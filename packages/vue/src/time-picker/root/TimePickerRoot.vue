@@ -83,14 +83,16 @@ export interface TimePickerRootProps<
   hideTimeZone?: boolean | undefined;
   /**
    * The earliest time that the picker accepts.
-   * The list starts at this time, and the columns and the clock disable an earlier time. An earlier
-   * time in the field makes the picker invalid.
+   * The list starts at this time. The columns and the clock disable a value that has no time at or
+   * after it, and a pick that gives an earlier time moves the time to it. An earlier time in the
+   * field makes the picker invalid.
    */
   minTime?: Temporal.PlainTime | undefined;
   /**
    * The latest time that the picker accepts.
-   * The list ends at this time, and the columns and the clock disable a later time. A later time in
-   * the field makes the picker invalid.
+   * The list ends at this time. The columns and the clock disable a value that has no time at or
+   * before it, and a pick that gives a later time moves the time to it. A later time in the field
+   * makes the picker invalid.
    */
   maxTime?: Temporal.PlainTime | undefined;
   /**

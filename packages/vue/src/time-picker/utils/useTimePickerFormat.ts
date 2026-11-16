@@ -6,7 +6,7 @@ import { useFormatLocale } from '../../utils/useFormatLocale';
 import type { TimePickerRootContext } from '../root/TimePickerRootContext';
 
 export interface TimePickerFormat {
-  /** The locale for the texts of a part. It is `en-US` until the part is mounted, as `useFormatLocale` says. */
+  /** The locale for the texts of a part. With no `locale` prop, it is `en-US` until the part is mounted. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
   /** The hour cycle: the `hourCycle` prop of the picker, else the hour cycle of the locale. */
   hourCycle: ComputedRef<TimeClockHourCycle>;
