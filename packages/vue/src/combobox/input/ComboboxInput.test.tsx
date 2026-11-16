@@ -16,6 +16,7 @@ import {
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
@@ -1079,6 +1080,23 @@ describe('<Combobox.Input />', () => {
       await user.keyboard('{ArrowLeft}');
 
       expect(input).toHaveFocus();
+    });
+
+    it('VUE-115: gives no error for ArrowLeft in the chips with a null value', async () => {
+      const { user } = await render(
+        <Combobox.Root multiple value={null}>
+          <Combobox.Chips>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      input.focus();
+      await user.keyboard('{ArrowLeft}');
+
+      expect(input).toHaveFocus();
+      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('treats a null selectionStart as the beginning of a custom input', async () => {
