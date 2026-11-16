@@ -23,6 +23,7 @@
       <li><NuxtLink to="/input">Input</NuxtLink></li>
       <li><NuxtLink to="/otp-field">OTP Field</NuxtLink></li>
       <li><NuxtLink to="/calendar">Calendar</NuxtLink></li>
+      <li><NuxtLink to="/date-layout">Date layout</NuxtLink></li>
       <li><NuxtLink to="/date-field">Date Field</NuxtLink></li>
       <li><NuxtLink to="/date-picker">Date Picker</NuxtLink></li>
       <li><NuxtLink to="/date-range-picker">Date Range Picker</NuxtLink></li>
