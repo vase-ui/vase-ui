@@ -264,25 +264,19 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
 
   // After a `setup` that throws, Vue 3.5.12 keeps the current instance set, so this case is last.
   it('throws a descriptive error when rendered outside <NumberField.ScrubArea>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(
+      render(
+        <NumberField.Root>
+          <NumberField.ScrubAreaCursor />
+        </NumberField.Root>,
+      ),
+    ).rejects.toThrow(
+      'Vase UI: A part of the scrub area of Number Field must be inside <NumberField.ScrubArea>. Without a scrub area the part has no scrub to follow. Put the part inside <NumberField.ScrubArea>.',
+    );
 
-    try {
-      await expect(
-        render(
-          <NumberField.Root>
-            <NumberField.ScrubAreaCursor />
-          </NumberField.Root>,
-        ),
-      ).rejects.toThrow(
-        'Vase UI: A part of the scrub area of Number Field must be inside <NumberField.ScrubArea>. Without a scrub area the part has no scrub to follow. Put the part inside <NumberField.ScrubArea>.',
-      );
-
-      // Vue also warns about the error of `setup`.
-      expect(takeReportedMessages()).toEqual([
-        expect.stringContaining('Unhandled error during execution of setup function'),
-      ]);
-    } finally {
-      errorSpy.mockRestore();
-    }
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

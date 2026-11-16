@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, takeReportedMessages } from '#test-utils';
 import { useComboboxPortalContext } from './ComboboxPortalContext';
@@ -13,15 +13,9 @@ describe('ComboboxPortalContext', () => {
       return () => null;
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<Consumer />)).rejects.toThrow(
-        'Vase UI: <Combobox.Portal> is missing. Without it the positioner cannot know if it stays mounted while the popup is closed. Put <Combobox.Positioner> inside <Combobox.Portal>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<Consumer />)).rejects.toThrow(
+      'Vase UI: <Combobox.Portal> is missing. Without it the positioner cannot know if it stays mounted while the popup is closed. Put <Combobox.Positioner> inside <Combobox.Portal>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

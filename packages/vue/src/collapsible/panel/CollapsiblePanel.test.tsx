@@ -133,7 +133,7 @@ describe('<Collapsible.Panel />', () => {
         </Collapsible.Root>,
       );
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
         'Vase UI: The `keepMounted` prop of `Collapsible.Panel` is `false` and `hiddenUntilFound` is enabled. The panel must stay mounted while it is closed, so `keepMounted` has no effect. Remove `keepMounted`, or remove `hiddenUntilFound`.',
       );
       expect(screen.getByText(PANEL_CONTENT).getAttribute('hidden')).toBe('until-found');
@@ -474,7 +474,7 @@ describe('<Collapsible.Panel />', () => {
         expect(panel).toHaveAttribute('data-starting-style');
         expect(panel.style.getPropertyValue('justify-content')).toBe('initial');
         expect(panel.style.getPropertyPriority('justify-content')).toBe('important');
-        expect(warnSpy).toHaveBeenCalledWith(
+        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
           'Vase UI: A panel of Collapsible or Accordion has a CSS transition and a CSS animation. The part waits for one of them only, so it treats the panel as a transition. Use only a transition or only an animation on the panel.',
         );
 
@@ -482,6 +482,7 @@ describe('<Collapsible.Panel />', () => {
         await flushMicrotasks();
 
         expect(panel.style.justifyContent).toBe('center');
+        expect(warnSpy).toHaveBeenCalledTimes(1);
       } finally {
         warnSpy.mockRestore();
       }

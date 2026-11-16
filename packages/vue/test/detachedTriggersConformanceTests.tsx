@@ -10,6 +10,7 @@ import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
+import { takeReportedMessages } from './reportedMessages';
 
 /**
  * Behavior shared by every popup that supports multiple triggers and detached triggers
@@ -252,11 +253,11 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     }
   }
 
-  function countWarnings(consoleWarn: { mock: { calls: unknown[][] } }, text: string) {
-    return consoleWarn.mock.calls.filter(
-      ([message]) => typeof message === 'string' && message.includes(text),
-    ).length;
-  }
+  // The two calls of `console.warn` for `open()` and `close()` on a handle with no mounted root.
+  const detachedCalls = [
+    [expect.stringContaining('.open() was called while no root that uses this handle is mounted')],
+    [expect.stringContaining('.close() was called while no root that uses this handle is mounted')],
+  ];
 
   describe('detached triggers conformance', () => {
     describe.each([{ mode: 'contained' as const }, { mode: 'detached' as const }])(
@@ -604,7 +605,9 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             try {
               handle.open('missing');
               await flushMicrotasks();
-              expect(countWarnings(consoleWarn, 'No trigger found with id "missing"')).toBe(1);
+              expect(consoleWarn.mock.calls).toEqual([
+                [expect.stringContaining('No trigger found with id "missing"')],
+              ]);
             } finally {
               consoleWarn.mockRestore();
             }
@@ -625,7 +628,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             handle.open('trigger-1');
             handle.close();
             expect(handle.isOpen).toBe(false);
-            expect(countWarnings(consoleWarn, 'no root that uses this handle is mounted')).toBe(2);
+            expect(consoleWarn.mock.calls).toEqual(detachedCalls);
 
             const { setProps } = await render(
               <Fixture mode="detached" handle={handle} rootMounted />,
@@ -643,11 +646,10 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             expect(handle.isOpen).toBe(false);
             expect(screen.queryByTestId('popup')).toBe(null);
 
-            consoleWarn.mockClear();
             handle.open('trigger-1');
             handle.close();
             expect(handle.isOpen).toBe(false);
-            expect(countWarnings(consoleWarn, 'no root that uses this handle is mounted')).toBe(2);
+            expect(consoleWarn.mock.calls).toEqual([...detachedCalls, ...detachedCalls]);
 
             // A remounted root starts closed, without the previous payload, and is controllable.
             await setProps({ rootMounted: true });
@@ -658,6 +660,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             await flushMicrotasks();
             await waitForContent('2');
             expect(handle.isOpen).toBe(true);
+            expect(consoleWarn).toHaveBeenCalledTimes(4);
           } finally {
             consoleWarn.mockRestore();
           }
@@ -708,7 +711,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
         it('resolves a trigger still registered to the previous root during a transient overlap', async () => {
           const handle = createHandle();
           const openErrors: unknown[] = [];
-          const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
           const OpenOnMount = defineComponent(() => {
             onMounted(() => {
@@ -769,29 +771,25 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             ),
           });
 
-          try {
-            // The detached trigger settles into the outgoing root's store (it is no longer in the
-            // fallback map). The incoming root then attaches while the outgoing one is still
-            // mounted, and a mounted hook in that same update opens by trigger id, before the
-            // trigger has migrated to the incoming root's store.
-            const { setProps } = await render(<App phase="outgoing" />);
-            await setProps({ phase: 'overlap' });
+          // The detached trigger settles into the outgoing root's store (it is no longer in the
+          // fallback map). The incoming root then attaches while the outgoing one is still
+          // mounted, and a mounted hook in that same update opens by trigger id, before the
+          // trigger has migrated to the incoming root's store.
+          const { setProps } = await render(<App phase="outgoing" />);
+          await setProps({ phase: 'overlap' });
 
-            expect(openErrors).toEqual([]);
-            expect(countWarnings(consoleWarn, 'No trigger found')).toBe(0);
-            expect(handle.isOpen).toBe(true);
-            expect(getTrigger(2)).toHaveAttribute('data-popup-open');
-            expect(getTrigger(1)).not.toHaveAttribute('data-popup-open');
+          expect(openErrors).toEqual([]);
+          expect(takeReportedMessages()).toEqual([]);
+          expect(handle.isOpen).toBe(true);
+          expect(getTrigger(2)).toHaveAttribute('data-popup-open');
+          expect(getTrigger(1)).not.toHaveAttribute('data-popup-open');
 
-            // Completing the handoff (the outgoing root unmounts) keeps the popup open and
-            // associated.
-            await setProps({ phase: 'incoming' });
-            expect(handle.isOpen).toBe(true);
-            expect(getTrigger(2)).toHaveAttribute('data-popup-open');
-            expect(getTrigger(1)).not.toHaveAttribute('data-popup-open');
-          } finally {
-            consoleWarn.mockRestore();
-          }
+          // Completing the handoff (the outgoing root unmounts) keeps the popup open and
+          // associated.
+          await setProps({ phase: 'incoming' });
+          expect(handle.isOpen).toBe(true);
+          expect(getTrigger(2)).toHaveAttribute('data-popup-open');
+          expect(getTrigger(1)).not.toHaveAttribute('data-popup-open');
         });
       });
 

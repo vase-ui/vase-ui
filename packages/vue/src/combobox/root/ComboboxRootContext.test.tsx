@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, takeReportedMessages } from '#test-utils';
 import { useComboboxDerivedItemsContext, useComboboxRootContext } from './ComboboxRootContext';
@@ -28,13 +28,7 @@ describe('ComboboxRootContext', () => {
       return () => null;
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<Consumer />)).rejects.toThrow(message);
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<Consumer />)).rejects.toThrow(message);
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

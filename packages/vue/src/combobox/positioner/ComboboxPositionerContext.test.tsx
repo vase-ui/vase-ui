@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, takeReportedMessages } from '#test-utils';
 import { useComboboxPositionerContext } from './ComboboxPositionerContext';
@@ -13,15 +13,9 @@ describe('ComboboxPositionerContext', () => {
       return () => null;
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<Consumer />)).rejects.toThrow(
-        'Vase UI: <Combobox.Popup> and <Combobox.Arrow> must be inside <Combobox.Positioner>. Without a positioner they have no side and no alignment. Put them inside <Combobox.Positioner>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<Consumer />)).rejects.toThrow(
+      'Vase UI: <Combobox.Popup> and <Combobox.Arrow> must be inside <Combobox.Positioner>. Without a positioner they have no side and no alignment. Put them inside <Combobox.Positioner>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([
