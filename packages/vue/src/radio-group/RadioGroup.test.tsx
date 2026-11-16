@@ -4211,19 +4211,20 @@ describe('<RadioGroup />', () => {
 
   describe('VUE-112: a disabled fieldset', () => {
     // A radio has no size of its own, and Playwright clicks only an element that has a size.
-    const size = 'display:inline-block;width:20px;height:20px';
+    const radioStyle = 'display:inline-block;width:20px;height:20px';
 
-    function radio(value: string) {
-      return <Radio.Root key={value} value={value} data-testid={value} style={size} />;
+    function renderRadio(value: string) {
+      return <Radio.Root key={value} value={value} data-testid={value} style={radioStyle} />;
+    }
+
+    function isShownDisabled(element: Element) {
+      const isAriaDisabled = element.getAttribute('aria-disabled') === 'true';
+      expect(element.hasAttribute('data-disabled')).toBe(isAriaDisabled);
+      return isAriaDisabled;
     }
 
     function readDisabled(testIds: string[]) {
-      return testIds.map((testId) => {
-        const element = screen.getByTestId(testId);
-        return (
-          element.getAttribute('aria-disabled') === 'true' && element.hasAttribute('data-disabled')
-        );
-      });
+      return testIds.map((testId) => isShownDisabled(screen.getByTestId(testId)));
     }
 
     function renderBetweenButtons(content: VNodeChild) {
@@ -4245,7 +4246,7 @@ describe('<RadioGroup />', () => {
         name: 'the fieldset holds the group',
         content: () => (
           <fieldset disabled>
-            <RadioGroup data-testid="group">{['a', 'b', 'c'].map(radio)}</RadioGroup>
+            <RadioGroup data-testid="group">{['a', 'b', 'c'].map(renderRadio)}</RadioGroup>
           </fieldset>
         ),
         radios: [true, true, true],
@@ -4255,9 +4256,9 @@ describe('<RadioGroup />', () => {
         name: 'the fieldset holds one radio',
         content: () => (
           <RadioGroup data-testid="group">
-            {radio('a')}
-            <fieldset disabled>{radio('b')}</fieldset>
-            {radio('c')}
+            {renderRadio('a')}
+            <fieldset disabled>{renderRadio('b')}</fieldset>
+            {renderRadio('c')}
           </RadioGroup>
         ),
         radios: [false, true, false],
@@ -4268,10 +4269,10 @@ describe('<RadioGroup />', () => {
         content: () => (
           <RadioGroup data-testid="group">
             <fieldset disabled>
-              <legend>{radio('a')}</legend>
-              {radio('b')}
+              <legend>{renderRadio('a')}</legend>
+              {renderRadio('b')}
             </fieldset>
-            {radio('c')}
+            {renderRadio('c')}
           </RadioGroup>
         ),
         radios: [false, true, false],
@@ -4282,7 +4283,7 @@ describe('<RadioGroup />', () => {
         content: () => (
           <fieldset disabled>
             <fieldset>
-              <RadioGroup data-testid="group">{['a', 'b', 'c'].map(radio)}</RadioGroup>
+              <RadioGroup data-testid="group">{['a', 'b', 'c'].map(renderRadio)}</RadioGroup>
             </fieldset>
           </fieldset>
         ),
@@ -4293,7 +4294,7 @@ describe('<RadioGroup />', () => {
         name: 'Fieldset.Root has no Field.Root',
         content: () => (
           <Fieldset.Root disabled>
-            <RadioGroup data-testid="group">{['a', 'b', 'c'].map(radio)}</RadioGroup>
+            <RadioGroup data-testid="group">{['a', 'b', 'c'].map(renderRadio)}</RadioGroup>
           </Fieldset.Root>
         ),
         radios: [true, true, true],
@@ -4310,12 +4311,15 @@ describe('<RadioGroup />', () => {
       const handleValueChange = vi.fn();
       await render(() => (
         <fieldset disabled>
-          <RadioGroup onValueChange={handleValueChange}>{['a', 'b', 'c'].map(radio)}</RadioGroup>
+          <RadioGroup onValueChange={handleValueChange}>
+            {['a', 'b', 'c'].map(renderRadio)}
+          </RadioGroup>
         </fieldset>
       ));
 
       await userEvent.click(screen.getByTestId('a'), { force: true });
       screen.getByTestId('b').focus();
+      expect(screen.getByTestId('b')).toHaveFocus();
       await userEvent.keyboard(' ');
       await flushMicrotasks();
 
@@ -4328,7 +4332,7 @@ describe('<RadioGroup />', () => {
       await render(() =>
         renderBetweenButtons(
           <fieldset disabled>
-            <RadioGroup defaultValue="b">{['a', 'b', 'c'].map(radio)}</RadioGroup>
+            <RadioGroup defaultValue="b">{['a', 'b', 'c'].map(renderRadio)}</RadioGroup>
           </fieldset>,
         ),
       );
@@ -4343,9 +4347,9 @@ describe('<RadioGroup />', () => {
       await render(() =>
         renderBetweenButtons(
           <RadioGroup defaultValue="b">
-            {radio('a')}
-            <fieldset disabled>{radio('b')}</fieldset>
-            {radio('c')}
+            {renderRadio('a')}
+            <fieldset disabled>{renderRadio('b')}</fieldset>
+            {renderRadio('c')}
           </RadioGroup>,
         ),
       );
@@ -4356,13 +4360,29 @@ describe('<RadioGroup />', () => {
       expect(screen.getByTestId('a')).toHaveFocus();
     });
 
+    it('skips a radio in a disabled fieldset with the arrow keys', async () => {
+      await render(() => (
+        <RadioGroup defaultValue="a">
+          {renderRadio('a')}
+          <fieldset disabled>{renderRadio('b')}</fieldset>
+          {renderRadio('c')}
+        </RadioGroup>
+      ));
+
+      screen.getByTestId('a').focus();
+      await userEvent.keyboard('{ArrowDown}');
+
+      expect(screen.getByTestId('c')).toHaveFocus();
+      expect(screen.getByTestId('c')).toHaveAttribute('aria-checked', 'true');
+    });
+
     it('follows a fieldset that becomes disabled and then enabled', async () => {
       const disabled = shallowRef(false);
       const handleValueChange = vi.fn();
       await render(() => (
         <fieldset disabled={disabled.value}>
           <RadioGroup data-testid="group" onValueChange={handleValueChange}>
-            {['a', 'b'].map(radio)}
+            {['a', 'b'].map(renderRadio)}
           </RadioGroup>
         </fieldset>
       ));
@@ -4390,7 +4410,7 @@ describe('<RadioGroup />', () => {
       await render(() => (
         <fieldset disabled>
           <Teleport to={outside} disabled={inFieldset.value}>
-            <RadioGroup data-testid="group">{radio('a')}</RadioGroup>
+            <RadioGroup data-testid="group">{renderRadio('a')}</RadioGroup>
           </Teleport>
         </fieldset>
       ));
@@ -4413,7 +4433,7 @@ describe('<RadioGroup />', () => {
       await render(() => (
         <Teleport to={container}>
           <fieldset disabled={disabled.value}>
-            <RadioGroup data-testid="group">{radio('a')}</RadioGroup>
+            <RadioGroup data-testid="group">{renderRadio('a')}</RadioGroup>
           </fieldset>
         </Teleport>
       ));
@@ -4434,7 +4454,7 @@ describe('<RadioGroup />', () => {
       const inShadowRoot = shallowRef(false);
       await render(() => (
         <Teleport to={fieldset} disabled={!inShadowRoot.value}>
-          <RadioGroup data-testid="group">{radio('a')}</RadioGroup>
+          <RadioGroup data-testid="group">{renderRadio('a')}</RadioGroup>
         </Teleport>
       ));
 
@@ -4450,7 +4470,7 @@ describe('<RadioGroup />', () => {
     it('follows a fieldset around a group that mounted while KeepAlive held it', async () => {
       const disabled = shallowRef(false);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <RadioGroup data-testid="group">{radio('a')}</RadioGroup>
+        <RadioGroup data-testid="group">{renderRadio('a')}</RadioGroup>
       ));
       await render(() => (
         <fieldset disabled={disabled.value}>
@@ -4466,13 +4486,36 @@ describe('<RadioGroup />', () => {
       expect(readDisabled(['group', 'a'])).toEqual([true, true]);
     });
 
+    it('keeps the disabled state of a group while KeepAlive holds it', async () => {
+      const disabled = shallowRef(true);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <RadioGroup data-testid="group">{renderRadio('a')}</RadioGroup>,
+        { mounted: true },
+      );
+      await render(() => (
+        <fieldset disabled={disabled.value}>
+          <HeldBranch />
+        </fieldset>
+      ));
+      const heldElements = [screen.getByTestId('group'), screen.getByTestId('a')];
+
+      await hide();
+
+      expect(heldElements.map(isShownDisabled)).toEqual([true, true]);
+
+      disabled.value = false;
+      await show();
+
+      expect(readDisabled(['group', 'a'])).toEqual([false, false]);
+    });
+
     it('leaves a group in a disabled fieldset out of the form values', async () => {
       const handleSubmit = vi.fn();
       await render(() => (
         <Form onFormSubmit={handleSubmit} data-testid="form">
           <fieldset disabled>
             <Field.Root name="choice">
-              <RadioGroup defaultValue="a">{['a', 'b'].map(radio)}</RadioGroup>
+              <RadioGroup defaultValue="a">{['a', 'b'].map(renderRadio)}</RadioGroup>
             </Field.Root>
           </fieldset>
           <button type="submit">Submit</button>
