@@ -13,7 +13,7 @@ import AccordionHeader from './AccordionHeader.vue';
       collapsible
       collapsed-size="40px"
       min-size="80px"
-      class="box-border overflow-hidden transition-[flex-grow] duration-200 motion-reduce:transition-none"
+      class="box-border overflow-hidden transition-[flex-grow] duration-200 ease-[ease] motion-reduce:transition-none"
     >
       <AccordionHeader>Files</AccordionHeader>
       <p class="px-4 text-sm text-neutral-600 dark:text-neutral-400">The pages of the project.</p>
@@ -27,7 +27,7 @@ import AccordionHeader from './AccordionHeader.vue';
       collapsible
       collapsed-size="40px"
       min-size="80px"
-      class="box-border overflow-hidden transition-[flex-grow] duration-200 motion-reduce:transition-none"
+      class="box-border overflow-hidden transition-[flex-grow] duration-200 ease-[ease] motion-reduce:transition-none"
     >
       <AccordionHeader>Outline</AccordionHeader>
       <p class="px-4 text-sm text-neutral-600 dark:text-neutral-400">The headings of the page.</p>
@@ -42,7 +42,7 @@ import AccordionHeader from './AccordionHeader.vue';
       collapsible
       collapsed-size="40px"
       min-size="80px"
-      class="box-border overflow-hidden transition-[flex-grow] duration-200 motion-reduce:transition-none"
+      class="box-border overflow-hidden transition-[flex-grow] duration-200 ease-[ease] motion-reduce:transition-none"
     >
       <AccordionHeader>Timeline</AccordionHeader>
       <p class="px-4 text-sm text-neutral-600 dark:text-neutral-400">The changes to the page.</p>
