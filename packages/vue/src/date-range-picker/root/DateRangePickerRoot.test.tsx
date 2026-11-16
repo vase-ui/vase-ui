@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { shallowRef } from 'vue';
+import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -193,10 +195,14 @@ describe('<DateRangePicker.Root />', () => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });
 
-      it('moves the focus to the default element for `true`', async () => {
+      it.each([
+        { name: '`true`', createOption: () => true },
+        { name: '`null`', createOption: () => null },
+        { name: 'an empty ref', createOption: () => shallowRef(null) },
+      ])('moves the focus to the default element for $name', async ({ createOption }) => {
         const { user } = await renderPicker({
           defaultValue: range('2026-11-18', '2026-11-20'),
-          popupProps: { initialFocus: true },
+          popupProps: { initialFocus: createOption() },
         });
 
         await open(user);
@@ -968,6 +974,36 @@ describe('<DateRangePicker.Root />', () => {
       });
       expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
       expect(dayButton('2026-11-18')).toHaveAttribute('data-disabled');
+    });
+
+    // The root reads the fieldset at its start field. Vue stops the `watch` of the field before it
+    // unmounts the field, so the field clears its element itself, and the root then uses the trigger.
+    it('reads the fieldset at the trigger after the fields unmount', async () => {
+      const hasFields = shallowRef(true);
+      await render(() => (
+        <DateRangePicker.Root locale="en-US">
+          {hasFields.value ? (
+            <>
+              <DateRangePicker.StartField>
+                <DateField.Input />
+              </DateRangePicker.StartField>
+              <DateRangePicker.EndField>
+                <DateField.Input />
+              </DateRangePicker.EndField>
+            </>
+          ) : null}
+          <fieldset disabled>
+            <DateRangePicker.Trigger data-testid="trigger">Open</DateRangePicker.Trigger>
+          </fieldset>
+        </DateRangePicker.Root>
+      ));
+      expect(screen.getByTestId('trigger')).not.toHaveAttribute('data-disabled');
+
+      hasFields.value = false;
+
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      });
     });
 
     it('disables the trigger of a picker that has no field, in a disabled fieldset', async () => {

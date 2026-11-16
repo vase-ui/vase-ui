@@ -1,4 +1,4 @@
-import { computed, provide, useAttrs, watch } from 'vue';
+import { computed, onBeforeUnmount, provide, useAttrs, watch } from 'vue';
 import type { Ref } from 'vue';
 import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -57,6 +57,12 @@ export function useDateRangePickerField(
     end === 'start' ? picker.startFieldElement : picker.endFieldElement,
   );
   watch(element, setFieldElement, { immediate: true, flush: 'post' });
+  // Vue stops the `watch` before it unmounts `DateField.Root`, so the `watch` never gets `null`. The
+  // positioner then uses the other field, and the root and the positioner use the trigger when no
+  // field is left.
+  onBeforeUnmount(() => {
+    setFieldElement(null);
+  });
 
   // The field holds the input of the form, so it hears about the reset.
   useFormReset(inputElement, (event) => {

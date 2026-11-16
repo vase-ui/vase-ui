@@ -1,4 +1,6 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
+import { isRef, shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import {
@@ -6,6 +8,7 @@ import {
   describeConformance,
   flushMicrotasks,
   screen,
+  waitFor,
   waitForPositioned,
 } from '#test-utils';
 
@@ -31,69 +34,75 @@ describe('<DateRangePicker.Positioner />', () => {
     },
   }));
 
+  type Fields = 'both' | 'start' | 'none';
+
   // The end field is taller than the start field, so the box around them ends at the end field.
+  // `fields` can be a ref, so that a case changes the fields after the render.
   function renderPicker(
     options: {
-      fields?: 'both' | 'start' | 'none';
+      fields?: Fields | ShallowRef<Fields>;
       anchor?: HTMLElement | undefined;
       align?: 'start' | 'center' | 'end';
     } = {},
   ) {
-    const { fields = 'both', anchor, align } = options;
-    return render(
-      <div style={{ padding: '100px' }}>
-        <DateRangePicker.Root open defaultValue={range} locale="en-US">
-          {fields === 'none' ? null : (
-            <DateRangePicker.StartField
-              data-testid="start-field"
-              style={{
-                display: 'inline-block',
-                verticalAlign: 'top',
-                width: '150px',
-                height: '30px',
-              }}
-            >
-              <DateField.Input />
-            </DateRangePicker.StartField>
-          )}
-          {fields === 'both' ? (
-            <DateRangePicker.EndField
-              data-testid="end-field"
-              style={{
-                display: 'inline-block',
-                verticalAlign: 'top',
-                width: '150px',
-                height: '60px',
-                marginLeft: '40px',
-              }}
-            >
-              <DateField.Input />
-            </DateRangePicker.EndField>
-          ) : null}
-          <DateRangePicker.Trigger
-            data-testid="trigger"
-            style={{ marginLeft: '100px', width: '40px' }}
-          >
-            Open
-          </DateRangePicker.Trigger>
-          <DateRangePicker.Portal>
-            <DateRangePicker.Positioner
-              data-testid="positioner"
-              anchor={anchor}
-              align={align}
-              sideOffset={0}
-            >
-              <DateRangePicker.Popup
-                aria-label="Choose dates"
-                style={{ width: '100px', height: '50px' }}
+    const { fields: fieldsOption = 'both', anchor, align } = options;
+    return render(() => {
+      const fields = isRef(fieldsOption) ? fieldsOption.value : fieldsOption;
+      return (
+        <div style={{ padding: '100px' }}>
+          <DateRangePicker.Root open defaultValue={range} locale="en-US">
+            {fields === 'none' ? null : (
+              <DateRangePicker.StartField
+                data-testid="start-field"
+                style={{
+                  display: 'inline-block',
+                  verticalAlign: 'top',
+                  width: '150px',
+                  height: '30px',
+                }}
               >
-                Content
-              </DateRangePicker.Popup>
-            </DateRangePicker.Positioner>
-          </DateRangePicker.Portal>
-        </DateRangePicker.Root>
-      </div>,
-    );
+                <DateField.Input />
+              </DateRangePicker.StartField>
+            )}
+            {fields === 'both' ? (
+              <DateRangePicker.EndField
+                data-testid="end-field"
+                style={{
+                  display: 'inline-block',
+                  verticalAlign: 'top',
+                  width: '150px',
+                  height: '60px',
+                  marginLeft: '40px',
+                }}
+              >
+                <DateField.Input />
+              </DateRangePicker.EndField>
+            ) : null}
+            <DateRangePicker.Trigger
+              data-testid="trigger"
+              style={{ marginLeft: '100px', width: '40px' }}
+            >
+              Open
+            </DateRangePicker.Trigger>
+            <DateRangePicker.Portal>
+              <DateRangePicker.Positioner
+                data-testid="positioner"
+                anchor={anchor}
+                align={align}
+                sideOffset={0}
+              >
+                <DateRangePicker.Popup
+                  aria-label="Choose dates"
+                  style={{ width: '100px', height: '50px' }}
+                >
+                  Content
+                </DateRangePicker.Popup>
+              </DateRangePicker.Positioner>
+            </DateRangePicker.Portal>
+          </DateRangePicker.Root>
+        </div>
+      );
+    });
   }
 
   async function findPositioner() {
@@ -131,6 +140,30 @@ describe('<DateRangePicker.Positioner />', () => {
     expect(positioner.getBoundingClientRect().left).toBeCloseTo(start.left, 0);
     expect(positioner.getBoundingClientRect().top).toBeCloseTo(start.bottom, 0);
   });
+
+  // Vue stops the `watch` of a field before it unmounts the field, so the field clears its element
+  // itself. A removed field then no longer takes part in the box.
+  it.each([
+    { name: 'the end field', from: 'both' as const, to: 'start' as const, side: 'start-field' },
+    { name: 'both fields', from: 'both' as const, to: 'none' as const, side: 'trigger' },
+  ])(
+    'positions the popup without the box of $name after it unmounts',
+    async ({ from, to, side }) => {
+      const fields = shallowRef<Fields>(from);
+      await renderPicker({ fields });
+      await findPositioner();
+
+      fields.value = to;
+      await flushMicrotasks();
+      const positioner = await findPositioner();
+
+      const anchor = screen.getByTestId(side).getBoundingClientRect();
+      await waitFor(() => {
+        expect(positioner.getBoundingClientRect().top).toBeCloseTo(anchor.bottom, 0);
+      });
+      expect(positioner.getBoundingClientRect().left).toBeCloseTo(anchor.left, 0);
+    },
+  );
 
   it('positions the popup against the trigger when the picker has no field', async () => {
     await renderPicker({ fields: 'none' });

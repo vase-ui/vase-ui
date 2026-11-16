@@ -13,8 +13,8 @@ export interface DateRangePickerPopupProps extends PopoverPopupProps {
    *
    * - `false`: Do not move focus.
    * - `true`: Move focus to the default element.
-   * - An element, a component, or a ref of one: Move focus to that element. An empty ref uses the
-   *   default element.
+   * - An element, a component, or a ref of one: Move focus to that element. `null` and an empty ref
+   *   use the default element.
    * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
    *   Return an element to focus, `true` or `null` to use the default element, or `false` or
    *   `undefined` to do nothing.
