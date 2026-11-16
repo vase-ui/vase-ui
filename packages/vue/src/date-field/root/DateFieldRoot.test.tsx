@@ -1,4 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
@@ -820,7 +821,7 @@ describe('<DateField.Root />', () => {
 
     it('leaves a date field in a disabled fieldset out of the form values', async () => {
       const handleSubmit = vi.fn();
-      const { user } = await render(() => (
+      await render(() => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="date">
             <fieldset disabled>
@@ -836,7 +837,7 @@ describe('<DateField.Root />', () => {
         </Form>
       ));
 
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(handleSubmit.mock.lastCall?.[0]).toEqual({ other: 'sent' });
