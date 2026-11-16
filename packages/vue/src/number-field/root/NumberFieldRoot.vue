@@ -305,7 +305,7 @@ function setHiddenInputElement(next: unknown) {
   hiddenInputElement.value = input;
 }
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: inputRef });
 
 const [numberValue, setValueUnwrapped] = useControlled<number | null>({
   controlled: () => props.value,

@@ -4,13 +4,16 @@ import { NOOP } from '../noop';
 import { givenId, useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
+import { useRegisteredId } from './useRegisteredId';
+import { useRenderedElementId } from './useRenderedElementId';
 
 /**
  * A control calls it in `setup` and binds the result to its `id`. The label of the same provider
  * then has the `for` that names the control.
  */
 export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedRef<string> {
-  const { controlId, registerControlId, resetControlId } = useLabelableContext();
+  const { controlId, registerControlId, resetControlId, registerControlElementId } =
+    useLabelableContext();
 
   const defaultId = useVaseUiId();
 
@@ -89,6 +92,15 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   // replaces it runs in the flush after that, so the new control never sees the old registration.
   onScopeDispose(unregister);
 
+  if (registerControlId !== NOOP && params.element !== undefined) {
+    const elementId = useRenderedElementId(params.element);
+    const elementSource = Symbol();
+    useRegisteredId(
+      () => elementId.value,
+      (getId) => registerControlElementId(elementSource, getId),
+    );
+  }
+
   // The id of the provider wins until the registration. The label has `for` with that id in the
   // server HTML. An id of the control here would leave the label and the control with two ids, and
   // a label that names no element names nothing.
@@ -106,4 +118,10 @@ export interface UseLabelableIdParameters {
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /**
+   * The element that has the `id` of the control. A `#render` slot can give it another `id`, and
+   * the label then names that `id`. Give `null` while the `#render` slot does not render that
+   * element, such as a checkbox with a hidden input.
+   */
+  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
 }

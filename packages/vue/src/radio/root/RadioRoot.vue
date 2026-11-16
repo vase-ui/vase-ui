@@ -203,7 +203,10 @@ if (!group && checked.value) {
 }
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({
+  id: () => props.id,
+  element: () => (props.nativeButton ? element.value : null),
+});
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const ariaLabelledBy = useAriaLabelledBy(
