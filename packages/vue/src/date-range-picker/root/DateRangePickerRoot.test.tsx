@@ -1,0 +1,904 @@
+import { describe, expect, it, vi } from 'vitest';
+import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import { Field } from '@vase-ui/vue/field';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  popupConformanceTests,
+  screen,
+  waitFor,
+  wait,
+  waitForLaterMillisecond,
+} from '#test-utils';
+import type { VaseUIRenderResult } from '#test-utils';
+import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
+
+const day = (text: string) => Temporal.PlainDate.from(text);
+const today = () => day('2026-11-14');
+const range = (start: string, end: string) => [day(start), day(end)] as const;
+
+const dayButton = (iso: string) =>
+  document.querySelector<HTMLElement>(`[data-date="${iso}"] button`)!;
+const segmentOf = (field: 'start' | 'end', type: string) =>
+  screen
+    .getByTestId(`${field}-field`)
+    .querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
+const hiddenInputsOf = (container: Element) =>
+  [...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')].map(
+    (input) => input.value,
+  );
+const centerOf = (element: Element) => {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+};
+// The text of the two ends of a call of `valueChange`.
+const endsOf = (call: readonly unknown[] | undefined) =>
+  (call?.[0] as (Temporal.PlainDate | null)[]).map((end) => end?.toString() ?? null);
+const rangeAttributes = () => {
+  const find = (name: string) =>
+    [...document.querySelectorAll(`td[${name}]`)].map((cell) => cell.getAttribute('data-date'));
+  return {
+    start: find('data-range-start'),
+    middle: find('data-range-middle'),
+    end: find('data-range-end'),
+  };
+};
+
+describe('<DateRangePicker.Root />', () => {
+  const { render } = createRenderer();
+
+  function renderPicker(props: Record<string, unknown> = {}) {
+    return render(
+      <DateRangePickerAnatomy
+        {...{ locale: 'en-US', timeZone: 'UTC', calendarProps: { today: today() }, ...props }}
+      />,
+    );
+  }
+
+  // The click comes in a later millisecond than the open, so that Vue runs each listener.
+  async function open(user: VaseUIRenderResult['user']) {
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).not.toBe(null);
+      });
+    });
+    return screen.getByRole('dialog');
+  }
+
+  // The element is the popup that the test got before the action.
+  async function expectClosed(popup: HTMLElement) {
+    await waitFor(() => {
+      expect(popup).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole('dialog')).toBe(null);
+  }
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <DateRangePicker.Root {...props.root}>
+        <DateRangePicker.Trigger {...props.trigger}>Open menu</DateRangePicker.Trigger>
+        <DateRangePicker.Portal {...props.portal}>
+          <DateRangePicker.Positioner>
+            <DateRangePicker.Popup {...props.popup}>Content</DateRangePicker.Popup>
+          </DateRangePicker.Positioner>
+        </DateRangePicker.Portal>
+      </DateRangePicker.Root>
+    ),
+    render,
+    triggerMouseAction: 'click',
+    expectedPopupRole: 'dialog',
+  });
+
+  it('renders no element of its own', async () => {
+    const { container } = await render(
+      <DateRangePicker.Root>
+        <span data-testid="child" />
+      </DateRangePicker.Root>,
+    );
+
+    expect(container.firstElementChild).toBe(screen.getByTestId('child'));
+  });
+
+  describe('the focus', () => {
+    it('goes to the day that has the tab stop when the popup opens: the first day of the range', async () => {
+      const { user } = await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20') });
+
+      await open(user);
+
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).toHaveFocus();
+      });
+    });
+
+    it('goes to today when the picker has no value', async () => {
+      const { user } = await renderPicker();
+
+      await open(user);
+
+      await waitFor(() => {
+        expect(dayButton('2026-11-14')).toHaveFocus();
+      });
+    });
+
+    it('goes to the day each time that a popup that stays mounted opens', async () => {
+      const { user } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        keepMounted: true,
+      });
+
+      await open(user);
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).toHaveFocus();
+      });
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+      await open(user);
+
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).toHaveFocus();
+      });
+    });
+
+    it.each([{ field: 'start' as const }, { field: 'end' as const }])(
+      'goes to the day when Alt+Down in a segment of the $field field opens the popup',
+      async ({ field }) => {
+        const { user } = await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20') });
+
+        segmentOf(field, 'day').focus();
+        await user.keyboard('{Alt>}{ArrowDown}{/Alt}');
+
+        await waitFor(() => {
+          expect(dayButton('2026-11-18')).toHaveFocus();
+        });
+        expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+      },
+    );
+
+    it('goes back to the trigger when Escape closes the popup, and the range stays', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        onValueChange,
+      });
+      const popup = await open(user);
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowRight}{Escape}');
+
+      await expectClosed(popup);
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-20']);
+    });
+  });
+
+  describe('the selection', () => {
+    it('keeps the popup open after the first press, and shows that day as the start', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+        onValueChange,
+      });
+      await open(user);
+
+      await user.click(dayButton('2026-11-16'));
+      await flushMicrotasks();
+
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', null]);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('day-press');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '']);
+      expect(segmentOf('start', 'day').value).toBe('16');
+      expect(segmentOf('end', 'day').value).toBe('');
+      expect(rangeAttributes().start).toEqual(['2026-11-16']);
+    });
+
+    it('closes the popup after the second press, and gives the range to the fields', async () => {
+      const onValueChange = vi.fn();
+      const onOpenChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+        onValueChange,
+        onOpenChange,
+      });
+      const popup = await open(user);
+
+      await user.click(dayButton('2026-11-16'));
+      await user.click(dayButton('2026-11-20'));
+
+      await expectClosed(popup);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', '2026-11-20']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('day-press');
+      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('imperative-action');
+      expect(onOpenChange.mock.lastCall?.[1].event.type).toBe('click');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-20']);
+      expect(segmentOf('start', 'day').value).toBe('16');
+      expect(segmentOf('end', 'day').value).toBe('20');
+      expect(screen.getByTestId('trigger').getAttribute('aria-label')).toContain('November 16');
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+    });
+
+    it('puts the ends in the order of the calendar when the second press is before the first', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await renderPicker({ onValueChange });
+      const popup = await open(user);
+
+      await user.click(dayButton('2026-11-20'));
+      await user.click(dayButton('2026-11-16'));
+
+      await expectClosed(popup);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', '2026-11-20']);
+    });
+
+    it('closes the popup after a press that makes a range of one day', async () => {
+      const { user, container } = await renderPicker();
+      const popup = await open(user);
+
+      await user.click(dayButton('2026-11-16'));
+      await user.click(dayButton('2026-11-16'));
+
+      await expectClosed(popup);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-16']);
+    });
+
+    it('closes the popup after Enter on the second day', async () => {
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+      });
+      const popup = await open(user);
+      await user.click(dayButton('2026-11-16'));
+      await waitFor(() => {
+        expect(dayButton('2026-11-16')).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowRight}{ArrowRight}{Enter}');
+
+      await expectClosed(popup);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+    });
+
+    it('closes the popup after a drag, which makes the range in one change', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({ onValueChange });
+      const popup = await open(user);
+      const first = dayButton('2026-11-16');
+      // A real drag holds the pointer on the button where it started, so the events go to that
+      // button, with the point where the pointer is.
+      const pointer = (target: Element, buttons = 1) => ({
+        button: 0,
+        buttons,
+        pointerId: 7,
+        pointerType: 'mouse',
+        clientX: centerOf(target).x,
+        clientY: centerOf(target).y,
+      });
+
+      await fireEvent.pointerDown(first, pointer(first));
+      await fireEvent.pointerMove(first, pointer(dayButton('2026-11-18')));
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      await fireEvent.pointerUp(first, pointer(dayButton('2026-11-18'), 0));
+
+      await expectClosed(popup);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', '2026-11-18']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('drag');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
+    });
+
+    it('keeps the popup open when a key extends the range, because the user can extend it more', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({ onValueChange });
+      await open(user);
+      await user.click(dayButton('2026-11-16'));
+      await waitFor(() => {
+        expect(dayButton('2026-11-16')).toHaveFocus();
+      });
+
+      await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+      await flushMicrotasks();
+
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', '2026-11-17']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('keyboard');
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-17']);
+    });
+
+    it('keeps the popup open when a listener cancels the change of the value', async () => {
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+        onValueChange: (_value: unknown, details: { cancel: () => void }) => {
+          details.cancel();
+        },
+      });
+      await open(user);
+
+      await user.click(dayButton('2026-11-16'));
+      await user.click(dayButton('2026-11-20'));
+      await flushMicrotasks();
+
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-10', '2026-11-12']);
+    });
+
+    it('keeps the popup open when a listener cancels the close, and the range changes', async () => {
+      const { user, container } = await renderPicker({
+        onOpenChange: (open: boolean, details: { cancel: () => void }) => {
+          if (!open) {
+            details.cancel();
+          }
+        },
+      });
+      await open(user);
+
+      await user.click(dayButton('2026-11-16'));
+      await user.click(dayButton('2026-11-20'));
+      await flushMicrotasks();
+
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-20']);
+    });
+
+    describe('prop: closeOnSelect', () => {
+      it('keeps the popup open for `false`, and the second press still gives the range', async () => {
+        const { user, container } = await renderPicker({ closeOnSelect: false });
+        await open(user);
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
+        expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-20']);
+      });
+
+      it('is `false` by default for a range with a time', async () => {
+        const { user, container } = await renderPicker({
+          defaultValue: [
+            Temporal.PlainDateTime.from('2026-11-10T09:00'),
+            Temporal.PlainDateTime.from('2026-11-12T17:30'),
+          ],
+        });
+        await open(user);
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
+        // Each end keeps the time of the end that it replaces.
+        expect(hiddenInputsOf(container)).toEqual(['2026-11-16T09:00', '2026-11-20T17:30']);
+      });
+
+      it('is `false` by default for a granularity with a time, with no value', async () => {
+        const { user } = await renderPicker({ granularity: 'minute' });
+        await open(user);
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
+      });
+
+      it('closes the popup for `true`, also for a range with a time', async () => {
+        const { user } = await renderPicker({
+          defaultValue: [
+            Temporal.PlainDateTime.from('2026-11-10T09:00'),
+            Temporal.PlainDateTime.from('2026-11-12T17:30'),
+          ],
+          closeOnSelect: true,
+        });
+        const popup = await open(user);
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+
+        await expectClosed(popup);
+      });
+    });
+
+    describe('a press on a day that cannot be selected', () => {
+      it('keeps the popup open for an unavailable day', async () => {
+        const { user, container } = await renderPicker({
+          defaultValue: range('2026-11-10', '2026-11-12'),
+          unavailableDates: day('2026-11-20'),
+        });
+        await open(user);
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
+        expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '']);
+      });
+
+      it('keeps the popup open for each press in a read-only picker', async () => {
+        const { user, container } = await renderPicker({
+          defaultValue: range('2026-11-10', '2026-11-12'),
+          defaultOpen: true,
+          readOnly: true,
+        });
+        await waitFor(() => {
+          expect(dayButton('2026-11-20')).not.toBe(null);
+        });
+
+        await user.click(dayButton('2026-11-16'));
+        await user.click(dayButton('2026-11-20'));
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
+        expect(hiddenInputsOf(container)).toEqual(['2026-11-10', '2026-11-12']);
+      });
+    });
+  });
+
+  describe('the Escape key', () => {
+    it('puts back the range from before the first press, and closes the popup', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+        onValueChange,
+      });
+      const popup = await open(user);
+      await user.click(dayButton('2026-11-16'));
+      await waitFor(() => {
+        expect(dayButton('2026-11-16')).toHaveFocus();
+      });
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '']);
+
+      await user.keyboard('{Escape}');
+
+      await expectClosed(popup);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-10', '2026-11-12']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('keyboard');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-10', '2026-11-12']);
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+    });
+  });
+
+  describe('a press outside the popup', () => {
+    it('closes the popup and keeps a range that has two ends', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        onValueChange,
+      });
+      const popup = await open(user);
+
+      await user.click(document.body);
+
+      await expectClosed(popup);
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-20']);
+    });
+
+    it('closes the popup and keeps the range in progress', async () => {
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+      });
+      const popup = await open(user);
+      await user.click(dayButton('2026-11-24'));
+
+      await user.click(document.body);
+
+      await expectClosed(popup);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-24', '']);
+    });
+  });
+
+  describe('the value', () => {
+    it('is one range for the fields and the calendar: a day typed in the start field is the start in the calendar', async () => {
+      const { user } = await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20') });
+
+      segmentOf('start', 'day').focus();
+      await user.keyboard('{ArrowDown}');
+      await open(user);
+
+      await waitFor(() => {
+        expect(dayButton('2026-11-17')).toHaveFocus();
+      });
+      expect(rangeAttributes()).toEqual({
+        start: ['2026-11-17'],
+        middle: ['2026-11-18', '2026-11-19'],
+        end: ['2026-11-20'],
+      });
+    });
+
+    it('follows a new range of a controlled picker in the fields, the calendar and the trigger', async () => {
+      const { setProps, container } = await renderPicker({
+        value: range('2026-11-18', '2026-11-20'),
+        defaultOpen: true,
+      });
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).not.toBe(null);
+      });
+
+      await setProps({ value: range('2026-11-22', '2026-11-24') });
+
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-22', '2026-11-24']);
+      expect(rangeAttributes().start).toEqual(['2026-11-22']);
+      expect(screen.getByTestId('trigger').getAttribute('aria-label')).toContain('November 22');
+    });
+
+    it('does not change a controlled picker until the parent gives the new range', async () => {
+      const onUpdateValue = vi.fn();
+      const { user, container } = await renderPicker({
+        value: range('2026-11-18', '2026-11-20'),
+        defaultOpen: true,
+        'onUpdate:value': onUpdateValue,
+      });
+      await waitFor(() => {
+        expect(dayButton('2026-11-22')).not.toBe(null);
+      });
+
+      await user.click(dayButton('2026-11-22'));
+
+      expect(endsOf(onUpdateValue.mock.lastCall)).toEqual(['2026-11-22', null]);
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-20']);
+    });
+
+    it('is a controlled empty range for `null`', async () => {
+      const onUpdateValue = vi.fn();
+      const { user, container, setProps } = await renderPicker({
+        value: null,
+        defaultOpen: true,
+        'onUpdate:value': onUpdateValue,
+      });
+      await waitFor(() => {
+        expect(dayButton('2026-11-16')).not.toBe(null);
+      });
+
+      await user.click(dayButton('2026-11-16'));
+
+      expect(endsOf(onUpdateValue.mock.lastCall)).toEqual(['2026-11-16', null]);
+      expect(hiddenInputsOf(container)).toEqual(['', '']);
+
+      await setProps({ value: range('2026-11-16', '2026-11-18') });
+
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
+    });
+
+    it('gives the empty fields the kind of the last range when the user empties them', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await renderPicker({
+        defaultValue: [
+          Temporal.ZonedDateTime.from('2026-11-18T09:30[Asia/Tokyo]'),
+          Temporal.ZonedDateTime.from('2026-11-20T09:30[Asia/Tokyo]'),
+        ],
+        hourCycle: 24,
+        onValueChange,
+      });
+
+      segmentOf('end', 'month').focus();
+      await user.keyboard('{Backspace}{Backspace}');
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual([
+        '2026-11-18T09:30:00+09:00[Asia/Tokyo]',
+        null,
+      ]);
+      await user.keyboard('12');
+
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual([
+        '2026-11-18T09:30:00+09:00[Asia/Tokyo]',
+        '2026-12-20T09:30:00+09:00[Asia/Tokyo]',
+      ]);
+    });
+
+    it('makes a range of the kind of the last range after the picker becomes empty', async () => {
+      const onValueChange = vi.fn();
+      const { user, setProps } = await renderPicker({
+        value: [
+          Temporal.ZonedDateTime.from('2026-11-18T09:30[Asia/Tokyo]'),
+          Temporal.ZonedDateTime.from('2026-11-20T17:45[Asia/Tokyo]'),
+        ],
+        defaultOpen: true,
+        onValueChange,
+      });
+      await waitFor(() => {
+        expect(dayButton('2026-11-16')).not.toBe(null);
+      });
+      await setProps({ value: [null, null] });
+
+      await user.click(dayButton('2026-11-16'));
+
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual([
+        '2026-11-16T09:30:00+09:00[Asia/Tokyo]',
+        null,
+      ]);
+    });
+  });
+
+  describe('the validity of the ends', () => {
+    it('makes the end field invalid when its day is before the start', async () => {
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+      });
+      const [start, end] = [...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')];
+      expect(end!.validity.rangeUnderflow).toBe(false);
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-17']);
+      expect(end!.validity.rangeUnderflow).toBe(true);
+      expect(end).toHaveAttribute('min', '2026-11-18');
+      expect(start!.validity.valid).toBe(true);
+    });
+
+    it('makes the end field invalid when the start moves after it, and valid when it moves back', async () => {
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+      });
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
+
+      segmentOf('start', 'day').focus();
+      await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}');
+
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-21', '2026-11-20']);
+      expect(end.validity.rangeUnderflow).toBe(true);
+
+      await user.keyboard('{ArrowDown}');
+
+      expect(end.validity.rangeUnderflow).toBe(false);
+    });
+
+    it('takes the later of the start and `minDate` for the limit of the end field', async () => {
+      const { container } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        minDate: day('2026-11-19'),
+      });
+      const [start, end] = [...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')];
+
+      expect(start).toHaveAttribute('min', '2026-11-19');
+      expect(end).toHaveAttribute('min', '2026-11-19');
+    });
+
+    it('shows the error in a Field, with the message of the end field', async () => {
+      const { user } = await render(
+        <Field.Root validationMode="onChange" data-testid="field">
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              timeZone: 'UTC',
+              defaultValue: range('2026-11-18', '2026-11-20'),
+            }}
+          />
+          <Field.Error match="rangeUnderflow" data-testid="error" />
+        </Field.Root>,
+      );
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toBeInTheDocument();
+      });
+      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid');
+    });
+  });
+
+  describe('prop: disabled and readOnly', () => {
+    it('does not open a disabled picker, and the fields ignore the user', async () => {
+      const { user } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        disabled: true,
+      });
+
+      await user.click(screen.getByTestId('trigger'));
+
+      expect(screen.queryByRole('dialog')).toBe(null);
+      expect(segmentOf('start', 'day')).toBeDisabled();
+      expect(segmentOf('end', 'day')).toBeDisabled();
+    });
+
+    it('is disabled by a disabled Field around it', async () => {
+      const { user } = await render(
+        <Field.Root disabled>
+          <DateRangePickerAnatomy
+            {...{ locale: 'en-US', defaultValue: range('2026-11-18', '2026-11-20') }}
+          />
+        </Field.Root>,
+      );
+
+      await user.click(screen.getByTestId('trigger'));
+
+      expect(screen.getByTestId('trigger')).toBeDisabled();
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+
+    it('does not open a read-only picker', async () => {
+      const { user } = await renderPicker({
+        defaultValue: range('2026-11-18', '2026-11-20'),
+        readOnly: true,
+      });
+
+      await user.click(screen.getByTestId('trigger'));
+
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+  });
+
+  describe('form', () => {
+    it('submits one entry for each end, with the names of the root', async () => {
+      const { container } = await render(
+        <form>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              defaultValue: range('2026-11-18', '2026-11-20'),
+              startName: 'from',
+              endName: 'to',
+            }}
+          />
+        </form>,
+      );
+
+      const data = new FormData(container.querySelector('form')!);
+
+      expect(data.getAll('from')).toEqual(['2026-11-18']);
+      expect(data.getAll('to')).toEqual(['2026-11-20']);
+    });
+
+    it('submits the start and no end for a range with one end', async () => {
+      const { container } = await render(
+        <form>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              defaultValue: [day('2026-11-18'), null],
+              startName: 'from',
+              endName: 'to',
+            }}
+          />
+        </form>,
+      );
+
+      const data = new FormData(container.querySelector('form')!);
+
+      expect(data.getAll('from')).toEqual(['2026-11-18']);
+      expect(data.getAll('to')).toEqual(['']);
+    });
+
+    // A control takes the name of its `Field`, so a `Field` with a name gives one name to the two
+    // hidden inputs.
+    it('has the name of a Field with a name in each hidden input, in the place of its own names', async () => {
+      const { container } = await render(
+        <Field.Root name="trip">
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              defaultValue: range('2026-11-18', '2026-11-20'),
+              startName: 'from',
+              endName: 'to',
+            }}
+          />
+        </Field.Root>,
+      );
+
+      const names = [...container.querySelectorAll('input[aria-hidden]')].map((input) =>
+        input.getAttribute('name'),
+      );
+
+      expect(names).toEqual(['trip', 'trip']);
+    });
+
+    it('needs a value in each end for `required`', async () => {
+      const { container } = await renderPicker({
+        defaultValue: [day('2026-11-18'), null],
+        required: true,
+      });
+      const [start, end] = [...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')];
+
+      expect(start).toBeRequired();
+      expect(end).toBeRequired();
+      expect(start!.validity.valueMissing).toBe(false);
+      expect(end!.validity.valueMissing).toBe(true);
+    });
+
+    it('goes back to its default range one time at a reset of the form, when it is not controlled', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <form>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              defaultValue: range('2026-11-18', '2026-11-20'),
+              startName: 'from',
+              endName: 'to',
+              onValueChange,
+            }}
+          />
+        </form>,
+      );
+
+      segmentOf('start', 'day').focus();
+      await user.keyboard('{ArrowDown}');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-17', '2026-11-20']);
+      onValueChange.mockClear();
+
+      container.querySelector('form')!.reset();
+
+      await waitFor(() => {
+        expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-20']);
+      });
+      // The two fields hear the same event, and the picker has one value.
+      await wait(20);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-18', '2026-11-20']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('none');
+      expect(onValueChange.mock.lastCall?.[1].event.type).toBe('reset');
+      expect(segmentOf('start', 'day').value).toBe('18');
+    });
+
+    it('does not change at a reset of the form, when it is controlled', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await render(
+        <form>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              value: range('2026-11-22', '2026-11-24'),
+              defaultValue: range('2026-11-18', '2026-11-20'),
+              onValueChange,
+            }}
+          />
+        </form>,
+      );
+
+      container.querySelector('form')!.reset();
+      await wait(20);
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-22', '2026-11-24']);
+    });
+  });
+
+  describe('exposed actions', () => {
+    it('closes the popup with `close()`, with the reason `imperative-action`', async () => {
+      const onOpenChange = vi.fn();
+      let root: { close(): void; unmount(): void } | undefined;
+      // A ref needs a vnode that a render function makes.
+      await render(() => (
+        <DateRangePicker.Root
+          defaultOpen
+          onOpenChange={onOpenChange}
+          ref={(value) => {
+            root = (value as typeof root | null) ?? root;
+          }}
+        >
+          <DateRangePicker.Trigger>Open</DateRangePicker.Trigger>
+          <DateRangePicker.Portal>
+            <DateRangePicker.Positioner>
+              <DateRangePicker.Popup aria-label="Choose dates">Content</DateRangePicker.Popup>
+            </DateRangePicker.Positioner>
+          </DateRangePicker.Portal>
+        </DateRangePicker.Root>
+      ));
+      const popup = await screen.findByRole('dialog');
+
+      root!.close();
+
+      await expectClosed(popup);
+      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('imperative-action');
+    });
+  });
+});
