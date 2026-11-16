@@ -594,6 +594,48 @@ describe('<Calendar.Root /> pages', () => {
       await hydrate(CalendarNavigationHydration, { serverHtml, props: { ...base, ...props } });
     });
 
+    // A `-u-` keyword gives the server other `Intl` data than the browser. A page whose first day
+    // changes, such as a Hebrew month or a page of weeks from Monday, then mounts again after the
+    // mount. Vue gives the caption of the new page a new id. A month keeps its first day when its
+    // weeks start on Monday, so it does not mount again.
+    it.each([
+      {
+        name: 'week numbers, a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { weekNumbers: true, selects: true },
+        renumberIds: false,
+        first: '2026-11-01',
+      },
+      {
+        name: 'the selects of a Hebrew server',
+        server: 'en-US-u-ca-hebrew',
+        props: { selects: true },
+        renumberIds: true,
+        first: '2026-11-01',
+      },
+      {
+        name: 'two weeks of a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { duration: 'weeks:2' },
+        renumberIds: true,
+        first: '2026-11-08',
+      },
+    ])(
+      'hydrates $name, then shows the grid of the browser',
+      async ({ server, props, renumberIds, first }) => {
+        const all = { ...base, ...props, locale: 'en-US' };
+        const serverHtml = await renderOnServer(file, { ...all, locale: server });
+
+        const { container } = await hydrate(CalendarNavigationHydration, {
+          serverHtml,
+          props: all,
+          renumberIds,
+        });
+
+        expect(container.querySelector('td[data-date]')).toHaveAttribute('data-date', first);
+      },
+    );
+
     it.each([
       {
         name: 'the month select',

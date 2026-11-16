@@ -47,7 +47,8 @@ function intlCalendar(calendar: string): string {
   return calendar === 'iso8601' ? 'gregory' : calendar;
 }
 
-function isTemporalCalendar(calendar: string): boolean {
+/** Whether `Temporal` has the calendar `calendar`. */
+export function isTemporalCalendar(calendar: string): boolean {
   try {
     Temporal.PlainDate.from('1970-01-01').withCalendar(calendar);
     return true;
@@ -114,6 +115,15 @@ export function weekInfo(locale: Intl.LocalesArgument): WeekInfo {
       ? Reflect.apply(method, resolved, [])
       : Reflect.get(resolved, 'weekInfo');
   return toWeekInfo(info) ?? { firstDay: 1, weekend: [6, 7] };
+}
+
+/**
+ * The days of the week of a text of numbers that spaces separate, such as `6 7`, or `undefined`
+ * for a text that is not valid.
+ */
+export function parseDaysOfWeek(text: string): DayOfWeek[] | undefined {
+  const days = text.split(' ').map(Number);
+  return days.every(isDayOfWeek) ? days : undefined;
 }
 
 /** The ten digits of the numbering system of a locale, from 0 to 9. */
