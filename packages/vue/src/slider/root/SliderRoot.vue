@@ -56,7 +56,7 @@ export interface SliderRootProps<
 >
   extends
     VaseUIComponentProps<SliderRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The uncontrolled value of the slider when it's initially rendered.
    *
@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
@@ -204,7 +204,6 @@ import { useFormContext } from '../../internals/form-context';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useFormReset } from '../../internals/useFormReset';
 import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -212,7 +211,7 @@ import { asc } from '../utils/asc';
 import { getSliderValue } from '../utils/getSliderValue';
 import { validateMinimumDistance } from '../utils/validateMinimumDistance';
 import { SliderRootContext } from './SliderRootContext';
-import type { ThumbMetadata } from './SliderRootContext';
+import type { ThumbInput, ThumbMetadata } from './SliderRootContext';
 import { sliderStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
@@ -459,15 +458,39 @@ function onValueCommitted(
   emit('valueCommitted', newValue as Value extends number ? number : Value, data);
 }
 
+const thumbInputs = new Set<ThumbInput>();
+
+function registerThumbInput(thumbInput: ThumbInput) {
+  thumbInputs.add(thumbInput);
+  return () => {
+    thumbInputs.delete(thumbInput);
+  };
+}
+
+// A form restore can change the inputs of several thumbs. The change of one thumb stops at the old
+// value of its neighbour. It also renders the other thumbs, and Vue then writes their state over
+// their restored inputs. The slider thus takes each changed input in one change.
+function takeChangedInputs(valueInput: number, index: number) {
+  const nextValues = values.value.slice();
+  nextValues[index] = clamp(valueInput, props.min, props.max);
+  const taken: ThumbInput[] = [];
+  for (const thumbInput of thumbInputs) {
+    const input = thumbInput.take();
+    // The thumb of the event also gives its input during its own take of the hydration. A change
+    // of that thumb alone still stops at its neighbours.
+    if (input !== undefined && input.index !== index) {
+      nextValues[input.index] = input.value;
+      taken.push(thumbInput);
+    }
+  }
+  return taken.length > 0 ? { values: nextValues.sort(asc), taken } : undefined;
+}
+
 function handleInputChange(valueInput: number, index: number, event: KeyboardEvent | Event) {
-  const newValue = getSliderValue(
-    valueInput,
-    index,
-    props.min,
-    props.max,
-    range.value,
-    values.value,
-  );
+  const changedInputs = takeChangedInputs(valueInput, index);
+  const newValue =
+    changedInputs?.values ??
+    getSliderValue(valueInput, index, props.min, props.max, range.value, values.value);
 
   if (validateMinimumDistance(newValue, props.step, props.minStepsBetweenValues)) {
     const reason = 'key' in event ? REASONS.keyboard : REASONS.inputChange;
@@ -485,6 +508,15 @@ function handleInputChange(valueInput: number, index: number, event: KeyboardEve
         createGenericEventDetails(reason, event as KeyboardEvent) as SliderRootCommitEventDetails,
       );
     }
+  }
+
+  if (changedInputs) {
+    // A listener can cancel the change, and a parent that controls the slider can keep its value.
+    void nextTick(() => {
+      changedInputs.taken.forEach((thumbInput) => {
+        thumbInput.writeValue();
+      });
+    });
   }
 }
 
@@ -527,14 +559,6 @@ watch(
   { flush: 'post' },
 );
 
-function getThumbInputs() {
-  const inputs: (HTMLInputElement | null)[] = [];
-  thumbRefs.value.forEach((thumb, index) => {
-    inputs[index] = thumb?.querySelector<HTMLInputElement>('input[type="range"]') ?? null;
-  });
-  return inputs;
-}
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -555,10 +579,14 @@ function resetToDefaultValue(event: Event) {
   return applied;
 }
 
-// Each thumb input has the same form. The reset thus follows only the first one.
-const firstThumbInput = computed(() => getThumbInputs().find((input) => input != null) ?? null);
+let handledReset: Event | undefined;
 
-useFormReset(firstThumbInput, (event) => {
+function reset(event: Event) {
+  if (event === handledReset) {
+    return;
+  }
+  handledReset = event;
+
   const previousValue = fieldValue.value;
 
   // `useValueChanged` sees no change when the slider clamps the default value to the current
@@ -568,7 +596,7 @@ useFormReset(firstThumbInput, (event) => {
   } else {
     clearFieldError(fieldValue.value);
   }
-});
+}
 
 const state = computed<SliderRootState>(() => ({
   ...fieldState.value,
@@ -591,6 +619,7 @@ provide(SliderRootContext, {
   validation,
   format: computed(() => props.format),
   handleInputChange,
+  registerThumbInput,
   indicatorPosition,
   setIndicatorPosition,
   inset: computed(() => props.thumbAlignment !== 'center'),
@@ -599,6 +628,7 @@ provide(SliderRootContext, {
   rootLabelId,
   registerLabelId,
   reaches: (target) => isInTreeOf(element.value, target),
+  reset,
   thumbMap,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,

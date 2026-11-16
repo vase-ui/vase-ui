@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineComponent, h, onMounted, shallowRef } from 'vue';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 defineProps<{
   composition:
@@ -49,7 +49,7 @@ const WrappedPanel = defineComponent({
     :default-layout="{ a: 20, b: 80 }"
   >
     <Resizable.Panel id="a" data-testid="a" />
-    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" aria-valuetext="Quarter" />
     <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'edges'" data-testid="root" drag-edges>

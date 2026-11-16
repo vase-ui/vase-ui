@@ -26,7 +26,7 @@ export interface ComboboxInputState extends FieldRootState {
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface ComboboxInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface ComboboxInputProps
@@ -44,7 +44,11 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
+import {
+  isTextControl,
+  useAriaAfterHydration,
+  useValueBeforeHydration,
+} from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -61,6 +65,7 @@ import { useDeferredServerRender, useLabelableContext } from '../../internals/la
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -221,9 +226,12 @@ function syncHandledValue() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
 }
 // At the mount the input can hold text that the user typed before the hydration, also in a
-// component in `as`. The last write of Vue, and the server HTML, have the text of the state.
+// component in `as`. The last write of Vue, and the server HTML, have the text of the state. The
+// browser removes the line breaks of that text from an input.
 onMounted(() => {
-  handledValue = displayText(inputValue.value);
+  const input = element.value;
+  const text = displayText(inputValue.value);
+  handledValue = isTextControl(input) ? sanitizeValue(input, text) : text;
 });
 watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
 
@@ -419,20 +427,25 @@ function getChipIndexForKey(event: KeyboardEvent, input: HTMLInputElement, selec
 
 function handleKeydown(event: VaseUIEvent<KeyboardEvent>) {
   const input = event.currentTarget as HTMLInputElement;
+  const state = toRaw(store.state);
 
-  // A textarea keeps the Home and End keys of the browser, as each other textarea does. The call
-  // also stops the list navigation, which takes the two keys when the input is in the popup
-  // (`VUE-97`).
-  if (input.tagName !== 'INPUT' && (event.key === 'Home' || event.key === 'End')) {
-    event.preventVaseUIHandler();
-    return;
+  if (event.key === 'Home' || event.key === 'End') {
+    // Home and End edit the text, also with a modifier key. The list navigation takes the two keys
+    // when the input is in the popup or the list is inline (`VUE-100`). Elsewhere its handler
+    // runs, because it records each key as keyboard input.
+    if (state.inputInsidePopup) {
+      event.preventVaseUIHandler();
+    }
+    // A textarea keeps the Home and End keys of the browser, as each other textarea does (`VUE-97`).
+    if (input.tagName !== 'INPUT') {
+      return;
+    }
   }
 
   if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
     return;
   }
 
-  const state = toRaw(store.state);
   const isOpen = open.value;
 
   if (isDisabled.value || state.readOnly) {
@@ -588,6 +601,8 @@ const { element, elementProps } = useRenderElement('input', props, {
   },
   stateAttributesMapping: triggerStateAttributesMapping,
 });
+
+useFormEntryValue(element, () => displayText(inputValue.value));
 
 const dismissButton = useDismissButton(
   element,

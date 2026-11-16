@@ -79,6 +79,14 @@
       "title": "does not navigate the list with arrow keys from portalled controls inside the popup",
       "kind": "not-applicable",
       "reason": "React sends the key of a portal up the React tree, so the list could get it. A Vue key goes up the DOM only, and a `Teleport` puts its content outside the list. The list thus gets no such key."
+    },
+    {
+      "upstream": "packages/react/src/combobox/group-label/ComboboxGroupLabel.test.tsx",
+      "describe": ["<Combobox.GroupLabel />", "a11y attributes"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/group-label/ComboboxGroupLabel.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
     }
   ],
   "surfaceAdditions": [

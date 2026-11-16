@@ -11,6 +11,8 @@ Base UI, arranged for Vue.
 
 Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3: the same unstyled, accessible components, with the same parts, data attributes and CSS variables, written as Vue components. It ships no styles. A vase should not pick your flowers.
 
+Vase UI also has some components that Base UI does not have, such as Resizable. [The parity page](https://vase-ui.com/parity) lists them.
+
 Vase UI is an independent project. It is not affiliated with MUI.
 
 ## Our guarantee

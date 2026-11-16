@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 
 describe('<Menu.RadioGroup />', () => {
@@ -157,5 +157,24 @@ describe('<Menu.RadioGroup />', () => {
     );
 
     expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'heading');
+  });
+
+  it('VUE-103: removes the id of its label for an aria-labelledby of null', async () => {
+    await render(
+      <Menu.Root open>
+        <Menu.RadioGroup data-testid="control">
+          <Menu.GroupLabel id="control-label">Control</Menu.GroupLabel>
+        </Menu.RadioGroup>
+        <Menu.RadioGroup aria-labelledby={null} data-testid="group">
+          <Menu.GroupLabel id="label">Label</Menu.GroupLabel>
+        </Menu.RadioGroup>
+      </Menu.Root>,
+    );
+
+    // Both groups get the id of their label in the same flush.
+    await waitFor(() => {
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'control-label');
+    });
+    expect(screen.getByTestId('group')).not.toHaveAttribute('aria-labelledby');
   });
 });

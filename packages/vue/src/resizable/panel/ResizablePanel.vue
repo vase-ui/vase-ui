@@ -165,6 +165,7 @@ import { useIsHydrating } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -233,11 +234,8 @@ const length = computed(() => root.lengthPanels.value.get(id.value));
 
 // A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
 // `collapsed` state until it shows again.
-const size = computed<number>(
-  (previous) =>
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel registers in `setup`, so the layout of the first computation has an entry for its id.
-    root.shown.value[id.value] ?? previous!,
-);
+// A panel that mounts while `KeepAlive` holds it has no size until it shows.
+const size = computed<number>((previous) => root.shown.value[id.value] ?? previous ?? 0);
 const collapsed = computed<boolean>((previous) => {
   const constraints = root.constraints.value.find((panel) => panel.id === id.value);
   // A panel that waits for its first measurement has no size, and it is not collapsed.
@@ -289,8 +287,9 @@ const { element, elementProps } = useRenderElement('div', props, {
 });
 
 // `KeepAlive` takes the panel out of the document. The root then gives its space to the other
-// panels, and the handles beside it do not name it.
-const deactivated = shallowRef(false);
+// panels, and the handles beside it do not name it. A panel that mounts while `KeepAlive` holds it
+// gets no `onDeactivated` call.
+const deactivated = shallowRef(isInHeldBranch());
 onDeactivated(() => {
   deactivated.value = true;
 });

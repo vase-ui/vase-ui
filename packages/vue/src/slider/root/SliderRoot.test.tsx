@@ -22,6 +22,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   heldMountListTests,
   hydrate,
   isJSDOM,
@@ -4245,6 +4246,117 @@ describe('<Slider.Root />', () => {
         expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
       });
 
+      it('keeps a reset that waits while KeepAlive hides and shows the slider', async () => {
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <Slider.Root name="price" defaultValue={30}>
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          ),
+          { mounted: true },
+        );
+        await render(() => (
+          <form data-testid="form">
+            <HeldBranch />
+          </form>
+        ));
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await hide();
+        await show();
+        await settleReset();
+
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '30');
+        expect(getFormData()).toEqual([['price', '30']]);
+      });
+
+      it('follows a program reset of a form that KeepAlive holds with the slider', async () => {
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <form data-testid="form">
+              <Slider.Root name="price" defaultValue={30}>
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+            </form>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        // A query cannot find the form while `KeepAlive` holds it.
+        const form = screen.getByTestId<HTMLFormElement>('form');
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+
+        await hide();
+        form.reset();
+        await settleReset();
+        await show();
+
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '30');
+      });
+
+      it('keeps a reset that waits when the first thumb of a range slider unmounts', async () => {
+        const withFirstThumb = shallowRef(true);
+        await render(() => (
+          <form data-testid="form">
+            <Slider.Root name="price" defaultValue={[20, 80]}>
+              <Slider.Control>
+                {withFirstThumb.value ? <Slider.Thumb index={0} /> : null}
+                <Slider.Thumb index={1} />
+              </Slider.Control>
+            </Slider.Root>
+          </form>
+        ));
+        await fireEvent.change(getInputs()[1], { target: { value: '90' } });
+        expect(getInputs()[1]).toHaveAttribute('aria-valuenow', '90');
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        withFirstThumb.value = false;
+        await flushMicrotasks();
+        await settleReset();
+
+        expect(getInputs()).toHaveLength(1);
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '80');
+      });
+
+      it('emits one valueChange for a reset of a range slider whose listener cancels it', async () => {
+        const handleValueChange = vi.fn(
+          (_value: number[], details: Slider.Root.ChangeEventDetails) => {
+            if (details.event.type === 'reset') {
+              details.cancel();
+            }
+          },
+        );
+        await render(
+          <form data-testid="form">
+            <Slider.Root name="price" defaultValue={[20, 80]} onValueChange={handleValueChange}>
+              <Slider.Control>
+                <Slider.Thumb />
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          </form>,
+        );
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+        handleValueChange.mockClear();
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(handleValueChange).toHaveBeenCalledTimes(1);
+        expect(getInputs().map((input) => input.getAttribute('aria-valuenow'))).toEqual([
+          '55',
+          '80',
+        ]);
+      });
+
       it('keeps the value of a slider whose listener cancels the change of the reset, and commits nothing', async () => {
         const handleValueCommitted = vi.fn();
         await render(
@@ -4275,6 +4387,21 @@ describe('<Slider.Root />', () => {
         expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
         expect(getFormData()).toEqual([['price', '55']]);
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <Slider.Root name="price" defaultValue={30}>
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>
+      ),
+      change: () => fireEvent.change(getInputs()[0], { target: { value: '55' } }),
+      readState: () => getInputs()[0]?.getAttribute('aria-valuenow'),
+      defaultState: '30',
+      changedState: '55',
     });
 
     describe('VUE-21: a native reset removes the error of the field', () => {

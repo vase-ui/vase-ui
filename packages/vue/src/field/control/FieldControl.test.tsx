@@ -1399,6 +1399,27 @@ describe('<Field.Control />', () => {
       expect(label.id).not.toBe('');
       expect(control).toHaveAttribute('aria-labelledby', label.id);
     });
+
+    it('VUE-103: removes the description of the field for an aria-describedby of null', async () => {
+      await render(
+        <div>
+          <Field.Root>
+            <Field.Control data-testid="described" />
+            <Field.Description data-testid="description">Your full name.</Field.Description>
+          </Field.Root>
+          <Field.Root>
+            <Field.Control aria-describedby={null} data-testid="undescribed" />
+            <Field.Description>Your full name.</Field.Description>
+          </Field.Root>
+        </div>,
+      );
+
+      const description = screen.getByTestId('description');
+      await waitFor(() => {
+        expect(screen.getByTestId('described')).toHaveAttribute('aria-describedby', description.id);
+      });
+      expect(screen.getByTestId('undescribed')).not.toHaveAttribute('aria-describedby');
+    });
   });
 
   describe('native form', () => {
