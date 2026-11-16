@@ -5,6 +5,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   popupConformanceTests,
   screen,
   waitFor,
@@ -879,6 +880,30 @@ describe('<DateRangePicker.Root />', () => {
   });
 
   describe('form', () => {
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <DateRangePickerAnatomy
+          {...{
+            locale: 'en-US',
+            timeZone: 'UTC',
+            startName: 'from',
+            endName: 'to',
+            defaultValue: range('2026-11-18', '2026-11-20'),
+            calendarProps: { today: today() },
+          }}
+        />
+      ),
+      change: () =>
+        fireEvent.input(document.querySelector<HTMLInputElement>('input[aria-hidden]')!, {
+          target: { value: '2026-11-10' },
+        }),
+      readState: () =>
+        screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
+      defaultState: ['11', '18', '2026', '11', '20', '2026'],
+      changedState: ['11', '10', '2026', '11', '20', '2026'],
+    });
+
     it('submits one entry for each end, with the names of the root', async () => {
       const { container } = await render(
         <form>
