@@ -3707,6 +3707,47 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(secondRender).not.toHaveBeenCalled();
     });
 
+    it('does not render the popup again when the highlight moves', async () => {
+      const popupRender = vi.fn();
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup
+                  v-slots={{
+                    render: ({ props }: { props: HTMLProps }) => {
+                      popupRender();
+                      return (
+                        <div {...props}>
+                          <Menu.Input aria-label="Filter actions" />
+                          <Menu.List>
+                            <Menu.Item>Rename</Menu.Item>
+                            <Menu.Item>Delete</Menu.Item>
+                          </Menu.List>
+                        </div>
+                      );
+                    },
+                  }}
+                />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await user.click(input);
+      popupRender.mockClear();
+
+      await user.keyboard('[ArrowDown]');
+
+      expect(input).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('menuitem', { name: 'Rename' }).id,
+      );
+      expect(popupRender).not.toHaveBeenCalled();
+    });
+
     const KeyboardNavigationMenu = defineComponent(() => () => (
       <Menu.FilterProvider>
         <Menu.Root>

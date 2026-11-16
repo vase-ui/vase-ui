@@ -127,7 +127,7 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
 
 type CreatePopupRootStore<Store extends PopupRootStore> = (
   initialState: PopupRootInitialState,
-  defaultPopupId: string | undefined,
+  defaultPopupId: string,
 ) => Store;
 
 export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick<
@@ -160,22 +160,6 @@ export function usePopupRoot<Store extends PopupRootStore>(
   createStore: CreatePopupRootStore<Store>,
   options: UsePopupRootOptions<Store>,
 ) {
-  return usePopupRootWithPopupId(props, createStore, useVaseUiId(), options);
-}
-
-/**
- * Does what `usePopupRoot` does, for a root that gives its own default popup id instead of a
- * generated one. Call it in `setup` of the root.
- *
- * @param defaultPopupId The default popup id, or a ref or a getter of it. `undefined` leaves the
- * popup with no default id. The store follows each change of the id.
- */
-export function usePopupRootWithPopupId<Store extends PopupRootStore>(
-  props: PopupRootProps,
-  createStore: CreatePopupRootStore<Store>,
-  defaultPopupId: MaybeRefOrGetter<string | undefined>,
-  options: UsePopupRootOptions<Store>,
-) {
   const store = usePopupRootStore(
     {
       open: props.defaultOpen ?? false,
@@ -184,7 +168,6 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
       triggerIdProp: props.triggerId,
     },
     createStore,
-    defaultPopupId,
     options,
   );
   usePopupRootOpenState(store, props, options.name);
@@ -322,7 +305,6 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
       triggerIdProp: undefined,
     },
     createStore,
-    useVaseUiId(),
     options,
   );
   usePopupRootOpenState(store, props, options.name);
@@ -336,20 +318,15 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
 }
 
 /**
- * Makes the store of a popup root, gives it the functions of the part, and keeps the default popup
- * id and `nested` current.
+ * Makes the store of a popup root with a generated default popup id, gives it the functions of the
+ * part, and keeps `nested` current.
  */
 function usePopupRootStore<Store extends PopupRootStore>(
   initialState: PopupRootInitialState,
   createStore: CreatePopupRootStore<Store>,
-  defaultPopupId: MaybeRefOrGetter<string | undefined>,
   options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
 ) {
-  const store = createStore(initialState, toValue(defaultPopupId));
-  watch(
-    () => toValue(defaultPopupId),
-    (id) => store.set('defaultPopupId', id),
-  );
+  const store = createStore(initialState, useVaseUiId().value);
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;
 

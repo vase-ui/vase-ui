@@ -1,13 +1,4 @@
-import {
-  computed,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  toRaw,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, provide, toRaw, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
@@ -27,7 +18,7 @@ import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
-import { usePopupRootSync, usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
+import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
   usePopupInteractionProps,
@@ -133,14 +124,10 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
 
   const rootId = useVaseUiId();
-  const generatedPopupId = useVaseUiId();
-  const renderedPopupId = shallowRef<string | undefined>(undefined);
 
   function isDisabled() {
     return (props.disabled ?? false) || (toValue(options.disabled) ?? false);
   }
-
-  const defaultPopupId = computed(() => renderedPopupId.value ?? generatedPopupId.value);
 
   const floatingParentNodeIdFromContext = useFloatingParentNodeId();
 
@@ -159,9 +146,9 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   // suppresses the enter transition on both popups or neither.
   const seededInstantType = animateInitialOpen ? parentMenuState?.instantType : undefined;
 
-  const { store, open, payload, transitionStatus, actions } = usePopupRootWithPopupId(
+  const { store, open, payload, transitionStatus, actions } = usePopupRoot(
     props,
-    (initialState, initialPopupId) => {
+    (initialState, defaultPopupId) => {
       const menuStore = new MenuStore<Payload>(
         {
           ...initialState,
@@ -172,12 +159,11 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
           rootId: rootId.value,
           instantType: seededInstantType,
         },
-        initialPopupId,
+        defaultPopupId,
       );
       menuStore.context.virtualFocusRef = options.virtualFocusRef;
       return menuStore;
     },
-    defaultPopupId,
     {
       name: 'Menu',
       handle: () => props.handle,
@@ -571,30 +557,6 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return rest;
   }
 
-  let previousPopup:
-    { floating: Record<string, unknown>; props: ReturnType<typeof mergeProps<'div'>> } | undefined;
-
-  // Under virtual focus the input holds `aria-activedescendant`, so the popup does not need it. The
-  // props of the popup then stay one object while the highlight moves. A new object renders the
-  // focus manager again, and Vue then patches each item again.
-  function getPopupProps() {
-    const { 'aria-activedescendant': _activeDescendant, ...floating } = listNavigation.value
-      .floating as Record<string, unknown>;
-    if (previousPopup === undefined || !isShallowEqual(previousPopup.floating, floating)) {
-      previousPopup = {
-        floating,
-        props: mergeProps(
-          FOCUSABLE_POPUP_PROPS,
-          popupListeners,
-          typeahead.floating,
-          floating,
-          dismiss.floating,
-        ),
-      };
-    }
-    return previousPopup.props;
-  }
-
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: mergeProps(
       typeahead.reference,
@@ -608,15 +570,13 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       interactionTypeProps,
     ),
     inactiveTriggerProps,
-    popupProps: virtualFocus
-      ? getPopupProps()
-      : mergeProps(
-          FOCUSABLE_POPUP_PROPS,
-          popupListeners,
-          typeahead.floating,
-          listNavigation.value.floating,
-          dismiss.floating,
-        ),
+    popupProps: mergeProps(
+      FOCUSABLE_POPUP_PROPS,
+      popupListeners,
+      typeahead.floating,
+      listNavigation.value.floating,
+      dismiss.floating,
+    ),
     itemProps: listNavigation.value.item,
     inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
   }));
@@ -635,10 +595,6 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     orientation,
     loopFocus,
     allowEscape,
-    generatedPopupId: generatedPopupId.value,
-    setRenderedPopupId(id) {
-      renderedPopupId.value = id;
-    },
     popupLabelId,
     virtualFocus,
     parentVirtualFocus,
@@ -659,9 +615,4 @@ function isInContextMenu(menuParent: MenuParent): boolean {
   return menuParent.type === 'menu'
     ? isInContextMenu(menuParent.store.select('parent'))
     : menuParent.type === 'context-menu';
-}
-
-function isShallowEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
-  const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
 }
