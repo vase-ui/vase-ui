@@ -284,7 +284,7 @@ export function readPartBadges(
       const title = tag.split('.').at(1);
       if (title === undefined || !file.parts.some(({ name }) => name === title)) {
         throw new Error(
-          `${page.file} has the badge ${badge} on the heading above <${tag}>, but ${file.file} has no part for that tag. The reference shows a badge only on the heading of a part, so the site would not show this badge. Write [${badge}] at the end of the heading that the page of the site has for <${tag}>. Then change \`readPartBadges\` in scripts/docs/apiReference.ts so that it accepts <${tag}> when the page has that heading.`,
+          `The Base UI page ${page.file} has the badge ${badge} on the heading above <${tag}>, but ${file.file} has no part for that tag. The reference shows a badge only on the heading of a part, so the site would not show this badge. Write [${badge}] at the end of the heading that the page of the site has for <${tag}>. Then change \`readPartBadges\` in scripts/docs/apiReference.ts so that it accepts <${tag}> when the page of the site has the badge on that heading.`,
         );
       }
       return [title, badge];

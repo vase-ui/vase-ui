@@ -382,11 +382,11 @@ test('the reference of an own component takes a name of its parts for a componen
 const PAGE = 'docs/src/app/(docs)/react/components/sample/page.mdx';
 
 function makePage(referenceBadges: Record<string, HeadingBadge>) {
-  return [{ file: PAGE, referenceTags: Object.keys(referenceBadges), referenceBadges }];
+  return { file: PAGE, referenceTags: Object.keys(referenceBadges), referenceBadges };
 }
 
 test('a part has the badge that the Base UI page shows on the heading above its tag, and each other part has none', () => {
-  const badges = readPartBadges(types, makePage({ 'TypesSample.Popup': 'Preview' }));
+  const badges = readPartBadges(types, [makePage({ 'TypesSample.Popup': 'Preview' })]);
   assert.deepEqual(
     buildApiParts(project, ENTRY, types, badges).map(({ name, badge }) => [name, badge]),
     [
@@ -401,18 +401,18 @@ test('a types.md has no badge from a page with no badge, or from the page of ano
     readPartBadges(types, [{ file: PAGE, referenceTags: ['TypesSample.Popup'] }]),
     new Map(),
   );
-  const otherPage = makePage({ 'TypesSample.Popup': 'New' }).map((page) => ({
-    ...page,
+  const otherPage = {
+    ...makePage({ 'TypesSample.Popup': 'New' }),
     file: 'docs/src/app/(docs)/react/components/other/page.mdx',
-  }));
-  assert.deepEqual(readPartBadges(types, otherPage), new Map());
+  };
+  assert.deepEqual(readPartBadges(types, [otherPage]), new Map());
 });
 
 for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
   test(`the reference refuses a badge on the heading of <${tag}>, which is not the heading of a part`, () => {
-    assert.throws(() => readPartBadges(types, makePage({ [tag]: 'New' })), {
+    assert.throws(() => readPartBadges(types, [makePage({ [tag]: 'New' })]), {
       message: new RegExp(
-        `^docs/src/app/\\(docs\\)/react/components/sample/page\\.mdx has the badge New on the heading above <${tag}>, but docs/src/app/\\(docs\\)/react/components/sample/types\\.md has no part for that tag\\. `,
+        `^The Base UI page docs/src/app/\\(docs\\)/react/components/sample/page\\.mdx has the badge New on the heading above <${tag}>, but docs/src/app/\\(docs\\)/react/components/sample/types\\.md has no part for that tag\\. `,
       ),
     });
   });
