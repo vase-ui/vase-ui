@@ -120,6 +120,18 @@ describe('<DatePicker.Calendar />', () => {
     });
   });
 
+  // `Calendar.Root` shows the outside days of a broadcast calendar when `showOutsideDays` is absent.
+  it('gives an absent `showOutsideDays` to the calendar as absent', async () => {
+    await renderOpen({
+      defaultValue: day('2026-11-18'),
+      calendarProps: { today: today(), broadcastCalendar: true },
+    });
+
+    await waitFor(() => {
+      expect(dayButton('2026-10-28')).toHaveAttribute('data-outside-month');
+    });
+  });
+
   describe('the picker owns the limits', () => {
     it('disables the days outside `minDate` and `maxDate`, and the field gets the same limits', async () => {
       const { container } = await renderOpen({
