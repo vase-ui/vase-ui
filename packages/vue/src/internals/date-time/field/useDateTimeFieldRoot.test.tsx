@@ -1185,6 +1185,39 @@ describe('useDateTimeFieldRoot', () => {
         props: { defaultValue: '2026-11-01T12:00', minDate: '2026-11-02' },
         flag: 'rangeUnderflow',
       },
+      {
+        name: 'a date and time before the least time',
+        props: {
+          defaultValue: '2026-11-14T09:59',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+        flag: 'rangeUnderflow',
+      },
+      {
+        name: 'a date and time on the least time',
+        props: {
+          defaultValue: '2026-11-14T10:00',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+        flag: 'valid',
+      },
+      {
+        name: 'a date and time after the greatest time',
+        props: {
+          defaultValue: '2026-11-14T17:31',
+          maxDate: Temporal.PlainDateTime.from('2026-11-14T17:30'),
+        },
+        flag: 'rangeOverflow',
+      },
+      {
+        name: 'a date and time that shows no time',
+        props: {
+          defaultValue: '2026-11-14T09:00',
+          granularity: 'day',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+        flag: 'valid',
+      },
       { name: 'an empty required field', props: { required: true }, flag: 'valueMissing' },
     ] as const)('gives the native validity of $name', async ({ props, flag }) => {
       const { container } = await render(<DateTimeFieldProbe locale="en-US" {...props} />);
@@ -1202,6 +1235,34 @@ describe('useDateTimeFieldRoot', () => {
       {
         name: 'a zoned value before the least day',
         props: { defaultValue: '2026-11-01T12:00[Asia/Tokyo]', minDate: '2026-11-02' },
+        prepare: '',
+        message: 'later',
+      },
+      {
+        name: 'a zoned value before the least time',
+        props: {
+          defaultValue: '2026-11-14T09:59[Asia/Tokyo]',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+        prepare: '',
+        message: 'later',
+      },
+      {
+        name: 'a zoned value after the greatest time',
+        props: {
+          defaultValue: '2026-11-14T17:31[Asia/Tokyo]',
+          maxDate: Temporal.ZonedDateTime.from('2026-11-14T17:30[Asia/Tokyo]'),
+        },
+        prepare: '',
+        message: 'earlier',
+      },
+      {
+        name: 'a zoned value before a least limit in another zone',
+        // 19:00 in New York on 9 November is 00:00 UTC, and 10:00 in Tokyo is 01:00 UTC.
+        props: {
+          defaultValue: '2026-11-09T19:00[America/New_York]',
+          minDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]'),
+        },
         prepare: '',
         message: 'later',
       },
@@ -1312,6 +1373,36 @@ describe('useDateTimeFieldRoot', () => {
       await flushMicrotasks();
 
       expect(screen.queryByTestId('error')).toBe(null);
+    });
+
+    it.each([
+      {
+        name: 'a zoned value on the least time',
+        props: {
+          defaultValue: '2026-11-14T10:00[Asia/Tokyo]',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+      },
+      {
+        name: 'a zoned value after a least limit in another zone',
+        // 05:00 in New York on 10 November is 10:00 UTC, and 10:00 in Tokyo is 01:00 UTC.
+        props: {
+          defaultValue: '2026-11-10T05:00[America/New_York]',
+          minDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]'),
+        },
+      },
+      {
+        name: 'a zoned value that shows no time',
+        props: {
+          defaultValue: '2026-11-14T09:00[Asia/Tokyo]',
+          granularity: 'day',
+          minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+      },
+    ] as const)('gives no custom error for $name', async ({ props }) => {
+      const { container } = await render(<DateTimeFieldProbe locale="en-US" {...props} />);
+
+      expect(hiddenInputOf(container).validity.valid).toBe(true);
     });
 
     it('takes the custom error back when the entry is complete again', async () => {

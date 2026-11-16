@@ -60,14 +60,6 @@ function onFocusin(event: FocusEvent) {
   range.preview(day.value);
 }
 
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && range.cancel(event)) {
-    event.preventDefault();
-    return;
-  }
-  root.onDayKeydown(day.value, event);
-}
-
 function onPointerenter(event: PointerEvent) {
   if (event.pointerType !== 'touch') {
     range.preview(day.value);
@@ -143,7 +135,6 @@ const { element, elementProps, text } = useDayButton(props, {
     style: { touchAction: 'none' },
     onClick,
     onFocusin,
-    onKeydown,
     onPointercancel,
     onPointerdown,
     onPointerenter,

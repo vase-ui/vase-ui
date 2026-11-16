@@ -71,11 +71,15 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
    */
   hideTimeZone?: boolean | undefined;
   /**
-   * The earliest date that the field accepts. A date before it makes the field invalid.
+   * The earliest date that the field accepts. A date before it makes the field invalid. A
+   * `Temporal.PlainDate` limits whole days. A limit with a time also limits the time of a field that
+   * shows a time. A zoned limit limits a zoned value by the moment, also in another time zone.
    */
   minDate?: DateValue | undefined;
   /**
-   * The latest date that the field accepts. A date after it makes the field invalid.
+   * The latest date that the field accepts. A date after it makes the field invalid. A
+   * `Temporal.PlainDate` limits whole days. A limit with a time also limits the time of a field that
+   * shows a time. A zoned limit limits a zoned value by the moment, also in another time zone.
    */
   maxDate?: DateValue | undefined;
   /**
