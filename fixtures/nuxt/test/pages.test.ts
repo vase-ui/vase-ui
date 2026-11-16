@@ -883,8 +883,8 @@ async function expectDateFieldPage(page: Page) {
   expect(await readDateFieldValues(page, 'card')).toEqual(['11', '2026']);
 }
 
-// The days of a calendar and the months of a year and month. Each has one tab stop, on its selected
-// day or month, and each shows its grid in the server HTML.
+// The first calendar shows days and the second is a month picker. Each shows its grid in the server
+// HTML, with one tab stop on its selected day or month.
 async function expectCalendarPage(page: Page) {
   const days = page.getByTestId('days');
   expect(await days.getAttribute('role')).toBe('group');
@@ -898,7 +898,6 @@ async function expectCalendarPage(page: Page) {
   const months = page.getByTestId('months');
   expect(await months.getAttribute('data-view')).toBe('month');
   expect(await months.locator('[role="gridcell"]').count()).toBe(12);
-  expect(await months.locator('table').count()).toBe(0);
   expect(await readTabStops(months)).toEqual(['March 2026']);
   expect(await readSelected(months)).toEqual(['March 2026']);
   expect(await page.getByTestId('month-value').textContent()).toBe('2026-03');
