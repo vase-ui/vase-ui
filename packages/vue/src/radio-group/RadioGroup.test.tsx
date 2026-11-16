@@ -7,6 +7,7 @@ import {
   h,
   KeepAlive,
   onMounted,
+  onUpdated,
   shallowRef,
   Teleport,
   watch,
@@ -3443,6 +3444,33 @@ describe('<RadioGroup />', () => {
       expect(handleSubmit.mock.lastCall?.[0]).toEqual({ fruit: 'a' });
     });
 
+    it('exposes no held input in an `onUpdated` hook of the update that deactivates the radios', async () => {
+      const visible = shallowRef(true);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const exposedInputs: (HTMLInputElement | null)[] = [];
+      const Radios = defineComponent(() => renderRadios);
+      const App = defineComponent(() => {
+        onUpdated(() => {
+          exposedInputs.push(group.value?.inputElement ?? null);
+        });
+        return () => {
+          // A read in the slot would update only the group, and `onUpdated` would not run.
+          const isVisible = visible.value;
+          return (
+            <RadioGroup ref={group} defaultValue="a">
+              <KeepAlive>{isVisible ? <Radios /> : <Placeholder />}</KeepAlive>
+            </RadioGroup>
+          );
+        };
+      });
+      await render(<App />);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(exposedInputs).toEqual([null]);
+    });
+
     it('does not let the inputs of deactivated radios block the form', async () => {
       const { App, visible, handleSubmit } = createApp(() => ({}));
       const { user } = await render(<App />);
@@ -4253,6 +4281,20 @@ describe('<RadioGroup />', () => {
           clientValue: null,
         },
       ],
+    });
+
+    it('exposes the checked input in an `onMounted` hook of the hydration', async () => {
+      const props = { defaultValue: 'b' };
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+      const mountedInputs: (HTMLInputElement | null)[] = [];
+
+      await hydrate(RadioGroupHydration, {
+        serverHtml,
+        props: { ...props, onMount: (input: HTMLInputElement | null) => mountedInputs.push(input) },
+      });
+
+      // `hydrate` mounts the fixture on the client first, so the last call comes from the hydration.
+      expect(mountedInputs.at(-1)).toBe(getInput('b'));
     });
   });
 

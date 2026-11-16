@@ -2,7 +2,6 @@ import {
   computed,
   inject,
   nextTick,
-  onDeactivated,
   onMounted,
   provide,
   shallowReactive,
@@ -20,7 +19,7 @@ import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/
 import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../field-register-control';
+import { useInputRegistration, useRegisterFieldControl } from '../../field-register-control';
 import { fieldValidityMapping } from '../../field-constants';
 import { useClearFieldError, useFieldRootContext } from '../../field-root-context';
 import { useFormContext } from '../../form-context';
@@ -35,7 +34,6 @@ import {
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
 import { useFormRestoreAsInput } from '../../useFormRestore';
-import { useKeepAliveState } from '../../useKeepAliveState';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
@@ -864,59 +862,21 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     void nextTick(writeValueToHiddenInput);
   }
 
-  // Vue calls a ref setter during a render, so the setter reads no reactive state.
-  let heldInput: HTMLInputElement | null = null;
-  let unregisterInput: (() => void) | void;
-  // `KeepAlive` takes the input out of the document, and the field must not use an input that is
-  // not in the document. A held required field that is empty would block the submit of its form.
-  const { isHeld, shown } = useKeepAliveState();
-
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
   // invalid input in the document.
-  function updateInputRegistration() {
-    unregisterInput?.();
-    unregisterInput = heldInput
-      ? validation.registerInput(heldInput, {
-          controlRef: () => firstSegment.value,
-          get value() {
-            return hiddenText.value;
-          },
-        })
-      : undefined;
-  }
+  useInputRegistration(hiddenInputElement, (input) =>
+    validation.registerInput(input, {
+      controlRef: () => firstSegment.value,
+      get value() {
+        return hiddenText.value;
+      },
+    }),
+  );
 
   function setHiddenInput(input: unknown) {
-    const next = input as HTMLInputElement | null;
-    // Vue calls a function ref again on each patch, with the same element.
-    if (next === heldInput) {
-      return;
-    }
-    heldInput = next;
-    hiddenInputElement.value = next;
-    updateInputRegistration();
+    hiddenInputElement.value = input as HTMLInputElement | null;
   }
-
-  function releaseInput() {
-    unregisterInput?.();
-    unregisterInput = undefined;
-  }
-
-  onDeactivated(releaseInput);
-
-  // The `ref` setter of a root that mounts in a held branch registers the input. `isHeld` is
-  // already `true` then, so the input is a source of the `watch`.
-  watch([isHeld, hiddenInputElement], ([held]) => {
-    if (held) {
-      releaseInput();
-    }
-  });
-
-  // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. The
-  // release before the registration keeps one cleanup for each registration. The field finds its
-  // input by its position in the document, so the order of the watchers decides only between
-  // inputs in two trees.
-  watch(shown, updateInputRegistration);
 
   watch(
     hiddenInputElement,
