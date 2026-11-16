@@ -14,6 +14,7 @@ defineProps<{
 
 <template>
   <TimePicker.Root open>
+    <TimePicker.Trigger>Open</TimePicker.Trigger>
     <TimePicker.Portal>
       <TimePicker.Positioner
         v-if="hasRenderSlot"
