@@ -176,7 +176,7 @@ describe('createRenderer', () => {
       // WebKit. A click right after a mount comes in the millisecond of the mount, unless the helper
       // waits. `Date.now()` adds `offset`. At its first read that is later than `stepAfter`, it steps
       // back. At its first read after the time `lateReadAfter` of `performance.now()`, it gives a
-      // time that is 3 ms later, one time. The clocks do not step.
+      // time that is 3 ms later than the clock, one time. The clocks do not step.
       function mockClocks() {
         let microseconds = Date.now() * 1000;
         offset = 0;
@@ -223,7 +223,8 @@ describe('createRenderer', () => {
 
       // The helper reads each clock one time to find the latest stamp, and each read moves the
       // clocks by 0.01 ms. A late read that comes 0.05 ms after `onMounted` is thus a read of the
-      // loop that waits, not a read of the latest stamp.
+      // loop that waits, not a read of the latest stamp. A late read of the latest stamp only makes
+      // the wait longer, so it does not test the loop.
       const LateReadAfterMount = defineComponent(() => {
         onMounted(() => {
           lateReadAfter = performance.now() + 0.05;
