@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, takeReportedMessages } from '#test-utils';
 import { useComboboxItemContext } from './ComboboxItemContext';
@@ -13,15 +13,9 @@ describe('ComboboxItemContext', () => {
       return () => null;
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<Consumer />)).rejects.toThrow(
-        'Vase UI: <Combobox.ItemIndicator> must be inside <Combobox.Item>. Without an item the indicator has no selected state. Put the part inside <Combobox.Item>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<Consumer />)).rejects.toThrow(
+      'Vase UI: <Combobox.ItemIndicator> must be inside <Combobox.Item>. Without an item the indicator has no selected state. Put the part inside <Combobox.Item>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

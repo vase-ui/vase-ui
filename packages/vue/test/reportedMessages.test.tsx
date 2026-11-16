@@ -18,6 +18,15 @@ const WarningOnUnmountPart = defineComponent({
   },
 });
 
+const ConsoleWarningOnUnmountPart = defineComponent({
+  setup() {
+    onUnmounted(() => {
+      console.warn('message of the unmount');
+    });
+    return () => <i />;
+  },
+});
+
 const ThrowingPart = defineComponent({
   setup() {
     throw new Error('error raised in the setup');
@@ -45,6 +54,15 @@ describe('reported messages', () => {
   it('fails a test in which the unmount makes Vue warn', { fails: true }, async () => {
     await render(<WarningOnUnmountPart />);
   });
+
+  it(
+    'fails a test in which the unmount calls console.warn while a spy replaces it',
+    { fails: true },
+    async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await render(<ConsoleWarningOnUnmountPart />);
+    },
+  );
 
   it('gives the Vue warning to a test that takes it', async () => {
     await render(<WarningPart />);

@@ -64,8 +64,10 @@ defineProps<{
     <template v-if="content" #default>
       <component :is="content" />
     </template>
-    <template #render="{ props }">
-      <div v-bind="props" />
+    <template #render="{ props, children }">
+      <div v-bind="props">
+        <component :is="children" v-if="children" />
+      </div>
     </template>
   </component>
 </template>

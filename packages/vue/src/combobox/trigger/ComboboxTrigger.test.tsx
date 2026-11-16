@@ -164,7 +164,7 @@ describe('<Combobox.Trigger />', () => {
   it.each([
     {
       name: 'single selection',
-      control: (
+      control: () => (
         <Combobox.Root defaultValue="apple">
           <Combobox.Trigger data-testid="trigger" />
         </Combobox.Root>
@@ -173,7 +173,7 @@ describe('<Combobox.Trigger />', () => {
     },
     {
       name: 'no selection',
-      control: (
+      control: () => (
         <Autocomplete.Root defaultValue="query">
           <Autocomplete.Trigger data-testid="trigger" />
         </Autocomplete.Root>
@@ -184,7 +184,7 @@ describe('<Combobox.Trigger />', () => {
     const validate = vi.fn();
     await render(
       <Field.Root validationMode="onBlur" validate={validate}>
-        {control}
+        {control()}
       </Field.Root>,
     );
 

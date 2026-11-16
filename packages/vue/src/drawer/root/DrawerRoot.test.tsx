@@ -963,14 +963,15 @@ describe('<Drawer.Root />', () => {
     handle.openWithPayload(8);
     handle.open('trigger');
     handle.close();
-    const detachedWarnings = consoleWarn.mock.calls.filter(
-      ([message]) =>
-        typeof message === 'string' && message.includes('no root that uses this handle is mounted'),
-    );
+    const messages = consoleWarn.mock.calls.map(([message]) => String(message));
     consoleWarn.mockRestore();
 
     expect(handle.isOpen).toBe(false);
-    expect(detachedWarnings).toHaveLength(3);
+    expect(messages).toEqual([
+      expect.stringContaining('openWithPayload() was called while no root that uses this handle'),
+      expect.stringContaining('.open() was called while no root that uses this handle'),
+      expect.stringContaining('.close() was called while no root that uses this handle'),
+    ]);
 
     await user.click(screen.getByRole('button', { name: 'Remount root' }));
     expect(screen.getByTestId('payload').textContent).toBe('No payload');

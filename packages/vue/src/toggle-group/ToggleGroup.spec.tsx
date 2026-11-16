@@ -9,6 +9,9 @@ const toggleValueReadonly = (value: NonNullable<ToggleGroup.Props['value']>) =>
 
 const values = ['a', 'b', 'c'];
 
+// `null` is an empty value.
+<ToggleGroup value={null} defaultValue={null} />;
+
 <ToggleGroup
   value={values}
   onValueChange={(value) => {

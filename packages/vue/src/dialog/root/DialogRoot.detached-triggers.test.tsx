@@ -443,7 +443,6 @@ describe('<Dialog.Root />', () => {
 
     it('opens from a descendant layout effect on initial mount', async () => {
       const handle = Dialog.createHandle();
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const OpenOnMount = defineComponent({
         setup() {
@@ -460,18 +459,12 @@ describe('<Dialog.Root />', () => {
         </Dialog.Root>
       ));
 
-      const detachedWarned = consoleWarn.mock.calls.some(
-        ([message]) => typeof message === 'string' && message.includes(DETACHED_WARNING),
-      );
-      consoleWarn.mockRestore();
-
-      expect(detachedWarned).toBe(false);
+      expect(takeReportedMessages()).toEqual([]);
       expect(handle.isOpen).toBe(true);
     });
 
     it('opens with a payload from a descendant layout effect on initial mount', async () => {
       const handle = Dialog.createHandle<number>();
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const OpenOnMount = defineComponent({
         setup() {
@@ -495,19 +488,13 @@ describe('<Dialog.Root />', () => {
         </Dialog.Root>
       ));
 
-      const detachedWarned = consoleWarn.mock.calls.some(
-        ([message]) => typeof message === 'string' && message.includes(DETACHED_WARNING),
-      );
-      consoleWarn.mockRestore();
-
-      expect(detachedWarned).toBe(false);
+      expect(takeReportedMessages()).toEqual([]);
       expect(handle.isOpen).toBe(true);
       expect(screen.getByTestId('payload').textContent).toBe('8');
     });
 
     it('closes from a descendant layout effect on an initially open root', async () => {
       const handle = Dialog.createHandle();
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const CloseOnMount = defineComponent({
         setup() {
@@ -524,12 +511,7 @@ describe('<Dialog.Root />', () => {
         </Dialog.Root>
       ));
 
-      const detachedWarned = consoleWarn.mock.calls.some(
-        ([message]) => typeof message === 'string' && message.includes(DETACHED_WARNING),
-      );
-      consoleWarn.mockRestore();
-
-      expect(detachedWarned).toBe(false);
+      expect(takeReportedMessages()).toEqual([]);
       expect(handle.isOpen).toBe(false);
     });
 
@@ -556,13 +538,13 @@ describe('<Dialog.Root />', () => {
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
         handle.openWithPayload(8);
-        expect(
-          consoleWarn.mock.calls.filter(
-            ([message]) =>
-              typeof message === 'string' &&
-              message.includes('openWithPayload() was called while no root that uses this handle'),
-          ),
-        ).toHaveLength(1);
+        expect(consoleWarn.mock.calls).toEqual([
+          [
+            expect.stringContaining(
+              'openWithPayload() was called while no root that uses this handle',
+            ),
+          ],
+        ]);
       } finally {
         consoleWarn.mockRestore();
       }
@@ -891,11 +873,12 @@ describe('<Dialog.Root />', () => {
       expect(handle.isOpen).toBe(false);
       expect(screen.queryByRole('dialog')).toBe(null);
 
-      const detachedWarnings = consoleWarn.mock.calls.filter(
-        ([message]) => typeof message === 'string' && message.includes(DETACHED_WARNING),
-      );
+      const messages = consoleWarn.mock.calls.map(([message]) => String(message));
       consoleWarn.mockRestore();
-      expect(detachedWarnings).toHaveLength(2);
+      expect(messages).toEqual([
+        expect.stringContaining(DETACHED_WARNING),
+        expect.stringContaining(DETACHED_WARNING),
+      ]);
     });
 
     it('associates the requested trigger when opened by id in the same commit a root attaches', async () => {
@@ -987,15 +970,8 @@ describe('<Dialog.Root />', () => {
         );
       }
 
-      const overlapWarned = (consoleWarn: ReturnType<typeof vi.spyOn>) =>
-        consoleWarn.mock.calls.some(
-          ([message]: unknown[]) =>
-            typeof message === 'string' && message.includes('more than one mounted root'),
-        );
-
       it('does not warn when one root replaces another during a route transition', async () => {
         const handle = Dialog.createHandle();
-        const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const TransitioningRoots = createTransitioningRoots(handle);
 
         const { setProps } = await render(<TransitioningRoots phase="outgoing" />);
@@ -1008,8 +984,7 @@ describe('<Dialog.Root />', () => {
         vi.advanceTimersByTime(20);
         await flushMicrotasks();
 
-        expect(overlapWarned(consoleWarn)).toBe(false);
-        consoleWarn.mockRestore();
+        expect(takeReportedMessages()).toEqual([]);
       });
 
       it('keeps the newer root attached after the older root unmounts', async () => {
@@ -1033,7 +1008,6 @@ describe('<Dialog.Root />', () => {
 
       it('restores control to the previous root when a newer overlapping root detaches', async () => {
         const handle = Dialog.createHandle();
-        const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const TransitioningRoots = createTransitioningRoots(handle);
 
         const { setProps } = await render(<TransitioningRoots phase="outgoing" />);
@@ -1054,8 +1028,7 @@ describe('<Dialog.Root />', () => {
         expect(screen.queryByText('Incoming')).toBe(null);
         expect(handle.isOpen).toBe(true);
         // A canceled transient overlap should not warn.
-        expect(overlapWarned(consoleWarn)).toBe(false);
-        consoleWarn.mockRestore();
+        expect(takeReportedMessages()).toEqual([]);
       });
     });
   });
@@ -1433,77 +1406,64 @@ describe('<Dialog.Root />', () => {
 
     it('does not warn when a handle-backed root remounts controlled after being uncontrolled', async () => {
       const testDialog = Dialog.createHandle();
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       const mode = shallowRef<'uncontrolled' | 'unmounted' | 'controlled'>('uncontrolled');
 
-      try {
-        const App = defineComponent(() => () => (
-          <div>
-            <Dialog.Trigger handle={testDialog} id="trigger">
-              Trigger
-            </Dialog.Trigger>
+      const App = defineComponent(() => () => (
+        <div>
+          <Dialog.Trigger handle={testDialog} id="trigger">
+            Trigger
+          </Dialog.Trigger>
+          <button
+            type="button"
+            onClick={() => {
+              mode.value = 'unmounted';
+            }}
+          >
+            Unmount root
+          </button>
+          {mode.value === 'unmounted' && (
             <button
               type="button"
               onClick={() => {
-                mode.value = 'unmounted';
+                mode.value = 'controlled';
               }}
             >
-              Unmount root
+              Remount controlled root
             </button>
-            {mode.value === 'unmounted' && (
-              <button
-                type="button"
-                onClick={() => {
-                  mode.value = 'controlled';
-                }}
-              >
-                Remount controlled root
-              </button>
-            )}
+          )}
 
-            {mode.value === 'uncontrolled' && (
-              <Dialog.Root handle={testDialog}>
-                <Dialog.Portal>
-                  <Dialog.Popup>Dialog Content</Dialog.Popup>
-                </Dialog.Portal>
-              </Dialog.Root>
-            )}
+          {mode.value === 'uncontrolled' && (
+            <Dialog.Root handle={testDialog}>
+              <Dialog.Portal>
+                <Dialog.Popup>Dialog Content</Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          )}
 
-            {mode.value === 'controlled' && (
-              <Dialog.Root handle={testDialog} open triggerId="trigger">
-                <Dialog.Portal>
-                  <Dialog.Popup>Dialog Content</Dialog.Popup>
-                </Dialog.Portal>
-              </Dialog.Root>
-            )}
-          </div>
-        ));
+          {mode.value === 'controlled' && (
+            <Dialog.Root handle={testDialog} open triggerId="trigger">
+              <Dialog.Portal>
+                <Dialog.Popup>Dialog Content</Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          )}
+        </div>
+      ));
 
-        const { user } = await render(<App />);
+      const { user } = await render(<App />);
 
-        await waitForLaterMillisecond(async () => {
-          await user.click(screen.getByRole('button', { name: 'Unmount root' }));
-          await flushMicrotasks();
-          expect(screen.queryByText('Dialog Content')).toBe(null);
-        });
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Unmount root' }));
+        await flushMicrotasks();
+        expect(screen.queryByText('Dialog Content')).toBe(null);
+      });
 
-        await user.click(screen.getByRole('button', { name: 'Remount controlled root' }));
-        await waitFor(() => {
-          expect(screen.getByText('Dialog Content')).toBeVisible();
-        });
+      await user.click(screen.getByRole('button', { name: 'Remount controlled root' }));
+      await waitFor(() => {
+        expect(screen.getByText('Dialog Content')).toBeVisible();
+      });
 
-        expect(
-          consoleError.mock.calls.some(([message]) => {
-            return (
-              typeof message === 'string' &&
-              message.includes('open state of DialogRoot') &&
-              message.includes('controlled')
-            );
-          }),
-        ).toBe(false);
-      } finally {
-        consoleError.mockRestore();
-      }
+      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('keeps ARIA controls in sync when a detached handle is recreated while open', async () => {
@@ -1771,18 +1731,15 @@ describe('<Dialog.Root />', () => {
 
         // Handle B's root must no longer resolve the handle-A trigger: the trigger followed its own
         // handle's store off the root's store, so open-by-id finds nothing and warns.
-        consoleWarn.mockClear();
         handleB.open('a');
         await flushMicrotasks();
         await waitFor(() => {
           expect(screen.getByText('Dialog Content')).toBeVisible();
         });
         expect(aTrigger).toHaveAttribute('aria-expanded', 'false');
-        expect(
-          consoleWarn.mock.calls.some(
-            ([message]) => typeof message === 'string' && message.includes('No trigger found'),
-          ),
-        ).toBe(true);
+        expect(consoleWarn.mock.calls).toEqual([
+          [expect.stringContaining('No trigger found with id "a"')],
+        ]);
       } finally {
         consoleWarn.mockRestore();
       }

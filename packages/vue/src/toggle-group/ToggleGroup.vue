@@ -30,14 +30,16 @@ export interface ToggleGroupProps<Value extends string = string>
    * The pressed state of the toggle group represented by an array of
    * the values of all pressed toggle buttons.
    * This is the controlled counterpart of `defaultValue`.
+   * `null` is an empty value, and the group stays controlled.
    */
-  value?: readonly Value[] | undefined;
+  value?: readonly Value[] | null | undefined;
   /**
    * The pressed state of the toggle group represented by an array of
    * the values of all pressed toggle buttons.
    * This is the uncontrolled counterpart of `value`.
+   * `null` is an empty value.
    */
-  defaultValue?: readonly Value[] | undefined;
+  defaultValue?: readonly Value[] | null | undefined;
   /**
    * Whether the toggle group should ignore user interaction.
    * @default false
@@ -120,7 +122,8 @@ const groupDisabled = computed(
 );
 
 const [groupValue, setValueState] = useControlled<readonly Value[]>({
-  controlled: () => props.value,
+  // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
+  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'ToggleGroup',
   state: 'value',
