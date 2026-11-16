@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import type { TimeClockFaceNumber } from '@vase-ui/vue/time-clock';
+import { mockRuntimeDateTimeLocale } from '../../../test/mockRuntimeLocale';
 import { takeReportedMessages } from '../../../test/reportedMessages';
 
 // Vue writes a comment around each fragment and slot.
@@ -15,17 +16,6 @@ function numberSlot(...shown: number[]) {
     number: ({ number }: { number: TimeClockFaceNumber }) =>
       shown.includes(number.value) ? <TimeClock.Number number={number} /> : null,
   };
-}
-
-// Makes `Intl.DateTimeFormat` use `locale` when a call gives no locale, until the test ends.
-function mockRuntimeDateTimeLocale(locale: string) {
-  const DateTimeFormat = Intl.DateTimeFormat;
-  const spy = vi
-    .spyOn(Intl, 'DateTimeFormat')
-    .mockImplementation(function MockDateTimeFormat(requestedLocale, options) {
-      return new DateTimeFormat(requestedLocale ?? locale, options);
-    });
-  onTestFinished(() => spy.mockRestore());
 }
 
 describe('<TimeClock.Root /> on a server', () => {
