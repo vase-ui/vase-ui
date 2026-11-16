@@ -354,23 +354,36 @@ describe('the form library demos of the Forms page', () => {
   );
 });
 
-describe('the demos of the Forms page', () => {
+describe.each([
+  { page: 'Toast', family: 'toast' },
+  { page: 'Navigation Menu', family: 'navigation-menu' },
+  { page: 'Forms', family: 'handbook-forms' },
+])('the demos of the $page page', ({ family }) => {
   const { render } = createRenderer();
+  const pageDemos = demos.filter(({ name }) => name.startsWith(`${family}/`));
+  const methods = [...new Set(pageDemos.map(({ variant }) => variant))];
 
-  it('have no axe violation when the page shows them together', async () => {
-    const pageDemos = demos.filter(({ name }) => name.startsWith('handbook-forms/'));
-    expect(pageDemos).not.toHaveLength(0);
-    await render(
-      h(
-        'div',
-        pageDemos.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
-      ),
-    );
+  it.each(methods.map((method) => ({ method })))(
+    'have no axe violation when the page shows them together ($method)',
+    async ({ method }) => {
+      // The frame shows the other variant of a demo that does not have the selected one.
+      const shown = pageDemos.filter(
+        ({ name, variant }) =>
+          variant === method ||
+          !pageDemos.some((other) => other.name === name && other.variant === method),
+      );
+      await render(
+        h(
+          'div',
+          shown.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
+        ),
+      );
 
-    // axe compares the landmarks of the demos only when it reads them together. The viewport of
-    // a toast provider is a landmark in a portal, outside the element of the render.
-    await expectNoAxeViolations(document.body);
-  });
+      // axe compares the landmarks of the demos only when it reads them together. The viewport of
+      // a toast provider is a landmark in a portal, outside the element of the render.
+      await expectNoAxeViolations(document.body);
+    },
+  );
 });
 
 describe('demos', () => {

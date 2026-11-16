@@ -27,16 +27,6 @@ const KNOWN_FAULTS: { page: string; rule: string; reason: string }[] = [
     rule: 'region',
     reason: 'The not-found layout of the default theme of VitePress has no main element.',
   },
-  {
-    page: '/components/navigation-menu',
-    rule: 'landmark-unique',
-    reason: 'The navigation landmarks of the three demos have no name.',
-  },
-  {
-    page: '/components/toast',
-    rule: 'landmark-unique',
-    reason: 'The viewports of the eight demos have the same name.',
-  },
 ];
 
 type Theme = (typeof THEMES)[number];
