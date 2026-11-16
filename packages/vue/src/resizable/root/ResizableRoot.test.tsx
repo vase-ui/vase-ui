@@ -1249,6 +1249,32 @@ describe('<Resizable.Root />', () => {
       expect(screen.getByTestId('handle')).not.toHaveAttribute('data-dragging');
     });
 
+    // The panels stay in the document, so the handle keeps its panel on each side.
+    it('ends a drag when KeepAlive holds the handle', async () => {
+      const Handle = defineComponent({
+        setup: () => () => <Resizable.Handle data-testid="handle" />,
+      });
+      const showHandle = shallowRef(true);
+      const onDraggingChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root onDraggingChange={onDraggingChange}>
+            <Resizable.Panel />
+            <KeepAlive>{showHandle.value ? <Handle /> : null}</KeepAlive>
+            <Resizable.Panel />
+          </Resizable.Root>
+        </div>
+      ));
+      const handle = screen.getByTestId('handle');
+      await fireEvent.pointerDown(handle, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(handle, { ...pointer, clientX: 100, buttons: 1 });
+
+      showHandle.value = false;
+      await nextTick();
+
+      expect(onDraggingChange.mock.calls).toEqual([[true], [false]]);
+    });
+
     it('gives the space of a panel that it holds to the other panels, and gives it back', async () => {
       const Side = defineComponent({
         setup: () => () => <Resizable.Panel id="c" data-testid="c" />,
