@@ -88,7 +88,7 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
@@ -96,6 +96,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useInputRegistration } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { given } from '../../internals/givenAttributes';
@@ -113,7 +114,6 @@ import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -161,36 +161,9 @@ const checked = computed(() =>
 );
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-let releaseInput: (() => void) | undefined;
-
-function registerInput(input: HTMLInputElement) {
-  if (!group) {
-    return;
-  }
-
-  releaseInput = mergeCleanups(
-    group.registerInputRef(input),
-    group.validation.registerInput(input, {
-      controlRef: () => element.value,
-      value: undefined,
-    }) || undefined,
-  );
-}
 
 function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === inputElement.value) {
-    return;
-  }
-
-  releaseInput?.();
-  releaseInput = undefined;
-  inputElement.value = input;
-
-  if (input) {
-    registerInput(input);
-  }
+  inputElement.value = value as HTMLInputElement | null;
 }
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
@@ -282,33 +255,15 @@ if (group) {
   // the value and can be absent.
   useFormReset(inputElement, group.reset);
 
-  // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
-  // stay in the group and in the field: the field would validate an input that the user cannot reach.
-  const { isHeld, shown } = useKeepAliveState();
-
-  function releaseRegisteredInput() {
-    releaseInput?.();
-    releaseInput = undefined;
-  }
-
-  onDeactivated(releaseRegisteredInput);
-
-  // The `ref` setter of a radio that mounts in a held branch registers the input. `isHeld` is
-  // already `true` then, so the input is a source of the `watch`.
-  watch([isHeld, inputElement], ([held]) => {
-    if (held) {
-      releaseRegisteredInput();
-    }
-  });
-
-  // `KeepAlive` calls no `ref` setter at an activation.
-  watch(shown, () => {
-    const input = inputElement.value;
-    releaseRegisteredInput();
-    if (input) {
-      registerInput(input);
-    }
-  });
+  const { isHeld } = useInputRegistration(inputElement, (input) =>
+    mergeCleanups(
+      group.registerInputRef(input),
+      group.validation.registerInput(input, {
+        controlRef: () => element.value,
+        value: undefined,
+      }) || undefined,
+    ),
+  );
 
   // The registration of an input whose `disabled` property is `false` ends the `null` after an
   // unmount. A `computed` that reads `inputElement` also follows each change of `checked` and

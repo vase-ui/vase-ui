@@ -2083,6 +2083,37 @@ describe('<Checkbox.Root />', () => {
       expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('own')).toHaveAttribute('data-parent', '');
     });
+
+    it('stays out of the validation of the form when the prop becomes false while KeepAlive holds it', async () => {
+      const handleSubmit = vi.fn();
+      const parent = shallowRef(true);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <Checkbox.Root parent={parent.value} required />,
+        { mounted: true },
+      );
+      await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup allValues={['a']}>
+              <HeldBranch />
+              <Checkbox.Root value="a" />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await hide();
+      parent.value = false;
+      await flushMicrotasks();
+      await fireEvent.click(screen.getByText('Submit'));
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+      // A required checkbox that is off blocks the submit.
+      await show();
+      await fireEvent.click(screen.getByText('Submit'));
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('VUE-42: a checkbox with no value in a group that has `allValues`', () => {
