@@ -63,6 +63,7 @@
 }
 
 .Segment {
+  field-sizing: content;
   margin: 0;
   padding: 0 0.125rem;
   border: 0;
@@ -209,7 +210,6 @@
 .Calendar {
   position: relative;
   box-sizing: border-box;
-  width: 17rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
@@ -266,9 +266,7 @@
 }
 
 .Grid {
-  width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
 .Weekday {

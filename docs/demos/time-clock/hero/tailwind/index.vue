@@ -23,7 +23,7 @@ const dayPeriodClass =
       <span aria-hidden="true" class="text-xl font-bold">:</span>
       <TimeClock.ViewTrigger view="minute" :class="[buttonClass, triggerClass]" />
       <TimeClock.DayPeriod value="am" :class="[buttonClass, dayPeriodClass]" />
-      <TimeClock.DayPeriod value="pm" :class="[buttonClass, dayPeriodClass, 'border-l-0']" />
+      <TimeClock.DayPeriod value="pm" :class="[buttonClass, dayPeriodClass]" />
     </div>
     <TimeClock.Face
       class="relative size-56 cursor-pointer rounded-full border border-neutral-950 bg-neutral-100 select-none [--radius:5.5rem] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-neutral-950 data-disabled:cursor-default data-readonly:cursor-default dark:border-white dark:bg-neutral-800 dark:has-focus-visible:outline-white"

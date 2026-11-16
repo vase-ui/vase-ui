@@ -16,7 +16,7 @@ const buttonClassName =
 const dayButtonClassName =
   'm-0 box-border size-9 cursor-pointer select-none rounded-md border-0 bg-transparent p-0 font-[inherit] text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-range-end:bg-neutral-950 data-range-end:text-white data-range-middle:rounded-none data-range-middle:bg-neutral-100 data-range-start:bg-neutral-950 data-range-start:text-white data-today:font-bold data-today:underline data-unavailable:line-through dark:focus-visible:outline-white dark:data-range-end:bg-white dark:data-range-end:text-neutral-950 dark:data-range-middle:bg-neutral-800 dark:data-range-start:bg-white dark:data-range-start:text-neutral-950';
 const segmentClassName =
-  'px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600';
+  'field-sizing-content px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600';
 const literalClassName = 'whitespace-pre text-neutral-600 dark:text-neutral-400';
 const inputClassName =
   'flex items-center text-sm font-normal tabular-nums any-pointer-coarse:text-base';
@@ -79,7 +79,7 @@ const inputClassName =
             aria-label="Choose trip dates"
             class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <DateRangePicker.Calendar :today="today" class="relative box-border w-68 text-sm">
+            <DateRangePicker.Calendar :today="today" class="relative box-border text-sm">
               <div class="absolute top-0 right-0 flex gap-1">
                 <RangeCalendar.PreviousButton :class="buttonClassName">
                   &lsaquo;
@@ -92,7 +92,7 @@ const inputClassName =
                 <template #month="{ month }">
                   <RangeCalendar.Month :month="month">
                     <RangeCalendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
-                    <RangeCalendar.Grid class="w-full table-fixed border-collapse">
+                    <RangeCalendar.Grid class="border-collapse">
                       <RangeCalendar.GridHeader>
                         <RangeCalendar.GridHeaderRow>
                           <template #weekday="{ weekday }">
