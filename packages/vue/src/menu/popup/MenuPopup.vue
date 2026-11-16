@@ -173,7 +173,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
     {
-      id: givenId(props.id) ?? store.select('defaultPopupId'),
+      id: given('id', props.id) ?? store.select('defaultPopupId'),
       // A rendered `Menu.List` carries the `menu` semantics instead.
       ...(store.select('listElement')
         ? { role: 'presentation' }
