@@ -114,7 +114,7 @@ Place a date picker beside a [Time Picker](/components/time-picker). Each picker
 
 </DemoSource>
 
-With time granularity or a value with a time, the field shows time segments, and a calendar selection keeps the time. `DatePicker.TimeField` edits that time in the popup, which stays open after selection until you use `DatePicker.Close`.
+Time segments appear by default with time `granularity` or a value with a time; a calendar selection keeps the time. `DatePicker.TimeField` edits that time in the popup, which stays open after selection until you use `DatePicker.Close`.
 
 ### Month picker
 
