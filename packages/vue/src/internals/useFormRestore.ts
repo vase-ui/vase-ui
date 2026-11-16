@@ -23,6 +23,8 @@ function isBeforePageshow(win: Window) {
  * `KeepAlive` takes the input out of the document, and the part then has no listener. When `load`
  * ends while `KeepAlive` holds a part that waits, the part calls `onRestore` with no event at its
  * next activation.
+ * A part that mounts in a held branch does not wait. Its input was not in the document when the
+ * browser restored the form state.
  * @param input An element of the part, such as its input. A ref that a `ref` setter writes.
  * @param onRestore Gets the `pageshow` event. Gets no event at an activation.
  * @returns Gives `true` from a mount or an activation before the `pageshow` event of the page until

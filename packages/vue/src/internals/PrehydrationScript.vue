@@ -18,6 +18,8 @@ const textProps = typeof document === 'undefined' ? { innerHTML: props.script } 
 const csp = useCSPContext();
 // While the part hydrates, the client renders the element too, so that Vue finds the element of the
 // server HTML. The element goes away in the flush after the mount.
+// The template has `<component :is="'script'">`, because the Vue compiler removes a `<script>` tag
+// from a template.
 const isHydrating = useIsHydrating();
 </script>
 
