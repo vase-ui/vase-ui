@@ -608,6 +608,17 @@ const CloseOnHook = defineComponent({
   },
 });
 
+const OpenOnMounted = defineComponent({
+  props: {
+    handle: { type: Object as PropType<{ open(triggerId: string): void }>, required: true },
+    triggerId: { type: String, required: true },
+  },
+  setup(props) {
+    onMounted(() => props.handle.open(props.triggerId));
+    return () => null;
+  },
+});
+
 function createAnimation() {
   let finish!: () => void;
   const finished = new Promise<void>((resolve) => {
@@ -1537,6 +1548,32 @@ describe('usePopupRoot', () => {
         expect(handle.store).toBe(root.current.store);
         expect(root.current.open).toBe(false);
       });
+
+      it('runs a call from a part below a root whose branch resolves while KeepAlive holds it, after the activation', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <Suspense>
+              <PopupRootPart handle={handle} defaultOpen>
+                <CloseOnHook hook={onMounted} handle={handle} />
+                <Pending />
+              </PopupRootPart>
+            </Suspense>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+
+        gate.open();
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(handle.isOpen).toBe(false);
+      });
     });
   });
 
@@ -1904,6 +1941,231 @@ describe('usePopupRoot', () => {
         expect(queryByRole('dialog')).toHaveTextContent('payload: from first');
       },
     );
+
+    describe('VUE-5: a part that mounts below a root while KeepAlive holds the root', () => {
+      it('runs a call of the handle in the onMounted hook of the part after the activation of a deactivated root', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+              {mountPart.value ? <CloseOnHook hook={onMounted} handle={handle} /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+        expect(root.current.store.select('open')).toBe(true);
+
+        await show();
+        expect(handle.store).toBe(root.current.store);
+        expect(handle.isOpen).toBe(false);
+      });
+
+      it('runs a call of the handle in the onMounted hook of the part after the activation of a root that mounted while KeepAlive held its branch', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <PopupRootPart handle={handle} defaultOpen>
+            {mountPart.value ? <CloseOnHook hook={onMounted} handle={handle} /> : null}
+          </PopupRootPart>
+        ));
+        await render(() => <HeldBranch />);
+        await mountWhileHeld();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(handle.isOpen).toBe(false);
+      });
+
+      it('runs open() with the id of a trigger of the root after that trigger activates', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart ref={root.ref} handle={handle}>
+              <PopupTriggerPart id="trigger">trigger</PopupTriggerPart>
+              {mountPart.value ? <OpenOnMounted handle={handle} triggerId="trigger" /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        const { getByText } = await render(() => <HeldBranch />);
+        await hide();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(handle.isOpen).toBe(true);
+        expect(root.current.store.state.activeTriggerId).toBe('trigger');
+        expect(getByText('trigger')).toHaveAttribute('aria-expanded', 'true');
+      });
+
+      it('does not run a kept call again at a later activation', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={handle}>
+              <PopupTriggerPart id="trigger">trigger</PopupTriggerPart>
+              {mountPart.value ? <OpenOnMounted handle={handle} triggerId="trigger" /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+        mountPart.value = true;
+        await flushMicrotasks();
+        await show();
+        expect(handle.isOpen).toBe(true);
+
+        handle.close();
+        await flushMicrotasks();
+        await hide();
+        await show();
+        expect(handle.isOpen).toBe(false);
+      });
+
+      it('runs each kept call when a kept call before it throws', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const mountParts = shallowRef(false);
+        const errors: unknown[] = [];
+        function handleError(event: ErrorEvent) {
+          event.preventDefault();
+          errors.push(event.error);
+        }
+        window.addEventListener('error', handleError);
+        onTestFinished(() => {
+          window.removeEventListener('error', handleError);
+        });
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={handle} defaultOpen>
+              {mountParts.value ? (
+                <>
+                  <OpenOnMounted handle={handle} triggerId="unknown" />
+                  <CloseOnHook hook={onMounted} handle={handle} />
+                </>
+              ) : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+        mountParts.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(handle.isOpen).toBe(false);
+        expect(errors).toEqual([
+          expect.objectContaining({ message: expect.stringContaining('trigger id "unknown"') }),
+        ]);
+        // While the case has a listener for `error`, Vitest writes the error to the console.
+        expect(takeReportedMessages()).toEqual([expect.stringContaining('trigger id "unknown"')]);
+      });
+
+      it('gives the call to the held root and not to an older root that is attached', async () => {
+        // A development build warns one frame after two roots took one handle. Fake timers hold
+        // that frame.
+        vi.useFakeTimers();
+        onTestFinished(() => {
+          vi.useRealTimers();
+        });
+        const handle = createPopupFixtureHandle<string>();
+        const older = createRootRef();
+        const held = createRootRef();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart ref={held.ref} handle={handle} defaultOpen>
+              {mountPart.value ? <CloseOnHook hook={onMounted} handle={handle} /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => (
+          <>
+            <PopupRootPart ref={older.ref} handle={handle} defaultOpen />
+            <HeldBranch />
+          </>
+        ));
+        await hide();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+        expect(older.current.open).toBe(true);
+
+        await show();
+        expect(held.current.open).toBe(false);
+        expect(older.current.open).toBe(true);
+      });
+
+      it('passes a call of another handle to the root of that handle above it', async () => {
+        const outer = createPopupFixtureHandle<string>();
+        const inner = createPopupFixtureHandle<string>();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={outer} defaultOpen>
+              <PopupRootPart handle={inner}>
+                {mountPart.value ? <CloseOnHook hook={onMounted} handle={outer} /> : null}
+              </PopupRootPart>
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(outer.isOpen).toBe(false);
+      });
+
+      it('runs a call of a handle that no root above the part uses at once', async () => {
+        const held = createPopupFixtureHandle<string>();
+        const other = createPopupFixtureHandle<string>();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={held}>
+              {mountPart.value ? <CloseOnHook hook={onMounted} handle={other} /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => (
+          <>
+            <PopupRootPart handle={other} defaultOpen />
+            <HeldBranch />
+          </>
+        ));
+        await hide();
+
+        mountPart.value = true;
+        await flushMicrotasks();
+        expect(other.isOpen).toBe(false);
+      });
+    });
   });
 
   describe('hydration', () => {
