@@ -22,6 +22,7 @@
     "test:docs": "node --test \"scripts/docs/*.test.ts\" \"docs/.vitepress/*.test.ts\"",
     "test:thanks": "node --test scripts/thanks/render.test.ts",
     "test:release": "node --test \"scripts/release/*.test.ts\"",
+    "test:ci": "node --test \"scripts/ci/*.test.ts\"",
     "cost:render": "node scripts/cost/render.ts",
     "cost:check": "node scripts/cost/render.ts --check",
     "status:render": "node scripts/docs/status.ts",
@@ -37,7 +38,7 @@
     "parity:check": "node scripts/parity/check.ts",
     "parity:track": "node scripts/parity/track.ts",
     "release:check-tag": "node scripts/release/checkTag.ts",
-    "lint": "pnpm test:lint-rules && pnpm test:cost && pnpm test:parity && pnpm test:docs && pnpm test:thanks && pnpm test:release && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check && pnpm status:check",
+    "lint": "pnpm test:lint-rules && pnpm test:cost && pnpm test:parity && pnpm test:docs && pnpm test:thanks && pnpm test:release && pnpm test:ci && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check && pnpm status:check",
     "lint:fix": "eslint . --fix; prettier --write .",
     "format": "prettier --write ."
   },
