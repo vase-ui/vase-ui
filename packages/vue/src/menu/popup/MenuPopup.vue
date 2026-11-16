@@ -54,7 +54,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, inject, onScopeDispose, toRaw, watch } from 'vue';
+import { computed, inject, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -84,8 +84,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuPopupState>;
 }>();
 
-const { store, generatedPopupId, setRenderedPopupId, popupLabelId, orientation, virtualFocus } =
-  useMenuRootContext();
+const { store, popupLabelId, orientation, virtualFocus } = useMenuRootContext();
 const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
 const insideToolbar = useToolbarRootContext(true) !== undefined;
@@ -105,15 +104,6 @@ const submenuRootContext = computed(() =>
 const activeTriggerElement = computed(
   () => store.select('activeTriggerElement') as HTMLElement | null,
 );
-
-const popupId = computed(() => givenId(props.id) ?? generatedPopupId);
-
-// The root names the popup with the id that the popup renders. A generated id is not a request, so
-// removing an explicit id gives the generated id back.
-watch(() => (popupId.value === generatedPopupId ? undefined : popupId.value), setRenderedPopupId, {
-  immediate: true,
-});
-onScopeDispose(() => setRenderedPopupId(undefined));
 
 watch(
   floatingTreeRoot,
@@ -183,7 +173,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
     {
-      id: popupId.value,
+      id: givenId(props.id) ?? store.select('defaultPopupId'),
       // A rendered `Menu.List` carries the `menu` semantics instead.
       ...(store.select('listElement')
         ? { role: 'presentation' }

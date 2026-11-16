@@ -745,6 +745,7 @@ const List = defineComponent({
     const { rootStore } = context;
     const click = useToggle(rootStore);
     const navigation = useListNavigation(rootStore, {
+      activeItemId: () => (activeIndex.value === null ? undefined : `list-${activeIndex.value}`),
       ...props.options,
       listRef,
       activeIndex,
@@ -2364,7 +2365,7 @@ describe('useListNavigation', () => {
   });
 
   describe('virtual focus', () => {
-    const virtual = { virtual: true, id: 'list' };
+    const virtual = { virtual: true };
 
     it('names the active item on the reference and on the popup, and keeps the focus', async () => {
       await renderList({ reference: 'input', defaultOpen: true, options: virtual });
@@ -2460,7 +2461,7 @@ describe('useListNavigation', () => {
       const { list } = await renderList({
         reference: 'input',
         defaultOpen: true,
-        options: { enabled, virtual: true, id: 'list' },
+        options: { enabled, virtual: true },
       });
       list.setActiveIndex(1);
       await nextTick();

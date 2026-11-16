@@ -123,16 +123,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onDeactivated,
-  onMounted,
-  onUpdated,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
@@ -163,6 +154,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
+import { useElementId } from '../../utils/popups/useElementId';
 import { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext';
 import type { UseCheckboxGroupParentReturnValue } from '../../checkbox-group/useCheckboxGroupParent';
 import { getCheckboxStateAttributesMapping } from '../utils/getCheckboxStateAttributesMapping';
@@ -663,16 +655,8 @@ const { element, elementProps } = useRenderElement('span', props, {
   ],
 });
 
-// A `#render` slot can give the element an `id` that no prop shows, so the part reads the `id` from
-// the element after each update.
-const renderedId = shallowRef<string>();
-
-function readRenderedId() {
-  renderedId.value = element.value?.id || undefined;
-}
-
-onMounted(readRenderedId);
-onUpdated(readRenderedId);
+// The `id` can come from the `#render` slot, also from a component in it that renders on its own.
+const elementId = useElementId(element);
 
 // The parent checkbox of the group lists the id of each child in `aria-controls`, and it reads the
 // disabled state of each child when it changes the value. The id waits for the mount, because a
@@ -694,9 +678,9 @@ watch(
 );
 
 watch(
-  [isHeld, groupParent, () => props.parent, itemValue, renderedId],
+  [isHeld, groupParent, () => props.parent, itemValue, elementId],
   ([held, parent, isParent, value, id], _previous, onCleanup) => {
-    if (held || isParent || !parent || value === undefined || id === undefined) {
+    if (held || isParent || !parent || value === undefined || !id) {
       return;
     }
 

@@ -217,9 +217,10 @@ export interface UseListNavigationProps {
    */
   triggerOrientation?: MaybeRefOrGetter<Orientation | undefined>;
   /**
-   * The id of the root component.
+   * The `id` of the element of the highlighted item. `aria-activedescendant` names it while the
+   * focus is virtual.
    */
-  id?: MaybeRefOrGetter<string | undefined>;
+  activeItemId?: MaybeRefOrGetter<string | undefined>;
   /**
    * Whether to clear the active index when the pointer leaves an item.
    * @default true
@@ -909,7 +910,7 @@ export function useListNavigation(
   const ariaActiveDescendant = computed(() => {
     const activeIndex = getActiveIndex();
     return isEnabled() && isVirtual() && store.select('open') && activeIndex != null
-      ? `${toValue(props.id)}-${activeIndex}`
+      ? toValue(props.activeItemId)
       : undefined;
   });
 

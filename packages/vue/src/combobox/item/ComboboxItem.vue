@@ -44,7 +44,7 @@ export interface ComboboxItemProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, toRaw } from 'vue';
+import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
   compareItemEquality,
@@ -250,6 +250,20 @@ const { element, elementProps } = useRenderElement('div', props, {
     attrs,
     getButtonProps,
   ],
+});
+
+// The input names the highlighted item in `aria-activedescendant`. The item gives its element, so
+// that name is the `id` that the element has, also an `id` from the `#render` slot.
+watch([highlighted, element], ([isHighlighted, item], _previous, onCleanup) => {
+  if (!isHighlighted || !item) {
+    return;
+  }
+  store.set('highlightedItem', item);
+  onCleanup(() => {
+    if (toRaw(store.state).highlightedItem === item) {
+      store.set('highlightedItem', null);
+    }
+  });
 });
 
 provide(ComboboxItemContext, { selected, textRef });

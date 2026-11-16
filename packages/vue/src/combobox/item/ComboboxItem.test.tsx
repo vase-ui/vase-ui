@@ -891,4 +891,129 @@ describe('<Combobox.Item />', () => {
 
     expect(onValueChange.mock.calls.map(([value]) => value)).toEqual(['one']);
   });
+
+  describe('VUE-125: the input names the id that the element of the highlighted item has', () => {
+    it('names the id that the #render slot gives the item, and follows each change', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item
+                    value="apple"
+                    v-slots={{
+                      render: ({ props }: { props: HTMLProps }) => <div {...props} id={id.value} />,
+                    }}
+                  >
+                    apple
+                  </Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      const input = screen.getByTestId('input');
+      input.focus();
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await flushMicrotasks();
+      const steps = [input.getAttribute('aria-activedescendant')];
+
+      id.value = 'second';
+      await flushMicrotasks();
+      steps.push(input.getAttribute('aria-activedescendant'));
+      const element = document.getElementById('second');
+
+      id.value = '';
+      await flushMicrotasks();
+      steps.push(input.getAttribute('aria-activedescendant'));
+
+      expect(steps).toEqual(['first', 'second', null]);
+      expect(element).not.toBeNull();
+    });
+
+    it('names the item above after ArrowUp', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="apple">apple</Combobox.Item>
+                  <Combobox.Item value="banana">banana</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const input = screen.getByTestId('input');
+      const apple = screen.getByRole('option', { name: 'apple' });
+      const banana = screen.getByRole('option', { name: 'banana' });
+      input.focus();
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('aria-activedescendant', banana.id);
+
+      await fireEvent.keyDown(input, { key: 'ArrowUp' });
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('aria-activedescendant', apple.id);
+    });
+
+    it('names no item while a virtualized list does not render the highlighted item', async () => {
+      const onItemHighlighted = vi.fn();
+      const WindowedItems = defineComponent(() => {
+        const items = Combobox.useFilteredItems<string>();
+        return () =>
+          items.value.slice(2, 4).map((item) => (
+            <Combobox.Item key={item} value={item}>
+              {item}
+            </Combobox.Item>
+          ));
+      });
+      await render(
+        <Combobox.Root
+          virtualized
+          items={['one', 'two', 'three', 'four']}
+          defaultOpen
+          onItemHighlighted={onItemHighlighted}
+        >
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <WindowedItems />
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const input = screen.getByTestId('input');
+      input.focus();
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(onItemHighlighted.mock.lastCall?.[0]).toBe('one');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await fireEvent.keyDown(input, { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(onItemHighlighted.mock.lastCall?.[0]).toBe('three');
+      expect(input).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('option', { name: 'three' }).id,
+      );
+    });
+  });
 });

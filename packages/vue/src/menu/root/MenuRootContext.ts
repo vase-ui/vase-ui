@@ -10,9 +10,6 @@ export interface MenuRootContext<Payload = unknown> {
   loopFocus: ComputedRef<boolean>;
   /** Whether arrow keys can step from either end of the list back to a virtual focus owner. */
   allowEscape: ComputedRef<boolean>;
-  generatedPopupId: string;
-  /** Records the id the popup rendered with, when it differs from `generatedPopupId`. */
-  setRenderedPopupId: (id: string | undefined) => void;
   /**
    * The `id` of the active trigger element, which names the part that has the `menu` role. It
    * follows each change of the attribute. While no trigger element exists, it is the registered id
