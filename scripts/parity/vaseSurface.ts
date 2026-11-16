@@ -381,7 +381,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
       return undefined;
     }
     const [declaration, ...others] = type.getSymbol()?.declarations ?? [];
-    // The checker writes the name of an alias, such as `type Named = { … }`, and not its literal.
+    // The checker writes the name of an alias, such as `type Named = { … }`, and not its literal. It
+    // gives each `{}` one shared type with no declaration, so `{}` keeps the text of the checker.
     return declaration &&
       others.length === 0 &&
       ts.isTypeLiteralNode(declaration) &&
@@ -393,9 +394,6 @@ export function createVaseProject(tsconfig: string): VaseProject {
   // The text of the checker, `{ name: type; }`, with each property type from its declaration. The
   // checker writes a quoted key with the quotes of the source, so such a literal keeps its text.
   const typeLiteralText = (type: ts.Type, literal: ts.TypeLiteralNode): string | undefined => {
-    if (literal.members.length === 0) {
-      return undefined;
-    }
     const texts = literal.members.map((member) => {
       if (!ts.isPropertySignature(member) || !ts.isIdentifier(member.name)) {
         return undefined;
