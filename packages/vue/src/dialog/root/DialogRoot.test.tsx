@@ -16,6 +16,7 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
+  createHeldBranch,
   createRenderer,
   dialogRootSharedTests,
   fireEvent,
@@ -30,6 +31,7 @@ import {
   popupConformanceTests,
   renderOnServer,
   screen,
+  takeReportedMessages,
   wait,
   waitFor,
   waitForLaterMillisecond,
@@ -2722,6 +2724,38 @@ describe('<Dialog.Root />', () => {
       handle.close();
       await flushMicrotasks();
       expect(isOpen.value).toBe(false);
+    });
+
+    it('runs openWithPayload() of a part that mounts below a deactivated root after the activation', async () => {
+      const handle = Dialog.createHandle<number>();
+      const mountPart = shallowRef(false);
+      const OpenWithPayloadOnMounted = defineComponent(() => {
+        onMounted(() => handle.openWithPayload(7));
+        return () => null;
+      });
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => (
+          <Dialog.Root handle={handle}>
+            {{
+              default: ({ payload }: { payload: number | undefined }) => [
+                <span data-testid="payload">{String(payload)}</span>,
+                mountPart.value ? <OpenWithPayloadOnMounted /> : null,
+              ],
+            }}
+          </Dialog.Root>
+        ),
+        { mounted: true },
+      );
+      await render(() => <HeldBranch />);
+      await hide();
+
+      mountPart.value = true;
+      await flushMicrotasks();
+      expect(takeReportedMessages()).toEqual([]);
+
+      await show();
+      expect(handle.isOpen).toBe(true);
+      expect(screen.getByTestId('payload').textContent).toBe('7');
     });
 
     it('opens with no trigger and warns when open() names an id that no trigger has', async () => {

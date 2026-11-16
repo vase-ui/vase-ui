@@ -10,7 +10,7 @@ import type { DialogHandleStore, DialogStore } from './DialogStore';
  * root and of any triggers rendered outside of it.
  *
  * The imperative methods take effect only while a root using this handle is mounted; calls made
- * before a root attaches (or after it unmounts) are ignored.
+ * before a root mounts (or after it unmounts) are ignored.
  */
 export class DialogHandle<Payload> extends BasePopupHandle<
   DialogHandleStore<Payload>,
@@ -40,6 +40,9 @@ export class DialogHandle<Payload> extends BasePopupHandle<
    * @param payload Payload to set when opening the dialog. The default slot of the root gets it.
    */
   openWithPayload(payload: Payload) {
+    if (this.deferToHeldRoot(() => this.openWithPayload(payload))) {
+      return;
+    }
     const attachedStore = this.attachedStoreUntracked;
 
     if (attachedStore === null) {

@@ -8,7 +8,7 @@ import type { TooltipHandleStore, TooltipStore } from './TooltipStore';
  * root and of any triggers rendered outside of it.
  *
  * The imperative methods take effect only while a root using this handle is mounted; calls made
- * before a root attaches (or after it unmounts) are ignored.
+ * before a root mounts (or after it unmounts) are ignored.
  */
 export class TooltipHandle<Payload> extends BasePopupHandle<
   TooltipHandleStore<Payload>,

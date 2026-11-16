@@ -1,0 +1,49 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
+import { jobRunCommands } from './workflowJob.ts';
+
+interface Manifest {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+}
+
+const manifest: Manifest = JSON.parse(
+  readRepositoryFile(REPOSITORY_ROOT, 'packages/vue/package.json'),
+);
+const vueRange = manifest.peerDependencies?.vue ?? '';
+const floor = /^\^(\d+\.\d+\.\d+)(?= |$)/.exec(vueRange)?.[1];
+
+test('the package has two run-time dependencies, and `vue` is its one peer', () => {
+  assert.deepEqual(
+    Object.keys({ ...manifest.dependencies, ...manifest.optionalDependencies }).sort(),
+    ['@floating-ui/utils', '@floating-ui/vue'],
+  );
+  assert.deepEqual(Object.keys(manifest.peerDependencies ?? {}), ['vue']);
+});
+
+test('the peer range of `vue` starts with the lowest version', () => {
+  assert.ok(
+    floor !== undefined,
+    `The range "${vueRange}" must start with "^" and the lowest version, such as "^3.5.12 || ^3.6.0-0".`,
+  );
+});
+
+test('the job `test-vue-floor` of CI installs the lowest version of the peer range', () => {
+  const commands = jobRunCommands(
+    readRepositoryFile(REPOSITORY_ROOT, '.github/workflows/ci.yml'),
+    'test-vue-floor',
+  );
+  const installed = commands.flatMap((command) => / vue@(\S+)$/.exec(command)?.[1] ?? []);
+  assert.deepEqual(installed, [floor]);
+});
+
+test('docs/quick-start.md names the lowest version of the peer range', () => {
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/quick-start.md');
+  const versions: string[] = page.match(/\d+(?:\.\d+)+/g) ?? [];
+  assert.ok(
+    floor !== undefined && versions.includes(floor),
+    `The page names these versions: ${versions.join(', ')}.`,
+  );
+});

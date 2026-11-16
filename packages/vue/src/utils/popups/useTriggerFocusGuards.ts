@@ -42,6 +42,10 @@ export interface TriggerFocusGuardStore {
  * the popup. It sends a focus from another element outside the popup to the end of the popup. It
  * asks for no close.
  *
+ * While `KeepAlive` holds the popup, the guard after the trigger skips it. A focus from the trigger,
+ * or from no element, then leaves as from the end of the popup. A focus from another element goes
+ * to the trigger.
+ *
  * The guards are not in the template, so the trigger keeps one root node.
  */
 export function useTriggerFocusGuards(
@@ -95,11 +99,22 @@ export function useTriggerFocusGuards(
     const positionerElement = current.select('positionerElement');
     if (positionerElement && isOutsideEvent(event, positionerElement)) {
       const origin = event.relatedTarget as Element | null;
-      const contentGuardRef =
-        origin === null || contains(toValue(triggerElement), origin)
+      const entersAtStart = origin === null || contains(toValue(triggerElement), origin);
+      const contentGuard = (
+        entersAtStart
           ? current.context.beforeContentFocusGuardRef
-          : current.context.afterContentFocusGuardRef;
-      contentGuardRef.value?.focus();
+          : current.context.afterContentFocusGuardRef
+      ).value;
+      // `KeepAlive` takes the inside guards out of the document with the popup, and a browser does
+      // not focus such an element. The Tab key then skips the popup, as it skips a popup with no
+      // tabbable element.
+      if (contentGuard?.isConnected) {
+        contentGuard.focus();
+      } else if (entersAtStart) {
+        void closeAndFocus(event, 1, positionerElement, false);
+      } else {
+        toValue(triggerElement)?.focus();
+      }
     } else {
       void closeAndFocus(event, 1, positionerElement, false);
     }
