@@ -592,6 +592,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `Resizable.Root` ignores an entry of `layout`, `defaultLayout` or `setLayout()` that is not a size, and a development build shows a warning. An app reads a layout from a cookie, a storage or a server, and a visitor can change it. A size prop whose value is not a size throws, because the template of the app gives that value.
 - `Resizable.Root` reads `null` in `layout`, `defaultLayout` or `setLayout()` as a layout with no entries, the same as `{}`. A `null` `layout` keeps the root controlled, because only `undefined` makes a part uncontrolled. The ref of `useCookie` of Nuxt is `null` after the removal of the cookie, and a `v-model:layout` can hold that ref.
 - `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.
+- With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `value` and `defaultValue` as an empty array (`VUE-115`). A `null` `value` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
 - A part whose input holds the uncontrolled value does not call `useControlled`. `Field.Control` is an example: it declares `value` and emits `valueChange` and `update:value`.
 
 `details` is upstream's object:
