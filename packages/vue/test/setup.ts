@@ -57,7 +57,7 @@ if (typeof document !== 'undefined') {
   // command. Without a wait for the command, its keys and pointer moves reach the next test. A key
   // that it holds also stays down there, because Vitest releases before each test only the keys of
   // the commands that returned. The wrapper below awaits each command, so Vitest does not fail a
-  // test that does not await a call. ESLint refuses such a call.
+  // test that does not await a call. ESLint refuses such a call when it has no `void`.
   //
   // After a time-out, the function of the test continues when its command ends. When the command
   // ends after the hook below starts, the wrapper rejects, so the next steps of the function do not
