@@ -193,7 +193,6 @@ import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
@@ -203,6 +202,7 @@ import {
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
+import { given } from '../../internals/givenAttributes';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -309,7 +309,7 @@ const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
 const labelId = computed(
-  () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+  () => given('aria-labelledby', props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
 );
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);

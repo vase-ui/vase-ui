@@ -38,7 +38,6 @@ import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
-import { givenName } from '../../internals/blankName';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
   createChangeEventDetails,
@@ -46,6 +45,7 @@ import {
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -133,7 +133,7 @@ if (process.env.NODE_ENV !== 'production') {
   let checkedLabel: unknown;
 
   const checkFirstSlotLabel = () => {
-    const slotAriaLabel = givenName(attrs['aria-label']);
+    const slotAriaLabel = given('aria-label', attrs['aria-label']);
     if (checkedIndex === index.value && checkedLabel === slotAriaLabel) {
       return;
     }

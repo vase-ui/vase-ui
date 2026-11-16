@@ -3,7 +3,8 @@ import { computed, toValue } from 'vue';
 import type { ComputedRef, LabelHTMLAttributes, MaybeRefOrGetter } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
-import { givenId, useVaseUiId } from '../useBaseUiId';
+import { given } from '../givenAttributes';
+import { useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
 import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
@@ -18,7 +19,7 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
 
   const ownId = useVaseUiId();
 
-  const id = computed(() => givenId(toValue(params.id)) ?? ownId.value);
+  const id = computed(() => given('id', toValue(params.id)) ?? ownId.value);
 
   const elementId = params.element === undefined ? undefined : useRenderedElementId(params.element);
 
