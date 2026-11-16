@@ -11,6 +11,7 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   takeReportedMessages,
   within,
 } from '#test-utils';
@@ -21,6 +22,14 @@ const time = (text: string) => Temporal.PlainTime.from(text);
 const numberSlot = {
   number: ({ number }: { number: TimeClockFaceNumber }) => <TimeClock.Number number={number} />,
 };
+
+const unitName = (unit: TimeClockView) =>
+  new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of(unit)!;
+const twoDigits = new Intl.NumberFormat('en-US', { minimumIntegerDigits: 2, useGrouping: false });
+const dayPeriodOf = (hour: number) =>
+  new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: true, timeZone: 'UTC' })
+    .formatToParts(Date.UTC(2026, 10, 14, hour))
+    .find((part) => part.type === 'dayPeriod')!.value;
 
 // Makes `Intl.DateTimeFormat` use `locale` when a call gives no locale, until the test ends.
 function mockRuntimeDateTimeLocale(locale: string) {
@@ -417,6 +426,61 @@ describe('<TimeClock.Root />', () => {
       expect(within(container).getByRole('slider')).toBeInTheDocument();
       expect(takeReportedMessages()).toEqual([]);
     });
+
+    it.each([
+      {
+        name: 'a view trigger',
+        selector: 'button',
+        attribute: 'aria-label',
+        text: `${unitName('hour')} ${twoDigits.format(3)}`,
+      },
+      { name: 'the face', selector: 'input', attribute: 'aria-label', text: unitName('hour') },
+      {
+        name: 'the face',
+        selector: 'input',
+        attribute: 'aria-valuetext',
+        text: new Intl.NumberFormat('en-US', {
+          style: 'unit',
+          unit: 'hour',
+          unitDisplay: 'long',
+        }).format(3),
+      },
+    ])(
+      'gives $name the $attribute of the browser when the server wrote another text',
+      async ({ selector, attribute, text }) => {
+        const props = { time: '15:45', locale: 'en-US' };
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer('src/time-clock/root/TimeClockRootHydration.test.vue', props),
+          selector,
+          attribute,
+          'other',
+        );
+
+        const { container } = await hydrate(TimeClockRootHydration, { serverHtml, props });
+
+        expect(container.querySelector(selector)).toHaveAttribute(attribute, text);
+      },
+    );
+
+    it.each([
+      { name: 'a view trigger', text: twoDigits.format(3) },
+      { name: 'a day period', text: dayPeriodOf(21) },
+      { name: 'a number', text: new Intl.NumberFormat('en-US').format(5) },
+    ])(
+      'writes the text of $name again with no warning when the server wrote another text',
+      async ({ text }) => {
+        const props = { time: '15:45', locale: 'en-US' };
+        const serverHtml = (
+          await renderOnServer('src/time-clock/root/TimeClockRootHydration.test.vue', props)
+        ).replace(`>${text}<`, '>other<');
+        expect(serverHtml).toContain('>other<');
+
+        const { container } = await hydrate(TimeClockRootHydration, { serverHtml, props });
+
+        expect(container).toHaveTextContent(text);
+        expect(container).not.toHaveTextContent('other');
+      },
+    );
 
     it('renders for en-US until hydrated, then for the runtime locale', async () => {
       mockRuntimeDateTimeLocale('de-DE');

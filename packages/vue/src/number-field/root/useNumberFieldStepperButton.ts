@@ -1,5 +1,6 @@
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -55,7 +56,10 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
       (isIncrement ? value >= maxWithDefault.value : value <= minWithDefault.value)
     );
   });
-  const disabled = computed(() => props.disabled || state.value.disabled || isAtBoundary.value);
+  const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+  const disabled = computed(
+    () => props.disabled || state.value.disabled || fieldsetDisabled.value || isAtBoundary.value,
+  );
   const isDisabledOrReadOnly = () => disabled.value || state.value.readOnly;
 
   const pressReason = isIncrement ? REASONS.incrementPress : REASONS.decrementPress;

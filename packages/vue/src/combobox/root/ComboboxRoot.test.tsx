@@ -41,6 +41,7 @@ import {
   recordInputEvents,
   renderOnServer,
   screen,
+  wait,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
@@ -7270,6 +7271,8 @@ describe('<Combobox.Root />', () => {
         await screen.findByRole('listbox');
 
         await waitSingleFrame();
+        // A lock comes in a 0 ms timer after the open.
+        await wait(0);
 
         expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
       });
@@ -16800,6 +16803,34 @@ describe('<Combobox.Root />', () => {
 
       await user.keyboard('{ArrowRight}');
       expect(input).toHaveFocus();
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the input and the trigger in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Combobox.Root items={['a', 'b']}>
+            <Combobox.Input data-testid="input" />
+            <Combobox.Trigger data-testid="trigger" />
+          </Combobox.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+    });
+
+    it('shows the disabled state on the input of an autocomplete in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Autocomplete.Root items={['a', 'b']}>
+            <Autocomplete.Input data-testid="input" />
+          </Autocomplete.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
     });
   });
 });

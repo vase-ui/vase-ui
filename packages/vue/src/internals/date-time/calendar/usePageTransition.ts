@@ -12,8 +12,10 @@ export type NavigationDirection = 'previous' | 'next' | 'none';
  * `renderedPages` until its animations end, so that the part can play the exit.
  *
  * A change of `layoutKey` gives other pages for the same place of the calendar: the runtime locale
- * has another first day of the week, or another calendar, than the locale of a server. It is not a
- * move of the page, so it has no side and no page leaves.
+ * has another first day of the week, or another calendar, than the locale of a server. After a
+ * hydration, the first page also changes when the clock of the browser gives another day than the
+ * clock of the server. Such a change is not a move of the page, so it has no side and no page
+ * leaves.
  *
  * Only the pages of days move, so `isEnabled` is `false` while the grid shows months or years. No
  * page leaves then, because no `Calendar.Month` is there to end its animation. The side is `none`.

@@ -5,10 +5,15 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
+  mockBrowserToday,
+  renderOnServer,
   screen,
+  setAttributeInHtml,
 } from '#test-utils';
 import * as RangeCalendar from '../index.parts';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
+import RangeCalendarRootHydration from './RangeCalendarRootHydration.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -510,6 +515,81 @@ describe('<RangeCalendar.Root />', () => {
       const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { props });
 
       expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-13']]);
+    });
+  });
+
+  describe('the server render', () => {
+    const file = 'src/range-calendar/root/RangeCalendarRootHydration.test.vue';
+    const props = { today: '2026-11-14', start: '2026-11-10', end: '2026-11-12' };
+    const format = (options: Intl.DateTimeFormatOptions, iso: string) =>
+      new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', ...options }).format(Date.parse(iso));
+
+    // A server whose `Intl` data differs writes other names. The part then writes the name of the
+    // browser after the mount.
+    it.each([
+      {
+        name: 'the root',
+        selector: '[role="group"]',
+        label: format({ month: 'long', year: 'numeric' }, '2026-11-01'),
+      },
+      {
+        name: 'a day button',
+        selector: '[data-date="2026-11-14"] button',
+        label: format(
+          { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+          '2026-11-14',
+        ),
+      },
+    ])(
+      'gives $name the aria-label of the browser when the server wrote another text',
+      async ({ selector, label }) => {
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(file, props),
+          selector,
+          'aria-label',
+          'other',
+        );
+
+        const { container } = await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+        expect(container.querySelector(selector)).toHaveAttribute('aria-label', label);
+      },
+    );
+
+    it('writes the text of a day again with no warning when the server wrote another text', async () => {
+      const text = format({ day: 'numeric' }, '2026-11-14');
+      const serverHtml = (await renderOnServer(file, props)).replace(`>${text}<`, '>other<');
+      expect(serverHtml).toContain('>other<');
+
+      const { container } = await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+      expect(container.querySelector('[data-date="2026-11-14"] button')).toHaveTextContent(text);
+      expect(container).not.toHaveTextContent('other');
+    });
+
+    it.each([
+      { name: 'another day', distance: 'day' as const },
+      { name: 'another month', distance: 'month' as const },
+    ])("shows the browser's today after the hydration: $name", async ({ distance }) => {
+      const clockProps = { locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, clockProps);
+      const browserDay = mockBrowserToday(distance).toString();
+
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props: clockProps });
+
+      const todayDates = [...document.querySelectorAll<HTMLElement>('[data-today]')].map(
+        (element) => element.closest<HTMLElement>('[data-date]')!.dataset.date,
+      );
+      expect(todayDates).toEqual([browserDay, browserDay]);
+      expect(button(browserDay)).toHaveAttribute('aria-current', 'date');
+      const tabStops = [...document.querySelectorAll<HTMLElement>('button[tabindex="0"]')];
+      expect(tabStops).toEqual([button(browserDay)]);
+      const pageMonths = new Set(
+        [...document.querySelectorAll<HTMLElement>('[data-date]:not([data-outside-month])')].map(
+          (element) => element.dataset.date!.slice(0, 7),
+        ),
+      );
+      expect(pageMonths).toEqual(new Set([browserDay.slice(0, 7)]));
     });
   });
 });

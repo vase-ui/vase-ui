@@ -10,12 +10,14 @@ import {
   fireEvent,
   flushMicrotasks,
   heldMountFormResetTests,
+  hydrate,
   hiddenInputSizeTests,
   hydrateAfter,
   recordInputEvents,
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   within,
 } from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
@@ -612,6 +614,25 @@ describe('<TimeField.Root />', () => {
   });
 
   describe('hydration', () => {
+    // A server whose `Intl` data differs writes other names. The root compares the attributes of
+    // each segment after the mount, and it makes the segments again.
+    it('gives a segment the aria-label of the browser when the server wrote another text', async () => {
+      const props = { locale: 'en-US', defaultValue: '15:45' };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer(HYDRATION_FILE, props),
+        'input[data-type="hour"]',
+        'aria-label',
+        'other',
+      );
+
+      const { container } = await hydrate(TimeFieldRootHydration, { serverHtml, props });
+
+      expect(segmentOf(container, 'hour')).toHaveAttribute(
+        'aria-label',
+        new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of('hour')!,
+      );
+    });
+
     removedPartHydrationTests({
       file: HYDRATION_FILE,
       component: TimeFieldRootHydration,
@@ -662,6 +683,26 @@ describe('<TimeField.Root />', () => {
           clientValue: null,
         },
       ],
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the root, the input and each segment in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <TimeField.Root data-testid="root" locale="en-US">
+            <TimeField.Input data-testid="input" />
+          </TimeField.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      const segments = screen.getAllByRole('spinbutton');
+      expect(segments).toHaveLength(3);
+      for (const segment of segments) {
+        expect(segment).toHaveAttribute('data-disabled');
+      }
     });
   });
 });

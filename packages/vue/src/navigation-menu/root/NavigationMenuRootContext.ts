@@ -31,9 +31,17 @@ export interface NavigationMenuRootContext<Value = any> {
   popupElementId: Readonly<Ref<string | undefined>>;
   positionerElement: ShallowRef<HTMLElement | null>;
   backdropElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The viewport element, also while `KeepAlive` holds it. In a positioner,
+   * `NavigationMenu.Content` teleports into it.
+   */
   viewportElement: ShallowRef<HTMLElement | null>;
   /**
-   * The `id` of `viewportElement`. The root follows each change of the attribute.
+   * The viewport element, or `null` while `KeepAlive` holds the viewport.
+   */
+  shownViewportElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The `id` of `shownViewportElement`. The root follows each change of the attribute.
    */
   viewportElementId: Readonly<Ref<string | undefined>>;
   viewportTargetElement: ShallowRef<HTMLElement | null>;

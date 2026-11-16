@@ -1,27 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { hydrate, renderOnServer } from '#test-utils';
+import { hydrate, mockBrowserToday, renderOnServer, setAttributeInHtml } from '#test-utils';
 import CalendarViewsHydration from './CalendarViewsHydration.test.vue';
 
 const file = 'src/calendar/root/CalendarViewsHydration.test.vue';
 const base = { today: '2026-11-14' };
 
-// The text of a range depends on the data of `Intl`, and Node and each browser have other data. Vue
-// does not patch a label, so a case with the years of a page gives the server HTML the range of the
-// browser. The case then tests the page, and not the data of Node.
-function withBrowserRange(serverHtml: string) {
-  const serverRange = new DOMParser()
-    .parseFromString(serverHtml, 'text/html')
-    .querySelector('[role="group"]')!
-    .getAttribute('aria-label')!;
-  if (!/\d{4}\D+\d{4}/.test(serverRange)) {
-    return serverHtml;
-  }
-  const browserRange = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-  }).formatRange(Date.parse('2016-01-01'), Date.parse('2027-01-01'));
-  return serverHtml.replaceAll(serverRange, browserRange);
-}
+const monthName = (iso: string) =>
+  new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(
+    Date.parse(iso),
+  );
+const fieldName = (field: 'month' | 'year') =>
+  new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of(field)!;
 
 describe('<Calendar.Root /> views hydration', () => {
   it.each([
@@ -39,10 +28,58 @@ describe('<Calendar.Root /> views hydration', () => {
     { name: 'four columns of three months', props: { view: 'month' as const, columns: 4 } },
   ])('hydrates $name with no warning and no difference', async ({ props }) => {
     const all = { ...base, ...props };
-    const serverHtml = withBrowserRange(await renderOnServer(file, all));
+    const serverHtml = await renderOnServer(file, all);
 
     await hydrate(CalendarViewsHydration, { serverHtml, props: all });
   });
+
+  it.each([
+    {
+      name: 'the year trigger',
+      props: {},
+      selector: '[data-testid="year-trigger"]',
+      label: `${monthName('2026-11-01')}, choose the year`,
+    },
+    {
+      name: 'the month trigger',
+      props: {},
+      selector: '[data-testid="month-trigger"]',
+      label: `${monthName('2026-11-01')}, choose the month`,
+    },
+    {
+      name: 'the grid of months',
+      props: { view: 'month' as const },
+      selector: '[role="grid"]',
+      label: fieldName('month'),
+    },
+    {
+      name: 'a month',
+      props: { view: 'month' as const },
+      selector: '[role="gridcell"]',
+      label: monthName('2026-01-01'),
+    },
+    {
+      name: 'the grid of years',
+      props: { view: 'year' as const },
+      selector: '[role="grid"]',
+      label: fieldName('year'),
+    },
+  ])(
+    'gives $name the aria-label of the browser when the server wrote another text',
+    async ({ props, selector, label }) => {
+      const all = { ...base, ...props };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer(file, all),
+        selector,
+        'aria-label',
+        'other',
+      );
+
+      const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props: all });
+
+      expect(container.querySelector(selector)).toHaveAttribute('aria-label', label);
+    },
+  );
 
   it.each([
     { name: 'a day', props: {}, text: '14' },
@@ -54,16 +91,46 @@ describe('<Calendar.Root /> views hydration', () => {
     'writes the text of $name again with no warning when the server wrote another text',
     async ({ props, text }) => {
       const all = { ...base, ...props };
-      const serverHtml = withBrowserRange(await renderOnServer(file, all)).replace(
-        `>${text}<`,
-        '>other<',
-      );
+      const serverHtml = (await renderOnServer(file, all)).replace(`>${text}<`, '>other<');
       expect(serverHtml).toContain('>other<');
 
       const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props: all });
 
       expect(container).toHaveTextContent(text);
       expect(container).not.toHaveTextContent('other');
+    },
+  );
+
+  it.each([
+    {
+      name: 'month',
+      view: 'month' as const,
+      // In another year, the month of the browser has the same cell as the month of the server.
+      distance: 'month' as const,
+      // A month cell has the month and its year as its name.
+      expected: (day: Temporal.PlainDate) => monthName(day.toString()),
+      read: (cell: HTMLElement) => cell.getAttribute('aria-label'),
+    },
+    {
+      name: 'year',
+      view: 'year' as const,
+      distance: 'year' as const,
+      expected: (day: Temporal.PlainDate) => String(day.year),
+      read: (cell: HTMLElement) => cell.textContent,
+    },
+  ])(
+    "marks the current $name of the browser's today",
+    async ({ view, distance, expected, read }) => {
+      const props = { locale: 'en-US', view };
+      const serverHtml = await renderOnServer(file, props);
+      const browserDay = mockBrowserToday(distance);
+
+      const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props });
+
+      const current = [...container.querySelectorAll<HTMLElement>('[data-current]')];
+      expect(current).toHaveLength(1);
+      expect(current[0]).toHaveAttribute('aria-current', 'date');
+      expect(read(current[0]!)).toBe(expected(browserDay));
     },
   );
 });

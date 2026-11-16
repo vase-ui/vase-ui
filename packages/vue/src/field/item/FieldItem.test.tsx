@@ -167,6 +167,26 @@ describe('<Field.Item />', () => {
     );
   });
 
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on an item in a disabled fieldset', async () => {
+      await render(() => (
+        <Field.Root data-testid="root">
+          <fieldset disabled>
+            <Field.Item data-testid="item">
+              <Checkbox.Root data-testid="checkbox" />
+              <Field.Label data-testid="label">Label</Field.Label>
+            </Field.Item>
+          </fieldset>
+        </Field.Root>
+      ));
+
+      for (const testId of ['item', 'checkbox', 'label']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
+    });
+  });
+
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <Field.Root>', async () => {

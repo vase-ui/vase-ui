@@ -1,4 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
@@ -11,11 +12,13 @@ import {
   fireEvent,
   flushMicrotasks,
   heldMountFormResetTests,
+  hydrate,
   hydrateAfter,
   recordInputEvents,
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   waitFor,
   within,
 } from '#test-utils';
@@ -763,6 +766,36 @@ describe('<DateField.Root />', () => {
   });
 
   describe('hydration', () => {
+    // A server whose `Intl` data differs writes other names. The root compares the attributes of
+    // each segment after the mount, and it makes the segments again.
+    it.each([
+      {
+        attribute: 'aria-label',
+        text: new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of('month')!,
+      },
+      {
+        attribute: 'aria-valuetext',
+        text: new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long' }).format(
+          Date.parse('2026-11-14'),
+        ),
+      },
+    ])(
+      'gives a segment the $attribute of the browser when the server wrote another text',
+      async ({ attribute, text }) => {
+        const props = { locale: 'en-US', defaultValue: '2026-11-14' };
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(HYDRATION_FILE, props),
+          'input[data-type="month"]',
+          attribute,
+          'other',
+        );
+
+        const { container } = await hydrate(DateFieldRootHydration, { serverHtml, props });
+
+        expect(segmentOf(container, 'month')).toHaveAttribute(attribute, text);
+      },
+    );
+
     removedPartHydrationTests({
       file: HYDRATION_FILE,
       component: DateFieldRootHydration,
@@ -833,5 +866,49 @@ describe('<DateField.Root />', () => {
       screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
     defaultState: ['11', '14', '2026'],
     changedState: ['2', '3', '2027'],
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the root, the input and each segment in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <DateField.Root data-testid="root" locale="en-US">
+            <DateField.Input data-testid="input" />
+          </DateField.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      const segments = screen.getAllByRole('spinbutton');
+      expect(segments).toHaveLength(3);
+      for (const segment of segments) {
+        expect(segment).toHaveAttribute('data-disabled');
+      }
+    });
+
+    it('leaves a date field in a disabled fieldset out of the form values', async () => {
+      const handleSubmit = vi.fn();
+      await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="date">
+            <fieldset disabled>
+              <DateField.Root locale="en-US" defaultValue={Temporal.PlainDate.from('2026-11-14')}>
+                <DateField.Input />
+              </DateField.Root>
+            </fieldset>
+          </Field.Root>
+          <Field.Root name="other">
+            <Field.Control defaultValue="sent" />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ other: 'sent' });
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { computed, watch } from 'vue';
 import type { HTMLAttributes, Ref } from 'vue';
-import { useIsHydrating } from '../../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../../common/hydration';
 import type { StateAttributesMapping } from '../../getStateAttributesProps';
 import type { NativeButtonProps, VaseUIComponentProps } from '../../types';
 import { useButton } from '../../use-button';
@@ -59,6 +59,7 @@ export function useDayButton<State extends DayState>(
   }: UseDayButtonOptions<State>,
 ) {
   const isHydrating = useIsHydrating();
+  const ariaAfterHydration = useAriaAfterHydration();
 
   // The button of a month that leaves has no tab stop, and the root does not focus it.
   const isTabStop = computed(
@@ -80,15 +81,17 @@ export function useDayButton<State extends DayState>(
       const tabindex = isTabStop.value ? 0 : -1;
       return [
         {
-          'aria-label': label.value,
+          'aria-label': ariaAfterHydration(label.value),
           'aria-current': state.value.today ? 'date' : undefined,
           // The button of a disabled day gets `disabled` or `aria-disabled` from `useButton`. A key
           // with the value `undefined` here would replace that attribute.
           ...(state.value.unavailable && { 'aria-disabled': true }),
-          // The tab stop of a server can be another day than the tab stop of the browser, because the
-          // clock of a server can differ. The day text also comes from the data of `Intl` in the
-          // engine. Hydration does not patch an attribute, so the string differs from the number that
-          // the button gives after the mount, and Vue then writes the attribute again.
+          // The first client render can put the tab stop on another day than the server HTML: the
+          // `Intl` data of the engine can give another first day of the week or calendar, and a root
+          // with no day of the server in the server HTML reads the clock of the browser. The day text
+          // also comes from the data of `Intl` in the engine. Hydration does not patch an attribute,
+          // so the string differs from the number that the button gives after the mount, and Vue
+          // then writes the attribute again.
           tabindex: isHydrating.value ? String(tabindex) : tabindex,
           'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
           onClick: (event: MouseEvent) => {

@@ -1,0 +1,85 @@
+diff --git a/dist/client/theme-default/components/VPLocalSearchBox.vue b/dist/client/theme-default/components/VPLocalSearchBox.vue
+index 265317ece617d0d3e0a1122373daffce97f17ccc..99e5935fcd735ae62ed6479976f591461a6c094f 100644
+--- a/dist/client/theme-default/components/VPLocalSearchBox.vue
++++ b/dist/client/theme-default/components/VPLocalSearchBox.vue
+@@ -27,11 +27,12 @@ if (import.meta.hot) {
+ 	});
+ }
+ const vitePressData = useData();
+-const { activate } = useFocusTrap(el, {
++const { activate, deactivate } = useFocusTrap(el, {
+ 	immediate: true,
+ 	allowOutsideClick: true,
+ 	clickOutsideDeactivates: true,
+-	escapeDeactivates: true
++	escapeDeactivates: true,
++	initialFocus: () => searchInput.value
+ });
+ const { localeIndex, theme } = vitePressData;
+ const isSearchIndexLoading = ref(false);
+@@ -186,9 +187,6 @@ function focusSearchInput(select = true) {
+ 	searchInput.value?.focus();
+ 	select && searchInput.value?.select();
+ }
+-onMounted(() => {
+-	focusSearchInput();
+-});
+ function onSearchBarClick(event) {
+ 	if (event.pointerType === "mouse") {
+ 		focusSearchInput();
+@@ -251,12 +249,16 @@ onKeyStroke("Enter", (e) => {
+ 	}
+ 	if (selectedPackage) {
+ 		router.go(withBase(selectedPackage.id));
+-		emit("close");
++		closeAfterNavigation();
+ 	}
+ });
+ onKeyStroke("Escape", () => {
+ 	emit("close");
+ });
++function closeAfterNavigation() {
++	deactivate({ returnFocus: false });
++	emit("close");
++}
+ /* Translations */
+ const defaultTranslations = {
+ 	button: { buttonText: "Search" },
+@@ -344,6 +346,7 @@ function onMouseMove(e) {
+           <div class="search-actions before">
+             <button
+               class="back-button"
++              tabindex="0"
+               :title="translate('modal.backButtonTitle')"
+               @click="$emit('close')"
+             >
+@@ -380,6 +383,7 @@ function onMouseMove(e) {
+             <button
+               v-if="!disableDetailedView"
+               class="toggle-layout-button"
++              tabindex="0"
+               type="button"
+               :class="{ 'detailed-list': showDetailedList }"
+               :title="translate('modal.displayDetails')"
+@@ -390,6 +394,7 @@ function onMouseMove(e) {
+ 
+             <button
+               class="clear-button"
++              tabindex="0"
+               type="reset"
+               :disabled="disableReset"
+               :title="translate('modal.resetButtonTitle')"
+@@ -419,11 +424,12 @@ function onMouseMove(e) {
+             <a
+               :href="withBase(p.id)"
+               class="result"
++              tabindex="0"
+               :class="{ selected: selectedIndex === index }"
+               :aria-label="[...p.titles, p.title].join(' > ')"
+               @mouseenter="!disableMouseOver && (selectedIndex = index)"
+               @focusin="selectedIndex = index"
+-              @click="$emit('close')"
++              @click="$event.defaultPrevented ? closeAfterNavigation() : $emit('close')"
+               :data-index="index"
+             >
+               <div>

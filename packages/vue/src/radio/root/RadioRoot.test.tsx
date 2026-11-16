@@ -5,12 +5,14 @@ import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrateAfter,
+  mockPageBeforeLoad,
   removedPartHydrationTests,
   renderOnServer,
   screen,
@@ -509,6 +511,25 @@ describe('<Radio.Root />', () => {
       input.checked = true;
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+      expect(input.checked).toBe(false);
+    });
+
+    it('writes the state of a radio with no group at the activation after a page show while KeepAlive held it', async () => {
+      const showPage = mockPageBeforeLoad();
+      const { HeldBranch, hide, show } = createHeldBranch(() => <Radio.Root value="a" />, {
+        mounted: true,
+      });
+      const { container } = await render(<HeldBranch />);
+      const input = container.querySelector<HTMLInputElement>('input[type="radio"]')!;
+      input.checked = true;
+
+      await hide();
+      showPage();
+
+      expect(input.checked).toBe(true);
+
+      await show();
 
       expect(input.checked).toBe(false);
     });

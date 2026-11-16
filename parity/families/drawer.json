@@ -49,12 +49,12 @@
     {
       "entry": "Title",
       "prop": "id",
-      "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to the root for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+      "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby` and follows a change of it. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to the root for `aria-describedby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby` and follows a change of it. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",

@@ -119,6 +119,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
   }
 
   return {
+    ref: list.ref,
     props: (attrs) =>
       list.props(
         mergeProps<'div'>(
