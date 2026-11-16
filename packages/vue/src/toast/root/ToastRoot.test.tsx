@@ -937,7 +937,7 @@ describe('<Toast.Root />', () => {
       { name: 'an aria-label of white space', attrs: { 'aria-label': ' ' } },
       { name: 'an empty aria-labelledby', attrs: { 'aria-labelledby': '' } },
       { name: 'an aria-labelledby of white space', attrs: { 'aria-labelledby': '\n\t ' } },
-    ])('$name of the consumer', ({ attrs }) => {
+    ])('VUE-106: $name of the consumer', ({ attrs }) => {
       it('names the toast with its description', async () => {
         await render(
           <Toast.Provider>

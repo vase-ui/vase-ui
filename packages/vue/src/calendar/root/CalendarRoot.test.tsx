@@ -65,7 +65,7 @@ describe('<Calendar.Root />', () => {
       { name: 'an aria-label of white space', props: { 'aria-label': ' ' } },
       { name: 'an empty aria-labelledby', props: { 'aria-labelledby': '' } },
       { name: 'an aria-labelledby of white space', props: { 'aria-labelledby': ' ' } },
-    ])('keeps the name of the month for $name of the consumer', async ({ props }) => {
+    ])('VUE-106: keeps the name of the month for $name of the consumer', async ({ props }) => {
       await renderCalendar(props);
 
       const group = screen.getByRole('group');
