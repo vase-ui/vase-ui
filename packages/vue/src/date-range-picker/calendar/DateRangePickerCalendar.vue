@@ -1,5 +1,6 @@
 <script lang="ts">
 import type {
+  RangeCalendarRootChangeEventDetails,
   RangeCalendarRootProps,
   RangeCalendarRootState,
 } from '../../range-calendar/root/RangeCalendarRoot.vue';
@@ -34,6 +35,7 @@ import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { mergeProps } from '../../merge-props';
 import RangeCalendarRoot from '../../range-calendar/root/RangeCalendarRoot.vue';
 import type { DateRangePickerRange } from '../root/DateRangePickerRootContext';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
@@ -47,6 +49,27 @@ const props = withDefaults(defineProps<DateRangePickerCalendarProps>(), {
   as: 'div',
   showOutsideDays: undefined,
 });
+
+const emit = defineEmits<{
+  /**
+   * Callback fired when the month that the grid shows changes.
+   */
+  monthChange: [month: Temporal.PlainYearMonth, eventDetails: RangeCalendarRootChangeEventDetails];
+  /**
+   * Event handler called after `monthChange` with the new month, unless a listener cancels the
+   * change. `v-model:month` uses it.
+   */
+  'update:month': [month: Temporal.PlainYearMonth];
+  /**
+   * Callback fired when the day that has the tab stop changes.
+   */
+  focusedDateChange: [date: Temporal.PlainDate, eventDetails: RangeCalendarRootChangeEventDetails];
+  /**
+   * Event handler called after `focusedDateChange` with the new day, unless a listener cancels the
+   * change. `v-model:focusedDate` uses it.
+   */
+  'update:focusedDate': [date: Temporal.PlainDate];
+}>();
 
 defineSlots<{
   default(props: { state: DateRangePickerCalendarState }): unknown;
@@ -90,6 +113,21 @@ function handleValueChange(
   }
 }
 
+const calendarHandlers = {
+  onMonthChange: (month: Temporal.PlainYearMonth, details: RangeCalendarRootChangeEventDetails) => {
+    emit('monthChange', month, details);
+  },
+  'onUpdate:month': (month: Temporal.PlainYearMonth) => {
+    emit('update:month', month);
+  },
+  onFocusedDateChange: (date: Temporal.PlainDate, details: RangeCalendarRootChangeEventDetails) => {
+    emit('focusedDateChange', date, details);
+  },
+  'onUpdate:focusedDate': (date: Temporal.PlainDate) => {
+    emit('update:focusedDate', date);
+  },
+};
+
 // `RangeCalendar.Root` has a type parameter for the kind of its ends, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
 // default value gives the kind of a new end, the same kind as for the fields.
@@ -100,7 +138,7 @@ function calendarProps() {
     defaultValue: [picker.template.value, picker.template.value],
   };
   return {
-    ...omitUndefinedAttributes(attrs),
+    ...mergeProps(calendarHandlers, omitUndefinedAttributes(attrs)),
     ...props,
     ...valueProps,
     minDate: root.minDate,

@@ -3,11 +3,14 @@
 import { shallowRef } from 'vue';
 import { expectType } from '#test-utils';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import type { RangeCalendar } from '@vase-ui/vue/range-calendar';
 
 const days = shallowRef<DateRangePicker.Root.Value<Temporal.PlainDate>>([null, null]);
 const zoned = shallowRef<DateRangePicker.Root.Value<Temporal.ZonedDateTime>>([null, null]);
 const optional = shallowRef<DateRangePicker.Root.Value<Temporal.PlainDate> | null>(null);
 const open = shallowRef(false);
+const month = shallowRef(Temporal.PlainYearMonth.from('2026-11'));
+const focusedDate = shallowRef(Temporal.PlainDate.from('2026-11-14'));
 
 function onDaysChange(
   value: DateRangePicker.Root.Value<Temporal.PlainDate>,
@@ -57,5 +60,16 @@ function onWrongKind(value: [Temporal.PlainTime | null, Temporal.PlainTime | nul
     <DateRangePicker.StartField name="from" />
     <!-- @vue-expect-error the root owns the name of the form entry -->
     <DateRangePicker.EndField name="to" />
+    <!-- The calendar gives the events of `RangeCalendar.Root` that are not about the value. -->
+    <DateRangePicker.Calendar
+      v-model:month="month"
+      v-model:focused-date="focusedDate"
+      @month-change="
+        (next, details) => {
+          expectType<Temporal.PlainYearMonth, typeof next>(next);
+          expectType<RangeCalendar.Root.ChangeEventDetails, typeof details>(details);
+        }
+      "
+    />
   </DateRangePicker.Root>
 </template>

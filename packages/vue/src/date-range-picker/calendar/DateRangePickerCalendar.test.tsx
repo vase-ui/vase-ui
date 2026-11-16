@@ -96,6 +96,50 @@ describe('<DateRangePicker.Calendar />', () => {
     expect(screen.getByRole('dialog')).not.toBe(null);
   });
 
+  it('emits the events of the month again, and a listener can cancel the change', async () => {
+    const onMonthChange = vi.fn((_month: unknown, details: { cancel: () => void }) => {
+      details.cancel();
+    });
+    const onUpdateMonth = vi.fn();
+    const { user } = await renderPicker(
+      { defaultValue: range('2026-11-18', '2026-11-20') },
+      { onMonthChange, 'onUpdate:month': onUpdateMonth },
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('next')).not.toBe(null);
+    });
+
+    await user.click(screen.getByTestId('next'));
+
+    expect(String(onMonthChange.mock.lastCall?.[0])).toBe('2026-12');
+    expect(onMonthChange.mock.lastCall?.[1]).toMatchObject({ reason: 'month-change' });
+    expect(onUpdateMonth).not.toHaveBeenCalled();
+    expect(dayButton('2026-11-18')).not.toBe(null);
+
+    onMonthChange.mockImplementation(() => undefined);
+    await user.click(screen.getByTestId('next'));
+
+    expect(onUpdateMonth.mock.lastCall?.[0].toString()).toBe('2026-12');
+  });
+
+  it('emits the events of the day that has the tab stop again', async () => {
+    const onFocusedDateChange = vi.fn();
+    const onUpdateFocusedDate = vi.fn();
+    const { user } = await renderPicker(
+      { defaultValue: range('2026-11-18', '2026-11-20') },
+      { onFocusedDateChange, 'onUpdate:focusedDate': onUpdateFocusedDate },
+    );
+    await waitFor(() => {
+      expect(dayButton('2026-11-18')).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowRight}');
+
+    expect(String(onFocusedDateChange.mock.lastCall?.[0])).toBe('2026-11-19');
+    expect(onFocusedDateChange.mock.lastCall?.[1]).toMatchObject({ reason: 'keyboard' });
+    expect(String(onUpdateFocusedDate.mock.lastCall?.[0])).toBe('2026-11-19');
+  });
+
   // Vue gives an absent Boolean prop the value `false`, and a broadcast calendar shows the days of
   // the weeks that it shares with the months around it.
   it('shows the outside days of a broadcast calendar with no `showOutsideDays`', async () => {

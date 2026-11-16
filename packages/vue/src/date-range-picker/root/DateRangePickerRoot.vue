@@ -121,7 +121,8 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
    */
   disabled?: boolean | undefined;
   /**
-   * Whether the user should be unable to change the value. A read-only picker does not open.
+   * Whether the user should be unable to change the value. The user cannot open the popup of a
+   * read-only picker.
    * @default false
    */
   readOnly?: boolean | undefined;
