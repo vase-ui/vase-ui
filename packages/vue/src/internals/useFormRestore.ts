@@ -70,9 +70,10 @@ export function useFormRestore(
  * event. At a restore, an `<input>` or a `<textarea>` whose value is not the value that the part
  * handled last gets the events of {@link dispatchTakeEvents}.
  *
- * Until its `pageshow` event, a render of the part that gives the input its earlier value keeps a
- * value that the part did not handle. Call it in the component that renders the input, because it
- * uses the `onBeforeUpdate` and `onUpdated` hooks of that component.
+ * While the part waits for its `pageshow` event, as {@link useFormRestore} gives, a render of the
+ * part that gives the input its earlier value keeps a value that the part did not handle. Call it in
+ * the component that renders the input, because it uses the `onBeforeUpdate` and `onUpdated` hooks
+ * of that component.
  * @param input The element of the control.
  * @param getHandledValue Gives the value that the input had after the last event that the part
  * handled, or after the last write of Vue or of the part. The value sanitization of the input type
