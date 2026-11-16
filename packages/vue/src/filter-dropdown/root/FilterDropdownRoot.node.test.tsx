@@ -10,7 +10,7 @@ function attribute(tag: string, name: string) {
 }
 
 describe('<FilterDropdown.Root /> on a server', () => {
-  it('renders each item, no empty message and the input that controls the list', async () => {
+  it('renders each item, no empty message and an input that names no list', async () => {
     const html = await renderToString(
       <FilterDropdown.Root
         open
@@ -41,6 +41,7 @@ describe('<FilterDropdown.Root /> on a server', () => {
     expect(attribute(input, 'role')).toBe('searchbox');
     expect(attribute(input, 'value')).toBe('zz');
     expect(attribute(list, 'id')).toMatch(/^vase-ui-./);
-    expect(attribute(input, 'aria-controls')).toBe(attribute(list, 'id'));
+    // The root reads the id from the list element, and a server has no element.
+    expect(attribute(input, 'aria-controls')).toBe(undefined);
   });
 });

@@ -2136,6 +2136,42 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
     });
 
+    it('uses the id from a custom trigger render element for popup labelling', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger
+              v-slots={{
+                render: ({ props }: { props: HTMLProps }) => (
+                  <button {...props} id="custom-trigger">
+                    Fruit
+                  </button>
+                ),
+              }}
+            />
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter fruit" />
+                  <Menu.List>
+                    <Menu.Item>Apple</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Fruit' }));
+
+      expect(await screen.findByRole('dialog')).toHaveAttribute(
+        'aria-labelledby',
+        'custom-trigger',
+      );
+      expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', 'custom-trigger');
+    });
+
     it('uses an explicit popup label instead of the trigger label', async () => {
       const { user } = await render(
         <Menu.FilterProvider>
@@ -5355,6 +5391,37 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       const trigger = screen.getByRole('button', { name: 'Actions' });
       expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', trigger.id);
+    });
+
+    it('omits aria-controls when the list renders with an explicitly empty id', async () => {
+      await render(
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List
+                    v-slots={{
+                      render: ({ props }: { props: HTMLProps }) => (
+                        <div {...props} id="">
+                          <Menu.Item>Rename</Menu.Item>
+                        </div>
+                      ),
+                    }}
+                  />
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await flushMicrotasks();
+      expect(input).not.toHaveAttribute('aria-controls');
+      expect(screen.getByRole('menu').id).toBe('');
     });
 
     it('VUE-93: names the generated id of a list with an empty id in aria-controls', async () => {

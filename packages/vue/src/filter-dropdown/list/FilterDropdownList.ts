@@ -1,15 +1,17 @@
-import { computed, onScopeDispose, provide, toValue, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { provide, toValue } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { getTarget } from '../../common/shadowDom';
 import { givenId } from '../../internals/useBaseUiId';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { FilterDropdownGroupContext } from '../group/FilterDropdownGroupContext';
 import { useFilterDropdownRootContext } from '../root/FilterDropdownRootContext';
 import { refocusOwner } from '../utils/refocusOwner';
 
 /**
- * The list of a filter dropdown. The part that calls it gives `props` to `useRenderElement` with
- * the default tag `div`.
+ * The list of a filter dropdown. The part that calls it gives `ref` and `props` to
+ * `useRenderElement` with the default tag `div`.
  *
  * The list's groups and items belong to this root's query. A nested root's list renders inside an
  * enclosing group, which must not count them as its own members. The composable thus provides no
@@ -21,17 +23,6 @@ export function useFilterDropdownList(
   params: UseFilterDropdownListParameters = {},
 ): UseFilterDropdownListReturnValue {
   const context = useFilterDropdownRootContext();
-
-  const id = computed(() => givenId(toValue(params.id)) ?? context.defaultListId.value);
-
-  // The root names the list with the id that the list renders. A generated id is not a request, so
-  // removing an explicit id gives the generated id back.
-  watch(
-    () => (id.value === context.defaultListId.value ? undefined : id.value),
-    context.setRenderedListId,
-    { immediate: true },
-  );
-  onScopeDispose(() => context.setRenderedListId(undefined));
 
   provide(FilterDropdownGroupContext, null);
 
@@ -53,12 +44,12 @@ export function useFilterDropdownList(
   };
 
   return {
-    id,
+    ref: useKeepAliveElementRef(createElementSetter(context.listElement)),
     props: (attrs) => [
       {
         // Chromium includes scrollable elements in sequential focus navigation by default.
         tabindex: -1,
-        id: id.value,
+        id: givenId(toValue(params.id)) ?? context.defaultListId.value,
         ...listeners,
       },
       attrs,
@@ -74,7 +65,7 @@ export interface UseFilterDropdownListParameters {
 }
 
 export interface UseFilterDropdownListReturnValue {
-  /** The id that the list renders. */
-  id: ComputedRef<string>;
+  /** The function ref of the list element. The root reads the `id` of that element. */
+  ref: (element: HTMLElement | null) => void;
   props: NonNullable<UseRenderElementParameters<FilterDropdownListState>['props']>;
 }

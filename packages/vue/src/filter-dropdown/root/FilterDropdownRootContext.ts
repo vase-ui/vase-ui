@@ -1,5 +1,5 @@
 import { computed, inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { REASONS } from '../../internals/reasons';
 import type { FilterDropdownStore } from '../store';
@@ -19,10 +19,12 @@ export interface FilterDropdownRootContext {
   setKeyboardModality: (keyboardModality: boolean) => void;
   autoHighlight: ComputedRef<boolean | 'always'>;
   triggerId: ComputedRef<string | undefined>;
+  /** The id that the list has when the consumer gives it no id. */
   defaultListId: ComputedRef<string>;
+  /** The id that the list element has now. `undefined` with no list element or an empty id. */
   listId: ComputedRef<string | undefined>;
-  /** Records the id the list rendered with, when it differs from `defaultListId`. */
-  setRenderedListId: (id: string | undefined) => void;
+  /** The list element. The list writes it. */
+  listElement: ShallowRef<HTMLElement | null>;
   /** The input, which owns real focus while the host uses virtual list navigation. */
   focusOwnerRef: Ref<HTMLElement | null>;
   /** Moves the host's highlight. */
