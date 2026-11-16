@@ -191,6 +191,7 @@ export function useCompositeRoot<Metadata>(
   // item that can hold the tab stop, the tab stop moves to the first item that can hold it, as the
   // APG radio pattern says for a group with no checked radio. While the composite has the focus,
   // the highlight stays on the item that the user chose, and the keys continue from it.
+  // Base UI does this only in `Tabs.Tab`.
   // Limit: the observer and the focus test cover the element of the root only, as the search for
   // the tab stop of the server HTML does.
   function moveTabStopToActiveItem() {
