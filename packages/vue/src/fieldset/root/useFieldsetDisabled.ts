@@ -64,7 +64,8 @@ function isInDisabledFieldset(element: Element): boolean {
 /**
  * Whether a fieldset disables the part of `element`: `Fieldset.Root` with `disabled`, or a native
  * `<fieldset disabled>` as HTML says. Call it in `setup`. The part knows a native fieldset only
- * after its mount, so the server HTML follows `Fieldset.Root` only.
+ * after its mount, so the server HTML follows `Fieldset.Root` only. While `element` gives `null`,
+ * no native fieldset disables the part.
  */
 export function useFieldsetDisabled(
   element: MaybeRefOrGetter<Element | null | undefined>,
@@ -85,7 +86,13 @@ export function useFieldsetDisabled(
     watch(
       [() => toValue(element), isHeld, () => fieldset?.disabled.value],
       ([partElement, held], _previous, onCleanup) => {
-        if (!partElement || held) {
+        if (held) {
+          return;
+        }
+        // The root of a date picker reads the element of its field or of its trigger, and each of
+        // them can unmount while the root stays.
+        if (!partElement) {
+          isNativeFieldsetDisabled.value = false;
           return;
         }
 
