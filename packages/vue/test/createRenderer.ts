@@ -102,8 +102,8 @@ export async function waitForLaterMillisecond<Result>(
 }
 
 /**
- * Makes `render` for a test file. The helpers do not use `@testing-library/vue`, because it
- * depends on another version of `@testing-library/dom`.
+ * The helpers do not use `@testing-library/vue`, because it depends on another version of
+ * `@testing-library/dom`.
  */
 export function createRenderer() {
   const mounted: { unmount: () => void; container: HTMLElement }[] = [];
