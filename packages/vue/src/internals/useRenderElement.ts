@@ -28,8 +28,8 @@ import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
 import { mergeClassNames, mergeProps, mergePropsN } from '../merge-props';
 import { getStateAttributesProps } from './getStateAttributesProps';
-import { givenAttributes } from './givenAttributes';
 import type { StateAttributesMapping } from './getStateAttributesProps';
+import { givenAttributes } from './givenAttributes';
 import { resolveElement } from './resolveElement';
 import type { HTMLProps, VaseUIComponentProps } from './types';
 

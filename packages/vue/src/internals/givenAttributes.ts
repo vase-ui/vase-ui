@@ -3,7 +3,6 @@ type NotGivenTest = (value: unknown) => boolean;
 const isEmpty: NotGivenTest = (value) => value === '';
 const isBlank: NotGivenTest = (value) => typeof value === 'string' && value.trim() === '';
 
-// A row is an attribute that has a value that is not given, with the test for that value.
 // `undefined` is not given for each attribute, so it has no row (`VUE-103`).
 // `form` has no row: an empty `form` has a meaning in HTML. The control then has no form owner.
 const NOT_GIVEN_TESTS = [
