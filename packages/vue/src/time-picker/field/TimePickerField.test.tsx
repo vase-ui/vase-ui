@@ -91,7 +91,7 @@ describe('<TimePicker.Field />', () => {
     expect(segmentOf(container, 'minute').value).toBe('');
   });
 
-  // The part has no prop for the names. The attribute reaches `TimeField.Root`, which reads it.
+  // The part gives the names to `TimeField.Root`, which reads them.
   it('names the group with the elements of `aria-labelledby`, and not with the label of the field', async () => {
     await render(
       <Field.Root name="when">

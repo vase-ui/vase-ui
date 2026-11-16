@@ -8,6 +8,7 @@ import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
+import * as TimePicker from '../src/time-picker/index.parts';
 
 <Checkbox.Root aria-label="x" aria-labelledby="id" />;
 <Checkbox.Root ariaLabel="x" ariaLabelledby="id" />;
@@ -84,3 +85,8 @@ import * as TimeField from '../src/time-field/index.parts';
 <TimeField.Root ariaLabelledby="id" />;
 // @ts-expect-error `aria-labelledby` is a string
 <TimeField.Root aria-labelledby={5} />;
+
+<TimePicker.Field aria-labelledby="id" />;
+<TimePicker.Field ariaLabelledby="id" />;
+// @ts-expect-error `aria-labelledby` is a string
+<TimePicker.Field aria-labelledby={5} />;
