@@ -1,5 +1,5 @@
 diff --git a/dist/client/theme-default/components/VPLocalSearchBox.vue b/dist/client/theme-default/components/VPLocalSearchBox.vue
-index 265317ece617d0d3e0a1122373daffce97f17ccc..d3173bb6c3fdbc939d36a96c46ba215a0edb4c98 100644
+index 265317ece617d0d3e0a1122373daffce97f17ccc..f80643b6cdfbefeab816a3292a473f0ea488bb64 100644
 --- a/dist/client/theme-default/components/VPLocalSearchBox.vue
 +++ b/dist/client/theme-default/components/VPLocalSearchBox.vue
 @@ -27,11 +27,12 @@ if (import.meta.hot) {
@@ -31,7 +31,7 @@ index 265317ece617d0d3e0a1122373daffce97f17ccc..d3173bb6c3fdbc939d36a96c46ba215a
  }
  /* Search keyboard selection */
 +function onTab(event) {
-+	if (event.defaultPrevented) return;
++	if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
 +	const controls = [...el.value.querySelectorAll(".search-bar button, .search-input, .results > li > .result")].filter((control) => !control.disabled && control.getClientRects().length);
 +	const index = controls.indexOf(document.activeElement);
 +	const next = event.shiftKey ? controls[index - 1] ?? controls.at(-1) : controls[index + 1] ?? controls[0];
@@ -68,36 +68,7 @@ index 265317ece617d0d3e0a1122373daffce97f17ccc..d3173bb6c3fdbc939d36a96c46ba215a
      >
        <div class="backdrop" @click="$emit('close')" />
  
-@@ -344,6 +356,7 @@ function onMouseMove(e) {
-           <div class="search-actions before">
-             <button
-               class="back-button"
-+              tabindex="0"
-               :title="translate('modal.backButtonTitle')"
-               @click="$emit('close')"
-             >
-@@ -380,6 +393,7 @@ function onMouseMove(e) {
-             <button
-               v-if="!disableDetailedView"
-               class="toggle-layout-button"
-+              tabindex="0"
-               type="button"
-               :class="{ 'detailed-list': showDetailedList }"
-               :title="translate('modal.displayDetails')"
-@@ -390,6 +404,7 @@ function onMouseMove(e) {
- 
-             <button
-               class="clear-button"
-+              tabindex="0"
-               type="reset"
-               :disabled="disableReset"
-               :title="translate('modal.resetButtonTitle')"
-@@ -419,11 +434,12 @@ function onMouseMove(e) {
-             <a
-               :href="withBase(p.id)"
-               class="result"
-+              tabindex="0"
-               :class="{ selected: selectedIndex === index }"
+@@ -423,7 +435,7 @@ function onMouseMove(e) {
                :aria-label="[...p.titles, p.title].join(' > ')"
                @mouseenter="!disableMouseOver && (selectedIndex = index)"
                @focusin="selectedIndex = index"
