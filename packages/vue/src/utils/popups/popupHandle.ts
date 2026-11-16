@@ -1,5 +1,5 @@
-import { markRaw, shallowRef } from 'vue';
-import type { ShallowRef } from 'vue';
+import { hasInjectionContext, inject, markRaw, shallowRef } from 'vue';
+import type { InjectionKey, ShallowRef } from 'vue';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -47,6 +47,19 @@ export interface PopupHandleStoreWithOpen extends PopupHandleStoreWithTriggers {
     eventDetails: VaseUIChangeEventDetails<typeof REASONS.imperativeAction>,
   ): void;
 }
+
+/**
+ * Keeps `call`, a call of `handle`, for a popup root of that handle above the part that makes the
+ * call, while `KeepAlive` holds the root and its store is detached. The root runs `call` after its
+ * activation. Returns whether a root kept the call.
+ */
+export type TakeHeldRootCall = (handle: object, call: () => void) => boolean;
+
+/**
+ * Gives a part the `TakeHeldRootCall` of the nearest popup root above it. A root gives a call of
+ * another handle to the root above it.
+ */
+export const HeldRootCallContext: InjectionKey<TakeHeldRootCall> = Symbol('HeldRootCallContext');
 
 /**
  * The base of the popup handles. A handle connects detached triggers to a mounted root.
@@ -189,9 +202,21 @@ export class BasePopupHandle<
   }
 
   /**
+   * Gives `call` to the popup root of this handle above the part that calls the handle, while
+   * `KeepAlive` holds that root and its store is detached. The root runs `call` after its
+   * activation. Returns whether a root took the call. A call with no current component, such as a
+   * call in an event handler, gets no root. A method that reads `attachedStoreUntracked` calls it
+   * first, and returns when it gives `true`.
+   */
+  protected deferToHeldRoot(call: () => void): boolean {
+    return hasInjectionContext() && (inject(HeldRootCallContext, null)?.(this, call) ?? false);
+  }
+
+  /**
    * Opens the attached root and links it to the trigger with the given id. It does nothing, and
-   * warns in a development build, while no root is attached. The `open()` method of each concrete
-   * handle calls it and only narrows the type of the parameter.
+   * warns in a development build, while no root is attached. A call from a part below a root of
+   * this handle that `KeepAlive` holds goes to that root (`deferToHeldRoot`). The `open()` method of
+   * each concrete handle calls it and only narrows the type of the parameter.
    *
    * When no registered trigger has the id, an anchored popup throws (see `throwOnMissingTrigger`).
    * Dialog opens with no trigger and warns in a development build.
@@ -202,6 +227,9 @@ export class BasePopupHandle<
    * with no trigger.
    */
   protected openByTrigger(triggerId: string | null | undefined) {
+    if (this.deferToHeldRoot(() => this.openByTrigger(triggerId))) {
+      return;
+    }
     const attachedStore = this.attachedStoreUntracked;
 
     if (attachedStore === null) {
@@ -255,11 +283,15 @@ export class BasePopupHandle<
 
   /**
    * Closes the attached root. It does nothing, and warns in a development build, while no root is
-   * attached. The `close()` method of each concrete handle calls it.
+   * attached. A call from a part below a root of this handle that `KeepAlive` holds goes to that
+   * root (`deferToHeldRoot`). The `close()` method of each concrete handle calls it.
    *
    * Call it only in an event handler or an effect, and not in a render.
    */
   protected closePopup() {
+    if (this.deferToHeldRoot(() => this.closePopup())) {
+      return;
+    }
     const attachedStore = this.attachedStoreUntracked;
 
     if (attachedStore === null) {
