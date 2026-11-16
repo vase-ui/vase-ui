@@ -312,7 +312,7 @@ An edge works with a pointer only. It has no key, no focus, no ARIA role and no 
 
 ## Elements that are not panels
 
-An element in the root that is not a panel or a handle, such as a toolbar, keeps its CSS size. The panel space does not hold it. A handle before the first panel or after the last panel moves nothing. It has no tab stop and no value, and its hit area does not take a press.
+An element in the root that is not a panel or a handle, such as a toolbar, keeps its CSS size. The panel space does not hold it. A handle before the first panel or after the last panel moves nothing. It has no tab stop and no value, and its hit area does not take a press. It has `data-at-min` and `data-at-max`, so a style sheet can show that it cannot move.
 
 ## Panels that mount later
 
@@ -486,6 +486,7 @@ These can move at the mount:
 - The hit area, when the main pointer is coarse. The server HTML has the `fine` size.
 - The value attributes of each handle of a root with a length panel. A handle gets its value at the first measurement.
 - The `aria-valuetext` of `getAriaValueText` when it uses `pixelSize` or the locale. `pixelSize` is `undefined` and the locale is `en-US` until the mount.
+- The state of a handle before the first panel or after the last panel. The server HTML gives it a tab stop, a hit area that takes a press and no end attribute. After the mount, it has no tab stop, its hit area does not take a press, and it has `data-at-min` and `data-at-max`.
 
 ## Keyboard
 
