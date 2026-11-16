@@ -10,6 +10,8 @@ import {
   within,
 } from '#test-utils';
 
+// Probe of the CI selection.
+
 describe('<Separator />', () => {
   const { render } = createRenderer();
 
