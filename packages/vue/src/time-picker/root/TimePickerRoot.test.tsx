@@ -245,6 +245,29 @@ describe('<TimePicker.Root />', () => {
       expect(hiddenInputOf(container).value).toBe('14:30');
     });
 
+    it('keeps the value when a press outside closes the popup', async () => {
+      const onValueChange = vi.fn();
+      const onOpenChange = vi.fn();
+      const { user, container } = await renderPicker({
+        list: true,
+        defaultValue: time('14:30'),
+        onValueChange,
+        onOpenChange,
+      });
+      const popup = await open(user);
+      await waitFor(() => {
+        expect(listItem('14:30')).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+      await user.click(document.body);
+
+      await expectClosed(popup);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('outside-press');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(hiddenInputOf(container).value).toBe('14:30');
+    });
+
     it('goes to the selected time when Alt+Down in a segment opens the popup', async () => {
       const { user, container } = await renderPicker({ list: true, defaultValue: time('14:30') });
 
