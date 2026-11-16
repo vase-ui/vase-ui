@@ -66,6 +66,7 @@ export interface PopoverTriggerProps<Payload = unknown>
 
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, shallowRef } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -126,13 +127,15 @@ const isTouchPressOpen = computed(() => store.value.select('isTouchPressOpen', p
 const hasFocusGuards = computed(() => store.value.select('hasTriggerFocusGuards', triggerId.value));
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   triggerId,
   store,
   () => ({
     payload: props.payload,
-    disabled: props.disabled,
+    disabled: isDisabled.value,
     openOnHover: props.openOnHover,
     closeDelay: props.closeDelay,
   }),
@@ -142,7 +145,7 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
 const handleClose = safePolygon();
 
 const hoverProps = useHoverTriggerInteraction(store, {
-  enabled: () => !props.disabled && props.openOnHover && !isTouchPressOpen.value,
+  enabled: () => !isDisabled.value && props.openOnHover && !isTouchPressOpen.value,
   mouseOnly: true,
   move: false,
   handleClose: () => handleClose,
@@ -163,7 +166,7 @@ const rootTriggerProps = computed(() =>
 );
 
 const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
+  disabled: isDisabled,
   native: () => props.nativeButton,
 });
 
@@ -176,7 +179,7 @@ const stateAttributesMapping: StateAttributesMapping<PopoverTriggerState> = {
 };
 
 const state = computed<PopoverTriggerState>(() => ({
-  disabled: props.disabled,
+  disabled: isDisabled.value,
   open: isOpenedByThisTrigger.value,
 }));
 

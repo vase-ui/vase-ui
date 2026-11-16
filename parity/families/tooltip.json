@@ -31,6 +31,16 @@
   "surfaceAdditions": [
     {
       "entry": "Trigger",
+      "stateField": "disabled",
+      "reason": "The state of a native button in a disabled fieldset (`VUE-112`). Base UI has no such state."
+    },
+    {
+      "entry": "TooltipTriggerDataAttributes",
+      "constant": "disabled",
+      "reason": "`data-disabled` of a native button in a disabled fieldset (`VUE-112`). Base UI has no such attribute."
+    },
+    {
+      "entry": "Trigger",
       "prop": "id",
       "reason": "The part reads `id` to register the trigger in the store of the tooltip, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     }

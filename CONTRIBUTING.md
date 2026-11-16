@@ -125,13 +125,16 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 | `upstreamPaths`         | The Base UI paths that the family ports, as globs. A family with a docs folder also names that folder: `docs/src/app/(docs)/react/components/<family>/**`, or `docs/src/app/(docs)/react/utils/<family>/**`. |
 | `matchedCommit`         | The Base UI commit that the family matches.                                                                                                                                                                  |
 | `exceptions`            | The exception rows of the family. See [Exception rows](#exception-rows).                                                                                                                                     |
-| `surfaceAdditions`      | The props, emits, slots and exposed members of a part that no Base UI row maps to, and the change reasons that Base UI lacks, each with its reason.                                                          |
+| `surfaceAdditions`      | The props, emits, slots, exposed members, change reasons, state fields and constants that Base UI lacks, each with its reason.                                                                               |
 | `returnTypeDifferences` | The functions that return a different type from the type that Base UI documents, each with the Vase UI type and the reason.                                                                                  |
 | `notApplicableCommits`  | The Base UI commits that touch these paths and do not apply to Vue, each with its reason.                                                                                                                    |
 
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A row can name one change reason instead: `{ "entry": "Root", "changeEventReason": "none", "reason": "…" }`. It accepts a reason that the `ChangeEventReason` type of the part has and Base UI lacks. `pnpm parity:check` reports the row as stale when Base UI has that reason, or when the type does not have it.
+- A row can name one state field: `{ "entry": "Trigger", "stateField": "disabled", "reason": "…" }`.
+- A row can name one constant: `{ "entry": "TooltipTriggerDataAttributes", "constant": "disabled", "reason": "…" }`. Its `entry` is the name of the export that holds the constant.
+- These rows accept only the named member. A row is stale when Base UI has the member, or Vase UI lacks it.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
 - A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. The part can give such an attribute a default, as `NumberField.Input` does for `aria-roledescription`. The part sets the default before the attributes of the consumer, so the attribute of the consumer wins.
 - The extract reads the rows of the surface only from the `types.md` of the docs folder. Without that folder, `pnpm parity:check` does not compare the props, emits, slots, exposed members and return types of the family.
@@ -261,6 +264,8 @@ A part that Base UI takes from another family is exported again and not copied: 
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
+- These native button parts read `useFieldsetDisabled` with their own element (`VUE-112`): `Button`, `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, `Tabs.Tab`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup. `Tabs.Tab` gives only its `disabled` prop to the metadata that the root reads for the selection, so a disabled fieldset does not change the selected panel.
+- `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. Before the mount it has no element. It is then a native button when `as` is `button` and it has no `#render` slot, so the server HTML follows `Fieldset.Root`. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
 The template of each such part has two lines and no wrapper component:
 
@@ -1760,6 +1765,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `popupConformanceTests`, `positionerConformanceTests`, `detachedTriggersConformanceTests` and `viewportConformanceTests`: the tests of a popup family.
   - `popupListConformanceTests`: the tests of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox.
   - `dialogRootSharedTests`: the tests of the roots of Dialog and Alert Dialog.
+  - `fieldsetDisabledTests`: the test of each native button part that reads `useFieldsetDisabled` (`VUE-112`).
   - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup in the popup that closes in the same update (`BUG-5519`).
   - `hiddenInputSizeTests`: the test of a part with a hidden input that has no `name`.
   - `hiddenInputTypeTests`: the test of a part with a hidden input that `getHiddenInputType` types.

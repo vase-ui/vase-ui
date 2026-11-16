@@ -47,6 +47,7 @@ export interface DialogTriggerProps<Payload = unknown>
 
 <script setup lang="ts" generic="Payload = unknown">
 import { computed } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
@@ -95,8 +96,11 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   () => ({ payload: props.payload }),
 );
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
+
 const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
+  disabled: isDisabled,
   native: () => props.nativeButton,
 });
 
@@ -109,7 +113,7 @@ const interactionTypeProps = useOpenMethodTriggerProps(
 );
 
 const state = computed<DialogTriggerState>(() => ({
-  disabled: props.disabled,
+  disabled: isDisabled.value,
   open: isOpenedByThisTrigger.value,
 }));
 

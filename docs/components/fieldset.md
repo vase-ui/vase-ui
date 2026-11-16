@@ -54,6 +54,10 @@ In the server HTML, a root with no `aria-label` has the id of `Fieldset.Legend` 
 
 `Fieldset.Root` with `disabled`, or a native `<fieldset disabled>`, disables each Vase UI form part in it, as the `disabled` prop of the part does. A part in the first `<legend>` of a native fieldset stays enabled, as in HTML. `Form` leaves out the value of each field that a fieldset disables. The parts read a native fieldset after the mount, so the server HTML shows them enabled.
 
+A disabled fieldset also disables these native button parts: `Button`, `Toggle`, `Tabs.Tab`, and the triggers of Accordion and Collapsible. It disables the native button triggers of Dialog, Alert Dialog, Drawer, Menu, Popover, Date Picker, Date Range Picker, Time Picker, Navigation Menu and Tooltip too. Each shows `data-disabled` and the `disabled` slot state. A disabled trigger cannot open its popup on hover. The selected tab panel stays visible. A fieldset does not disable a part with `:native-button="false"`.
+
+For `Tooltip.Trigger`, the fieldset rule applies when its element is a native button, also through `as` or `#render`. With `#render` or a component in `as`, the part reads its element after the mount, so the server HTML shows it enabled also in `Fieldset.Root`. Its `disabled` prop still suppresses only the tooltip; `data-trigger-disabled` marks that state.
+
 ## API reference
 
 <ApiReference />

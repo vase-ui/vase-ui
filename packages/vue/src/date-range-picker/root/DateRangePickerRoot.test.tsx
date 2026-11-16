@@ -981,7 +981,7 @@ describe('<DateRangePicker.Root />', () => {
     it('reads the fieldset at the trigger after the fields unmount', async () => {
       const hasFields = shallowRef(true);
       await render(() => (
-        <DateRangePicker.Root locale="en-US">
+        <DateRangePicker.Root locale="en-US" open>
           {hasFields.value ? (
             <>
               <DateRangePicker.StartField>
@@ -995,14 +995,22 @@ describe('<DateRangePicker.Root />', () => {
           <fieldset disabled>
             <DateRangePicker.Trigger data-testid="trigger">Open</DateRangePicker.Trigger>
           </fieldset>
+          <DateRangePicker.Portal>
+            <DateRangePicker.Positioner>
+              <DateRangePicker.Popup aria-label="Choose dates">
+                <DateRangePicker.Calendar data-testid="calendar" today={today()} />
+              </DateRangePicker.Popup>
+            </DateRangePicker.Positioner>
+          </DateRangePicker.Portal>
         </DateRangePicker.Root>
       ));
-      expect(screen.getByTestId('trigger')).not.toHaveAttribute('data-disabled');
+      expect(await screen.findByTestId('calendar')).not.toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
 
       hasFields.value = false;
 
       await waitFor(() => {
-        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+        expect(screen.getByTestId('calendar')).toHaveAttribute('data-disabled');
       });
     });
 

@@ -39,6 +39,7 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
@@ -65,7 +66,10 @@ const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsib
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();
 
-const isDisabled = computed(() => props.disabled || contextDisabled.value);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => props.disabled || contextDisabled.value || (props.nativeButton && fieldsetDisabled.value),
+);
 
 const { getButtonProps, buttonRef } = useButton({
   disabled: isDisabled,
