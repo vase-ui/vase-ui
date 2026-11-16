@@ -117,13 +117,6 @@ export function provideMenuFilterDropdown(
     }
   });
 
-  // Trust the rendered element's id once it exists: an explicitly empty id must not fall back to a
-  // registered id that no element carries.
-  const triggerId = computed(() => {
-    const activeTriggerElement = store.select('activeTriggerElement');
-    return activeTriggerElement ? activeTriggerElement.id || null : store.select('activeTriggerId');
-  });
-
   provide(MenuFilterImplContext, MENU_FILTER_IMPL);
 
   useFilterDropdownRoot({
@@ -133,7 +126,7 @@ export function provideMenuFilterDropdown(
     value,
     query,
     onValueChange: handleValueChange,
-    triggerId,
+    triggerId: context.popupLabelId,
     listRef: store.context.itemDomElements,
     getActiveIndex: () => toRaw(store.state).activeIndex,
     setActiveIndex(index) {
