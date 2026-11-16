@@ -144,6 +144,7 @@ import { computed, provide, shallowRef, watch } from 'vue';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { hourCycleOf } from '../../internals/date-time/format';
 import { assertTemporal, toPlainTime, withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -156,7 +157,6 @@ import {
   faceNumberOf,
   faceNumbers,
   gridOf,
-  hourCycleOf,
   isTimeAllowed,
   isValidStep,
   nextView,

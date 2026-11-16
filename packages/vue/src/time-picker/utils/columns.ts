@@ -1,5 +1,5 @@
 import { formatNumber } from '../../common/formatNumber';
-import { formatter } from '../../internals/date-time/format';
+import { dayPeriodText } from '../../internals/date-time/format';
 import {
   dayPeriodOf,
   faceNumber,
@@ -94,13 +94,7 @@ export function columnText(
   locale: Intl.LocalesArgument,
 ): string {
   if (unit === 'dayPeriod') {
-    const [format, epochMilliseconds] = formatter(
-      new Temporal.PlainTime(value === 'pm' ? 21 : 9),
-      { hour: 'numeric', hour12: true },
-      locale,
-    );
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A 12-hour format of each locale has a day period.
-    return format.formatToParts(epochMilliseconds).find((part) => part.type === 'dayPeriod')!.value;
+    return dayPeriodText(value === 'pm' ? 'pm' : 'am', locale);
   }
   return formatNumber(Number(value), locale, {
     minimumIntegerDigits: unit === 'hour' && hourCycle === 12 ? 1 : 2,
