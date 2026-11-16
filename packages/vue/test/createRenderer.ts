@@ -38,6 +38,10 @@ function markClock(): ClockMark {
 /**
  * Waits until `Date.now()` is later than each stamp that Vue can give a listener that it attaches
  * after `mark`. Vue stamps a listener with `Date.now()` when it attaches it.
+ * No wait covers a step back of the wall clock between the end of the wait and the event. In
+ * Firefox and WebKit, `performance.now()` gives whole milliseconds, so the wait can end too early
+ * after a step back during the change. No wait covers a late read of `Date.now()` when Vue stamps
+ * a listener.
  */
 async function waitPastStampsSince(mark: ClockMark) {
   // The system can set the wall clock back by some milliseconds. `Date.now()` is then smaller than
@@ -47,11 +51,16 @@ async function waitPastStampsSince(mark: ClockMark) {
   const stamp = Math.max(Date.now(), mark.wall + Math.ceil(performance.now() - mark.monotonic));
   const mockedTime = vi.getMockedSystemTime()?.getTime();
   if (mockedTime !== undefined) {
-    // A mocked clock does not move during the loop below, so the loop would not end.
+    // Fake timers and a call of `vi.setSystemTime` with no fake timers both mock the clock. A
+    // mocked clock does not move during the loop below, so the loop would not end.
     // `vi.setSystemTime` runs no timer and moves each pending timer with the clock, but the frames
-    // stay at their times. A move of whole frames thus keeps each frame callback in its frame.
+    // stay at their times. A move of whole frames thus keeps each frame callback in its frame. A
+    // frame callback that the mount requests runs at the next `vi.advanceTimersToNextFrame()`.
     // With a mocked `Date` and a real `performance.now()`, the stamp can be more than one frame
     // after `Date.now()`.
+    // Each move makes a mocked `Date.now()` at least 16 ms later. A part that measures a time with
+    // `Date.now()`, such as the store of Toast, thus measures at least 16 ms more than its timers
+    // waited.
     const frames = Math.max(1, Math.ceil((stamp + 1 - Date.now()) / FAKE_FRAME_DURATION));
     vi.setSystemTime(mockedTime + frames * FAKE_FRAME_DURATION);
   }
@@ -78,6 +87,9 @@ function isWallClockLaterThan(stamp: number) {
  * listener that gets it. It skips each later listener that it attached in that millisecond or
  * after it. Give the action that mounts the target of the next event, so that the event reaches
  * each listener of the target.
+ * The function reads the clocks before the action, because a step back during the action cannot
+ * be seen after it.
+ * @example await waitForLaterMillisecond(() => user.click(trigger));
  * @returns The result of `action`.
  */
 export async function waitForLaterMillisecond<Result>(
@@ -89,6 +101,10 @@ export async function waitForLaterMillisecond<Result>(
   return result;
 }
 
+/**
+ * Makes `render` for a test file. The helpers do not use `@testing-library/vue`, because it
+ * depends on another version of `@testing-library/dom`.
+ */
 export function createRenderer() {
   const mounted: { unmount: () => void; container: HTMLElement }[] = [];
 
