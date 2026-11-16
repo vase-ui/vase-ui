@@ -73,12 +73,20 @@
     cursor: row-resize;
   }
 
-  &[data-orientation='vertical'][data-at-min] {
+  /*
+   * :where() adds no specificity, so each state rule below has the same specificity. The sequence
+   * of the rules then decides: an end, both ends, a crossing, disabled.
+   */
+  &:where([data-orientation='vertical'])[data-at-min] {
     cursor: s-resize;
   }
 
-  &[data-orientation='vertical'][data-at-max] {
+  &:where([data-orientation='vertical'])[data-at-max] {
     cursor: n-resize;
+  }
+
+  &[data-at-min]:where([data-at-max]) {
+    cursor: default;
   }
 
   &[data-crossing] {
