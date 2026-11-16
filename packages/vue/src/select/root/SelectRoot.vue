@@ -108,9 +108,9 @@ export interface SelectRootProps<Value, Multiple extends boolean | undefined = f
   isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
   /**
    * The uncontrolled value of the select when it's initially rendered.
+   * With `multiple`, `null` is an empty value.
    *
    * To render a controlled select, use the `value` prop instead.
-   * With `multiple`, `null` is an empty value.
    */
   defaultValue?: SelectInputValue<Value, Multiple> | null | undefined;
   /**

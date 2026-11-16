@@ -77,9 +77,9 @@ export interface ComboboxRootProps<
   isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
   /**
    * The uncontrolled selected value of the combobox when it's initially rendered.
+   * With `multiple`, `null` is an empty value.
    *
    * To render a controlled combobox, use the `value` prop instead.
-   * With `multiple`, `null` is an empty value.
    */
   defaultValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
   /**
