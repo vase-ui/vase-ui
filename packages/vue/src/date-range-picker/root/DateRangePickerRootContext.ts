@@ -37,6 +37,8 @@ export interface DateRangePickerRootContext {
   startFieldElement: ShallowRef<HTMLElement | null>;
   /** The element of the end field. */
   endFieldElement: ShallowRef<HTMLElement | null>;
+  /** The element of the trigger. */
+  triggerElement: ShallowRef<HTMLElement | null>;
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<DateRangePickerRootProps>;
   /**

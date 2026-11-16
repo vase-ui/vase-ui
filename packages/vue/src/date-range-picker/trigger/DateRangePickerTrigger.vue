@@ -17,7 +17,7 @@ export interface DateRangePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, useAttrs, useTemplateRef, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { givenName } from '../../internals/blankName';
 import { formatRangeText } from '../../internals/date-time/calendar/formatText';
@@ -25,6 +25,7 @@ import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
@@ -78,6 +79,9 @@ function label() {
 // `Popover.Trigger` dynamic. Vue then renders `Popover.Trigger` again each time this part renders.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
+
+// The root reads the fieldset of a picker that has no field from the trigger.
+watch(element, createElementSetter(picker.triggerElement), { immediate: true, flush: 'post' });
 
 function triggerProps() {
   return {

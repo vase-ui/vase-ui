@@ -244,8 +244,12 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
 });
 
 const fieldContext = useFieldRootContext();
-// The root has no element. Its start field is at the place of the picker.
-const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+// The root has no element. Its start field is at the place of the picker, and a picker with no field
+// has its trigger there.
+const triggerElement = shallowRef<HTMLElement | null>(null);
+const fieldsetDisabled = useFieldsetDisabled(
+  () => picker.fieldElement.value ?? triggerElement.value,
+);
 const disabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );
@@ -266,6 +270,7 @@ provide(DateRangePickerRootContext, {
   closeOnSelect: picker.closeOnSelect,
   startFieldElement: picker.fieldElement,
   endFieldElement: shallowRef<HTMLElement | null>(null),
+  triggerElement,
   props,
   disabled,
 });

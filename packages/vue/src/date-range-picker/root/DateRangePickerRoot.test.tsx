@@ -939,6 +939,25 @@ describe('<DateRangePicker.Root />', () => {
       expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
       expect(dayButton('2026-11-18')).toHaveAttribute('data-disabled');
     });
+
+    it('disables the trigger of a picker that has no field, in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              timeZone: 'UTC',
+              hasFields: false,
+              defaultValue: range('2026-11-18', '2026-11-20'),
+            }}
+          />
+        </fieldset>
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      });
+    });
   });
 
   describe('form', () => {
