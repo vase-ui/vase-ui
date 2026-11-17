@@ -22,6 +22,7 @@ import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useFormatLocale } from '../../utils/useFormatLocale';
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<TimePickerTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimePicker.Trigger');
+}
 
 defineSlots<{
   default(props: { state: TimePickerTriggerState }): unknown;

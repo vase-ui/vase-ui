@@ -46,6 +46,7 @@ import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
@@ -74,6 +75,7 @@ const isHiddenUntilFound = computed(() => props.hiddenUntilFound ?? contextHidde
 const isKeptMounted = computed(() => props.keepMounted ?? contextKeepMounted.value);
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Accordion.Panel');
   const warnWhenKeepMountedIsIgnored = () => {
     if (props.keepMounted === false && isHiddenUntilFound.value) {
       warn(

@@ -58,6 +58,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
@@ -77,6 +78,10 @@ const props = withDefaults(defineProps<SelectPopupProps>(), {
   as: 'div',
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Popup');
+}
 
 defineSlots<{
   default(props: { state: SelectPopupState }): unknown;

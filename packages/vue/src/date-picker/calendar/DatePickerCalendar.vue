@@ -47,6 +47,7 @@ import type { DateValue } from '../../internals/date-time/temporal';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 import type {
@@ -62,6 +63,10 @@ const props = withDefaults(defineProps<DatePickerCalendarProps>(), {
   as: 'div',
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DatePicker.Calendar');
+}
 
 const emit = defineEmits<{
   /**

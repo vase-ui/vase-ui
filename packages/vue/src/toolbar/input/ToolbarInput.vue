@@ -44,6 +44,7 @@ import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
@@ -58,6 +59,10 @@ const props = withDefaults(defineProps<ToolbarInputProps>(), {
   disabled: false,
   focusableWhenDisabled: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toolbar.Input');
+}
 
 defineSlots<{
   render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, ToolbarInputState>;

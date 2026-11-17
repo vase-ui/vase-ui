@@ -55,6 +55,11 @@ test('a record whose names each have an export of the right kind has no problem'
   assert.deepEqual(checkOwnComponent('sample', makeRecord(), context), []);
 });
 
+test('a utility record with functions and no parts has no problem', () => {
+  const record = makeRecord({ parts: undefined });
+  assert.deepEqual(checkOwnComponent('sample', record, context), []);
+});
+
 test('a record with no functions and no types has no problem', () => {
   const record = makeRecord({ functions: undefined, types: undefined });
   assert.deepEqual(checkOwnComponent('sample', record, context), []);

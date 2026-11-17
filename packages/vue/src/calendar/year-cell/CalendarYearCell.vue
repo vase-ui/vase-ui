@@ -30,6 +30,7 @@ export interface CalendarYearCellProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { useCalendarCell } from '../utils/useCalendarCell';
 
@@ -40,6 +41,10 @@ const props = withDefaults(defineProps<CalendarYearCellProps>(), {
   nativeButton: true,
   format: 'numeric',
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.YearCell');
+}
 
 defineSlots<{
   default(props: { state: CalendarYearCellState; text: string }): unknown;

@@ -78,6 +78,7 @@ export type TooltipRootChangeEventDetails =
 <script setup lang="ts" generic="Payload = unknown">
 import { onMounted, provide, watch } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import { useClientPoint } from '../../utils/popups/interactions/useClientPoint';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -97,6 +98,10 @@ const props = withDefaults(defineProps<TooltipRootProps<Payload>>(), {
   triggerId: undefined,
   defaultTriggerId: null,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tooltip.Root');
+}
 
 const emit = defineEmits<{
   /**

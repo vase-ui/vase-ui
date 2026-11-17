@@ -40,6 +40,7 @@ import {
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import RangeCalendarRoot from '../../range-calendar/root/RangeCalendarRoot.vue';
 import type { DateRangePickerRange } from '../root/DateRangePickerRootContext';
@@ -54,6 +55,10 @@ const props = withDefaults(defineProps<DateRangePickerCalendarProps>(), {
   as: 'div',
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Calendar');
+}
 
 const emit = defineEmits<{
   /**

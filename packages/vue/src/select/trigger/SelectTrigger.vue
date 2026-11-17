@@ -66,6 +66,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
@@ -83,6 +84,10 @@ const props = withDefaults(defineProps<SelectTriggerProps<Value>>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Trigger');
+}
 
 defineSlots<{
   default(props: { state: SelectTriggerState<Value> }): unknown;

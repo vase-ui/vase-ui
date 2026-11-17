@@ -64,6 +64,7 @@ import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
@@ -85,6 +86,10 @@ const props = withDefaults(defineProps<PopoverPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Popup');
+}
 
 defineSlots<{
   default(props: { state: PopoverPopupState }): unknown;

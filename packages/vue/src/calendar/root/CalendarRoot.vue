@@ -118,6 +118,7 @@ import { useDaySelection } from '../../internals/date-time/calendar/daySelection
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
 import { assertTemporal, isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { CalendarRootContext } from './CalendarRootContext';
 import { calendarRootStateAttributesMapping } from './stateAttributesMapping';
@@ -140,6 +141,10 @@ const props = withDefaults(defineProps<CalendarRootProps<Value, Multiple>>(), {
   defaultView: undefined,
   visibleYears: 12,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.Root');
+}
 
 const emit = defineEmits<{
   /**

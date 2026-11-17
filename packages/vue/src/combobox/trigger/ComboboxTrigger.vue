@@ -71,6 +71,7 @@ import {
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
@@ -90,6 +91,10 @@ const props = withDefaults(defineProps<ComboboxTriggerProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Trigger');
+}
 
 defineSlots<{
   default(props: { state: ComboboxTriggerState }): unknown;

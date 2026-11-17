@@ -74,6 +74,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { REGULAR_ITEM, useMenuItem } from '../item/useMenuItem';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
@@ -91,6 +92,10 @@ const props = withDefaults(defineProps<MenuCheckboxItemProps>(), {
   disabled: false,
   closeOnClick: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.CheckboxItem');
+}
 
 const emit = defineEmits<{
   /**

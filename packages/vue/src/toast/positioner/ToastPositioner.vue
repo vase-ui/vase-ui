@@ -38,6 +38,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import * as ToastRootCssVars from '../root/ToastRootCssVars';
@@ -52,6 +53,10 @@ const props = withDefaults(defineProps<ToastPositionerProps>(), {
   sticky: undefined,
   disableAnchorTracking: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toast.Positioner');
+}
 
 defineSlots<{
   default(props: { state: ToastPositionerState }): unknown;

@@ -27,6 +27,7 @@ import { computed, provide, shallowRef, watch } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -41,6 +42,10 @@ const props = withDefaults(defineProps<TabsListProps>(), {
   activateOnFocus: false,
   loopFocus: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tabs.List');
+}
 
 defineSlots<{
   default(props: { state: TabsListState }): unknown;

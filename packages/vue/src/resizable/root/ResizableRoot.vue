@@ -201,6 +201,7 @@ import {
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMediaQuery } from '../../unstable-use-media-query';
@@ -517,6 +518,7 @@ const usesViewportLengths = computed(
 );
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Resizable.Root');
   // The first renders see only the panels that registered before them, so the check waits for the
   // render that follows the registrations.
   watch(

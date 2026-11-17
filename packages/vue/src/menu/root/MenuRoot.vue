@@ -155,6 +155,7 @@ export type MenuParent =
 
 <script setup lang="ts" generic="Payload = unknown">
 import { inject, provide } from 'vue';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import { useMenuRoot } from './useMenuRoot';
 
@@ -171,6 +172,10 @@ const props = withDefaults(defineProps<MenuRootProps<Payload>>(), {
   defaultTriggerId: null,
   handle: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Root');
+}
 
 const emit = defineEmits<{
   /**

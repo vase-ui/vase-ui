@@ -42,6 +42,7 @@ import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 
@@ -53,6 +54,10 @@ const props = withDefaults(defineProps<CalendarViewTriggerProps>(), {
   view: 'year',
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.ViewTrigger');
+}
 
 defineSlots<{
   default(props: { state: CalendarViewTriggerState; text: string }): unknown;

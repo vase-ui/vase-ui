@@ -5,6 +5,7 @@ import type {
   VaseUIComponentProps,
   WithVaseUIEvent,
 } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { RangeCalendarDayState } from '../day/RangeCalendarDay.vue';
 
 export interface RangeCalendarDayButtonState extends RangeCalendarDayState {}
@@ -37,6 +38,10 @@ const props = withDefaults(defineProps<RangeCalendarDayButtonProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('RangeCalendar.DayButton');
+}
 
 defineSlots<{
   default(props: { state: RangeCalendarDayButtonState; text: string }): unknown;

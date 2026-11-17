@@ -54,6 +54,7 @@ import { REASONS } from '../../internals/reasons';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
@@ -75,6 +76,10 @@ const props = withDefaults(defineProps<ComboboxClearProps>(), {
   disabled: false,
   keepMounted: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Clear');
+}
 
 defineSlots<{
   /**

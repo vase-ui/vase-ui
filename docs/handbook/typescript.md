@@ -20,11 +20,11 @@ Each type also has a flat name, such as `TooltipRootProps` and `TooltipRootState
 
 To make a component that wraps a part, use the `Props` type to accept all of the props of that part. The sample takes the flat name in `defineProps`.
 
-<<< ../examples/typescript/MyTooltip.vue{5}
+<<< ../examples/typescript/MyTooltip.vue{6-7}
 
-Vue changes an absent Boolean prop to `false`. The wrapper gives `open` the default `undefined`, so that the tooltip stays uncontrolled.
+Vue changes an absent Boolean prop to `false`. The wrapper uses `useForwardProps` to omit that cast value, so the tooltip stays uncontrolled.
 
-See [Wrap a part](/handbook/composition#wrap-a-part) for the other Boolean props that need this default.
+See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that need this rule.
 
 ### State
 

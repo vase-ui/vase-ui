@@ -77,6 +77,7 @@ import { EMPTY_ARRAY } from '../common/empty';
 import { useControlled } from '../common/useControlled';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
 import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
@@ -93,6 +94,10 @@ const props = withDefaults(defineProps<ToggleGroupProps<Value>>(), {
   loopFocus: true,
   multiple: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('ToggleGroup');
+}
 
 const emit = defineEmits<{
   /**

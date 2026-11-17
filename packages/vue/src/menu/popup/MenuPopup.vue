@@ -63,6 +63,7 @@ import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -78,6 +79,10 @@ import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContex
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<MenuPopupProps>(), { as: 'div', finalFocus: undefined });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Popup');
+}
 
 defineSlots<{
   default(props: { state: MenuPopupState }): unknown;

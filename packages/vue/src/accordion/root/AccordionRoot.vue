@@ -89,6 +89,7 @@ import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { AccordionRootContext } from './AccordionRootContext';
 
@@ -125,6 +126,7 @@ defineSlots<{
 }>();
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Accordion.Root');
   const warnWhenKeepMountedIsIgnored = () => {
     if (props.hiddenUntilFound && props.keepMounted === false) {
       warn(

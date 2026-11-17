@@ -45,6 +45,7 @@ import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 
@@ -55,6 +56,10 @@ const props = withDefaults(defineProps<AccordionTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Accordion.Trigger');
+}
 
 defineSlots<{
   default(props: { state: AccordionTriggerState }): unknown;

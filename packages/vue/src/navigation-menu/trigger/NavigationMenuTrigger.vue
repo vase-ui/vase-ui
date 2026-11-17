@@ -95,6 +95,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
@@ -134,6 +135,10 @@ const props = withDefaults(defineProps<NavigationMenuTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('NavigationMenu.Trigger');
+}
 
 defineSlots<{
   default(props: { state: NavigationMenuTriggerState }): unknown;

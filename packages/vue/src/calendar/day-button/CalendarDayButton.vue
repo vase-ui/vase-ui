@@ -25,6 +25,7 @@ export interface CalendarDayButtonProps
 <script setup lang="ts">
 import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarDayContext } from '../day/CalendarDayContext';
 import { dayStateAttributesMapping } from '../day/stateAttributesMapping';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<CalendarDayButtonProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.DayButton');
+}
 
 defineSlots<{
   default(props: { state: CalendarDayButtonState; text: string }): unknown;

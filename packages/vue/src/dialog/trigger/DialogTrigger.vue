@@ -52,6 +52,7 @@ import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
@@ -68,6 +69,10 @@ const props = withDefaults(defineProps<DialogTriggerProps<Payload>>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Trigger');
+}
 
 defineSlots<{
   default(props: { state: DialogTriggerState }): unknown;

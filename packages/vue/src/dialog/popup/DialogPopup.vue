@@ -56,6 +56,7 @@ export interface DialogPopupProps
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import {
@@ -75,6 +76,10 @@ const props = withDefaults(defineProps<DialogPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Popup');
+}
 
 defineSlots<{
   default(props: { state: DialogPopupState }): unknown;

@@ -72,6 +72,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -97,6 +98,10 @@ const props = withDefaults(defineProps<PopoverTriggerProps<Payload>>(), {
   delay: 300,
   closeDelay: 0,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Trigger');
+}
 
 defineSlots<{
   default(props: { state: PopoverTriggerState }): unknown;

@@ -8,6 +8,7 @@ import type {
 } from '../../internals/date-time/calendar/rangeSelection';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { CalendarRootState } from '../../calendar/root/CalendarRoot.vue';
 
 export interface RangeCalendarRootState extends CalendarRootState {
@@ -87,6 +88,10 @@ const props = withDefaults(defineProps<RangeCalendarRootProps<Value>>(), {
   numberOfMonths: 1,
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('RangeCalendar.Root');
+}
 
 const emit = defineEmits<{
   /**

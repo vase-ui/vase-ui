@@ -31,6 +31,7 @@ import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastRootContext } from '../root/ToastRootContext';
 import { isRenderableNode } from '../utils/isRenderableNode';
@@ -44,6 +45,10 @@ const props = withDefaults(defineProps<ToastActionProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toast.Action');
+}
 
 defineSlots<{
   default(props: { state: ToastActionState }): unknown;

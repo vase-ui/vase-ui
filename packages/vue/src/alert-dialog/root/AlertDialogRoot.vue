@@ -43,6 +43,7 @@ export type AlertDialogRootChangeEventDetails =
 
 <script setup lang="ts" generic="Payload = unknown">
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 const props = withDefaults(defineProps<AlertDialogRootProps<Payload>>(), {
   open: undefined,
@@ -51,6 +52,10 @@ const props = withDefaults(defineProps<AlertDialogRootProps<Payload>>(), {
   triggerId: undefined,
   defaultTriggerId: null,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('AlertDialog.Root');
+}
 
 const emit = defineEmits<{
   /**

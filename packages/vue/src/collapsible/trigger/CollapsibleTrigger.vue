@@ -32,6 +32,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
@@ -43,6 +44,10 @@ const props = withDefaults(defineProps<CollapsibleTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Collapsible.Trigger');
+}
 
 defineSlots<{
   default(props: { state: CollapsibleTriggerState }): unknown;

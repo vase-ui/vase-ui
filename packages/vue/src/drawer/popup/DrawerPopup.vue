@@ -164,6 +164,7 @@ import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext'
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
@@ -220,6 +221,7 @@ const swiping = computed(() => swipe?.swiping.value ?? false);
 const popupHeight = shallowRef(0);
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Popup');
   onMounted(() => {
     if (swipe) {
       return;

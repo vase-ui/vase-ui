@@ -76,6 +76,7 @@ import { useMenubarContext } from '../../internals/menubar-context/MenubarContex
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
@@ -110,6 +111,10 @@ const props = withDefaults(defineProps<MenuTriggerProps<Payload>>(), {
   closeDelay: 0,
   openOnHover: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Trigger');
+}
 
 defineSlots<{
   default(props: { state: MenuTriggerState }): unknown;

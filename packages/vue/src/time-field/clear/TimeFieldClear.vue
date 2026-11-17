@@ -30,6 +30,7 @@ import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTim
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import TimeFieldClearChildren from './TimeFieldClearChildren.vue';
 
@@ -40,6 +41,10 @@ const props = withDefaults(defineProps<TimeFieldClearProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimeField.Clear');
+}
 
 defineSlots<{
   /**

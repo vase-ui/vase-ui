@@ -42,6 +42,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimeClockRootContext } from '../root/TimeClockRootContext';
@@ -52,6 +53,10 @@ const props = withDefaults(defineProps<TimeClockDayPeriodProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimeClock.DayPeriod');
+}
 
 defineSlots<{
   default(props: { state: TimeClockDayPeriodState }): unknown;

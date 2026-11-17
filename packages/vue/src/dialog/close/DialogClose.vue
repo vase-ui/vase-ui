@@ -32,6 +32,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDialogRootContext } from '../root/DialogRootContext';
 
@@ -42,6 +43,10 @@ const props = withDefaults(defineProps<DialogCloseProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Close');
+}
 
 defineSlots<{
   default(props: { state: DialogCloseState }): unknown;

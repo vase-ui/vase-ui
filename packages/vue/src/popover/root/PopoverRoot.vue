@@ -86,6 +86,7 @@ export type PopoverRootChangeEventDetails =
 <script setup lang="ts" generic="Payload = unknown">
 import { onScopeDispose, provide, watch } from 'vue';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
@@ -101,6 +102,10 @@ const props = withDefaults(defineProps<PopoverRootProps<Payload>>(), {
   defaultTriggerId: null,
   handle: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Root');
+}
 
 const emit = defineEmits<{
   /**

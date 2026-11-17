@@ -54,7 +54,7 @@ Where Vue or the browser lets us handle an edge case better than the original, w
 
 ## Components of Vase UI's own
 
-A component of Vase UI's own is a component that Base UI does not have. Its behavior follows a standard, and its API follows the convention of the families. `parity/own` holds one record for each component.
+A component of Vase UI's own is a component that Base UI does not have. Its behavior follows a standard, and its API follows the convention of the families. `parity/own` holds one record for each component. A utility of Vase UI's own has a record too, with its functions in place of parts.
 
 <ParityOwnComponents />
 

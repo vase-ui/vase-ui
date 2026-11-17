@@ -32,6 +32,7 @@ import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useLabel } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFieldItemContext } from '../item/FieldItemContext';
 
@@ -65,6 +66,7 @@ const { element, elementProps } = useRenderElement('label', props, {
 });
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Field.Label');
   const checkElement = () => {
     const label = element.value;
     if (!label) {

@@ -65,6 +65,7 @@ import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { contains, getTarget } from '../../common/shadowDom';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -82,6 +83,10 @@ const props = withDefaults(defineProps<ComboboxPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Popup');
+}
 
 defineSlots<{
   default(props: { state: ComboboxPopupState }): unknown;

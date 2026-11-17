@@ -31,6 +31,7 @@ export interface CalendarMonthCellProps
 import { computed } from 'vue';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { useCalendarCell } from '../utils/useCalendarCell';
 
@@ -41,6 +42,10 @@ const props = withDefaults(defineProps<CalendarMonthCellProps>(), {
   nativeButton: true,
   format: 'long',
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.MonthCell');
+}
 
 defineSlots<{
   default(props: { state: CalendarMonthCellState; text: string }): unknown;

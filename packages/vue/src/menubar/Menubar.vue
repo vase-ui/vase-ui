@@ -57,6 +57,7 @@ import { MenubarContext } from '../internals/menubar-context/MenubarContext';
 import { REASONS } from '../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { MenuOpenEventDetails } from '../menu/utils/types';
 import {
@@ -81,6 +82,10 @@ const props = withDefaults(defineProps<MenubarProps>(), {
   orientation: 'horizontal',
   loopFocus: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menubar');
+}
 
 defineSlots<{
   default(props: { state: MenubarState }): unknown;

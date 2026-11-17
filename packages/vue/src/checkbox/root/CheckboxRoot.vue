@@ -151,6 +151,7 @@ import {
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -176,6 +177,10 @@ const props = withDefaults(defineProps<CheckboxRootProps>(), {
   readOnly: false,
   required: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Checkbox.Root');
+}
 
 const emit = defineEmits<{
   /**

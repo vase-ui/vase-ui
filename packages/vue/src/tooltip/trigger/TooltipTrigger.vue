@@ -79,6 +79,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
@@ -106,6 +107,10 @@ const props = withDefaults(defineProps<TooltipTriggerProps<Payload>>(), {
   delay: undefined,
   closeDelay: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tooltip.Trigger');
+}
 
 defineSlots<{
   default(props: { state: TooltipTriggerState }): unknown;

@@ -37,6 +37,7 @@ export interface ButtonProps
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useButton } from '../internals/use-button';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 
 defineOptions({ inheritAttrs: false });
@@ -47,6 +48,10 @@ const props = withDefaults(defineProps<ButtonProps>(), {
   focusableWhenDisabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Button');
+}
 
 defineSlots<{
   default(props: { state: ButtonState }): unknown;

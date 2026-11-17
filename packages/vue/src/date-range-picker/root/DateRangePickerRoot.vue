@@ -156,6 +156,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
@@ -173,6 +174,10 @@ const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
   readOnly: false,
   required: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Root');
+}
 
 const emit = defineEmits<{
   /**

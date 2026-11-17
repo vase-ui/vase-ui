@@ -182,6 +182,7 @@ import {
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
@@ -213,6 +214,10 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   highlightItemOnHover: true,
   modal: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Root');
+}
 
 const emit = defineEmits<{
   /**

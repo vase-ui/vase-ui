@@ -83,6 +83,7 @@ import { FieldRootContext } from '../../internals/field-root-context/FieldRootCo
 import { useFormContext } from '../../internals/form-context/FormContext';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFieldValidation } from './useFieldValidation';
 
@@ -96,6 +97,10 @@ const props = withDefaults(defineProps<FieldRootProps>(), {
   dirty: undefined,
   touched: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Field.Root', ['invalid']);
+}
 
 defineSlots<{
   default(props: { state: FieldRootState }): unknown;

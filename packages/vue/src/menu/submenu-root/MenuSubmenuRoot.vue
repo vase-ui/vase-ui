@@ -18,6 +18,7 @@ export type MenuSubmenuRootChangeEventDetails = MenuRootChangeEventDetails;
 
 <script setup lang="ts">
 import { inject, provide } from 'vue';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import type { MenuRootHighlightEventDetails } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -35,6 +36,10 @@ const props = withDefaults(defineProps<MenuSubmenuRootProps>(), {
   disabled: false,
   closeParentOnEsc: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.SubmenuRoot');
+}
 
 const emit = defineEmits<{
   /**

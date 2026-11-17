@@ -44,6 +44,7 @@ import { warn } from '../../common/warn';
 import { given } from '../../internals/givenAttributes';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -64,6 +65,7 @@ defineSlots<{
 }>();
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Collapsible.Panel');
   // Only an explicit `keepMounted={false}` gets the warning, so the prop has no default.
   const warnWhenKeepMountedIsIgnored = () => {
     if (props.hiddenUntilFound && props.keepMounted === false) {

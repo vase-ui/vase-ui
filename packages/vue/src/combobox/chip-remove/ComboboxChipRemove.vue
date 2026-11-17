@@ -33,6 +33,7 @@ import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -46,6 +47,10 @@ const props = withDefaults(defineProps<ComboboxChipRemoveProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.ChipRemove');
+}
 
 defineSlots<{
   default(props: { state: ComboboxChipRemoveState }): unknown;

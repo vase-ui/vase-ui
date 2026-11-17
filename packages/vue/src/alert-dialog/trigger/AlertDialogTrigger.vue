@@ -23,6 +23,7 @@ export interface AlertDialogTriggerState extends DialogTriggerState {}
 import { computed, useTemplateRef } from 'vue';
 import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 defineOptions({ inheritAttrs: false });
 
@@ -31,6 +32,10 @@ const props = withDefaults(defineProps<AlertDialogTriggerProps<Payload>>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('AlertDialog.Trigger');
+}
 
 defineSlots<{
   default(props: { state: AlertDialogTriggerState }): unknown;

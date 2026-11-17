@@ -173,6 +173,7 @@ import { useCoreFilter } from '../../combobox/root/utils/useFilter';
 import { useControlled } from '../../common/useControlled';
 import { REASONS } from '../../internals/reasons';
 import { stringifyAsLabel } from '../../internals/resolveValueLabel';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 type ItemValue = AutocompleteItemValue<Items>;
 
@@ -198,6 +199,10 @@ const props = withDefaults(defineProps<AutocompleteRootSetupProps<Items>>(), {
   submitOnItemClick: false,
   filter: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Autocomplete.Root');
+}
 
 const emit = defineEmits<{
   /**

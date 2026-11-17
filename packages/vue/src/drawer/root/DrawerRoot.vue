@@ -153,6 +153,7 @@ import { ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
@@ -172,6 +173,10 @@ const props = withDefaults(defineProps<DrawerRootProps<Payload>>(), {
   snapPoint: undefined,
   defaultSnapPoint: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Root');
+}
 
 const emit = defineEmits<{
   /**

@@ -48,6 +48,7 @@ import { computed, provide, shallowRef } from 'vue';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { ToolbarRootContext } from './ToolbarRootContext';
 
@@ -59,6 +60,10 @@ const props = withDefaults(defineProps<ToolbarRootProps>(), {
   orientation: 'horizontal',
   loopFocus: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toolbar.Root');
+}
 
 defineSlots<{
   default(props: { state: ToolbarRootState }): unknown;

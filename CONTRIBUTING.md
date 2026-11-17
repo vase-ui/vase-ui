@@ -163,9 +163,11 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 | --- | --- |
 | `standard` | The links to the standards that the behavior follows, such as a pattern of the WAI-ARIA Authoring Practices Guide. Each link starts with `https://`. |
 | `reason` | Why Vase UI has the component. |
-| `parts` | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports. |
+| `parts` | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports. A record needs `parts` or `functions`. |
 | `functions` | Optional. The titles of the functions and classes that the entry point exports, such as `createHandle`. |
 | `types` | Optional. The paths of the types that the entry point exports, such as `useRender.Parameters`. |
+
+A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
 - The component is not a port, so no file of Base UI is its source. The sources are the standards in `standard`, the code and documentation of Vue, and the libraries that Vase UI depends on.
 - The API follows the [API convention](#api-convention), as in each other component. The entry point exports the four things of [Entry points](#entry-points).
@@ -468,6 +470,10 @@ Rules:
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
 - The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
 - A Boolean prop with the default `true` cannot tell an absent prop from `true`. A check of Base UI for a prop that is set thus runs only for `false`. `Menu.Root` does this for `modal` on a nested menu.
+- A part that has a Boolean prop with the default `true` or `undefined` calls `useCastBooleanWarning` of `src/internals` in `setup`, inside `if (process.env.NODE_ENV !== 'production')`. For such a prop, an absent prop and `false` can give different results.
+- The helper warns when a wrapper component gives the part `false` only because Vue cast an absent Boolean prop of the wrapper. Its `except` list names each prop for which an absent prop and `false` have the same effect, as `invalid` of `Field.Root`.
+- `src/internals/useCastBooleanWarning.coverage.node.test.ts` fails for such a part with no call. Its table names each exception. A part that has no other such prop, as `Field.Error`, has no call.
+- Add each new such prop that is not an exception to the lists of [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
 - Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
@@ -661,6 +667,8 @@ The project `vapor` of the tests checks the parts in a Vapor app. See [Where a t
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 
 `isInHeldBranch()` of `src/internals/useKeepAliveState.ts` reads `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. `useKeepAliveState` starts `isHeld` with the function, so a part compiled as a Vapor component is not held at a mount in a held branch. Each part of the package compiles as a virtual DOM component. Such a part below the `KeepAlive` of a Vapor component gets `true` while that `KeepAlive` holds it. A case of `src/utils/popups/portal/PortalHeldMount.test.tsx` shows this in the project `vapor`.
+
+`src/internals/callerProps.ts` reads `getCurrentInstance`, because Vue has no public API for the props that a caller sets, for the declared events, or for the component whose render made a vnode. The file reads `vnode.props`, `vnode.ctx`, `propsOptions`, `type.emits`, `type.__name`, `type.name` and the `_n` flag of a slot. Keep each such read in that file. In a wrapper compiled as a Vapor component, the file gets no instance. `useForwardProps` then warns in a development build and forwards each value other than `undefined`, and `useForwardPropsEmits` forwards no event. A part below such a wrapper gives no cast Boolean warning.
 
 ### Server render
 
@@ -1871,6 +1879,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A test that expects a `Vase UI:` message on the console asserts the list of `takeReportedMessages()`, or it uses a console spy that has `mockImplementation`.
 - In the list, such a message is one string that starts with `console.warn: Vase UI:` or `console.error: Vase UI:`. Assert the whole list. The test then fails on a message that it does not expect.
 - A console spy that has `mockImplementation` takes each call of its method, so those calls are not in the list. The test then fails on a call that it does not expect only if it asserts each call of the spy. A spy with no implementation passes the call to the console, and the test fails unless it takes the message from the list.
+- A fixture that declares an optional Boolean prop and gives it to a part forwards its props with `useForwardProps`, or gives the prop the default `undefined`. The cast Boolean warning of the part otherwise fails the test.
 - A case that has a console spy asserts each call of the spy. For one message, use `expect(spy).toHaveBeenCalledExactlyOnceWith(message)`. For more than one message, compare `spy.mock.calls` with the whole list.
 - Do not select the calls of a console spy by their text. Do not use `toHaveBeenCalledWith` as the only assertion on a console spy. The case then passes on a message that it does not expect.
 - Assert the calls after the last step that can give a message. When a step follows the assertion, assert the number of calls at the end of the case.
@@ -2021,7 +2030,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
-- When a sample wrapper declares an optional Boolean prop and gives it to the part, set the default of that prop to `undefined`. Without that default, Vue changes an absent Boolean prop to `false`.
+- A sample wrapper forwards its props with `useForwardProps`, or gives each optional Boolean prop the default `undefined`. Vue otherwise changes an absent Boolean prop to `false`.
 - Compose two parts in a sample or a demo as the Base UI code does. Where Base UI gives `render` an element with no props, give its tag or its component to `as`. Where that element has props of its own, use the `#render` slot and bind `props`.
 - A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
 - The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6. Dates and times has no Base UI page, and its `order` is 7.

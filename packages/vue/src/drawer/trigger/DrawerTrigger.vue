@@ -38,6 +38,7 @@ export interface DrawerTriggerState {
 import { computed, useTemplateRef } from 'vue';
 import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 defineOptions({ inheritAttrs: false });
 
@@ -46,6 +47,10 @@ const props = withDefaults(defineProps<DrawerTriggerProps<Payload>>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Trigger');
+}
 
 defineSlots<{
   default(props: { state: DrawerTriggerState }): unknown;

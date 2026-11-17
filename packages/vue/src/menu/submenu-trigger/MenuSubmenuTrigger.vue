@@ -74,6 +74,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -165,6 +166,7 @@ const isDisabled = computed(
 );
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.SubmenuTrigger');
   const warnForDisabledElement = () => {
     const element = triggerElement.value;
     if (element && isElementDisabled(element) && !isDisabled.value) {

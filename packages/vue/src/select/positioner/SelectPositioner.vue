@@ -49,6 +49,7 @@ import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
@@ -78,6 +79,10 @@ const props = withDefaults(defineProps<SelectPositionerProps>(), {
   positionMethod: 'absolute',
   alignItemWithTrigger: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Positioner');
+}
 
 defineSlots<{
   default(props: { state: SelectPositionerState }): unknown;
