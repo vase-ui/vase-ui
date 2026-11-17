@@ -1812,7 +1812,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `popupListConformanceTests`: the tests of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox.
   - `dialogRootSharedTests`: the tests of the roots of Dialog and Alert Dialog.
   - `fieldsetDisabledTests`: the test of each native button part that reads `useFieldsetDisabled` (`VUE-112`).
-  - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup in the popup that closes in the same update (`BUG-5519`).
+  - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for an outer popup that closes with a popup in it, before that popup, or alone (`BUG-5519`).
   - `hiddenInputSizeTests`: the test of a part with a hidden input that has no `name`.
   - `hiddenInputTypeTests`: the test of a part with a hidden input that `getHiddenInputType` types.
   - `heldMountFormResetTests`: the test of each family whose part calls `useFormReset`. `RadioGroup.test.tsx` calls it for `Radio.Root`, which follows a reset only in a group.
