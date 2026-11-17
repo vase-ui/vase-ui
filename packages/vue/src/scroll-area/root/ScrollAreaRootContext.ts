@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { Orientation } from '../../internals/types';
 import type {
   Coords,
   HiddenState,
@@ -28,7 +29,7 @@ export interface ScrollAreaRootContext {
   scrollbarXElement: ShallowRef<HTMLElement | null>;
   thumbXElement: ShallowRef<HTMLElement | null>;
   cornerElement: ShallowRef<HTMLElement | null>;
-  handlePointerDown(event: PointerEvent): void;
+  handlePointerDown(event: PointerEvent, orientation: Orientation): void;
   handlePointerMove(event: PointerEvent): void;
   handlePointerUp(event: PointerEvent): void;
   handleScroll(scrollPosition: Coords): void;

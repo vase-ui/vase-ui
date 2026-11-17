@@ -245,6 +245,36 @@ describe('<ScrollArea.Scrollbar />', () => {
     });
   });
 
+  async function renderAxisTrack(
+    orientation: 'horizontal' | 'vertical',
+    direction: TextDirection,
+  ) {
+    await render(
+      <DirectionProvider direction={direction}>
+        <ScrollArea.Root style={{ width: '200px', height: '200px', direction }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation={orientation}
+            data-testid="scrollbar"
+            keepMounted
+            style={orientation === 'vertical' ? { width: '10px' } : { height: '10px' }}
+          >
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
+      </DirectionProvider>,
+    );
+
+    const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+    const scrollbar = screen.getByTestId('scrollbar');
+    const thumb = screen.getByTestId('thumb');
+    await waitFor(() => expect(thumb.offsetWidth + thumb.offsetHeight).toBeGreaterThan(0));
+
+    return { viewport, scrollbar };
+  }
+
   describe('track pointer down', () => {
     it('ignores non-primary pointer presses', async () => {
       await render(
@@ -431,6 +461,27 @@ describe('<ScrollArea.Scrollbar />', () => {
       expect(verticalScrollbar).toHaveAttribute('data-scrolling');
     });
 
+    it('scrolls farther down when the pointer drags from the vertical track', async () => {
+      const { viewport, scrollbar } = await renderAxisTrack('vertical', 'ltr');
+      const { width, height } = scrollbar.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: width / 2, y: height / 2 },
+        keys: '[MouseLeft>]',
+      });
+      const scrollTopAfterPress = viewport.scrollTop;
+      expect(scrollTopAfterPress).toBeGreaterThan(0);
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: width / 2, y: (height * 3) / 4 },
+      });
+
+      expect(viewport.scrollTop).toBeGreaterThan(scrollTopAfterPress);
+    });
+
     it('clears track drag state on pointer cancel', async () => {
       await render(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
@@ -549,36 +600,6 @@ describe('<ScrollArea.Scrollbar />', () => {
   // thumb, so each case presses with the real pointer of the browser. The track has a cross size,
   // because a real pointer cannot press an element with no area.
   describe.skipIf(isJSDOM)('track click by axis', () => {
-    async function renderAxisTrack(
-      orientation: 'horizontal' | 'vertical',
-      direction: TextDirection,
-    ) {
-      await render(
-        <DirectionProvider direction={direction}>
-          <ScrollArea.Root style={{ width: '200px', height: '200px', direction }}>
-            <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
-              <div style={{ width: '1000px', height: '1000px' }} />
-            </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar
-              orientation={orientation}
-              data-testid="scrollbar"
-              keepMounted
-              style={orientation === 'vertical' ? { width: '10px' } : { height: '10px' }}
-            >
-              <ScrollArea.Thumb data-testid="thumb" />
-            </ScrollArea.Scrollbar>
-          </ScrollArea.Root>
-        </DirectionProvider>,
-      );
-
-      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
-      const scrollbar = screen.getByTestId('scrollbar');
-      const thumb = screen.getByTestId('thumb');
-      await waitFor(() => expect(thumb.offsetWidth + thumb.offsetHeight).toBeGreaterThan(0));
-
-      return { viewport, scrollbar };
-    }
-
     it('scrolls down when clicking below the thumb on a vertical track', async () => {
       const { viewport, scrollbar } = await renderAxisTrack('vertical', 'ltr');
       const rect = scrollbar.getBoundingClientRect();
