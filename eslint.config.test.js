@@ -1094,9 +1094,25 @@ const passed = [
     ),
   },
   {
-    name: 'unfiltered attributes on the input part',
+    name: 'filtered attributes on the input part',
     file: 'packages/vue/src/input/Input.vue',
-    code: docsSfc('', '<FieldControl v-bind="{ ...$attrs, ...props }" />'),
+    code: docsSfc(
+      '',
+      '<FieldControl v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }" />',
+    ),
+  },
+  {
+    name: 'filtered attributes in the props of a picker field',
+    file: 'packages/vue/src/date-picker/field/DatePickerField.vue',
+    code: docsSfc(
+      '',
+      '<DateFieldRoot v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))" />',
+    ),
+  },
+  {
+    name: 'unfiltered attributes on a native backdrop element',
+    file: 'packages/vue/src/utils/popups/InternalBackdrop.vue',
+    code: docsSfc('', '<div v-bind="{ ...$attrs, style }" />'),
   },
   {
     name: 'conditional part forms at the root',
@@ -1515,9 +1531,18 @@ for (const { name, file, code } of passed) {
   });
 }
 
-for (const binding of ['{ ...$attrs, as }', '$attrs']) {
-  test(`reports v-bind="${binding}" on a portal part one time`, async () => {
-    const messages = await lint(PORTAL_PART, docsSfc('', `<FloatingPortal v-bind="${binding}" />`));
+for (const { part, file, tag, binding } of [
+  { part: 'a portal part', file: PORTAL_PART, tag: 'FloatingPortal', binding: '{ ...$attrs, as }' },
+  { part: 'a portal part', file: PORTAL_PART, tag: 'FloatingPortal', binding: '$attrs' },
+  {
+    part: 'the input part',
+    file: 'packages/vue/src/input/Input.vue',
+    tag: 'FieldControl',
+    binding: '{ ...$attrs, ...props }',
+  },
+]) {
+  test(`reports v-bind="${binding}" on ${part} one time`, async () => {
+    const messages = await lint(file, docsSfc('', `<${tag} v-bind="${binding}" />`));
     assert.deepEqual(
       messages.map(({ ruleId }) => ruleId),
       ['vue/no-restricted-syntax'],
