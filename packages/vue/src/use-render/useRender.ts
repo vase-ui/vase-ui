@@ -1,6 +1,7 @@
 import { computed, toValue } from 'vue';
 import type {
   Component,
+  ComponentPublicInstance,
   ComputedRef,
   IntrinsicElementAttributes,
   MaybeRefOrGetter,
@@ -25,12 +26,17 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
  * Set `inheritAttrs: false`. The composable reads the attributes with `useAttrs()`
  * and puts them on the element.
  * Expose `element` with `defineExpose({ element })`.
- * Write these two lines in the template:
+ * Write the `#render` slot and the element in the template:
  *
  * ```vue
  * <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
- * <component :is="tag" v-else v-bind="elementProps()"><slot :state="state" /></component>
+ * <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
+ *   <slot :state="state" />
+ * </component>
  * ```
+ *
+ * Bind `setRef` by name beside `elementProps()`.
+ * Vapor mode applies only a ref that the template binds by name.
  *
  * @param componentProps The reactive props object of the component. Do not destructure it.
  * The composable reads `as`, `stateClass` and `stateStyle` from it.
@@ -48,14 +54,14 @@ export function useRender<
   const { defaultTagName, ...elementParams } = params;
   const getDefaultTag = () => toValue(defaultTagName) ?? 'div';
 
-  const { element, elementProps } = useRenderElement<State, RenderedElementType>(
+  const { element, elementProps, setRef } = useRenderElement<State, RenderedElementType>(
     getDefaultTag,
     componentProps,
     { ...elementParams, serverAttributes: false },
   );
   const tag = computed(() => componentProps.as ?? getDefaultTag());
 
-  return { element, elementProps, tag };
+  return { element, elementProps, setRef, tag };
 }
 
 /**
@@ -130,6 +136,12 @@ export interface UseRenderReturnValue<RenderedElementType extends Element = HTML
    * A `computed` does not see an attribute that comes later.
    */
   elementProps: () => HTMLProps;
+  /**
+   * The `ref` setter of the element. `elementProps()` holds the same function as `ref`.
+   * Bind it by name on the element, beside `elementProps()`: `:ref="setRef"`.
+   * Vapor mode applies only a ref that the template binds by name.
+   */
+  setRef: (value: Element | ComponentPublicInstance | null) => void;
   /**
    * The tag or the component that the template renders: the `as` prop, or the default tag.
    */

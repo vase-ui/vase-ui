@@ -1,4 +1,4 @@
-import type { Component, ComputedRef, ShallowRef } from 'vue';
+import type { Component, ComponentPublicInstance, ComputedRef, ShallowRef } from 'vue';
 import { expectType } from '#test-utils';
 import { Button } from '@vase-ui/vue/button';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -20,6 +20,9 @@ const result = useRender({});
 expectType<useRender.ReturnValue, typeof result>(result);
 expectType<ShallowRef<HTMLElement | null>, typeof result.element>(result.element);
 expectType<() => HTMLProps, typeof result.elementProps>(result.elementProps);
+expectType<(value: Element | ComponentPublicInstance | null) => void, typeof result.setRef>(
+  result.setRef,
+);
 expectType<ComputedRef<string | Component>, typeof result.tag>(result.tag);
 
 const buttonResult = useRender<{}, HTMLButtonElement>({ as: 'button' });

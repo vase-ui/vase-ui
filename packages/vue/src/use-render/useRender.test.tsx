@@ -1,12 +1,13 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { HTMLProps } from '@vase-ui/vue/use-render';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, isVaporApp, screen } from '#test-utils';
 import UseRenderPart from './UseRenderPart.test.vue';
 import type { UseRenderPartState } from './UseRenderPart.test.vue';
+import UseRenderVaporPart from './UseRenderVaporPart.test.vue';
 
-// A component that calls `useRender` in `setup` and renders the two template lines.
+// A component that calls `useRender` in `setup` and renders the `#render` slot or the element.
 function defineTestComponent<Props extends Record<string, any> = {}>(
   callUseRender: (props: Props) => useRender.ReturnValue,
   props: (keyof Props & string)[] = [],
@@ -77,6 +78,12 @@ describe('useRender', () => {
     refs.forEach((ref) => {
       expect(ref).toBe(container.firstElementChild);
     });
+  });
+
+  it.runIf(isVaporApp)('gives the element to a component that is a Vapor component', async () => {
+    const report = vi.fn();
+    await render(() => <UseRenderVaporPart report={report} data-testid="part" />);
+    expect(report).toHaveBeenCalledExactlyOnceWith(screen.getByTestId('part'));
   });
 
   describe('param: defaultTagName', () => {
