@@ -28,7 +28,7 @@ const state: FilterDropdownEmptyState = EMPTY_OBJECT;
 
 const { visible, ref: emptyRef, props: emptyProps } = useFilterDropdownEmpty();
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: emptyRef,
   props: emptyProps,
@@ -38,7 +38,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="visible && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="visible && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

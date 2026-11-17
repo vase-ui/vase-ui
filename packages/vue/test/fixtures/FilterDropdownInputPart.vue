@@ -47,7 +47,7 @@ const input = useFilterDropdownInput({
   navigationProps: () => props.navigationProps,
 });
 
-const { element, elementProps, setRef } = useRenderElement('input', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref],
   props: input.props,
@@ -57,6 +57,6 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="input.state.value" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="input.state.value" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
 </template>

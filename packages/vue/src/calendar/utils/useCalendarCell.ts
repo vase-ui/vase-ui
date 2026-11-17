@@ -50,7 +50,7 @@ export function useCalendarCell({
     native: () => props.nativeButton,
   });
 
-  const { element, elementProps, setRef } = useRenderElement('button', props, {
+  const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
     state,
     ref: buttonRef,
     props: (attrs) => {
@@ -95,5 +95,5 @@ export function useCalendarCell({
     { flush: 'post' },
   );
 
-  return { element, elementProps, setRef, text };
+  return { element, elementProps, setRef, usesRenderSlot, text };
 }

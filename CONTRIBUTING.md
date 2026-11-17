@@ -277,13 +277,14 @@ A part that Base UI takes from another family is exported again and not copied: 
 The template of each such part has the `#render` slot, then the element, and no wrapper component:
 
 ```vue
-<slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
 <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
   <slot :state="state" />
 </component>
 ```
 
 - `elementProps` is a function that the template calls. It is not a `computed`.
+- Call `usesRenderSlot()` of `useRenderElement` as the last condition of the `v-if` of a `#render` slot that gets `elementProps()`. It tells whether the consumer gave the slot, and in a development build it marks that the part renders the slot. A slot of a part compiled as a Vapor component reads `props` only when it uses `props`. A slot that uses no prop thus never calls `elementProps()`. ESLint refuses a `#render` slot that gets `elementProps()` without the call.
 - Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`.
 - When the element with its content exceeds 100 columns on one line, put the content on its own line. Vue removes white space between a tag and an element or a slot, so the render code stays the same. Prettier keeps this form. In the one-line form, Prettier breaks the line in the tags.
 - Keep text content, such as `{{ text }}`, on the line of its tag. White space beside text stays in the text.
@@ -294,9 +295,10 @@ The template of each such part has the `#render` slot, then the element, and no 
 - It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
 - Its template binds `:is="as ?? defaultTag"` on the element.
 - Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
-- A part that renders its element only in some states puts the condition in both forms: `<slot v-if="shouldRender && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shouldRender" … >`. Put a condition that has `||` in parentheses in the first form. The part then renders one comment while it has no element.
+- A part that renders its element only in some states puts the condition in both forms: `<slot v-if="shouldRender && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shouldRender" … >`. Put a condition that has `||` in parentheses in the first form. The part then renders one comment while it has no element.
 - Do not put the two forms in a `<template v-if>`. The root of the part is then a fragment. Vue gives the scope id of a consumer, `v-show`, a custom directive and `<Transition>` only to a root element. ESLint refuses this form.
 - `Tabs.Indicator` with `renderBeforeHydration` is the exception. The script of Base UI reads the indicator as the element before it. Thus one form of the template has the element and the script. The form with only the element comes last.
+- When a `<template v-if>` holds another node beside the `#render` slot, end that `v-if` with `usesRenderSlot()`. The slot inside it has no `v-if`. `Select.Positioner` and `Tabs.Indicator` are the examples.
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
@@ -351,7 +353,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 
 <!-- prettier-ignore -->
 ```vue
-<slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SliderThumbChildren" />
+<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="SliderThumbChildren" />
 <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
   <SliderThumbChildren><slot :state="state" /></SliderThumbChildren>
 </component>
@@ -420,7 +422,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - `Select.Trigger`, `Select.Root` and a combobox with a selection mode whose trigger is the control do the same. The comment at each call gives its case.
 
 ```vue
-<slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
 <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
   <slot :state="state" />
 </component>
@@ -450,7 +452,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the functions `elementProps` and `setRef`. The template binds `setRef` by name on the element.
+- Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the functions `elementProps`, `setRef` and `usesRenderSlot`. The template binds `setRef` by name on the element.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), an empty `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
@@ -475,8 +477,10 @@ Rules:
 - Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue listener got the event. `useRenderElement` thus adds a second listener for each `focusin` and `focusout` handler of the props. That listener runs the handler for an event that Vue skipped.
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
+- In a development build, a watcher also checks for `as` together with `#render`. A part compiled as a Vapor component does not update when `as` changes while it renders the `#render` slot. Only the slot reads the props of the element then.
 - `useRender` is the public form of `useRenderElement`. Its JSDoc and `docs/utils/use-render.md` give its API.
 - `useRender` returns `setRef` too. The template of a component that calls `useRender` binds it by name beside the spread, as the template of a part does. Each sample, demo and fixture that calls `useRender` has that form. A render function has no binding by name, so it spreads only `elementProps()`.
+- `useRender` does not return `usesRenderSlot`, and a component that calls it keeps `v-if="$slots.render"`. In a component compiled as a Vapor component, the checks of the `#render` slot thus do not run for a slot that uses no slot prop.
 - `useRender` passes `serverAttributes: false` to `useRenderElement`, because the library cannot know the first element of the template of a consumer. A component of a consumer thus hydrates as Vue does.
 
 ### Props
@@ -1801,6 +1805,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
 - `test/setup.ts` refuses a pointer lock in each engine. A test that needs a pointer lock mocks `requestPointerLock`.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
 - The `render` option of a `describeConformance` call for a portal part, and for each part in it, such as `Tooltip.Popup`, calls `await flushMicrotasks()`. The portal renders its element and its content in the flush after the mount.
+- In the project `vapor-parts`, `describeConformance` also renders the part with a `#render` slot that uses no slot prop, and asserts the warning.
 - Each shared suite is a function of `#test-utils`. The JSDoc of its config says what a call gives. The list below names each suite and the tests that call it:
   - `popupConformanceTests`, `positionerConformanceTests`, `detachedTriggersConformanceTests` and `viewportConformanceTests`: the tests of a popup family.
   - `popupListConformanceTests`: the tests of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox.

@@ -72,7 +72,7 @@ const { buttonRef, getButtonProps } = useButton({
   disabled: isDisabled,
 });
 
-const { element, elementProps, setRef } = useRenderElement('button', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
   ref: [buttonRef],
@@ -95,7 +95,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="DateFieldClearChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="DateFieldClearChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <DateFieldClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></DateFieldClearChildren>
   </component>

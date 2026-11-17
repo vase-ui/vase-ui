@@ -40,7 +40,7 @@ const { compositeProps, compositeRef } = useCompositeItem({
   disabled: () => props.disabled,
 });
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   // The composite ref is first. When two items share one element, the outer item registers last
   // and owns the entry.
@@ -52,7 +52,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

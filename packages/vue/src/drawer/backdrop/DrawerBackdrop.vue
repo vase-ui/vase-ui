@@ -65,7 +65,7 @@ function swipeProgressValue() {
   return ownBackdrop?.style.getPropertyValue(DrawerBackdropCssVars.swipeProgress) || '0';
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [
     createElementSetter(store.context.backdropRef),
@@ -95,7 +95,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(forceRender || !nested) && $slots.render"
+    v-if="(forceRender || !nested) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

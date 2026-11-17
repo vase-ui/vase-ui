@@ -28,7 +28,9 @@ const MESSAGES = {
   refByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
   conditionalForms:
-    'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
+    'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
+  renderSlotCall:
+    'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -338,6 +340,12 @@ const RESTRICTED_SYNTAX_IN_VUE_FILES = [
 const BUILT_IN_DIRECTIVES =
   'if|else|else-if|for|show|bind|on|model|slot|text|html|cloak|pre|once|is';
 
+const RENDER_SLOT_MARK =
+  "VAttribute[directive=true][key.name.name=/^(?:if|else-if)$/] > VExpressionContainer > :matches(CallExpression[callee.name='usesRenderSlot'], LogicalExpression[operator='&&'][right.callee.name='usesRenderSlot'])";
+// A start tag has only its attributes below it, so the descendant form is exact.
+const ELEMENT_PROPS_SLOT_TAG =
+  "VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.argument.name='props'] CallExpression[callee.name='elementProps'])";
+
 const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
   {
@@ -345,6 +353,12 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector:
       "VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument]) CallExpression[callee.name='elementProps']):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
     message: MESSAGES.refByName,
+  },
+  {
+    // The selector nests two `:has` steps, because a chain of two child steps in one `:has`
+    // matches nothing in esquery.
+    selector: `:not(VElement[name='template']:has(> VStartTag:has(${RENDER_SLOT_MARK}))) > ${ELEMENT_PROPS_SLOT_TAG}:not(:has(${RENDER_SLOT_MARK}))`,
+    message: MESSAGES.renderSlotCall,
   },
   {
     // A selector cannot read the bound object, so the rule applies to each `<input>` with a spread.

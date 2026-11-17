@@ -35,7 +35,7 @@ const { hasMeasuredScrollbar, viewportState } = useScrollAreaRootContext();
 // One read, on purpose: the value of the first render.
 const computeOnInitialResize = hasMeasuredScrollbar.value;
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: viewportState,
   stateAttributesMapping: scrollAreaStateAttributesMapping,
   props: (attrs) => [{ role: 'presentation', style: { minWidth: 'fit-content' } }, attrs],
@@ -82,7 +82,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="viewportState" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="viewportState" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="viewportState" />
   </component>

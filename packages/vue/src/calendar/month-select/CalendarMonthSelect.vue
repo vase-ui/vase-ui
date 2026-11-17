@@ -75,29 +75,28 @@ const { onChange } = useCalendarSelect({
 
 const label = computed(() => formatFieldName('month', locale.value));
 
-const { element, elementProps, setRef } = useRenderElement<CalendarState, HTMLSelectElement>(
-  'select',
-  props,
-  {
-    state,
-    children: true,
-    props: (attrs) => [
-      {
-        'aria-label': label.value,
-        disabled: state.value.disabled ? true : undefined,
-        onChange,
-      },
-      attrs,
-    ],
-  },
-);
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  CalendarState,
+  HTMLSelectElement
+>('select', props, {
+  state,
+  children: true,
+  props: (attrs) => [
+    {
+      'aria-label': label.value,
+      disabled: state.value.disabled ? true : undefined,
+      onChange,
+    },
+    attrs,
+  ],
+});
 
 defineExpose({ element });
 </script>
 
 <template>
   <slot
-    v-if="$slots.render"
+    v-if="usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

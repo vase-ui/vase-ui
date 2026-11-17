@@ -32,7 +32,9 @@ import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { markChildrenMounted, useRenderElement } from './useRenderElement';
+import VaporConditionalPart from './VaporConditionalPart.test.vue';
 import VaporPart from './VaporPart.test.vue';
+import VaporRenderConsumer from './VaporRenderConsumer.test.vue';
 
 interface ActiveState {
   active?: boolean | undefined;
@@ -1057,6 +1059,113 @@ describe('useRenderElement', () => {
           'Vase UI: The `#render` slot did not mount `children`.',
         );
       });
+    });
+  });
+
+  describe.runIf(isVaporApp)('warnings in a part compiled as a Vapor component', () => {
+    function renderNothing() {
+      return null;
+    }
+
+    function renderEmptySpan() {
+      return <span />;
+    }
+
+    it('warns when the `#render` slot returns `null`', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(<VaporConditionalPart enabled v-slots={{ render: renderNothing }} />);
+
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      );
+    });
+
+    it('warns when the `#render` slot renders an element and uses no slot prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(<VaporConditionalPart enabled v-slots={{ render: renderEmptySpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      );
+    });
+
+    it('warns when the part renders a `#render` slot that uses no slot prop after the mount', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <VaporConditionalPart enabled={false} v-slots={{ render: renderEmptySpan }} />,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(<VaporConditionalPart enabled v-slots={{ render: renderEmptySpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      );
+    });
+
+    it('warns for both the element and `children` when the `#render` slot uses no slot prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(
+        <VaporConditionalPart enabled withChildren v-slots={{ render: renderEmptySpan }} />,
+      );
+
+      expect(warnSpy.mock.calls).toEqual([
+        [expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.')],
+        [expect.stringContaining('Vase UI: The `#render` slot did not mount `children`.')],
+      ]);
+    });
+
+    it('does not warn when the part does not render the `#render` slot, also after another prop changes', async () => {
+      const { rerender } = await render(
+        <VaporConditionalPart enabled={false} count={0} v-slots={{ render: renderEmptySpan }} />,
+      );
+
+      await rerender(
+        <VaporConditionalPart enabled={false} count={1} v-slots={{ render: renderEmptySpan }} />,
+      );
+
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('warns when `as` comes after the mount of a part whose `#render` slot binds `props` in a Vapor consumer', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled form="bound" />,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled form="bound" as="section" />,
+      );
+
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `as` prop and the `#render` slot are both set.'),
+      );
+    });
+
+    it('warns when the part hides after an update and shows again with a `#render` slot that uses no slot prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled form="bound" count={0} />,
+      );
+      await rerender(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled form="bound" count={1} />,
+      );
+      await rerender(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled={false} form="bound" count={1} />,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(
+        <VaporRenderConsumer part={VaporConditionalPart} enabled form="empty" count={1} />,
+      );
+
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      );
     });
   });
 

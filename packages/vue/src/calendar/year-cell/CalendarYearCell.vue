@@ -55,7 +55,7 @@ const root = useCalendarRootContext();
 
 const state = computed<CalendarYearCellState>(() => root.getYearState(props.year));
 
-const { element, elementProps, setRef, text } = useCalendarCell({
+const { element, elementProps, setRef, usesRenderSlot, text } = useCalendarCell({
   props,
   cell: () => props.year,
   state,
@@ -71,7 +71,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :text="text" />
   <component
     :is="as"
     v-else-if="$slots.default || as !== 'button'"

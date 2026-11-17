@@ -34,7 +34,7 @@ defineSlots<{
 
 const { state } = useProgressRootContext();
 
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
   stateAttributesMapping: progressStateAttributesMapping,
@@ -46,7 +46,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ProgressValueChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ProgressValueChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <ProgressValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></ProgressValueChildren>
   </component>

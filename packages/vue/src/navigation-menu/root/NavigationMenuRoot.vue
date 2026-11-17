@@ -399,7 +399,7 @@ const state = computed<NavigationMenuRootState>(() => ({ open: open.value, neste
 
 const defaultTag = nested ? 'div' : 'nav';
 
-const { element, elementProps, setRef } = useRenderElement(defaultTag, props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement(defaultTag, props, {
   state,
   ref: [
     (rootElement) => {
@@ -413,7 +413,7 @@ defineExpose({ element, close, unmount });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as ?? defaultTag" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

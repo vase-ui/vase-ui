@@ -149,23 +149,22 @@ function getRenderedStatusProps() {
   };
 }
 
-const { element, elementProps, setRef } = useRenderElement<AvatarImageState, HTMLImageElement>(
-  'img',
-  props,
-  {
-    state,
-    props: (attrs) => [
-      getRenderedStatusProps(),
-      definedProps({ crossorigin: props.crossorigin, referrerpolicy: props.referrerpolicy }),
-      attrs,
-      // Safari and Firefox start the fetch when `src` is set. They ignore a `loading`, `sizes` or
-      // `srcset` that comes later. Vue sets the attributes in key order, so the source props
-      // come last, with `src` as the last key.
-      definedProps({ sizes: props.sizes, srcset: props.srcset, src: props.src }),
-    ],
-    stateAttributesMapping,
-  },
-);
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  AvatarImageState,
+  HTMLImageElement
+>('img', props, {
+  state,
+  props: (attrs) => [
+    getRenderedStatusProps(),
+    definedProps({ crossorigin: props.crossorigin, referrerpolicy: props.referrerpolicy }),
+    attrs,
+    // Safari and Firefox start the fetch when `src` is set. They ignore a `loading`, `sizes` or
+    // `srcset` that comes later. Vue sets the attributes in key order, so the source props
+    // come last, with `src` as the last key.
+    definedProps({ sizes: props.sizes, srcset: props.srcset, src: props.src }),
+  ],
+  stateAttributesMapping,
+});
 
 useOpenChangeComplete({
   enabled: () => !isVisible.value,
@@ -249,7 +248,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(keepMounted || mounted) && $slots.render"
+    v-if="(keepMounted || mounted) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

@@ -93,7 +93,7 @@ const state = computed<AnimatedPanelState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
   props: (attrs) => [{ hidden: mounted.value ? undefined : true }, attrs],
@@ -125,7 +125,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(keepMounted || mounted) && $slots.render"
+    v-if="(keepMounted || mounted) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"
