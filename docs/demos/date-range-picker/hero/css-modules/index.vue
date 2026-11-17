@@ -6,7 +6,6 @@ import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import styles from '../../_index.module.css';
 
 const id = useId();
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   Temporal.PlainDate.from('2026-11-18'),
   Temporal.PlainDate.from('2026-11-22'),
@@ -16,7 +15,7 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
 <template>
   <div :class="styles.Field">
     <label :for="id" :class="styles.Label">Trip dates</label>
-    <DateRangePicker.Root :default-value="defaultValue" locale="en-US" time-zone="UTC">
+    <DateRangePicker.Root :default-value="defaultValue" locale="en-US">
       <div :class="styles.Control">
         <DateRangePicker.StartField :id="id" :class="styles.Group">
           <DateField.Input :class="styles.Input">
@@ -61,7 +60,7 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
       <DateRangePicker.Portal>
         <DateRangePicker.Positioner :side-offset="4">
           <DateRangePicker.Popup aria-label="Choose trip dates" :class="styles.Popup">
-            <DateRangePicker.Calendar :today="today" :class="styles.Calendar">
+            <DateRangePicker.Calendar :class="styles.Calendar">
               <div :class="styles.Nav">
                 <RangeCalendar.PreviousButton :class="styles.Button">
                   &lsaquo;

@@ -8,6 +8,8 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  mockBrowserToday,
+  mockToday,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -58,6 +60,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
     const { render } = createRenderer();
 
     it('mounts with no Vue warning and has no axe violation', async () => {
+      mockToday('2026-11-14');
       // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
       // `import.meta.glob`.
       const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
@@ -67,8 +70,11 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
 
     it('hydrates the server render with no mismatch', async () => {
       const serverHtml = await renderOnServer(file);
-
-      await hydrate(Demo, { serverHtml });
+      // A reader opens the site on another day than the day of its build.
+      mockBrowserToday('month');
+      // A calendar page that follows the clock mounts again for the day of the browser, so Vue
+      // gives its caption a new id.
+      await hydrate(Demo, { serverHtml, renumberIds: serverHtml.includes('data-vase-ui-today') });
     });
   },
 );
@@ -386,6 +392,22 @@ describe.each([
   );
 });
 
+describe('calendar/hero', () => {
+  const { render } = createRenderer();
+
+  it('marks the day of the clock as today', async () => {
+    mockToday('2027-03-05');
+    const { Demo } = demos.find(
+      ({ name, variant }) => name === 'calendar/hero' && variant === 'css-modules',
+    )!;
+    const { container } = await render(h(Demo));
+
+    expect([...container.querySelectorAll('[aria-current="date"]')]).toEqual([
+      screen.getByRole('button', { name: /March 5, 2027/ }),
+    ]);
+  });
+});
+
 describe('demos', () => {
   it('have no name of Base UI or React in their text or their links', () => {
     expect(sourcesThatMatch(/Base UI|BaseUI|base-ui|\bReact\b|\/react\//)).toEqual([]);
@@ -395,5 +417,9 @@ describe('demos', () => {
   // starts with `/` misses the page.
   it('start the path of each link to this site with the base path', () => {
     expect(sourcesThatMatch(/\bhref(?:="['`]?|:\s*['"`])\/(?!\/)/)).toEqual([]);
+  });
+
+  it('give no calendar a fixed today', () => {
+    expect(sourcesThatMatch(/[\s:]today=/)).toEqual([]);
   });
 });

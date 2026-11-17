@@ -6,6 +6,7 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  portalOwnPropsTests,
   screen,
   waitFor,
   waitForPositioned,
@@ -26,6 +27,15 @@ describe('<Combobox.Portal />', () => {
       return result;
     },
   }));
+
+  portalOwnPropsTests({
+    render,
+    createComponent: (attributes) => (
+      <Combobox.Root defaultOpen>
+        <Combobox.Portal {...attributes} />
+      </Combobox.Root>
+    ),
+  });
 
   it('renders the popup in the children component of the #render slot', async () => {
     await render(

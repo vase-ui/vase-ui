@@ -1,5 +1,6 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
+import type { PickerPartElements } from '../../internals/date-time/picker/usePickerPartElement';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type {
   DateRangePickerRootChangeEventDetails,
@@ -33,12 +34,12 @@ export interface DateRangePickerRootContext {
   reset: (details: DateRangePickerRootChangeEventDetails) => void;
   /** Whether the second press or a drag in the calendar closes the popup. */
   closeOnSelect: ComputedRef<boolean>;
-  /** The element of the start field. */
-  startFieldElement: ShallowRef<HTMLElement | null>;
-  /** The element of the end field. */
-  endFieldElement: ShallowRef<HTMLElement | null>;
-  /** The element of the trigger. */
-  triggerElement: ShallowRef<HTMLElement | null>;
+  /** The start fields give the root its native fieldset and the popup its start anchor. */
+  startFields: PickerPartElements;
+  /** The end fields give the popup its end anchor. */
+  endFields: PickerPartElements;
+  /** The triggers give the root its native fieldset when it has no start field. */
+  triggers: PickerPartElements;
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<DateRangePickerRootProps>;
   /**

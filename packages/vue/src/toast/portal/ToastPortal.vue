@@ -14,6 +14,7 @@ import { computed, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -38,12 +39,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortalLite v-if="$slots.render" ref="portal" v-bind="{ ...$attrs, ...props }">
+  <FloatingPortalLite
+    v-if="$slots.render"
+    ref="portal"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortalLite), ...props }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </FloatingPortalLite>
-  <FloatingPortalLite v-else ref="portal" v-bind="{ ...$attrs, ...props }">
+  <FloatingPortalLite
+    v-else
+    ref="portal"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortalLite), ...props }"
+  >
     <slot :state="state" />
   </FloatingPortalLite>
 </template>

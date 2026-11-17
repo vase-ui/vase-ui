@@ -34,7 +34,7 @@ Attributes and listeners that the wrapper does not declare stay in `$attrs`. Vue
 
 ## Events
 
-Use `useForwardPropsEmits` when your wrapper declares its events with `defineEmits`. It adds a listener for each declared event. Each listener calls the wrapper's `emit` before it returns, so `details.cancel()` can stop `update:open`.
+Use `useForwardPropsEmits` when your wrapper declares its events with `defineEmits`. It adds a listener for each declared event. An event that a mixin or `extends` declares is a declared event too. Each listener calls the wrapper's `emit` before it returns, so `details.cancel()` can stop `update:open`.
 
 <<< ./use-forward-props/CollapsibleRoot.vue
 

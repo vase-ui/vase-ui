@@ -81,12 +81,14 @@ export interface DatePickerRootProps<
   hideTimeZone?: boolean | undefined;
   /**
    * The earliest date that the picker accepts. The calendar disables an earlier day, and an earlier
-   * date in the field makes the picker invalid.
+   * date in the field makes the picker invalid. A limit with a time also limits the time of a field
+   * that shows a time. A zoned limit limits a zoned value by the moment.
    */
   minDate?: DateValue | undefined;
   /**
    * The latest date that the picker accepts. The calendar disables a later day, and a later date in
-   * the field makes the picker invalid.
+   * the field makes the picker invalid. A limit with a time also limits the time of a field that
+   * shows a time. A zoned limit limits a zoned value by the moment.
    */
   maxDate?: DateValue | undefined;
   /**
@@ -143,10 +145,8 @@ export interface DatePickerRootProps<
 
 <script setup lang="ts" generic="Value extends DatePickerRootValue = DatePickerRootValue">
 import { computed, provide, useTemplateRef } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
-import { useFieldRootContext } from '../../internals/field-root-context';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DatePickerRootContext } from './DatePickerRootContext';
@@ -227,22 +227,13 @@ const picker = useDateTimePickerRoot<DatePickerRootValue, DatePickerRootChangeEv
   defaultValue: () => props.defaultValue,
   fallback,
   closeOnSelect: () => props.closeOnSelect,
+  disabled: () => props.disabled,
   hasTime,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
   updateValue: (value) => emit('update:value', value as Value | null),
 });
 
-const fieldContext = useFieldRootContext();
-// The root has no element. Its field is at the place of the picker, and its trigger is there when
-// the picker has no field.
-const fieldsetDisabled = useFieldsetDisabled(
-  () => picker.fieldElement.value ?? picker.triggerElement.value,
-);
-const isDisabled = computed(
-  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
-);
-
-provide(DatePickerRootContext, { ...picker, props, disabled: isDisabled });
+provide(DatePickerRootContext, { ...picker, props });
 
 const popover = useTemplateRef<DatePickerRootActions>('popover');
 

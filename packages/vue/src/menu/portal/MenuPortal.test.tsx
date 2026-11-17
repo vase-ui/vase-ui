@@ -3,7 +3,14 @@ import { userEvent } from 'vitest/browser';
 import { computed, defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  portalOwnPropsTests,
+  screen,
+  waitFor,
+} from '#test-utils';
 import {
   ContextMenuProvider,
   MenubarProvider,
@@ -37,6 +44,15 @@ describe('<Menu.Portal />', () => {
       return render(<Menu.Root>{node}</Menu.Root>);
     },
   }));
+
+  portalOwnPropsTests({
+    render,
+    createComponent: (attributes) => (
+      <Menu.Root defaultOpen>
+        <Menu.Portal {...attributes} />
+      </Menu.Root>
+    ),
+  });
 
   describe('slot: render', () => {
     it('puts the content of children in the element of the slot', async () => {

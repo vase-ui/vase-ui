@@ -11,6 +11,7 @@ import { useMenubarContext } from '../../internals/menubar-context/MenubarContex
 import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -292,6 +293,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   let allowOutsidePressDismissal = toRaw(store.state).parent.type !== 'context-menu';
   const allowOutsidePressDismissalTimeout = useTimeout();
+  const { isHeld } = useKeepAliveState();
 
   function followOpenState() {
     const isOpen = open.value;
@@ -309,6 +311,10 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       return;
     }
 
+    if (isHeld.value) {
+      return;
+    }
+
     // With `mousedown` outside press events and long press touch input, there
     // needs to be a grace period after opening to ensure the dismissal event
     // doesn't fire immediately after open.
@@ -318,6 +324,18 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
   onMounted(followOpenState);
   watch([open, () => parent.value.type], followOpenState);
+  watch(
+    isHeld,
+    (held) => {
+      if (!held) {
+        followOpenState();
+        return;
+      }
+
+      allowOutsidePressDismissalTimeout.clear();
+    },
+    { flush: 'sync' },
+  );
 
   onScopeDispose(() => store.context.allowTouchToCloseTimeout.clear());
 

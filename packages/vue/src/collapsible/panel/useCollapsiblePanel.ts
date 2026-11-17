@@ -29,6 +29,18 @@ type TemporaryStyle = Record<string, string>;
  */
 type RecordTemporaryStyle = (declarations: TemporaryStyle) => () => void;
 
+interface PendingReveal {
+  panel: HTMLElement;
+  /**
+   * Whether the reveal made the next open skip the motion of the author.
+   */
+  revertSkippedMotion: boolean;
+  /**
+   * Whether the reveal removed the starting style from the panel.
+   */
+  restoreStartingStyle: boolean;
+}
+
 const EMPTY_DIMENSIONS: Dimensions = {
   height: undefined,
   width: undefined,
@@ -407,8 +419,8 @@ export function useCollapsiblePanel(
 
   // The props give the string `until-found` to the element, so the server HTML has
   // `hidden="until-found"` with Vue 3.5.41 or later. In Vue 3.6, the server writes it from
-  // 3.6.0-rc.3. A server of an earlier Vue writes a bare `hidden`, and hydration does not patch an
-  // attribute. The write at mount corrects it.
+  // 3.6.0-rc.3. Earlier versions write a bare `hidden`. Vue keeps the server value of `hidden`
+  // from a `v-bind` object while it hydrates, so the panel corrects it at the mount.
   // A transition keeps running when the element gets `hidden="until-found"`, because the content
   // is hidden with `content-visibility` and the element has no `display: none`. So when the panel
   // becomes hidden, the element first gets a plain `hidden` for one style computation. The browser
@@ -433,48 +445,37 @@ export function useCollapsiblePanel(
     { flush: 'post' },
   );
 
-  const revealDecisionTimeout = Timeout.create();
-  let revertRevealFrame = -1;
+  // A `beforematch` reveal that the root did not follow yet. It stays until its revert runs or the
+  // open arrives.
+  const pendingReveal = shallowRef<PendingReveal>();
 
-  function clearRevealRevert() {
-    revealDecisionTimeout.clear();
-    AnimationFrame.cancel(revertRevealFrame);
-  }
+  function revertPendingReveal() {
+    const reveal = pendingReveal.value;
+    if (!reveal) {
+      return;
+    }
+    pendingReveal.value = undefined;
 
-  // The revert must wait until the browser has measured the match. Vue cannot do the revert: the
-  // props of a closed panel do not change, so Vue does not write the attributes that the browser
-  // changed (the browser removes `hidden` in the reveal).
-  // A task decides if the open arrived, and a frame writes the DOM. A busy main thread can delay a
-  // frame, and the frame could then read a value that is not current. When the consumer ignores the
-  // open, the state does not change and the decision holds.
-  function scheduleRevealRevert(
-    revealedPanel: HTMLElement,
-    revertSkippedMotion: boolean,
-    restoreStartingStyle: boolean,
-  ) {
-    revealDecisionTimeout.start(0, () => {
-      if (isOpen()) {
-        return;
-      }
+    if (isOpen()) {
+      return;
+    }
 
-      revertRevealFrame = AnimationFrame.request(() => {
-        if (isOpen()) {
-          return;
-        }
+    if (reveal.revertSkippedMotion) {
+      // The open did not happen, so the next open is a normal open with the motion of the
+      // author.
+      shouldSkipNextOpen = false;
+    }
 
-        if (revertSkippedMotion) {
-          // The open did not happen, so the next open is a normal open with the motion of the
-          // author.
-          shouldSkipNextOpen = false;
-        }
+    // A panel that lost `hiddenUntilFound` has its attributes from Vue.
+    if (!isHiddenUntilFound()) {
+      return;
+    }
 
-        if (restoreStartingStyle) {
-          revealedPanel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
-        }
+    if (reveal.restoreStartingStyle) {
+      reveal.panel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
+    }
 
-        revealedPanel.setAttribute('hidden', 'until-found');
-      });
-    });
+    reveal.panel.setAttribute('hidden', 'until-found');
   }
 
   function handleBeforeMatch(event: Event) {
@@ -488,7 +489,11 @@ export function useCollapsiblePanel(
     if (eventDetails.isCanceled) {
       // The panel must stay hidden. The revert writes `hidden` again, so the content stays
       // searchable.
-      scheduleRevealRevert(revealedPanel, false, false);
+      pendingReveal.value = {
+        panel: revealedPanel,
+        revertSkippedMotion: false,
+        restoreStartingStyle: false,
+      };
       return;
     }
 
@@ -507,7 +512,11 @@ export function useCollapsiblePanel(
 
     // A controlled root can ignore the open. The panel then goes back to the closed state when the
     // browser has measured the match.
-    scheduleRevealRevert(revealedPanel, true, hadStartingStyle);
+    pendingReveal.value = {
+      panel: revealedPanel,
+      revertSkippedMotion: true,
+      restoreStartingStyle: hadStartingStyle,
+    };
   }
 
   watch(
@@ -516,6 +525,10 @@ export function useCollapsiblePanel(
       if (!held) {
         runSizeEffect();
         runCloseEffect();
+        // The browser removes `hidden` in the task of `beforematch`, after the listeners. A hold
+        // in that task comes before that removal, so the revert of a reveal that the hold stopped
+        // runs here and not at the hold.
+        revertPendingReveal();
         return;
       }
 
@@ -525,7 +538,39 @@ export function useCollapsiblePanel(
       cleanupCloseEffect = undefined;
       markActivityResumeAnimationSuppressed();
       restorePendingTemporaryStyle();
-      clearRevealRevert();
+    },
+    { flush: 'sync' },
+  );
+
+  // The revert must wait until the browser has measured the match. Vue cannot do the revert: the
+  // props of a closed panel do not change, so Vue does not write the attributes that the browser
+  // changed (the browser removes `hidden` in the reveal).
+  // A task decides if the open arrived, and a frame writes the DOM. A busy main thread can delay a
+  // frame, and the frame could then read a value that is not current. When the consumer ignores the
+  // open, the state does not change and the decision holds.
+  // One run of this `watch` owns the task and the frame of one reveal, and its cleanup stops them.
+  // A hold thus stops them and keeps the reveal.
+  watch(
+    [pendingReveal, isHeld],
+    ([reveal, held], _previous, onCleanup) => {
+      if (!reveal || held) {
+        return;
+      }
+
+      const decisionTimeout = Timeout.create();
+      let revertFrame = -1;
+      decisionTimeout.start(0, () => {
+        if (isOpen()) {
+          pendingReveal.value = undefined;
+          return;
+        }
+
+        revertFrame = AnimationFrame.request(revertPendingReveal);
+      });
+      onCleanup(() => {
+        decisionTimeout.clear();
+        AnimationFrame.cancel(revertFrame);
+      });
     },
     { flush: 'sync' },
   );
@@ -534,7 +579,6 @@ export function useCollapsiblePanel(
     cleanupSizeEffect?.();
     cleanupCloseEffect?.();
     restorePendingTemporaryStyle();
-    clearRevealRevert();
   });
 
   const props = computed(() => ({

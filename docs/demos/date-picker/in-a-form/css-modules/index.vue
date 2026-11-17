@@ -5,7 +5,6 @@ import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue = Temporal.PlainDate.from('2026-12-01');
 const minDate = Temporal.PlainDate.from('2026-11-01');
 const maxDate = Temporal.PlainDate.from('2026-11-30');
@@ -23,7 +22,6 @@ const unavailableDates = { dayOfWeek: [6, 7] };
       :max-date="maxDate"
       :unavailable-dates="unavailableDates"
       locale="en-US"
-      time-zone="UTC"
     >
       <div :class="styles.Control">
         <DatePicker.Field :class="styles.Group">
@@ -56,7 +54,7 @@ const unavailableDates = { dayOfWeek: [6, 7] };
       <DatePicker.Portal>
         <DatePicker.Positioner :side-offset="4">
           <DatePicker.Popup aria-label="Choose a check-in date" :class="styles.Popup">
-            <DatePicker.Calendar :today="today" :class="styles.Calendar">
+            <DatePicker.Calendar :class="styles.Calendar">
               <div :class="styles.Nav">
                 <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
                 <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>

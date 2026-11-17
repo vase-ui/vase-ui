@@ -47,8 +47,8 @@ export interface UseLabelIdReturnValue {
  * mounted, unless the consumer gives the root a non-blank `aria-label`. A non-blank
  * `aria-labelledby` of the consumer wins, because the attributes of the consumer merge last.
  *
- * The first render in a browser assumes the same as a server. Vue does not patch an attribute when
- * it hydrates. A root that assumes a label only on a server keeps the generated id in the DOM.
+ * The first render in a browser makes the same assumption so its `aria-labelledby` matches the
+ * server HTML.
  */
 export function useLabelId(): UseLabelIdReturnValue {
   const defaultLabelId = useVaseUiId();

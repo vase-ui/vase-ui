@@ -4,7 +4,7 @@ export { createFormDataSpy } from './formData';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export { installPartsInterop, isVaporApp, isVaporParts } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
-export { mockBrowserToday } from './mockBrowserToday';
+export { mockBrowserToday, mockToday } from './mockBrowserToday';
 export { mockRuntimeDateTimeLocale, mockRuntimeLocale } from './mockRuntimeLocale';
 export {
   clientCenter,
@@ -35,6 +35,7 @@ export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
+export { portalOwnPropsTests } from './portalOwnPropsTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { viewportConformanceTests } from './viewportConformanceTests';

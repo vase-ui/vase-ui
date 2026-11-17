@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { InjectionKey } from 'vue';
 import type { DateTimePickerContext } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import type {
   DatePickerRootChangeEventDetails,
@@ -13,11 +13,6 @@ export interface DatePickerRootContext extends DateTimePickerContext<
 > {
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<DatePickerRootProps>;
-  /**
-   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
-   * fieldset around it.
-   */
-  disabled: ComputedRef<boolean>;
 }
 
 export const DatePickerRootContext: InjectionKey<DatePickerRootContext> = Symbol();
