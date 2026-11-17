@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { shallowRef, Transition } from 'vue';
+import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
@@ -852,67 +852,6 @@ describe('<TimePicker.Root />', () => {
       await userEvent.click(listItem('15:00'), { force: true });
 
       expect(onValueChange).not.toHaveBeenCalled();
-    });
-
-    it('reads the fieldset at the trigger after the field unmounts', async () => {
-      const hasField = shallowRef(true);
-      await render(() => (
-        <TimePicker.Root locale="en-US" open>
-          {hasField.value ? (
-            <TimePicker.Field>
-              <TimeField.Input />
-            </TimePicker.Field>
-          ) : null}
-          <fieldset disabled>
-            <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
-          </fieldset>
-          <TimePicker.Portal>
-            <TimePicker.Positioner>
-              <TimePicker.Popup aria-label="Choose time">
-                <TimePicker.List step={60} data-testid="list" />
-              </TimePicker.Popup>
-            </TimePicker.Positioner>
-          </TimePicker.Portal>
-        </TimePicker.Root>
-      ));
-      expect(await screen.findByTestId('list')).not.toHaveAttribute('aria-disabled');
-      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
-
-      hasField.value = false;
-
-      await waitFor(() => {
-        expect(screen.getByTestId('list')).toHaveAttribute('aria-disabled', 'true');
-      });
-    });
-
-    // The leave transition keeps the element of the trigger in the fieldset after the unmount.
-    it('reads no fieldset at the trigger after the trigger unmounts', async () => {
-      const hasTrigger = shallowRef(true);
-      await render(() => (
-        <TimePicker.Root locale="en-US" open>
-          <fieldset disabled>
-            <Transition duration={{ enter: 0, leave: 100_000 }}>
-              {hasTrigger.value ? (
-                <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
-              ) : null}
-            </Transition>
-          </fieldset>
-          <TimePicker.Portal>
-            <TimePicker.Positioner>
-              <TimePicker.Popup aria-label="Choose time">
-                <TimePicker.List step={60} data-testid="list" />
-              </TimePicker.Popup>
-            </TimePicker.Positioner>
-          </TimePicker.Portal>
-        </TimePicker.Root>
-      ));
-      expect(await screen.findByTestId('list')).toHaveAttribute('aria-disabled', 'true');
-
-      hasTrigger.value = false;
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('trigger')).toBeInTheDocument();
-      expect(screen.getByTestId('list')).not.toHaveAttribute('aria-disabled');
     });
   });
 

@@ -151,11 +151,10 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
-import { computed, provide, shallowRef, useTemplateRef } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { computed, provide, useTemplateRef } from 'vue';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
+import { createPickerPartElements } from '../../internals/date-time/picker/usePickerPartElement';
 import { assertTemporal } from '../../internals/date-time/temporal';
-import { useFieldRootContext } from '../../internals/field-root-context';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
@@ -240,6 +239,7 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
   defaultValue: () => props.defaultValue ?? EMPTY_RANGE,
   fallback: () => [fallbackEnd.value, fallbackEnd.value],
   closeOnSelect: () => props.closeOnSelect,
+  disabled: () => props.disabled,
   // The popup has no part for a time, so no range keeps the popup open by default.
   hasTime: () => false,
   isEmpty: (range) => range[0] === null && range[1] === null,
@@ -247,16 +247,6 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
     emit('valueChange', range as DateRangePickerRootValue<Value>, details),
   updateValue: (range) => emit('update:value', range as DateRangePickerRootValue<Value>),
 });
-
-const fieldContext = useFieldRootContext();
-// The root has no element. Its start field is at the place of the picker, and a picker with no field
-// has its trigger there.
-const fieldsetDisabled = useFieldsetDisabled(
-  () => picker.fieldElement.value ?? picker.triggerElement.value,
-);
-const isDisabled = computed(
-  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
-);
 
 // The two fields of one form hear the same `reset` event, and the picker has one value.
 let lastResetEvent: Event | undefined;
@@ -272,11 +262,11 @@ provide(DateRangePickerRootContext, {
     }
   },
   closeOnSelect: picker.closeOnSelect,
-  startFieldElement: picker.fieldElement,
-  endFieldElement: shallowRef<HTMLElement | null>(null),
-  triggerElement: picker.triggerElement,
+  startFields: picker.fields,
+  endFields: createPickerPartElements(),
+  triggers: picker.triggers,
   props,
-  disabled: isDisabled,
+  disabled: picker.disabled,
 });
 
 const popover = useTemplateRef<DateRangePickerRootActions>('popover');

@@ -133,10 +133,8 @@ export interface TimePickerRootProps<
 
 <script setup lang="ts" generic="Value extends TimePickerRootValue = Temporal.PlainTime">
 import { computed, provide, useTemplateRef } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
-import { useFieldRootContext } from '../../internals/field-root-context';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { TimePickerRootContext } from './TimePickerRootContext';
@@ -217,21 +215,13 @@ const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEv
   defaultValue: () => props.defaultValue,
   fallback: () => props.referenceDate ?? new Temporal.PlainTime(),
   closeOnSelect: () => props.closeOnSelect,
+  disabled: () => props.disabled,
   // A pick sets the time itself, so no value keeps the popup open by default.
   hasTime: () => false,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
   updateValue: (value) => emit('update:value', value as Value | null),
 });
 
-const fieldContext = useFieldRootContext();
-// The root has no element. Its field is at the place of the picker, and its trigger is there when
-// the picker has no field.
-const fieldsetDisabled = useFieldsetDisabled(
-  () => picker.fieldElement.value ?? picker.triggerElement.value,
-);
-const isDisabled = computed(
-  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
-);
 const isReadOnly = computed(() => props.readOnly);
 // A part of the popup changes the time of the value. While the picker has no value, it starts at
 // the time of the reference date.
@@ -242,7 +232,6 @@ const time = computed(() =>
 provide(TimePickerRootContext, {
   ...picker,
   props,
-  disabled: isDisabled,
   readOnly: isReadOnly,
   time,
   referenceTime,
