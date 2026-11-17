@@ -19,6 +19,33 @@ vi.mock('../../common/platform', async () => {
 });
 
 describe('<Drawer.Root /> on a server', () => {
+  it('VUE-128: renders an open popup in place with a disabled portal', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () => (
+          <main>
+            <Drawer.Root open>
+              <Drawer.Portal disabled>
+                <Drawer.Viewport>
+                  <Drawer.Popup>
+                    <Drawer.Content>
+                      <Drawer.Title>Title</Drawer.Title>
+                    </Drawer.Content>
+                  </Drawer.Popup>
+                </Drawer.Viewport>
+              </Drawer.Portal>
+            </Drawer.Root>
+          </main>
+        ),
+      }),
+    );
+
+    expect(html).toContain('data-vase-ui-portal');
+    expect(html).toContain('role="dialog"');
+    expect(html.replace(/<!--.*?-->/g, '')).toContain('>Title</h2>');
+    expect(html).not.toContain('teleport');
+  });
+
   it('renders its default slot with no payload and attaches no store to its handle', async () => {
     const handle = Drawer.createHandle<number>();
 

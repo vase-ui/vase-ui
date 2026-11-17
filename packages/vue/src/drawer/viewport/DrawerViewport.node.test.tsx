@@ -4,8 +4,8 @@ import { renderToString } from 'vue/server-renderer';
 import { DialogPortalContext } from '../../dialog/portal/DialogPortalContext';
 import * as Drawer from '../index.parts';
 
-// `Drawer.Portal` renders its children only after the mount. This part gives the children the
-// context of the portal, so the server renders the viewport and the popup.
+// The default `Drawer.Portal` renders its children only after the mount. This part gives the
+// children the context of the portal, so the server renders the viewport and the popup.
 const ServerPortal = defineComponent({
   setup(_props, { slots }) {
     provide(

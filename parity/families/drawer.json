@@ -37,6 +37,11 @@
   ],
   "surfaceAdditions": [
     {
+      "entry": "Portal",
+      "prop": "disabled",
+      "reason": "`Drawer.Portal` is `Dialog.Portal`. With `disabled`, the portal element and its parts render in the place of the part, also on a server (`VUE-128`). Base UI has no such prop."
+    },
+    {
       "entry": "Trigger",
       "prop": "disabled",
       "reason": "The part gives `disabled` to `Dialog.Trigger`, which reads it for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."

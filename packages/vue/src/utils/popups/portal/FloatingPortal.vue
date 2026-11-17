@@ -6,8 +6,9 @@ import type { FloatingPortalContainer } from './useFloatingPortalNode';
 export interface FloatingPortalState {}
 
 /**
- * Puts the popup into a container, by default `<body>`. A parent with `overflow: hidden` then
- * does not clip the popup. The popup keeps its place in the component tree.
+ * Puts the popup into a container, by default `<body>`, unless `inPlace` is true.
+ * In a container, a parent with `overflow: hidden` does not clip the popup.
+ * The popup keeps its place in the component tree.
  * @see https://floating-ui.com/docs/FloatingPortal
  */
 export interface FloatingPortalProps
@@ -22,6 +23,13 @@ export interface FloatingPortalProps
    * The role for the hidden `aria-owns` owner element.
    */
   portalOwnerRole?: string | undefined;
+  /**
+   * Whether the portal element renders in the place of the part, with no `Teleport`.
+   * Other portal parts pass attributes to this component.
+   * The internal name keeps their `disabled` attributes separate from this mode.
+   * @default false
+   */
+  inPlace?: boolean | undefined;
 }
 </script>
 
@@ -53,7 +61,7 @@ import { useFloatingPortalNode } from './useFloatingPortalNode';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<FloatingPortalProps>(), { as: 'div' });
+const props = withDefaults(defineProps<FloatingPortalProps>(), { as: 'div', inPlace: false });
 
 defineSlots<{
   default(props: { state: FloatingPortalState }): unknown;
@@ -90,15 +98,16 @@ const { element, elementProps, setRef, containerElement, isHeld } = useFloatingP
   container: () => props.container,
   componentProps: props,
   children: true,
+  inPlace: () => props.inPlace,
 });
 
 // The capture phase runs these listeners before a listener of the focus manager. A Vue listener
 // here would get each focus in the popup first. Vue would then skip the Vue listener of a target
 // that mounted in the millisecond of the focus.
 watch(
-  [element, modal],
-  ([portalNode, isModal], _previous, onCleanup) => {
-    if (!portalNode || isModal) {
+  [element, modal, () => props.inPlace],
+  ([portalNode, isModal, inPlace], _previous, onCleanup) => {
+    if (!portalNode || isModal || inPlace) {
       return;
     }
     onCleanup(
@@ -142,7 +151,9 @@ const nodeId = useElementId(element);
 
 // Vue gives a ref of a `Teleport` the node that marks the place of the `Teleport`: a comment in a
 // development build, and an empty text node in a production build. The guards and the owner
-// element are not in the template, so the part has one root node: its `Teleport`.
+// element are not in the template, so the part has one root node in either form.
+// In place, the part renders no `Teleport`. The ref is then `null`, so the part keeps no guards and
+// no owner element.
 const teleportStart = shallowRef<Comment | Text | null>(null);
 
 function setTeleportStart(node: unknown) {
@@ -220,6 +231,7 @@ const afterInsideRef = shallowRef<HTMLSpanElement | null>(null);
 
 provide(PortalContext, {
   portalNode: element,
+  inPlace: computed(() => props.inPlace),
   setFocusManagerState(nextState) {
     focusManagerState.value = nextState;
   },
@@ -255,8 +267,18 @@ defineExpose({ element });
 </script>
 
 <template>
+  <slot
+    v-if="inPlace && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+    :children="FloatingPortalChildren"
+  />
+  <component :is="as" v-else-if="inPlace" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
   <Teleport
-    v-if="containerElement"
+    v-else-if="containerElement"
     :ref="setTeleportStart"
     :to="containerElement"
     :disabled="isHeld"

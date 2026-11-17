@@ -64,6 +64,38 @@ describe('FloatingPortal', () => {
     refInstanceof: window.HTMLDivElement,
   }));
 
+  describe('prop: inPlace', () => {
+    it('keeps no guards or owner for a focus manager that is not modal and gives its mode through context', async () => {
+      let context: PortalContextValue | undefined;
+      const Probe = defineComponent({
+        setup() {
+          context = usePortalContext();
+          return () => null;
+        },
+      });
+      await render(
+        <div data-testid="host">
+          <FloatingPortal inPlace data-testid="portal">
+            <FocusManagerPart>
+              <Probe />
+              <input />
+            </FocusManagerPart>
+          </FloatingPortal>
+        </div>,
+      );
+
+      expect(context?.inPlace.value).toBe(true);
+      expect(context?.portalNode.value).toBe(screen.getByTestId('portal'));
+      expect(context?.beforeInsideRef.value).toBe(null);
+      expect(context?.afterInsideRef.value).toBe(null);
+      expect(context?.beforeOutsideRef.value).toBe(null);
+      expect(context?.afterOutsideRef.value).toBe(null);
+      expect(listPlaceOfPortal(screen.getByTestId('host'))).toEqual(['portal']);
+      expect(document.querySelector('[data-vase-ui-focus-guard]')).toBe(null);
+      expect(document.querySelector('[aria-owns]')).toBe(null);
+    });
+  });
+
   describe('guards and owner element', () => {
     it('renders the guards and the owner element around the place of the portal', async () => {
       await render(

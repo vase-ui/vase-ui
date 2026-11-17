@@ -34,6 +34,13 @@ const open = { defaultOpen: true };
 const portalParts = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
+  {
+    name: 'Dialog.Portal in place',
+    root: Dialog.Root,
+    portal: Dialog.Portal,
+    rootProps: open,
+    portalProps: { disabled: true },
+  },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
   {
     name: 'NavigationMenu.Portal',

@@ -257,6 +257,20 @@ To show an element "outside" the colored area of the popup, keep it inside `Dial
 
 </DemoSource>
 
+### Render in place
+
+Set `disabled` on `Dialog.Portal` to render the portal element and its parts at the place of the component. The server HTML then includes an open popup, and the portal does not read `container`. The name follows [Vue's `Teleport` prop](https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport).
+
+This panel stays beside a list on wide screens and becomes a modal sheet on narrow screens. It keeps one dialog tree and changes `modal` after hydration:
+
+<<< ./dialog/InPlace.vue
+
+Give a modal popup a `position` so that it appears above the backdrops. Hide `Dialog.Backdrop` with CSS while the dialog is not modal. A modal dialog includes its internal backdrop in the server HTML; use `:modal="false"` for a page that must work before hydration.
+
+A nested popup keeps its portal inside the dialog's portal element, so an ancestor with `overflow: hidden` can clip it. A change of `disabled` mounts the parts again and discards DOM state, such as the text of an uncontrolled input.
+
+The popup gets `aria-labelledby` and `aria-describedby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. Do the same with `Dialog.Description` and `aria-describedby`. When `modal` becomes `true` with focus outside the popup, the dialog does not move focus into it.
+
 ### Detached triggers
 
 A trigger can be inside or outside `Dialog.Root`. For a simple interaction, put `Dialog.Trigger` inside `Dialog.Root`, as the example at the top of this page does.

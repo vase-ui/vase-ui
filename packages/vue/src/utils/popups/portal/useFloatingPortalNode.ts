@@ -37,12 +37,17 @@ export interface UseFloatingPortalNodeProps {
    * `useRenderElement` then warns when the slot does not mount `children`.
    */
   children?: boolean | undefined;
+  /**
+   * Whether the part renders the portal element in its own place, with no `Teleport`. The
+   * composable then does not read `container`.
+   */
+  inPlace?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
 export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue {
   /**
    * The element that the `Teleport` of the part renders into, or `null` while the part renders
-   * no `Teleport`. It is `null` on a server and until the part is mounted.
+   * no `Teleport`. It is `null` on a server, before the mount, and while `inPlace` is true.
    */
   containerElement: Readonly<Ref<HTMLElement | ShadowRoot | null>>;
   /**
@@ -73,7 +78,7 @@ function resolveContainer(
 
 /**
  * Makes the portal element of a portal and finds its container. The part renders one `Teleport`
- * to `containerElement`, and the portal element is inside that `Teleport`.
+ * to `containerElement`, unless `inPlace` is true. In place, the portal element is the root node.
  * Base UI makes two `createPortal` calls for this.
  *
  * With the `#render` slot, the child of the `Teleport` is the fragment of the slot. Vue then warns
@@ -97,7 +102,10 @@ export function useFloatingPortalNode(
   // children then run in the first container, which is out of the document. Base UI mounts the
   // children one time, in the new container.
   watch(
-    () => (mounted.value ? resolveContainer(params.container, parentPortalNode) : null),
+    () =>
+      mounted.value && !toValue(params.inPlace)
+        ? resolveContainer(params.container, parentPortalNode)
+        : null,
     (container) => {
       containerElement.value = container;
     },

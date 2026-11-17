@@ -71,9 +71,11 @@ export namespace Popup {
  * By default, the portal element is appended to `<body>`.
  * Renders a `<div>` element.
  *
- * The part renders its element in a `Teleport`. Vue gives the scope id of `<style scoped>`,
- * `v-show` and a custom directive only to a root element, so they do not reach this element. Put
- * them on your element in the `#render` slot, or use a CSS module or a `style` binding.
+ * By default, the part renders its element in a `Teleport`. Vue gives the scope id of
+ * `<style scoped>`, `v-show` and a custom directive only to a root element, so they do not reach
+ * this element. Put them on your element in the `#render` slot, or use a CSS module or a `style`
+ * binding. With `disabled` and no `#render` slot, the portal element is the root node of the
+ * part, so they and a `<Transition>` reach it.
  */
 export const Portal: typeof DialogPortal = DialogPortal;
 export namespace Portal {

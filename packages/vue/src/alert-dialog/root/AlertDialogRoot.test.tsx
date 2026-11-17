@@ -1,3 +1,4 @@
+import { userEvent } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, shallowRef } from 'vue';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
@@ -13,6 +14,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
@@ -47,6 +49,36 @@ const AlertDialogState = defineComponent({
 
 describe('<AlertDialog.Root />', () => {
   const { render } = createRenderer();
+
+  it('VUE-128: renders the popup in place, marks outside elements and closes on Escape', async () => {
+    const onOpenChange = vi.fn();
+    await render(() => (
+      <div data-testid="host">
+        <button data-testid="before">before</button>
+        <AlertDialog.Root defaultOpen onOpenChange={onOpenChange}>
+          <AlertDialog.Portal disabled data-testid="portal">
+            <AlertDialog.Backdrop />
+            <AlertDialog.Popup data-testid="popup">
+              <AlertDialog.Title>Title</AlertDialog.Title>
+              <AlertDialog.Close data-testid="close">Close</AlertDialog.Close>
+            </AlertDialog.Popup>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
+      </div>
+    ));
+    await waitFor(() => expect(screen.getByTestId('close')).toHaveFocus());
+    expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('host'));
+    expect(screen.getByTestId('before').closest('[inert]')).not.toBe(null);
+    await userEvent.keyboard('{Tab}');
+    expect(screen.getByTestId('close')).toHaveFocus();
+    const popup = screen.getByTestId('popup');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup).not.toBeInTheDocument());
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(
+      false,
+      expect.objectContaining({ reason: 'escape-key' }),
+    );
+  });
 
   popupAnatomyTests({
     createComponent: ({ open, onOpenChangeComplete, content }) => (
