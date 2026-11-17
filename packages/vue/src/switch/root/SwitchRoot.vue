@@ -104,8 +104,8 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
-import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -185,11 +185,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-// Vapor sets the input ref before the part mounts. A ref callback can click the control then.
-let isMounted = false;
-onMounted(() => {
-  isMounted = true;
-});
+const isHydrated = useIsHydrated();
 const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
@@ -402,8 +398,11 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
 
         event.preventDefault();
 
+        // In a part compiled as a Vapor component, the input has its `ref` when a `ref` callback
+        // of the consumer gets the element. A click in that callback must change nothing, as in
+        // Base UI and in a virtual DOM part, where the input does not exist yet.
         const input = inputElement.value;
-        if (!isMounted || !input) {
+        if (!isHydrated.value || !input) {
           return;
         }
 

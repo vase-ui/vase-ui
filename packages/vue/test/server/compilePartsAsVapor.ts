@@ -1,8 +1,10 @@
+import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
-const SRC = `${import.meta.dirname.replace(/\/test\/server$/, '')}/src/`;
+const SRC = `${resolve(import.meta.dirname, '../../src')}/`;
 const TEST_OR_TYPE_TEST = /\.(?:test|spec)\.vue$/;
-const SCRIPT_SETUP = /<script\b[^>]*\bsetup\b/;
+// The tag starts a line. The text of a comment or a string above it can also hold the tag.
+const SCRIPT_SETUP = /^<script\b[^>]*\bsetup\b/m;
 
 /**
  * Compiles each part SFC as a Vapor component. Adds `vapor` to its `<script setup>` below `src`,

@@ -335,7 +335,16 @@
         "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "test/reportedMessages.test.tsx": {
+      "fails": {}
+    },
+    "test/testApp.test.tsx": {
+      "fails": {}
+    },
     "test/vaporParts/vaporParts.test.tsx": {
+      "fails": {}
+    },
+    "test/withoutVaporAnchors.test.tsx": {
       "fails": {}
     }
   }

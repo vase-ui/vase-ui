@@ -279,9 +279,12 @@ jobs:
           command: ${{ needs.select.outputs.vitest-command }}
           project: vapor
 
-  # The parts need a prerelease of Vue, so `required` does not need this job.
-  # A failure must stay visible. The module graph does not link the list to its part tests,
-  # so each file of `test/vaporParts/expectedFailures.json` runs.
+  # The project `vapor-parts` compiles each part as a Vapor component, with the Vue of `test-vue-rc`.
+  # A prerelease of a dependency must not block a merge, so `required` does not need this job.
+  # The job has no `continue-on-error`, so a failure shows on the pull request.
+  # The job does not use the selection of `select`. It runs each test file of
+  # `packages/vue/test/vaporParts/expectedFailures.json`, because an entry of that list changes the
+  # result of a test file that does not import the list.
   test-vapor-parts:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}

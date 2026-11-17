@@ -3,10 +3,6 @@ import { expect, it } from 'vitest';
 import { isVaporParts } from '#test-utils';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
-// These helper cases must also run with parts that compile as Vapor components.
-import '../testApp.test';
-import '../withoutVaporAnchors.test';
-
 it('compiles a part as a Vapor component only in the project of the Vapor parts', () => {
   expect((Checkbox.Root as { __vapor?: boolean }).__vapor === true).toBe(isVaporParts);
 });
@@ -35,6 +31,3 @@ it('each cause has a summary, and its link is a URL of an issue', () => {
     expect(link.pathname).toMatch(/^\/vuejs\/core\/issues\/\d+$/);
   }
 });
-
-// The case whose setup throws must remain last.
-await import('../reportedMessages.test');
