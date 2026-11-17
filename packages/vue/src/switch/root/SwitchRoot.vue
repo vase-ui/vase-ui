@@ -114,6 +114,7 @@ import { useFieldInput, useRegisterFieldControl } from '../../internals/field-re
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
+import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -129,7 +130,6 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { stateAttributesMapping } from '../stateAttributesMapping';
 import { SwitchRootContext } from './SwitchRootContext';
 
@@ -397,12 +397,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
 
         event.preventDefault();
 
-        const input = inputElement.value;
-        if (!input) {
-          return;
-        }
-
-        dispatchClickWithModifiers(input, event);
+        forwardClickToInput(inputElement.value, event);
       },
     },
     attrs,

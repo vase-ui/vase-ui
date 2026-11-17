@@ -5,6 +5,8 @@ import {
   createHeldBranch,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
+  installPartsInterop,
   isJSDOM,
   renderOnServer,
   screen,
@@ -201,7 +203,7 @@ describe('<ScrollArea.Content />', () => {
       expect(content.style.minWidth).toBe('fit-content');
       expect(content).not.toHaveAttribute('data-has-overflow-y');
 
-      const hydratingApp = createSSRApp(ScrollAreaContentHydration);
+      const hydratingApp = installPartsInterop(createSSRApp(ScrollAreaContentHydration));
       onTestFinished(() => {
         hydratingApp.unmount();
         container.remove();
@@ -215,7 +217,7 @@ describe('<ScrollArea.Content />', () => {
 
       const clientContainer = document.createElement('div');
       document.body.append(clientContainer);
-      const clientApp = createApp(ScrollAreaContentHydration);
+      const clientApp = installPartsInterop(createApp(ScrollAreaContentHydration));
       onTestFinished(() => {
         clientApp.unmount();
         clientContainer.remove();
@@ -240,9 +242,6 @@ describe('<ScrollArea.Content />', () => {
       'Vase UI: <ScrollArea.Content> must be inside <ScrollArea.Viewport>. Without a viewport the content cannot start a measurement. Put <ScrollArea.Content> inside <ScrollArea.Viewport>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

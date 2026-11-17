@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, createSSRApp, defineComponent, h, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  createApp,
+  createSSRApp,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  shallowRef,
+} from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
@@ -15,6 +24,7 @@ import {
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
+  installPartsInterop,
   isJSDOM,
   mockPageBeforeLoad,
   removedPartHydrationTests,
@@ -22,6 +32,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
@@ -107,6 +118,36 @@ describe('<Switch.Root />', () => {
       await render(<App />);
       expect(inputAtCall).toBe(null);
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('changes its state after a mount in a detached container', async () => {
+      const container = document.createElement('div');
+      const app = installPartsInterop(createApp({ render: () => <Switch.Root /> }));
+      onTestFinished(() => app.unmount());
+      await waitForLaterMillisecond(() => app.mount(container));
+      const control = within(container).getByRole('switch');
+      expect(control.isConnected).toBe(false);
+      expect(control).toHaveAttribute('aria-checked', 'false');
+
+      control.click();
+      await nextTick();
+
+      expect(control).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('changes its state for a click in the `onMounted` hook of a child', async () => {
+      const ClickParentOnMount = defineComponent(() => {
+        const element = shallowRef<HTMLElement | null>(null);
+        onMounted(() => element.value?.parentElement?.click());
+        return () => <span ref={element} />;
+      });
+      await render(
+        <Switch.Root>
+          <ClickParentOnMount />
+        </Switch.Root>,
+      );
+
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
     });
 
     it('should change its state when clicked', async () => {
@@ -1608,7 +1649,9 @@ describe('<Switch.Root />', () => {
       container.innerHTML = serverHtml;
       // The client props differ from the server props, so `hydrateAfter` would throw on the
       // mismatch. Vue does not write `checked` when it hydrates.
-      const app = createSSRApp(SwitchRootBeforeHydration, { defaultChecked: true });
+      const app = installPartsInterop(
+        createSSRApp(SwitchRootBeforeHydration, { defaultChecked: true }),
+      );
       onTestFinished(() => {
         app.unmount();
         container.remove();

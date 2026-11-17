@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  expectSetupErrorWarnings,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import * as Calendar from '../index.parts';
 import CalendarAncestors from '../root/CalendarAncestors.test.vue';
 
@@ -98,8 +104,6 @@ describe('<Calendar.DayButton />', () => {
       'Vase UI: <Calendar.DayButton> must be inside <Calendar.Day>. Without a day the button has no date to select. Put the button inside <Calendar.Day>.',
     );
 
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

@@ -11,6 +11,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  withoutVaporAnchors,
 } from '#test-utils';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
@@ -1048,7 +1049,7 @@ describe('Combobox.createItems', () => {
 
       await render(<App />);
 
-      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+      expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
     });
 
     it('does not treat source value fields as derived selections', async () => {
@@ -1074,7 +1075,7 @@ describe('Combobox.createItems', () => {
       await render(<App />);
 
       expect(screen.getByTestId('placeholder')).toHaveTextContent('Choose an option');
-      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+      expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
     });
 
     it('toggles derived values in multiple mode', async () => {

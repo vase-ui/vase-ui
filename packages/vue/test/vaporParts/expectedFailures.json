@@ -1,0 +1,360 @@
+{
+  "causes": {
+    "vue-16301": {
+      "summary": "A ref in a virtual DOM slot has no owner when its parent vnode comes from outside a render function.",
+      "link": "https://github.com/vuejs/core/issues/16301"
+    },
+    "vue-16302": {
+      "summary": "A virtual DOM Fragment with a null child in a Vapor slot throws in getTransitionRawChildren.",
+      "link": "https://github.com/vuejs/core/issues/16302"
+    },
+    "vue-16305-hydration": {
+      "summary": "A Vapor component cannot read its hydration state or its first server node.",
+      "link": "https://github.com/vuejs/core/issues/16305"
+    },
+    "vue-16305-keep-alive": {
+      "summary": "A Vapor component cannot read whether KeepAlive holds its branch.",
+      "link": "https://github.com/vuejs/core/issues/16305"
+    },
+    "vue-16308": {
+      "summary": "A function ref on a dynamic component gets null and the same element again after a value that the ref reads changes.",
+      "link": "https://github.com/vuejs/core/issues/16308"
+    }
+  },
+  "files": {
+    "src/alert-dialog/trigger/AlertDialogTrigger.test.tsx": {
+      "fails": {}
+    },
+    "src/autocomplete/value/AutocompleteValue.test.tsx": {
+      "fails": {}
+    },
+    "src/calendar/caption/CalendarCaption.test.tsx": {
+      "fails": {
+        "<Calendar.Caption /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Calendar.Caption /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Calendar.Caption /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/calendar/day-button/CalendarDayButton.test.tsx": {
+      "fails": {
+        "<Calendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Calendar.DayButton /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Calendar.DayButton /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/calendar/grid/CalendarGrid.test.tsx": {
+      "fails": {
+        "<Calendar.Grid /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Calendar.Grid /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Calendar.Grid /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/checkbox/root/CheckboxRoot.test.tsx": {
+      "fails": {
+        "<Checkbox.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Checkbox.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Checkbox.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not block the form of its group while held, and blocks it after the show": "vue-16305-keep-alive",
+        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not block the form while held, and blocks it after the show": "vue-16305-keep-alive",
+        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not give its id to the `for` of the label while held": "vue-16305-keep-alive",
+        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > is not in `aria-controls` of the parent checkbox while held": "vue-16305-keep-alive",
+        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
+        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description after another": "vue-16305-hydration",
+        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration",
+        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, the input, a removed description": "vue-16305-hydration"
+      }
+    },
+    "src/combobox/chip-remove/ComboboxChipRemove.test.tsx": {
+      "fails": {
+        "<Combobox.ChipRemove /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/combobox/collection/ComboboxCollection.test.tsx": {
+      "fails": {}
+    },
+    "src/combobox/items/createItems.test.tsx": {
+      "fails": {}
+    },
+    "src/combobox/value/ComboboxValue.test.tsx": {
+      "fails": {}
+    },
+    "src/drawer/trigger/DrawerTrigger.test.tsx": {
+      "fails": {
+        "<Drawer.Trigger /> > VUE-73: aria-controls names only an element in the document > has no aria-controls while the popup mounts in a branch that KeepAlive holds": "vue-16305-keep-alive"
+      }
+    },
+    "src/navigation-menu/arrow/NavigationMenuArrow.test.tsx": {
+      "fails": {
+        "<NavigationMenu.Arrow /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/navigation-menu/icon/NavigationMenuIcon.test.tsx": {
+      "fails": {
+        "<NavigationMenu.Icon /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx": {
+      "fails": {
+        "<NavigationMenu.Positioner /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<NavigationMenu.Positioner /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<NavigationMenu.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<NavigationMenu.Positioner /> > resets data-instant after the first activation of a held mount": "vue-16305-keep-alive"
+      }
+    },
+    "src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx": {
+      "fails": {
+        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop: render > renders a customized root element with an element": "vue-16308"
+      }
+    },
+    "src/popover/popup/PopoverPopup.test.tsx": {
+      "fails": {
+        "<Popover.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/preview-card/popup/PreviewCardPopup.test.tsx": {
+      "fails": {
+        "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/radio/root/RadioRoot.test.tsx": {
+      "fails": {
+        "<Radio.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Radio.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Radio.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Radio.Root /> > hydration > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
+        "<Radio.Root /> > hydration > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration"
+      }
+    },
+    "src/range-calendar/day-button/RangeCalendarDayButton.test.tsx": {
+      "fails": {
+        "<RangeCalendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<RangeCalendar.DayButton /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<RangeCalendar.DayButton /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/resizable/panel/ResizablePanel.test.tsx": {
+      "fails": {
+        "<Resizable.Panel /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Resizable.Panel /> > event: resize > is emitted for a drag with the size before it": "vue-16302",
+        "<Resizable.Panel /> > event: resize > is emitted for a fixed panel when the root changes size, with the same pixels": "vue-16302",
+        "<Resizable.Panel /> > event: resize > is emitted for a size change of the root: the percent stays and the pixels change": "vue-16302",
+        "<Resizable.Panel /> > event: resize > is emitted one time after the mount, with the pixels of the panel": "vue-16302",
+        "<Resizable.Panel /> > event: resize > is emitted with a length that gives the first size, once": "vue-16302",
+        "<Resizable.Panel /> > event: resize > is not emitted for a change of another panel that leaves the panel as it is": "vue-16302",
+        "<Resizable.Panel /> > hydration > gives the state of the server HTML to stateClass and the slot while it hydrates": "vue-16305-hydration",
+        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a removed panel, data-collapsed": "vue-16305-hydration",
+        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a stored layout, data-collapsed": "vue-16305-hydration",
+        "<Resizable.Panel /> > method: getSize() > gives the size in percent and in pixels": "vue-16302",
+        "<Resizable.Panel /> > methods > collapses the last panel into the panel before it, and expands it again": "vue-16302",
+        "<Resizable.Panel /> > methods > collapses with collapse() and gives back the size from before with expand()": "vue-16302",
+        "<Resizable.Panel /> > methods > does not collapse another panel with expand(), also when that panel has the room": "vue-16302",
+        "<Resizable.Panel /> > methods > does nothing for a panel that is alone in its root": "vue-16302",
+        "<Resizable.Panel /> > methods > emits nothing for collapse() when collapsed": "vue-16302",
+        "<Resizable.Panel /> > methods > emits nothing for collapse() when not collapsible": "vue-16302",
+        "<Resizable.Panel /> > methods > emits nothing for expand() when not collapsed": "vue-16302",
+        "<Resizable.Panel /> > methods > emits nothing for resize() to the same size": "vue-16302",
+        "<Resizable.Panel /> > methods > emits the change and the commit with the reason imperative-action": "vue-16302",
+        "<Resizable.Panel /> > methods > gives back the size from the start of the drag that collapsed it with expand(), a drag from the least size": "vue-16302",
+        "<Resizable.Panel /> > methods > gives back the size from the start of the drag that collapsed it with expand(), a drag in one move": "vue-16302",
+        "<Resizable.Panel /> > methods > gives back the size from the start of the drag that collapsed it with expand(), a drag in two moves": "vue-16302",
+        "<Resizable.Panel /> > methods > gives the least size with expand() when the panel has no size from before": "vue-16302",
+        "<Resizable.Panel /> > methods > gives the panel a number with resize()": "vue-16302",
+        "<Resizable.Panel /> > methods > gives the panel a size below the least size with resize()": "vue-16302",
+        "<Resizable.Panel /> > methods > gives the panel a string of a number with resize()": "vue-16302",
+        "<Resizable.Panel /> > methods > gives the panel a string with a percent sign with resize()": "vue-16302",
+        "<Resizable.Panel /> > methods > keeps the layout when a listener cancels the change of a method": "vue-16302",
+        "<Resizable.Panel /> > methods > pushes the panels after the next panel with a root that does not push": "vue-16302",
+        "<Resizable.Panel /> > methods > takes only what another panel has above its least size with resize()": "vue-16302",
+        "<Resizable.Panel /> > methods > takes the room above the least sizes of the other panels with expand()": "vue-16302",
+        "<Resizable.Panel /> > methods > works on a disabled panel and on a disabled root": "vue-16302",
+        "<Resizable.Panel /> > padding and border > keeps the handle under the pointer when the panels of a horizontal root have padding and a border": "vue-16302",
+        "<Resizable.Panel /> > padding and border > keeps the handle under the pointer when the panels of a vertical root have padding and a border": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a number collapses below 15": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a number expands above 5": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a number stays collapsed at 4": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a number stops at 16": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a percent string collapses below 15": "vue-16302",
+        "<Resizable.Panel /> > prop: collapseThreshold > is the distance from the limits for a string of a number stops at 16": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > a drag collapses below the middle of the distance": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > a drag expands above the middle of the distance": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > a drag goes on past the least size of the distance": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > a drag stays collapsed below the middle of the distance": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > a drag stops at the least size above the middle of the distance": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > emits collapsedChange when the panel collapses or expands, and not for another change": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > gives a collapsed panel the first size when its default size is the collapsed size": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > has a collapsed size that the panel keeps while it is collapsed": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > has data-collapsed and the state collapsed while the panel is collapsed": "vue-16302",
+        "<Resizable.Panel /> > prop: collapsible > warns once when a collapsible panel cannot collapse": "vue-16302",
+        "<Resizable.Panel /> > prop: defaultSize > does not win over the layout of the root": "vue-16302",
+        "<Resizable.Panel /> > prop: defaultSize > is the size at the start, as a number": "vue-16302",
+        "<Resizable.Panel /> > prop: defaultSize > is the size at the start, as a string of a number": "vue-16302",
+        "<Resizable.Panel /> > prop: defaultSize > is the size at the start, as a string with a percent sign": "vue-16302",
+        "<Resizable.Panel /> > prop: defaultSize > takes the remainder in equal parts for the panels with no size": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > goes through the panel for the handle after it to the left": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > goes through the panel for the handle after it to the right": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > goes through the panel for the handle before it to the left": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > goes through the panel for the handle before it to the right": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > has data-disabled and the state disabled": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > leaves Enter and a double click on a handle whose primary panel is disabled": "vue-16302",
+        "<Resizable.Panel /> > prop: disabled > stops a key on a handle that has only disabled panels on one side": "vue-16302",
+        "<Resizable.Panel /> > prop: id > is a generated id with no id prop, and the handle controls it": "vue-16302",
+        "<Resizable.Panel /> > prop: id > is the id of the element, and the key of the layout": "vue-16302",
+        "<Resizable.Panel /> > prop: id > warns once when two panels have one id": "vue-16302",
+        "<Resizable.Panel /> > prop: minSize and maxSize > hold in a drag": "vue-16302",
+        "<Resizable.Panel /> > prop: minSize and maxSize > hold in a key move": "vue-16302",
+        "<Resizable.Panel /> > prop: minSize and maxSize > take a string of a number": "vue-16302",
+        "<Resizable.Panel /> > prop: minSize and maxSize > take a string with a percent sign": "vue-16302",
+        "<Resizable.Panel /> > prop: minSize and maxSize > warns once when the sizes cannot sum to 100": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > emits no layout event for a size change of the root": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > gives the panel new pixels with a drag": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > gives the panel new pixels with a key": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > keeps the pixels of a fixed panel when the root gets larger or smaller": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > scales a panel that is proportional with the root": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > takes the room of a size change from the first fixed panel with no priority": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > takes the room of a size change from the panel with the greater priority first": "vue-16302",
+        "<Resizable.Panel /> > prop: rootResizeBehavior > warns once when each panel is fixed": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > does not snap a key": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > does not snap a method": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > has a tolerance of 10 px by default": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > has the tolerance that snapTolerance gives": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in percent, at the edge of the tolerance": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in percent, from above": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in percent, from below": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in percent, outside the tolerance": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in pixels": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point in rem": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps a drag to a snap point one of two": "vue-16302",
+        "<Resizable.Panel /> > prop: snapPoints > snaps the panel after the handle too": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > collapses a drag that passes the collapse threshold in em": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > collapses a drag that passes the collapse threshold in px": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > collapses a drag that passes the collapse threshold in rem": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > collapses a drag that passes the collapse threshold in vh": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > collapses a drag that passes the collapse threshold in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > does not warn for a collapsible panel whose least size is a length": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > does not warn when the lengths of the panels cannot fit in a small root": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > follows the size of the window for a size in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives a panel in a vertical root a size in pixels of its height": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives back the pixels of a default size in a length with reset() and a double click": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the content of a panel the pixels, and not the panel with its padding": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the size at the start in em": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the size at the start in px": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the size at the start in rem": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the size at the start in vh": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > gives the size at the start in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the collapsed size in em": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the collapsed size in px": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the collapsed size in rem": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the collapsed size in vh": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the collapsed size in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the greatest size in em": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the greatest size in px": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the greatest size in rem": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the greatest size in vh": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the greatest size in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the least size in em": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the least size in px": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the least size in rem": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the least size in vh": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > has the least size in vw": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > keeps a least size in pixels when the root gets smaller, and gives the layout back": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > keeps the percent that a default size in a length gave, when the root changes size": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > resizes with a length": "vue-16302",
+        "<Resizable.Panel /> > sizes with a unit > warns once when a collapsible panel cannot collapse with lengths": "vue-16302",
+        "<Resizable.Panel /> > state > gives the orientation and the size to the slot and to stateClass": "vue-16302",
+        "<Resizable.Panel /> > style > fills the root by its size": "vue-16302",
+        "<Resizable.Panel /> > style > grows by its size in percent, from a basis of zero": "vue-16302",
+        "<Resizable.Panel /> > style > has no minimum size on the axis of a horizontal root": "vue-16302",
+        "<Resizable.Panel /> > style > has no minimum size on the axis of a vertical root": "vue-16302",
+        "<Resizable.Panel /> > style > has the size in percent as a variable with no unit": "vue-16302",
+        "<Resizable.Panel /> > style > keeps the style of a consumer, which wins over the style of the panel": "vue-16302"
+      }
+    },
+    "src/scroll-area/content/ScrollAreaContent.test.tsx": {
+      "fails": {
+        "<ScrollArea.Content /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<ScrollArea.Content /> > KeepAlive > observes content from the first activation after a held mount": "vue-16305-keep-alive"
+      }
+    },
+    "src/scroll-area/thumb/ScrollAreaThumb.test.tsx": {
+      "fails": {
+        "<ScrollArea.Thumb /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/select/item-text/SelectItemText.test.tsx": {
+      "fails": {
+        "<Select.ItemText /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/switch/root/SwitchRoot.test.tsx": {
+      "fails": {
+        "<Switch.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Switch.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Switch.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Switch.Root /> > KeepAlive > a held required switch does not block the submit of its form: held mount": "vue-16305-keep-alive",
+        "<Switch.Root /> > KeepAlive > the label does not name a switch that mounts while KeepAlive holds it": "vue-16305-keep-alive",
+        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
+        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration",
+        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, the input, a removed description": "vue-16305-hydration"
+      }
+    },
+    "src/tabs/indicator/TabsIndicator.test.tsx": {
+      "fails": {
+        "<Tabs.Indicator /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Tabs.Indicator /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Tabs.Indicator /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/tabs/tab/TabsTab.test.tsx": {
+      "fails": {
+        "<Tabs.Tab /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Tabs.Tab /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Tabs.Tab /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Tabs.Tab /> > is not named by its panel while KeepAlive holds a tab that mounted in a held branch": "vue-16305-keep-alive",
+        "<Tabs.Tab /> > state > exposes tab activation direction through the render prop": "vue-16301"
+      }
+    },
+    "src/toast/action/ToastAction.test.tsx": {
+      "fails": {
+        "<Toast.Action /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
+        "<Toast.Action /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "src/toast/utils/useToastLabelPart.test.tsx": {
+      "fails": {
+        "useToastLabelPart > <Toast.Description /> > drops aria-describedby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive",
+        "useToastLabelPart > <Toast.Title /> > drops aria-labelledby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive"
+      }
+    },
+    "src/tooltip/positioner/TooltipPositioner.test.tsx": {
+      "fails": {
+        "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
+    "test/reportedMessages.test.tsx": {
+      "fails": {}
+    },
+    "test/testApp.test.tsx": {
+      "fails": {}
+    },
+    "test/vaporParts/vaporParts.test.tsx": {
+      "fails": {}
+    },
+    "test/withoutVaporAnchors.test.tsx": {
+      "fails": {}
+    }
+  }
+}

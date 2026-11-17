@@ -6,8 +6,10 @@ import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
+  installPartsInterop,
   isJSDOM,
   renderOnServer,
   screen,
@@ -719,7 +721,7 @@ describe('<ScrollArea.Thumb />', () => {
       expect(thumb).toHaveAttribute('data-orientation', 'vertical');
       expect(thumb.style.visibility).toBe('hidden');
 
-      const hydratingApp = createSSRApp(ScrollAreaThumbHydration);
+      const hydratingApp = installPartsInterop(createSSRApp(ScrollAreaThumbHydration));
       onTestFinished(() => {
         hydratingApp.unmount();
         container.remove();
@@ -733,7 +735,7 @@ describe('<ScrollArea.Thumb />', () => {
 
       const clientContainer = document.createElement('div');
       document.body.append(clientContainer);
-      const clientApp = createApp(ScrollAreaThumbHydration);
+      const clientApp = installPartsInterop(createApp(ScrollAreaThumbHydration));
       onTestFinished(() => {
         clientApp.unmount();
         clientContainer.remove();
@@ -758,9 +760,6 @@ describe('<ScrollArea.Thumb />', () => {
       'Vase UI: <ScrollArea.Thumb> must be inside <ScrollArea.Scrollbar>. Without a scrollbar the thumb has no orientation. Put <ScrollArea.Thumb> inside <ScrollArea.Scrollbar>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

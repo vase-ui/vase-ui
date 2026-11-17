@@ -3,6 +3,7 @@ import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
   screen,
@@ -563,9 +564,6 @@ describe('<Combobox.ChipRemove />', () => {
       'Vase UI: <Combobox.ChipRemove> must be inside <Combobox.Chip>. Without a chip the button has no value to remove. Put the part inside <Combobox.Chip>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

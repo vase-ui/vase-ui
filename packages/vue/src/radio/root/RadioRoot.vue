@@ -99,6 +99,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useInputRegistration } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -116,7 +117,6 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
-import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { stateAttributesMapping } from '../utils/stateAttributesMapping';
 import { RadioRootContext } from './RadioRootContext';
 
@@ -367,12 +367,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
 
         event.preventDefault();
 
-        const input = inputElement.value;
-        if (!input) {
-          return;
-        }
-
-        dispatchClickWithModifiers(input, event);
+        forwardClickToInput(inputElement.value, event);
       },
       onFocusin(event: FocusEvent) {
         setFocused(true);

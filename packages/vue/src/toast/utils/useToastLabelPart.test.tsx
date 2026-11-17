@@ -1,7 +1,13 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import { createHeldBranch, createRenderer, screen, takeReportedMessages } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  screen,
+  takeReportedMessages,
+  withoutVaporAnchors,
+} from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastLabel } from '../useToastManager';
@@ -238,7 +244,7 @@ describe('useToastLabelPart', () => {
       await renderInRoot(<Part data-testid="part" />, { id: 'test', [field]: label });
 
       const part = screen.getByTestId('part');
-      expect(part.innerHTML).toBe('<strong>Rich content</strong>');
+      expect(withoutVaporAnchors(part).innerHTML).toBe('<strong>Rich content</strong>');
       expect(screen.getByTestId('root')).toHaveAttribute(attribute, part.id);
     });
 

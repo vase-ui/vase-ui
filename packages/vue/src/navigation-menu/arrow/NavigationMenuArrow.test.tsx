@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   flushMicrotasks,
   screen,
   takeReportedMessages,
@@ -57,9 +58,6 @@ describe('<NavigationMenu.Arrow />', () => {
       'Vase UI: <NavigationMenu.Positioner> is missing. The popup and the arrow read their side and their alignment from the positioner. Put the part inside <NavigationMenu.Positioner>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

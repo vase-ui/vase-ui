@@ -1,7 +1,7 @@
 import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, screen, withoutVaporAnchors } from '#test-utils';
 
 type ValueSlotProps = { value: any };
 
@@ -951,7 +951,7 @@ describe('<Combobox.Value />', () => {
         </Combobox.Root>,
       );
 
-      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+      expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
     });
   });
 });

@@ -6,6 +6,7 @@ import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
   describeConformance,
+  installPartsInterop,
   mockRuntimeLocale,
   renderOnServer,
   screen,
@@ -142,7 +143,7 @@ describe('<Progress.Value />', () => {
       const value = within(container).getByTestId('value');
       expect(value.textContent).toBe((1234.5).toLocaleString('en-US', format));
 
-      const app = createSSRApp(ProgressValueHydration, props);
+      const app = installPartsInterop(createSSRApp(ProgressValueHydration, props));
       onTestFinished(() => {
         app.unmount();
         container.remove();

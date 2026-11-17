@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   flushMicrotasks,
   screen,
   takeReportedMessages,
@@ -101,8 +102,6 @@ describe('<Calendar.Grid />', () => {
       'Vase UI: A part of a month of Calendar must be inside <Calendar.Month>. Without a month the part has no weeks to show. Put the part inside <Calendar.Month>.',
     );
 
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

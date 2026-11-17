@@ -7,6 +7,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isVaporParts,
   removedPartHydrationTests,
   renderOnServer,
   screen,
@@ -1961,8 +1962,11 @@ describe('<Resizable.Panel />', () => {
       ),
     ).rejects.toThrow(/^Vase UI: The size "12ch" is not valid\./);
 
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of render function'),
-    ]);
+    // The size check throws in render. A Vapor parent reports the same error in its own render.
+    expect(takeReportedMessages()).toEqual(
+      Array.from({ length: isVaporParts ? 2 : 1 }, () =>
+        expect.stringContaining('Unhandled error during execution of render function'),
+      ),
+    );
   });
 });

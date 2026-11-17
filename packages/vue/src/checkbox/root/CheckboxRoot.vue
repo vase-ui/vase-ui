@@ -140,6 +140,7 @@ import {
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
+import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -156,7 +157,6 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { useElementId } from '../../utils/popups/useElementId';
 import { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext';
 import type { UseCheckboxGroupParentReturnValue } from '../../checkbox-group/useCheckboxGroupParent';
@@ -597,12 +597,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
 
         event.preventDefault();
 
-        const input = inputElement.value;
-        if (!input) {
-          return;
-        }
-
-        dispatchClickWithModifiers(input, event);
+        forwardClickToInput(inputElement.value, event);
       },
     },
     attrs,

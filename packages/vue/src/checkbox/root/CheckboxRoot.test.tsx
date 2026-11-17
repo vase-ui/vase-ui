@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { createApp, createSSRApp, defineComponent, h, nextTick, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
@@ -16,6 +16,7 @@ import {
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
+  installPartsInterop,
   isJSDOM,
   mockPageBeforeLoad,
   removedPartHydrationTests,
@@ -24,6 +25,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
@@ -259,6 +261,36 @@ describe('<Checkbox.Root />', () => {
       await render(<App />);
       expect(inputAtCall).toBe(null);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('changes its state after a mount in a detached container', async () => {
+      const container = document.createElement('div');
+      const app = installPartsInterop(createApp({ render: () => <Checkbox.Root /> }));
+      onTestFinished(() => app.unmount());
+      await waitForLaterMillisecond(() => app.mount(container));
+      const control = within(container).getByRole('checkbox');
+      expect(control.isConnected).toBe(false);
+      expect(control).toHaveAttribute('aria-checked', 'false');
+
+      control.click();
+      await nextTick();
+
+      expect(control).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('changes its state for a click in the `onMounted` hook of a child', async () => {
+      const ClickParentOnMount = defineComponent(() => {
+        const element = shallowRef<HTMLElement | null>(null);
+        onMounted(() => element.value?.parentElement?.click());
+        return () => <span ref={element} />;
+      });
+      await render(
+        <Checkbox.Root>
+          <ClickParentOnMount />
+        </Checkbox.Root>,
+      );
+
+      expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
     });
 
     it('should change its state when clicked', async () => {
@@ -3297,7 +3329,9 @@ describe('<Checkbox.Root />', () => {
       container.innerHTML = serverHtml;
       // The client props differ from the server props, so `hydrateAfter` would throw on the
       // mismatch. Vue does not write `checked` when it hydrates.
-      const app = createSSRApp(CheckboxRootBeforeHydration, { defaultChecked: true });
+      const app = installPartsInterop(
+        createSSRApp(CheckboxRootBeforeHydration, { defaultChecked: true }),
+      );
       onTestFinished(() => {
         app.unmount();
         container.remove();
