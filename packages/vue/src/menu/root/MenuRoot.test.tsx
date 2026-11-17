@@ -8,6 +8,7 @@ import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Menubar } from '@vase-ui/vue/menubar';
 import {
   clientCenter,
+  createHeldBranch,
   createRenderer,
   enterWithMouse,
   fireEvent,
@@ -6431,6 +6432,144 @@ describe('<Menu.Root />', () => {
       await pressOutside();
 
       expect(events).toEqual([true, false]);
+    });
+
+    it.each([
+      { name: 'mounted open', initialOpen: true },
+      { name: 'opened while held', initialOpen: false },
+    ])(
+      'VUE-5: starts the grace time of a context menu at the activation: $name',
+      async ({ initialOpen }) => {
+        useFakeTimers();
+        const events: boolean[] = [];
+        const open = shallowRef(initialOpen);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen) => {
+                events.push(nextOpen);
+              }}
+              onUpdate:open={(nextOpen) => {
+                open.value = nextOpen;
+              }}
+            >
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        ));
+        const { getByTestId } = await render(() => (
+          <div>
+            <button data-testid="outside" />
+            <HeldBranch />
+          </div>
+        ));
+        const pressOutside = () =>
+          fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+
+        await mountWhileHeld();
+        open.value = true;
+        await flushMicrotasks();
+        vi.advanceTimersByTime(500);
+
+        expect(events).toEqual([]);
+
+        await show();
+        await pressOutside();
+
+        expect(events).toEqual([]);
+
+        vi.advanceTimersByTime(500);
+        await pressOutside();
+
+        expect(events).toEqual([false]);
+      },
+    );
+
+    it('VUE-5: starts the grace time again when KeepAlive shows a context menu that it deactivated in the grace time', async () => {
+      useFakeTimers();
+      const events: boolean[] = [];
+      const open = shallowRef(false);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => (
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen) => {
+                events.push(nextOpen);
+              }}
+              onUpdate:open={(nextOpen) => {
+                open.value = nextOpen;
+              }}
+            >
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        ),
+        { mounted: true },
+      );
+      const { getByTestId } = await render(() => (
+        <div>
+          <button data-testid="outside" />
+          <HeldBranch />
+        </div>
+      ));
+      const pressOutside = () =>
+        fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+
+      open.value = true;
+      await flushMicrotasks();
+      vi.advanceTimersByTime(200);
+      await hide();
+      vi.advanceTimersByTime(500);
+      await show();
+      await pressOutside();
+
+      expect(events).toEqual([]);
+
+      vi.advanceTimersByTime(500);
+      await pressOutside();
+
+      expect(events).toEqual([false]);
+    });
+
+    it('VUE-5: closes a context menu whose grace time ended before KeepAlive held it on the first press after the show', async () => {
+      useFakeTimers();
+      const events: boolean[] = [];
+      const open = shallowRef(true);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => (
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen) => {
+                events.push(nextOpen);
+              }}
+              onUpdate:open={(nextOpen) => {
+                open.value = nextOpen;
+              }}
+            >
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        ),
+        { mounted: true },
+      );
+      const { getByTestId } = await render(() => (
+        <div>
+          <button data-testid="outside" />
+          <HeldBranch />
+        </div>
+      ));
+      const pressOutside = () =>
+        fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+
+      vi.advanceTimersByTime(500);
+      await hide();
+      await show();
+      await pressOutside();
+
+      expect(events).toEqual([false]);
     });
   });
 

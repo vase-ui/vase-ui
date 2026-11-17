@@ -3605,6 +3605,36 @@ describe('<RadioGroup />', () => {
       expect(handleSubmit).not.toHaveBeenCalled();
       expect(screen.getByTestId('a')).toHaveFocus();
     });
+
+    it('keeps inputElement null when a radio mounts in a held branch after the exposed radio unmounted', async () => {
+      const showFirst = shallowRef(true);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Radio.Root value="c" data-testid="c" />
+      ));
+      await render(() => (
+        <RadioGroup ref={group}>
+          {showFirst.value ? <Radio.Root key="a" value="a" data-testid="a" /> : null}
+          <Radio.Root key="b" value="b" data-testid="b" />
+          <HeldBranch />
+        </RadioGroup>
+      ));
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
+      showFirst.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      await mountWhileHeld();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      await show();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+    });
   });
 
   describe('VUE-81: the state that the input got before the hydration', () => {

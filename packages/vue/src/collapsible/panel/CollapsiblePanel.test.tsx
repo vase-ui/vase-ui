@@ -1935,6 +1935,167 @@ describe('<Collapsible.Panel />', () => {
       }
     });
 
+    describe('VUE-133: a reveal that KeepAlive holds before its revert', () => {
+      it.each([
+        { name: 'ignored, before the timer', cancel: false, afterTimer: false },
+        { name: 'ignored, before the frame', cancel: false, afterTimer: true },
+        { name: 'canceled, before the timer', cancel: true, afterTimer: false },
+      ])('hides the panel again at the activation: $name', async ({ cancel, afterTimer }) => {
+        const active = shallowRef(true);
+        await render(() => (
+          <KeepAlive>
+            {active.value ? (
+              <Collapsible.Root
+                key="panel"
+                open={false}
+                onOpenChange={(_open, details) => {
+                  if (cancel) {
+                    details.cancel();
+                  }
+                }}
+              >
+                <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+                <Collapsible.Panel hiddenUntilFound keepMounted data-testid="panel">
+                  {PANEL_CONTENT}
+                </Collapsible.Panel>
+              </Collapsible.Root>
+            ) : null}
+          </KeepAlive>
+        ));
+        const panel = screen.getByTestId('panel');
+        expect(panel).toHaveAttribute('hidden', 'until-found');
+
+        vi.useFakeTimers();
+        try {
+          await fireBeforeMatch(panel);
+          panel.removeAttribute('hidden');
+          if (afterTimer) {
+            vi.advanceTimersByTime(0);
+          }
+
+          active.value = false;
+          await nextTick();
+          active.value = true;
+          await nextTick();
+          await vi.advanceTimersByTimeAsync(64);
+
+          expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
+            'aria-expanded',
+            'false',
+          );
+          expect(panel).toHaveAttribute('hidden', 'until-found');
+          expect(panel).toHaveAttribute('data-starting-style');
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('keeps the motion of the next open', async () => {
+        const active = shallowRef(true);
+        const open = shallowRef(false);
+        const { user } = await render(() => (
+          <>
+            <style>{`
+              .transition-test-panel {
+                overflow: hidden;
+                height: var(--collapsible-panel-height);
+                transition-property: height;
+                transition-duration: 999ms;
+                transition-timing-function: linear;
+              }
+
+              .transition-test-panel[data-starting-style],
+              .transition-test-panel[data-ending-style] {
+                height: 0;
+              }
+            `}</style>
+            <KeepAlive>
+              {active.value ? (
+                <Collapsible.Root
+                  key="panel"
+                  open={open.value}
+                  onOpenChange={(nextOpen, details) => {
+                    if (details.reason !== REASONS.none) {
+                      open.value = nextOpen;
+                    }
+                  }}
+                >
+                  <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+                  <Collapsible.Panel
+                    class="transition-test-panel"
+                    data-testid="panel"
+                    hiddenUntilFound
+                    keepMounted
+                    style={{ transitionDuration: '123ms' }}
+                  >
+                    {PANEL_CONTENT}
+                  </Collapsible.Panel>
+                </Collapsible.Root>
+              ) : null}
+            </KeepAlive>
+          </>
+        ));
+        const panel = screen.getByTestId('panel');
+        const trigger = screen.getByRole('button', { name: 'Trigger' });
+
+        vi.useFakeTimers();
+        try {
+          await fireBeforeMatch(panel);
+          panel.removeAttribute('hidden');
+          active.value = false;
+          await nextTick();
+          active.value = true;
+          await nextTick();
+        } finally {
+          vi.useRealTimers();
+        }
+
+        expect(panel).toHaveAttribute('hidden', 'until-found');
+
+        await user.click(trigger);
+
+        expect(panel).toHaveAttribute('data-open');
+        expect(panel.style.transitionDuration).toBe('123ms');
+      });
+
+      it('leaves a panel open when its root opened it', async () => {
+        const active = shallowRef(true);
+        await render(() => (
+          <KeepAlive>
+            {active.value ? (
+              <Collapsible.Root key="panel">
+                <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+                <Collapsible.Panel hiddenUntilFound keepMounted data-testid="panel">
+                  {PANEL_CONTENT}
+                </Collapsible.Panel>
+              </Collapsible.Root>
+            ) : null}
+          </KeepAlive>
+        ));
+        const panel = screen.getByTestId('panel');
+
+        vi.useFakeTimers();
+        try {
+          await fireBeforeMatch(panel);
+          panel.removeAttribute('hidden');
+          active.value = false;
+          await nextTick();
+          active.value = true;
+          await nextTick();
+          await vi.advanceTimersByTimeAsync(64);
+
+          expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
+            'aria-expanded',
+            'true',
+          );
+          expect(panel).toHaveAttribute('data-open');
+          expect(panel).not.toHaveAttribute('hidden');
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+    });
+
     it('does not open or suppress the next trigger open when beforematch is canceled', async () => {
       const handleOpenChange = vi.fn(
         (nextOpen: boolean, eventDetails: Collapsible.Root.ChangeEventDetails) => {
