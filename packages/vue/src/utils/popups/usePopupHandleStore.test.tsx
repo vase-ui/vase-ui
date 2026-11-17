@@ -91,8 +91,10 @@ describe('usePopupHandleStore', () => {
       return { server: readExpanded(template.content), client: readExpanded(container) };
     }
 
-    // The fixture binds a plain object without `useRenderElement`. Its trigger would keep the
-    // server value of `aria-expanded` if it read the root store while it hydrates.
+    // The root of the fixture attaches before the trigger that follows it hydrates, as a mounted
+    // root does for a trigger that hydrates late. The fixture binds a plain object without
+    // `useRenderElement`. Its trigger would keep the server value of `aria-expanded` if it read the
+    // root store while it hydrates.
     it('gives the inert store while a trigger with a handle hydrates, and the store of the root after it', async () => {
       const { server, client } = await hydrateWithRoot({
         defaultOpen: true,
