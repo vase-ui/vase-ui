@@ -1975,9 +1975,12 @@ describe('<Collapsible.Panel />', () => {
 
           active.value = false;
           await nextTick();
+          await vi.advanceTimersByTimeAsync(64);
+
+          expect(panel).not.toHaveAttribute('hidden');
+
           active.value = true;
           await nextTick();
-          await vi.advanceTimersByTimeAsync(64);
 
           expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
             'aria-expanded',

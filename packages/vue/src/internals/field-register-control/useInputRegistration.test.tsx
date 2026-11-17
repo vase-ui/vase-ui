@@ -1,12 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import { createHeldBranch, createRenderer, screen } from '#test-utils';
 import { useInputRegistration } from './useInputRegistration';
 
 const RegisteredControl = defineComponent(
-  (props: { register: (input: HTMLInputElement) => (() => void) | void }) => {
+  (props: { register: (input: HTMLInputElement) => (() => void) | void }, { expose }) => {
     const input = shallowRef<HTMLInputElement | null>(null);
-    useInputRegistration(input, (element) => props.register(element));
+    const { updateInputRegistration } = useInputRegistration(input, (element) =>
+      props.register(element),
+    );
+    expose({ updateInputRegistration });
     return () => (
       <input
         data-testid="input"
@@ -67,5 +70,49 @@ describe('useInputRegistration', () => {
 
     expect(register).toHaveBeenCalledTimes(2);
     expect(register).toHaveBeenLastCalledWith(input);
+  });
+
+  it('registers the input again when the part updates the registration', async () => {
+    const release = vi.fn();
+    const register = vi.fn(() => release);
+    const control = shallowRef<{ updateInputRegistration: () => void } | null>(null);
+    const { HeldBranch, hide, show } = createHeldBranch(
+      () => <RegisteredControl ref={control} register={register} />,
+      { mounted: true },
+    );
+    await render(() => <HeldBranch />);
+    const input = screen.getByTestId('input');
+
+    control.value?.updateInputRegistration();
+
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(register).toHaveBeenCalledTimes(2);
+    expect(register).toHaveBeenLastCalledWith(input);
+
+    await hide();
+    control.value?.updateInputRegistration();
+
+    expect(release).toHaveBeenCalledTimes(2);
+    expect(register).toHaveBeenCalledTimes(2);
+
+    await show();
+
+    expect(release).toHaveBeenCalledTimes(2);
+    expect(register).toHaveBeenCalledTimes(3);
+  });
+
+  it('releases the input when the part unmounts', async () => {
+    const release = vi.fn();
+    const register = vi.fn(() => release);
+    const mounted = shallowRef(true);
+    await render(() => (
+      <div>{mounted.value ? <RegisteredControl register={register} /> : null}</div>
+    ));
+
+    mounted.value = false;
+    await nextTick();
+
+    expect(register).toHaveBeenCalledTimes(1);
+    expect(release).toHaveBeenCalledTimes(1);
   });
 });
