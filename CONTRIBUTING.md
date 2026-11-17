@@ -643,7 +643,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 ### Idioms
 
 - Write `??` where the left operand is an object, `null` or `undefined`. Where Base UI has `||` for a string, a number or a Boolean, keep `||`. The two operators differ for `''`, `0` and `false`.
-- Write `Object.hasOwn` and `??=`.
+- Write `Object.hasOwn`.
 - Write `.at(-1)` for the last item of a list.
 - Write `import type` on its own line.
 - Write `void` before a promise that the code does not wait for.
@@ -1437,7 +1437,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.
 - A transition must sometimes start from a value that an earlier DOM update set. Then read the layout of the element after that update. `useCollapsiblePanel` calls `getBoundingClientRect()` in `nextTick` after it writes the measured size. Without that read, the exit transition does not start.
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
-- Write a style key with a vendor prefix in its CSS form, such as `'-webkit-user-select'`. A server render writes the key `WebkitUserSelect` as `webkit-user-select`, which is not a CSS property.
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration that a part writes to its element also in a record that the part renders. Remove the declaration from the record when the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
