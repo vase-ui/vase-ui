@@ -1039,6 +1039,11 @@ const reported = [
 
 const passed = [
   {
+    name: 'a root node read at the event',
+    file: `${SRC}/useRoot.ts`,
+    code: "declare const element: Element;\n\nelement.addEventListener('click', () => element.getRootNode());\n",
+  },
+  {
     name: 'conditional part forms at the root',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
@@ -1449,6 +1454,18 @@ for (const { name, file, code } of passed) {
     assert.deepEqual(await lint(file, code), []);
   });
 }
+
+test('reports a root node read in a watch callback one time', async () => {
+  const messages = await lint(
+    `${SRC}/useRoot.ts`,
+    "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
+  );
+  assert.deepEqual(
+    messages.map(({ ruleId }) => ruleId),
+    ['no-restricted-syntax'],
+  );
+  assert.match(messages[0].message, /followRootNode/);
+});
 
 test('reports a row that has a vnode in a vnode one time', async () => {
   const messages = await lint(

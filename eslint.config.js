@@ -39,6 +39,8 @@ const MESSAGES = {
     'A server render has no DOM, and an element can live in an iframe. Use `ownerDocument(element)` and `ownerWindow(element)`.',
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
+  staleRootNode:
+    'A root node read in a watcher, hook or computed value can change when Teleport moves the element. Use observeRootNode or followRootNode from src/internals, or read the root at the event.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
@@ -280,6 +282,11 @@ const RESTRICTED_TEST_SYNTAX = [
 ];
 
 const RESTRICTED_SYNTAX = [
+  {
+    selector:
+      "CallExpression[callee.name=/^(?:watch|watchEffect|watchSyncEffect|onMounted|onBeforeMount|onUpdated|computed)$/] CallExpression[callee.property.name='getRootNode']",
+    message: MESSAGES.staleRootNode,
+  },
   {
     selector: [
       "CallExpression[callee.type='MemberExpression'][callee.object.name=/^\\$?slots$/]",
