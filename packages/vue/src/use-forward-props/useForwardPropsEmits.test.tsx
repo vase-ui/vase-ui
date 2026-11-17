@@ -106,4 +106,15 @@ describe('useForwardPropsEmits', () => {
         'It has no event to forward. Declare the events with `defineEmits`, or use `useForwardProps`.',
     ]);
   });
+
+  it('warns with no component, and forwards no event', () => {
+    const forwarded = useForwardPropsEmits({ id: 'value', open: undefined }, vi.fn());
+    expect(forwarded.value).toStrictEqual({ id: 'value' });
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('`useForwardProps` ran with no virtual DOM component.'),
+      'console.warn: Vase UI: `useForwardPropsEmits` ran with no virtual DOM component. ' +
+        'It cannot read the events that the wrapper declares, so it forwards no event. ' +
+        'Call it in the `setup` of a component that is not a Vapor component.',
+    ]);
+  });
 });
