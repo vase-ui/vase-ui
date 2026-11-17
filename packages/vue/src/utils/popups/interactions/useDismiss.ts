@@ -210,9 +210,11 @@ export interface UseDismissProps {
  * Closes the floating element when a dismissal is requested — by default, when
  * the user presses the `escape` key or outside of the floating element.
  *
- * Call it in the `setup` of the root of the popup. Each popup and each portal part below that root
- * then count as inside the popup, also when `Teleport` moved them. Other content that `Teleport`
- * moved out of the popup is outside it.
+ * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
+ * the popup, also when `Teleport` moved it, with each part in its portal, such as its backdrop. A
+ * portal below that root that no popup owns also counts as inside the popup. The portal of the
+ * popup itself does not: a press on its backdrop is outside the popup. Other content that
+ * `Teleport` moved out of the popup is outside it.
  *
  * Base UI differs in its boundary. It counts only the React children of the popup element as
  * inside, and that includes content that a React portal moves out of the element. Here the
@@ -283,9 +285,10 @@ export function useDismiss(
 
   const parent = inject(DismissParentContext, undefined);
 
-  // Holds the positioner of each popup below and each portal element below. A release on a child
-  // backdrop sets the inside marker for the click, so the release check must count that portal as
-  // inside too.
+  // The positioner of each popup below this call in the component tree, and each portal element
+  // below it. A release on the backdrop of a child popup gives the inside marker to the click that
+  // follows, so that click takes no suppression. The release check thus counts the portal of a
+  // child popup as inside too.
   const elementsBelow = new Set<() => Element | null | undefined>();
 
   function addElementBelow(getElement: () => Element | null | undefined) {
@@ -328,8 +331,9 @@ export function useDismiss(
     return false;
   }
 
-  // In a closed shadow root, `composedPath()` at the document hides the target, and a press can
-  // unmount a child before the target listener runs. The capture listeners thus set this marker too.
+  // The elements below cannot replace the inside marker. The document sees the host as the target
+  // of a press in a closed shadow root. A press can also close a child popup, and Vue can remove
+  // that popup before the popup above checks the press.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
   function clearInsideComponentTree() {

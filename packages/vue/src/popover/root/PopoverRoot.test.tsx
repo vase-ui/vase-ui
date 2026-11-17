@@ -2925,6 +2925,8 @@ describe('<Popover.Root />', () => {
           const childPress = vi.fn<(event: PointerEvent) => void>();
           const Test = defineComponent({
             setup() {
+              // The outside target takes no focus. A press on a focusable element moves the focus,
+              // and the parent then closes with `focus-out` before the click.
               return () => (
                 <div>
                   <div
