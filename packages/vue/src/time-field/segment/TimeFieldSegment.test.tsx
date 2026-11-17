@@ -8,10 +8,16 @@ const FIXTURE = 'src/time-field/root/TimeFieldRootHydration.test.vue';
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
 
+// The `scrollWidth` of an input excludes a placeholder, and WebKit adds two pixels to it. The
+// `clientWidth` of an input is the padding box in WebKit and the content box in the other engines.
+// A ruler element thus gives the width of the text, and the box less its padding and its border
+// gives the room.
 function measureSegment(container: Element, segment: HTMLInputElement) {
   const style = getComputedStyle(segment);
   const ruler = document.createElement('span');
   ruler.style.cssText = 'position: absolute; visibility: hidden; white-space: pre;';
+  // The `font` of a computed style is empty in Firefox when a part of it has no place in the
+  // shorthand.
   for (const name of [
     'fontFamily',
     'fontSize',

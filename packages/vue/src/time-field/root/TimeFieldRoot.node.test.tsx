@@ -20,10 +20,11 @@ function hasAttribute(element: string, name: string) {
 const GROUP = /<div[^>]*role="group"[^>]*>/;
 const INPUT = /<div[^>]*data-testid="input"[^>]*>/;
 const HIDDEN_INPUT = /<input[^>]*aria-hidden="true"[^>]*>/;
+const segmentTags = (html: string) => html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
 // A server writes an empty `value` as a bare attribute.
 const segments = (html: string) =>
-  Array.from(html.matchAll(/<input[^>]* data-type="(\w+)"[^>]*>/g), ([element, type]) => [
-    type,
+  segmentTags(html).map((element) => [
+    attribute(element, 'data-type'),
     /\svalue(?:="([^"]*)")?[\s>]/.exec(element)?.[1] ?? '',
   ]);
 
@@ -182,11 +183,11 @@ describe('<TimeField.Root /> on a server', () => {
         <TimeField.Input />
       </TimeField.Root>,
     );
-    const tags = html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
+    const tags = segmentTags(html);
 
     expect(tags).toHaveLength(3);
-    for (const segment of tags) {
-      expect(attribute(segment, 'style')).toContain('field-sizing:content');
+    for (const element of tags) {
+      expect(attribute(element, 'style')).toContain('field-sizing:content');
     }
   });
 
@@ -205,11 +206,11 @@ describe('<TimeField.Root /> on a server', () => {
         </TimeField.Input>
       </TimeField.Root>,
     );
-    const tags = html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
+    const tags = segmentTags(html);
 
     expect(tags).toHaveLength(3);
-    for (const segment of tags) {
-      expect(hasAttribute(segment, 'style')).toBe(false);
+    for (const element of tags) {
+      expect(hasAttribute(element, 'style')).toBe(false);
     }
   });
 });
