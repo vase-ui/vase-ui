@@ -24,12 +24,17 @@ export const isVaporApp = inject('testApp') === 'vapor';
 /**
  * Makes the app of a test. In the project `vapor` it is a Vapor app with `vaporInteropPlugin`, and
  * its Vapor root component renders `root`.
+ * An ordinary app also installs the plugin when Vue has it, so the app can mount a Vapor fixture.
  */
 export function createTestApp(root: Component): App {
-  if (!isVaporApp) {
-    return Vue.createApp(root);
-  }
   const { createVaporApp, vaporInteropPlugin } = vapor;
+  if (!isVaporApp) {
+    const app = Vue.createApp(root);
+    if (vaporInteropPlugin) {
+      app.use(vaporInteropPlugin);
+    }
+    return app;
+  }
   if (!createVaporApp || !vaporInteropPlugin) {
     throw new Error(`The project \`vapor\` needs Vue 3.6. The installed Vue is ${Vue.version}.`);
   }
