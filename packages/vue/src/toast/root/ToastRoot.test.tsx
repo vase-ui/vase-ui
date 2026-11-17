@@ -8,6 +8,7 @@ import {
   expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
+  nextEndingStyle,
   nextEvent,
   screen,
   waitFor,
@@ -1119,6 +1120,47 @@ describe('<Toast.Root />', () => {
 
       expect(root).toHaveAttribute('data-ending-style');
       expect(keys).toEqual(['Escape', 'Enter']);
+    });
+
+    it('does not stop an Escape that comes during the exit of the toast', async () => {
+      const animationsDisabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      try {
+        const manager = Toast.createToastManager();
+        await render(
+          <Toast.Provider toastManager={manager}>
+            <style>
+              {`
+              [data-testid="toast"][data-ending-style] { animation: toast-exit 100s; }
+              @keyframes toast-exit { to { opacity: 0; } }
+            `}
+            </style>
+            <Toast.Viewport>
+              <ToastTextList />
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
+        await flushMicrotasks();
+        const root = screen.getByTestId('toast');
+        const keys: string[] = [];
+        const record = (event: KeyboardEvent) => keys.push(event.key);
+        document.addEventListener('keydown', record);
+        onTestFinished(() => document.removeEventListener('keydown', record));
+
+        root.focus();
+        await nextEndingStyle(root, { action: () => fireEvent.keyDown(root, { key: 'Escape' }) });
+        expect(keys).toEqual([]);
+
+        // No element took the focus from the toast, and its exit of 100 s still runs.
+        expect(root).toHaveFocus();
+        await fireEvent.keyDown(root, { key: 'Escape' });
+
+        expect(keys).toEqual(['Escape']);
+      } finally {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = animationsDisabled;
+      }
     });
   });
 
