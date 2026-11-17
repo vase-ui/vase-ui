@@ -93,10 +93,10 @@ export default defineConfig({
       `try{if(localStorage.getItem('${DEMO_VARIANT_STORAGE_KEY}')==='tailwind')document.documentElement.dataset.demoVariant='tailwind'}catch{}`,
     ],
   ],
-  // A demo is inside an element with the class `vp-raw`. The first plugin keeps the styles of the
-  // theme out of it, so the style sheet of the demo is the only one that styles it. For a Tailwind
-  // demo, that is `docs/demos/tailwind.css`. The second plugin makes a copied style sheet follow
-  // the theme of the site. In `tailwind.css`, the variant `dark` does the same.
+  // A demo is inside an element with the class `vp-raw`. The first PostCSS plugin keeps the styles
+  // of the theme out of it, so the style sheet of the demo is the only one that styles it. For a
+  // Tailwind demo, that is `docs/demos/tailwind.css`. The second PostCSS plugin makes a copied
+  // style sheet follow the theme of the site. In `tailwind.css`, the variant `dark` does the same.
   vite: {
     plugins: [tailwindcss(), viteFollowSource(join(REPOSITORY_ROOT, VASE_SOURCE_ROOT))],
     css: {
