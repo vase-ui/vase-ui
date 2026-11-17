@@ -970,11 +970,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   // `listKey` changes when the layout of the server differs from the first layout of the browser.
-  // Vue reuses a server element of the same tag for another part, and it writes no attribute
-  // while it hydrates. The element then keeps the attributes of the server, such as `data-type`,
-  // `aria-hidden` and `aria-valuemax`. A server can put a time zone name or an era in the place of
-  // a separator, so the root also compares each literal part with its place in the layout. New
-  // keys make the elements again. Vue changes the text of a literal itself.
+  // Vue reuses a server element of the same tag for another part, and it writes no attribute of a
+  // `v-bind` object while it hydrates. The element then keeps the attributes of the server, such as
+  // `data-type`, `aria-hidden` and `aria-valuemax`. A server can put a time zone name or an era in
+  // the place of a separator, so the root also compares each literal part with its place in the
+  // layout. New keys make the elements again. Vue changes the text of a literal itself.
   const listKey = shallowRef(0);
   const hydratedLayout = segments.value.map(({ type }) => type);
   const hydratedTypes = editableTypes.value;

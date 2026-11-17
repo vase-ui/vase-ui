@@ -335,7 +335,8 @@ export function useDateTimeFieldSegment(
       'aria-invalid': !context.disabled.value && context.invalid.value ? true : undefined,
       disabled: context.disabled.value ? '' : undefined,
       readonly: context.readOnly.value || undefined,
-      // The server can have another layout, and Vue writes no attribute while it hydrates.
+      // The server can have another layout, and Vue writes no attribute of a `v-bind` object
+      // while it hydrates.
       'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
       onMousedown(event: MouseEvent) {
         if (event.defaultPrevented || context.disabled.value) {
