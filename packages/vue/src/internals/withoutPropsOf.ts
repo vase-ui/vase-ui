@@ -10,7 +10,7 @@ export function withoutPropsOf(
   attrs: Record<string, unknown>,
   component: Component,
 ): Record<string, unknown> {
-  // The SFC compiler writes the object form of the props option. Some Component types omit it.
+  // Vue compiles the typed props of a part to an object. Some `Component` types omit this option.
   // https://vuejs.org/api/options-state.html#props
   const props = (component as { props?: Record<string, unknown> }).props ?? {};
   return Object.fromEntries(
