@@ -116,7 +116,7 @@ const state = computed<TabsPanelState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: [listItemRef],
   props: (attrs) => [
@@ -151,6 +151,8 @@ defineExpose({ element });
 <template>
   <template v-if="keepMounted || mounted">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <slot :state="state" />
+    </component>
   </template>
 </template>

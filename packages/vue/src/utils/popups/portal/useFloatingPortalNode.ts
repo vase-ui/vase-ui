@@ -109,12 +109,12 @@ export function useFloatingPortalNode(
   // of the document.
   const { isHeld } = useKeepAliveState();
 
-  const { element, elementProps } = useRenderElement('div', params.componentProps, {
+  const { element, elementProps, setRef } = useRenderElement('div', params.componentProps, {
     props: (attrs) => [{ id: uniqueId, [attr]: '' }, attrs],
     children: params.children,
   });
 
   useDismissPortal(element);
 
-  return { element, elementProps, containerElement, isHeld };
+  return { element, elementProps, setRef, containerElement, isHeld };
 }

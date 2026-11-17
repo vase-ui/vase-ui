@@ -91,7 +91,7 @@ function setElements(list: HTMLElement | null) {
   listElement = list;
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   // The `aria-controls` of the input names the list.
   ref: useKeepAliveElementRef(setElements),
@@ -134,7 +134,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef"
     ><ComboboxCollection v-if="$slots.item"
       ><template #default="slotProps"
         ><slot name="item" v-bind="slotProps" /></template></ComboboxCollection

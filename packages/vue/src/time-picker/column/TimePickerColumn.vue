@@ -125,7 +125,7 @@ provide(TimePickerColumnContext, {
   closeOnSelect,
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: [rootRef],
   props: (attrs) => [
@@ -150,7 +150,7 @@ defineExpose({ element });
 <template>
   <template v-if="isRendered">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()">
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
       <template v-for="(value, index) in values" :key="value">
         <slot v-if="$slots.item" name="item" :value="value" :index="index" />
         <TimePickerColumnItem v-else :value="value" />

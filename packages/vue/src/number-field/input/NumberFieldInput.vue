@@ -548,7 +548,7 @@ function setOwnInput(next: HTMLElement | null) {
   ownInput = input;
 }
 
-const { element, elementProps } = useRenderElement('input', props, {
+const { element, elementProps, setRef } = useRenderElement('input', props, {
   state,
   ref: setOwnInput,
   props: (attrs) => {
@@ -597,5 +597,5 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" />
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
 </template>

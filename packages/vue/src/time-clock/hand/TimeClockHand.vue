@@ -53,7 +53,7 @@ const state = computed<TimeClockHandState>(() => ({
   betweenNumbers: view.value !== 'hour' && selectedNumber.value.value % 5 !== 0,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   stateAttributesMapping,
   props: (attrs) => [
@@ -73,5 +73,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="!empty && $slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else-if="!empty" v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else-if="!empty" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

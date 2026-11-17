@@ -64,7 +64,10 @@ const stateAttributesMapping: StateAttributesMapping<CalendarMonthsState> = {
   }),
 };
 
-const { element, elementProps } = useRenderElement('div', props, { state, stateAttributesMapping });
+const { element, elementProps, setRef } = useRenderElement('div', props, {
+  state,
+  stateAttributesMapping,
+});
 
 defineExpose({ element });
 </script>
@@ -73,6 +76,8 @@ defineExpose({ element });
 <template>
   <template v-if="view === 'day'">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template>
+    </component>
   </template>
 </template>

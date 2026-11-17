@@ -104,28 +104,27 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-const { element, elementProps } = useRenderElement<NavigationMenuViewportState, HTMLElement>(
-  'div',
-  props,
-  {
-    // In a positioner, `NavigationMenu.Content` teleports into `viewportElement`. The content must
-    // stay there while `KeepAlive` holds the viewport, so only `shownViewportElement`, whose id the
-    // owner element names, follows `KeepAlive`.
-    ref: [
-      createElementSetter(viewportElement),
-      useKeepAliveElementRef(createElementSetter(shownViewportElement)),
-    ],
-    props: (attrs) => [
-      {
-        id: viewportId.value,
-        onFocusout: handleFocusout,
-        inert: !inPositioner && viewportInert.value ? true : undefined,
-      },
-      attrs,
-    ],
-    children: true,
-  },
-);
+const { element, elementProps, setRef } = useRenderElement<
+  NavigationMenuViewportState,
+  HTMLElement
+>('div', props, {
+  // In a positioner, `NavigationMenu.Content` teleports into `viewportElement`. The content must
+  // stay there while `KeepAlive` holds the viewport, so only `shownViewportElement`, whose id the
+  // owner element names, follows `KeepAlive`.
+  ref: [
+    createElementSetter(viewportElement),
+    useKeepAliveElementRef(createElementSetter(shownViewportElement)),
+  ],
+  props: (attrs) => [
+    {
+      id: viewportId.value,
+      onFocusout: handleFocusout,
+      inert: !inPositioner && viewportInert.value ? true : undefined,
+    },
+    attrs,
+  ],
+  children: true,
+});
 
 // In a positioner, the two inside focus guards are siblings of the element. Script keeps them
 // there, so the part has one root node. With no positioner, the element holds them.
@@ -139,5 +138,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren>
+  </component>
 </template>

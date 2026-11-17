@@ -53,7 +53,7 @@ const state = computed<RangeCalendarDayState>(() => {
 
 provide(RangeCalendarDayContext, { day: computed(() => props.day), state });
 
-const { element, elementProps } = useRenderElement('td', props, {
+const { element, elementProps, setRef } = useRenderElement('td', props, {
   state,
   props: (attrs) => [
     {
@@ -72,5 +72,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

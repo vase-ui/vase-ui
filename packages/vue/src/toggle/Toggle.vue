@@ -175,7 +175,7 @@ const compositeItem = groupContext
   ? useCompositeItem({ metadata: itemMetadata, disabled: toggleDisabled })
   : undefined;
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   state,
   ref: compositeItem ? [compositeItem.compositeRef, buttonRef] : [buttonRef],
   props: (attrs) => {
@@ -195,5 +195,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

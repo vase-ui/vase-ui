@@ -61,7 +61,7 @@ function getElementHolder(thumbOrientation: 'vertical' | 'horizontal') {
 // `useRenderElement` sets `element` before it calls the callback, so the callback keeps the element.
 let mountedElement: HTMLElement | null = null;
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   // A change of the orientation can remove the scrollbar and this thumb together. The `watch`
   // below does not run then, so the callback clears each holder of the element that left.
   ref: (thumb) => {
@@ -112,5 +112,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

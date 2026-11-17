@@ -273,20 +273,25 @@ A part that Base UI takes from another family is exported again and not copied: 
 - These native button parts read `useFieldsetDisabled` with their own element (`VUE-112`): `Button`, `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, `Tabs.Tab`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup. `Tabs.Tab` gives only its `disabled` prop to the metadata that the root reads for the selection, so a disabled fieldset does not change the selected panel.
 - `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. Before the mount it has no element. It is then a native button when `as` is `button` and it has no `#render` slot, so the server HTML follows `Fieldset.Root`. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
-The template of each such part has two lines and no wrapper component:
+The template of each such part has the `#render` slot, then the element, and no wrapper component:
 
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-<component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+<component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot :state="state" />
+</component>
 ```
 
 - `elementProps` is a function that the template calls. It is not a `computed`.
+- Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`. An input of a part has no such binding. See [Vapor mode](#vapor-mode).
+- When the element with its content exceeds 100 columns on one line, put the content on its own line. Vue removes white space between a tag and an element or a slot, so the render code stays the same. Prettier keeps this form. In the one-line form, Prettier breaks the line in the tags.
+- Keep text content, such as `{{ text }}`, on the line of its tag. White space beside text stays in the text.
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
 - The render function runs again on each change of the attributes.
 - A part with a void default tag (`img`, `input`) has no default slot.
 - A part whose default tag depends on its context, such as `NavigationMenu.Root`, has no default for `as`.
 - It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
-- Its template binds `:is="as ?? defaultTag"` in the second line.
+- Its template binds `:is="as ?? defaultTag"` on the element.
 - Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
@@ -341,7 +346,9 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 <!-- prettier-ignore -->
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SliderThumbChildren" />
-<component :is="as" v-else v-bind="elementProps()"><SliderThumbChildren><slot :state="state" /></SliderThumbChildren></component>
+<component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <SliderThumbChildren><slot :state="state" /></SliderThumbChildren>
+</component>
 ```
 
 A part whose own node is text, such as `Progress.Value`, has four more rules:
@@ -360,7 +367,7 @@ A part of a component that Base UI does not have follows the same rules for its 
 Some upstream parts render a hidden `<input>` beside their element. `Switch.Root` is the model. The input gives the part the form behavior of a native control.
 
 - The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
-- The template has the two lines of a part. The inputs come after them.
+- The template has the `#render` slot and the element of a part. The inputs come after them.
 - The input that has the state of the part has one `v-bind` and no other attribute. The `ref` setter is a key of the bound object. With a second attribute, the compiler calls the `mergeProps` of Vue, which makes a new `style` object in each render. See [What differs from the React source](#what-differs-from-the-react-source).
 - A `v-if` on that input has the same effect. A part that renders the input only in some states puts the `v-if` on an internal SFC with the template `<input v-bind="inputProps" />`. `OTPFieldRootHiddenInput.vue` is the model.
 - A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
@@ -407,7 +414,9 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-<component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+<component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot :state="state" />
+</component>
 <input v-bind="inputProps()" />
 ```
 
@@ -434,7 +443,8 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
+- Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the functions `elementProps` and `setRef`. The template binds `setRef` by name on the element.
+- `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), an empty `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
 - The `Map` of that file has one row for each attribute that has a value that is not given, apart from `undefined`. A row holds the name of the attribute and the test for that value. A new such attribute needs a new row.
@@ -663,6 +673,8 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 If a line must break a rule, put a disable comment on that line and give the reason.
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
+
+An input that a part renders beside or in its element gets its `ref` setter only as a key of the bound object. Such inputs are the hidden input of a form control and the range inputs of `Slider.Thumb` and `TimeClock.Face`. The bound object must be the only attribute of a hidden input, so its template cannot bind the setter by name. See [Parts with a hidden input](#parts-with-a-hidden-input). A part compiled as a Vapor component thus gets no such input element.
 
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 

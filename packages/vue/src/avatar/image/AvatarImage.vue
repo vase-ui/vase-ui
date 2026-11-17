@@ -149,7 +149,7 @@ function getRenderedStatusProps() {
   };
 }
 
-const { element, elementProps } = useRenderElement<AvatarImageState, HTMLImageElement>(
+const { element, elementProps, setRef } = useRenderElement<AvatarImageState, HTMLImageElement>(
   'img',
   props,
   {
@@ -250,6 +250,6 @@ defineExpose({ element });
 <template>
   <template v-if="keepMounted || mounted">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" />
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
   </template>
 </template>

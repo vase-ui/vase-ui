@@ -100,7 +100,7 @@ provide(MeterRootContext, {
   labelRoot,
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
@@ -122,5 +122,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="MeterRootChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><MeterRootChildren><slot :state="state" /></MeterRootChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <MeterRootChildren><slot :state="state" /></MeterRootChildren>
+  </component>
 </template>

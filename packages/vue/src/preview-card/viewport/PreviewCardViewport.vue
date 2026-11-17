@@ -63,7 +63,7 @@ const state = computed<PreviewCardViewportState>(() => ({
   instant: store.select('instantType'),
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: popupViewportStateMapping,
   children: true,
@@ -75,5 +75,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="PopupViewportChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><PopupViewportChildren><slot :state="state" /></PopupViewportChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <PopupViewportChildren><slot :state="state" /></PopupViewportChildren>
+  </component>
 </template>

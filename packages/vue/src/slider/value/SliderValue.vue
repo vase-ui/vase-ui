@@ -34,7 +34,7 @@ defineSlots<{
 
 const { thumbMap, state } = useSliderRootContext();
 
-const { element, elementProps } = useRenderElement('output', props, {
+const { element, elementProps, setRef } = useRenderElement('output', props, {
   state,
   props: (attrs) => [
     {
@@ -58,5 +58,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SliderValueChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><SliderValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></SliderValueChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <SliderValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></SliderValueChildren>
+  </component>
 </template>

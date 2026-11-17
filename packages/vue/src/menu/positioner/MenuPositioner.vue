@@ -145,10 +145,8 @@ const resolvedProps = computed(() => {
 
 const isContextMenu = computed(() => parent.value.type === 'context-menu');
 
-const { element, elementProps, state, positioning, open } = usePopupPositioner<MenuPositionerState>(
-  store,
-  props,
-  {
+const { element, elementProps, setRef, state, positioning, open } =
+  usePopupPositioner<MenuPositionerState>(store, props, {
     keepMounted,
     positioning: {
       anchor: () => resolvedProps.value.anchor,
@@ -174,8 +172,7 @@ const { element, elementProps, state, positioning, open } = usePopupPositioner<M
       lazyFlip: virtualFocus ? 'placement' : false,
     },
     state: () => ({ nested: parent.value.type === 'menu' }),
-  },
-);
+  });
 
 provide(MenuPositionerContext, positioning);
 provideFloatingNode(floatingNodeId);
@@ -321,5 +318,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

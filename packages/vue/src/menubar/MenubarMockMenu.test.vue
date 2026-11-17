@@ -43,7 +43,7 @@ function report(
 
 const { compositeProps, compositeRef } = useCompositeItem({ disabled: () => props.disabled });
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   ref: [compositeRef],
   props: (attrs) => [
     compositeProps.value,
@@ -56,5 +56,5 @@ defineExpose({ element, report, menubar, nodeId, parentNodeId, tree });
 </script>
 
 <template>
-  <component :is="as" v-bind="elementProps()"><slot /></component>
+  <component :is="as" v-bind="elementProps()" :ref="setRef"><slot /></component>
 </template>

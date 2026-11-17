@@ -53,7 +53,7 @@ export function useCalendarNavigationButton(props: NavigationButtonProps, step: 
     focusableWhenDisabled: () => !isDisabled.value,
   });
 
-  const { element, elementProps } = useRenderElement('button', props, {
+  const { element, elementProps, setRef } = useRenderElement('button', props, {
     ref: [
       buttonRef,
       (value) => {
@@ -68,5 +68,5 @@ export function useCalendarNavigationButton(props: NavigationButtonProps, step: 
     ],
   });
 
-  return { element, elementProps, state };
+  return { element, elementProps, setRef, state };
 }

@@ -22,6 +22,7 @@ import {
   createRenderer,
   flushMicrotasks,
   hydrate,
+  isVaporApp,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -31,6 +32,7 @@ import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { markChildrenMounted, useRenderElement } from './useRenderElement';
+import VaporPart from './VaporPart.test.vue';
 
 interface ActiveState {
   active?: boolean | undefined;
@@ -51,7 +53,7 @@ interface RerenderTestComponentProps extends WithVaseUIEvent<HTMLAttributes> {
 
 type ComponentWithElement = { element: HTMLElement | null };
 
-// The two template lines of a part, as a render function.
+// The render slot and element of a part, as a render function.
 function renderPart<State>(
   props: { as?: string | Component | undefined },
   slots: Slots,
@@ -704,6 +706,12 @@ describe('useRenderElement', () => {
   });
 
   describe('ref callbacks', () => {
+    it.runIf(isVaporApp)('gives the element to a part that is a Vapor component', async () => {
+      const report = vi.fn();
+      await render(() => <VaporPart report={report} data-testid="part" />);
+      expect(report).toHaveBeenCalledExactlyOnceWith(screen.getByTestId('part'));
+    });
+
     it('gives the element one time over three rerenders, and null at unmount', async () => {
       const refs = vi.fn();
       const { container, rerender, unmount } = await render(

@@ -165,6 +165,7 @@ function takeServerAttributes(
 /**
  * Makes the props of the element of a part. A part calls it in `setup`.
  * The template of the part calls `elementProps()` and binds the result on its element.
+ * It also binds `setRef` by name on that element.
  *
  * @param element The default tag of the part, as a value, a ref or a getter.
  * @param componentProps The reactive props object of the part. Do not destructure it.
@@ -300,6 +301,8 @@ export function useRenderElement<
       }
     }
 
+    // The `#render` slot gives the setter to the consumer through props. The part binds the same
+    // setter by name, so Vue merges the two into one `ref`.
     outProps.ref = setRef;
 
     const consumerClass = mergeClassNames(componentProps.stateClass?.(state), classAttribute);
@@ -424,7 +427,7 @@ export function useRenderElement<
     onUpdated(checkRender);
   }
 
-  return { element: elementRef, elementProps };
+  return { element: elementRef, elementProps, setRef };
 }
 
 export type UseRenderElementParameters<State, RenderedElementType extends Element = HTMLElement> = {
@@ -483,4 +486,9 @@ export interface UseRenderElementReturnValue<RenderedElementType extends Element
    * value: a string, or `undefined` when the server element has no such attribute.
    */
   elementProps: () => HTMLProps;
+  /**
+   * The setter of the element. The template binds it by name on the element, beside the spread.
+   * Vapor mode applies only a ref that the template binds by name.
+   */
+  setRef: (value: Element | ComponentPublicInstance | null) => void;
 }

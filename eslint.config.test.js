@@ -66,6 +66,27 @@ const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 
 const reported = [
   {
+    name: 'a spread of elementProps() with no ref by name',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<component :is="as" v-bind="elementProps()"><slot /></component>'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'by name',
+  },
+  {
+    name: 'a spread of elementProps() in a merge with no ref by name',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<div v-bind="mergeProps(elementProps(), { id })" />'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'by name',
+  },
+  {
+    name: 'a spread of elementProps() beside a static ref',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<div ref="element" v-bind="elementProps()" />'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'by name',
+  },
+  {
     name: 'an import of getCurrentInstance',
     file: `${SRC}/useRoot.ts`,
     code: "import { getCurrentInstance } from 'vue';\n\nexport const instance = getCurrentInstance();\n",
@@ -896,6 +917,24 @@ const reported = [
 ];
 
 const passed = [
+  {
+    name: 'a spread of elementProps() with the ref by name',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<component :is="as" v-bind="elementProps()" :ref="setRef"><slot /></component>',
+    ),
+  },
+  {
+    name: 'elementProps() as the props of the #render slot',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<slot name="render" :props="elementProps()" />'),
+  },
+  {
+    name: 'a spread of elementProps() with no ref by name in a test SFC',
+    file: `${SRC}/DialogPart.test.vue`,
+    code: docsSfc('', '<component :is="as" v-bind="elementProps()"><slot /></component>'),
+  },
   {
     name: 'a DOM global in a test file',
     file: `${SRC}/DialogRoot.test.tsx`,

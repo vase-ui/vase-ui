@@ -90,7 +90,7 @@ function getItemProps(externalProps?: Record<string, any>) {
 
 const state = computed<MenuLinkItemState>(() => ({ highlighted: highlighted.value }));
 
-const { element, elementProps } = useRenderElement('a', props, {
+const { element, elementProps, setRef } = useRenderElement('a', props, {
   state,
   ref: [
     (link) => {
@@ -109,7 +109,9 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
   <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
     <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
     <slot v-else :state="state" />

@@ -40,7 +40,7 @@ const state = computed<ChildrenPartState>(() => ({ value: props.value }));
 
 provide(CHILDREN_PART_STATE, state);
 
-const { element, elementProps } = useRenderElement('div', props, { state, children: true });
+const { element, elementProps, setRef } = useRenderElement('div', props, { state, children: true });
 
 defineExpose({ element });
 </script>
@@ -48,5 +48,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ChildrenPartChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ChildrenPartChildren><slot :state="state" /></ChildrenPartChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ChildrenPartChildren><slot :state="state" /></ChildrenPartChildren>
+  </component>
 </template>

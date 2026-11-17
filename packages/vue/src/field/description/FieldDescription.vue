@@ -47,7 +47,7 @@ const state = computed<FieldDescriptionState>(() => ({
 
 useRegisteredMessageId(descriptionId, () => element.value);
 
-const { element, elementProps } = useRenderElement('p', props, {
+const { element, elementProps, setRef } = useRenderElement('p', props, {
   state,
   props: (attrs) => [{ id: descriptionId.value }, attrs],
   stateAttributesMapping: fieldValidityMapping,
@@ -58,5 +58,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

@@ -258,7 +258,7 @@ const state = computed<TabsIndicatorState>(() => ({
 
 // The template puts `PrehydrationScript` directly after the element. The script finds the indicator
 // as `document.currentScript.previousElementSibling`.
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   props: (attrs) => {
     const measured = measurement.value;
@@ -297,7 +297,9 @@ defineExpose({ element });
 <template>
   <template v-if="value != null">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <slot :state="state" />
+    </component>
     <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />
   </template>
 </template>

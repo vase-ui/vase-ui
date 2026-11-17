@@ -91,7 +91,7 @@ function setInputFocused(element: HTMLInputElement | null) {
         });
 }
 
-const { element, elementProps } = useRenderElement('input', props, {
+const { element, elementProps, setRef } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref, setInputFocused],
   props: (attrs) => input.props(mergeProps<'input'>({ onKeydown: handleKeydown }, attrs)),
@@ -102,5 +102,5 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="input.state.value" />
-  <component :is="as" v-else v-bind="elementProps()" />
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
 </template>
