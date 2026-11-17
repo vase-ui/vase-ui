@@ -31,6 +31,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import * as Menu from '../../menu/index.parts';
+import * as Select from '../../select/index.parts';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import * as Popover from '../index.parts';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
@@ -2871,6 +2872,140 @@ describe('<Popover.Root />', () => {
         });
         expect(screen.queryByTestId('child-popup')).toBe(null);
       });
+
+      it.each([
+        {
+          name: 'Select',
+          renderChild: (onChildPress: (event: PointerEvent) => void) => (
+            <Select.Root modal={false}>
+              <Select.Trigger data-testid="child-trigger">Child</Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner
+                  alignItemWithTrigger={false}
+                  side="right"
+                  data-testid="child-positioner"
+                >
+                  <Select.Popup
+                    data-testid="child-popup"
+                    style={{ padding: '30px' }}
+                    onPointerdown={onChildPress}
+                  >
+                    <Select.Item value="a">a</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          ),
+        },
+        {
+          name: 'Menu',
+          renderChild: (onChildPress: (event: PointerEvent) => void) => (
+            <Menu.Root modal={false}>
+              <Menu.Trigger data-testid="child-trigger">Child</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner side="right" data-testid="child-positioner">
+                  <Menu.Popup
+                    data-testid="child-popup"
+                    style={{ padding: '30px' }}
+                    onPointerdown={onChildPress}
+                  >
+                    <Menu.Item>a</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          ),
+        },
+      ])(
+        'VUE-4: keeps the parent popover open when a drag from a non-modal $name child ends outside',
+        async ({ renderChild }) => {
+          const parentChanges: Change[] = [];
+          const childPress = vi.fn<(event: PointerEvent) => void>();
+          const Test = defineComponent({
+            setup() {
+              // The outside target takes no focus. A press on a focusable element moves the focus,
+              // and the parent then closes with `focus-out` before the click.
+              return () => (
+                <div>
+                  <div
+                    data-testid="outside"
+                    style={{
+                      position: 'fixed',
+                      right: '10px',
+                      bottom: '10px',
+                      width: '40px',
+                      height: '40px',
+                    }}
+                  />
+
+                  <Popover.Root defaultOpen onOpenChange={recordChange(parentChanges)}>
+                    <Popover.Trigger>Parent</Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Positioner data-testid="parent-positioner">
+                        <Popover.Popup data-testid="parent-popup">
+                          {renderChild(childPress)}
+                        </Popover.Popup>
+                      </Popover.Positioner>
+                    </Popover.Portal>
+                  </Popover.Root>
+                </div>
+              );
+            },
+          });
+
+          await render(<Test />);
+
+          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+
+          const childTrigger = screen.getByTestId('child-trigger');
+          await waitForPositioned(screen.getByTestId('parent-positioner'));
+          await waitFor(() => {
+            expect(childTrigger).toHaveFocus();
+          });
+
+          const childPopup = await waitForLaterMillisecond(async () => {
+            await userEvent.click(childTrigger);
+            return screen.findByTestId('child-popup');
+          });
+          await waitForPositioned(screen.getByTestId('child-positioner'));
+          const childRect = childPopup.getBoundingClientRect();
+          const outside = screen.getByTestId('outside');
+          const to = clientCenter(outside);
+          const destination = { x: to.clientX, y: to.clientY };
+          let held = true;
+          onTestFinished(async () => {
+            if (held) {
+              await userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' });
+            }
+          });
+
+          await userEvent.pointer({
+            coords: { x: childRect.left + 15, y: childRect.top + 15 },
+            keys: '[MouseLeft>]',
+          });
+          expect(childPress).toHaveBeenCalledOnce();
+          expect(childPress.mock.calls[0]?.[0].target).toBe(childPopup);
+          // The inside marker expires in a timer task before the release.
+          await wait(0);
+          await userEvent.pointer({ coords: destination });
+          // The release gives a click to the common ancestor of the two targets.
+          await nextEvent(document, 'click', {
+            action: () => userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' }),
+          });
+          held = false;
+          await flushMicrotasks();
+
+          expect(parentChanges).toEqual([]);
+          const parentPopup = screen.getByTestId('parent-popup');
+          expect(parentPopup).toBeInTheDocument();
+
+          await userEvent.click(outside);
+          expect(parentChanges).toEqual([[false, 'outside-press']]);
+          await waitFor(() => {
+            expect(parentPopup).not.toBeInTheDocument();
+          });
+        },
+      );
 
       it.skipIf(isJSDOM)(
         'should not close popover when scrolling nested popup on touch',
