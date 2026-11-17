@@ -557,6 +557,7 @@ export function useCompositeRoot<Metadata>(
 
   return {
     props: { onFocusin, onFocusout, onKeydown },
+    elementsRef,
     rootRef(element) {
       // Vue calls a function ref again on each patch. A new observer for the same element would
       // drop the records of that patch.
@@ -711,6 +712,11 @@ export interface UseCompositeRootReturnValue {
    * The part puts this object first in the `props` of `useRenderElement`.
    */
   props: Omit<HTMLProps, 'ref'>;
+  /**
+   * The item elements in document order, unless an item sets its index.
+   * The list is empty on the server and before the root mounts.
+   */
+  elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   /**
    * Gives the element of the root to the composite, and `null` when the element goes away.
    * The part gives it to `useRenderElement` in `ref`.

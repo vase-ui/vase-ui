@@ -95,7 +95,7 @@ const hasSelectedItem = computed(() => {
   );
 });
 
-const { props: compositeProps, rootRef } = useCompositeRoot({
+const { props: compositeProps, rootRef, elementsRef } = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
   hasActiveItem: hasSelectedItem,
@@ -121,7 +121,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-usePickerFocusTarget(() => findOptionToFocus(element.value));
+usePickerFocusTarget(() => findOptionToFocus(elementsRef.value));
 
 defineExpose({ element });
 </script>
