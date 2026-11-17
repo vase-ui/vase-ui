@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Dialog } from '@vase-ui/vue/dialog';
 
-defineProps<{ modal?: boolean | undefined }>();
+defineProps<{ modal: boolean }>();
 </script>
 
 <template>
   <div data-testid="host">
     <button data-testid="before" type="button">before</button>
-    <Dialog.Root default-open :modal="modal ?? false">
+    <Dialog.Root default-open :modal="modal">
       <Dialog.Portal disabled data-testid="portal">
         <Dialog.Backdrop data-testid="backdrop" />
         <Dialog.Popup data-testid="popup">

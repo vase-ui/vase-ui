@@ -269,7 +269,7 @@ Give a modal popup a `position` so that it appears above the backdrops. Hide `Di
 
 A nested popup keeps its portal inside the dialog's portal element, so an ancestor with `overflow: hidden` can clip it. A change of `disabled` mounts the parts again and discards DOM state, such as the text of an uncontrolled input.
 
-The popup gets `aria-labelledby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. When `modal` becomes `true` with focus outside the popup, the dialog does not move focus into it.
+The popup gets `aria-labelledby` and `aria-describedby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. Do the same with `Dialog.Description` and `aria-describedby`. When `modal` becomes `true` with focus outside the popup, the dialog does not move focus into it.
 
 ### Detached triggers
 

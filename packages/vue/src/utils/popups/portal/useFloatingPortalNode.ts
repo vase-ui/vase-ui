@@ -41,7 +41,7 @@ export interface UseFloatingPortalNodeProps {
    * Whether the part renders the portal element in its own place, with no `Teleport`. The
    * composable then does not read `container`.
    */
-  inPlace?: MaybeRefOrGetter<boolean | undefined>;
+  inPlace?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
 export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue {

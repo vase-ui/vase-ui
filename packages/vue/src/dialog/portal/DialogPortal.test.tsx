@@ -680,16 +680,21 @@ describe('<Dialog.Portal />', () => {
       expect(portal.querySelector(INTERNAL_BACKDROP_SELECTOR)).not.toBe(null);
     });
 
-    it('gives the portal element the scope id and v-show of the consumer', async () => {
-      const { setProps } = await render(<DialogPortalInPlaceScoped visible />);
+    it('gives the portal element the scope id, the directives and the transition of the consumer', async () => {
+      const onBeforeLeave = vi.fn();
+      const { setProps } = await render(
+        <DialogPortalInPlaceScoped visible onBeforeLeave={onBeforeLeave} />,
+      );
       const portal = screen.getByTestId('portal');
       expect(portal).toHaveStyle({ outlineStyle: 'dashed' });
+      expect(portal).toHaveAttribute('data-marked');
       expect(portal).toBeVisible();
 
       await setProps({ visible: false });
 
       expect(portal).toHaveStyle({ display: 'none' });
       expect(portal).not.toBeVisible();
+      expect(onBeforeLeave).toHaveBeenCalledExactlyOnceWith(portal);
       await setProps({ visible: true });
       expect(portal).toBeVisible();
     });

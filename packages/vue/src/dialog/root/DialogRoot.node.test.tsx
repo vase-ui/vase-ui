@@ -89,8 +89,9 @@ describe('<Dialog.Root /> on a server', () => {
       ));
 
       expect(html.includes('data-vase-ui-portal')).toBe(keepMounted);
-      expect(html.includes('role="dialog"')).toBe(keepMounted);
-      expect(html.includes('hidden')).toBe(keepMounted);
+      const popup = /<div [^>]*role="dialog"[^>]*>/.exec(html)?.[0] ?? null;
+      expect(popup !== null).toBe(keepMounted);
+      expect(popup !== null && / hidden[ =>]/.test(popup)).toBe(keepMounted);
     });
   });
 
