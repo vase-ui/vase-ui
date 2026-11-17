@@ -61,11 +61,14 @@ export function getCalendarTabStop(calendar: Element | null | undefined): HTMLEl
   return calendar?.querySelector<HTMLElement>(CALENDAR_TAB_STOP) ?? null;
 }
 
-// A part that mounts later still has its place in the document, so the registration order of the
-// parts does not decide. `KeepAlive` keeps a part that it holds registered, and moves its element
-// out of the document. Such an element cannot take the focus, so it does not count.
-function getFirstInDocument(elements: (Element | null | undefined)[]) {
-  let first: Element | undefined;
+/**
+ * A part can mount after a part that follows it in the document. Only connected elements can give
+ * a focus target, an anchor or a native fieldset.
+ */
+export function getFirstInDocument<T extends Element>(
+  elements: (T | null | undefined)[],
+): T | undefined {
+  let first: T | undefined;
   for (const element of elements) {
     if (
       element?.isConnected &&
