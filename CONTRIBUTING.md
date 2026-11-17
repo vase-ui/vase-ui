@@ -293,6 +293,10 @@ The template of each such part has the `#render` slot, then the element, and no 
 - It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
 - Its template binds `:is="as ?? defaultTag"` on the element.
 - Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
+- A part that renders its element only in some states puts the condition in both forms: `<slot v-if="shouldRender && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shouldRender" … >`. Put a condition that has `||` in parentheses in the first form. The part then renders one comment while it has no element.
+- Do not put the two forms in a `<template v-if>`. The root of the part is then a fragment. Vue gives the scope id of a consumer, `v-show`, a custom directive and `<Transition>` only to a root element. ESLint refuses this form.
+- `Tabs.Indicator` with `renderBeforeHydration` is the exception. The script of Base UI reads the indicator as the element before it. Thus one form of the template has the element and the script. The form with only the element comes last.
+- `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
@@ -465,7 +469,7 @@ Rules:
 - A custom `stateAttributesMapping` function that returns `null` gives no key, so the comparison does not heal that attribute. A part whose first client state can differ from the server HTML reads its state from the server element, as `Resizable.Handle` and `Resizable.Panel` do. See [Server render](#server-render).
 - `elementProps()` reads the server element with `getServerElement()` of `src/common/hydration.ts`. That element is the first element that Vue hydrates for the part. The template of a part thus starts with its element: first the `#render` slot, and then `<component :is="as">`.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
-- A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
+- A part that renders no element in some state puts the condition in the `v-if` chain of both forms of its template. The template then does not call `elementProps()`. See [Parts that render an element](#parts-that-render-an-element).
 - Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue listener got the event. `useRenderElement` thus adds a second listener for each `focusin` and `focusout` handler of the props. That listener runs the handler for an event that Vue skipped.
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.

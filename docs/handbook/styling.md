@@ -59,9 +59,9 @@ For one property, `stateStyle` wins over `style`, and `style` wins over the styl
 
 ## Scoped styles
 
-A rule of `<style scoped>` matches the element of a part that has one root node.
+Each part that renders an element has one root node, except the parts that this section names. A rule of `<style scoped>` thus matches the element of the part. `v-show`, a custom directive and `<Transition>` on the part apply to that element too. This also applies to a part that renders its element only in some states, such as `Collapsible.Panel`, `Dialog.Backdrop` or `Tabs.Indicator`.
 
-A part that renders a hidden input beside its element has more than one root node. `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root` and `OTPField.Root` are such parts. A rule of `<style scoped>` does not match the element of such a part, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
+A part that renders a hidden input beside its element has more than one root node. These parts are `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root`, `OTPField.Root`, `DateField.Root`, `TimeField.Root`, `DatePicker.Field`, `DatePicker.TimeField`, `DateRangePicker.StartField`, `DateRangePicker.EndField` and `TimePicker.Field`. `Tabs.Indicator` with `renderBeforeHydration` renders a script element after its element, so it also has more than one root node. A rule of `<style scoped>` does not match the element of such a part. `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
 
 Each `Popup` part has one root node, also while it keeps focus guards or a dismiss button beside its element. A rule of `<style scoped>`, `v-show`, a custom directive and `<Transition>` thus apply to the popup element.
 
@@ -73,7 +73,7 @@ Each `Portal` part renders its element in a `Teleport`, in another place of the 
 
 <<< ../examples/styling/ScopedPortal.vue
 
-`NumberField.ScrubAreaCursor` also renders its element in a `Teleport`, so bind `props` on your element in its `#render` slot.
+`NavigationMenu.Content` in a viewport and `NumberField.ScrubAreaCursor` also render their element in a `Teleport`. Bind `props` on your element in their `#render` slot.
 
 ## Tailwind CSS
 
