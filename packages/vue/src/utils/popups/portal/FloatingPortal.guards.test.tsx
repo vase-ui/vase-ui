@@ -713,6 +713,174 @@ describe('FloatingPortal', () => {
     expect(getOwner(host)).toHaveAttribute('aria-owns', portal.id);
   });
 
+  it('VUE-120: sends the Tab key past the place of the portal while KeepAlive holds only the popup', async () => {
+    const visible = shallowRef(true);
+    await render(() => (
+      <div>
+        <input data-testid="trigger" />
+        <FloatingPortal>
+          <KeepAlive>
+            {visible.value ? (
+              <FocusManagerPart key="part">
+                <input data-testid="first-inside" />
+                <input data-testid="last-inside" />
+              </FocusManagerPart>
+            ) : null}
+          </KeepAlive>
+        </FloatingPortal>
+        <input data-testid="next" />
+      </div>
+    ));
+
+    visible.value = false;
+    await nextTick();
+
+    screen.getByTestId('trigger').focus();
+    await userEvent.tab();
+
+    expect(screen.getByTestId('next')).toHaveFocus();
+  });
+
+  it('VUE-120: sends Shift+Tab past the place of the portal while KeepAlive holds only the popup', async () => {
+    const visible = shallowRef(true);
+    await render(() => (
+      <div>
+        <input data-testid="trigger" />
+        <FloatingPortal>
+          <KeepAlive>
+            {visible.value ? (
+              <FocusManagerPart key="part">
+                <input data-testid="first-inside" />
+                <input data-testid="last-inside" />
+              </FocusManagerPart>
+            ) : null}
+          </KeepAlive>
+        </FloatingPortal>
+        <input data-testid="next" />
+      </div>
+    ));
+
+    visible.value = false;
+    await nextTick();
+
+    screen.getByTestId('next').focus();
+    await userEvent.tab({ shift: true });
+
+    expect(screen.getByTestId('trigger')).toHaveFocus();
+  });
+
+  it.each([
+    { name: 'closeOnFocusOut true', closeOnFocusOut: true, shift: false, calls: 1 },
+    { name: 'closeOnFocusOut false', closeOnFocusOut: false, shift: false, calls: 0 },
+    { name: 'backward skip', closeOnFocusOut: true, shift: true, calls: 0 },
+  ])(
+    'VUE-120: asks for the close when the Tab key skips a held popup: $name',
+    async ({ closeOnFocusOut, shift, calls }) => {
+      const visible = shallowRef(true);
+      const handleOpenChange = vi.fn();
+      await render(() => (
+        <div>
+          <input data-testid="trigger" />
+          <FloatingPortal>
+            <KeepAlive>
+              {visible.value ? (
+                <FocusManagerPart
+                  key="part"
+                  closeOnFocusOut={closeOnFocusOut}
+                  onOpenChange={handleOpenChange}
+                >
+                  <input data-testid="inside" />
+                </FocusManagerPart>
+              ) : null}
+            </KeepAlive>
+          </FloatingPortal>
+          <input data-testid="next" />
+        </div>
+      ));
+
+      visible.value = false;
+      await nextTick();
+
+      screen.getByTestId(shift ? 'next' : 'trigger').focus();
+      await userEvent.tab({ shift });
+
+      expect(screen.getByTestId(shift ? 'trigger' : 'next')).toHaveFocus();
+      expect(handleOpenChange).toHaveBeenCalledTimes(calls);
+      if (calls > 0) {
+        const [open, eventDetails] = handleOpenChange.mock.lastCall!;
+        expect(open).toBe(false);
+        expect(eventDetails.reason).toBe(REASONS.focusOut);
+      }
+    },
+  );
+
+  it.each([
+    { name: 'forward', guardIndex: 0 },
+    { name: 'backward', guardIndex: 1 },
+  ])(
+    'VUE-120: sends the focus to the reference of the focus manager when a guard skips a held popup with no tabbable outside: $name',
+    async ({ guardIndex }) => {
+      const reference = appendUntabbableReference();
+      const visible = shallowRef(true);
+      await render(() => (
+        <div>
+          <FloatingPortal>
+            <KeepAlive>
+              {visible.value ? (
+                <FocusManagerPart key="part" domReference={reference}>
+                  <input data-testid="inside" />
+                </FocusManagerPart>
+              ) : null}
+            </KeepAlive>
+          </FloatingPortal>
+        </div>
+      ));
+
+      visible.value = false;
+      await nextTick();
+
+      getOutsideGuards()[guardIndex].focus();
+
+      expect(reference).toHaveFocus();
+    },
+  );
+
+  it('VUE-120: enters the popup again through the same guards after KeepAlive shows it', async () => {
+    const visible = shallowRef(true);
+    await render(() => (
+      <div>
+        <input data-testid="trigger" />
+        <FloatingPortal>
+          <KeepAlive>
+            {visible.value ? (
+              <FocusManagerPart key="part">
+                <input data-testid="first-inside" />
+                <input data-testid="last-inside" />
+              </FocusManagerPart>
+            ) : null}
+          </KeepAlive>
+        </FloatingPortal>
+        <input data-testid="next" />
+      </div>
+    ));
+    const guards = getOutsideGuards();
+
+    visible.value = false;
+    await nextTick();
+    visible.value = true;
+    await nextTick();
+
+    expect(getOutsideGuards().map((guard, index) => guard === guards[index])).toEqual([true, true]);
+
+    screen.getByTestId('trigger').focus();
+    await userEvent.tab();
+    expect(screen.getByTestId('first-inside')).toHaveFocus();
+
+    screen.getByTestId('next').focus();
+    await userEvent.tab({ shift: true });
+    expect(screen.getByTestId('last-inside')).toHaveFocus();
+  });
+
   describe('hydration', () => {
     it('renders no portal element and no guard on a server, and hydrates with no message', async () => {
       const serverHtml = await renderOnServer(HYDRATION_FILE);

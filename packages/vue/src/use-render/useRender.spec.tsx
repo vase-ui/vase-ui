@@ -24,6 +24,7 @@ expectType<(value: Element | ComponentPublicInstance | null) => void, typeof res
   result.setRef,
 );
 expectType<ComputedRef<string | Component>, typeof result.tag>(result.tag);
+expectType<() => boolean, typeof result.usesRenderSlot>(result.usesRenderSlot);
 
 const buttonResult = useRender<{}, HTMLButtonElement>({ as: 'button' });
 

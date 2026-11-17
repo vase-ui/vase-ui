@@ -9,6 +9,7 @@ import {
   mockRuntimeLocale,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   within,
 } from '#test-utils';
 import ProgressRootHydration from './ProgressRootHydration.test.vue';
@@ -437,6 +438,23 @@ describe('<Progress.Root />', () => {
   });
 
   describe('hydration', () => {
+    it('writes the aria-valuetext of the browser when the server HTML has another text', async () => {
+      const props = { value: 50, locale: 'en-US', 'aria-label': 'Upload' };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer('src/progress/root/ProgressRoot.vue', props),
+        '[role="progressbar"]',
+        'aria-valuetext',
+        'other',
+      );
+
+      const { container } = await hydrate(Progress.Root, { serverHtml, props });
+
+      expect(within(container).getByRole('progressbar')).toHaveAttribute(
+        'aria-valuetext',
+        new Intl.NumberFormat(props.locale, { style: 'percent' }).format(0.5),
+      );
+    });
+
     it.each(STATUSES)(
       'hydrates the $name root with no warning and no DOM difference',
       async ({ value }) => {

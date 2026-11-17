@@ -192,9 +192,9 @@ function setInputElement(element: HTMLElement | null) {
   });
 }
 
-// Vue calls a function ref while it hydrates the input, before it hydrates the parts after the
-// input. Hydration does not patch an attribute. A write in the ref thus leaves the server
-// attributes on a part after the input that reads the key, such as the trigger.
+// Vue calls the function ref while it hydrates the input, before it hydrates the next parts.
+// A write there can give a later trigger a different `tabindex` and `id` in its first render.
+// Vue compares both attributes, warns if they differ, and keeps their server values.
 onMounted(() => {
   store.update({ inputInsidePopup: isInsidePopup.value });
 });
