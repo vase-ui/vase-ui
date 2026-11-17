@@ -21,12 +21,16 @@ function server({ pages = LOADED_PAGES, plugin = viteFollowSource(SOURCE_ROOT) }
   assert.ok(typeof configureServer === 'function' && typeof hotUpdate === 'function');
   const byId = new Map(pages.map((path) => [posix.join(DOCS_ROOT, path), { id: path }]));
   const watched: string[] = [];
+  const invalidated: unknown[][] = [];
   const fixture: unknown = {
     server: { watcher: { add: (folder: string) => watched.push(folder) } },
     context: {
       environment: {
         config: { root: DOCS_ROOT },
-        moduleGraph: { getModuleById: (id: string) => byId.get(id) },
+        moduleGraph: {
+          getModuleById: (id: string) => byId.get(id),
+          invalidateModule: (...call: unknown[]) => invalidated.push(call),
+        },
       },
     },
     event: { modules: [SOURCE_MODULE] },
@@ -42,6 +46,7 @@ function server({ pages = LOADED_PAGES, plugin = viteFollowSource(SOURCE_ROOT) }
     event: Parameters<typeof hotUpdate>[0];
   };
   return {
+    invalidated,
     async watch() {
       await configureServer.call(context, devServer);
       return watched;
@@ -64,11 +69,19 @@ test('a source edit gives the module of each family page that the server has', (
   }
 });
 
+test('a source edit makes Vite discard the transform in progress of each family page', () => {
+  const { invalidated, update } = server();
+  void update(join(SOURCE_ROOT, 'dialog/popup/DialogPopup.vue'));
+  // Vite discards the transform only for a call with no hot update argument.
+  assert.deepEqual(invalidated, [[{ id: 'components/button.md' }], [{ id: 'utils/use-render.md' }]]);
+});
+
 test('a test file gives no page module', () => {
-  const { update } = server();
+  const { invalidated, update } = server();
   for (const path of ['button/Button.test.tsx', 'button/Button.spec.vue']) {
     assert.equal(update(join(SOURCE_ROOT, path)), undefined, path);
   }
+  assert.deepEqual(invalidated, []);
 });
 
 test('a file outside the source folder gives no page module', () => {
