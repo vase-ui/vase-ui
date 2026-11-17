@@ -279,6 +279,32 @@ jobs:
           command: ${{ needs.select.outputs.vitest-command }}
           project: vapor
 
+  # The parts need a prerelease of Vue, so `required` does not need this job.
+  # A failure must stay visible. The module graph does not link the list to its part tests,
+  # so each file of `test/vaporParts/expectedFailures.json` runs.
+  test-vapor-parts:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - uses: ./.github/actions/vitest
+        with:
+          project: vapor-parts
+
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
