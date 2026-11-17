@@ -64,7 +64,7 @@ Import the component and assemble its parts:
 
 `TimeField.Input` renders the layout of the locale: a segment for each part of the time, and the text between them. With no `segment` slot, it renders each part with no class. Use the slot to give a class to a segment and to a separator. The slot gets each part of the layout and its `index`. A part that the user edits has `editable: true`. The other parts have `editable: false` and a `text`: a separator, or the name of a time zone.
 
-A segment is an `<input>`, and an input cuts text that is wider than its box. With no width from your styles, the browser gives a segment the width of its `size` attribute. That width is too narrow for `AM` in some browsers and fonts. Set `field-sizing: content` on the segment, so that its box follows its text.
+A segment is an `<input>`. The part sets `field-sizing: content` in the `style` of the segment, so the box of a segment follows its text and your styles need no rule for its width. A `width` or a `min-width` in your styles still applies. Chrome and Edge before 123, Firefox before 152 and Safari before 26.2 do not have `field-sizing`. In those browsers the `size` attribute gives the width, and that width is too narrow for `AM` in some fonts. Give the segment a width if you support them. To remove the declaration, see [Inline style attributes](/utils/csp-provider#inline-style-attributes).
 
 Because of the hidden input, `TimeField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
