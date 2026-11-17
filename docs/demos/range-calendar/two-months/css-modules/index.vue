@@ -2,7 +2,6 @@
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   Temporal.PlainDate.from('2026-11-24'),
   Temporal.PlainDate.from('2026-12-03'),
@@ -15,8 +14,6 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
     aria-label="Conference dates"
     :number-of-months="2"
     paged-navigation
-    :today="today"
-    time-zone="UTC"
     locale="en-US"
     :default-value="defaultValue"
   >

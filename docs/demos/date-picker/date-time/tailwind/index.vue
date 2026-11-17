@@ -7,7 +7,6 @@ import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 
 const labelId = useId();
-const today = Temporal.PlainDate.from('2026-11-14');
 const meetingDate = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-11-18'));
 const meetingTime = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('09:30'));
 // A field has no value while one of its segments is empty.
@@ -27,7 +26,7 @@ const dayButtonClassName =
   <div role="group" :aria-labelledby="labelId" class="flex flex-col items-start gap-1">
     <div :id="labelId" class="text-sm font-bold text-neutral-950 dark:text-white">Meeting time</div>
     <div class="flex flex-wrap gap-2">
-      <DatePicker.Root v-model:value="meetingDate" locale="en-US" time-zone="UTC">
+      <DatePicker.Root v-model:value="meetingDate" locale="en-US">
         <div
           class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
         >
@@ -72,7 +71,7 @@ const dayButtonClassName =
               aria-label="Choose a meeting date"
               class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
-              <DatePicker.Calendar :today="today" class="relative box-border w-68 text-sm">
+              <DatePicker.Calendar class="relative box-border w-68 text-sm">
                 <div class="absolute top-0 right-0 flex gap-1">
                   <Calendar.PreviousButton :class="buttonClassName"
                     >&lsaquo;</Calendar.PreviousButton

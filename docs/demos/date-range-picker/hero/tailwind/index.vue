@@ -5,7 +5,6 @@ import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 
 const id = useId();
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   Temporal.PlainDate.from('2026-11-18'),
   Temporal.PlainDate.from('2026-11-22'),
@@ -25,7 +24,7 @@ const inputClassName =
 <template>
   <div class="flex flex-col items-start gap-1">
     <label :for="id" class="text-sm font-bold text-neutral-950 dark:text-white">Trip dates</label>
-    <DateRangePicker.Root :default-value="defaultValue" locale="en-US" time-zone="UTC">
+    <DateRangePicker.Root :default-value="defaultValue" locale="en-US">
       <div
         class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
       >
@@ -79,7 +78,7 @@ const inputClassName =
             aria-label="Choose trip dates"
             class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <DateRangePicker.Calendar :today="today" class="relative box-border text-sm">
+            <DateRangePicker.Calendar class="relative box-border text-sm">
               <div class="absolute top-0 right-0 flex gap-1">
                 <RangeCalendar.PreviousButton :class="buttonClassName">
                   &lsaquo;

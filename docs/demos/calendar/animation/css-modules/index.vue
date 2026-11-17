@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
-
-const today = Temporal.PlainDate.from('2026-11-14');
 </script>
 
 <template>
-  <Calendar.Root fixed-weeks show-outside-days :today="today" locale="en-US" :class="styles.Root">
+  <Calendar.Root fixed-weeks show-outside-days locale="en-US" :class="styles.Root">
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
