@@ -5,8 +5,9 @@ import { AlertDialog } from '../alert-dialog';
 import { Button } from '../button';
 import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
+import { DatePicker } from '../date-picker';
 import { Field } from '../field';
-import { createRenderer, takeReportedMessages } from '#test-utils';
+import { createRenderer, flushMicrotasks, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
 import SlotHostUser from './SlotHostUser.test.vue';
@@ -172,7 +173,7 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([message('MyCollapsible', 'Collapsible.Root', 'open')]);
   });
 
-  it('gives one warning for a part that gives the prop to another part', async () => {
+  it('gives one warning for AlertDialog.Root', async () => {
     const Wrapper = defineComponent({
       name: 'MyAlertDialog',
       props: { open: Boolean },
@@ -182,6 +183,29 @@ describe('useCastBooleanWarning', () => {
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([message('MyAlertDialog', 'AlertDialog.Root', 'open')]);
+  });
+
+  it('gives one warning for a part that gives the prop to another part', async () => {
+    const Wrapper = defineComponent({
+      name: 'MyDatePickerPopup',
+      props: { finalFocus: Boolean },
+      setup(props) {
+        return () => <DatePicker.Popup finalFocus={props.finalFocus} aria-label="Example" />;
+      },
+    });
+    await render(() => (
+      <DatePicker.Root>
+        <DatePicker.Portal keepMounted>
+          <DatePicker.Positioner>
+            <Wrapper />
+          </DatePicker.Positioner>
+        </DatePicker.Portal>
+      </DatePicker.Root>
+    ));
+    await flushMicrotasks();
+    expect(takeReportedMessages()).toEqual([
+      message('MyDatePickerPopup', 'DatePicker.Popup', 'finalFocus'),
+    ]);
   });
 
   it('gives no warning for an excepted prop', async () => {
