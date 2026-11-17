@@ -20,8 +20,8 @@ export interface UseInputRegistrationReturnValue {
  *
  * `KeepAlive` takes the input out of the document and calls no `ref` setter. An owner must not use
  * an input that the user cannot reach: a held required input would block the submit of its form.
- * The registration thus ends when `KeepAlive` holds the part. The input registers again at each
- * activation.
+ * The composable registers no input while `KeepAlive` holds the part, releases a registered input
+ * at the hold, and registers the input at each activation.
  * @param input The input of the part.
  * @param register Registers the input and returns the function that releases it.
  */
@@ -30,6 +30,10 @@ export function useInputRegistration(
   register: (input: HTMLInputElement) => (() => void) | void,
 ): UseInputRegistrationReturnValue {
   const { isHeld, shown } = useKeepAliveState();
+  // The `ref` setter runs in the patch of the part. Vue 3.5.12 tracks a reactive read in a `sync`
+  // `watch` callback. A read of `isHeld.value` in `registerInput` makes the render of the part
+  // depend on `isHeld`.
+  let held = isHeld.value;
   let release: (() => void) | void;
 
   function releaseInput() {
@@ -39,7 +43,7 @@ export function useInputRegistration(
 
   function registerInput(element: HTMLInputElement | null) {
     releaseInput();
-    if (element) {
+    if (element && !held) {
       release = register(element);
     }
   }
@@ -52,21 +56,14 @@ export function useInputRegistration(
   // flush sees no held input.
   watch(
     isHeld,
-    (held) => {
-      if (held) {
+    (nextHeld) => {
+      held = nextHeld;
+      if (nextHeld) {
         releaseInput();
       }
     },
     { flush: 'sync' },
   );
-
-  // The `ref` setter of a part that mounts in a held branch registers the input, and `isHeld` does
-  // not change.
-  watch(input, () => {
-    if (isHeld.value) {
-      releaseInput();
-    }
-  });
 
   watch(shown, () => registerInput(input.value));
 
@@ -76,7 +73,7 @@ export function useInputRegistration(
   return {
     isHeld,
     updateInputRegistration() {
-      if (!isHeld.value) {
+      if (!held) {
         registerInput(input.value);
       }
     },

@@ -435,8 +435,9 @@ export function useCollapsiblePanel(
 
   const revealDecisionTimeout = Timeout.create();
   let revertRevealFrame = -1;
+  let pendingRevealRevert: (() => void) | undefined;
 
-  function clearRevealRevert() {
+  function stopRevealRevertSchedule() {
     revealDecisionTimeout.clear();
     AnimationFrame.cancel(revertRevealFrame);
   }
@@ -447,33 +448,45 @@ export function useCollapsiblePanel(
   // A task decides if the open arrived, and a frame writes the DOM. A busy main thread can delay a
   // frame, and the frame could then read a value that is not current. When the consumer ignores the
   // open, the state does not change and the decision holds.
+  // The browser removes `hidden` in the task of `beforematch`, after the listeners. A hold in that
+  // task comes before that removal, so the show runs the revert.
   function scheduleRevealRevert(
     revealedPanel: HTMLElement,
     revertSkippedMotion: boolean,
     restoreStartingStyle: boolean,
   ) {
-    revealDecisionTimeout.start(0, () => {
+    stopRevealRevertSchedule();
+    const revert = () => {
+      pendingRevealRevert = undefined;
       if (isOpen()) {
         return;
       }
 
-      revertRevealFrame = AnimationFrame.request(() => {
-        if (isOpen()) {
-          return;
-        }
+      if (revertSkippedMotion) {
+        // The open did not happen, so the next open is a normal open with the motion of the
+        // author.
+        shouldSkipNextOpen = false;
+      }
 
-        if (revertSkippedMotion) {
-          // The open did not happen, so the next open is a normal open with the motion of the
-          // author.
-          shouldSkipNextOpen = false;
-        }
+      if (!isHiddenUntilFound()) {
+        return;
+      }
 
-        if (restoreStartingStyle) {
-          revealedPanel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
-        }
+      if (restoreStartingStyle) {
+        revealedPanel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
+      }
 
-        revealedPanel.setAttribute('hidden', 'until-found');
-      });
+      revealedPanel.setAttribute('hidden', 'until-found');
+    };
+    pendingRevealRevert = revert;
+
+    revealDecisionTimeout.start(0, () => {
+      if (isOpen()) {
+        pendingRevealRevert = undefined;
+        return;
+      }
+
+      revertRevealFrame = AnimationFrame.request(revert);
     });
   }
 
@@ -516,6 +529,7 @@ export function useCollapsiblePanel(
       if (!held) {
         runSizeEffect();
         runCloseEffect();
+        pendingRevealRevert?.();
         return;
       }
 
@@ -525,7 +539,7 @@ export function useCollapsiblePanel(
       cleanupCloseEffect = undefined;
       markActivityResumeAnimationSuppressed();
       restorePendingTemporaryStyle();
-      clearRevealRevert();
+      stopRevealRevertSchedule();
     },
     { flush: 'sync' },
   );
@@ -534,7 +548,8 @@ export function useCollapsiblePanel(
     cleanupSizeEffect?.();
     cleanupCloseEffect?.();
     restorePendingTemporaryStyle();
-    clearRevealRevert();
+    stopRevealRevertSchedule();
+    pendingRevealRevert = undefined;
   });
 
   const props = computed(() => ({

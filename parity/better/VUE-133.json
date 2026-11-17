@@ -1,0 +1,10 @@
+{
+  "id": "VUE-133",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L355-L366",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L368-L457",
+    "https://vuejs.org/guide/built-ins/keep-alive.html#lifecycle-of-cached-instance"
+  ],
+  "behavior": "When `KeepAlive` holds `Collapsible.Panel` after a `beforematch` reveal that its root does not follow, the activation runs the revert. It restores `hidden=\"until-found\"`, `data-starting-style`, and the motion of the next open. Base UI under `Activity` writes `hidden=\"until-found\"` again at the reveal and drops the other two, so its next open has no motion.",
+  "dueWith": "packages/react/src/collapsible/panel/useCollapsiblePanel.ts"
+}
