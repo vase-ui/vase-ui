@@ -1,6 +1,6 @@
-<script setup vapor lang="ts">
-// The template has the form of a part with a hidden input. Vue 3.6 compiles a `vapor` script as a
-// Vapor component. Vue 3.5 ignores the attribute.
+<script setup lang="ts">
+// The template has the form of a part with a hidden input. `HiddenInputPartVapor.test.vue` has the
+// same template and Vue compiles it as a Vapor component.
 import { visuallyHiddenInputPinned } from '../common/visuallyHidden';
 import { handleHiddenInputInvalid } from './handleHiddenInputInvalid';
 
