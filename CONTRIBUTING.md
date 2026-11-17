@@ -1118,7 +1118,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()` makes the portal element and finds its container. `FloatingPortalLite` is the portal of a popup that takes no focus. `FloatingPortal` is the portal of a popup that takes focus.
 
 - The JSDoc of `container` and the comments of `useFloatingPortalNode.ts` give the forms of the container, and when the portal reads it.
-- `FloatingPortal` takes `inPlace`. With it, the portal element is the root node of the part, with no `Teleport`, also on a server.
+- `FloatingPortal` takes `inPlace`. With it, the root node of the part is the portal element or the `#render` slot, with no `Teleport`, also on a server.
 - A disabled `Teleport` still needs a target to hydrate its children in Vue 3.5.12. A plain element needs no target or server teleport buffer.
 - In place, the portal reads no `container` and keeps no owner element or outside guards. Its context gives `inPlace`, so the focus manager acts as with no portal.
 - The public prop is `disabled` of `Dialog.Portal`, which Alert Dialog and Drawer also use. The internal name is `inPlace`, because other portal parts pass attributes to `FloatingPortal`; an attribute named `disabled` must not select this mode.
