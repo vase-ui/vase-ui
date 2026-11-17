@@ -42,7 +42,7 @@ defineSlots<{
 const context = useDateTimeFieldContext();
 const isHydrating = useIsHydrating();
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: context.state,
   stateAttributesMapping: rootStateAttributesMapping,
   props: (attrs) => [
@@ -64,7 +64,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="TimeFieldInputChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="TimeFieldInputChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <TimeFieldInputChildren v-if="$slots.segment"><template #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></TimeFieldInputChildren><TimeFieldInputChildren v-else />
   </component>

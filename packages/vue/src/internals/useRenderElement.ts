@@ -12,6 +12,7 @@ import {
   toValue,
   useAttrs,
   useSlots,
+  watch,
 } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- The second focus listener gives an error of a handler to the error handler of the app, as a Vue listener does. Vue needs the instance of the part for that. A Vapor component gets `null`. Vue's listener on an element of a Vapor template skips no event, so there the second listener calls no handler.
 import { getCurrentInstance } from 'vue';
@@ -164,7 +165,9 @@ function takeServerAttributes(
 
 /**
  * Makes the props of the element of a part. A part calls it in `setup`.
- * The template of the part calls `elementProps()` and binds the result on its element.
+ * The template of the part calls `usesRenderSlot()` as the last condition of the `v-if` of its
+ * `#render` slot.
+ * It calls `elementProps()` and binds the result on its element.
  * It also binds `setRef` by name on that element.
  *
  * @param element The default tag of the part, as a value, a ref or a getter.
@@ -184,7 +187,7 @@ export function useRenderElement<
   const slots = useSlots();
   const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
   const refCallbacks = Array.isArray(params.ref) ? params.ref : [params.ref];
-  let hasCalledElementProps = false;
+  let hasRendered = false;
   let hasWrittenStyleKey = false;
 
   // Vue gives the setter an element, a component or `null`. The part keeps that value and
@@ -262,7 +265,7 @@ export function useRenderElement<
   }
 
   function elementProps(): HTMLProps {
-    hasCalledElementProps = true;
+    hasRendered = true;
 
     const defaultTag = toValue(element);
     const state = toValue(params.state) ?? (EMPTY_OBJECT as State);
@@ -367,8 +370,8 @@ export function useRenderElement<
       provide(CHILDREN_MARKER, childrenMarker);
     }
 
-    // A consumer can give `as` or `#render` after the mount, so the check runs after each render.
-    // `warn` writes each message only one time.
+    // A consumer can give `as` or `#render` after the mount, so the check runs after each render
+    // and in the watcher below. `warn` writes each message only one time.
     const checkAsWithRenderSlot = () => {
       if (
         slots.render &&
@@ -386,7 +389,7 @@ export function useRenderElement<
     // A part can render its `#render` slot for the first time after the mount.
     // The checks thus run after each render in which the slot appears.
     const checkRenderSlot = () => {
-      const slotIsRendered = hasCalledElementProps && slots.render !== undefined;
+      const slotIsRendered = hasRendered && slots.render !== undefined;
       const slotAppeared = slotIsRendered && !slotWasRendered;
       slotWasRendered = slotIsRendered;
 
@@ -421,13 +424,32 @@ export function useRenderElement<
     };
 
     onBeforeUpdate(() => {
-      hasCalledElementProps = false;
+      hasRendered = false;
     });
     onMounted(checkRender);
     onUpdated(checkRender);
+    // A Vapor part does not update when `as` changes while it renders the `#render` slot.
+    // Only the slot reads the props of the element then.
+    watch(
+      () => componentProps.as !== undefined && componentProps.as !== toValue(element),
+      checkAsWithRenderSlot,
+      { flush: 'post' },
+    );
   }
 
-  return { element: elementRef, elementProps, setRef };
+  function usesRenderSlot(): boolean {
+    if (slots.render === undefined) {
+      return false;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      // A slot of a Vapor component reads a slot prop only when the slot uses that prop.
+      // A slot that uses no prop thus never calls `elementProps()`.
+      hasRendered = true;
+    }
+    return true;
+  }
+
+  return { element: elementRef, elementProps, setRef, usesRenderSlot };
 }
 
 export type UseRenderElementParameters<State, RenderedElementType extends Element = HTMLElement> = {
@@ -491,4 +513,11 @@ export interface UseRenderElementReturnValue<RenderedElementType extends Element
    * Vapor mode applies only a ref that the template binds by name.
    */
   setRef: (value: Element | ComponentPublicInstance | null) => void;
+  /**
+   * Tells whether the consumer gave the `#render` slot.
+   * The template calls it as the last condition of the `v-if` of that slot:
+   * `v-if="usesRenderSlot()"`.
+   * In a development build, a `true` result also tells the checks that the part renders the slot.
+   */
+  usesRenderSlot: () => boolean;
 }

@@ -40,7 +40,7 @@ const store = useSelectRootContext();
 
 const state = computed<SelectIconState>(() => ({ open: store.select('open') }));
 
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
   stateAttributesMapping: triggerOpenStateMapping,
@@ -52,7 +52,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SelectIconChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="SelectIconChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <SelectIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectIconChildren>
   </component>

@@ -342,7 +342,7 @@ function handlePaste(event: ClipboardEvent) {
   commitValue(rawValue, REASONS.inputPaste, event);
 }
 
-const { element, elementProps, setRef } = useRenderElement('input', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state: inputState,
   ref: [listItemRef],
   stateAttributesMapping: inputStateAttributesMapping,
@@ -454,6 +454,6 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="inputState" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="inputState" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
 </template>

@@ -178,7 +178,7 @@ function handleClick(event: MouseEvent) {
   store.context.inputRef.value?.focus();
 }
 
-const { element, elementProps, setRef } = useRenderElement('button', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setClearElement],
   props: (attrs) => [
@@ -202,7 +202,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="(keepMounted || mounted) && $slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxClearChildren" />
+  <slot v-if="(keepMounted || mounted) && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ComboboxClearChildren" />
   <component :is="as" v-else-if="keepMounted || mounted" v-bind="elementProps()" :ref="setRef">
     <ComboboxClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxClearChildren>
   </component>

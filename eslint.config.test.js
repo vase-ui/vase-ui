@@ -64,6 +64,8 @@ const WAIT_FILES = [
 const VNODE_HINT = 'mounts a vnode one time';
 const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 const REF_HINT = 'before the element is in the document';
+const RENDER_SLOT_HINT = 'usesRenderSlot()';
+const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
 const reported = [
   {
@@ -71,7 +73,7 @@ const reported = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
       '',
-      '<template v-if="shown"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
+      '<template v-if="shown"><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
     ),
     ruleId: 'vue/no-restricted-syntax',
     hint: 'fragment',
@@ -81,11 +83,57 @@ const reported = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
       '',
-      '<div v-if="other" /><template v-else><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
+      '<div v-if="other" /><template v-else><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
     ),
     ruleId: 'vue/no-restricted-syntax',
     hint: 'fragment',
   },
+  ...[
+    ['a #render slot with $slots.render', `<slot v-if="$slots.render" ${RENDER_SLOT_REST}`],
+    [
+      'a #render slot with a condition and $slots.render',
+      `<slot v-if="shouldRender && $slots.render" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with a condition after usesRenderSlot()',
+      `<slot v-if="usesRenderSlot() && shouldRender" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with || after usesRenderSlot()',
+      `<slot v-if="usesRenderSlot() || other" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with usesRenderSlot and no call',
+      `<slot v-if="$slots.render && usesRenderSlot" ${RENDER_SLOT_REST}`,
+    ],
+    ['a #render slot with elementProps() and no condition', `<slot ${RENDER_SLOT_REST}`],
+    [
+      'a #render slot in a template with $slots.render',
+      `<template v-if="$slots.render"><Style /><slot ${RENDER_SLOT_REST}</template>`,
+    ],
+    [
+      'a #render slot in a div inside a template with usesRenderSlot()',
+      `<template v-if="usesRenderSlot()"><div><slot ${RENDER_SLOT_REST}</div></template>`,
+    ],
+    [
+      'a #render slot with no condition in a Teleport with usesRenderSlot()',
+      `<Teleport v-if="usesRenderSlot()" to="body"><slot ${RENDER_SLOT_REST}</Teleport>`,
+    ],
+    [
+      'a #render slot with v-show="usesRenderSlot()"',
+      `<slot v-show="usesRenderSlot()" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with elementProps() in mergeProps and no usesRenderSlot()',
+      '<slot v-if="shown" name="render" :props="mergeProps(elementProps(), other)" :state="state" />',
+    ],
+  ].map(([name, template]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', template),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: RENDER_SLOT_HINT,
+  })),
   {
     name: 'a spread of elementProps() with no ref by name',
     file: `${SRC}/DialogRoot.vue`,
@@ -995,7 +1043,7 @@ const passed = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
       '',
-      '<slot v-if="shown && $slots.render" name="render" :props="elementProps()" /><component :is="as" v-else-if="shown" v-bind="elementProps()" :ref="setRef" />',
+      '<slot v-if="shown && usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else-if="shown" v-bind="elementProps()" :ref="setRef" />',
     ),
   },
   {
@@ -1003,7 +1051,7 @@ const passed = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
       '',
-      '<template v-if="$slots.render"><Style /><slot name="render" :props="elementProps()" /></template><component :is="as" v-else v-bind="elementProps()" :ref="setRef" />',
+      '<template v-if="usesRenderSlot()"><Style /><slot name="render" :props="elementProps()" /></template><component :is="as" v-else v-bind="elementProps()" :ref="setRef" />',
     ),
   },
   {
@@ -1011,7 +1059,7 @@ const passed = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
       '',
-      '<Teleport v-if="shown" to="body"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></Teleport>',
+      '<Teleport v-if="shown" to="body"><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></Teleport>',
     ),
   },
   {
@@ -1033,7 +1081,42 @@ const passed = [
   {
     name: 'elementProps() as the props of the #render slot',
     file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc('', '<slot name="render" :props="elementProps()" />'),
+    code: docsSfc('', '<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" />'),
+  },
+  ...[
+    [
+      'a #render slot with (keepMounted || mounted) && usesRenderSlot()',
+      `<slot v-if="(keepMounted || mounted) && usesRenderSlot()" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with two && conditions and usesRenderSlot()',
+      `<slot v-if="a && b && usesRenderSlot()" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot with v-else-if="usesRenderSlot()"',
+      `<div v-if="other" /><slot v-else-if="usesRenderSlot()" ${RENDER_SLOT_REST}`,
+    ],
+    [
+      'a #render slot in a template with value != null && usesRenderSlot()',
+      `<template v-if="value != null && usesRenderSlot()"><slot ${RENDER_SLOT_REST}<Style /></template>`,
+    ],
+    [
+      'a #render slot with empty props and $slots.render',
+      '<slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />',
+    ],
+    [
+      'a #render slot forwarded with v-bind="slotProps"',
+      '<Part><template #render="slotProps"><slot name="render" v-bind="slotProps" /></template></Part>',
+    ],
+  ].map(([name, template]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', template),
+  })),
+  {
+    name: 'a #render slot with $slots.render and elementProps() in a test SFC',
+    file: `${SRC}/DialogPart.test.vue`,
+    code: docsSfc('', `<slot v-if="$slots.render" ${RENDER_SLOT_REST}`),
   },
   {
     name: 'a spread of elementProps() with no ref by name in a test SFC',

@@ -71,7 +71,7 @@ const { getButtonProps, buttonRef } = useButton({
 
 const state = computed<ToastActionState>(() => ({ type: toast.value.type }));
 
-const { element, elementProps, setRef } = useRenderElement('button', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => {
@@ -86,7 +86,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="rendered && $slots.render" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
+  <slot v-if="rendered && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
   <component :is="as" v-else-if="rendered" v-bind="elementProps()" :ref="setRef">
     <ToastActionChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ToastActionChildren>
   </component>

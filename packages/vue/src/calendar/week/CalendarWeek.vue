@@ -42,14 +42,14 @@ defineSlots<{
 
 const { state } = useCalendarRootContext();
 
-const { element, elementProps, setRef } = useRenderElement('tr', props, { state });
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('tr', props, { state });
 
 defineExpose({ element });
 </script>
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot /><template v-for="(day, index) in week.days" :key="toInputText(day, false)"><slot name="day" :day="day" :index="index" /></template>
   </component>

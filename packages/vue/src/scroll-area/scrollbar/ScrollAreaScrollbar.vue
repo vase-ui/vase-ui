@@ -208,7 +208,7 @@ function handleTrackPointerDown(event: PointerEvent) {
   handlePointerDown(event);
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   // `useRenderElement` calls this callback only when the element changes. The callback reads the
   // orientation when it runs. While the scrollbar stays mounted, a change of `orientation` does not
   // change the element, so the `watch` below moves the element to the other holder. If the change
@@ -284,7 +284,12 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="shouldRender && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot
+    v-if="shouldRender && usesRenderSlot()"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
   <component :is="as" v-else-if="shouldRender" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

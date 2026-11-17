@@ -56,7 +56,7 @@ const state = computed<SelectArrowState>(() => ({
   uncentered: arrowUncentered.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [arrowRef],
   stateAttributesMapping: popupTransitionStateMapping,
@@ -68,7 +68,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="!alignItemWithTriggerActive && $slots.render"
+    v-if="!alignItemWithTriggerActive && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"
