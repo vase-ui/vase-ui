@@ -17,6 +17,7 @@ export interface TimePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
 import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<TimePickerTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimePicker.Trigger');
+}
 
 defineSlots<{
   default(props: { state: TimePickerTriggerState }): unknown;

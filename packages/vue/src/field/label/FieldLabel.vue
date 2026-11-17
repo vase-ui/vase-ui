@@ -26,6 +26,7 @@ export interface FieldLabelProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { error } from '../../common/error';
 import { fieldValidityMapping } from '../../internals/field-constants';
@@ -65,6 +66,7 @@ const { element, elementProps } = useRenderElement('label', props, {
 });
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Field.Label');
   const checkElement = () => {
     const label = element.value;
     if (!label) {

@@ -76,6 +76,7 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
@@ -102,6 +103,10 @@ const props = withDefaults(defineProps<TabsTabProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tabs.Tab');
+}
 
 defineSlots<{
   default(props: { state: TabsTabState }): unknown;

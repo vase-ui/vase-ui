@@ -23,6 +23,7 @@ export interface RangeCalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
 import { useCalendarMonthContext } from '../../calendar/month/CalendarMonthContext';
@@ -37,6 +38,10 @@ const props = withDefaults(defineProps<RangeCalendarDayButtonProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('RangeCalendar.DayButton');
+}
 
 defineSlots<{
   default(props: { state: RangeCalendarDayButtonState; text: string }): unknown;

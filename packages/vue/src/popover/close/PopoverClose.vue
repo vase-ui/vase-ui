@@ -22,6 +22,7 @@ export interface PopoverCloseProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -38,6 +39,10 @@ const props = withDefaults(defineProps<PopoverCloseProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Close');
+}
 
 defineSlots<{
   default(props: { state: PopoverCloseState }): unknown;

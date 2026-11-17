@@ -10,7 +10,7 @@ import TextWithCode from './TextWithCode.vue';
     <table>
       <thead>
         <tr>
-          <th scope="col">Component</th>
+          <th scope="col">Entry point</th>
           <th scope="col">Reason</th>
           <th scope="col">Standard</th>
         </tr>

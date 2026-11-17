@@ -185,6 +185,7 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
@@ -517,6 +518,7 @@ const usesViewportLengths = computed(
 );
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Resizable.Root');
   // The first renders see only the panels that registered before them, so the check waits for the
   // render that follows the registrations.
   watch(

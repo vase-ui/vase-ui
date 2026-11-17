@@ -60,6 +60,7 @@ export interface ComboboxPopupProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, toRaw } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -82,6 +83,10 @@ const props = withDefaults(defineProps<ComboboxPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Popup');
+}
 
 defineSlots<{
   default(props: { state: ComboboxPopupState }): unknown;

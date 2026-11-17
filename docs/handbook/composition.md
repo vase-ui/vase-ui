@@ -83,15 +83,21 @@ The default slot also gets `{ state }`. Some parts have nodes of their own. `Sli
 
 ## Wrap a part
 
-Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`.
+Use [`useForwardProps`](/utils/use-forward-props) when your component wraps a part. It forwards the props that your caller sets, plus your explicit defaults. It omits values of `undefined`.
 
-When your wrapper declares an optional Boolean prop and gives it to the part, set the default of that prop to `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
+Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`. The helper omits that cast value, so the part keeps its default or parent value.
 
 This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
 
-<<< ../examples/composition/MyAccordionPanel.vue{11-14}
+<<< ../examples/composition/MyAccordionPanel.vue{4,12-13,17}
+
+You can instead give each optional Boolean prop the default `undefined`. An explicit `false` still reaches the part:
+
+<<< ../examples/composition/MyAccordionPanelDefaults.vue{11-14}
 
 You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
+
+A development build warns when a wrapper gives a part a cast `false` that replaces a default or parent value. The message names the wrapper, the part, the prop and both corrections. See [the development warning](/utils/use-forward-props#the-development-warning) for its limits.
 
 An absent prop and `false` give different results in four cases.
 

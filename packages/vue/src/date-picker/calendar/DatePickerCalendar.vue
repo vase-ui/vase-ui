@@ -33,6 +33,7 @@ export interface DatePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { isElement } from '@floating-ui/utils/dom';
 import { computed, useAttrs, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
@@ -62,6 +63,10 @@ const props = withDefaults(defineProps<DatePickerCalendarProps>(), {
   as: 'div',
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DatePicker.Calendar');
+}
 
 const emit = defineEmits<{
   /**

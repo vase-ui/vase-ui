@@ -50,6 +50,7 @@ export interface MenubarProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef } from 'vue';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import type { StateAttributesMapping } from '../internals/getStateAttributesProps';
@@ -81,6 +82,10 @@ const props = withDefaults(defineProps<MenubarProps>(), {
   orientation: 'horizontal',
   loopFocus: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menubar');
+}
 
 defineSlots<{
   default(props: { state: MenubarState }): unknown;

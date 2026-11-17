@@ -46,6 +46,7 @@ export interface DialogTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
@@ -68,6 +69,10 @@ const props = withDefaults(defineProps<DialogTriggerProps<Payload>>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Trigger');
+}
 
 defineSlots<{
   default(props: { state: DialogTriggerState }): unknown;

@@ -42,6 +42,7 @@ export interface SelectPopupProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
@@ -77,6 +78,10 @@ const props = withDefaults(defineProps<SelectPopupProps>(), {
   as: 'div',
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Popup');
+}
 
 defineSlots<{
   default(props: { state: SelectPopupState }): unknown;

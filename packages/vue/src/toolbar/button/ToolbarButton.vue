@@ -42,6 +42,7 @@ const FORWARDED_DISABLED = { disabled: '' };
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
@@ -60,6 +61,10 @@ const props = withDefaults(defineProps<ToolbarButtonProps>(), {
   focusableWhenDisabled: true,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toolbar.Button');
+}
 
 defineSlots<{
   default(props: { state: ToolbarButtonState }): unknown;

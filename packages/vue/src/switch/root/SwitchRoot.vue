@@ -104,6 +104,7 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
@@ -143,6 +144,10 @@ const props = withDefaults(defineProps<SwitchRootProps>(), {
   readOnly: false,
   required: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Switch.Root');
+}
 
 const emit = defineEmits<{
   /**

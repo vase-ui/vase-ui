@@ -37,6 +37,7 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -55,6 +56,10 @@ const props = withDefaults(defineProps<AccordionTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Accordion.Trigger');
+}
 
 defineSlots<{
   default(props: { state: AccordionTriggerState }): unknown;

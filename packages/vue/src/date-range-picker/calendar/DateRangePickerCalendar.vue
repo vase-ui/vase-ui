@@ -29,6 +29,7 @@ export interface DateRangePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, useAttrs, useTemplateRef } from 'vue';
 import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
 import type { DateValue } from '../../internals/date-time/temporal';
@@ -54,6 +55,10 @@ const props = withDefaults(defineProps<DateRangePickerCalendarProps>(), {
   as: 'div',
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Calendar');
+}
 
 const emit = defineEmits<{
   /**

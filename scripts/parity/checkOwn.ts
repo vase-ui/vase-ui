@@ -58,7 +58,7 @@ export function checkOwnComponent(
     return undefined;
   };
 
-  for (const title of record.parts) {
+  for (const title of record.parts ?? []) {
     const match = findOne('part', title);
     if (match && !project.readComponent(match)) {
       problems.push(

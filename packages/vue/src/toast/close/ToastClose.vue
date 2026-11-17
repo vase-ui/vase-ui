@@ -27,6 +27,7 @@ export interface ToastCloseProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
@@ -41,6 +42,10 @@ const props = withDefaults(defineProps<ToastCloseProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toast.Close');
+}
 
 defineSlots<{
   default(props: { state: ToastCloseState }): unknown;

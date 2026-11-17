@@ -48,6 +48,7 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
@@ -83,6 +84,10 @@ const props = withDefaults(defineProps<SelectTriggerProps<Value>>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Trigger');
+}
 
 defineSlots<{
   default(props: { state: SelectTriggerState<Value> }): unknown;

@@ -27,6 +27,7 @@ export interface ToastActionProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
@@ -44,6 +45,10 @@ const props = withDefaults(defineProps<ToastActionProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toast.Action');
+}
 
 defineSlots<{
   default(props: { state: ToastActionState }): unknown;

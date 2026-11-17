@@ -64,6 +64,7 @@ export interface MenuSubmenuTriggerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onUpdated, shallowRef, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
@@ -165,6 +166,7 @@ const isDisabled = computed(
 );
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.SubmenuTrigger');
   const warnForDisabledElement = () => {
     const element = triggerElement.value;
     if (element && isElementDisabled(element) && !isDisabled.value) {

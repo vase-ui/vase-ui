@@ -45,6 +45,7 @@ export interface ComboboxClearProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import type { Component } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -75,6 +76,10 @@ const props = withDefaults(defineProps<ComboboxClearProps>(), {
   disabled: false,
   keepMounted: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Clear');
+}
 
 defineSlots<{
   /**

@@ -302,6 +302,12 @@ test('a correct record of an own component has no problem, with or without funct
   assert.deepEqual(validateOwnComponent(OWN_COMPONENT_FILE, record), []);
 });
 
+test('a utility record with functions and no parts has no problem', () => {
+  const record = makeOwnComponent();
+  delete record.parts;
+  assert.deepEqual(validateOwnComponent(OWN_COMPONENT_FILE, record), []);
+});
+
 const wrongOwnComponents: { name: string; change: (record: Json) => void; message: RegExp }[] = [
   {
     name: 'an unknown key',
@@ -325,11 +331,12 @@ const wrongOwnComponents: { name: string; change: (record: Json) => void; messag
     message: /^parity\/own\/sample\.json: needs the key "reason"\.$/,
   },
   {
-    name: 'a missing list of parts',
+    name: 'a record with neither parts nor functions',
     change: (record) => {
       delete record.parts;
+      delete record.functions;
     },
-    message: /^parity\/own\/sample\.json: needs the key "parts"\.$/,
+    message: /^parity\/own\/sample\.json: needs the key "parts" or the key "functions"\.$/,
   },
   {
     name: 'a standard with no link',

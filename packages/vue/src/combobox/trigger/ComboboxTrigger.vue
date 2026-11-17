@@ -54,6 +54,7 @@ export interface ComboboxTriggerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
@@ -90,6 +91,10 @@ const props = withDefaults(defineProps<ComboboxTriggerProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.Trigger');
+}
 
 defineSlots<{
   default(props: { state: ComboboxTriggerState }): unknown;

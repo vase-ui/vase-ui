@@ -40,6 +40,7 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
@@ -58,6 +59,10 @@ const props = withDefaults(defineProps<ToolbarInputProps>(), {
   disabled: false,
   focusableWhenDisabled: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toolbar.Input');
+}
 
 defineSlots<{
   render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, ToolbarInputState>;

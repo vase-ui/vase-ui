@@ -146,6 +146,7 @@ function createNestedSwipeProgressStore(): NestedSwipeProgressStore {
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
@@ -172,6 +173,10 @@ const props = withDefaults(defineProps<DrawerRootProps<Payload>>(), {
   snapPoint: undefined,
   defaultSnapPoint: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Root');
+}
 
 const emit = defineEmits<{
   /**

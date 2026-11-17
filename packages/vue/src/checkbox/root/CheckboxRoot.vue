@@ -123,6 +123,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
@@ -176,6 +177,10 @@ const props = withDefaults(defineProps<CheckboxRootProps>(), {
   readOnly: false,
   required: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Checkbox.Root');
+}
 
 const emit = defineEmits<{
   /**

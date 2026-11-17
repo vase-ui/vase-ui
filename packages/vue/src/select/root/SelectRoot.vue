@@ -156,6 +156,7 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 </script>
 
 <script setup lang="ts" generic="Value = never, Multiple extends boolean | undefined = false">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
@@ -213,6 +214,10 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   highlightItemOnHover: true,
   modal: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Root');
+}
 
 const emit = defineEmits<{
   /**

@@ -35,6 +35,7 @@ export interface DrawerTriggerState {
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useTemplateRef } from 'vue';
 import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -46,6 +47,10 @@ const props = withDefaults(defineProps<DrawerTriggerProps<Payload>>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Trigger');
+}
 
 defineSlots<{
   default(props: { state: DrawerTriggerState }): unknown;

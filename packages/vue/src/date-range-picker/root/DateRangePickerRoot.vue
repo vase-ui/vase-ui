@@ -151,6 +151,7 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef, useTemplateRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
@@ -173,6 +174,10 @@ const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
   readOnly: false,
   required: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Root');
+}
 
 const emit = defineEmits<{
   /**

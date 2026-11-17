@@ -38,6 +38,7 @@ export interface CalendarViewTriggerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { HTMLProps } from '../../internals/types';
@@ -53,6 +54,10 @@ const props = withDefaults(defineProps<CalendarViewTriggerProps>(), {
   view: 'year',
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.ViewTrigger');
+}
 
 defineSlots<{
   default(props: { state: CalendarViewTriggerState; text: string }): unknown;

@@ -70,6 +70,7 @@ export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroup
 </script>
 
 <script setup lang="ts" generic="Value extends string = any">
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `any`, that check accepts `(value: ('a' | 'b')[]) => void`.
 import { computed, provide } from 'vue';
@@ -93,6 +94,10 @@ const props = withDefaults(defineProps<ToggleGroupProps<Value>>(), {
   loopFocus: true,
   multiple: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('ToggleGroup');
+}
 
 const emit = defineEmits<{
   /**

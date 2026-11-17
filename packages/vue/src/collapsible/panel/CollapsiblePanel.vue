@@ -39,6 +39,7 @@ export interface CollapsiblePanelProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
 import { given } from '../../internals/givenAttributes';
@@ -64,6 +65,7 @@ defineSlots<{
 }>();
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Collapsible.Panel');
   // Only an explicit `keepMounted={false}` gets the warning, so the prop has no default.
   const warnWhenKeepMountedIsIgnored = () => {
     if (props.hiddenUntilFound && props.keepMounted === false) {

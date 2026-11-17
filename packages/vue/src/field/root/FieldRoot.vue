@@ -75,6 +75,7 @@ export interface FieldRootProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef, watch } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
@@ -96,6 +97,10 @@ const props = withDefaults(defineProps<FieldRootProps>(), {
   dirty: undefined,
   touched: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Field.Root', ['invalid']);
+}
 
 defineSlots<{
   default(props: { state: FieldRootState }): unknown;

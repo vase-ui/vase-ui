@@ -82,6 +82,7 @@ export type DialogRootChangeEventDetails = VaseUIChangeEventDetails<DialogRootCh
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderDialogRoot } from './useRenderDialogRoot';
 
 const props = withDefaults(defineProps<DialogRootProps<Payload>>(), {
@@ -93,6 +94,10 @@ const props = withDefaults(defineProps<DialogRootProps<Payload>>(), {
   triggerId: undefined,
   defaultTriggerId: null,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Root');
+}
 
 const emit = defineEmits<{
   /**

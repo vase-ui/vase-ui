@@ -27,6 +27,7 @@ export interface DialogCloseProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -42,6 +43,10 @@ const props = withDefaults(defineProps<DialogCloseProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Dialog.Close');
+}
 
 defineSlots<{
   default(props: { state: DialogCloseState }): unknown;

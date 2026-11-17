@@ -75,6 +75,7 @@ function createHoverEvent(type: 'mouseenter' | 'mousemove', currentTarget: HTMLE
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import {
   computed,
   nextTick,
@@ -134,6 +135,10 @@ const props = withDefaults(defineProps<NavigationMenuTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('NavigationMenu.Trigger');
+}
 
 defineSlots<{
   default(props: { state: NavigationMenuTriggerState }): unknown;

@@ -83,6 +83,7 @@ const rootStateAttributesMapping = {
 </script>
 
 <script setup lang="ts" generic="Value = any">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
@@ -125,6 +126,7 @@ defineSlots<{
 }>();
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Accordion.Root');
   const warnWhenKeepMountedIsIgnored = () => {
     if (props.hiddenUntilFound && props.keepMounted === false) {
       warn(

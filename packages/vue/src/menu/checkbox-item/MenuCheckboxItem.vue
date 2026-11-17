@@ -66,6 +66,7 @@ export type MenuCheckboxItemChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
@@ -91,6 +92,10 @@ const props = withDefaults(defineProps<MenuCheckboxItemProps>(), {
   disabled: false,
   closeOnClick: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.CheckboxItem');
+}
 
 const emit = defineEmits<{
   /**

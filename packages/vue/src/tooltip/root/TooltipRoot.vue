@@ -76,6 +76,7 @@ export type TooltipRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { onMounted, provide, watch } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { mergeProps } from '../../merge-props';
@@ -97,6 +98,10 @@ const props = withDefaults(defineProps<TooltipRootProps<Payload>>(), {
   triggerId: undefined,
   defaultTriggerId: null,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tooltip.Root');
+}
 
 const emit = defineEmits<{
   /**

@@ -66,6 +66,7 @@ export type PreviewCardRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { provide, watch } from 'vue';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
@@ -85,6 +86,10 @@ const props = withDefaults(defineProps<PreviewCardRootProps<Payload>>(), {
   triggerId: undefined,
   defaultTriggerId: null,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('PreviewCard.Root');
+}
 
 const emit = defineEmits<{
   /**

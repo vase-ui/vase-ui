@@ -65,6 +65,7 @@ export interface PopoverTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, shallowRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
@@ -97,6 +98,10 @@ const props = withDefaults(defineProps<PopoverTriggerProps<Payload>>(), {
   delay: 300,
   closeDelay: 0,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Trigger');
+}
 
 defineSlots<{
   default(props: { state: PopoverTriggerState }): unknown;

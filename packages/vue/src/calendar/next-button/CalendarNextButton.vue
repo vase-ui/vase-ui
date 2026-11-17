@@ -23,6 +23,7 @@ export interface CalendarNextButtonProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCalendarNavigationButton } from '../utils/useCalendarNavigationButton';
 
@@ -33,6 +34,10 @@ const props = withDefaults(defineProps<CalendarNextButtonProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.NextButton');
+}
 
 defineSlots<{
   default(props: { state: CalendarNextButtonState }): unknown;

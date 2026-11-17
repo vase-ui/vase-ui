@@ -23,6 +23,7 @@ export interface NumberFieldIncrementProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useNumberFieldStepperButton } from '../root/useNumberFieldStepperButton';
 
@@ -33,6 +34,10 @@ const props = withDefaults(defineProps<NumberFieldIncrementProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('NumberField.Increment');
+}
 
 defineSlots<{
   default(props: { state: NumberFieldIncrementState }): unknown;

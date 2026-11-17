@@ -40,6 +40,7 @@ export interface SelectPositionerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -78,6 +79,10 @@ const props = withDefaults(defineProps<SelectPositionerProps>(), {
   positionMethod: 'absolute',
   alignItemWithTrigger: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Select.Positioner');
+}
 
 defineSlots<{
   default(props: { state: SelectPositionerState }): unknown;

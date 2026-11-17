@@ -54,6 +54,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, inject, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
@@ -78,6 +79,10 @@ import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContex
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<MenuPopupProps>(), { as: 'div', finalFocus: undefined });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Popup');
+}
 
 defineSlots<{
   default(props: { state: MenuPopupState }): unknown;

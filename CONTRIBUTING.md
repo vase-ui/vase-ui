@@ -163,9 +163,11 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 | --- | --- |
 | `standard` | The links to the standards that the behavior follows, such as a pattern of the WAI-ARIA Authoring Practices Guide. Each link starts with `https://`. |
 | `reason` | Why Vase UI has the component. |
-| `parts` | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports. |
+| `parts` | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports. A record needs `parts` or `functions`. |
 | `functions` | Optional. The titles of the functions and classes that the entry point exports, such as `createHandle`. |
 | `types` | Optional. The paths of the types that the entry point exports, such as `useRender.Parameters`. |
+
+A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
 - The component is not a port, so no file of Base UI is its source. The sources are the standards in `standard`, the code and documentation of Vue, and the libraries that Vase UI depends on.
 - The API follows the [API convention](#api-convention), as in each other component. The entry point exports the four things of [Entry points](#entry-points).
@@ -461,6 +463,7 @@ Rules:
 
 ### Props
 
+- A part calls `useCastBooleanWarning` in development when an absent Boolean prop differs from `false`. Such a prop has the default `true` or `undefined`. The helper reports a wrapper that gives the part `false` because Vue cast an absent prop. Its `except` list holds props for which an absent value and `false` have the same effect. Add each new covered prop to [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare an optional prop as `x?: T | undefined`, as upstream does. A consumer that sets `exactOptionalPropertyTypes` can then pass `undefined`.
 - Upstream types some Boolean props with a generic parameter, such as `multiple?: Multiple | undefined`. Declare such a prop as `multiple?: (Multiple & boolean) | undefined`.
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
@@ -661,6 +664,8 @@ The project `vapor` of the tests checks the parts in a Vapor app. See [Where a t
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 
 `isInHeldBranch()` of `src/internals/useKeepAliveState.ts` reads `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. `useKeepAliveState` starts `isHeld` with the function, so a part compiled as a Vapor component is not held at a mount in a held branch. Each part of the package compiles as a virtual DOM component. Such a part below the `KeepAlive` of a Vapor component gets `true` while that `KeepAlive` holds it. A case of `src/utils/popups/portal/PortalHeldMount.test.tsx` shows this in the project `vapor`.
+
+`src/internals/callerProps.ts` reads `getCurrentInstance`. Vue has no public API for the props that a caller sets or the owner of a vnode. It reads `vnode.props`, `vnode.ctx`, `propsOptions`, `type.emits`, `type.__name`, `type.name` and the `_n` flag of a slot. Each read stays in that file. In a Vapor wrapper, `useForwardProps` warns in development and forwards each value other than `undefined`.
 
 ### Server render
 
@@ -1820,6 +1825,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 
 ### Test rules
 
+- A fixture that forwards an optional Boolean prop uses `useForwardProps`, or gives the prop the default `undefined`. A cast Boolean warning fails the test.
 - Use only the Vitest APIs: `expect`, the functions of `vi`, such as `vi.fn` and `vi.spyOn`, and the DOM matchers.
 - The DOM matchers are the matchers of `@testing-library/jest-dom`, as in Base UI. A ported assertion then has the same meaning.
 - A `.node.test` file has no DOM matchers. `test/setup.ts` loads them only in the browser projects, and it gives the reason.
@@ -2021,7 +2027,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
-- When a sample wrapper declares an optional Boolean prop and gives it to the part, set the default of that prop to `undefined`. Without that default, Vue changes an absent Boolean prop to `false`.
+- A sample wrapper forwards its props with `useForwardProps`, or gives each optional Boolean prop the default `undefined`. Vue otherwise changes an absent Boolean prop to `false`.
 - Compose two parts in a sample or a demo as the Base UI code does. Where Base UI gives `render` an element with no props, give its tag or its component to `as`. Where that element has props of its own, use the `#render` slot and bind `props`.
 - A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
 - The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6. Dates and times has no Base UI page, and its `order` is 7.

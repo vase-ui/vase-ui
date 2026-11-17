@@ -60,6 +60,7 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide } from 'vue';
 import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
@@ -87,6 +88,10 @@ const props = withDefaults(defineProps<RangeCalendarRootProps<Value>>(), {
   numberOfMonths: 1,
   showOutsideDays: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('RangeCalendar.Root');
+}
 
 const emit = defineEmits<{
   /**

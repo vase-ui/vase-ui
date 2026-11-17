@@ -157,6 +157,7 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
 import { error } from '../../common/error';
@@ -220,6 +221,7 @@ const swiping = computed(() => swipe?.swiping.value ?? false);
 const popupHeight = shallowRef(0);
 
 if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Drawer.Popup');
   onMounted(() => {
     if (swipe) {
       return;

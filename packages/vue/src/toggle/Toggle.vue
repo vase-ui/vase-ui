@@ -49,6 +49,7 @@ export type ToggleChangeEventDetails = VaseUIChangeEventDetails<ToggleChangeEven
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
@@ -71,6 +72,10 @@ const props = withDefaults(defineProps<ToggleProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toggle');
+}
 
 const emit = defineEmits<{
   /**

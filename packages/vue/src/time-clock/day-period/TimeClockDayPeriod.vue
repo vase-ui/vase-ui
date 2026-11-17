@@ -35,6 +35,7 @@ export interface TimeClockDayPeriodProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { dayPeriodText } from '../../internals/date-time/format';
@@ -52,6 +53,10 @@ const props = withDefaults(defineProps<TimeClockDayPeriodProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimeClock.DayPeriod');
+}
 
 defineSlots<{
   default(props: { state: TimeClockDayPeriodState }): unknown;

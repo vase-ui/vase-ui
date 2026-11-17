@@ -58,6 +58,7 @@ export interface PopoverPopupProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { computed, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
@@ -85,6 +86,10 @@ const props = withDefaults(defineProps<PopoverPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Popover.Popup');
+}
 
 defineSlots<{
   default(props: { state: PopoverPopupState }): unknown;

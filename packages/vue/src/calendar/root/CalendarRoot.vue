@@ -113,6 +113,7 @@ export type CalendarRootView = CalendarView;
     Multiple extends boolean | undefined = false
   "
 >
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide } from 'vue';
 import { useDaySelection } from '../../internals/date-time/calendar/daySelection';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
@@ -140,6 +141,10 @@ const props = withDefaults(defineProps<CalendarRootProps<Value, Multiple>>(), {
   defaultView: undefined,
   visibleYears: 12,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.Root');
+}
 
 const emit = defineEmits<{
   /**

@@ -21,10 +21,15 @@ function runBin(name: string, args: string[]): void {
   execFileSync(join('node_modules', '.bin', name), args, { stdio: 'inherit' });
 }
 
-async function bundleConsumerFile(file: string): Promise<string> {
+async function bundleConsumerFile(
+  file: string,
+  mode: 'production' | 'development' = 'production',
+): Promise<string> {
   const result = await bundle({
     configFile: false,
     logLevel: 'silent',
+    mode,
+    define: { 'process.env.NODE_ENV': JSON.stringify(mode) },
     root: CONSUMER_DIRECTORY,
     build: {
       write: false,
@@ -179,6 +184,11 @@ async function main(): Promise<void> {
   const singlePart = await bundleConsumerFile('singlePart.ts');
   const multiPartRoot = await bundleConsumerFile('multiPartRoot.ts');
   const scriptedPart = await bundleConsumerFile('scriptedPart.ts');
+  const castBoolean = await bundleConsumerFile('castBooleanWarning.ts');
+  const castBooleanDevelopment = await bundleConsumerFile('castBooleanWarning.ts', 'development');
+  expectContent('castBooleanWarning.ts (development)', castBooleanDevelopment, 'did not set', true);
+  expectContent('castBooleanWarning.ts (production)', castBoolean, 'did not set', false);
+  expectContent('castBooleanWarning.ts (production)', castBoolean, 'useCastBooleanWarning', false);
   expectContent('singlePart.ts', singlePart, 'data-single-part', true);
   expectContent('singlePart.ts', singlePart, 'data-multi-part', false);
   expectContent('multiPartRoot.ts', multiPartRoot, 'data-multi-part-root', true);

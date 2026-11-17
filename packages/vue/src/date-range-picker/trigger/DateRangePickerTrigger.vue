@@ -17,6 +17,7 @@ export interface DateRangePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
 import { given } from '../../internals/givenAttributes';
 import { formatRangeText } from '../../internals/date-time/calendar/formatText';
@@ -35,6 +36,10 @@ const props = withDefaults(defineProps<DateRangePickerTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Trigger');
+}
 
 defineSlots<{
   default(props: { state: DateRangePickerTriggerState }): unknown;

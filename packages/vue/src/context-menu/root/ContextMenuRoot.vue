@@ -22,6 +22,7 @@ export type ContextMenuRootChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { provide, shallowRef, useTemplateRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import MenuRoot from '../../menu/root/MenuRoot.vue';
@@ -37,6 +38,10 @@ const props = withDefaults(defineProps<ContextMenuRootProps>(), {
   disabled: false,
   orientation: 'vertical',
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('ContextMenu.Root');
+}
 
 const emit = defineEmits<{
   /**

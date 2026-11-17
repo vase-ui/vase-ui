@@ -27,6 +27,7 @@ export interface ComboboxChipRemoveProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, toRaw } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { findItemIndex } from '../../internals/itemEquality';
@@ -46,6 +47,10 @@ const props = withDefaults(defineProps<ComboboxChipRemoveProps>(), {
   disabled: false,
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Combobox.ChipRemove');
+}
 
 defineSlots<{
   default(props: { state: ComboboxChipRemoveState }): unknown;

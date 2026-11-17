@@ -32,6 +32,7 @@ export interface ToastPositionerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { isElement } from '@floating-ui/utils/dom';
 import { computed, provide, shallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
@@ -52,6 +53,10 @@ const props = withDefaults(defineProps<ToastPositionerProps>(), {
   sticky: undefined,
   disableAnchorTracking: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Toast.Positioner');
+}
 
 defineSlots<{
   default(props: { state: ToastPositionerState }): unknown;

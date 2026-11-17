@@ -165,6 +165,7 @@ export type AutocompleteRootHighlightEventDetails = AriaCombobox.HighlightEventD
 </script>
 
 <script setup lang="ts" generic="Items extends readonly any[] = never">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 // vue-tsc resolves `Items` before it checks a listener of a template.
 // With the default `never`, `itemHighlighted` accepts a typed parameter and keeps `undefined`.
 import { computed, nextTick, shallowRef, watch } from 'vue';
@@ -198,6 +199,10 @@ const props = withDefaults(defineProps<AutocompleteRootSetupProps<Items>>(), {
   submitOnItemClick: false,
   filter: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Autocomplete.Root');
+}
 
 const emit = defineEmits<{
   /**

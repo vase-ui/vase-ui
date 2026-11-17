@@ -24,6 +24,7 @@ export interface DateRangePickerPopupProps extends PopoverPopupProps {
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useTemplateRef } from 'vue';
 import { usePickerInitialFocus } from '../../internals/date-time/picker/usePickerPopup';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -38,6 +39,10 @@ const props = withDefaults(defineProps<DateRangePickerPopupProps>(), {
   initialFocus: undefined,
   finalFocus: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateRangePicker.Popup');
+}
 
 defineSlots<{
   default(props: { state: DateRangePickerPopupState }): unknown;

@@ -72,6 +72,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, shallowRef, useSlots, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -106,6 +107,10 @@ const props = withDefaults(defineProps<TooltipTriggerProps<Payload>>(), {
   delay: undefined,
   closeDelay: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Tooltip.Trigger');
+}
 
 defineSlots<{
   default(props: { state: TooltipTriggerState }): unknown;

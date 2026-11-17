@@ -49,6 +49,7 @@ export type CollapsibleRootChangeEventDetails =
 <script setup lang="ts">
 import { computed, provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { CollapsibleRootContext } from './CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from './stateAttributesMapping';
@@ -62,6 +63,10 @@ const props = withDefaults(defineProps<CollapsibleRootProps>(), {
   defaultOpen: false,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Collapsible.Root');
+}
 
 const emit = defineEmits<{
   /**

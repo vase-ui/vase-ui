@@ -46,6 +46,7 @@ export interface MenuItemProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -63,6 +64,10 @@ const props = withDefaults(defineProps<MenuItemProps>(), {
   disabled: false,
   closeOnClick: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Item');
+}
 
 defineSlots<{
   default(props: { state: MenuItemState }): unknown;

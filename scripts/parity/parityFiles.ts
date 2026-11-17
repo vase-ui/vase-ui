@@ -76,8 +76,8 @@ export interface OwnComponent {
   standard: string[];
   /** Why Vase UI has the component. */
   reason: string;
-  /** The titles of the parts, such as `Root`. */
-  parts: string[];
+  /** The titles of the parts, such as `Root`. A utility has none. */
+  parts?: string[];
   /** The titles of the functions and classes, such as `createHandle`. */
   functions?: string[];
   /** The paths of the types, such as `useRender.Parameters`. */
@@ -423,9 +423,12 @@ const ownComponent = withRule<OwnComponent>(
       functions: array(nonEmptyString, { nonEmpty: true }),
       types: array(nonEmptyString, { nonEmpty: true }),
     },
-    ['functions', 'types'],
+    ['parts', 'functions', 'types'],
   ),
-  (component, _place, report) => {
+  (component, place, report) => {
+    if (!component.parts && !component.functions) {
+      report(place, 'needs the key "parts" or the key "functions".');
+    }
     for (const key of ['standard', 'parts', 'functions', 'types'] as const) {
       checkDuplicates(component[key] ?? [], (item) => item, key, report);
     }

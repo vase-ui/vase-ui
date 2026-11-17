@@ -26,6 +26,7 @@ export interface CollapsibleTriggerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
@@ -43,6 +44,10 @@ const props = withDefaults(defineProps<CollapsibleTriggerProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Collapsible.Trigger');
+}
 
 defineSlots<{
   default(props: { state: CollapsibleTriggerState }): unknown;

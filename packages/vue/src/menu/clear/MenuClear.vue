@@ -23,6 +23,7 @@ export interface MenuClearProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFilterDropdownClear } from '../../filter-dropdown/clear/FilterDropdownClear';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -35,6 +36,10 @@ const props = withDefaults(defineProps<MenuClearProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Clear');
+}
 
 defineSlots<{
   default(props: { state: MenuClearState }): unknown;

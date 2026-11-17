@@ -24,6 +24,7 @@ export interface DateFieldClearProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
@@ -40,6 +41,10 @@ const props = withDefaults(defineProps<DateFieldClearProps>(), {
   nativeButton: true,
   disabled: false,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('DateField.Clear');
+}
 
 defineSlots<{
   /**

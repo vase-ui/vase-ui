@@ -63,6 +63,7 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -110,6 +111,10 @@ const props = withDefaults(defineProps<MenuTriggerProps<Payload>>(), {
   closeDelay: 0,
   openOnHover: undefined,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Menu.Trigger');
+}
 
 defineSlots<{
   default(props: { state: MenuTriggerState }): unknown;

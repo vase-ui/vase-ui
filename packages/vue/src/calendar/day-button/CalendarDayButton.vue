@@ -23,6 +23,7 @@ export interface CalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
 import { useCalendarDayContext } from '../day/CalendarDayContext';
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<CalendarDayButtonProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('Calendar.DayButton');
+}
 
 defineSlots<{
   default(props: { state: CalendarDayButtonState; text: string }): unknown;

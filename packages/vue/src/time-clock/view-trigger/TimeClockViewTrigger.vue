@@ -29,6 +29,7 @@ export interface TimeClockViewTriggerProps
 </script>
 
 <script setup lang="ts">
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrating } from '../../common/hydration';
@@ -47,6 +48,10 @@ const props = withDefaults(defineProps<TimeClockViewTriggerProps>(), {
   as: 'button',
   nativeButton: true,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  useCastBooleanWarning('TimeClock.ViewTrigger');
+}
 
 defineSlots<{
   default(props: { state: TimeClockViewTriggerState }): unknown;
