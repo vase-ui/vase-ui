@@ -42,6 +42,8 @@ The distinction between `undefined` and `false` matters in three cases.
 - `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
 - `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
 - `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
+- `Calendar.Root`, `RangeCalendar.Root`, `DatePicker.Calendar` and `DateRangePicker.Calendar`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
+- `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
 
 `Field.Root` treats `invalid` the same when it is absent or `false`.
 
@@ -61,7 +63,7 @@ The state stays `false` until the caller updates the prop. Handle change events 
 
 - `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
 - `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
-- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots.
+- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots, and `Menu.SubmenuRoot`.
 - `openOnInputClick` on `Combobox.Root`.
 - `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
 - `openOnHover` on `Menu.SubmenuTrigger`.
@@ -70,6 +72,7 @@ The state stays `false` until the caller updates the prop. Handle change events 
 - `pushPanels` on `Resizable.Root`.
 - `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
 - `nativeLabel` on `Field.Label`.
+- `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 
 ## Composing multiple components
