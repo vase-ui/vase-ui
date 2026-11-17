@@ -35,8 +35,10 @@ export interface TimeClockDayPeriodProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
+import { activeElement, contains } from '../../common/shadowDom';
 import { dayPeriodText } from '../../internals/date-time/format';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -105,6 +107,19 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       getButtonProps,
     ];
   },
+});
+
+// When Vue removes a focused element, the browser moves the focus to `<body>`. The face takes the
+// focus before the update, so a popup finds no lost focus to restore.
+watch(isTwelveHour, (twelveHour) => {
+  const dayPeriodElement = element.value;
+  if (
+    !twelveHour &&
+    dayPeriodElement !== null &&
+    contains(dayPeriodElement, activeElement(ownerDocument(dayPeriodElement)))
+  ) {
+    root.inputElement.value?.focus();
+  }
 });
 
 defineExpose({ element });
