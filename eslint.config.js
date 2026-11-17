@@ -27,6 +27,8 @@ const MESSAGES = {
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
   refByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
+  inputRefByName:
+    'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
     'Only a `<script setup>` SFC compiles to Vapor mode. Use `<script setup lang="ts">`.',
   domGlobal:
@@ -314,6 +316,12 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector:
       "VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument]) CallExpression[callee.name='elementProps']):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
     message: MESSAGES.refByName,
+  },
+  {
+    // The rule knows the input by its tag.
+    selector:
+      "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
+    message: MESSAGES.inputRefByName,
   },
   {
     // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.
