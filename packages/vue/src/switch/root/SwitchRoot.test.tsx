@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, createApp, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  createApp,
+  createSSRApp,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  shallowRef,
+} from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
@@ -121,6 +130,21 @@ describe('<Switch.Root />', () => {
       await nextTick();
 
       expect(control).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('changes its state for a click in the `onMounted` hook of a child', async () => {
+      const ClickParentOnMount = defineComponent(() => {
+        const element = shallowRef<HTMLElement | null>(null);
+        onMounted(() => element.value?.parentElement?.click());
+        return () => <span ref={element} />;
+      });
+      await render(
+        <Switch.Root>
+          <ClickParentOnMount />
+        </Switch.Root>,
+      );
+
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
     });
 
     it('should change its state when clicked', async () => {

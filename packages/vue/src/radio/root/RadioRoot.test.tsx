@@ -1,6 +1,6 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, shallowRef } from 'vue';
+import { createApp, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -12,11 +12,13 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrateAfter,
+  installPartsInterop,
   mockPageBeforeLoad,
   removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import RadioGroupBeforeHydration from '../../radio-group/RadioGroupBeforeHydration.test.vue';
@@ -216,6 +218,82 @@ describe('<Radio.Root />', () => {
     const radio = screen.getByRole('radio');
     expect(radio).not.toHaveAttribute('aria-label');
     expect(radio).toHaveAccessibleName('Apple');
+  });
+
+  describe('interactions', () => {
+    it('tolerates imperative interaction in its ref callback before the hidden input mounts', async () => {
+      let inputAtCall: Element | null | undefined;
+      let calls = 0;
+      const App = defineComponent(() => {
+        return () => (
+          <RadioGroup>
+            <Radio.Root
+              value="a"
+              v-slots={{
+                render: ({ props }: { props: Record<string, any> }) => (
+                  <span
+                    {...props}
+                    ref={(element: any) => {
+                      props.ref(element);
+                      if (element && calls === 0) {
+                        calls += 1;
+                        inputAtCall = element.parentElement.querySelector('input');
+                        element.focus();
+                        element.blur();
+                        element.click();
+                      }
+                    }}
+                  />
+                ),
+              }}
+            />
+          </RadioGroup>
+        );
+      });
+      await render(<App />);
+      expect(inputAtCall).toBe(null);
+      expect(screen.getByRole('radio')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('changes its state after a mount in a detached container', async () => {
+      const container = document.createElement('div');
+      const app = installPartsInterop(
+        createApp({
+          render: () => (
+            <RadioGroup>
+              <Radio.Root value="a" />
+            </RadioGroup>
+          ),
+        }),
+      );
+      onTestFinished(() => app.unmount());
+      await waitForLaterMillisecond(() => app.mount(container));
+      const control = within(container).getByRole('radio');
+      expect(control.isConnected).toBe(false);
+      expect(control).toHaveAttribute('aria-checked', 'false');
+
+      control.click();
+      await nextTick();
+
+      expect(control).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('changes its state for a click in the `onMounted` hook of a child', async () => {
+      const ClickParentOnMount = defineComponent(() => {
+        const element = shallowRef<HTMLElement | null>(null);
+        onMounted(() => element.value?.parentElement?.click());
+        return () => <span ref={element} />;
+      });
+      await render(
+        <RadioGroup>
+          <Radio.Root value="a">
+            <ClickParentOnMount />
+          </Radio.Root>
+        </RadioGroup>,
+      );
+
+      expect(screen.getByRole('radio')).toHaveAttribute('aria-checked', 'true');
+    });
   });
 
   describe('prop: onClick', () => {

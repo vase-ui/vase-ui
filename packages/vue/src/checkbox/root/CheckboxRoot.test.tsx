@@ -275,6 +275,21 @@ describe('<Checkbox.Root />', () => {
       expect(control).toHaveAttribute('aria-checked', 'true');
     });
 
+    it('changes its state for a click in the `onMounted` hook of a child', async () => {
+      const ClickParentOnMount = defineComponent(() => {
+        const element = shallowRef<HTMLElement | null>(null);
+        onMounted(() => element.value?.parentElement?.click());
+        return () => <span ref={element} />;
+      });
+      await render(
+        <Checkbox.Root>
+          <ClickParentOnMount />
+        </Checkbox.Root>,
+      );
+
+      expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+    });
+
     it('should change its state when clicked', async () => {
       await render(<Checkbox.Root />);
       const [checkbox] = screen.getAllByRole('checkbox');

@@ -105,7 +105,7 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
-import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
+import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -114,6 +114,7 @@ import { useFieldInput, useRegisterFieldControl } from '../../internals/field-re
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
+import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -129,7 +130,6 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { stateAttributesMapping } from '../stateAttributesMapping';
 import { SwitchRootContext } from './SwitchRootContext';
 
@@ -185,7 +185,6 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const isHydrated = useIsHydrated();
 const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
@@ -398,15 +397,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
 
         event.preventDefault();
 
-        // In a part compiled as a Vapor component, the input has its `ref` when a `ref` callback
-        // of the consumer gets the element. A click in that callback must change nothing, as in
-        // Base UI and in a virtual DOM part, where the input does not exist yet.
-        const input = inputElement.value;
-        if (!isHydrated.value || !input) {
-          return;
-        }
-
-        dispatchClickWithModifiers(input, event);
+        forwardClickToInput(inputElement.value, event);
       },
     },
     attrs,
