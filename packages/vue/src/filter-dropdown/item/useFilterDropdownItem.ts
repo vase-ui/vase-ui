@@ -37,9 +37,12 @@ export interface UseFilterDropdownItemReturnValue {
    * The first text after the element goes is a baseline. The text of the element stays the text of
    * the item until a later text differs from that baseline. An item with a `label` whose slot needs
    * a mount gives no text while it is hidden. When that `label` becomes `undefined`, the first text
-   * is the text of the item.
+   * of the mount is the text of the item.
+   *
+   * `mounted` is `true` when the text is the text of a mount of the slot, and `false` when it is
+   * the text of vnodes.
    */
-  setHiddenText: (text: string) => void;
+  setHiddenText: (text: string, mounted: boolean) => void;
 }
 
 /**
@@ -74,7 +77,7 @@ export function useFilterDropdownItem(
   // The text of the slot that the hidden item last gave, to tell whether it changed.
   let hiddenText: string | undefined;
   // `true` after the `label` goes from a hidden item that gave no slot text. The content can have
-  // changed with no read since the element went, so the next slot text is not a baseline.
+  // changed with no read since the element went, so the first text of a mount is not a baseline.
   let renderedTextIsOld = false;
 
   const matched = computed(() => store.select('isItemVisible', itemId));
@@ -155,12 +158,13 @@ export function useFilterDropdownItem(
     },
   );
 
-  function setHiddenText(text: string) {
+  function setHiddenText(text: string, mounted: boolean) {
     const previousText = hiddenText;
     hiddenText = text;
     // The first text after the element goes away is only a baseline: the cached text of the
-    // element wins until the slot text changes.
-    const isBaseline = previousText === undefined && !renderedTextIsOld;
+    // element wins until the slot text changes. The text of vnodes is always such a baseline,
+    // because the vnode of a component has no text.
+    const isBaseline = previousText === undefined && !(renderedTextIsOld && mounted);
     renderedTextIsOld = false;
     if (isBaseline || text === previousText) {
       return;

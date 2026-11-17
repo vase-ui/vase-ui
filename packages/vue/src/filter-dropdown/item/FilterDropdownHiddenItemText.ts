@@ -65,7 +65,11 @@ function slotText(node: unknown): string | undefined {
 export const FilterDropdownHiddenItemText = defineComponent({
   name: 'FilterDropdownHiddenItemText',
   props: {
-    setText: { type: Function as PropType<(text: string) => void>, required: true },
+    /** Takes the text, and whether it is the text of a mount of the slot. */
+    setText: {
+      type: Function as PropType<(text: string, mounted: boolean) => void>,
+      required: true,
+    },
     /** The `label` prop of the item. */
     label: { type: String, default: undefined },
   },
@@ -83,7 +87,7 @@ export const FilterDropdownHiddenItemText = defineComponent({
     function giveText() {
       if (text !== undefined) {
         stopObserver();
-        props.setText(text);
+        props.setText(text, false);
         return;
       }
       const element = mountElement;
@@ -93,10 +97,10 @@ export const FilterDropdownHiddenItemText = defineComponent({
       }
       if (observer === undefined) {
         // A Vapor slot changes its nodes with no render of this component.
-        observer = new MutationObserver(() => props.setText(element.textContent ?? ''));
+        observer = new MutationObserver(() => props.setText(element.textContent ?? '', true));
         observer.observe(element, { subtree: true, childList: true, characterData: true });
       }
-      props.setText(element.textContent ?? '');
+      props.setText(element.textContent ?? '', true);
     }
 
     onMounted(giveText);

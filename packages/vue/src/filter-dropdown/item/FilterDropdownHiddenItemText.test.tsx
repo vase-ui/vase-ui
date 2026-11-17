@@ -123,4 +123,22 @@ describe.runIf(isVaporApp)('VUE-129: the slot of a Vapor component in a hidden f
 
     expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeVisible();
   });
+
+  it('keeps the text of the element when the label goes in the flush that hides the item', async () => {
+    // Each mount of the content renders another text, so the case can tell the two texts apart.
+    let mounts = 0;
+    const MountNumber = defineComponent(() => {
+      mounts += 1;
+      const text = `Mount ${mounts}`;
+      return () => text;
+    });
+    const { setProps } = await renderMenu({ content: MountNumber, itemLabel: 'Rename' });
+    expect(screen.getByRole('menuitem', { name: 'Mount 1' })).toBeVisible();
+
+    await setProps({ value: 'del', itemLabel: undefined });
+    await setProps({ value: 'mount 2', itemLabel: undefined });
+
+    expect(screen.queryByRole('menuitem')).toBe(null);
+    expect(mounts).toBe(2);
+  });
 });

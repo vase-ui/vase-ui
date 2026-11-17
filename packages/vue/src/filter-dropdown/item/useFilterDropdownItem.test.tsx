@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, shallowRef, watch } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import Item from '../../../test/fixtures/FilterDropdownItemPart.vue';
@@ -222,24 +222,38 @@ describe('useFilterDropdownItem', () => {
     expect(screen.queryByRole('menuitem')).toBe(null);
   });
 
-  it('VUE-129: keeps the rendered text when the label goes in the flush that hides the item', async () => {
+  it('VUE-129: keeps the rendered text when the label goes after the render that hides the item', async () => {
     const query = shallowRef('');
     const label = shallowRef<string | undefined>('Canada');
     const Translated = defineComponent(() => () => 'Kanada');
-    await render(() => (
-      <TestFilterDropdownRoot value={query.value}>
-        <Item label={label.value}>
-          <Translated />
-        </Item>
-        <Item>Mexico</Item>
-      </TestFilterDropdownRoot>
-    ));
+    const item = shallowRef<{ element: HTMLElement | null } | null>(null);
+    // The watcher runs in the flush that hides the item, after the render of the item and before
+    // the hidden item gives its first text.
+    const App = defineComponent(() => {
+      watch(
+        () => item.value?.element,
+        (element) => {
+          if (element == null) {
+            label.value = undefined;
+          }
+        },
+      );
+      return () => (
+        <TestFilterDropdownRoot value={query.value}>
+          <Item ref={item} label={label.value}>
+            <Translated />
+          </Item>
+          <Item>Mexico</Item>
+        </TestFilterDropdownRoot>
+      );
+    });
+    await render(<App />);
     await flushMicrotasks();
     expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
 
-    label.value = undefined;
     query.value = 'mex';
     await flushMicrotasks();
+    expect(label.value).toBe(undefined);
     expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
 
     query.value = 'kan';
