@@ -6,11 +6,11 @@ Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section 
 
 Mathematic uses AI agents to maintain this repository. We write all of the code. GitHub lets only collaborators open a pull request.
 
-- Report a bug in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs). Give the versions of `@vase-ui/vue` and Vue. Name the browser, its version and the operating system. Give the component and the steps that show the bug. Say what you expect and what happens. Include a reproduction if you can.
+- Report a bug in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs). Give the versions, the browser and the steps. Include a reproduction if you can.
 - Request a change or a new feature in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas).
 - Ask a question in [Q&A](https://github.com/vase-ui/vase-ui/discussions/new?category=q-a).
 
-An AI agent reads each new discussion in Bugs and Ideas. For a bug, it first writes a test that fails. It then makes the fix in a pull request that links to the discussion. It answers in the discussion. We review each pull request before it merges. We publish package fixes in releases. We publish site fixes when we deploy the site.
+An AI agent reads each new discussion in Bugs and Ideas. See [Contributing](https://vase-ui.com/contributing) for the full report and response process.
 
 If Base UI has the same bug, you can also report it to [Base UI](https://github.com/mui/base-ui). Vase UI includes every improvement of a Base UI release within two weeks.
 
