@@ -431,6 +431,26 @@ describe('useAriaLabelledBy', () => {
       expect(control).toHaveAttribute('aria-labelledby', 'a-label');
     });
 
+    it('names the control after the consumer attaches a tree that already has its `for` label', async () => {
+      const container = document.createElement('div');
+      onTestFinished(() => container.remove());
+      await render(
+        <Teleport to={container}>
+          <label for="a">Name</label>
+          <div>
+            <HiddenInputControl id="a" data-testid="control" />
+          </div>
+        </Teleport>,
+      );
+      const control = within(container).getByTestId('control');
+      expect(control.getRootNode()).toBe(container);
+
+      document.body.append(container);
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'a-label');
+    });
+
     it('names a control that mounted in a tree outside the document with a label that appears in that tree after the consumer attaches it', async () => {
       const container = document.createElement('div');
       const showLabel = shallowRef(false);
