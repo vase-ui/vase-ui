@@ -596,3 +596,10 @@
 .dark [data-vase-ui-portal] [class*='_DangerButton_']:active:not([data-disabled]) {
   color: oklch(80.8% 0.114 19.571deg);
 }
+
+/* The Forms demos of Base UI give the URL line of an option `whitespace-nowrap`. The list is as
+   wide as its input, and the URL is wider than a list of `16rem`. This rule lets that text wrap. */
+[data-vase-ui-portal] [role='option'] [class~='whitespace-nowrap'] {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
