@@ -1,17 +1,12 @@
 import { screen } from '../queries';
 import { describe, expect, it, vi } from 'vitest';
-import type { Component, Slots, VNode } from 'vue';
+import type { Component, VNode } from 'vue';
 import type { VaseUiConformanceTestsOptions } from '../describeConformance';
 import { isVaporApp } from '../testApp';
 import VaporConsumer from './VaporConsumer.vue';
+import { contentOf } from './utils';
 
 type ComponentWithElement = { element: Element | null };
-
-/** The default slot of the vnode as a component that a template can render. */
-function contentOf({ children }: VNode): Component | undefined {
-  const slot = (children as Slots | null)?.default;
-  return slot && (() => slot());
-}
 
 export function testVaporConsumer(element: VNode, getOptions: () => VaseUiConformanceTestsOptions) {
   // Only the project `vapor` mounts the test in an app that can render a Vapor component.

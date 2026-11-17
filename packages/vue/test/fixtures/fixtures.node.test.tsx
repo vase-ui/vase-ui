@@ -65,22 +65,22 @@ describe('fixture parts on a server', () => {
     {
       name: 'a closed panel that is kept mounted is hidden',
       props: { open: false, keepMounted: true },
-      html: '<!--[--><div hidden><!--[--><!--]--></div><!--]-->',
+      html: '<div hidden><!--[--><!--]--></div>',
     },
     {
       name: 'an open panel has no transition attribute',
       props: { open: true },
-      html: '<!--[--><div data-open><!--[--><!--]--></div><!--]-->',
+      html: '<div data-open><!--[--><!--]--></div>',
     },
     {
       name: 'an open panel with animateInitialOpen has the starting attribute',
       props: { open: true, animateInitialOpen: true },
-      html: '<!--[--><div data-open data-starting-style><!--[--><!--]--></div><!--]-->',
+      html: '<div data-open data-starting-style><!--[--><!--]--></div>',
     },
     {
       name: 'an open panel with the idle state has no transition attribute',
       props: { open: true, enableIdleState: true },
-      html: '<!--[--><div data-open><!--[--><!--]--></div><!--]-->',
+      html: '<div data-open><!--[--><!--]--></div>',
     },
   ])('renders AnimatedPanel: $name', async ({ props, html }) => {
     expect(await renderToString(<AnimatedPanel {...props} />)).toBe(html);

@@ -17,6 +17,7 @@ describe('<PreviewCard.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<PreviewCard.Portal keepMounted />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<PreviewCard.Root open>{node}</PreviewCard.Root>);

@@ -67,10 +67,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="!alignItemWithTriggerActive">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot
+    v-if="!alignItemWithTriggerActive && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
+  <component :is="as" v-else-if="!alignItemWithTriggerActive" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

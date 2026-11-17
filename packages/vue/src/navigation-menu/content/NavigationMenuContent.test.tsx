@@ -16,6 +16,7 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { allowTopLevelViewportWarning } from '../utils/test-utils';
+import NavigationMenuContentScoped from './NavigationMenuContentScoped.test.vue';
 
 // The root waits for the animations of its popup element before it unmounts the popup. This
 // component gives the root an element to wait for.
@@ -87,6 +88,16 @@ describe('<NavigationMenu.Content />', () => {
   beforeEach(allowTopLevelViewportWarning);
 
   const { render } = createRenderer();
+
+  describe('VUE-60: the content that its item keeps has one root node', () => {
+    it('gives the scope id of the consumer to the hidden content in its item', async () => {
+      await render(<NavigationMenuContentScoped />);
+
+      const content = screen.getByTestId('content');
+      expect(content).toHaveAttribute('hidden');
+      expect(getComputedStyle(content).outlineStyle).toBe('dashed');
+    });
+  });
 
   heldMountListTests({
     render,

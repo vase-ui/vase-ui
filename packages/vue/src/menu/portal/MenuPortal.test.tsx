@@ -31,6 +31,7 @@ describe('<Menu.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Menu.Portal keepMounted />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(<Menu.Root>{node}</Menu.Root>);

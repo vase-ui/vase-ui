@@ -12,6 +12,7 @@ describe('<NavigationMenu.Portal />', () => {
 
   // The portal renders its element in the flush after the mount.
   describeConformance(<NavigationMenu.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<NavigationMenu.Root value="item">{node}</NavigationMenu.Root>);

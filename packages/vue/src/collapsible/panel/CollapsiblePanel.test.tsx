@@ -22,6 +22,7 @@ import {
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
+import CollapsiblePanelScoped from './CollapsiblePanelScoped.test.vue';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -122,6 +123,56 @@ describe('<Collapsible.Panel />', () => {
       return render(<Collapsible.Root defaultOpen>{node}</Collapsible.Root>);
     },
   }));
+
+  describe('VUE-60: the panel has one root node', () => {
+    const FIXTURE = 'src/collapsible/panel/CollapsiblePanelScoped.test.vue';
+
+    it('gives the scope id of the consumer to an element that mounts after the part', async () => {
+      await render(<CollapsiblePanelScoped />);
+      expect(screen.queryByTestId('panel')).toBe(null);
+
+      await fireEvent.click(screen.getByTestId('trigger'));
+
+      expect(getComputedStyle(screen.getByTestId('panel')).outlineStyle).toBe('dashed');
+    });
+
+    it('hides its element with v-show', async () => {
+      const shown = shallowRef(true);
+      await render(() => <CollapsiblePanelScoped defaultOpen shown={shown.value} />);
+      const panel = screen.getByTestId('panel');
+      expect(getComputedStyle(panel).display).toBe('block');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(getComputedStyle(panel).display).toBe('none');
+    });
+
+    it('renders in a Transition', async () => {
+      // Vue warns when a `Transition` contains a part with more than one root node.
+      // The test setup fails on that warning.
+      await render(<CollapsiblePanelScoped defaultOpen inTransition />);
+
+      expect(screen.getByTestId('panel')).toBeVisible();
+    });
+
+    it('has the scope id of the consumer in the server HTML, and keeps it after the hydration', async () => {
+      const props = { defaultOpen: true };
+      const serverHtml = await renderOnServer(FIXTURE, props);
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      const serverPanel = template.content.querySelector('[data-testid="panel"]')!;
+      expect(
+        serverPanel.getAttributeNames().filter((name) => name.startsWith('data-v-')),
+      ).toHaveLength(1);
+
+      const { container } = await hydrate(CollapsiblePanelScoped, { serverHtml, props });
+
+      expect(getComputedStyle(container.querySelector('[data-testid="panel"]')!).outlineStyle).toBe(
+        'dashed',
+      );
+    });
+  });
 
   it('warns when hiddenUntilFound overrides keepMounted={false}', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});

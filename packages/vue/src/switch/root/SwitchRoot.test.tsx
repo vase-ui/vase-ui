@@ -49,6 +49,7 @@ describe('<Switch.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Switch.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLSpanElement,
     testRenderPropWith: 'span',
     button: true,

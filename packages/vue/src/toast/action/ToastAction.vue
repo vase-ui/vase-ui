@@ -86,10 +86,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="rendered">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <ToastActionChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ToastActionChildren>
-    </component>
-  </template>
+  <slot v-if="rendered && $slots.render" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
+  <component :is="as" v-else-if="rendered" v-bind="elementProps()" :ref="setRef">
+    <ToastActionChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ToastActionChildren>
+  </component>
 </template>

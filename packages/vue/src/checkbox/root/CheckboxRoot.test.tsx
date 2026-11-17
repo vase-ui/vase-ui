@@ -51,6 +51,7 @@ describe('<Checkbox.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Checkbox.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLSpanElement,
     testRenderPropWith: 'span',
     button: true,

@@ -60,6 +60,7 @@ describe('FloatingPortal', () => {
   const { render } = createRenderer();
 
   describeConformance(<FloatingPortal />, () => ({
+    elementIsRoot: false,
     render,
     refInstanceof: window.HTMLDivElement,
   }));

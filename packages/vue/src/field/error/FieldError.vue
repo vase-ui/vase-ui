@@ -168,10 +168,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="mounted">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="FieldErrorChildren" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <FieldErrorChildren><template v-if="$slots.default" #default><slot :state="state" /></template></FieldErrorChildren>
-    </component>
-  </template>
+  <slot v-if="mounted && $slots.render" name="render" :props="elementProps()" :state="state" :children="FieldErrorChildren" />
+  <component :is="as" v-else-if="mounted" v-bind="elementProps()" :ref="setRef">
+    <FieldErrorChildren><template v-if="$slots.default" #default><slot :state="state" /></template></FieldErrorChildren>
+  </component>
 </template>

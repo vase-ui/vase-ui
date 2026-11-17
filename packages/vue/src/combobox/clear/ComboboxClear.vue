@@ -202,10 +202,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="keepMounted || mounted">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxClearChildren" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <ComboboxClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxClearChildren>
-    </component>
-  </template>
+  <slot v-if="(keepMounted || mounted) && $slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxClearChildren" />
+  <component :is="as" v-else-if="keepMounted || mounted" v-bind="elementProps()" :ref="setRef">
+    <ComboboxClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxClearChildren>
+  </component>
 </template>
