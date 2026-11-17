@@ -6,7 +6,8 @@ interface TreeObserver {
   callbacks: Set<() => void>;
 }
 
-// Each observer of a root gets the same records. Controls in one copy of the library share it.
+// Each observer of a root gets each record, so the controls of one root share an observer.
+// The map is in the module, so each copy of the library has its own observers.
 const treeObservers = new WeakMap<Node, Map<string, TreeObserver>>();
 
 export function isDocumentOrShadowRoot(root: Node): root is Document | ShadowRoot {
@@ -49,7 +50,8 @@ function observeTree(root: Node, callback: () => void, attributeFilter?: readonl
  * Calls `callback` after a child list or listed attribute changes in the root tree of `element`.
  * It calls back after a move to another root. The initial subscription makes no call.
  * In a detached tree it also observes the last document or shadow root, or the owner document
- * if the element had neither. Attachment to an unobserved root can give neither observer a record.
+ * if the element had neither. When the consumer attaches that tree in another root, such as
+ * another shadow root, neither observer gets a record.
  * The returned function stops both observations.
  */
 export function observeRootNode(
@@ -99,7 +101,8 @@ export function observeRootNode(
  * Calls `effect` with the root node of `element` at once and after each root change.
  * It runs the previous cleanup before the next effect. The returned stop runs the last cleanup.
  * In a detached tree it follows attachment to the last document or shadow root, or the owner
- * document if the element had neither. Attachment to an unobserved root can give no record.
+ * document if the element had neither. When the consumer attaches that tree in another root, it
+ * gets no record.
  */
 export function followRootNode(
   element: Element,

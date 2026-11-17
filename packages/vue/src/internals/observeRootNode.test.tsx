@@ -89,8 +89,28 @@ describe('observeRootNode', () => {
       parent.append(wrapper);
       await flushMicrotasks();
       expect(callback).toHaveBeenCalledTimes(3);
+      wrapper.append(document.createElement('span'));
+      await flushMicrotasks();
+      expect(callback).toHaveBeenCalledTimes(4);
     },
   );
+
+  it('stops both observers of a detached tree', async () => {
+    const wrapper = document.createElement('div');
+    const input = document.createElement('input');
+    wrapper.append(input);
+    const callback = vi.fn();
+    const stop = observeRootNode(input, callback);
+    onTestFinished(stop);
+
+    stop();
+    wrapper.append(document.createElement('span'));
+    document.body.append(wrapper);
+    onTestFinished(() => wrapper.remove());
+    await flushMicrotasks();
+
+    expect(callback).not.toHaveBeenCalled();
+  });
 
   it('sees the first attachment of a detached tree to its owner document', async () => {
     const doc = document.implementation.createHTMLDocument();
