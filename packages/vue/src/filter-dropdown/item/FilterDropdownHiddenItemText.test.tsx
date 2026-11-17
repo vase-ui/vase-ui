@@ -107,4 +107,20 @@ describe.runIf(isVaporApp)('VUE-129: the slot of a Vapor component in a hidden f
     expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     expect(contentElements.size).toBe(1);
   });
+
+  it('matches the changed text of a hidden item when its label becomes undefined', async () => {
+    const { setProps, contentElements } = await renderMenu({
+      text: 'Rename',
+      itemLabel: 'Rename',
+    });
+
+    await setProps({ value: 'del' });
+    await setProps({ value: 'del', text: 'Duplicate' });
+    expect(contentElements.size).toBe(1);
+    await setProps({ value: 'del', text: 'Duplicate', itemLabel: undefined });
+    expect(screen.queryByRole('menuitem', { name: 'Duplicate' })).toBe(null);
+    await setProps({ value: 'dup', text: 'Duplicate', itemLabel: undefined });
+
+    expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeVisible();
+  });
 });

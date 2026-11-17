@@ -33,6 +33,11 @@ export interface UseFilterDropdownItemReturnValue {
   /**
    * Takes the text of the slot of an item that the query hides, which has no element to read. The
    * part gives this function and the `label` of the item to `FilterDropdownHiddenItemText`.
+   *
+   * The first text after the element goes is a baseline. The text of the element stays the text of
+   * the item until a later text differs from that baseline. An item with a `label` whose slot needs
+   * a mount gives no text while it is hidden. When that `label` becomes `undefined`, the first text
+   * is the text of the item.
    */
   setHiddenText: (text: string) => void;
 }
@@ -68,6 +73,9 @@ export function useFilterDropdownItem(
   let registeredText: string | undefined;
   // The text of the slot that the hidden item last gave, to tell whether it changed.
   let hiddenText: string | undefined;
+  // `true` after the `label` goes from a hidden item that gave no slot text. The content can have
+  // changed with no read since the element went, so the next slot text is not a baseline.
+  let renderedTextIsOld = false;
 
   const matched = computed(() => store.select('isItemVisible', itemId));
 
@@ -137,7 +145,14 @@ export function useFilterDropdownItem(
   onUpdated(() => registerChangedText(resolveText()));
   watch(
     () => toValue(params.label),
-    () => registerChangedText(resolveText()),
+    (label) => {
+      // This watcher runs before the render. The element of an item that the query hides in the
+      // same flush is thus not `null` here, and the first slot text of that item stays a baseline.
+      if (label == null && element === null && hiddenText === undefined) {
+        renderedTextIsOld = true;
+      }
+      registerChangedText(resolveText());
+    },
   );
 
   function setHiddenText(text: string) {
@@ -145,7 +160,9 @@ export function useFilterDropdownItem(
     hiddenText = text;
     // The first text after the element goes away is only a baseline: the cached text of the
     // element wins until the slot text changes.
-    if (previousText === undefined || text === previousText) {
+    const isBaseline = previousText === undefined && !renderedTextIsOld;
+    renderedTextIsOld = false;
+    if (isBaseline || text === previousText) {
       return;
     }
     renderedText = text;
@@ -160,6 +177,7 @@ export function useFilterDropdownItem(
       element = nextElement;
       if (nextElement !== null) {
         hiddenText = undefined;
+        renderedTextIsOld = false;
       }
     },
     setHiddenText,

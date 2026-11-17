@@ -159,4 +159,91 @@ describe('useFilterDropdownItem', () => {
     await flushMicrotasks();
     expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
   });
+
+  it('VUE-129: uses the changed content when the label of a hidden item becomes undefined', async () => {
+    const query = shallowRef('mex');
+    const label = shallowRef<string | undefined>('Canada');
+    const text = shallowRef('Kanada');
+    await render(() => (
+      <TestFilterDropdownRoot value={query.value}>
+        <Item label={label.value}>{text.value}</Item>
+        <Item>Mexico</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+    expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
+
+    text.value = 'Japan';
+    await flushMicrotasks();
+    label.value = undefined;
+    query.value = 'jap';
+    await flushMicrotasks();
+
+    expect(screen.getByRole('menuitem', { name: 'Japan' })).toBeVisible();
+  });
+
+  it('VUE-129: uses the changed content when the label goes in the flush that changes the content', async () => {
+    const query = shallowRef('mex');
+    const label = shallowRef<string | undefined>('Canada');
+    const text = shallowRef('Kanada');
+    await render(() => (
+      <TestFilterDropdownRoot value={query.value}>
+        <Item label={label.value}>{text.value}</Item>
+        <Item>Mexico</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+
+    text.value = 'Japan';
+    label.value = undefined;
+    query.value = 'jap';
+    await flushMicrotasks();
+
+    expect(screen.getByRole('menuitem', { name: 'Japan' })).toBeVisible();
+  });
+
+  it('VUE-129: hides the item for a query that matches only the content that it had', async () => {
+    const query = shallowRef('mex');
+    const label = shallowRef<string | undefined>('Canada');
+    const text = shallowRef('Kanada');
+    await render(() => (
+      <TestFilterDropdownRoot value={query.value}>
+        <Item label={label.value}>{text.value}</Item>
+        <Item>Mexico</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+
+    text.value = 'Japan';
+    label.value = undefined;
+    query.value = 'kan';
+    await flushMicrotasks();
+
+    expect(screen.queryByRole('menuitem')).toBe(null);
+  });
+
+  it('VUE-129: keeps the rendered text when the label goes in the flush that hides the item', async () => {
+    const query = shallowRef('');
+    const label = shallowRef<string | undefined>('Canada');
+    const Translated = defineComponent(() => () => 'Kanada');
+    await render(() => (
+      <TestFilterDropdownRoot value={query.value}>
+        <Item label={label.value}>
+          <Translated />
+        </Item>
+        <Item>Mexico</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+    expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
+
+    label.value = undefined;
+    query.value = 'mex';
+    await flushMicrotasks();
+    expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
+
+    query.value = 'kan';
+    await flushMicrotasks();
+    expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
+  });
 });

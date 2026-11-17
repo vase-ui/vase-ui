@@ -56,7 +56,9 @@ function slotText(node: unknown): string | undefined {
  * A virtual DOM slot gives vnodes. The component reads their text and renders nothing.
  * The slot of a Vapor component gives its nodes only at a mount. The component mounts that slot in
  * an element that is not in the document, and reads the text of the element.
- * An item with a `label` needs no text, so the component does not call the slot.
+ * The filter matches the `label` of an item that has one, so the component does not mount the slot
+ * of such an item. It still gives the text of the vnodes of that item. The item can then tell that
+ * its content changed when its `label` becomes `undefined`.
  *
  * @internal
  */
@@ -79,17 +81,14 @@ export const FilterDropdownHiddenItemText = defineComponent({
     }
 
     function giveText() {
-      if (props.label != null) {
-        stopObserver();
-        return;
-      }
       if (text !== undefined) {
         stopObserver();
         props.setText(text);
         return;
       }
       const element = mountElement;
-      if (element === undefined) {
+      if (props.label != null || element === undefined) {
+        stopObserver();
         return;
       }
       if (observer === undefined) {
@@ -105,13 +104,10 @@ export const FilterDropdownHiddenItemText = defineComponent({
     onBeforeUnmount(stopObserver);
 
     return () => {
-      if (props.label != null) {
-        return null;
-      }
       // eslint-disable-next-line no-restricted-syntax -- The call is in a render function, so Vue gives no warning and renders this component again when the slot reads a changed value.
       const nodes = slots.default?.();
       text = slotText(nodes);
-      if (nodes === undefined || text !== undefined) {
+      if (nodes === undefined || text !== undefined || props.label != null) {
         return null;
       }
       // Vue makes each node in the global document, so this element is in that document too.
