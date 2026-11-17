@@ -14,9 +14,8 @@ const handleStore = usePopupHandleStore(() => props.handle);
 const store = computed(() => handleStore.value ?? rootStore);
 const isOpen = computed(() => store.value?.select('isOpenedByTrigger', props.id) ?? false);
 
-// Vue can patch a bound attribute, such as `:aria-expanded`, while it hydrates. It does not patch
-// an attribute of a bound object, which is the form of the parts of the library. The fixture binds
-// an object too, so a trigger that reads the wrong store shows a hydration mismatch.
+// This fixture binds a plain object without `useRenderElement`. A read of the wrong store leaves
+// the server values on the button, even for attributes that a library trigger corrects.
 function elementProps() {
   return {
     id: props.id,

@@ -419,8 +419,8 @@ export function useCollapsiblePanel(
 
   // The props give the string `until-found` to the element, so the server HTML has
   // `hidden="until-found"` with Vue 3.5.41 or later. In Vue 3.6, the server writes it from
-  // 3.6.0-rc.3. A server of an earlier Vue writes a bare `hidden`, and hydration does not patch an
-  // attribute. The write at mount corrects it.
+  // 3.6.0-rc.3. Earlier versions write a bare `hidden`. Vue keeps the server value of `hidden`
+  // from a `v-bind` object while it hydrates, so the panel corrects it at the mount.
   // A transition keeps running when the element gets `hidden="until-found"`, because the content
   // is hidden with `content-visibility` and the element has no `display: none`. So when the panel
   // becomes hidden, the element first gets a plain `hidden` for one style computation. The browser

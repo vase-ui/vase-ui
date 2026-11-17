@@ -642,6 +642,7 @@ function inputProps() {
     ...merged,
     'aria-labelledby': ariaAfterHydration(merged['aria-labelledby']),
     'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+    'aria-valuetext': ariaAfterHydration(merged['aria-valuetext']),
   };
 }
 
