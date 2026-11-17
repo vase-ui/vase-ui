@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
@@ -15,6 +16,24 @@ const changeTime = (
 
 describe('<TimePicker.Trigger />', () => {
   const { render } = createRenderer();
+
+  it('opens the picker on a click with a handle attribute', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await render(
+      <TimePicker.Root>
+        <TimePicker.Trigger {...{ handle }} />
+        <TimePicker.Portal>
+          <TimePicker.Positioner>
+            <TimePicker.Popup aria-label="Choose" />
+          </TimePicker.Positioner>
+        </TimePicker.Portal>
+      </TimePicker.Root>,
+    );
+
+    await user.click(screen.getByRole('button'));
+
+    expect(await screen.findByRole('dialog', { name: 'Choose' })).toBeInTheDocument();
+  });
 
   describeConformance(<TimePicker.Trigger />, () => ({
     refInstanceof: window.HTMLButtonElement,

@@ -4,6 +4,7 @@ import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import {
   createRenderer,
   fireEvent,
@@ -45,6 +46,15 @@ const columnItem = (testId: string, name: string) =>
 
 describe('<TimePicker.Root />', () => {
   const { render } = createRenderer();
+
+  it('keeps a handle attribute closed while the picker is open', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await renderPicker({ handle });
+
+    await open(user);
+
+    expect(handle.isOpen).toBe(false);
+  });
 
   function renderPicker(props: Record<string, unknown> = {}) {
     return render(<TimePickerAnatomy {...{ locale: 'en-US', hourCycle: 12, ...props }} />);

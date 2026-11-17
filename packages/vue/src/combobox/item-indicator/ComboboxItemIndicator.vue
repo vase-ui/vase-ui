@@ -29,6 +29,7 @@ export interface ComboboxItemIndicatorProps
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import ItemIndicator from '../../utils/ItemIndicator.vue';
 import { useComboboxItemContext } from '../item/ComboboxItemContext';
 
@@ -63,7 +64,7 @@ defineExpose({ element });
   <ItemIndicator
     v-if="shouldRender && $slots.render"
     ref="indicator"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
     :selected="selected"
   >
     <template #render="slotProps">
@@ -73,7 +74,7 @@ defineExpose({ element });
   <ItemIndicator
     v-else-if="shouldRender"
     ref="indicator"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
     :selected="selected"
   >
     <template #default="slotProps">

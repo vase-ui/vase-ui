@@ -261,7 +261,6 @@ import {
   onScopeDispose,
   provide,
   shallowRef,
-  useAttrs,
   useTemplateRef,
   watch,
 } from 'vue';
@@ -278,6 +277,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import { getElementAtPoint } from '../../utils/getElementAtPoint';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
@@ -307,7 +307,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DrawerViewportState>;
 }>();
 
-const attrs = useAttrs();
 const store = useDialogRootContext();
 const popupRef = store.context.popupRef;
 const backdropRef = store.context.backdropRef;
@@ -1257,8 +1256,8 @@ const viewportHandlers = {
   [DialogViewportDataAttributes.nestedDialogOpen]: null,
 };
 
-function viewportProps() {
-  return { ...mergeProps(viewportHandlers, givenAttributes(attrs)), ...props };
+function viewportProps(attributes: Record<string, unknown>) {
+  return { ...mergeProps(viewportHandlers, givenAttributes(attributes)), ...props };
 }
 
 // As in Base UI, this part renders `Dialog.Viewport` and makes no element of its own.
@@ -1272,12 +1271,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <DialogViewport v-if="$slots.render" ref="viewport" v-bind="viewportProps()">
+  <DialogViewport
+    v-if="$slots.render"
+    ref="viewport"
+    v-bind="viewportProps(withoutPropsOf($attrs, DialogViewport))"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </DialogViewport>
-  <DialogViewport v-else ref="viewport" v-bind="viewportProps()">
+  <DialogViewport
+    v-else
+    ref="viewport"
+    v-bind="viewportProps(withoutPropsOf($attrs, DialogViewport))"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
@@ -16,6 +17,24 @@ const changeDate = (
 
 describe('<DatePicker.Trigger />', () => {
   const { render } = createRenderer();
+
+  it('opens the picker on a click with a handle attribute', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await render(
+      <DatePicker.Root>
+        <DatePicker.Trigger {...{ handle }} />
+        <DatePicker.Portal>
+          <DatePicker.Positioner>
+            <DatePicker.Popup aria-label="Choose" />
+          </DatePicker.Positioner>
+        </DatePicker.Portal>
+      </DatePicker.Root>,
+    );
+
+    await user.click(screen.getByRole('button'));
+
+    expect(await screen.findByRole('dialog', { name: 'Choose' })).toBeInTheDocument();
+  });
 
   describeConformance(<DatePicker.Trigger />, () => ({
     refInstanceof: window.HTMLButtonElement,

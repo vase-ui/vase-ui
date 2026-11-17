@@ -20,6 +20,7 @@ export interface SelectScrollUpArrowProps
 import { computed, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import SelectScrollArrow from '../scroll-arrow/SelectScrollArrow.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -58,7 +59,7 @@ defineExpose({ element });
   <SelectScrollArrow
     v-if="$slots.render"
     ref="arrow"
-    v-bind="{ ...$attrs, ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, SelectScrollArrow), ...props }"
     direction="up"
   >
     <template #render="slotProps">
@@ -68,12 +69,17 @@ defineExpose({ element });
   <SelectScrollArrow
     v-else-if="$slots.default"
     ref="arrow"
-    v-bind="{ ...$attrs, ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, SelectScrollArrow), ...props }"
     direction="up"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </SelectScrollArrow>
-  <SelectScrollArrow v-else ref="arrow" v-bind="{ ...$attrs, ...props }" direction="up" />
+  <SelectScrollArrow
+    v-else
+    ref="arrow"
+    v-bind="{ ...withoutPropsOf($attrs, SelectScrollArrow), ...props }"
+    direction="up"
+  />
 </template>

@@ -44,7 +44,6 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       expect(screen.getByTestId('none')).not.toHaveAttribute('aria-label');
     });
 
-    // The part has no prop for the names. The attribute reaches `DateField.Root`, which reads it.
     it('takes its name from the elements of `aria-labelledby`', async () => {
       await render(
         <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>

@@ -39,6 +39,7 @@ import {
 import { isKind } from '../../internals/date-time/temporal';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 import { hasTime } from '../root/pickerTemplate';
@@ -127,7 +128,7 @@ defineExpose({
   <TimeFieldRoot
     v-if="$slots.render"
     ref="field"
-    v-bind="{ ...$attrs, ...timeFieldProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
@@ -137,7 +138,7 @@ defineExpose({
   <TimeFieldRoot
     v-else
     ref="field"
-    v-bind="{ ...$attrs, ...timeFieldProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
     @value-change="handleValueChange"
   >
     <template #default="slotProps">
