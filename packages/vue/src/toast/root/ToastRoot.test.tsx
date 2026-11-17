@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
@@ -8,11 +8,13 @@ import {
   expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
+  nextEndingStyle,
   nextEvent,
   screen,
   waitFor,
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManagerAddOptions } from '../useToastManager';
 import { List, Button } from '../utils/test-utils';
@@ -1043,20 +1045,123 @@ describe('<Toast.Root />', () => {
     expect(screen.getByTestId('new')).not.toHaveAttribute('inert');
   });
 
-  it('closes the toast on Escape while the focus is inside it', async () => {
-    const { manager } = await renderToasts();
-    manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
-    await flushMicrotasks();
-    const root = screen.getByTestId('toast');
+  describe('VUE-127: Escape with the focus in a toast', () => {
+    async function renderToastWithDialog() {
+      const manager = Toast.createToastManager();
+      const onOpenChange = vi.fn();
+      const result = await render(
+        <Toast.Provider toastManager={manager}>
+          <Dialog.Root defaultOpen onOpenChange={onOpenChange}>
+            <Dialog.Portal>
+              <Dialog.Popup data-testid="dialog">
+                <Dialog.Title>Dialog</Dialog.Title>
+                <button type="button">in dialog</button>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+          <Toast.Portal>
+            <Toast.Viewport data-testid="viewport">
+              <ToastTextList />
+            </Toast.Viewport>
+          </Toast.Portal>
+        </Toast.Provider>,
+      );
+      manager.add({ id: 'toast', title: 'Saved', timeout: 0 });
+      await flushMicrotasks();
+      return { onOpenChange, ...result };
+    }
 
-    await fireEvent.keyDown(root, { key: 'Escape' });
+    it('closes the toast and keeps a modal dialog open', async () => {
+      const { onOpenChange, user } = await renderToastWithDialog();
+      const inDialog = screen.getByRole('button', { name: 'in dialog' });
+      // The dialog takes the focus in a frame after it opens. A step before that frame loses the
+      // focus to the dialog.
+      await waitFor(() => {
+        expect(inDialog).toHaveFocus();
+      });
 
-    expect(root).not.toHaveAttribute('data-ending-style');
+      await user.keyboard('{F6}');
+      await user.keyboard('{Tab}');
+      const root = screen.getByTestId('toast');
+      expect(root).toHaveFocus();
 
-    root.focus();
-    await fireEvent.keyDown(root, { key: 'Escape' });
+      await user.keyboard('{Escape}');
 
-    expect(root).toHaveAttribute('data-ending-style');
+      expect(root).toHaveAttribute('data-ending-style');
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('dialog')).not.toHaveAttribute('data-ending-style');
+
+      // The focus is in the dialog again, so the next Escape is for the dialog.
+      expect(inDialog).toHaveFocus();
+      await user.keyboard('{Escape}');
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.calls[0]?.[0]).toBe(false);
+    });
+
+    it('closes on Escape only while it has the focus, and stops only that Escape', async () => {
+      const { manager } = await renderToasts();
+      manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
+      await flushMicrotasks();
+      const root = screen.getByTestId('toast');
+      const keys: string[] = [];
+      const record = (event: KeyboardEvent) => keys.push(event.key);
+      document.addEventListener('keydown', record);
+      onTestFinished(() => document.removeEventListener('keydown', record));
+
+      // The focus is not in the toast, so the toast does not handle the key.
+      await fireEvent.keyDown(root, { key: 'Escape' });
+      expect(root).not.toHaveAttribute('data-ending-style');
+      root.focus();
+      await fireEvent.keyDown(root, { key: 'Enter' });
+      expect(keys).toEqual(['Escape', 'Enter']);
+
+      await fireEvent.keyDown(root, { key: 'Escape' });
+
+      expect(root).toHaveAttribute('data-ending-style');
+      expect(keys).toEqual(['Escape', 'Enter']);
+    });
+
+    it('does not stop an Escape that comes during the exit of the toast', async () => {
+      const animationsDisabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      try {
+        const manager = Toast.createToastManager();
+        await render(
+          <Toast.Provider toastManager={manager}>
+            <style>
+              {`
+              [data-testid="toast"][data-ending-style] { animation: toast-exit 100s; }
+              @keyframes toast-exit { to { opacity: 0; } }
+            `}
+            </style>
+            <Toast.Viewport>
+              <ToastTextList />
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
+        await flushMicrotasks();
+        const root = screen.getByTestId('toast');
+        const keys: string[] = [];
+        const record = (event: KeyboardEvent) => keys.push(event.key);
+        document.addEventListener('keydown', record);
+        onTestFinished(() => document.removeEventListener('keydown', record));
+
+        root.focus();
+        await nextEndingStyle(root, { action: () => fireEvent.keyDown(root, { key: 'Escape' }) });
+        expect(keys).toEqual([]);
+
+        // No element took the focus from the toast, and its exit of 100 s still runs.
+        expect(root).toHaveFocus();
+        await fireEvent.keyDown(root, { key: 'Escape' });
+
+        expect(keys).toEqual(['Escape']);
+      } finally {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = animationsDisabled;
+      }
+    });
   });
 
   describe('swipe behavior', () => {

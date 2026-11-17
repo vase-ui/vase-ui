@@ -483,7 +483,16 @@ function handleKeydown(event: KeyboardEvent) {
       return;
     }
 
+    const isEnding = props.toast.transitionStatus === 'ending';
     store.closeToast(props.toast.id);
+    if (isEnding) {
+      return;
+    }
+
+    // The toast closes for this Escape. A popup under the toast, such as a modal dialog, listens
+    // for Escape on the document. It must not close for the same press (VUE-127). A toast that
+    // was in its exit closes nothing, so its Escape goes on, as that of a closed popup does.
+    event.stopPropagation();
   }
 }
 
