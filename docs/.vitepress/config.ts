@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, postcssIsolateStyles } from 'vitepress';
-import type { MarkdownRenderer } from 'vitepress';
+import type { HeadConfig, MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
@@ -71,9 +71,14 @@ function markdownConfig(md: MarkdownRenderer): void {
   markdownSiteLinks(md);
 }
 
+const SITE_TITLE = 'Vase UI';
+const PREVIEW_IMAGE = new URL('og-image.png', manifest.homepage).href;
+const PREVIEW_IMAGE_ALT =
+  'The Vase UI mark and summary beside a date picker, a menu and a time picker.';
+
 export default defineConfig({
   lang: 'en-US',
-  title: 'Vase UI',
+  title: SITE_TITLE,
   description: manifest.description,
   base: '/',
   cleanUrls: true,
@@ -84,6 +89,16 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon.png' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    // Link crawlers need an absolute image address. X reads og:title and og:description.
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: SITE_TITLE }],
+    ['meta', { property: 'og:image', content: PREVIEW_IMAGE }],
+    ['meta', { property: 'og:image:type', content: 'image/png' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:image:alt', content: PREVIEW_IMAGE_ALT }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:image', content: PREVIEW_IMAGE }],
     // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
     [
       'script',
@@ -113,8 +128,23 @@ export default defineConfig({
   // reference of that earlier render.
   markdown: { cache: isBuild, colorReplacements: SYNTAX_COLORS, config: markdownConfig },
   transformPageData(pageData) {
+    const pagePath = pageData.relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '');
+    const pageHead: HeadConfig[] = [
+      ['meta', { property: 'og:url', content: new URL(pagePath, manifest.homepage).href }],
+      ['meta', { property: 'og:title', content: pageData.title || SITE_TITLE }],
+      [
+        'meta',
+        { property: 'og:description', content: pageData.description || manifest.description },
+      ],
+    ];
+    const frontmatterHead: HeadConfig[] = Array.isArray(pageData.frontmatter.head)
+      ? pageData.frontmatter.head
+      : [];
     const family = familyOfPage(pageData.relativePath);
-    return family === undefined ? undefined : { apiReference: readApiReference(family) };
+    return {
+      frontmatter: { ...pageData.frontmatter, head: [...pageHead, ...frontmatterHead] },
+      ...(family === undefined ? {} : { apiReference: readApiReference(family) }),
+    };
   },
   themeConfig: {
     logo: { light: '/mark-light.svg', dark: '/mark-dark.svg', alt: 'Vase UI' },
