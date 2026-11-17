@@ -14,8 +14,11 @@ function read(path: string): string {
 
 const heading = /<h1>.*?<\/h1>/s.exec(read('README.md'))?.[0] ?? '';
 const headingImages = [...heading.matchAll(/\bsrc(?:set)?="([^"]*)"/g)].map(([, url]) => url);
-const logo = /\blogo: \{(.*?)\}/s.exec(read('docs/.vitepress/config.ts'))?.[1] ?? '';
-const logoImages = [...logo.matchAll(/'(\/[^']*)'/g)].map(([, path]) => path);
+const logo = config.themeConfig?.logo;
+const logoImages =
+  typeof logo === 'object' && typeof logo.light === 'string' && typeof logo.dark === 'string'
+    ? [logo.light, logo.dark]
+    : [];
 
 function pathsOf(file: string): string[] {
   return [...read(file).matchAll(/<path\b[^>]*?\sd="([^"]*)"/g)].map(([, outline]) => outline);
@@ -63,23 +66,32 @@ const iconLinks = (config.head ?? []).flatMap(([tag, attributes]) =>
   tag === 'link' && ['icon', 'apple-touch-icon'].includes(attributes.rel ?? '') ? [attributes] : [],
 );
 
-test('docs/.vitepress/config.ts links the ICO, the SVG and an Apple touch icon, the ICO first', () => {
-  const indexOfIcon = (extension: string) =>
-    iconLinks.findIndex(({ rel, href = '' }) => rel === 'icon' && extname(href) === extension);
-  const ico = indexOfIcon('.ico');
-  assert.notEqual(ico, -1, 'No icon link names an ICO file.');
-  assert.ok(indexOfIcon('.svg') > ico, 'The SVG icon link must follow the ICO icon link.');
+const RASTER_EXTENSIONS = ['.ico', '.png'];
+
+test('docs/.vitepress/config.ts links the ICO, the SVG and an Apple touch icon, the SVG after each raster icon', () => {
+  const extensions = iconLinks
+    .filter(({ rel }) => rel === 'icon')
+    .map(({ href = '' }) => extname(href));
+  const svg = extensions.indexOf('.svg');
+  assert.ok(extensions.includes('.ico'), 'No icon link names an ICO file.');
+  assert.notEqual(svg, -1, 'No icon link names an SVG file.');
+  assert.ok(
+    extensions.findLastIndex((extension) => RASTER_EXTENSIONS.includes(extension)) < svg,
+    'The SVG icon link must follow each ICO and PNG icon link.',
+  );
   assert.ok(
     iconLinks.some(({ rel }) => rel === 'apple-touch-icon'),
     'No link names an Apple touch icon.',
   );
 });
 
-for (const { href = '', sizes = '' } of iconLinks) {
-  test(`docs/.vitepress/config.ts: ${href} is a file of docs/public`, () => {
-    assert.ok(existsSync(join(PUBLIC_ROOT, href)), `docs/public${href} does not exist.`);
+for (const path of new Set([...logoImages, ...iconLinks.map(({ href = '' }) => href)])) {
+  test(`docs/.vitepress/config.ts: ${path} is a file of docs/public`, () => {
+    assert.ok(existsSync(join(PUBLIC_ROOT, path)), `docs/public${path} does not exist.`);
   });
+}
 
+for (const { href = '', sizes = '' } of iconLinks) {
   // `any` stands for a scalable image. Each other keyword must name an image that the file has.
   const keywords = sizes.split(/\s+/).filter((keyword) => keyword !== '' && keyword !== 'any');
   if (keywords.length > 0) {
@@ -98,7 +110,7 @@ test('docs/public/favicon.ico holds images of 16, 32 and 48 pixels', () => {
 
 test('the heading of README.md and the navigation bar each name two images', () => {
   assert.equal(headingImages.length, 2, 'README.md');
-  assert.equal(logoImages.length, 2, 'docs/.vitepress/config.ts');
+  assert.equal(logoImages.length, 2, 'themeConfig.logo must name a light and a dark image.');
 });
 
 for (const url of headingImages) {
@@ -110,10 +122,6 @@ for (const url of headingImages) {
 }
 
 for (const path of logoImages) {
-  test(`docs/.vitepress/config.ts: ${path} is a file of docs/public`, () => {
-    assert.ok(existsSync(join(PUBLIC_ROOT, path)), `docs/public${path} does not exist.`);
-  });
-
   test(`docs/.vitepress/config.ts: ${path} holds the mark and no words`, () => {
     assert.deepEqual(pathsOf(`docs/public${path}`), markPaths);
   });
