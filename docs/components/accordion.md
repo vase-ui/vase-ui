@@ -97,6 +97,8 @@ To try it, press <kbd>Ctrl</kbd>+<kbd>F</kbd> (<kbd>Cmd</kbd>+<kbd>F</kbd> on ma
 
 A browser that does not support `hidden="until-found"` keeps each panel hidden until its trigger opens it, and find-in-page skips the contents.
 
+In a [wrapper of `Accordion.Panel`](/handbook/composition#wrap-a-part), give `keepMounted` and `hiddenUntilFound` the default `undefined` to keep the root values.
+
 <DemoFrame>
   <DemoAccordionHiddenUntilFound />
   <template #tailwind>

@@ -73,6 +73,8 @@ With no value, a new end has the kind that `granularity` and `referenceDate` giv
 
 `closeOnSelect` says if the second press in the calendar closes the popup. It is `true`, also for a range with a time, because the popup has no part for a time: the user sets a time in a field. The first press only starts the range. A drag closes the popup too, because it makes the whole range. This is also true for a drag that makes the range that the picker already has, although the calendar gives no change for it. A key that extends the range does not, because the user can extend it more. Escape and a press outside the popup close it.
 
+In a [wrapper of `DateRangePicker.Root`](/handbook/composition#wrap-a-part), give `closeOnSelect` the default `undefined` to keep this behavior.
+
 ## In a form
 
 Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. Each field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
