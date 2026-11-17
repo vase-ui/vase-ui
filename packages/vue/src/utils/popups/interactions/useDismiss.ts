@@ -508,9 +508,7 @@ export function useDismiss(
       listenedStore.context.events.off('openchange', handleOpenChange);
       // After the move, no listener of this composable clears the marker of the last store. A set
       // marker makes the next outside press of that store count as inside.
-      if (listenedStore.context.insideComponentTree) {
-        listenedStore.context.insideComponentTree = false;
-      }
+      listenedStore.context.insideComponentTree &&= false;
     }
     listenedStore = nextStore;
     nextStore.context.events.on('openchange', handleOpenChange);

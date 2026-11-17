@@ -649,7 +649,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 ### Idioms
 
 - Write `??` where the left operand is an object, `null` or `undefined`. Where Base UI has `||` for a string, a number or a Boolean, keep `||`. The two operators differ for `''`, `0` and `false`.
-- Write `Object.hasOwn` and `??=`.
+- Write `Object.hasOwn`.
 - Write `.at(-1)` for the last item of a list.
 - Write `import type` on its own line.
 - Write `void` before a promise that the code does not wait for.
@@ -1453,7 +1453,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.
 - A transition must sometimes start from a value that an earlier DOM update set. Then read the layout of the element after that update. `useCollapsiblePanel` calls `getBoundingClientRect()` in `nextTick` after it writes the measured size. Without that read, the exit transition does not start.
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
-- Write a style key with a vendor prefix in its CSS form, such as `'-webkit-user-select'`. A server render writes the key `WebkitUserSelect` as `webkit-user-select`, which is not a CSS property.
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration that a part writes to its element also in a record that the part renders. Remove the declaration from the record when the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
@@ -2127,6 +2126,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `docs/.vitepress/postcssFollowSiteTheme.ts` changes each `@media (prefers-color-scheme: dark)` rule of a style sheet into a rule for that class.
 - A style that the site writes uses the class `dark`, as `DemoFrame.vue` does.
 - A copied style sheet can give text less than the AA contrast of WCAG, in one state of a part or in each state. Do not edit the sheet. For a popup, add a rule to `look.css` with the nearest value of the sheets that passes. A popup is in an element with `data-vase-ui-portal`, outside the frame of a demo, so the rule reaches it. For text in the frame, add the rule to `DemoFrame.vue` with `:deep()`. Vite adds a prefix and a suffix to each class of a CSS module, so the selector names only the middle part, as `[class*='_LinkDescription_']` does. Name the part and its state, not the demo. For the Tailwind variant, name the utility that gives the color, as `[class~='data-placeholder:text-neutral-500']` does. Where no value of the sheets passes, use the next step of the same color of the Tailwind palette. Give each selector of a rule a row in `packages/vue/test/demos.contrast.test.tsx`. A row measures the text in one state, in both themes and in each variant of the demo. Where a rule applies in each state, add a row for each state that changes the background behind the text.
+- A class string or a copied style sheet of a Base UI demo can make a list cut the text of an option. Do not change the class string or the sheet. Add a rule to the part "Popups of demos" of `look.css` that lets the text wrap. Name the role and the utility or the middle part of the module class, not the demo, as `[role='option'] [class~='whitespace-nowrap']` does. The popup case of `packages/vue/test/demos.popups.test.tsx` is the test of the rule. Do not add a row to `packages/vue/test/demos.contrast.test.tsx`.
 - A plugin of the site is a file in `docs/.vitepress`, and its test is beside it, as `<name>.test.ts`.
 - A component of the site that shows a table puts the table in `<ScrollBox>` of `docs/.vitepress/components`. Give the box a `label` that names the table, such as `Props of Dialog.Root`. The box scrolls the table when the column is narrower than the table.
 - A keyboard user scrolls a box with the arrow keys, so the box or an element in it must be able to get the focus (WCAG 2.1.1). A table of the API reference has no such element. The box thus takes the focus while it scrolls, with the role `group` and its `label` as its name. A box that does not scroll is not in the sequence of the Tab key.
@@ -2208,7 +2208,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The popup case finds a trigger by `aria-haspopup`, or by the attribute of a Tooltip trigger or of a Navigation Menu trigger. `unmarkedTriggers` in that file has a rule for each other trigger. Add a rule for a new trigger that has no such attribute. Do not add an attribute to the demo.
 - The popup case turns off the axe rule `aria-hidden-focus`. The case thus does not see a demo that writes `aria-hidden` on a control inside a popup.
 - The popup case accepts three other reports of axe, each for one kind of element and not for the whole rule. `ACCEPTED` in that file has them. A row is for a state that a part sets on purpose. Do not add a row for a fault of a demo. Correct the demo.
-- For a demo of a family with no `upstream.json`, the popup case fails when an option of a list cuts its text. It compares the `scrollWidth` of each option with its `clientWidth`. It also compares the box of the text with the box of the option and with the part of the list that shows. A family with an `upstream.json` keeps the style sheets of Base UI, so the check leaves out its lists.
+- The popup case fails when an option of a list cuts its text. It compares the `scrollWidth` of each option with its `clientWidth`. It also compares the box of the text with the box of the option and with the part of the list that shows. The page of the test has the default width of Vitest, 414 px. The case thus does not see a cut that shows only in a wider page.
 - The popup case does not open a popup whose trigger has no attribute that the case knows and no rule in `unmarkedTriggers`, and it does not fail for such a popup. It runs in the light theme, as the mount case does.
 
 ### Thanks page
