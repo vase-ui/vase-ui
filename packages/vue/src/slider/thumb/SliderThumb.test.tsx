@@ -30,6 +30,7 @@ import {
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   waitFor,
   waitSingleFrame,
   within,
@@ -196,6 +197,28 @@ describe('<Slider.Thumb />', () => {
       expect(within(container).getByRole('slider')).toHaveAttribute(
         'aria-valuetext',
         (1000).toLocaleString('de-DE', format),
+      );
+    });
+
+    it('VUE-134: writes the aria-valuetext of the browser when the server HTML has another text', async () => {
+      const props = {
+        defaultValue: 1000,
+        max: 2000,
+        locale: 'de-DE',
+        format: { maximumFractionDigits: 1 },
+      };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer(FIXTURE, props),
+        'input[type="range"]',
+        'aria-valuetext',
+        'other',
+      );
+
+      const { container } = await hydrate(SliderThumbHydration, { serverHtml, props });
+
+      expect(within(container).getByRole('slider')).toHaveAttribute(
+        'aria-valuetext',
+        props.defaultValue.toLocaleString(props.locale, props.format),
       );
     });
   });
