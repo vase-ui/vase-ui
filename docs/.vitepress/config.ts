@@ -7,10 +7,12 @@ import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
 import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
+import { VASE_SOURCE_ROOT } from '../../scripts/parity/paths.ts';
 import { REPOSITORY_ROOT } from '../../scripts/parity/repository.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
+import { viteFollowSource } from './viteFollowSource.ts';
 
 const docsRoot = join(import.meta.dirname, '..');
 const manifest: { description: string; homepage: string } = JSON.parse(
@@ -96,7 +98,7 @@ export default defineConfig({
   // demo, that is `docs/demos/tailwind.css`. The second plugin makes a copied style sheet follow
   // the theme of the site. In `tailwind.css`, the variant `dark` does the same.
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), viteFollowSource(join(REPOSITORY_ROOT, VASE_SOURCE_ROOT))],
     css: {
       postcss: {
         plugins: [
