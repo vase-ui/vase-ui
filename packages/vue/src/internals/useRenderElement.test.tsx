@@ -1192,6 +1192,35 @@ describe('useRenderElement', () => {
       expect(refs.mock.calls[0][0]).toBe(widget);
       expect(component!.element).toBe(widget);
     });
+
+    it('gives the element to a part whose #render slot changes to the target after the mount', async () => {
+      const refs = vi.fn();
+      let component: ComponentWithElement | null = null;
+      const Test = (props: { useTarget: boolean }) => (
+        <RerenderTestComponent
+          enabled
+          refs={refs}
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+          v-slots={{
+            render: ({ props: partProps }: { props: HTMLProps }) =>
+              props.useTarget ? <MountedElementTarget {...partProps} /> : <span {...partProps} />,
+          }}
+        />
+      );
+      const { container, rerender } = await render(<Test useTarget={false} />);
+      const span = container.firstElementChild;
+      expect(refs).toHaveBeenCalledExactlyOnceWith(span);
+      expect(component!.element).toBe(span);
+
+      await rerender(<Test useTarget />);
+
+      const widget = screen.getByTestId('widget');
+      expect(refs).toHaveBeenLastCalledWith(widget);
+      expect(component!.element).toBe(widget);
+      expect(takeReportedMessages()).toEqual([]);
+    });
   });
 
   describe('target component with an outer element and an inner element', () => {
