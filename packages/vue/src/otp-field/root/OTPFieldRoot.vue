@@ -700,7 +700,8 @@ useFormReset(hiddenInputElement, (event) => {
   }
 });
 
-// A plain variable prevents a render dependency on the element in the root.
+// The render of the root calls `setHiddenInput`. A plain variable gives that render no dependency
+// on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
 const giveFieldInput = useFieldInput();
 

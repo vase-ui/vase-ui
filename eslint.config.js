@@ -318,7 +318,7 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     message: MESSAGES.refByName,
   },
   {
-    // The rule knows the input by its tag.
+    // A selector cannot read the bound object, so the rule applies to each `<input>` with a spread.
     selector:
       "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
     message: MESSAGES.inputRefByName,
