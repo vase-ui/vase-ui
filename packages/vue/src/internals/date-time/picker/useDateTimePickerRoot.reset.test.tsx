@@ -27,6 +27,7 @@ const PickerOfTwoFields = defineComponent({
   setup() {
     const picker = useDateTimePickerRoot<Ends, DateTimeFieldChangeEventDetails>({
       part: 'PickerOfTwoFields',
+      disabled: false,
       value: () => undefined,
       defaultValue: () => EMPTY,
       fallback: () => EMPTY,

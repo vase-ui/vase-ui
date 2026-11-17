@@ -1,9 +1,10 @@
-import { computed, onBeforeUnmount, provide, useAttrs, watch } from 'vue';
+import { computed, provide, useAttrs } from 'vue';
 import type { Ref } from 'vue';
 import { given, givenAttributes } from '../../internals/givenAttributes';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
 import { DateTimeFieldHostContext } from '../../internals/date-time/field/dateTimeFieldHost';
+import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
@@ -12,7 +13,6 @@ import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
-import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
 /** The members that `DateField.Root` exposes. */
@@ -52,16 +52,7 @@ export function useDateRangePickerField(
   const element = computed(() => field.value?.element ?? null);
   const inputElement = computed(() => field.value?.inputElement ?? null);
 
-  const setFieldElement = createElementSetter(
-    end === 'start' ? picker.startFieldElement : picker.endFieldElement,
-  );
-  watch(element, setFieldElement, { immediate: true, flush: 'post' });
-  // Vue stops the `watch` before it unmounts `DateField.Root`, so the `watch` never gets `null`. The
-  // positioner then uses the other field, and the root and the positioner use the trigger when no
-  // field is left.
-  onBeforeUnmount(() => {
-    setFieldElement(null);
-  });
+  usePickerPartElement(end === 'start' ? picker.startFields : picker.endFields, element);
 
   // The field holds the input of the form, so it hears about the reset.
   useFormReset(inputElement, (event) => {
