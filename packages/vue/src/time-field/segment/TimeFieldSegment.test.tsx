@@ -8,6 +8,40 @@ const FIXTURE = 'src/time-field/root/TimeFieldRootHydration.test.vue';
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
 
+// The `scrollWidth` of an input excludes a placeholder, and WebKit adds two pixels to it. The
+// `clientWidth` of an input is the padding box in WebKit and the content box in the other engines.
+// A ruler element thus gives the width of the text, and the box less its padding and its border
+// gives the room.
+function measureSegment(container: Element, segment: HTMLInputElement) {
+  const style = getComputedStyle(segment);
+  const ruler = document.createElement('span');
+  ruler.style.cssText = 'position: absolute; visibility: hidden; white-space: pre;';
+  // The `font` of a computed style is empty in Firefox when a part of it has no place in the
+  // shorthand.
+  for (const name of [
+    'fontFamily',
+    'fontSize',
+    'fontStretch',
+    'fontStyle',
+    'fontVariantNumeric',
+    'fontWeight',
+    'letterSpacing',
+  ] as const) {
+    ruler.style[name] = style[name];
+  }
+  ruler.textContent = segment.value || segment.placeholder;
+  container.append(ruler);
+  const textWidth = ruler.getBoundingClientRect().width;
+  ruler.remove();
+  const room =
+    segment.getBoundingClientRect().width -
+    parseFloat(style.paddingLeft) -
+    parseFloat(style.paddingRight) -
+    parseFloat(style.borderLeftWidth) -
+    parseFloat(style.borderRightWidth);
+  return { room, textWidth };
+}
+
 describe('<TimeField.Segment />', () => {
   const { render } = createRenderer();
 
@@ -72,6 +106,25 @@ describe('<TimeField.Segment />', () => {
 
       expect(container.querySelectorAll('input')).toHaveLength(2);
       expect(segmentOf(container, 'minute').value).toBe('04');
+    });
+
+    it.each([
+      { name: 'a one-digit hour', time: '07:30', type: 'hour', text: '7' },
+      { name: 'a two-digit minute', time: '07:30', type: 'minute', text: '30' },
+      { name: 'the day period AM', time: '07:30', type: 'dayPeriod', text: 'AM' },
+      { name: 'the day period PM', time: '19:30', type: 'dayPeriod', text: 'PM' },
+      { name: 'an empty minute', time: undefined, type: 'minute', text: 'mm' },
+      { name: 'an empty day period', time: undefined, type: 'dayPeriod', text: '--' },
+    ])('has the width of its text with no style rule: $name', async ({ time, type, text }) => {
+      expect(CSS.supports('field-sizing', 'content')).toBe(true);
+      const { container } = await render(
+        <Field defaultValue={time ? Temporal.PlainTime.from(time) : undefined} />,
+      );
+      const segment = segmentOf(container, type);
+
+      expect(segment.value || segment.placeholder).toBe(text);
+      const { room, textWidth } = measureSegment(container, segment);
+      expect(Math.abs(room - textWidth)).toBeLessThanOrEqual(0.5);
     });
   });
 
