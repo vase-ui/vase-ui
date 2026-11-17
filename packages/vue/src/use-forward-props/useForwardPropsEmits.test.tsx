@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Collapsible } from '../collapsible';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import ForwardEmits from './ForwardEmits.test.vue';
 import ForwardEmitsModel from './ForwardEmitsModel.test.vue';
@@ -82,6 +83,56 @@ describe('useForwardPropsEmits', () => {
     });
     await render(() => <Wrapper id="value" />);
     expect(read()).toEqual({ id: 'value' });
+  });
+
+  it('forwards an event of a mixin to the listener of the caller', async () => {
+    const change = vi.fn();
+    const openChangeMixin = defineComponent({ emits: ['openChange'] });
+    const Wrapper = defineComponent({
+      mixins: [openChangeMixin],
+      emits: ['update:open'],
+      setup(props, { emit }) {
+        const forwarded = useForwardPropsEmits(props, emit);
+        return () => (
+          <Collapsible.Root {...forwarded.value}>
+            <Collapsible.Trigger>Toggle</Collapsible.Trigger>
+          </Collapsible.Root>
+        );
+      },
+    });
+    const { user } = await render(() => <Wrapper onOpenChange={change} />);
+    await user.click(screen.getByRole('button', { name: 'Toggle' }));
+    expect(change).toHaveBeenCalledExactlyOnceWith(
+      true,
+      expect.objectContaining({ reason: 'trigger-press' }),
+    );
+  });
+
+  it('takes the props and the events of `extends`', async () => {
+    let read: () => object = () => ({});
+    const saved = vi.fn();
+    const Base = defineComponent({
+      props: { id: String },
+      emits: { 'after-save': null },
+    });
+    const Wrapper = defineComponent({
+      extends: Base,
+      emits: ['done'],
+      setup(props, { emit }) {
+        const forwarded = useForwardPropsEmits(props, emit);
+        read = () => forwarded.value;
+        return () => <div />;
+      },
+    });
+    await render(() => <Wrapper id="value" {...{ onAfterSave: saved }} />);
+    expect(read()).toEqual({
+      id: 'value',
+      onAfterSave: expect.any(Function),
+      onDone: expect.any(Function),
+    });
+    const listeners = read() as Record<string, (...args: unknown[]) => void>;
+    listeners.onAfterSave('value');
+    expect(saved).toHaveBeenCalledExactlyOnceWith('value');
   });
 
   it('warns when the wrapper declares no event', async () => {

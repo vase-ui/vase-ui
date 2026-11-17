@@ -77,8 +77,8 @@ defineSlots<{
 const { store } = useMenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
-// A filterable menu hides the element of an item that the query filters out. The template then
-// gives the content of the item to a component that reads its text and renders nothing.
+// A filterable menu removes the element of an item that the query hides. The template then gives
+// the content of the item to a component that reads its text and adds no element to the document.
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
@@ -115,7 +115,7 @@ defineExpose({ element });
   <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText" :label="label">
     <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
     <slot v-else :state="state" />
   </component>

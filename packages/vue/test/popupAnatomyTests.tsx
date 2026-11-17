@@ -2,6 +2,7 @@ import { defineAsyncComponent, defineComponent, shallowRef } from 'vue';
 import type { VNode, VNodeChild } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { REASONS } from '../src/internals/reasons';
 import { nextAnimationsRead } from './animation';
 import type { createRenderer } from './createRenderer';
@@ -48,8 +49,8 @@ export interface PopupAnatomyTestConfig {
   createPopup?: (() => VNode) | undefined;
   /**
    * Returns the root with a backdrop part and no positioner. The backdrop has
-   * `data-testid="shown"` and the class `shown`. The suite then runs its first two cases on that
-   * root too.
+   * `data-testid="shown"` and the class `shown`. The suite then runs the Tab case and the two
+   * close cases on that root too.
    */
   createBackdropComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
   /**
@@ -94,6 +95,9 @@ function isShown(part: HTMLElement | null) {
 }
 
 const INTERNAL_BACKDROP = '[role="presentation"][data-vase-ui-inert]';
+const FOCUS_GUARD = '[data-vase-ui-focus-guard]';
+// More presses than a root needs. A focus that the Tab key cannot move then fails the case.
+const TAB_LIMIT = 6;
 const PORTAL = '[data-vase-ui-portal]';
 
 // The page is one button, away from the trigger and from the popup.
@@ -112,7 +116,8 @@ async function press(element: Element) {
 
 /**
  * The cases of a root whose anatomy has no popup part. The positioner, or else the backdrop, is
- * then the part that shows. Its animations end each open change.
+ * then the part that shows. Its animations end each open change. The Tab key goes past such a root
+ * while it is open.
  */
 export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
   const {
@@ -196,6 +201,52 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
     expect(isShown(getShownPart())).toBe(false);
     expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
   }
+
+  // Presses the key until `target` has the focus. Each press must move the focus to an element that
+  // a user sees, and to no element a second time. The first stop is the element that has the focus
+  // at the start.
+  async function expectTabReaches(target: HTMLElement, shift: boolean) {
+    const stops = [document.activeElement];
+    while (stops.at(-1) !== target && stops.length <= TAB_LIMIT) {
+      await userEvent.tab({ shift });
+      await flushMicrotasks();
+      stops.push(document.activeElement);
+    }
+    expect(target).toHaveFocus();
+    expect(stops.filter((stop) => stop?.matches(FOCUS_GUARD))).toEqual([]);
+    expect(new Set(stops).size).toBe(stops.length);
+  }
+
+  async function passOpenRoot(create: PopupAnatomyTestConfig['createComponent']) {
+    const { App, open, onOpenChangeComplete } = createAnatomy(create);
+    await render(
+      <>
+        <button type="button" data-testid="before">
+          Before
+        </button>
+        <App />
+        <button type="button" data-testid="after">
+          After
+        </button>
+      </>,
+    );
+    await openAnatomy(open, onOpenChangeComplete);
+    const before = document.querySelector<HTMLElement>('[data-testid="before"]')!;
+    const after = document.querySelector<HTMLElement>('[data-testid="after"]')!;
+    before.focus();
+
+    await expectTabReaches(after, false);
+    await expectTabReaches(before, true);
+  }
+
+  describe('VUE-132: the Tab key at an open root with no popup part', () => {
+    it('goes past the root in both directions', () => passOpenRoot(createComponent));
+
+    it.skipIf(createBackdropComponent === undefined)(
+      'goes past a root with no positioner in both directions',
+      () => passOpenRoot(createBackdropComponent!),
+    );
+  });
 
   describe('VUE-72: an anatomy with no popup part', () => {
     it('hides the shown part after the close and reports each completion one time', () =>

@@ -1,0 +1,11 @@
+{
+  "id": "VUE-130",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/viewport/ToastViewport.tsx#L119-L144",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/interactions/useDismiss.ts#L778-L782",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+    "https://dom.spec.whatwg.org/#dom-event-stoppropagation"
+  ],
+  "behavior": "After F6, an Escape in the toast viewport that no toast handles returns the focus to the element that had it before F6. The viewport stops that event, so a popup under the toasts, such as a modal dialog, stays open. The viewport does not stop an Escape that moves no focus. In Base UI, the viewport has no Escape handler, so the focus stays in the viewport. The event reaches the document, and a popup that listens there closes.",
+  "dueWith": "packages/react/src/toast/viewport/ToastViewport.tsx"
+}

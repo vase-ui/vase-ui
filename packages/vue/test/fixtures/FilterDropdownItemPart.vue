@@ -57,7 +57,7 @@ defineExpose({ element });
   <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <FilterDropdownHiddenItemText v-else :set-text="setHiddenText"
+  <FilterDropdownHiddenItemText v-else :set-text="setHiddenText" :label="label"
     ><slot :state="state"
   /></FilterDropdownHiddenItemText>
 </template>

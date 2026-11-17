@@ -20,10 +20,11 @@ function hasAttribute(element: string, name: string) {
 const GROUP = /<div[^>]*role="group"[^>]*>/;
 const INPUT = /<div[^>]*data-testid="input"[^>]*>/;
 const HIDDEN_INPUT = /<input[^>]*aria-hidden="true"[^>]*>/;
+const segmentTags = (html: string) => html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
 // A server writes an empty `value` as a bare attribute.
 const segments = (html: string) =>
-  Array.from(html.matchAll(/<input[^>]* data-type="(\w+)"[^>]*>/g), ([element, type]) => [
-    type,
+  segmentTags(html).map((element) => [
+    attribute(element, 'data-type'),
     /\svalue(?:="([^"]*)")?[\s>]/.exec(element)?.[1] ?? '',
   ]);
 
@@ -175,6 +176,43 @@ describe('<TimeField.Root /> on a server', () => {
       expect(attribute(tag(html, HIDDEN_INPUT), 'aria-describedby')).toBe(descriptionId);
     },
   );
+
+  it('gives each segment the style field-sizing: content in the server HTML', async () => {
+    const html = await renderToString(
+      <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} locale="en-US">
+        <TimeField.Input />
+      </TimeField.Root>,
+    );
+    const tags = segmentTags(html);
+
+    expect(tags).toHaveLength(3);
+    for (const element of tags) {
+      expect(attribute(element, 'style')).toContain('field-sizing:content');
+    }
+  });
+
+  it('writes no style attribute when the style of the consumer unsets field-sizing', async () => {
+    const html = await renderToString(
+      <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} locale="en-US">
+        <TimeField.Input>
+          {{
+            segment: ({ segment }: { segment: TimeField.Input.Segment }) =>
+              segment.editable ? (
+                <TimeField.Segment segment={segment} style={{ fieldSizing: undefined }} />
+              ) : (
+                <TimeField.Literal segment={segment} />
+              ),
+          }}
+        </TimeField.Input>
+      </TimeField.Root>,
+    );
+    const tags = segmentTags(html);
+
+    expect(tags).toHaveLength(3);
+    for (const element of tags) {
+      expect(hasAttribute(element, 'style')).toBe(false);
+    }
+  });
 });
 
 describe('the modules of the time field with no Temporal', () => {
