@@ -272,9 +272,9 @@ defineExpose({ element });
     :state="state"
     :children="FloatingPortalChildren"
   />
-  <component :is="as" v-else-if="inPlace" v-bind="elementProps()"
-    ><slot :state="state"
-  /></component>
+  <component :is="as" v-else-if="inPlace" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
   <Teleport
     v-else-if="containerElement"
     :ref="setTeleportStart"
