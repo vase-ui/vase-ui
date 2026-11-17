@@ -136,7 +136,7 @@ watch(
 
 const shouldRenderOwner = computed(() => {
   const focusManager = focusManagerState.value;
-  return !props.inPlace && focusManager !== null && !focusManager.modal && focusManager.open;
+  return focusManager !== null && !focusManager.modal && focusManager.open;
 });
 
 // A popup with a next focusable element has guards beside its trigger. A second pair of guards at
@@ -152,6 +152,8 @@ const nodeId = useElementId(element);
 // Vue gives a ref of a `Teleport` the node that marks the place of the `Teleport`: a comment in a
 // development build, and an empty text node in a production build. The guards and the owner
 // element are not in the template, so the part has one root node in either form.
+// In place, the part renders no `Teleport`. The ref is then `null`, so the part keeps no guards and
+// no owner element.
 const teleportStart = shallowRef<Comment | Text | null>(null);
 
 function setTeleportStart(node: unknown) {
