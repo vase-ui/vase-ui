@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { withoutVaporAnchors, createRenderer, fireEvent, screen } from '#test-utils';
+import { createRenderer, fireEvent, screen, withoutVaporAnchors } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
 

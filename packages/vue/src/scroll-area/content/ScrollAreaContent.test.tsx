@@ -2,11 +2,11 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
-  expectSetupErrorWarnings,
   createHeldBranch,
   createRenderer,
-  installPartsInterop,
   describeConformance,
+  expectSetupErrorWarnings,
+  installPartsInterop,
   isJSDOM,
   renderOnServer,
   screen,

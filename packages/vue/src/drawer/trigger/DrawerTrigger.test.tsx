@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import {
-  withoutVaporAnchors,
   createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
   screen,
+  withoutVaporAnchors,
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';

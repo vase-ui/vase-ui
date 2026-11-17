@@ -22,7 +22,8 @@ function casesOf(tasks: readonly RunnerTask[]): RunnerTestCase[] {
 // Vitest reads `fails` after a case runs. A case with `fails` passes when it fails.
 // It fails with `Expect test to fail` when it passes. Vitest has no public setter for `fails`.
 // This hook sets it on the collected cases before the first case runs.
-// `-t` and `only` keep each case in the file. A filter thus reports no absent entry for an unselected case.
+// `-t` and `only` keep each case in the file. A filter thus reports no absent entry for an
+// unselected case.
 // eslint-disable-next-line no-empty-pattern -- Vitest reads the first parameter as a fixture pattern, and the file is the second parameter.
 beforeAll(({}, file) => {
   const fails = files[file.file.name]?.fails ?? {};

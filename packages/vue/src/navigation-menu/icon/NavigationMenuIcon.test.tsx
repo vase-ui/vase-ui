@@ -3,9 +3,9 @@ import { h } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   screen,
   takeReportedMessages,
 } from '#test-utils';

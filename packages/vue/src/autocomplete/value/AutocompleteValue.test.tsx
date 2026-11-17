@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import {
-  withoutVaporAnchors,
   createRenderer,
   fireEvent,
   flushMicrotasks,
   screen,
+  withoutVaporAnchors,
 } from '#test-utils';
 
 async function type(text: string) {

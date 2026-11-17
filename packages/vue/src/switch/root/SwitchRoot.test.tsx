@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, createApp, createSSRApp, nextTick, defineComponent, h, shallowRef } from 'vue';
+import { KeepAlive, createApp, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
@@ -8,7 +8,6 @@ import {
   createFormDataSpy,
   createHeldBranch,
   createRenderer,
-  installPartsInterop,
   describeConformance,
   fireEvent,
   flushMicrotasks,
@@ -16,6 +15,7 @@ import {
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
+  installPartsInterop,
   isJSDOM,
   mockPageBeforeLoad,
   removedPartHydrationTests,

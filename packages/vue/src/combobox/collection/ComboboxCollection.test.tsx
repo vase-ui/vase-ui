@@ -1,11 +1,11 @@
 import { expect, describe, it } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
-  withoutVaporAnchors,
   createRenderer,
   fireEvent,
   flushMicrotasks,
   screen,
+  withoutVaporAnchors,
 } from '#test-utils';
 
 describe('<Combobox.Collection />', () => {

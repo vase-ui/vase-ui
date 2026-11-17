@@ -2,9 +2,9 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   flushMicrotasks,
   screen,
   takeReportedMessages,

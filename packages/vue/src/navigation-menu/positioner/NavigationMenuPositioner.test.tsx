@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import {
-  expectSetupErrorWarnings,
   createHeldBranch,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
   screen,

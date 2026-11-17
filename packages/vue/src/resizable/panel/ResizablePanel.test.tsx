@@ -2,12 +2,12 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import {
-  isVaporParts,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isVaporParts,
   removedPartHydrationTests,
   renderOnServer,
   screen,

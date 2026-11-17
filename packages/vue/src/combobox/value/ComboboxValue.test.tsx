@@ -1,7 +1,7 @@
 import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { withoutVaporAnchors, createRenderer, screen } from '#test-utils';
+import { createRenderer, screen, withoutVaporAnchors } from '#test-utils';
 
 type ValueSlotProps = { value: any };
 

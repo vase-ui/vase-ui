@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
 import {
-  withoutVaporAnchors,
   createRenderer,
   describeConformance,
   screen,
   waitForLaterMillisecond,
+  withoutVaporAnchors,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';

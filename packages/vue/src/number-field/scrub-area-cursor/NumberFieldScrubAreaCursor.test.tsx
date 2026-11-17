@@ -2,11 +2,11 @@ import { describe, expect, onTestFinished, vi, it } from 'vitest';
 import { defineComponent, defineCustomElement, provide, shallowRef, Teleport } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
-  installPartsInterop,
   describeConformance,
+  expectSetupErrorWarnings,
   flushMicrotasks,
+  installPartsInterop,
   screen,
   takeReportedMessages,
   waitFor,

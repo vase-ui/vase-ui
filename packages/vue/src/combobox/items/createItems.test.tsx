@@ -2,7 +2,6 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
-  withoutVaporAnchors,
   createRenderer,
   expectType,
   fireEvent,
@@ -12,6 +11,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  withoutVaporAnchors,
 } from '#test-utils';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';

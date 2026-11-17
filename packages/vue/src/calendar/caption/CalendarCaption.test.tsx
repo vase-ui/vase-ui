@@ -1,8 +1,8 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   screen,
   takeReportedMessages,
   waitFor,

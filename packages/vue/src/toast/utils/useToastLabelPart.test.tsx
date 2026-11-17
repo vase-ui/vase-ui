@@ -2,11 +2,11 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import {
-  withoutVaporAnchors,
   createHeldBranch,
   createRenderer,
   screen,
   takeReportedMessages,
+  withoutVaporAnchors,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';

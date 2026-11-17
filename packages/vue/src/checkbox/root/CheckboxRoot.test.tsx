@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createApp, createSSRApp, nextTick, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { createApp, createSSRApp, defineComponent, h, nextTick, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
@@ -9,7 +9,6 @@ import {
   createFormDataSpy,
   createHeldBranch,
   createRenderer,
-  installPartsInterop,
   describeConformance,
   fireEvent,
   flushMicrotasks,
@@ -17,6 +16,7 @@ import {
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
+  installPartsInterop,
   isJSDOM,
   mockPageBeforeLoad,
   removedPartHydrationTests,

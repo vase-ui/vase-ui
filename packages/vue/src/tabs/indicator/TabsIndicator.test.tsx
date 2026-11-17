@@ -3,12 +3,12 @@ import { createSSRApp, defineComponent } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
-  installPartsInterop,
   describeConformance,
+  expectSetupErrorWarnings,
   flushMicrotasks,
   hydrate,
+  installPartsInterop,
   isJSDOM,
   renderOnServer,
   screen,

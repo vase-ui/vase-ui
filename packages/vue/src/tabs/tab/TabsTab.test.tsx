@@ -2,10 +2,10 @@ import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
-  expectSetupErrorWarnings,
   createHeldBranch,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
   isJSDOM,

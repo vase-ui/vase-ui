@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
   screen,

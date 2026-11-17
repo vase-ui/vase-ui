@@ -4,12 +4,12 @@ import { createApp, createSSRApp, defineComponent, nextTick, provide, shallowRef
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
-  expectSetupErrorWarnings,
   createRenderer,
-  installPartsInterop,
   describeConformance,
+  expectSetupErrorWarnings,
   fireEvent,
   flushMicrotasks,
+  installPartsInterop,
   isJSDOM,
   renderOnServer,
   screen,
