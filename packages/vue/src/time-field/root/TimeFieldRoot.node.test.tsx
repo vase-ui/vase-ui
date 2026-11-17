@@ -175,6 +175,43 @@ describe('<TimeField.Root /> on a server', () => {
       expect(attribute(tag(html, HIDDEN_INPUT), 'aria-describedby')).toBe(descriptionId);
     },
   );
+
+  it('gives each segment the style field-sizing: content in the server HTML', async () => {
+    const html = await renderToString(
+      <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} locale="en-US">
+        <TimeField.Input />
+      </TimeField.Root>,
+    );
+    const tags = html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
+
+    expect(tags).toHaveLength(3);
+    for (const segment of tags) {
+      expect(attribute(segment, 'style')).toContain('field-sizing:content');
+    }
+  });
+
+  it('writes no style attribute when the style of the consumer unsets field-sizing', async () => {
+    const html = await renderToString(
+      <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} locale="en-US">
+        <TimeField.Input>
+          {{
+            segment: ({ segment }: { segment: TimeField.Input.Segment }) =>
+              segment.editable ? (
+                <TimeField.Segment segment={segment} style={{ fieldSizing: undefined }} />
+              ) : (
+                <TimeField.Literal segment={segment} />
+              ),
+          }}
+        </TimeField.Input>
+      </TimeField.Root>,
+    );
+    const tags = html.match(/<input[^>]* data-type="\w+"[^>]*>/g) ?? [];
+
+    expect(tags).toHaveLength(3);
+    for (const segment of tags) {
+      expect(hasAttribute(segment, 'style')).toBe(false);
+    }
+  });
 });
 
 describe('the modules of the time field with no Temporal', () => {
