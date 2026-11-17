@@ -1,3 +1,4 @@
+import { isElement } from '@floating-ui/utils/dom';
 import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
@@ -13,7 +14,8 @@ import { useKeepAliveState } from '../useKeepAliveState';
  * of the native `<label>` that names `labelSourceRef`. A server has no DOM, so the server HTML
  * never has the id of a native `<label>`. The control gets it in the first flush after the mount.
  * The result follows a label that comes or goes, a change of its `for` and a change of its `id`. It
- * also follows a change of the `id` of the control.
+ * also follows a change of the `id` of the control. The result also follows a move of the control
+ * to another document or shadow root.
  * @param labelId The id of the label of the provider. Pass the result of `useControlLabelId()`.
  * @param labelSourceRef The labelable element, such as the hidden input of the control. Pass a ref
  * that a ref callback writes, or a getter of one. The lookup starts when the value changes from
@@ -51,25 +53,39 @@ export function useAriaLabelledBy(
 
   // `KeepAlive` moves the DOM of a held control into a detached element. The input has no label
   // there, and its root node is that element. The lookup and the observer wait for the activation.
-  const { isHeld, shown } = useKeepAliveState();
+  const { isHeld } = useKeepAliveState();
 
   // Base UI runs this lookup after each commit. A Vue component with the same props does not render
   // again when its parent renders, so a native `<label>` that a sibling adds or removes later would
   // not change the result. The lookup thus also runs when the DOM of the root node changes.
   watch(
-    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld, shown],
+    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld],
     ([labelSource, enabled, , held], _previous, onCleanup) => {
       if (!labelSource || !enabled || held) {
         fallbackAriaLabelledBy.value = undefined;
         return;
       }
 
+      let observedRoot: Node | undefined;
+      let stopObserver: (() => void) | undefined;
+
+      // `Teleport` can move the input to another document or shadow root with no change of a
+      // source. The observer of the old root node sees that move.
       const update = () => {
         fallbackAriaLabelledBy.value = getAriaLabelledBy(labelSource, generatedLabelId.value);
+        const root = labelSource.getRootNode();
+        // A root node that is an element is the top of a tree in no document and no shadow root.
+        // An observer of it gets no record when the consumer attaches that tree, so the observer
+        // stays on the previous root node.
+        if (root !== observedRoot && (!observedRoot || !isElement(root))) {
+          stopObserver?.();
+          observedRoot = root;
+          stopObserver = observeLabels(root, update);
+        }
       };
 
       update();
-      onCleanup(observeLabels(labelSource.getRootNode(), update));
+      onCleanup(() => stopObserver?.());
     },
     { flush: 'post' },
   );
