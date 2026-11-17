@@ -26,6 +26,7 @@ import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { NavigationMenuPortalContext } from './NavigationMenuPortalContext';
@@ -70,7 +71,7 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -79,7 +80,7 @@ defineExpose({ element });
   <FloatingPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <slot :state="state" />
   </FloatingPortal>

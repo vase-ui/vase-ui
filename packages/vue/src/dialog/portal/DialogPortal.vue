@@ -34,6 +34,7 @@ import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import DialogPortalChildren from './DialogPortalChildren.vue';
@@ -82,13 +83,17 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...$attrs, ...portalProps }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), ...portalProps }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="DialogPortalChildren" />
     </template>
   </FloatingPortal>
-  <FloatingPortal v-else-if="shouldRender" ref="portal" v-bind="{ ...$attrs, ...portalProps }">
+  <FloatingPortal
+    v-else-if="shouldRender"
+    ref="portal"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), ...portalProps }"
+  >
     <DialogPortalChildren><slot :state="state" /></DialogPortalChildren>
   </FloatingPortal>
 </template>

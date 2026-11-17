@@ -35,6 +35,7 @@ export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
+export { portalOwnPropsTests } from './portalOwnPropsTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { viewportConformanceTests } from './viewportConformanceTests';
