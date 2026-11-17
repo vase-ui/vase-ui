@@ -23,7 +23,9 @@ describe('withoutPropsOf', () => {
       onClick: vi.fn(),
     };
     expect(withoutPropsOf({ ...attributes, inPlace: true }, FloatingPortal)).toEqual(attributes);
-    expect(withoutPropsOf({ 'in-place': '' }, FloatingPortalLite)).toEqual({ 'in-place': '' });
+    expect(withoutPropsOf({ container: null, 'in-place': '' }, FloatingPortalLite)).toEqual({
+      'in-place': '',
+    });
   });
 
   it('copies all attributes for a component with no props option', () => {
