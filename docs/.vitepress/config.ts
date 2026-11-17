@@ -77,11 +77,14 @@ export default defineConfig({
   description: manifest.description,
   base: '/',
   cleanUrls: true,
-  // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
   head: [
+    // If two icons are equally appropriate, a browser uses the last one. The SVG link thus follows
+    // the ICO link.
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon.png' }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
     [
       'script',
       {},
