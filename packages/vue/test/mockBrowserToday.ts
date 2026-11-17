@@ -1,6 +1,19 @@
 import { onTestFinished, vi } from 'vitest';
 
 /**
+ * Makes `Temporal.Now.plainDateISO` give `day` for each time zone until the test ends, and returns
+ * that day. Call it in a test, or in a function that a test calls.
+ */
+export function mockToday(day: string): Temporal.PlainDate {
+  const date = Temporal.PlainDate.from(day);
+  const spy = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(date);
+  onTestFinished(() => {
+    spy.mockRestore();
+  });
+  return date;
+}
+
+/**
  * Makes `Temporal.Now.plainDateISO` give another day than today, for the rest of the test, and
  * returns that day. The day differs from today in the day only, in the month, or in the year.
  *
@@ -17,9 +30,5 @@ export function mockBrowserToday(distance: 'day' | 'month' | 'year'): Temporal.P
   } else {
     browserDay = real.add(distance === 'month' ? { months: 2 } : { years: 2 });
   }
-  const spy = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(browserDay);
-  onTestFinished(() => {
-    spy.mockRestore();
-  });
-  return browserDay;
+  return mockToday(browserDay.toString());
 }

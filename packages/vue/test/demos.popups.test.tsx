@@ -8,6 +8,7 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  mockToday,
   waitFor,
   waitForLaterMillisecond,
   within,
@@ -299,6 +300,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
     const { render } = createRenderer();
 
     it('opens each popup with no Vue warning, no axe violation and no cut option', async () => {
+      mockToday('2026-11-14');
       // A path is the index of the trigger at each depth. The case opens each path in a new mount,
       // and it adds the triggers of the popup at the end of a path as new paths.
       const paths: number[][] = [];
