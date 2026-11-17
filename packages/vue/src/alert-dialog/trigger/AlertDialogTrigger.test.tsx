@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { createRenderer, fireEvent, screen } from '#test-utils';
+import { withoutVaporAnchors, createRenderer, fireEvent, screen } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
 
@@ -16,7 +16,9 @@ describe('<AlertDialog.Trigger />', () => {
         </Dialog.Trigger>
       </Dialog.Root>,
     );
-    const dialogTrigger = screen.getByRole('button', { name: 'Delete' }).outerHTML;
+    const dialogTrigger = withoutVaporAnchors(
+      screen.getByRole('button', { name: 'Delete' }),
+    ).outerHTML;
     unmount();
 
     await render(
@@ -32,7 +34,7 @@ describe('<AlertDialog.Trigger />', () => {
       </AlertDialog.Root>,
     );
     const trigger = screen.getByRole('button', { name: 'Delete' });
-    expect(trigger.outerHTML).toBe(dialogTrigger);
+    expect(withoutVaporAnchors(trigger).outerHTML).toBe(dialogTrigger);
 
     await fireEvent.click(trigger);
     expect(clicks).toBe(1);

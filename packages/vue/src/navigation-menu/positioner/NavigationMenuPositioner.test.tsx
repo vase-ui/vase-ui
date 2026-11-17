@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import {
+  expectSetupErrorWarnings,
   createHeldBranch,
   createRenderer,
   describeConformance,
@@ -278,9 +279,6 @@ describe('<NavigationMenu.Positioner />', () => {
       'Vase UI: <NavigationMenu.Portal> is missing. The positioner reads from the portal whether the popup stays in the DOM while it is closed. Put <NavigationMenu.Positioner> inside <NavigationMenu.Portal>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

@@ -1,6 +1,7 @@
 import { onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
+import { installPartsInterop } from './testApp';
 import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
 
 declare module 'vitest/browser' {
@@ -78,7 +79,7 @@ async function mountServerHtml(
   props: Record<string, unknown> | undefined,
   container: HTMLElement,
 ) {
-  const app = createSSRApp(component, props);
+  const app = installPartsInterop(createSSRApp(component, props));
   recordVueWarnings(app);
   onTestFinished(() => {
     try {
@@ -243,7 +244,7 @@ async function renderOnClient(
 ): Promise<string> {
   const container = document.createElement('div');
   document.body.append(container);
-  const app = createApp(component, props);
+  const app = installPartsInterop(createApp(component, props));
   recordVueWarnings(app);
 
   try {

@@ -104,7 +104,7 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
 import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -185,6 +185,11 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+// Vapor sets the input ref before the part mounts. A ref callback can click the control then.
+let isMounted = false;
+onMounted(() => {
+  isMounted = true;
+});
 const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
@@ -398,7 +403,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
         event.preventDefault();
 
         const input = inputElement.value;
-        if (!input) {
+        if (!isMounted || !input) {
           return;
         }
 

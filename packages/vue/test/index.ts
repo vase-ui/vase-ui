@@ -2,7 +2,7 @@ export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
-export { isVaporApp } from './testApp';
+export { installPartsInterop, isVaporApp, isVaporParts } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockBrowserToday } from './mockBrowserToday';
 export { mockRuntimeDateTimeLocale, mockRuntimeLocale } from './mockRuntimeLocale';
@@ -57,5 +57,6 @@ export {
   recordInputEvents,
   setAttributeInHtml,
 } from './hydration';
-export { takeReportedMessages } from './reportedMessages';
+export { expectSetupErrorWarnings, takeReportedMessages } from './reportedMessages';
 export { expectNoAxeViolations } from './axe';
+export { withoutVaporAnchors } from './withoutVaporAnchors';

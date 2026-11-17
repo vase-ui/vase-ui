@@ -123,7 +123,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
@@ -254,6 +254,11 @@ const isIndeterminate = computed(
 );
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+// Vapor sets the input ref before the part mounts. A ref callback can click the control then.
+let isMounted = false;
+onMounted(() => {
+  isMounted = true;
+});
 // A field can have more than one input, so the input goes to the registry of the field and not to
 // `validation.inputRef`. The group reads the value when the form needs it, so a change of the value
 // needs no new registration. The parent checkbox is not an input of its field, because it has no
@@ -598,7 +603,7 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
         event.preventDefault();
 
         const input = inputElement.value;
-        if (!input) {
+        if (!isMounted || !input) {
           return;
         }
 

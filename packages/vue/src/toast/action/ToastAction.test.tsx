@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, screen, waitForLaterMillisecond } from '#test-utils';
+import {
+  withoutVaporAnchors,
+  createRenderer,
+  describeConformance,
+  screen,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import { List, Button } from '../utils/test-utils';
@@ -178,7 +184,9 @@ describe('<Toast.Action />', () => {
       </Toast.Provider>,
     );
 
-    expect(screen.getByTestId('action').innerHTML).toBe('<strong>Undo</strong>');
+    expect(withoutVaporAnchors(screen.getByTestId('action')).innerHTML).toBe(
+      '<strong>Undo</strong>',
+    );
   });
 
   it('renders its default slot when actionProps has no content', async () => {

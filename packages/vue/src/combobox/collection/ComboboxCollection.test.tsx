@@ -1,6 +1,12 @@
 import { expect, describe, it } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  withoutVaporAnchors,
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 describe('<Combobox.Collection />', () => {
   const { render } = createRenderer();
@@ -52,7 +58,7 @@ describe('<Combobox.Collection />', () => {
     );
 
     // The fragment of a slot leaves empty text nodes.
-    expect(screen.getByTestId('group').innerHTML).toBe('');
+    expect(withoutVaporAnchors(screen.getByTestId('group')).innerHTML).toBe('');
   });
 
   describe('Vue form of the collection', () => {

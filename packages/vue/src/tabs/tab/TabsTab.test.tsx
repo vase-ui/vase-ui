@@ -2,6 +2,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
+  expectSetupErrorWarnings,
   createHeldBranch,
   createRenderer,
   describeConformance,
@@ -375,9 +376,6 @@ describe('<Tabs.Tab />', () => {
       'Vase UI: A tab or an indicator of Tabs must be inside <Tabs.List>. Without a list the part has no list element to read and no keyboard navigation. Put the part inside <Tabs.List>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

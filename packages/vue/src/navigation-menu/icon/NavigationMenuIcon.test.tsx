@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '@vase-ui/vue/types';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  expectSetupErrorWarnings,
+  createRenderer,
+  describeConformance,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 describe('<NavigationMenu.Icon />', () => {
@@ -79,9 +85,6 @@ describe('<NavigationMenu.Icon />', () => {
       'Vase UI: <NavigationMenu.Item> is missing. A trigger, a content and an icon read the value of their item. Put the part inside <NavigationMenu.Item>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

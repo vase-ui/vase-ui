@@ -2,6 +2,7 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import {
+  expectSetupErrorWarnings,
   createRenderer,
   describeConformance,
   flushMicrotasks,
@@ -65,6 +66,6 @@ describe('<Select.ItemText />', () => {
     ).rejects.toThrow(
       'Vase UI: A text or an indicator of a Select item must be inside <Select.Item>.',
     );
-    expect(takeReportedMessages()).toHaveLength(1);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

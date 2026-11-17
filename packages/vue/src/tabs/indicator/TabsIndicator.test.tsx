@@ -3,7 +3,9 @@ import { createSSRApp, defineComponent } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
+  expectSetupErrorWarnings,
   createRenderer,
+  installPartsInterop,
   describeConformance,
   flushMicrotasks,
   hydrate,
@@ -1008,7 +1010,7 @@ describe('<Tabs.Indicator />', () => {
       const indicator = getIndicator(container);
       expect(indicator).toHaveAttribute('hidden');
 
-      const app = createSSRApp(TabsIndicatorHydration, props);
+      const app = installPartsInterop(createSSRApp(TabsIndicatorHydration, props));
       onTestFinished(() => {
         app.unmount();
         container.remove();
@@ -1145,9 +1147,6 @@ describe('<Tabs.Indicator />', () => {
       'Vase UI: A tab or an indicator of Tabs must be inside <Tabs.List>. Without a list the part has no list element to read and no keyboard navigation. Put the part inside <Tabs.List>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });

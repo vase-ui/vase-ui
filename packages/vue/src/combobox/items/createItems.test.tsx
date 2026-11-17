@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
+  withoutVaporAnchors,
   createRenderer,
   expectType,
   fireEvent,
@@ -1048,7 +1049,7 @@ describe('Combobox.createItems', () => {
 
       await render(<App />);
 
-      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+      expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
     });
 
     it('does not treat source value fields as derived selections', async () => {
@@ -1074,7 +1075,7 @@ describe('Combobox.createItems', () => {
       await render(<App />);
 
       expect(screen.getByTestId('placeholder')).toHaveTextContent('Choose an option');
-      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+      expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
     });
 
     it('toggles derived values in multiple mode', async () => {

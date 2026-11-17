@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  withoutVaporAnchors,
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 async function type(text: string) {
   await fireEvent.input(screen.getByRole('combobox'), {
@@ -71,7 +77,7 @@ describe('<Autocomplete.Value />', () => {
       </Autocomplete.Root>,
     );
 
-    expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+    expect(withoutVaporAnchors(screen.getByTestId('value'))).toBeEmptyDOMElement();
   });
 
   describe('prop: children', () => {

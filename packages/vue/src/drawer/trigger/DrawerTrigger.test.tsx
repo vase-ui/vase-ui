@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
-import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  withoutVaporAnchors,
+  createHeldBranch,
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
@@ -17,7 +24,9 @@ describe('<Drawer.Trigger />', () => {
         </Dialog.Trigger>
       </Dialog.Root>,
     );
-    const dialogTrigger = screen.getByRole('button', { name: 'Open' }).outerHTML;
+    const dialogTrigger = withoutVaporAnchors(
+      screen.getByRole('button', { name: 'Open' }),
+    ).outerHTML;
     unmount();
 
     await render(
@@ -28,7 +37,7 @@ describe('<Drawer.Trigger />', () => {
       </Drawer.Root>,
     );
     const trigger = screen.getByRole('button', { name: 'Open' });
-    expect(trigger.outerHTML).toBe(dialogTrigger);
+    expect(withoutVaporAnchors(trigger).outerHTML).toBe(dialogTrigger);
 
     await fireEvent.click(trigger);
     expect(clicks).toBe(1);

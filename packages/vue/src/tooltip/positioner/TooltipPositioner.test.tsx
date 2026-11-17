@@ -9,6 +9,7 @@ import {
   screen,
   takeReportedMessages,
   isVaporApp,
+  isVaporParts,
 } from '#test-utils';
 
 const Trigger: FunctionalComponent<Tooltip.Trigger.Props> = (props, { slots }) => (
@@ -90,12 +91,11 @@ describe('<Tooltip.Positioner />', () => {
     expect(takeReportedMessages()).toHaveLength(1);
   });
 
-  // In a Vapor app this case fails. The case before it throws in `setup`, and Vue then keeps that
-  // component as the current instance. A Vapor app takes the current instance as the parent of
-  // its root, so the part finds the context of the earlier case.
+  // With virtual DOM parts in a Vapor app, the earlier setup error leaves the current instance set.
+  // A Vapor app takes that instance as the parent of its root, so the part finds the earlier context.
   it(
     'throws a descriptive error when rendered outside <Tooltip.Root>',
-    { fails: isVaporApp },
+    { fails: isVaporApp && !isVaporParts },
     async () => {
       await expect(render(<Tooltip.Positioner />)).rejects.toThrow(
         'Vase UI: A part of Tooltip must be inside <Tooltip.Root>.',

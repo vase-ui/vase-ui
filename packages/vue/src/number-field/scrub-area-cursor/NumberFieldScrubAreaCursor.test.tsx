@@ -2,7 +2,9 @@ import { describe, expect, onTestFinished, vi, it } from 'vitest';
 import { defineComponent, defineCustomElement, provide, shallowRef, Teleport } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
+  expectSetupErrorWarnings,
   createRenderer,
+  installPartsInterop,
   describeConformance,
   flushMicrotasks,
   screen,
@@ -36,6 +38,7 @@ customElements.define(
   CURSOR_ELEMENT_NAME,
   defineCustomElement({
     styles: [CURSOR_CSS],
+    configureApp: installPartsInterop,
     render: () => (
       <NumberField.Root>
         <NumberField.Input />
@@ -495,9 +498,6 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       'Vase UI: A part of the scrub area of Number Field must be inside <NumberField.ScrubArea>. Without a scrub area the part has no scrub to follow. Put the part inside <NumberField.ScrubArea>.',
     );
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    expectSetupErrorWarnings(takeReportedMessages());
   });
 });
