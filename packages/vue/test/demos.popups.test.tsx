@@ -41,14 +41,6 @@ const sources = import.meta.glob<string>(
   { query: '?raw', import: 'default', eager: true },
 );
 
-// A family with a record of its Base UI demos keeps the style sheets of Base UI. The other demos
-// have style sheets that Vase UI writes.
-const familiesWithBaseUiSheets = new Set(
-  Object.keys(import.meta.glob('../../../docs/demos/*/upstream.json')).map(
-    (path) => /([^/]+)\/upstream\.json$/.exec(path)![1],
-  ),
-);
-
 // A demo has a popup when a file of its folder names a `Portal` part.
 const demos = Object.entries(modules)
   .map(([path, { default: Demo }]) => ({
@@ -312,7 +304,6 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         0,
       );
 
-      const hasOwnSheet = !familiesWithBaseUiSheets.has(name.slice(0, name.indexOf('/')));
       const cut: string[] = [];
       for (const path of paths) {
         const view = await mount(render, variant, Demo);
@@ -343,9 +334,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         await expectNoViolationsInOpenState(frame);
         for (const portal of portals().filter((element) => !frame.contains(element))) {
           await expectNoViolationsInOpenState(portal);
-          if (hasOwnSheet) {
-            cut.push(...optionsWithCutText(portal));
-          }
+          cut.push(...optionsWithCutText(portal));
         }
 
         if (path.length < 3) {
