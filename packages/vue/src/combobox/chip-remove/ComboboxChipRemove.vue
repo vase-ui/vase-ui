@@ -27,13 +27,13 @@ export interface ComboboxChipRemoveProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, toRaw } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';

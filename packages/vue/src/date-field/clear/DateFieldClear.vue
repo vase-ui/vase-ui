@@ -24,13 +24,13 @@ export interface DateFieldClearProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import DateFieldClearChildren from './DateFieldClearChildren.vue';
 

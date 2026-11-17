@@ -37,7 +37,6 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -46,6 +45,7 @@ import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 

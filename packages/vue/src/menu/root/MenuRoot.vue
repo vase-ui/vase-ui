@@ -154,8 +154,8 @@ export type MenuParent =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { inject, provide } from 'vue';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import { useMenuRoot } from './useMenuRoot';
 

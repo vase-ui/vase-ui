@@ -46,13 +46,13 @@ export interface DialogTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';

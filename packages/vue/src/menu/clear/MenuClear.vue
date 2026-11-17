@@ -23,9 +23,9 @@ export interface MenuClearProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFilterDropdownClear } from '../../filter-dropdown/clear/FilterDropdownClear';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuFilterPart } from '../filter-root/MenuFilterContext';
 

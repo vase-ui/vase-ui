@@ -20,10 +20,10 @@ export interface AlertDialogTriggerState extends DialogTriggerState {}
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useTemplateRef } from 'vue';
 import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 defineOptions({ inheritAttrs: false });
 

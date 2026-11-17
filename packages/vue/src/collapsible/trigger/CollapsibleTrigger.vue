@@ -26,13 +26,13 @@ export interface CollapsibleTriggerProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';

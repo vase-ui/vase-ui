@@ -28,10 +28,10 @@ export interface CalendarMonthCellProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { useCalendarCell } from '../utils/useCalendarCell';
 

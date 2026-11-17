@@ -165,7 +165,6 @@ export type AutocompleteRootHighlightEventDetails = AriaCombobox.HighlightEventD
 </script>
 
 <script setup lang="ts" generic="Items extends readonly any[] = never">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 // vue-tsc resolves `Items` before it checks a listener of a template.
 // With the default `never`, `itemHighlighted` accepts a typed parameter and keeps `undefined`.
 import { computed, nextTick, shallowRef, watch } from 'vue';
@@ -174,6 +173,7 @@ import { useCoreFilter } from '../../combobox/root/utils/useFilter';
 import { useControlled } from '../../common/useControlled';
 import { REASONS } from '../../internals/reasons';
 import { stringifyAsLabel } from '../../internals/resolveValueLabel';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 type ItemValue = AutocompleteItemValue<Items>;
 

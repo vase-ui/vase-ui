@@ -84,9 +84,9 @@ export type PopoverRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { onScopeDispose, provide, watch } from 'vue';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';

@@ -27,11 +27,11 @@ export interface ToastActionProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastRootContext } from '../root/ToastRootContext';
 import { isRenderableNode } from '../utils/isRenderableNode';

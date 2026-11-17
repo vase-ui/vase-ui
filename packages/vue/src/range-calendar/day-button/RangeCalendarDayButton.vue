@@ -5,6 +5,7 @@ import type {
   VaseUIComponentProps,
   WithVaseUIEvent,
 } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { RangeCalendarDayState } from '../day/RangeCalendarDay.vue';
 
 export interface RangeCalendarDayButtonState extends RangeCalendarDayState {}
@@ -23,7 +24,6 @@ export interface RangeCalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
 import { useCalendarMonthContext } from '../../calendar/month/CalendarMonthContext';

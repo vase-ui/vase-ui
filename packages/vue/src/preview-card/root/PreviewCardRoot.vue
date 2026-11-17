@@ -66,8 +66,8 @@ export type PreviewCardRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { provide, watch } from 'vue';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';

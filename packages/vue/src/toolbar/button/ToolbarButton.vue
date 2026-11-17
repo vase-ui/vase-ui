@@ -42,12 +42,12 @@ const FORWARDED_DISABLED = { disabled: '' };
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
 import type { ToolbarRootItemMetadata } from '../root/ToolbarRoot.vue';

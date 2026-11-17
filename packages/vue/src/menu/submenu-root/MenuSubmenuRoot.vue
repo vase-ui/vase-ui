@@ -17,8 +17,8 @@ export type MenuSubmenuRootChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { inject, provide } from 'vue';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import type { MenuRootHighlightEventDetails } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';

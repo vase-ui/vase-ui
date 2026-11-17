@@ -29,7 +29,6 @@ export interface DateRangePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, useAttrs, useTemplateRef } from 'vue';
 import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
 import type { DateValue } from '../../internals/date-time/temporal';
@@ -41,6 +40,7 @@ import {
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import RangeCalendarRoot from '../../range-calendar/root/RangeCalendarRoot.vue';
 import type { DateRangePickerRange } from '../root/DateRangePickerRootContext';

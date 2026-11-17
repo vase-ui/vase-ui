@@ -40,7 +40,6 @@ export interface SelectPositionerProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -50,6 +49,7 @@ import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';

@@ -32,13 +32,13 @@ export interface ToastPositionerProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { isElement } from '@floating-ui/utils/dom';
 import { computed, provide, shallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import * as ToastRootCssVars from '../root/ToastRootCssVars';

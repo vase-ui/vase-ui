@@ -60,12 +60,12 @@ export interface ComboboxPopupProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, toRaw } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { contains, getTarget } from '../../common/shadowDom';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';

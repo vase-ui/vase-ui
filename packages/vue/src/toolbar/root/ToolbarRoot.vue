@@ -44,11 +44,11 @@ export interface ToolbarRootProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef } from 'vue';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { ToolbarRootContext } from './ToolbarRootContext';
 

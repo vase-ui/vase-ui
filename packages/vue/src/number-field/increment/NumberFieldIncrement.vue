@@ -23,8 +23,8 @@ export interface NumberFieldIncrementProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useNumberFieldStepperButton } from '../root/useNumberFieldStepperButton';
 
 defineOptions({ inheritAttrs: false });

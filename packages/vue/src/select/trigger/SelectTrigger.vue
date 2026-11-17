@@ -48,7 +48,6 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
@@ -67,6 +66,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';

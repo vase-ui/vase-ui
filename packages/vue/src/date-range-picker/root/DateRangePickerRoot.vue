@@ -151,12 +151,12 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef, useTemplateRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';

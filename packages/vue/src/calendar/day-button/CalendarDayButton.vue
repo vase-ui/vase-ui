@@ -23,9 +23,9 @@ export interface CalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarDayContext } from '../day/CalendarDayContext';
 import { dayStateAttributesMapping } from '../day/stateAttributesMapping';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';

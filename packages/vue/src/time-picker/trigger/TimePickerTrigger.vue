@@ -17,12 +17,12 @@ export interface TimePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
 import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useFormatLocale } from '../../utils/useFormatLocale';

@@ -50,7 +50,6 @@ export interface MenubarProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef } from 'vue';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import type { StateAttributesMapping } from '../internals/getStateAttributesProps';
@@ -58,6 +57,7 @@ import { MenubarContext } from '../internals/menubar-context/MenubarContext';
 import { REASONS } from '../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { MenuOpenEventDetails } from '../menu/utils/types';
 import {

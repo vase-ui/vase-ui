@@ -26,13 +26,13 @@ export interface FieldLabelProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { error } from '../../common/error';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useLabel } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFieldItemContext } from '../item/FieldItemContext';
 

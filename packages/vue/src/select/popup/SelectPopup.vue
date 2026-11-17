@@ -42,7 +42,6 @@ export interface SelectPopupProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
@@ -59,6 +58,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';

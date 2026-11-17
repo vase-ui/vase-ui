@@ -49,7 +49,6 @@ export type ToggleChangeEventDetails = VaseUIChangeEventDetails<ToggleChangeEven
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
@@ -59,6 +58,7 @@ import { createChangeEventDetails } from '../internals/createBaseUIEventDetails'
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useButton } from '../internals/use-button';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useToggleGroupContext } from '../toggle-group/ToggleGroupContext';
 import type { ToolbarRootItemMetadata } from '../toolbar/root/ToolbarRoot.vue';

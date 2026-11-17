@@ -132,12 +132,12 @@ export interface TimePickerRootProps<
 </script>
 
 <script setup lang="ts" generic="Value extends TimePickerRootValue = Temporal.PlainTime">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, useTemplateRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { TimePickerRootContext } from './TimePickerRootContext';
 

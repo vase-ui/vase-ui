@@ -142,12 +142,12 @@ export interface DatePickerRootProps<
 </script>
 
 <script setup lang="ts" generic="Value extends DatePickerRootValue = DatePickerRootValue">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, useTemplateRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DatePickerRootContext } from './DatePickerRootContext';
 import { createPickerTemplate, hasTime } from './pickerTemplate';

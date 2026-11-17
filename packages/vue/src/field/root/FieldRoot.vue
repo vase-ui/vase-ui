@@ -75,7 +75,6 @@ export interface FieldRootProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide, shallowRef, watch } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
@@ -84,6 +83,7 @@ import { FieldRootContext } from '../../internals/field-root-context/FieldRootCo
 import { useFormContext } from '../../internals/form-context/FormContext';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFieldValidation } from './useFieldValidation';
 

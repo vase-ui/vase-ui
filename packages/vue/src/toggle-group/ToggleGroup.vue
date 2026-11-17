@@ -70,7 +70,6 @@ export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroup
 </script>
 
 <script setup lang="ts" generic="Value extends string = any">
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `any`, that check accepts `(value: ('a' | 'b')[]) => void`.
 import { computed, provide } from 'vue';
@@ -78,6 +77,7 @@ import { EMPTY_ARRAY } from '../common/empty';
 import { useControlled } from '../common/useControlled';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
 import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';

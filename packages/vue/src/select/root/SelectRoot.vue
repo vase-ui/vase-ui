@@ -156,7 +156,6 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 </script>
 
 <script setup lang="ts" generic="Value = never, Multiple extends boolean | undefined = false">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
@@ -183,6 +182,7 @@ import {
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';

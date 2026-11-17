@@ -185,7 +185,6 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
@@ -202,6 +201,7 @@ import {
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMediaQuery } from '../../unstable-use-media-query';

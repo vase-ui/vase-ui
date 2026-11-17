@@ -45,7 +45,6 @@ export interface ComboboxClearProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import type { Component } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -55,6 +54,7 @@ import { REASONS } from '../../internals/reasons';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';

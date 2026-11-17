@@ -29,7 +29,6 @@ export interface TimeClockViewTriggerProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, useSlots } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrating } from '../../common/hydration';
@@ -37,6 +36,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimeClockRootContext } from '../root/TimeClockRootContext';

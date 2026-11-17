@@ -22,9 +22,9 @@ export type ContextMenuRootChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { provide, shallowRef, useTemplateRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import MenuRoot from '../../menu/root/MenuRoot.vue';
 import { MenuRootContext } from '../../menu/root/MenuRootContext';
 import { ContextMenuRootContext } from './ContextMenuRootContext';

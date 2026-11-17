@@ -157,7 +157,6 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
 import { error } from '../../common/error';
@@ -165,6 +164,7 @@ import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext'
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';

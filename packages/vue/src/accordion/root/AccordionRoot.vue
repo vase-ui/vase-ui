@@ -83,13 +83,13 @@ const rootStateAttributesMapping = {
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { AccordionRootContext } from './AccordionRootContext';
 

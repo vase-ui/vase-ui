@@ -39,12 +39,12 @@ export interface CollapsiblePanelProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
 import { given } from '../../internals/givenAttributes';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';

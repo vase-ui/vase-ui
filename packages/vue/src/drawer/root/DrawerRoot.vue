@@ -146,7 +146,6 @@ function createNestedSwipeProgressStore(): NestedSwipeProgressStore {
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
@@ -154,6 +153,7 @@ import { ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';

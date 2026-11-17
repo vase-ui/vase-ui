@@ -42,8 +42,8 @@ export type AlertDialogRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 const props = withDefaults(defineProps<AlertDialogRootProps<Payload>>(), {
   open: undefined,

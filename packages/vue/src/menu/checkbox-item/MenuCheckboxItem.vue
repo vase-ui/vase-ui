@@ -66,7 +66,6 @@ export type MenuCheckboxItemChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
@@ -75,6 +74,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { REGULAR_ITEM, useMenuItem } from '../item/useMenuItem';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';

@@ -34,10 +34,10 @@ export interface ButtonProps
 </script>
 
 <script setup lang="ts">
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useButton } from '../internals/use-button';
+import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 
 defineOptions({ inheritAttrs: false });

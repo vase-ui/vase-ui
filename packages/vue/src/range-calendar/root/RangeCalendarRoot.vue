@@ -8,6 +8,7 @@ import type {
 } from '../../internals/date-time/calendar/rangeSelection';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import type { CalendarRootState } from '../../calendar/root/CalendarRoot.vue';
 
 export interface RangeCalendarRootState extends CalendarRootState {
@@ -60,7 +61,6 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { computed, provide } from 'vue';
 import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';

@@ -76,9 +76,9 @@ export type TooltipRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { onMounted, provide, watch } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import { useClientPoint } from '../../utils/popups/interactions/useClientPoint';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
