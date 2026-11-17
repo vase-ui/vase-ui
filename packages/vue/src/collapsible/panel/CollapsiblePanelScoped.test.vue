@@ -5,12 +5,14 @@ withDefaults(defineProps<{ defaultOpen?: boolean; shown?: boolean; inTransition?
   defaultOpen: undefined,
   shown: true,
 });
+
+const emit = defineEmits<{ beforeEnter: [element: Element] }>();
 </script>
 
 <template>
   <Collapsible.Root :default-open="defaultOpen">
     <Collapsible.Trigger data-testid="trigger">Trigger</Collapsible.Trigger>
-    <Transition v-if="inTransition">
+    <Transition v-if="inTransition" :css="false" @before-enter="emit('beforeEnter', $event)">
       <Collapsible.Panel class="panel" data-testid="panel">Panel content</Collapsible.Panel>
     </Transition>
     <Collapsible.Panel v-else v-show="shown" class="panel" data-testid="panel">

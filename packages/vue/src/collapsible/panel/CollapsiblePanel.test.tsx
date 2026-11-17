@@ -148,12 +148,14 @@ describe('<Collapsible.Panel />', () => {
       expect(getComputedStyle(panel).display).toBe('none');
     });
 
-    it('renders in a Transition', async () => {
-      // Vue warns when a `Transition` contains a part with more than one root node.
-      // The test setup fails on that warning.
-      await render(<CollapsiblePanelScoped defaultOpen inTransition />);
+    it('enters with the Transition of the consumer', async () => {
+      const onBeforeEnter = vi.fn();
+      await render(<CollapsiblePanelScoped inTransition onBeforeEnter={onBeforeEnter} />);
+      expect(onBeforeEnter).not.toHaveBeenCalled();
 
-      expect(screen.getByTestId('panel')).toBeVisible();
+      await fireEvent.click(screen.getByTestId('trigger'));
+
+      expect(onBeforeEnter).toHaveBeenCalledExactlyOnceWith(screen.getByTestId('panel'));
     });
 
     it('has the scope id of the consumer in the server HTML, and keeps it after the hydration', async () => {
