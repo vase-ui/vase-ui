@@ -193,7 +193,6 @@ import {
 } from '../utils/otp';
 import { rootStateAttributesMapping } from '../utils/stateAttributesMapping';
 import { OTPFieldRootContext } from './OTPFieldRootContext';
-import OTPFieldRootHiddenInput from './OTPFieldRootHiddenInput.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -701,7 +700,8 @@ useFormReset(hiddenInputElement, (event) => {
   }
 });
 
-// A plain variable keeps the render of the hidden input part from depending on the element.
+// The render of the root calls `setHiddenInput`. A plain variable gives that render no dependency
+// on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
 const giveFieldInput = useFieldInput();
 
@@ -740,14 +740,11 @@ watch(
   { flush: 'post' },
 );
 
-// The style is the constant itself, in an object that no `mergeProps` call makes.
-// `handleHiddenInputInvalid` then keeps the size that it writes.
 function hiddenInputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value);
   return {
     ...validationProps,
     'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    ref: setHiddenInput,
     type: 'text',
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
@@ -781,5 +778,5 @@ defineExpose({ element });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <OTPFieldRootHiddenInput v-if="hasValidLength" :input-props="hiddenInputProps()" />
+  <input v-if="hasValidLength" v-bind="hiddenInputProps()" :ref="setHiddenInput" />
 </template>

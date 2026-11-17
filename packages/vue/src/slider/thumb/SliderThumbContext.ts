@@ -6,6 +6,8 @@ export interface SliderThumbContext {
    * Makes the props of the input of the thumb. The `children` component calls it in its render.
    */
   inputProps: () => Record<string, any>;
+  /** The `ref` setter of the input. The `children` component binds it by name. */
+  setInputElement: (value: unknown) => void;
   /** The input of the thumb. */
   inputElement: Readonly<Ref<HTMLInputElement | null>>;
   /**

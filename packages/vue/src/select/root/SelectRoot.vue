@@ -807,12 +807,9 @@ const hiddenValues = computed(() => {
   return value.map((currentValue) => stringifyAsValue(currentValue, props.itemToStringValue));
 });
 
-// The style is the constant itself, in an object that no `mergeProps` call makes.
-// `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
   return {
     ...validation.getValidationProps(isDisabled.value),
-    ref: setInputElement,
     id:
       controlId.value && hiddenInputName.value == null
         ? `${controlId.value}-hidden-input`
@@ -851,7 +848,7 @@ defineExpose({ ...actions, inputElement });
 
 <template>
   <slot />
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputElement" />
   <input
     v-for="hiddenValue in hiddenValues"
     :key="hiddenValue"

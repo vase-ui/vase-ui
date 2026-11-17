@@ -283,7 +283,7 @@ The template of each such part has the `#render` slot, then the element, and no 
 ```
 
 - `elementProps` is a function that the template calls. It is not a `computed`.
-- Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`. An input of a part has no such binding. See [Vapor mode](#vapor-mode).
+- Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`.
 - When the element with its content exceeds 100 columns on one line, put the content on its own line. Vue removes white space between a tag and an element or a slot, so the render code stays the same. Prettier keeps this form. In the one-line form, Prettier breaks the line in the tags.
 - Keep text content, such as `{{ text }}`, on the line of its tag. White space beside text stays in the text.
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
@@ -335,6 +335,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 
 - Each such part has one internal SFC, `<Part>Children.vue`.
 - That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
+- `<Part>Children.vue` binds the `ref` setter of a node of its own by name. The part gives the setter in the context that the SFC reads. `SliderThumbChildren.vue` is the model.
 - It renders the nodes around its default slot, in upstream's order.
 - A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
@@ -368,8 +369,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 
 - The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
 - The template has the `#render` slot and the element of a part. The inputs come after them.
-- The input that has the state of the part has one `v-bind` and no other attribute. The `ref` setter is a key of the bound object. With a second attribute, the compiler calls the `mergeProps` of Vue, which makes a new `style` object in each render. See [What differs from the React source](#what-differs-from-the-react-source).
-- A `v-if` on that input has the same effect. A part that renders the input only in some states puts the `v-if` on an internal SFC with the template `<input v-bind="inputProps" />`. `OTPFieldRootHiddenInput.vue` is the model.
+- The template gives the input its props in one `v-bind` and binds the `ref` setter by name beside it. The bound object has no `ref` key. Vapor mode applies a `ref` only when the template binds it by name. See [Parts that render an element](#parts-that-render-an-element). ESLint refuses an `<input>` with a spread and no `:ref`.
+- `handleHiddenInputInvalid` grows an input with no `name` to 1px with `min-width` and `min-height`. The style of a hidden input has neither key.
 - A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
 - A part that keeps its focus guards beside its element with `useElementSiblings`, such as a trigger or a popup part, has one root node. See [Focus helpers](#focus-helpers).
 - `Combobox.Input` keeps its dismiss button before its element with `useElementSiblings`, so it has one root node. Its `#render` slot gets the element only.
@@ -381,7 +382,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - The part takes the input at two moments. At the hydration, the input differs from its server HTML. At a `pageshow` event that does not come from the back/forward cache, the input differs from the value that the part handled.
 - Firefox and WebKit restore the form state of a page during the parse, before the scripts run. Chromium restores it in a task after the parse or right after `load`, the earlier of the two, and always before `pageshow`. An app that mounts in its entry module, as `create-vue` makes it, is thus mounted before Chromium restores the inputs.
 - `useFormRestore(input, onRestore)` of `src/internals` calls `onRestore` at that `pageshow` event. `useFormRestoreAsInput(input, getHandledValue, leaves)` calls it for a control that takes a value through its `input` event. Their JSDoc and their comments give the rules for `KeepAlive` and for a render that comes before `pageshow`. At a take with no event, `Checkbox.Root`, `Switch.Root` and `RadioGroup` give the event `vase-ui` in the `details` of the change. The take of the hydration does the same.
-- The composable uses the `onBeforeUpdate` and `onUpdated` hooks of the component that calls it. A part thus calls it in the component that renders the input. A child component whose render reads only its props renders only in a render of its parent, so the hooks of the parent apply to it too. `DateField.Root` and `TimeField.Root` render their hidden input through such a component. `Slider.Thumb` calls it in the component of its `children`, because that component renders the input with its own render. A component of the consumer in the `#render` slot of a part can also render the input with its own render. Such a render runs no hook of the part, so it writes the state of the part over a restored value.
+- The composable uses the `onBeforeUpdate` and `onUpdated` hooks of the component that calls it. A part thus calls it in the component that renders the input. `Slider.Thumb` calls it in the component of its `children`, because that component renders the input with its own render. A component of the consumer in the `#render` slot of a part can also render the input with its own render. Such a render runs no hook of the part, so it writes the state of the part over a restored value.
 - The take of one part at `pageshow` can render a later part before the listener of that part runs. The flag of each part stays set until its own listener, so the later part keeps its restored value.
 - The value sanitization of an input type can change the text of a state. Each part that calls `useFormRestoreAsInput` gives as `getHandledValue` the value of the input after the last event or write, not the text of its state. `Field.Control`, `Toolbar.Input`, `Slider.Thumb` and `useDateTimeFieldRoot` are the models, and their comments give the reason for their reads of the input.
 - A text input also removes CR and LF from the value that the form gets. `Select.Root`, `useAriaCombobox` and `Combobox.Input` thus call `useFormEntryValue(input, getValue)` of `src/internals`. The form then gets the value of the part, as it gets the value of the option of a `<select>` (`VUE-102`). The JSDoc and the comments of the composable say how it finds the entry of the input.
@@ -417,7 +418,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
   <slot :state="state" />
 </component>
-<input v-bind="inputProps()" />
+<input v-bind="inputProps()" :ref="setInputElement" />
 ```
 
 ### Element targets
@@ -674,8 +675,6 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 If a line must break a rule, put a disable comment on that line and give the reason.
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
-
-An input that a part renders beside or in its element gets its `ref` setter only as a key of the bound object. Such inputs are the hidden input of a form control and the range inputs of `Slider.Thumb` and `TimeClock.Face`. The bound object must be the only attribute of a hidden input, so its template cannot bind the setter by name. See [Parts with a hidden input](#parts-with-a-hidden-input). A part compiled as a Vapor component thus gets no such input element.
 
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 
@@ -1439,7 +1438,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. They replace a value that `onProgress` wrote to a movement variable. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
 - `Drawer.Popup` gives the `transform` and the `transition` of the drag to `useRenderElement` as `overridingStyle` while the drawer is swiping. The drag then wins over a `transform` or a `transition` in the `style` of the consumer.
 - `Drawer.SwipeArea` writes the movement of an opening gesture and `transition: none` to the popup. During that gesture, `Drawer.Popup` renders the movement that its element holds, and it gives `transition: none` as `overridingStyle`. A render of the popup then keeps the gesture.
-- A hidden input that `handleHiddenInputInvalid` grows gets the style constant itself, in a bound object, outside `mergeProps`. That bound object is the only attribute of the input.
+- `handleHiddenInputInvalid` writes `min-width` and `min-height`, and Base UI writes `width` and `height`. A Vue render writes each key of the style of the input again, and it writes no other property.
 - A root can write a temporary declaration to the element of another part. `ScrollAreaRoot.vue` does this for `scroll-snap-type`, while a thumb drag or a track press is active.
 - The root saves the inline value that it finds, and it restores that value at the end.
 - A render of the other part can replace the declaration. The other part thus calls the root in `onUpdated`, and the root writes the declaration again.

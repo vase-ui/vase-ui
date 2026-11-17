@@ -720,12 +720,9 @@ useFormReset(hiddenInputElement, (event) => {
 
 useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
 
-// The style is the constant itself, in an object that no `mergeProps` call makes.
-// `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
   return {
     ...validation.getValidationProps(isDisabled.value),
-    ref: setHiddenInputElement,
     type: 'number',
     form: props.form,
     name: inputName.value,
@@ -756,5 +753,5 @@ defineExpose({ element, inputElement: hiddenInputElement });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setHiddenInputElement" />
 </template>

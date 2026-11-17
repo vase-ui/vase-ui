@@ -87,6 +87,20 @@ const reported = [
     hint: 'by name',
   },
   {
+    name: 'a spread on an input with no ref by name',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input v-bind="inputProps()" />'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'setter of the input',
+  },
+  {
+    name: 'a spread on an input beside a static ref',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input ref="input" v-bind="inputProps" />'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'setter of the input',
+  },
+  {
     name: 'an import of getCurrentInstance',
     file: `${SRC}/useRoot.ts`,
     code: "import { getCurrentInstance } from 'vue';\n\nexport const instance = getCurrentInstance();\n",
@@ -934,6 +948,21 @@ const passed = [
     name: 'a spread of elementProps() with no ref by name in a test SFC',
     file: `${SRC}/DialogPart.test.vue`,
     code: docsSfc('', '<component :is="as" v-bind="elementProps()"><slot /></component>'),
+  },
+  {
+    name: 'a spread on an input with the ref by name',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input v-bind="inputProps()" :ref="setInputElement" />'),
+  },
+  {
+    name: 'an input with no spread and no ref',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input type="hidden" :name="name" :value="value" />'),
+  },
+  {
+    name: 'a spread with no ref on an element that is not an input',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<div v-bind="attributes" />'),
   },
   {
     name: 'a DOM global in a test file',

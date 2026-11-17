@@ -10,7 +10,7 @@ defineSlots<{
 }>();
 
 const { numbers } = useTimeClockRootContext();
-const { inputProps } = useTimeClockFaceContext();
+const { inputProps, setInputElement } = useTimeClockFaceContext();
 
 markChildrenMounted();
 </script>
@@ -22,5 +22,5 @@ markChildrenMounted();
       <slot name="number" :number="number" :index="index" />
     </template>
   </template>
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputElement" />
 </template>

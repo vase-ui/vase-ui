@@ -60,7 +60,6 @@ import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { mergeProps } from '../../merge-props';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimeClockRootContext } from '../root/TimeClockRootContext';
 import { angleOfPoint, outerRingRadius, ratioOfPoint } from '../utils/clockGeometry';
@@ -139,40 +138,37 @@ function onInput(event: Event) {
 
 function inputProps() {
   const ariaLabelledby = given('aria-labelledby', props.ariaLabelledby);
-  return mergeProps<'input'>(
-    {
-      'aria-label':
-        ariaAfterHydration(
-          given('aria-label', props.ariaLabel) ??
-            (ariaLabelledby == null ? label.value : undefined),
-        ) ?? undefined,
-      'aria-labelledby': ariaLabelledby,
-      'aria-describedby': given('aria-describedby', props.ariaDescribedby),
-      'aria-readonly': root.readOnly.value ? 'true' : undefined,
-      'aria-valuenow': root.selectedNumber.value.value,
-      'aria-valuetext':
-        ariaAfterHydration(
-          typeof props.getAriaValueText === 'function'
-            ? props.getAriaValueText(root.selectedNumber.value.value, root.view.value)
-            : valueText.value,
-        ) ?? undefined,
-      // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
-      autocomplete: 'off',
-      disabled: root.disabled.value,
-      max: grid.value.first + grid.value.count - 1,
-      min: grid.value.first,
-      onInput,
-      step: grid.value.step,
-      style: HIDDEN_INPUT_STYLE,
-      type: 'range',
-      value: root.selectedNumber.value.value,
-    },
-    { ref: setInputElement },
-  );
+  return {
+    'aria-label':
+      ariaAfterHydration(
+        given('aria-label', props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
+      ) ?? undefined,
+    'aria-labelledby': ariaLabelledby,
+    'aria-describedby': given('aria-describedby', props.ariaDescribedby),
+    'aria-readonly': root.readOnly.value ? 'true' : undefined,
+    'aria-valuenow': root.selectedNumber.value.value,
+    'aria-valuetext':
+      ariaAfterHydration(
+        typeof props.getAriaValueText === 'function'
+          ? props.getAriaValueText(root.selectedNumber.value.value, root.view.value)
+          : valueText.value,
+      ) ?? undefined,
+    // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
+    autocomplete: 'off',
+    disabled: root.disabled.value,
+    max: grid.value.first + grid.value.count - 1,
+    min: grid.value.first,
+    onInput,
+    step: grid.value.step,
+    style: HIDDEN_INPUT_STYLE,
+    type: 'range',
+    value: root.selectedNumber.value.value,
+  };
 }
 
 provide(TimeClockFaceContext, {
   inputProps,
+  setInputElement,
   registerNumber(element, number) {
     numberElements.set(element, number);
     return () => {

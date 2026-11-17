@@ -636,7 +636,6 @@ function inputProps() {
       onKeydown(event: KeyboardEvent) {
         callHandler(attrs.onKeydown as Handler, event);
       },
-      ref: setInputElement,
     },
   );
   return {
@@ -648,6 +647,7 @@ function inputProps() {
 
 provide(SliderThumbContext, {
   inputProps,
+  setInputElement,
   inputElement,
   getHandledInputValue: () => handledInputValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.

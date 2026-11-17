@@ -26,7 +26,6 @@ function setInputRef(element: unknown) {
 
 function inputProps() {
   return {
-    ref: setInputRef,
     'data-testid': 'text',
     inputmode: inputMode.value,
     value: state.value.inputValue,
@@ -38,5 +37,5 @@ defineExpose({ context });
 </script>
 
 <template>
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputRef" />
 </template>

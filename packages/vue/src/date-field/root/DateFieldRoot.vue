@@ -141,7 +141,6 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
 </script>
 
 <script setup lang="ts" generic="Value extends DateFieldRootValue = DateFieldRootValue">
-import DateTimeFieldHiddenInput from '../../internals/date-time/field/DateTimeFieldHiddenInput.vue';
 import {
   rootStateAttributesMapping,
   useDateTimeFieldRoot,
@@ -243,5 +242,5 @@ defineExpose({
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <DateTimeFieldHiddenInput :input-props="context.hiddenInputProps()" />
+  <input v-bind="context.hiddenInputProps()" :ref="context.setHiddenInput" />
 </template>

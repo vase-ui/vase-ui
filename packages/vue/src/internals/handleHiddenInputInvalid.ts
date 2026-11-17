@@ -6,12 +6,13 @@
  * change.
  *
  * The write goes directly to the DOM, because the browser shows the message before the next Vue
- * flush. Vue writes each key of a style again when the `style` object is not the object of the last
- * render, and the input then has zero size again. Give the input the style constant itself, and do
- * not merge it with another style.
+ * flush. Base UI writes `width` and `height`. A Vue render writes each key of the style of the
+ * input again, and it writes no other property. A size in `width` and `height` thus does not stay
+ * after a render. The handler writes `min-width` and `min-height`, which no hidden input style
+ * has. Give no hidden input a style with one of these two keys.
  */
 export function handleHiddenInputInvalid(event: Event): void {
   const { style } = event.currentTarget as HTMLInputElement;
-  style.width = '1px';
-  style.height = '1px';
+  style.minWidth = '1px';
+  style.minHeight = '1px';
 }

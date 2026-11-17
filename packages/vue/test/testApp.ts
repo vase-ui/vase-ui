@@ -23,7 +23,7 @@ export const isVaporApp = inject('testApp') === 'vapor';
 
 /**
  * Makes the app of a test. In the project `vapor` it is a Vapor app with `vaporInteropPlugin`, and
- * its Vapor root component renders `root`.
+ * its Vapor root component renders `root`. In each other project it is an ordinary app.
  */
 export function createTestApp(root: Component): App {
   if (!isVaporApp) {

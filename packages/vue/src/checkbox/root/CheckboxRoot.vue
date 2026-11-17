@@ -648,14 +648,11 @@ watch(
   },
 );
 
-// The style is the constant itself, in an object that no `mergeProps` call makes.
-// `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value, getDescriptionProps({}));
   return {
     ...validationProps,
     'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,
     form: props.form,
@@ -694,5 +691,5 @@ defineExpose({ element, inputElement });
     :value="uncheckedValue"
     :disabled="isDisabled"
   />
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputElement" />
 </template>

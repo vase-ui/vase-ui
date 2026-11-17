@@ -194,6 +194,7 @@ const {
   actions,
   inputElement,
   hiddenInputProps,
+  setHiddenInputElement,
   hiddenValues,
   name: inputName,
   disabled: isDisabled,
@@ -329,7 +330,7 @@ defineExpose({ ...actions, inputElement });
 
 <template>
   <slot />
-  <input v-bind="hiddenInputProps()" />
+  <input v-bind="hiddenInputProps()" :ref="setHiddenInputElement" />
   <input
     v-for="hiddenValue in hiddenValues"
     :key="hiddenValue"

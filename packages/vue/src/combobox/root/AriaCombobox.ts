@@ -401,8 +401,10 @@ export interface UseAriaComboboxReturnValue {
   actions: AriaCombobox.Actions;
   /** The hidden input. */
   inputElement: ShallowRef<HTMLInputElement | null>;
-  /** The one bound object of the hidden input that has the state of the root. */
+  /** The props of the hidden input that has the state of the root. */
   hiddenInputProps: () => Record<string, unknown>;
+  /** The `ref` setter of that input. The template of the root binds it by name. */
+  setHiddenInputElement: (value: unknown) => void;
   /** The serialized values of a multiple selection that has a name. */
   hiddenValues: ComputedRef<string[]>;
   name: ComputedRef<string | undefined>;
@@ -2089,12 +2091,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
   useFormEntryValue(hiddenInputElement, () => serializedValue.value);
 
-  // The style is the constant itself, in an object that no `mergeProps` call makes.
-  // `handleHiddenInputInvalid` then keeps the size that it writes.
   function hiddenInputProps() {
     return {
       ...validation.getValidationProps(disabled.value),
-      ref: setHiddenInputElement,
       id: id.value && hiddenInputName.value == null ? `${id.value}-hidden-input` : undefined,
       form: props.form,
       name: hiddenInputName.value,
@@ -2132,6 +2131,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     actions,
     inputElement: hiddenInputElement,
     hiddenInputProps,
+    setHiddenInputElement,
     hiddenValues,
     name,
     disabled,
