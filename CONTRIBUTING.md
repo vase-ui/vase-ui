@@ -284,7 +284,7 @@ The template of each such part has the `#render` slot, then the element, and no 
 ```
 
 - `elementProps` is a function that the template calls. It is not a `computed`.
-- Call `usesRenderSlot()` of `useRenderElement` as the last condition of the `v-if` of a `#render` slot that gets `elementProps()`. It tells whether the consumer gave the slot, and in a development build it marks that the part renders the slot. A slot of a part compiled as a Vapor component reads `props` only when it uses `props`. A slot that uses no prop thus never calls `elementProps()`. ESLint refuses such a slot without the call.
+- Call `usesRenderSlot()` of `useRenderElement` as the last condition of the `v-if` of a `#render` slot that gets `elementProps()`. It tells whether the consumer gave the slot, and in a development build it marks that the part renders the slot. A slot of a part compiled as a Vapor component reads `props` only when it uses `props`. A slot that uses no prop thus never calls `elementProps()`. ESLint refuses a `#render` slot that gets `elementProps()` without the call.
 - Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`.
 - When the element with its content exceeds 100 columns on one line, put the content on its own line. Vue removes white space between a tag and an element or a slot, so the render code stays the same. Prettier keeps this form. In the one-line form, Prettier breaks the line in the tags.
 - Keep text content, such as `{{ text }}`, on the line of its tag. White space beside text stays in the text.
@@ -480,7 +480,7 @@ Rules:
 - In a development build, a watcher also checks for `as` together with `#render`. A part compiled as a Vapor component does not update when `as` changes while it renders the `#render` slot. Only the slot reads the props of the element then.
 - `useRender` is the public form of `useRenderElement`. Its JSDoc and `docs/utils/use-render.md` give its API.
 - `useRender` returns `setRef` too. The template of a component that calls `useRender` binds it by name beside the spread, as the template of a part does. Each sample, demo and fixture that calls `useRender` has that form. A render function has no binding by name, so it spreads only `elementProps()`.
-- `useRender` does not return `usesRenderSlot`, and a component that calls it keeps `v-if="$slots.render"`. In a component compiled as a Vapor component, a `#render` slot that uses no slot prop thus does not run the slot checks.
+- `useRender` does not return `usesRenderSlot`, and a component that calls it keeps `v-if="$slots.render"`. In a component compiled as a Vapor component, the checks of the `#render` slot thus do not run for a slot that uses no slot prop.
 - `useRender` passes `serverAttributes: false` to `useRenderElement`, because the library cannot know the first element of the template of a consumer. A component of a consumer thus hydrates as Vue does.
 
 ### Props

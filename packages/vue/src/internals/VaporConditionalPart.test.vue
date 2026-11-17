@@ -18,6 +18,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 });
 
 defineExpose({ element });
+
+// The `<span>` reads `count`. A change of `count` thus updates the part, and the `v-if` of the
+// slot does not run again.
 </script>
 
 <template>

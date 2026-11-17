@@ -61,7 +61,9 @@ export function testRenderSlot(element: VNode, getOptions: () => VaseUiConforman
       ]);
     });
 
-    // A slot of a part compiled as a Vapor component reads a slot prop only when it uses the prop.
+    // Only a part compiled as a Vapor component needs this case, because its slot reads a slot
+    // prop only when it uses the prop. Each other part calls `elementProps()` when it renders the
+    // slot, and the cases of `useRenderElement` cover that call.
     it.runIf(isVaporParts)('warns when the slot reads no slot prop', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -69,7 +71,8 @@ export function testRenderSlot(element: VNode, getOptions: () => VaseUiConforman
         cloneElement(element, { ...(button && { nativeButton }) }, { render: () => <Element /> }),
       );
 
-      // A slot that uses no prop cannot mount `children`, so a part with `children` also warns for it.
+      // This slot does not mount `children`, so a part with `children` gives a second message.
+      // The options do not name each part with `children`, so the case accepts both lists.
       const [first, ...rest] = warnSpy.mock.calls;
       expect(first).toEqual([
         expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),

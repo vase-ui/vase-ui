@@ -428,8 +428,8 @@ export function useRenderElement<
     });
     onMounted(checkRender);
     onUpdated(checkRender);
-    // A Vapor part does not update when `as` changes while it renders the `#render` slot.
-    // Only the slot reads the props of the element then.
+    // A part compiled as a Vapor component does not update when `as` changes while it renders
+    // the `#render` slot. Only the slot reads the props of the element then.
     watch(
       () => componentProps.as !== undefined && componentProps.as !== toValue(element),
       checkAsWithRenderSlot,

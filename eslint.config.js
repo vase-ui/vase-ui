@@ -30,7 +30,7 @@ const MESSAGES = {
   conditionalForms:
     'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   renderSlotCall:
-    'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
+    'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
