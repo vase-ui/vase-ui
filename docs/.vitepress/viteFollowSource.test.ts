@@ -17,35 +17,37 @@ const LOADED_PAGES = [
 ];
 
 function server({ pages = LOADED_PAGES, plugin = viteFollowSource(SOURCE_ROOT) } = {}) {
+  const { configureServer, hotUpdate } = plugin;
+  assert.ok(typeof configureServer === 'function' && typeof hotUpdate === 'function');
   const byId = new Map(pages.map((path) => [posix.join(DOCS_ROOT, path), { id: path }]));
-  const environment = {
-    config: { root: DOCS_ROOT },
-    moduleGraph: { getModuleById: (id: string) => byId.get(id) },
-  };
   const watched: string[] = [];
-  const watcher = { add: (folder: string) => watched.push(folder) };
-  // The hooks use only these fields of the Vite server, its context and its modules.
-  const hooks = plugin as {
-    configureServer(options: { watcher: typeof watcher }): void;
-    hotUpdate(
-      this: { environment: typeof environment },
-      options: { file: string; type: string; modules: (typeof SOURCE_MODULE)[] },
-    ): unknown;
+  const fixture: unknown = {
+    server: { watcher: { add: (folder: string) => watched.push(folder) } },
+    context: {
+      environment: {
+        config: { root: DOCS_ROOT },
+        moduleGraph: { getModuleById: (id: string) => byId.get(id) },
+      },
+    },
+    event: { modules: [SOURCE_MODULE] },
+  };
+  // The two hooks read only these fields of the Vite server, context and event.
+  const {
+    server: devServer,
+    context,
+    event,
+  } = fixture as {
+    server: Parameters<typeof configureServer>[0];
+    context: ThisParameterType<typeof hotUpdate>;
+    event: Parameters<typeof hotUpdate>[0];
   };
   return {
-    watch() {
-      hooks.configureServer({ watcher });
+    async watch() {
+      await configureServer.call(context, devServer);
       return watched;
     },
-    update(file: string, type = 'update') {
-      return hooks.hotUpdate.call(
-        { environment },
-        {
-          file: file.replaceAll(sep, '/'),
-          type,
-          modules: [SOURCE_MODULE],
-        },
-      );
+    update(file: string, type: typeof event.type = 'update') {
+      return hotUpdate.call(context, { ...event, file: file.replaceAll(sep, '/'), type });
     },
   };
 }
@@ -53,7 +55,7 @@ function server({ pages = LOADED_PAGES, plugin = viteFollowSource(SOURCE_ROOT) }
 test('a source edit gives the module of each family page that the server has', () => {
   const { update } = server();
   const file = join(SOURCE_ROOT, 'dialog/popup/DialogPopup.vue');
-  for (const type of ['create', 'update', 'delete']) {
+  for (const type of ['create', 'update', 'delete'] as const) {
     assert.deepEqual(update(file, type), [
       SOURCE_MODULE,
       { id: 'components/button.md' },
@@ -84,11 +86,11 @@ test('a source edit gives nothing while the server has no family page module', (
   assert.equal(update(join(SOURCE_ROOT, 'button/Button.vue')), undefined);
 });
 
-test('the plugin of the site configuration watches the source folder of the package', () => {
+test('the plugin of the site configuration watches the source folder of the package', async () => {
   const plugin = config.vite?.plugins?.find(
     (item): item is Plugin =>
       !!item && typeof item === 'object' && 'name' in item && item.name === 'vase-ui:follow-source',
   );
   assert.ok(plugin);
-  assert.deepEqual(server({ plugin }).watch(), [SOURCE_ROOT]);
+  assert.deepEqual(await server({ plugin }).watch(), [SOURCE_ROOT]);
 });
