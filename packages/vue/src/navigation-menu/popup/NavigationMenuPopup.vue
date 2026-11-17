@@ -96,7 +96,10 @@ const originSideStyle = computed<CSSProperties | undefined>(() => {
   };
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('nav', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  NavigationMenuPopupState,
+  HTMLElement
+>('nav', props, {
   state,
   stateAttributesMapping: popupTransitionStateMapping,
   ref: createElementSetter(popupElement),

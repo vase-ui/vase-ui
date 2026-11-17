@@ -65,6 +65,8 @@ const MESSAGES = {
     '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
   watchPostEffect:
     "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
+  popupElementWrite:
+    'Give popupElementTarget(store) or stateElementTarget(store, key) to createElementSetter. Its cleanup preserves the replacement element.',
   keepAliveHook:
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
@@ -735,6 +737,24 @@ export default defineConfig([
     ignores: TEST_FILES,
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX_IN_VUE_FILES] },
   },
+  ...[
+    ['ts', RESTRICTED_SYNTAX],
+    ['vue', RESTRICTED_SYNTAX_IN_VUE_FILES],
+  ].map(([extension, syntax]) => ({
+    files: [`packages/vue/src/**/*.${extension}`],
+    ignores: [...TEST_FILES, 'packages/vue/src/utils/popups/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...syntax,
+        {
+          selector:
+            "CallExpression[callee.object.name='store'][callee.computed=false][callee.property.name='set'][arguments.0.value=/^(popupElement|listElement)$/]",
+          message: MESSAGES.popupElementWrite,
+        },
+      ],
+    },
+  })),
   {
     files: ['packages/vue/src/**/*.tsx'],
     ignores: TEST_FILES,

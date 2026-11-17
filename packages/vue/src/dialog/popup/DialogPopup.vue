@@ -63,7 +63,7 @@ import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
 } from '../../utils/popups/popupStoreUtils';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { dialogStateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -113,18 +113,6 @@ const state = computed<DialogPopupState>(() => ({
   nestedDialogOpen: nestedOpenDialogCount.value > 0,
 }));
 
-let popupElement: HTMLElement | null = null;
-
-function setPopupElement(popup: HTMLElement | null) {
-  // A compiled template can mount a new popup before it unmounts the old one. The old one then must
-  // not clear the element of the new one.
-  if (popup !== null || store.context.popupRef.value === popupElement) {
-    store.context.popupRef.value = popup;
-    store.set('popupElement', popup);
-  }
-  popupElement = popup;
-}
-
 // The modal marks would set `inert` on the internal backdrop while the dialog is open. Their release
 // at the close would then remove the `inert` that the portal gives the backdrop while the dialog
 // closes, and the backdrop would take the presses of the exit animation.
@@ -138,9 +126,12 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  DialogPopupState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement),
+  ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

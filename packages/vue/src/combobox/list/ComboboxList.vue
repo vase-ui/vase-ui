@@ -21,7 +21,7 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, stateElementTarget } from '../../utils/popups/createElementSetter';
 import ComboboxCollection from '../collection/ComboboxCollection.vue';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import {
@@ -77,24 +77,18 @@ if (!toRaw(store.state).virtualized) {
   });
 }
 
-// A compiled template can mount a new list before it unmounts the old one. The old one then must
-// not clear the elements of the new one.
-let listElement: HTMLElement | null = null;
-function setElements(list: HTMLElement | null) {
-  const current = toRaw(store.state);
-  if (list !== null || current.listElement === listElement) {
-    store.set('listElement', list as HTMLDivElement | null);
-  }
-  if (!hasPositionerContext && (list !== null || current.positionerElement === listElement)) {
-    store.set('positionerElement', list);
-  }
-  listElement = list;
-}
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  ComboboxListState,
+  HTMLElement
+>('div', props, {
   state,
   // The `aria-controls` of the input names the list.
-  ref: useKeepAliveElementRef(setElements),
+  ref: [
+    createElementSetter(stateElementTarget(store, 'listElement')),
+    hasPositionerContext
+      ? undefined
+      : createElementSetter(stateElementTarget(store, 'positionerElement')),
+  ],
   props: (attrs) => {
     const grid = store.select('grid');
     return [
