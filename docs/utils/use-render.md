@@ -50,7 +50,9 @@ The `#render` slot gives more control over how the props go to the element. It a
 
 :::
 
-A component that calls `useRender` sets `inheritAttrs: false`. It passes its props object to `useRender` and does not destructure it. It exposes `element` with `defineExpose`. Its template has the two lines of the demos above.
+A component that calls `useRender` sets `inheritAttrs: false`. It passes its props object to `useRender` and does not destructure it. It exposes `element` with `defineExpose`. Its template has the `#render` slot and then the element, as in the demos above.
+
+The element binds `elementProps()` with `v-bind`, and `setRef` by name with `:ref`. [Vapor mode](/handbook/composition#vapor-mode) applies only a ref bound by name and ignores the `ref` key of a bound object ([vuejs/core#15900](https://github.com/vuejs/core/pull/15900)).
 
 ## Merging props
 

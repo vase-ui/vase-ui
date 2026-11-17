@@ -469,6 +469,7 @@ Rules:
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
 - `useRender` is the public form of `useRenderElement`. Its JSDoc and `docs/utils/use-render.md` give its API.
+- `useRender` returns `setRef` too. The template of a component that calls `useRender` binds it by name beside the spread, as the template of a part does. Each sample, demo and fixture that calls `useRender` has that form. A render function has no binding by name, so it spreads only `elementProps()`.
 - `useRender` passes `serverAttributes: false` to `useRenderElement`, because the library cannot know the first element of the template of a consumer. A component of a consumer thus hydrates as Vue does.
 
 ### Props

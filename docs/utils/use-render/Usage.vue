@@ -7,7 +7,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<UseRenderComponentProps>();
 
 // #region usage
-const { element, elementProps, tag } = useRender(props, {
+const { element, elementProps, setRef, tag } = useRender(props, {
   // Parameters
 });
 // #endregion usage
@@ -17,5 +17,5 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="{}" />
-  <component :is="tag" v-else v-bind="elementProps()"><slot /></component>
+  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef"><slot /></component>
 </template>
