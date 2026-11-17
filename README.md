@@ -5,6 +5,10 @@
   </picture>
 </h1>
 
+[![npm version](https://img.shields.io/npm/v/@vase-ui/vue?label=npm&logo=npm)](https://www.npmjs.com/package/@vase-ui/vue) [![Monthly npm downloads](https://img.shields.io/npm/dm/@vase-ui/vue)](https://www.npmjs.com/package/@vase-ui/vue) [![CI status](https://img.shields.io/github/actions/workflow/status/vase-ui/vase-ui/ci.yml?event=merge_group&label=CI&logo=githubactions)](https://github.com/vase-ui/vase-ui/actions/workflows/ci.yml) [![Docs deploy status](https://img.shields.io/github/actions/workflow/status/vase-ui/vase-ui/docs.yml?branch=main&label=docs)](https://vase-ui.com) [![Base UI parity](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fvase-ui%2Fvase-ui%2Fmain%2Fparity%2Fupstream.json&query=%24.release&label=matches%20Base%20UI)](https://vase-ui.com/parity) [![License](https://img.shields.io/npm/l/@vase-ui/vue)](LICENSE) [![TypeScript types](https://img.shields.io/npm/types/@vase-ui/vue?logo=typescript)](https://vase-ui.com/handbook/typescript) [![Vue peer dependency](https://img.shields.io/npm/dependency-version/@vase-ui/vue/peer/vue?logo=vuedotjs)](https://vuejs.org) [![GitHub discussions](https://img.shields.io/github/discussions/vase-ui/vase-ui)](https://github.com/vase-ui/vase-ui/discussions) [![Tested in Chromium, Firefox and WebKit](https://img.shields.io/badge/tested%20in-Chromium%20%C2%B7%20Firefox%20%C2%B7%20WebKit-161616)](https://github.com/vase-ui/vase-ui/actions/workflows/ci.yml) [![Nuxt supported](https://img.shields.io/badge/Nuxt-supported-161616?logo=nuxt)](https://vase-ui.com/quick-start) [![npm provenance signed](https://img.shields.io/badge/npm%20provenance-signed-161616)](https://www.npmjs.com/package/@vase-ui/vue#provenance)
+
+[![styles: bring your own flowers](https://img.shields.io/badge/styles-bring%20your%20own%20flowers-161616)](https://vase-ui.com/handbook/styling) [![React: had it first](https://img.shields.io/badge/React-had%20it%20first-161616)](#why) [![Vue: has it now](https://img.shields.io/badge/Vue-has%20it%20now-161616)](#why)
+
 <!-- #region home -->
 
 Base UI, arranged for Vue.
