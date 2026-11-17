@@ -23,9 +23,9 @@ export function viteFollowSource(sourceRoot: string): Plugin {
       const pages = listFamilyPages(config.root)
         .map(({ path }) => moduleGraph.getModuleById(posix.join(config.root, path)))
         .filter((page) => page !== undefined);
-      // Vite keeps the result of a transform that is in progress at a hot update. A page transform
-      // can read the reference for some seconds. Without this call, a page would not show a file
-      // that changes in that time.
+      // Vite keeps the result of a page transform that is in progress at a hot update. That
+      // transform can read the reference for some seconds. Without this call, the page does not
+      // show an edit that comes in that time.
       for (const page of pages) {
         moduleGraph.invalidateModule(page);
       }

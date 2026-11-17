@@ -73,7 +73,10 @@ test('a source edit makes Vite discard the transform in progress of each family 
   const { invalidated, update } = server();
   void update(join(SOURCE_ROOT, 'dialog/popup/DialogPopup.vue'));
   // Vite discards the transform only for a call with no hot update argument.
-  assert.deepEqual(invalidated, [[{ id: 'components/button.md' }], [{ id: 'utils/use-render.md' }]]);
+  assert.deepEqual(invalidated, [
+    [{ id: 'components/button.md' }],
+    [{ id: 'utils/use-render.md' }],
+  ]);
 });
 
 test('a test file gives no page module', () => {
