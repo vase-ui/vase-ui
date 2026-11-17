@@ -258,7 +258,8 @@ const state = computed<TabsIndicatorState>(() => ({
 
 // The template puts `PrehydrationScript` directly after the element. The script finds the indicator
 // as `document.currentScript.previousElementSibling`.
-// The form with only the element comes last, so it is the root without `renderBeforeHydration`.
+// The form with only the element comes last. Without `renderBeforeHydration`, the indicator is thus
+// the root node of the part.
 const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   props: (attrs) => {
