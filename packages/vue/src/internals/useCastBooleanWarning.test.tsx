@@ -7,12 +7,13 @@ import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
 import { Field } from '../field';
-import { createRenderer, flushMicrotasks, takeReportedMessages } from '#test-utils';
+import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
 import SlotHostUser from './SlotHostUser.test.vue';
 import WrapperBindProps from './WrapperBindProps.test.vue';
 import WrapperCast from './WrapperCast.test.vue';
+import WrapperCastVapor from './WrapperCastVapor.test.vue';
 import WrapperFalseDefault from './WrapperFalseDefault.test.vue';
 import WrapperForward from './WrapperForward.test.vue';
 import WrapperInSlot from './WrapperInSlot.test.vue';
@@ -295,5 +296,10 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([
       expect.stringContaining('A component with no name gives `open: false` to <Collapsible.Root>'),
     ]);
+  });
+
+  it.runIf(isVaporApp)('gives no warning for a Vapor wrapper that casts', async () => {
+    await render(() => <WrapperCastVapor />);
+    expect(takeReportedMessages()).toEqual([]);
   });
 });

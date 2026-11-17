@@ -15,7 +15,7 @@ Vue sets an absent Boolean prop to `false`, even when its type is optional. A wr
 
 <<< ./use-forward-props/AccordionPanel.vue
 
-`useForwardProps` and `useForwardPropsEmits` keep the names and behavior of the Reka UI composables, so Reka UI and shadcn-vue wrappers work unchanged.
+`useForwardProps` and `useForwardPropsEmits` have the names and the behavior of the Reka UI composables. A wrapper that you port from Reka UI or shadcn-vue keeps its calls of them.
 
 ## What it forwards
 
@@ -48,7 +48,7 @@ The return type describes the props, without listener keys. The listeners exist 
 
 ## The development warning
 
-At setup, a development build checks a part that receives `false` for a Boolean prop with a different default or parent value. If its wrapper declares that prop without a default and its caller omits it, the part warns:
+In a development build, a part checks each Boolean prop for which an absent prop and `false` give different results. It makes the check one time, in `setup`. The part warns when it gets `false`, its wrapper declares that prop with no default, and the caller of the wrapper omits the prop:
 
 ```text
 Vase UI: <MyAccordionPanel> gives `keepMounted: false` to <Accordion.Panel>, but its caller did not set `keepMounted`. Vue sets an absent Boolean prop to `false`, so the part cannot use its default or the value of its parent. Give `keepMounted` the default `undefined` in <MyAccordionPanel>, or forward the props with `useForwardProps`.
@@ -64,11 +64,11 @@ The check cannot detect these cases:
 - A wrapper that receives array children.
 - A cast that starts after setup.
 
-One case can warn without a fault. A wrapper can declare the prop without a default, omit it at its caller, and give the part a literal `false`. Give the wrapper prop a default to remove that message.
+One case can warn without a fault. A wrapper declares the prop without a default, and its caller omits the prop. The render of the wrapper then gives the part a `false` from another source: a literal, another value, or a vnode that a function prop returns. Give the prop of the wrapper a default to remove that message.
 
 ## Vapor mode
 
-Vue does not expose the caller's set props to this helper in a Vapor wrapper. The helper warns in development and forwards each value other than `undefined`. An absent Boolean prop can thus remain `false`.
+Vue does not expose the caller's set props to this helper in a Vapor wrapper. The helper warns in development and forwards each value other than `undefined`. An absent Boolean prop can thus remain `false`. Vue does not expose the declared events either, so `useForwardPropsEmits` warns in development and forwards no event.
 
 Give each optional Boolean prop the default `undefined`, or leave it undeclared and pass `$attrs` to the part. The same fallback applies to a call outside component setup.
 

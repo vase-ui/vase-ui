@@ -463,7 +463,6 @@ Rules:
 
 ### Props
 
-- A part calls `useCastBooleanWarning` in development when an absent Boolean prop differs from `false`. Such a prop has the default `true` or `undefined`. The helper reports a wrapper that gives the part `false` because Vue cast an absent prop. Its `except` list holds props for which an absent value and `false` have the same effect. Add each new covered prop to [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare an optional prop as `x?: T | undefined`, as upstream does. A consumer that sets `exactOptionalPropertyTypes` can then pass `undefined`.
 - Upstream types some Boolean props with a generic parameter, such as `multiple?: Multiple | undefined`. Declare such a prop as `multiple?: (Multiple & boolean) | undefined`.
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
@@ -471,6 +470,9 @@ Rules:
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
 - The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
 - A Boolean prop with the default `true` cannot tell an absent prop from `true`. A check of Base UI for a prop that is set thus runs only for `false`. `Menu.Root` does this for `modal` on a nested menu.
+- A part that has a Boolean prop with the default `true` or `undefined` calls `useCastBooleanWarning` of `src/internals` in `setup`, inside `if (process.env.NODE_ENV !== 'production')`. For such a prop, an absent prop and `false` give different results.
+- The helper warns when a wrapper component gives the part `false` only because Vue cast an absent Boolean prop of the wrapper. Its `except` list names each prop for which an absent prop and `false` have the same effect, as `invalid` of `Field.Root`.
+- `src/internals/useCastBooleanWarning.coverage.node.test.ts` fails for such a part with no call. Add each new such prop to the lists of [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
 - Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
@@ -665,7 +667,7 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 
 `isInHeldBranch()` of `src/internals/useKeepAliveState.ts` reads `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. `useKeepAliveState` starts `isHeld` with the function, so a part compiled as a Vapor component is not held at a mount in a held branch. Each part of the package compiles as a virtual DOM component. Such a part below the `KeepAlive` of a Vapor component gets `true` while that `KeepAlive` holds it. A case of `src/utils/popups/portal/PortalHeldMount.test.tsx` shows this in the project `vapor`.
 
-`src/internals/callerProps.ts` reads `getCurrentInstance`. Vue has no public API for the props that a caller sets or the owner of a vnode. It reads `vnode.props`, `vnode.ctx`, `propsOptions`, `type.emits`, `type.__name`, `type.name` and the `_n` flag of a slot. Each read stays in that file. In a Vapor wrapper, `useForwardProps` warns in development and forwards each value other than `undefined`.
+`src/internals/callerProps.ts` reads `getCurrentInstance`, because Vue has no public API for the props that a caller sets, for the declared events, or for the component whose render made a vnode. The file reads `vnode.props`, `vnode.ctx`, `propsOptions`, `type.emits`, `type.__name`, `type.name` and the `_n` flag of a slot. Keep each such read in that file. In a wrapper compiled as a Vapor component, the file gets no instance. `useForwardProps` then warns in a development build and forwards each value other than `undefined`, and `useForwardPropsEmits` forwards no event. A part below such a wrapper gives no cast Boolean warning.
 
 ### Server render
 
@@ -1825,7 +1827,6 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 
 ### Test rules
 
-- A fixture that forwards an optional Boolean prop uses `useForwardProps`, or gives the prop the default `undefined`. A cast Boolean warning fails the test.
 - Use only the Vitest APIs: `expect`, the functions of `vi`, such as `vi.fn` and `vi.spyOn`, and the DOM matchers.
 - The DOM matchers are the matchers of `@testing-library/jest-dom`, as in Base UI. A ported assertion then has the same meaning.
 - A `.node.test` file has no DOM matchers. `test/setup.ts` loads them only in the browser projects, and it gives the reason.
@@ -1877,6 +1878,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A test that expects a `Vase UI:` message on the console asserts the list of `takeReportedMessages()`, or it uses a console spy that has `mockImplementation`.
 - In the list, such a message is one string that starts with `console.warn: Vase UI:` or `console.error: Vase UI:`. Assert the whole list. The test then fails on a message that it does not expect.
 - A console spy that has `mockImplementation` takes each call of its method, so those calls are not in the list. The test then fails on a call that it does not expect only if it asserts each call of the spy. A spy with no implementation passes the call to the console, and the test fails unless it takes the message from the list.
+- A fixture that declares an optional Boolean prop and gives it to a part forwards its props with `useForwardProps`, or gives the prop the default `undefined`. The cast Boolean warning of the part otherwise fails the test.
 - A case that has a console spy asserts each call of the spy. For one message, use `expect(spy).toHaveBeenCalledExactlyOnceWith(message)`. For more than one message, compare `spy.mock.calls` with the whole list.
 - Do not select the calls of a console spy by their text. Do not use `toHaveBeenCalledWith` as the only assertion on a console spy. The case then passes on a message that it does not expect.
 - Assert the calls after the last step that can give a message. When a step follows the assertion, assert the number of calls at the end of the case.
