@@ -25,8 +25,8 @@ export interface FloatingPortalProps
   portalOwnerRole?: string | undefined;
   /**
    * Whether the portal element renders in the place of the part, with no `Teleport`.
-   * Other portal parts pass attributes to this component.
-   * The internal name keeps their `disabled` attributes separate from this mode.
+   * Only `Dialog.Portal` sets this prop, from its `disabled` prop.
+   * On other portal parts, `disabled` stays an attribute of the portal element.
    * @default false
    */
   inPlace?: boolean | undefined;

@@ -1139,7 +1139,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `FloatingPortal` takes `inPlace`. With it, the root node of the part is the portal element or the `#render` slot, with no `Teleport`, also on a server.
 - A disabled `Teleport` still needs a target to hydrate its children in Vue 3.5.12. A plain element needs no target or server teleport buffer.
 - In place, the portal reads no `container` and keeps no owner element or outside guards. Its context gives `inPlace`, so the focus manager acts as with no portal.
-- The public prop is `disabled` of `Dialog.Portal`, which Alert Dialog and Drawer also use. The internal name is `inPlace`, because other portal parts pass attributes to `FloatingPortal`; an attribute named `disabled` must not select this mode.
+- Only `Dialog.Portal` sets `inPlace`, from its public `disabled` prop. Alert Dialog and Drawer use this part. On other portal parts, `disabled` stays an attribute of the portal element.
 - A change of `disabled` mounts the content again.
 - Do not render the `Teleport` on a server. With an element of the page as the target, the server HTML has no popup, and Vue reports a hydration mismatch.
 - `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
@@ -1151,6 +1151,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The JSDoc of each portal part names what does not reach the portal element by default: a scope id, `v-show` and a custom directive. The comments of `useElementSiblings.ts` and `useFloatingPortalNode.ts` say when a `<Transition>` of the consumer reaches it.
 - The `id` attribute and the `#render` slot can replace the generated `id`. The portal thus follows the attribute with `useElementId` (`VUE-124`).
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
+- The exception is `$attrs` in `{ ...$attrs, ...props }`. A portal part binds `withoutPropsOf($attrs, FloatingPortal)` in its place, or `withoutPropsOf($attrs, FloatingPortalLite)` when it renders that portal. The internal portal declares props that the part does not declare, such as `inPlace`. Vue gives an attribute with the name of such a prop to that prop. `withoutPropsOf` removes the attribute, so it sets no prop and reaches no element (`VUE-135`). ESLint refuses each other use of `$attrs` in the template of a portal part.
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - The second form of a portal part is the exception to the rule for the two forms in [Parts that render an element](#parts-that-render-an-element). The state of a portal part is empty, so write the content as plain children: `<DialogPortalChildren><slot :state="state" /></DialogPortalChildren>`. Do not wrap it in `<template #default="slotProps">` to bind `slotProps`. A slot variable in the slot of `DialogPortalChildren` makes the slots of that component dynamic. Each part below it that has slot content then renders again with its parent.
 - `utils/popups/portal/PortalPart.test.tsx` checks this rule for each portal part. Add an entry to its `portalParts` for each new portal part.
@@ -1827,6 +1828,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
 - Each shared suite is a function of `#test-utils`. The JSDoc of its config says what a call gives. The list below names each suite and the tests that call it:
   - `popupConformanceTests`, `positionerConformanceTests`, `detachedTriggersConformanceTests` and `viewportConformanceTests`: the tests of a popup family.
   - `popupListConformanceTests`: the tests of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox.
+  - `portalOwnPropsTests`: the test of each portal part that renders `FloatingPortal` and does not set `inPlace` (`VUE-135`). `Dialog.Portal` sets `inPlace`, so `DialogPortal.test.tsx` has a case of its own with `portal-owner-role`.
   - `dialogRootSharedTests`: the tests of the roots of Dialog and Alert Dialog.
   - `fieldsetDisabledTests`: the test of each native button part that reads `useFieldsetDisabled` (`VUE-112`).
   - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup in the popup that closes in the same update (`BUG-5519`).

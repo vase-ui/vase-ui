@@ -50,6 +50,7 @@ function page(body) {
 }
 
 const SRC = 'packages/vue/src/dialog';
+const PORTAL_PART = 'packages/vue/src/popover/portal/PopoverPortal.vue';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
@@ -1085,6 +1086,19 @@ const reported = [
 
 const passed = [
   {
+    name: 'filtered attributes on a portal part',
+    file: PORTAL_PART,
+    code: docsSfc(
+      '',
+      '<FloatingPortal v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as }" />',
+    ),
+  },
+  {
+    name: 'unfiltered attributes on the input part',
+    file: 'packages/vue/src/input/Input.vue',
+    code: docsSfc('', '<FieldControl v-bind="{ ...$attrs, ...props }" />'),
+  },
+  {
     name: 'conditional part forms at the root',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
@@ -1498,6 +1512,17 @@ for (const { name, file, code, ruleId, hint } of reported) {
 for (const { name, file, code } of passed) {
   test(`accepts ${name}`, async () => {
     assert.deepEqual(await lint(file, code), []);
+  });
+}
+
+for (const binding of ['{ ...$attrs, as }', '$attrs']) {
+  test(`reports v-bind="${binding}" on a portal part one time`, async () => {
+    const messages = await lint(PORTAL_PART, docsSfc('', `<FloatingPortal v-bind="${binding}" />`));
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['vue/no-restricted-syntax'],
+    );
+    assert.match(messages[0].message, /withoutPropsOf/);
   });
 }
 

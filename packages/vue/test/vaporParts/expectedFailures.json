@@ -104,6 +104,9 @@
     "src/internals/useRenderElement.test.tsx": {
       "fails": {}
     },
+    "src/internals/withoutPropsOf.test.ts": {
+      "fails": {}
+    },
     "src/menu/filter-root/useMenuFilterItem.test.tsx": {
       "fails": {}
     },

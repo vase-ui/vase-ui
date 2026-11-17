@@ -26,6 +26,7 @@ import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 import { PreviewCardPortalContext } from './PreviewCardPortalContext';
@@ -67,7 +68,13 @@ defineExpose({ element });
   <FloatingPortalLite
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{
+      ...withoutPropsOf($attrs, FloatingPortalLite),
+      as,
+      stateClass,
+      stateStyle,
+      container,
+    }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -76,7 +83,13 @@ defineExpose({ element });
   <FloatingPortalLite
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{
+      ...withoutPropsOf($attrs, FloatingPortalLite),
+      as,
+      stateClass,
+      stateStyle,
+      container,
+    }"
   >
     <slot :state="state" />
   </FloatingPortalLite>
