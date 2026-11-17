@@ -18,6 +18,14 @@ export interface DialogPortalProps
    * A parent element to render the portal element into.
    */
   container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
+  /**
+   * Whether the portal element renders in the place of the part instead of a container.
+   * The server HTML then has the popup, and the part does not read `container`.
+   * A popup that is not modal is at its place in the tab order.
+   * A change of this prop mounts the parts in the portal again.
+   * @default false
+   */
+  disabled?: boolean | undefined;
 }
 </script>
 
@@ -33,7 +41,11 @@ import { DialogPortalContext } from './DialogPortalContext';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<DialogPortalProps>(), { as: 'div', keepMounted: false });
+const props = withDefaults(defineProps<DialogPortalProps>(), {
+  as: 'div',
+  keepMounted: false,
+  disabled: false,
+});
 
 defineSlots<{
   default(props: { state: DialogPortalState }): unknown;
@@ -52,8 +64,8 @@ provide(
 );
 
 const portalProps = computed(() => {
-  const { keepMounted, ...otherProps } = props;
-  return otherProps;
+  const { keepMounted, disabled, ...otherProps } = props;
+  return { ...otherProps, inPlace: disabled };
 });
 
 // As in Base UI, this part renders `FloatingPortal` and makes no element of its own.

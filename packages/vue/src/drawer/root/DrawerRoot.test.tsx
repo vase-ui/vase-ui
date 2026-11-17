@@ -1,3 +1,4 @@
+import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, onScopeDispose, provide, shallowRef } from 'vue';
 import type { PropType } from 'vue';
@@ -670,6 +671,40 @@ function createProvider() {
 
 describe('<Drawer.Root />', () => {
   const { render } = createRenderer();
+
+  it('VUE-128: renders the popup in place, marks outside elements and closes on Escape', async () => {
+    const onOpenChange = vi.fn();
+    await render(() => (
+      <div data-testid="host">
+        <button data-testid="before">before</button>
+        <Drawer.Root defaultOpen onOpenChange={onOpenChange}>
+          <Drawer.Portal disabled data-testid="portal">
+            <Drawer.Backdrop />
+            <Drawer.Viewport>
+              <Drawer.Popup data-testid="popup">
+                <Drawer.Content>
+                  <Drawer.Title>Title</Drawer.Title>
+                  <Drawer.Close data-testid="close">Close</Drawer.Close>
+                </Drawer.Content>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </div>
+    ));
+    await waitFor(() =>
+      expect(screen.getByTestId('popup')).toContainElement(document.activeElement as HTMLElement),
+    );
+    expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('host'));
+    expect(screen.getByTestId('before').closest('[inert]')).not.toBe(null);
+    const popup = screen.getByTestId('popup');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup).not.toBeInTheDocument());
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(
+      false,
+      expect.objectContaining({ reason: 'escape-key' }),
+    );
+  });
 
   popupAnatomyTests({
     createComponent: ({ open, onOpenChangeComplete, content }) => (

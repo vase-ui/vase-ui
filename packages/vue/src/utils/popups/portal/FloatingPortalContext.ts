@@ -27,6 +27,11 @@ export interface PortalContextValue {
    */
   portalNode: Readonly<Ref<HTMLElement | null>>;
   /**
+   * Whether the portal element is in the place of the part, with no `Teleport`. The popup is then
+   * at its place in the tab order, and the portal keeps no guards and no owner element.
+   */
+  inPlace: Readonly<Ref<boolean>>;
+  /**
    * The focus manager gives its state to the portal, and it gives `null` when it goes away. It
    * gives a new object when a value changes, because the portal does not see a change in an object.
    */

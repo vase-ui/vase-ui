@@ -1,8 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
-import { h, shallowRef } from 'vue';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { h, nextTick, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
+import { Select } from '@vase-ui/vue/select';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -11,11 +15,17 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
+  waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPortalHydration from './DialogPortalHydration.test.vue';
+import DialogPortalInPlaceHydration from './DialogPortalInPlaceHydration.test.vue';
+import DialogPortalInPlaceScoped from './DialogPortalInPlaceScoped.test.vue';
+import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
 
 const INTERNAL_BACKDROP_SELECTOR = '[role="presentation"][data-vase-ui-inert]';
 
@@ -230,6 +240,459 @@ describe('<Dialog.Portal />', () => {
     await hydrate(DialogPortalHydration, { serverHtml });
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  describe('VUE-128: prop: disabled', () => {
+    const guards = '[data-vase-ui-focus-guard]';
+
+    function inertOf(...ids: string[]) {
+      return ids.map((id) => screen.getByTestId(id).closest('[inert]') !== null);
+    }
+
+    function page(
+      rootProps: {
+        modal?: boolean | 'trap-focus';
+        disablePointerDismissal?: boolean;
+        onOpenChange?: (open: boolean, details: Dialog.Root.ChangeEventDetails) => void;
+      } = {},
+    ) {
+      return (
+        <div data-testid="host">
+          <button data-testid="before">Before</button>
+          <Dialog.Root defaultOpen modal={false} {...rootProps}>
+            <Dialog.Portal disabled data-testid="portal">
+              <Dialog.Backdrop
+                data-testid="backdrop"
+                style={rootProps.modal === true ? 'position:fixed;inset:0' : 'display:none'}
+              />
+              <Dialog.Popup data-testid="popup" style="position:relative">
+                <Dialog.Title>Title</Dialog.Title>
+                <button data-testid="inside">Inside</button>
+                <Dialog.Close data-testid="close">Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+          <button data-testid="after">After</button>
+        </div>
+      );
+    }
+
+    beforeEach(() => {
+      onTestFinished(() => {
+        expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
+      });
+    });
+
+    it('renders the portal and its parts between the sibling buttons', async () => {
+      await render(page());
+
+      const portal = screen.getByTestId('portal');
+      expect(portal.parentElement).toBe(screen.getByTestId('host'));
+      expect(portal.previousElementSibling).toBe(screen.getByTestId('before'));
+      expect(portal.nextElementSibling).toBe(screen.getByTestId('after'));
+      expect(portal).toContainElement(screen.getByTestId('popup'));
+      expect(portal).toContainElement(screen.getByTestId('backdrop'));
+    });
+
+    it('does not read the container after the mount', async () => {
+      const container = vi.fn(() => document.body);
+      await render(
+        <Dialog.Root defaultOpen modal={false}>
+          <Dialog.Portal disabled container={container}>
+            <Dialog.Popup />
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+      await nextTick();
+      await nextTick();
+
+      expect(container).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { name: 'modal', modal: true },
+      { name: 'not modal', modal: false },
+    ])('hydrates an open dialog in place with no message: $name', async ({ modal }) => {
+      const serverHtml = await renderOnServer(
+        'src/dialog/portal/DialogPortalInPlaceHydration.test.vue',
+        { modal },
+      );
+      expect(serverHtml).toContain('role="dialog"');
+      expect(serverHtml).not.toContain('teleport');
+
+      await hydrate(DialogPortalInPlaceHydration, { serverHtml, props: { modal } });
+
+      const portal = screen.getByTestId('portal');
+      expect(portal.parentElement).toBe(screen.getByTestId('host'));
+      expect(portal).toContainElement(screen.getByTestId('popup'));
+      expect(screen.getByTestId('popup')).toHaveAttribute(
+        'aria-labelledby',
+        screen.getByTestId('title').id,
+      );
+    });
+
+    it('keeps the natural tab order with no guards and no owner when not modal', async () => {
+      await render(page({ disablePointerDismissal: true }));
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      expect(document.querySelectorAll(guards)).toHaveLength(0);
+      expect(document.querySelector('[aria-owns]')).toBe(null);
+
+      screen.getByTestId('before').focus();
+      await userEvent.tab();
+      expect(screen.getByTestId('inside')).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByTestId('close')).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByTestId('after')).toHaveFocus();
+    });
+
+    it('closes with focus-out when Tab leaves a popup that is not modal', async () => {
+      const onOpenChange = vi.fn();
+      await render(page({ onOpenChange }));
+      const popup = screen.getByTestId('popup');
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+
+      screen.getByTestId('close').focus();
+      await userEvent.tab();
+
+      await waitFor(() => expect(popup).not.toBeInTheDocument());
+      expect(screen.getByTestId('after')).toHaveFocus();
+      expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(
+        false,
+        expect.objectContaining({ reason: 'focus-out' }),
+      );
+    });
+
+    it('keeps the content tabbable after focus leaves a popup that stays open', async () => {
+      await render(page({ disablePointerDismissal: true }));
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      screen.getByTestId('close').focus();
+      await userEvent.tab();
+      expect(screen.getByTestId('after')).toHaveFocus();
+
+      await userEvent.tab({ shift: true });
+
+      expect(screen.getByTestId('close')).toHaveFocus();
+      expect(screen.getByTestId('popup')).toBeInTheDocument();
+    });
+
+    it('updates the marks, focus trap and scroll lock when modal changes while open', async () => {
+      const modal = shallowRef<boolean | 'trap-focus'>(false);
+      const onOpenChange = vi.fn();
+      await render(() => page({ modal: modal.value, disablePointerDismissal: true, onOpenChange }));
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      expect(inertOf('before', 'after', 'portal', 'popup')).toEqual([false, false, false, false]);
+      expect(document.querySelectorAll(guards)).toHaveLength(0);
+      expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
+
+      modal.value = true;
+      await waitFor(() => expect(inertOf('before', 'after')).toEqual([true, true]));
+      expect(inertOf('portal', 'popup', 'backdrop')).toEqual([false, false, true]);
+      expect(document.querySelectorAll(guards)).toHaveLength(2);
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+      screen.getByTestId('close').focus();
+      await userEvent.tab();
+      expect(screen.getByTestId('inside')).toHaveFocus();
+
+      modal.value = 'trap-focus';
+      await waitFor(() => expect(inertOf('before', 'after')).toEqual([false, false]));
+      expect(document.querySelectorAll(guards)).toHaveLength(2);
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(0));
+      screen.getByTestId('close').focus();
+      await userEvent.tab();
+      expect(screen.getByTestId('inside')).toHaveFocus();
+
+      modal.value = false;
+      await waitFor(() => expect(document.querySelectorAll(guards)).toHaveLength(0));
+      expect(inertOf('before', 'after')).toEqual([false, false]);
+      expect(screen.getByTestId('before').closest('[aria-hidden]')).toBe(null);
+      expect(screen.getByTestId('after').closest('[aria-hidden]')).toBe(null);
+      expect(getScrollLockRegistry()?.lockCount).toBe(0);
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { name: 'modal', modal: true },
+      { name: 'not modal', modal: false },
+    ])('closes on Escape: $name', async ({ modal }) => {
+      const onOpenChange = vi.fn();
+      await render(page({ modal, onOpenChange }));
+      const popup = screen.getByTestId('popup');
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+
+      await userEvent.keyboard('{Escape}');
+
+      await waitFor(() => expect(popup).not.toBeInTheDocument());
+      expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(
+        false,
+        expect.objectContaining({ reason: 'escape-key' }),
+      );
+    });
+
+    it('closes a modal dialog on a real press on the internal backdrop', async () => {
+      const onOpenChange = vi.fn();
+      await render(page({ modal: true, onOpenChange }));
+      const popup = screen.getByTestId('popup');
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      const hit = document.elementFromPoint(5, 300);
+      expect(hit).toBe(screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR));
+      expect(hit).not.toBe(null);
+
+      await userEvent.click(document.body, { position: { x: 5, y: 300 } });
+
+      await waitFor(() => expect(popup).not.toBeInTheDocument());
+      expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(
+        false,
+        expect.objectContaining({ reason: 'outside-press' }),
+      );
+    });
+
+    it('keeps a popup that is not modal open on outside press and Tab with disablePointerDismissal', async () => {
+      const onOpenChange = vi.fn();
+      await render(page({ disablePointerDismissal: true, onOpenChange }));
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      await userEvent.click(screen.getByTestId('before'));
+      await wait(0);
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      expect(onOpenChange).not.toHaveBeenCalled();
+
+      screen.getByTestId('close').focus();
+      await userEvent.tab();
+      await wait(0);
+
+      expect(screen.getByTestId('after')).toHaveFocus();
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { name: 'in the popup', nested: true },
+      { name: 'beside the dialog', nested: false },
+    ])('releases modal marks and locks in order for an alert dialog $name', async ({ nested }) => {
+      const modal = shallowRef<boolean | 'trap-focus'>(true);
+      const alertOpen = shallowRef(false);
+      const Alert = () => (
+        <AlertDialog.Root
+          open={alertOpen.value}
+          onOpenChange={(open: boolean) => (alertOpen.value = open)}
+        >
+          <AlertDialog.Portal data-testid="alert-portal">
+            <AlertDialog.Popup data-testid="alert">
+              <AlertDialog.Title>Confirm</AlertDialog.Title>
+              <AlertDialog.Close data-testid="alert-close">Cancel</AlertDialog.Close>
+            </AlertDialog.Popup>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
+      );
+      await render(() => (
+        <div data-testid="host">
+          <button data-testid="before">Before</button>
+          <Dialog.Root defaultOpen modal={modal.value}>
+            <Dialog.Portal disabled data-testid="portal">
+              <Dialog.Popup data-testid="popup">
+                <Dialog.Title>Title</Dialog.Title>
+                <button data-testid="inside">Inside</button>
+                {nested ? <Alert /> : null}
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+          {nested ? null : <Alert />}
+          <button data-testid="after">After</button>
+        </div>
+      ));
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      expect(inertOf('before', 'after', 'popup')).toEqual([true, true, false]);
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+
+      await waitForLaterMillisecond(() => {
+        alertOpen.value = true;
+      });
+      await waitFor(() => expect(screen.getByTestId('alert-close')).toHaveFocus());
+      const alert = screen.getByTestId('alert');
+      expect(screen.getByTestId('alert-portal').parentElement).toBe(
+        nested ? screen.getByTestId('portal') : document.body,
+      );
+      expect(inertOf('before', 'after', 'popup', 'alert')).toEqual([true, true, true, false]);
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(2));
+
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(alert).not.toBeInTheDocument());
+      expect(inertOf('before', 'after', 'popup')).toEqual([true, true, false]);
+      await waitFor(() =>
+        expect(screen.getByTestId('popup')).toContainElement(document.activeElement as HTMLElement),
+      );
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+
+      modal.value = false;
+      await waitFor(() =>
+        expect(inertOf('before', 'after', 'popup')).toEqual([false, false, false]),
+      );
+      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(0));
+      expect(document.querySelector('[inert]')).toBe(null);
+    });
+
+    it('keeps a nested Select portal inside the dialog portal and free of inert', async () => {
+      await render(
+        <Dialog.Root defaultOpen>
+          <Dialog.Portal disabled data-testid="portal">
+            <Dialog.Popup>
+              <Select.Root defaultOpen>
+                <Select.Trigger>
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Portal data-testid="select-portal">
+                  <Select.Positioner>
+                    <Select.Popup>
+                      <Select.Item value="a" data-testid="item">
+                        A
+                      </Select.Item>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+      const item = await screen.findByRole('option');
+
+      expect(screen.getByTestId('select-portal').parentElement).toBe(screen.getByTestId('portal'));
+      expect(item.closest('[inert]')).toBe(null);
+    });
+
+    it.each([
+      { name: 'modal', modal: true },
+      { name: 'not modal', modal: false },
+    ])(
+      'mounts the parts again and keeps the dialog open when disabled changes: $name',
+      async ({ modal }) => {
+        const disabled = shallowRef(true);
+        const onOpenChange = vi.fn();
+        await render(() => (
+          <div data-testid="host">
+            <Dialog.Root
+              defaultOpen
+              modal={modal}
+              disablePointerDismissal
+              onOpenChange={onOpenChange}
+            >
+              <Dialog.Portal disabled={disabled.value} data-testid="portal">
+                <Dialog.Popup data-testid="popup">
+                  <input data-testid="input" />
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+            <button data-testid="after">After</button>
+          </div>
+        ));
+        await waitFor(() => expect(screen.getByTestId('input')).toHaveFocus());
+        const first = screen.getByTestId('popup');
+        screen.getByTestId<HTMLInputElement>('input').value = 'typed';
+
+        disabled.value = false;
+        await waitFor(() => expect(screen.getByTestId('portal').parentElement).toBe(document.body));
+        const second = screen.getByTestId('popup');
+        expect(second).not.toBe(first);
+        expect(first).not.toBeInTheDocument();
+        expect(second).toHaveAttribute('data-open');
+        expect(screen.getByTestId('input')).toHaveValue('');
+        await waitFor(() => expect(screen.getByTestId('input')).toHaveFocus());
+        expect(inertOf('after')).toEqual([modal]);
+        expect(document.querySelectorAll(guards)).toHaveLength(modal ? 2 : 4);
+
+        disabled.value = true;
+        await waitFor(() =>
+          expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('host')),
+        );
+        const third = screen.getByTestId('popup');
+        expect(third).not.toBe(second);
+        expect(second).not.toBeInTheDocument();
+        expect(third).toHaveAttribute('data-open');
+        await waitFor(() => expect(screen.getByTestId('input')).toHaveFocus());
+        expect(inertOf('after')).toEqual([modal]);
+        expect(document.querySelectorAll(guards)).toHaveLength(modal ? 2 : 0);
+        await waitFor(() => expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(modal ? 1 : 0));
+        expect(onOpenChange).not.toHaveBeenCalled();
+      },
+    );
+
+    it('takes the popup and the modal marks out of the document with KeepAlive', async () => {
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => (
+          <Dialog.Root defaultOpen>
+            <Dialog.Portal disabled>
+              <Dialog.Popup data-testid="popup">
+                <button data-testid="inside">Inside</button>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        ),
+        { mounted: true },
+      );
+      await render(
+        <div>
+          <button data-testid="outside">Outside</button>
+          <HeldBranch />
+        </div>,
+      );
+      await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
+      const popup = screen.getByTestId('popup');
+      expect(inertOf('outside')).toEqual([true]);
+
+      await hide();
+
+      expect(popup).not.toBeInTheDocument();
+      expect(inertOf('outside')).toEqual([false]);
+      expect(screen.getByTestId('outside').closest('[aria-hidden]')).toBe(null);
+
+      await show();
+
+      expect(screen.getByTestId('popup')).toBe(popup);
+      await waitFor(() => expect(inertOf('outside')).toEqual([true]));
+      await waitFor(() => expect(popup).toContainElement(document.activeElement as HTMLElement));
+    });
+
+    it('renders the consumer element and children of the render slot in place', async () => {
+      await render(
+        <div data-testid="host">
+          <Dialog.Root defaultOpen>
+            <Dialog.Portal
+              disabled
+              v-slots={{
+                render: ({ props, children }: RenderSlotProps) => (
+                  <section {...props} data-testid="portal">
+                    {h(children, null, () => (
+                      <Dialog.Popup data-testid="popup" />
+                    ))}
+                  </section>
+                ),
+              }}
+            />
+          </Dialog.Root>
+        </div>,
+      );
+      const portal = screen.getByTestId('portal');
+
+      expect(portal.localName).toBe('section');
+      expect(portal.parentElement).toBe(screen.getByTestId('host'));
+      expect(portal).toContainElement(screen.getByTestId('popup'));
+      expect(portal.querySelector(INTERNAL_BACKDROP_SELECTOR)).not.toBe(null);
+    });
+
+    it('gives the portal element the scope id and v-show of the consumer', async () => {
+      const { setProps } = await render(<DialogPortalInPlaceScoped visible />);
+      const portal = screen.getByTestId('portal');
+      expect(portal).toHaveStyle({ outlineStyle: 'dashed' });
+      expect(portal).toBeVisible();
+
+      await setProps({ visible: false });
+
+      expect(portal).toHaveStyle({ display: 'none' });
+      expect(portal).not.toBeVisible();
+      await setProps({ visible: true });
+      expect(portal).toBeVisible();
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

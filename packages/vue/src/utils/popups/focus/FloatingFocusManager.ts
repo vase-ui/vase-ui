@@ -410,6 +410,9 @@ export function useFloatingFocusManager(
 
   const portalContext = usePortalContext();
   const portalNode = computed(() => portalContext?.portalNode.value ?? null);
+  // A portal that renders in place leaves the popup at its place in the tab order. The focus
+  // manager then acts as with no portal: a popup that is not modal has no guards.
+  const isInsidePortal = computed(() => portalContext != null && !portalContext.inPlace.value);
   const tree = useFloatingTree(() => resolved.value.externalTree);
 
   const parentFocusManager = inject(ParentFocusManagerContext, null);
@@ -487,7 +490,7 @@ export function useFloatingFocusManager(
     () =>
       !resolved.value.disabled &&
       (resolved.value.modal ? !isUntrappedTypeableCombobox.value : true) &&
-      (portalContext != null || resolved.value.modal),
+      (isInsidePortal.value || resolved.value.modal),
   );
 
   let guards: { before: HTMLSpanElement; after: HTMLSpanElement } | null = null;
@@ -1098,6 +1101,7 @@ export function useFloatingFocusManager(
       isUntrappedTypeableCombobox.value,
       toValue(resolved.value.nextFocusableElement),
       toValue(resolved.value.previousFocusableElement),
+      isInsidePortal.value,
     ],
     () => {
       const domReferenceEl = domReference.value;
@@ -1312,7 +1316,7 @@ export function useFloatingFocusManager(
         floatingEl && addEventListener(floatingEl, 'focusin', handleFocusIn),
         floatingEl && addEventListener(floatingEl, 'focusout', handleFocusOutside),
         floatingEl &&
-          portalContext &&
+          isInsidePortal.value &&
           addEventListener(floatingEl, 'focusout', markInsideComponentTree, true),
         removalObserver && (() => removalObserver.disconnect()),
       );

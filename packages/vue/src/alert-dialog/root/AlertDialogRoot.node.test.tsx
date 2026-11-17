@@ -5,6 +5,29 @@ import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 
 describe('<AlertDialog.Root /> on a server', () => {
+  it('VUE-128: renders an open popup in place with a disabled portal', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () => (
+          <main>
+            <AlertDialog.Root open>
+              <AlertDialog.Portal disabled>
+                <AlertDialog.Popup>
+                  <AlertDialog.Title>Title</AlertDialog.Title>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </main>
+        ),
+      }),
+    );
+
+    expect(html).toContain('data-vase-ui-portal');
+    expect(html).toContain('role="alertdialog"');
+    expect(html.replace(/<!--.*?-->/g, '')).toContain('>Title</h2>');
+    expect(html).not.toContain('teleport');
+  });
+
   it('gives the alert dialog state to the parts and attaches no store to its handle', async () => {
     const handle = AlertDialog.createHandle<number>();
     const Probe = defineComponent({

@@ -13,6 +13,87 @@ function getButtonTag(html: string, id: string) {
 }
 
 describe('<Dialog.Root /> on a server', () => {
+  describe('VUE-128: prop: disabled', () => {
+    it.each([
+      { name: 'modal', modal: true },
+      { name: 'not modal', modal: false },
+    ])('renders an open dialog in place: $name', async ({ modal }) => {
+      const context: Record<string, unknown> = {};
+      const container = vi.fn();
+      const html = await renderToString(
+        createSSRApp({
+          render: () => (
+            <main>
+              <button>Before</button>
+              <Dialog.Root open modal={modal}>
+                <Dialog.Portal disabled container={container}>
+                  <Dialog.Backdrop />
+                  <Dialog.Popup>
+                    <Dialog.Title>Title</Dialog.Title>
+                    <Dialog.Description>Description</Dialog.Description>
+                    <Dialog.Close>Close</Dialog.Close>
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              </Dialog.Root>
+              <button>After</button>
+            </main>
+          ),
+        }),
+        context,
+      );
+
+      expect(html).toContain('role="dialog"');
+      expect(html).toContain('data-vase-ui-portal');
+      expect(html.replace(/<!--.*?-->/g, '')).toContain('>Title</h2>');
+      expect(html.indexOf('>Before</button>')).toBeLessThan(html.indexOf('data-vase-ui-portal'));
+      expect(html.indexOf('data-vase-ui-portal')).toBeLessThan(html.indexOf('>After</button>'));
+      expect(html.includes('data-vase-ui-inert')).toBe(modal);
+      const popup = /<div [^>]*role="dialog"[^>]*>/.exec(html)?.[0];
+      expect(popup).toBeDefined();
+      expect(popup).not.toContain('aria-labelledby');
+      expect(popup).not.toContain('aria-describedby');
+      expect(html).not.toContain('teleport');
+      expect(context.teleports).toBeUndefined();
+      expect(container).not.toHaveBeenCalled();
+    });
+
+    it('keeps the explicit name and description of the popup in the server HTML', async () => {
+      const html = await renderApp(() => (
+        <Dialog.Root open>
+          <Dialog.Portal disabled>
+            <Dialog.Popup aria-labelledby="panel-title" aria-describedby="panel-description">
+              <Dialog.Title id="panel-title">Title</Dialog.Title>
+              <Dialog.Description id="panel-description">Description</Dialog.Description>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+
+      const popup = /<div [^>]*role="dialog"[^>]*>/.exec(html)?.[0];
+      expect(popup).toContain('aria-labelledby="panel-title"');
+      expect(popup).toContain('aria-describedby="panel-description"');
+      expect(html).toContain('id="panel-title"');
+      expect(html).toContain('id="panel-description"');
+    });
+
+    it.each([
+      { name: 'without keepMounted', keepMounted: false },
+      { name: 'with keepMounted', keepMounted: true },
+    ])('renders a closed dialog in place: $name', async ({ keepMounted }) => {
+      const html = await renderApp(() => (
+        <Dialog.Root>
+          <Dialog.Portal disabled keepMounted={keepMounted}>
+            <Dialog.Popup />
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+
+      expect(html.includes('data-vase-ui-portal')).toBe(keepMounted);
+      expect(html.includes('role="dialog"')).toBe(keepMounted);
+      expect(html.includes('hidden')).toBe(keepMounted);
+    });
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
