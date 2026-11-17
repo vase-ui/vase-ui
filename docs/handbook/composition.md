@@ -159,4 +159,4 @@ A component that you build with [useRender](/utils/use-render) exposes the `elem
 
 In a Vapor wrapper, give each optional Boolean prop the default `undefined`, as [useForwardProps explains](/utils/use-forward-props#vapor-mode).
 
-In a filterable menu, an item in a Vapor component mounts its content a second time while the query hides the item. That mount is in an element outside the document, so the filter can read its text and follow changes from child components. The components in the content run while the item is hidden. Give the item a `label` to prevent that mount.
+In a filterable menu, an item in a Vapor component mounts its content a second time while the query hides the item. That mount is in an element outside the document, so the filter can read its text and follow changes from child components. The components in the content run while the item is hidden. Give the item a `label` to prevent that mount. The filter then matches the `label`.

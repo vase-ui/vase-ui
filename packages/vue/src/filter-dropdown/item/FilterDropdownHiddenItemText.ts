@@ -18,9 +18,10 @@ import { ownerDocument } from '../../common/owner';
 // The text of the vnodes of a slot: text vnodes, and the children of element and fragment vnodes.
 // A component keeps its content in its own slots. A scoped slot can need props that a call here
 // does not give, so the text of a component is empty.
-// The result is `undefined` when a vnode has no children to read. The slot of a Vapor component is
-// such a vnode: it holds a function, and only a mount gives its nodes. Vue 3.5 does not export its
-// symbol, so the test checks for a symbol type without children.
+// The result is `undefined` when a vnode gives its text only at a mount. The slot of a Vapor
+// component is such a vnode: it holds a function, and only a mount gives its nodes. Vue 3.5 does
+// not export the symbol of its type, so the test is for a symbol that is not `Fragment`, `Text`,
+// `Comment` or `Static`.
 function slotText(node: unknown): string | undefined {
   if (typeof node === 'string' || typeof node === 'number') {
     return String(node);
@@ -67,7 +68,7 @@ export const FilterDropdownHiddenItemText = defineComponent({
     label: { type: String, default: undefined },
   },
   setup(props, { slots }) {
-    // `undefined` while the slot has a vnode with no children to read.
+    // `undefined` while the slot has a vnode that gives its text only at a mount.
     let text: string | undefined = '';
     let mountElement: HTMLElement | undefined;
     let observer: MutationObserver | undefined;
