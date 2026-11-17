@@ -155,7 +155,7 @@ The rule applies to each element and each component that gets `props`. With nest
 
 A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to `#render`, also when the component that renders the part is not in Vapor mode.
 
-A component that you build with [useRender](/utils/use-render) exposes the `element` that `useRender` returns. Its template binds `setRef` by name on its element, as the samples of that page do.
+A component that you build with `useRender` exposes the `element` that it returns. Call `usesRenderSlot()` in the `v-if` of its `#render` slot. Bind `setRef` by name beside `elementProps()`. In Vapor mode, a development build warns when a native element has only the spread. See the [useRender samples](/utils/use-render).
 
 In a Vapor wrapper, give each optional Boolean prop the default `undefined`, as [useForwardProps explains](/utils/use-forward-props#vapor-mode).
 

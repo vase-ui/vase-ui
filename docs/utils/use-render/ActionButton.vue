@@ -12,12 +12,14 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<ActionButtonProps>();
 
-const { element, elementProps, setRef, tag } = useRender(props, { defaultTagName: 'button' });
+const { element, elementProps, setRef, tag, usesRenderSlot } = useRender(props, {
+  defaultTagName: 'button',
+});
 
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="{}" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="{}" />
   <component :is="tag" v-else v-bind="elementProps()" :ref="setRef"><slot /></component>
 </template>

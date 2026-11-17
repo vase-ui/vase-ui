@@ -54,6 +54,10 @@ A component that calls `useRender` sets `inheritAttrs: false`. It passes its pro
 
 The element binds `elementProps()` with `v-bind`, and `setRef` by name with `:ref`. [Vapor mode](/handbook/composition#vapor-mode) applies only a ref bound by name and ignores the `ref` key of a bound object ([vuejs/core#15900](https://github.com/vuejs/core/pull/15900)).
 
+Call `usesRenderSlot()` in the `v-if` of the `#render` slot. It tells whether the consumer gave the slot. In a development build, it also tells `useRender` that the component renders the slot. A Vapor slot that uses no slot prop never calls `elementProps()`.
+
+In a development build, `useRender` warns when the `#render` slot gives no element. It also warns when a Vapor component binds `elementProps()` to a native element without a named `ref`. Bind `:ref="setRef"` on that element.
+
 ## Merging props
 
 The `mergeProps` function merges two or more sets of Vue props. Event handlers, `class` values and `style` values have rules of their own. For the other keys, a later set overwrites an earlier set. See [mergeProps](/utils/merge-props) for the rules. Merging props is useful when you create custom components. It is also useful in the `#render` slot of any Vase UI part.
