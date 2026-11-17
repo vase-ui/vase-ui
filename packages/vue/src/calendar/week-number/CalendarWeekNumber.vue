@@ -57,7 +57,7 @@ const stateAttributesMapping: StateAttributesMapping<CalendarWeekNumberState> = 
   weekNumber: (value) => ({ [CalendarWeekNumberDataAttributes.weekNumber]: String(value) }),
 };
 
-const { element, elementProps } = useRenderElement('th', props, {
+const { element, elementProps, setRef } = useRenderElement('th', props, {
   state,
   stateAttributesMapping,
   props: (attrs) => [
@@ -77,8 +77,12 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-  <component :is="as" v-else-if="$slots.default || as !== 'th'" v-bind="elementProps()"
+  <component
+    :is="as"
+    v-else-if="$slots.default || as !== 'th'"
+    v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state" :text="text">{{ text }}</slot></component
   >
-  <th v-else v-bind="elementProps()">{{ text }}</th>
+  <th v-else v-bind="elementProps()" :ref="setRef">{{ text }}</th>
 </template>

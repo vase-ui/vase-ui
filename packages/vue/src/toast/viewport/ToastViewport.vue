@@ -193,7 +193,7 @@ function handleFocusout(event: FocusEvent) {
 
 const state = computed<ToastViewportState>(() => ({ expanded: expanded.value }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: store.setViewport,
   children: true,
@@ -459,5 +459,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ToastViewportChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ToastViewportChildren><slot :state="state" /></ToastViewportChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ToastViewportChildren><slot :state="state" /></ToastViewportChildren>
+  </component>
 </template>

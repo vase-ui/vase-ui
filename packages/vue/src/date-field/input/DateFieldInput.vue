@@ -47,7 +47,7 @@ const isHydrating = useIsHydrating();
 
 const { state } = context;
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
   props: (attrs) => [
@@ -67,5 +67,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="DateFieldInputChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><DateFieldInputChildren><template #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></DateFieldInputChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <DateFieldInputChildren><template #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></DateFieldInputChildren>
+  </component>
 </template>

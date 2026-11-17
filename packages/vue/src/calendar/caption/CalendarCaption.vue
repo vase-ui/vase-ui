@@ -62,7 +62,7 @@ const liveRegionRef = useInitialLiveRegionTextMutation<HTMLElement>(
   navigationDirection.value !== 'none',
 );
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: liveRegionRef,
   props: (attrs) => [
@@ -82,8 +82,12 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-  <component :is="as" v-else-if="$slots.default || as !== 'div'" v-bind="elementProps()"
+  <component
+    :is="as"
+    v-else-if="$slots.default || as !== 'div'"
+    v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state" :text="text">{{ text }}</slot></component
   >
-  <div v-else v-bind="elementProps()">{{ text }}</div>
+  <div v-else v-bind="elementProps()" :ref="setRef">{{ text }}</div>
 </template>

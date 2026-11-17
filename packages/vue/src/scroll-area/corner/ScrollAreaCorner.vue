@@ -31,7 +31,7 @@ const { cornerElement, cornerSize, hiddenState } = useScrollAreaRootContext();
 
 // The viewport writes the corner size only while `cornerElement` has an element. A hidden corner
 // has no element, so the viewport then stops its writes.
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   ref: (corner) => {
     cornerElement.value = corner;
   },
@@ -56,6 +56,8 @@ defineExpose({ element });
 <template>
   <template v-if="!hiddenState.corner">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <slot :state="state" />
+    </component>
   </template>
 </template>

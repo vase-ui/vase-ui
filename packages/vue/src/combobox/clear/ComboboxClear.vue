@@ -178,7 +178,7 @@ function handleClick(event: MouseEvent) {
   store.context.inputRef.value?.focus();
 }
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setClearElement],
   props: (attrs) => [
@@ -204,6 +204,8 @@ defineExpose({ element });
 <template>
   <template v-if="keepMounted || mounted">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxClearChildren" />
-    <component :is="as" v-else v-bind="elementProps()"><ComboboxClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxClearChildren></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <ComboboxClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxClearChildren>
+    </component>
   </template>
 </template>

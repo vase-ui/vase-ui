@@ -337,7 +337,7 @@ provide(RadioRootContext, state);
 // time.
 const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
   stateAttributesMapping,
@@ -435,6 +435,8 @@ defineExpose({ element, inputElement });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
   <input v-bind="inputProps()" />
 </template>

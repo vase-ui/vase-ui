@@ -163,7 +163,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
     disabled: disabled.value,
   }));
 
-  const { element, elementProps } = useRenderElement('button', props, {
+  const { element, elementProps, setRef } = useRenderElement('button', props, {
     ref: buttonRef,
     state: buttonState,
     props: (attrs) => [
@@ -186,5 +186,5 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
     stateAttributesMapping,
   });
 
-  return { element, elementProps, state: buttonState };
+  return { element, elementProps, setRef, state: buttonState };
 }

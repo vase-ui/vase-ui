@@ -37,7 +37,7 @@ defineSlots<{
 
 const { state, weekdays } = useCalendarRootContext();
 
-const { element, elementProps } = useRenderElement('tr', props, { state });
+const { element, elementProps, setRef } = useRenderElement('tr', props, { state });
 
 defineExpose({ element });
 </script>
@@ -45,5 +45,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot /><template v-for="(weekday, index) in weekdays" :key="index"><slot name="weekday" :weekday="weekday" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot /><template v-for="(weekday, index) in weekdays" :key="index"><slot name="weekday" :weekday="weekday" :index="index" /></template>
+  </component>
 </template>

@@ -25,6 +25,8 @@ const MESSAGES = {
     'The build supports Firefox 114, and Firefox 114 does not have this array method. Use `sort`, `reverse` or `splice` on a copy. See "Compiler flags" in CONTRIBUTING.md.',
   customDirective: 'A custom directive has another signature in Vapor mode. Use a composable.',
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
+  refByName:
+    'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
   defineComponent:
     'Only a `<script setup>` SFC compiles to Vapor mode. Use `<script setup lang="ts">`.',
   domGlobal:
@@ -307,6 +309,12 @@ const BUILT_IN_DIRECTIVES =
 
 const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
+  {
+    // A start tag has only its attributes below it, so the descendant form is exact.
+    selector:
+      "VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument]) CallExpression[callee.name='elementProps']):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
+    message: MESSAGES.refByName,
+  },
   {
     // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.
     selector: `VElement:not([name='script']) > VStartTag > VAttribute[directive=true]:not([key.name.name=/^(?:${BUILT_IN_DIRECTIVES}|memo)$/])`,

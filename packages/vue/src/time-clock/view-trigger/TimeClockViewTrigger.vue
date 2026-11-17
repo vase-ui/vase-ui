@@ -96,7 +96,7 @@ function onClick(event: MouseEvent) {
   root.setView(props.view, createChangeEventDetails(REASONS.triggerPress, event));
 }
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => {
@@ -121,8 +121,12 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else-if="$slots.default || as !== 'button'" v-bind="elementProps()"
+  <component
+    :is="as"
+    v-else-if="$slots.default || as !== 'button'"
+    v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state">{{ text }}</slot></component
   >
-  <button v-else v-bind="elementProps()">{{ text }}</button>
+  <button v-else v-bind="elementProps()" :ref="setRef">{{ text }}</button>
 </template>

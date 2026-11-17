@@ -88,7 +88,7 @@ function onClick(event: MouseEvent) {
   root.selectDayPeriod(props.value, createChangeEventDetails(REASONS.itemPress, event));
 }
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => {
@@ -116,7 +116,8 @@ defineExpose({ element });
     :is="as"
     v-else-if="isTwelveHour && ($slots.default || as !== 'button')"
     v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state">{{ text }}</slot></component
   >
-  <button v-else-if="isTwelveHour" v-bind="elementProps()">{{ text }}</button>
+  <button v-else-if="isTwelveHour" v-bind="elementProps()" :ref="setRef">{{ text }}</button>
 </template>

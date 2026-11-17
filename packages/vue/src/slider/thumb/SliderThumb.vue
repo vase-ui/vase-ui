@@ -659,7 +659,7 @@ const state = computed<SliderThumbState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: [listItemRef],
   props: (consumerAttrs) => {
@@ -719,5 +719,7 @@ defineExpose({ element, inputElement });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SliderThumbChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><SliderThumbChildren><slot :state="state" /></SliderThumbChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <SliderThumbChildren><slot :state="state" /></SliderThumbChildren>
+  </component>
 </template>

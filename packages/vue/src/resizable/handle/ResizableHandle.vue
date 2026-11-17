@@ -433,7 +433,7 @@ const state = computed<ResizableHandleState>(() => ({
   atMax: ends.value.atMax,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   stateAttributesMapping,
   ref: [listItemRef],
@@ -490,5 +490,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ResizableHandleChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ResizableHandleChildren><slot :state="state" /></ResizableHandleChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ResizableHandleChildren><slot :state="state" /></ResizableHandleChildren>
+  </component>
 </template>

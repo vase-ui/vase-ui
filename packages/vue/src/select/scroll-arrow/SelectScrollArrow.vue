@@ -150,7 +150,7 @@ function scrollNextItem() {
   timeout.start(40, scrollNextItem);
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: transitionStatusMapping,
   props: (attrs) => [
@@ -241,6 +241,8 @@ function getTargetScrollTop(
 <template>
   <template v-if="shouldRender">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
-    <component :is="as" v-else v-bind="elementProps()"><SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren>
+    </component>
   </template>
 </template>

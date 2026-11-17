@@ -57,7 +57,7 @@ function updateDelayPassed() {
 onMounted(updateDelayPassed);
 watch(() => props.delay, updateDelayPassed);
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   stateAttributesMapping: avatarStateAttributesMapping,
 });
@@ -68,6 +68,8 @@ defineExpose({ element });
 <template>
   <template v-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed)">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <slot :state="state" />
+    </component>
   </template>
 </template>

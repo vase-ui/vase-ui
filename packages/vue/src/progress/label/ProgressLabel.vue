@@ -44,7 +44,7 @@ const labelId = useRegisteredLabelId(
   () => element.value,
 );
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ id: labelId.value, role: 'presentation' }, attrs],
   stateAttributesMapping: progressStateAttributesMapping,
@@ -55,5 +55,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

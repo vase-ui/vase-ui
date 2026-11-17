@@ -206,7 +206,7 @@ const root = useDateTimeFieldRoot<TemporalValue>({
   updateValue: (value) => emit('update:value', value),
 });
 
-const { elementProps } = useRenderElement(
+const { elementProps, setRef } = useRenderElement(
   'div',
   {},
   {
@@ -221,7 +221,7 @@ defineExpose({ context: root });
 </script>
 
 <template>
-  <div v-bind="elementProps()">
+  <div v-bind="elementProps()" :ref="setRef">
     <ProbeInput />
     <button
       type="button"

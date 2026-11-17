@@ -53,7 +53,7 @@ const clear = useFilterDropdownClear({
   nativeButton: () => props.nativeButton,
 });
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, setRef } = useRenderElement('button', props, {
   state: clear.state,
   ref: clear.ref,
   props: clear.props,
@@ -65,7 +65,7 @@ defineExpose({ element });
 <template>
   <template v-if="clear.visible.value">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="clear.state.value" />
-    <component :is="as" v-else v-bind="elementProps()"
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef"
       ><slot :state="clear.state.value"
     /></component>
   </template>
