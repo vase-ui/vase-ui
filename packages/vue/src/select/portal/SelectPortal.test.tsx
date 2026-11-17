@@ -22,6 +22,7 @@ describe('<Select.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Select.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<Select.Root open>{node}</Select.Root>);

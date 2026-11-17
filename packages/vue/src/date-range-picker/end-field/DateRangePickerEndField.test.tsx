@@ -19,6 +19,7 @@ describe('<DateRangePicker.EndField />', () => {
   const { render } = createRenderer();
 
   describeConformance(<DateRangePicker.EndField />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(

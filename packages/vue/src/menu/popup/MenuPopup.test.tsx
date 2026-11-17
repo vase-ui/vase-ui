@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, onMounted, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
@@ -388,6 +388,12 @@ describe('<Menu.Popup />', () => {
   );
 
   it('keeps focus on an input that autofocuses when the trigger is hidden as the menu closes', async () => {
+    // A `ref` callback can run before the input is in the document.
+    const FocusedInput = defineComponent(() => {
+      const input = shallowRef<HTMLInputElement | null>(null);
+      onMounted(() => input.value?.focus());
+      return () => <input ref={input} aria-label="Name" />;
+    });
     const App = defineComponent(() => {
       const renaming = shallowRef(false);
       let renameRequested = false;
@@ -403,12 +409,7 @@ describe('<Menu.Popup />', () => {
               </Menu.Positioner>
             </Menu.Portal>
           </Menu.Root>
-          {renaming.value && (
-            <input
-              aria-label="Name"
-              ref={(element) => (element as HTMLInputElement | null)?.focus()}
-            />
-          )}
+          {renaming.value && <FocusedInput />}
           <Menu.Root
             onOpenChangeComplete={(open: boolean) => {
               if (!open && renameRequested) {

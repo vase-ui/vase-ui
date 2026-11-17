@@ -64,10 +64,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="view === 'month'">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <template v-for="(months, index) in rows" :key="months[0]?.toString()"><slot name="row" :months="months" :index="index" /></template>
-    </component>
-  </template>
+  <slot v-if="view === 'month' && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="view === 'month'" v-bind="elementProps()" :ref="setRef">
+    <template v-for="(months, index) in rows" :key="months[0]?.toString()"><slot name="row" :months="months" :index="index" /></template>
+  </component>
 </template>

@@ -78,6 +78,7 @@ describe('<OTPField.Root />', () => {
   });
 
   describeConformance(<OTPFieldBase.Root length={1} />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render,
   }));

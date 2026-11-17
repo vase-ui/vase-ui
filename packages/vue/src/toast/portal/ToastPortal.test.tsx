@@ -10,6 +10,7 @@ describe('<Toast.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Toast.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(node);

@@ -1,5 +1,5 @@
 import { h } from 'vue';
-import type { Component } from 'vue';
+import type { Component, Slots, VNode } from 'vue';
 
 export function throwMissingPropError(field: string): never {
   throw new Error(`missing "${field}" in options
@@ -16,4 +16,10 @@ export function throwMissingPropError(field: string): never {
  */
 export function childrenSlots(children: Component | undefined) {
   return children && { default: () => [h(children)] };
+}
+
+/** The default slot of the vnode as a component that a template can render. */
+export function contentOf({ children }: VNode): Component | undefined {
+  const slot = (children as Slots | null)?.default;
+  return slot && (() => slot());
 }

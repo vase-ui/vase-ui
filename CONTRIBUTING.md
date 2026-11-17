@@ -294,6 +294,10 @@ The template of each such part has the `#render` slot, then the element, and no 
 - It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
 - Its template binds `:is="as ?? defaultTag"` on the element.
 - Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
+- A part that renders its element only in some states puts the condition in both forms: `<slot v-if="shouldRender && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shouldRender" … >`. Put a condition that has `||` in parentheses in the first form. The part then renders one comment while it has no element.
+- Do not put the two forms in a `<template v-if>`. The root of the part is then a fragment. Vue gives the scope id of a consumer, `v-show`, a custom directive and `<Transition>` only to a root element. ESLint refuses this form.
+- `Tabs.Indicator` with `renderBeforeHydration` is the exception. The script of Base UI reads the indicator as the element before it. Thus one form of the template has the element and the script. The form with only the element comes last.
+- `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
@@ -467,7 +471,7 @@ Rules:
 - A custom `stateAttributesMapping` function that returns `null` gives no key, so the comparison does not heal that attribute. A part whose first client state can differ from the server HTML reads its state from the server element, as `Resizable.Handle` and `Resizable.Panel` do. See [Server render](#server-render).
 - `elementProps()` reads the server element with `getServerElement()` of `src/common/hydration.ts`. That element is the first element that Vue hydrates for the part. The template of a part thus starts with its element: first the `#render` slot, and then `<component :is="as">`.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
-- A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
+- A part that renders no element in some state puts the condition in the `v-if` chain of both forms of its template. The template then does not call `elementProps()`. See [Parts that render an element](#parts-that-render-an-element).
 - Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue listener got the event. `useRenderElement` thus adds a second listener for each `focusin` and `focusout` handler of the props. That listener runs the handler for an event that Vue skipped.
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
@@ -1605,7 +1609,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `noValidate` as a prop or as a key of a props object | `novalidate`. An assertion on the DOM property keeps `noValidate`. |
 | `crossOrigin`, `referrerPolicy` or `srcSet` as a prop or as a key of a props object | `crossorigin`, `referrerpolicy` or `srcset`. A DOM property keeps its name. |
 | `minLength` or `readOnly` as a prop or as a key of a props object | `minlength` or `readonly`. A DOM property keeps its name. |
-| `autoFocus` that gives the focus to an element before the case acts | A `focus()` call after `render`, or in `onMounted` for an element that mounts later. React focuses such an element when it mounts. Vue does not, and the browser can ignore `autofocus` on an element that a script adds. |
+| `autoFocus` that gives the focus to an element before the case acts | A `focus()` call after `render`, or in `onMounted` for an element that mounts later. React focuses such an element when it mounts. Vue does not, and the browser can ignore `autofocus` on an element that a script adds. Do not focus it in a function ref, because Vue can run that ref before the element is in the document. |
 | `render={<x />}`, an element with no props | `as` |
 | `render={<x a={b} />}`, an element with props of its own | `v-slots={{ render }}`. The function returns `<x {...props} a={b} />`, with the own props after the spread. |
 | A render function | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns. |
@@ -1636,7 +1640,6 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | A component in `render` that counts its renders, such as `LoggingRoot` | A function of the `#render` slot that counts its calls. Vue calls it in each render of the part, one time. React renders two times under Strict Mode, so the case asserts the numbers of Vue. |
 | A count of renders that starts after `render`, for the positioner of a popup | `await waitForPositioned(positioner)` before the count starts. The first position pass of the popup renders the positioner again. It does not render the parts below the positioner. |
 | `useStableCallback(fn)` | `fn` |
-| `autoFocus` on an element | A function ref that focuses the element. React focuses such an element at the mount. A browser focuses only the first `autofocus` element of a document. |
 | `element.focus()` in a case that reads the scroll position of a container | `element.focus({ preventScroll: true })`. Chromium scrolls the element into view in the call. Firefox and WebKit can scroll it later. |
 | A `user.click` on an input, before a case sets the scroll position of a container that holds the input | `await waitSingleFrame()` after the click. In the frame after the click, Firefox can scroll that container again. That scroll replaces the position that the case sets. The helper waits for one animation frame. |
 | A case that compares the result of `React.useCallback` or `React.useMemo` in two renders | No counterpart. `setup` runs one time, so a function or an object that it makes keeps its identity. Give the case a `not-applicable` row. |

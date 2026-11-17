@@ -30,6 +30,7 @@ describe('<Radio.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Radio.Root value="" />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLSpanElement,
     testRenderPropWith: 'span',
     button: true,

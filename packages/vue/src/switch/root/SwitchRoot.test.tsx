@@ -60,6 +60,7 @@ describe('<Switch.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Switch.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLSpanElement,
     testRenderPropWith: 'span',
     button: true,
@@ -101,9 +102,11 @@ describe('<Switch.Root />', () => {
                     if (element && calls === 0) {
                       calls += 1;
                       inputAtCall = element.parentElement.querySelector('input');
+                      /* eslint-disable no-restricted-syntax -- This case tests a ref callback that acts before the hidden input mounts, as the Base UI case does. */
                       element.focus();
                       element.blur();
                       element.click();
+                      /* eslint-enable no-restricted-syntax */
                     }
                   }}
                 />

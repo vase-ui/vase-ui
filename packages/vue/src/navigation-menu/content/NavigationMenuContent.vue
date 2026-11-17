@@ -213,12 +213,15 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="shouldRenderInline">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot
+    v-if="shouldRenderInline && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
+  <component :is="as" v-else-if="shouldRenderInline" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
   <Teleport v-else-if="shouldRenderInPortal" :to="portalContainer">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
     <component :is="as" v-else v-bind="elementProps()" :ref="setRef">

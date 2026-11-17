@@ -18,6 +18,7 @@ describe('<DateRangePicker.StartField />', () => {
   const { render } = createRenderer();
 
   describeConformance(<DateRangePicker.StartField />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(

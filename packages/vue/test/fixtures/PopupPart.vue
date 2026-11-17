@@ -68,10 +68,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="mounted || keepMounted">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot
+    v-if="(mounted || keepMounted) && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
+  <component :is="as" v-else-if="mounted || keepMounted" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

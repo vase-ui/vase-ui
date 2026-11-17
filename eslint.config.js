@@ -27,6 +27,8 @@ const MESSAGES = {
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
   refByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
+  conditionalForms:
+    'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -75,6 +77,8 @@ const MESSAGES = {
     'Another realm and a polyfill have other `Temporal` classes. Use `kindOf` or `isKind` of `internals/date-time/temporal`.',
   toLocaleString:
     '`Intl` must get a number, a zone and a calendar, and never a `Temporal` object. Format a date or a time with `formatter()` of `internals/date-time/format`, and a number with `formatNumber` of `common/formatNumber`.',
+  actInRef:
+    'Vue can run a function ref before the element is in the document, so this call can do nothing. Act in `onMounted`, or in `onVnodeMounted` in a slot function.',
   vendorStyleKey:
     "A server render writes this key with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `'-webkit-user-select'`.",
   reactEventProp: (reactKey, vueKey) =>
@@ -240,10 +244,21 @@ const CONSTANT = 'VariableDeclaration > VariableDeclarator';
 const DESCRIBE =
   ":matches(CallExpression[callee.name='describe'], CallExpression[callee.callee.object.name='describe'])";
 
+// A call that acts on an element. `select` of a store has an argument, and `select()` of an input has none.
+const ACT_ON_ELEMENT =
+  ":function :matches(CallExpression[callee.property.name=/^(?:click|select|blur)$/][arguments.length=0], CallExpression[callee.property.name='focus'])";
+
 // A later block with `no-restricted-syntax` for a test file replaces the list of an earlier block.
 // Thus each selector for the test files is in this one list.
 const RESTRICTED_TEST_SYNTAX = [
   ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
+  {
+    selector: [
+      `JSXAttribute[name.name='ref'] > JSXExpressionContainer > ${ACT_ON_ELEMENT}`,
+      `CallExpression[callee.name='h'] > ObjectExpression > Property[key.name='ref'] > ${ACT_ON_ELEMENT}`,
+    ].join(', '),
+    message: MESSAGES.actInRef,
+  },
   {
     selector: [
       "CallExpression[callee.name='waitFor'] CallExpression[callee.name=/^query(All)?By/]",
@@ -322,6 +337,13 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector:
       "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
     message: MESSAGES.inputRefByName,
+  },
+  {
+    // The `#render` slot has a `v-if` only where the element form comes after it. A start tag has
+    // only its attributes below it, so the descendant form is exact.
+    selector:
+      "VElement[name='template']:not([parent.type='VDocumentFragment']) > VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.name.name='if']):has(VAttribute[directive=false][key.name='name'][value.value='render'])",
+    message: MESSAGES.conditionalForms,
   },
   {
     // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.
@@ -684,6 +706,18 @@ export default defineConfig([
       'no-restricted-syntax': [
         'error',
         ...RESTRICTED_TEST_SYNTAX.filter(({ message }) => message !== MESSAGES.vnodeAtCollection),
+      ],
+    },
+  },
+  {
+    files: ['**/*.{test,spec}.vue', 'packages/vue/test/**/*.vue'],
+    rules: {
+      'vue/no-restricted-syntax': [
+        'error',
+        {
+          selector: `VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref'] > VExpressionContainer > ${ACT_ON_ELEMENT}`,
+          message: MESSAGES.actInRef,
+        },
       ],
     },
   },

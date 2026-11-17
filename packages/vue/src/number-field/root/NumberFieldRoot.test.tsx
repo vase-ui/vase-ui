@@ -77,6 +77,7 @@ describe('<NumberField />', () => {
   const { render } = createRenderer();
 
   describeConformance(<NumberFieldBase.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render,
   }));

@@ -29,6 +29,7 @@ describe('<DatePicker.Field />', () => {
   const { render } = createRenderer();
 
   describeConformance(<DatePicker.Field />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(<DatePicker.Root defaultValue={day}>{node}</DatePicker.Root>);

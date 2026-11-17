@@ -54,6 +54,10 @@ export namespace Tab {
 /**
  * A visual indicator that can be styled to match the position of the currently active tab.
  * Renders a `<span>` element.
+ *
+ * With `renderBeforeHydration`, the part renders a script element after its element, so it has
+ * more than one root node. A rule of `<style scoped>` then does not match its element, and
+ * `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Indicator: typeof TabsIndicator = TabsIndicator;
 export namespace Indicator {

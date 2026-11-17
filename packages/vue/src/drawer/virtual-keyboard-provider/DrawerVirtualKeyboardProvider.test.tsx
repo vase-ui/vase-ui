@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -185,13 +185,13 @@ function setFieldTop(field: HTMLElement, scroll: HTMLElement, top: number) {
   field.getBoundingClientRect = () => new DOMRect(0, top - scroll.scrollTop, 320, 40);
 }
 
-// React focuses an `autoFocus` element at the mount. A browser focuses only the first
-// `autofocus` element of a document.
-function focusElement(element: unknown) {
-  if (element instanceof HTMLElement) {
-    element.focus();
-  }
-}
+// React focuses an `autoFocus` element at the mount. A `ref` callback can run before the input is in
+// the document, so this component focuses it in `onMounted`.
+const FocusedInput = defineComponent(() => {
+  const input = shallowRef<HTMLInputElement | null>(null);
+  onMounted(() => input.value?.focus());
+  return () => <input ref={input} data-testid="input" type="text" />;
+});
 
 async function flushAnimationFrames(count: number) {
   for (let i = 0; i < count; i += 1) {
@@ -2327,10 +2327,9 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(() => (
       <KeyboardDrawer modal initialFocus={false}>
-        <input ref={focusElement} data-testid="input" type="text" />
+        <FocusedInput />
       </KeyboardDrawer>
     ));
-    await flushMicrotasks();
 
     expect(screen.getByTestId('input')).toHaveFocus();
     await waitFor(() => {

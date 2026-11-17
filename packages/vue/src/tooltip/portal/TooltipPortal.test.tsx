@@ -18,6 +18,7 @@ describe('<Tooltip.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Tooltip.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<Tooltip.Root open>{node}</Tooltip.Root>);

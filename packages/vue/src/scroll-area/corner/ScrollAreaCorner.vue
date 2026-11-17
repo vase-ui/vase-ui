@@ -54,10 +54,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="!hiddenState.corner">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot
+    v-if="!hiddenState.corner && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
+  <component :is="as" v-else-if="!hiddenState.corner" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>
