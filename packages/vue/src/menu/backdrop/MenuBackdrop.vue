@@ -50,7 +50,7 @@ const state = computed<MenuBackdropState>(() => ({
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [
-    createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
+    createElementSetter(store.context.backdropRef),
     contextMenuContext && createElementSetter(contextMenuContext.backdropRef),
   ],
   stateAttributesMapping: popupTransitionStateMapping,

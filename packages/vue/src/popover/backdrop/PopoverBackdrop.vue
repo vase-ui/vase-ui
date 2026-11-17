@@ -47,7 +47,7 @@ const state = computed<PopoverBackdropState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
+  ref: createElementSetter(store.context.backdropRef),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     {

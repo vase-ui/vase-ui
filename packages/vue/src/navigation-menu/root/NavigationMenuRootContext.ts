@@ -31,7 +31,6 @@ export interface NavigationMenuRootContext<Value = any> {
   popupElementId: Readonly<Ref<string | undefined>>;
   /** The trigger uses positioned interactions while the positioner exists, even when held. */
   positionerElement: ShallowRef<HTMLElement | null>;
-  /** The root can use the held backdrop to end an open change when no popup or positioner exists. */
   backdropElement: ShallowRef<HTMLElement | null>;
   /**
    * The viewport element, also while `KeepAlive` holds it. In a positioner,
