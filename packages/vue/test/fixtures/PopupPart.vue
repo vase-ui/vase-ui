@@ -49,7 +49,7 @@ const state = computed<PopupPartState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [
     (popupElement) => {
@@ -69,7 +69,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(mounted || keepMounted) && $slots.render"
+    v-if="(mounted || keepMounted) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

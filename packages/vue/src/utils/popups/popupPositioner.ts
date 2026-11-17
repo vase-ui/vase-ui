@@ -137,7 +137,7 @@ export function usePopupPositioner<State extends PopupPositionerState>(
 
   let positionerElement: HTMLElement | null = null;
 
-  const { element, elementProps, setRef } = usePositioner(props, {
+  const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
     state,
     styles: positioning.positionerStyles,
     transitionStatus: () => store.select('transitionStatus'),
@@ -153,5 +153,5 @@ export function usePopupPositioner<State extends PopupPositionerState>(
     inert: () => toValue(options.inert) ?? !open.value,
   });
 
-  return { element, elementProps, setRef, state, positioning, open, mounted };
+  return { element, elementProps, setRef, usesRenderSlot, state, positioning, open, mounted };
 }

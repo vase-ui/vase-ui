@@ -129,7 +129,7 @@ function onPointercancel(event: PointerEvent) {
 
 // With no default slot and no `as`, the text is the only child of a static element. Vue allows a
 // text mismatch only for such an element, so the template has a branch of its own for it.
-const { element, elementProps, setRef, text } = useDayButton(props, {
+const { element, elementProps, setRef, usesRenderSlot, text } = useDayButton(props, {
   root,
   day,
   state,
@@ -155,7 +155,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="!state.hidden && $slots.render"
+    v-if="!state.hidden && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

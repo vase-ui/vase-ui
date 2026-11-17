@@ -3,6 +3,7 @@ import { expect, describe, it, vi } from 'vitest';
 import type { VNode } from 'vue';
 import { cloneElement } from '../cloneElement';
 import type { VaseUiConformanceTestsOptions } from '../describeConformance';
+import { isVaporParts } from '../testApp';
 import { throwMissingPropError } from './utils';
 
 type ComponentWithElement = { element: Element | null };
@@ -58,6 +59,29 @@ export function testRenderSlot(element: VNode, getOptions: () => VaseUiConforman
       expect(warnSpy.mock.calls).toEqual([
         [expect.stringContaining('The `#render` slot gave no element')],
       ]);
+    });
+
+    // Only a part compiled as a Vapor component needs this case, because its slot reads a slot
+    // prop only when it uses the prop. Each other part calls `elementProps()` when it renders the
+    // slot, and the cases of `useRenderElement` cover that call.
+    it.runIf(isVaporParts)('warns when the slot reads no slot prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(
+        cloneElement(element, { ...(button && { nativeButton }) }, { render: () => <Element /> }),
+      );
+
+      // This slot does not mount `children`, so a part with `children` gives a second message.
+      // The options do not name each part with `children`, so the case accepts both lists.
+      const [first, ...rest] = warnSpy.mock.calls;
+      expect(first).toEqual([
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      ]);
+      expect(rest).toEqual(
+        rest.length === 0
+          ? []
+          : [[expect.stringContaining('Vase UI: The `#render` slot did not mount `children`.')]],
+      );
     });
 
     if (childrenSelector !== undefined) {

@@ -31,7 +31,7 @@ defineSlots<{
 
 const state: ComboboxIconState = EMPTY_OBJECT;
 
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
   children: true,
@@ -42,7 +42,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxIconChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ComboboxIconChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <ComboboxIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxIconChildren>
   </component>

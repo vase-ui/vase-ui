@@ -110,7 +110,7 @@ const state = computed<ToastPositionerState>(() => ({
   anchorHidden: positioning.anchorHidden.value,
 }));
 
-const { element, elementProps, setRef } = usePositioner(props, {
+const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
   styles: () => ({
     ...positioning.positionerStyles.value,
@@ -129,7 +129,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

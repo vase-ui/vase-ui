@@ -100,7 +100,7 @@ const state = computed<MenuItemState>(() => ({
   highlighted: highlighted.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [itemRef, listItem.ref, filterItem.ref],
   props: (attrs) => [store.select('itemProps'), attrs, getItemProps],
@@ -111,7 +111,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="filterItem.visible.value && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

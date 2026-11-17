@@ -94,12 +94,13 @@ function handleFocus(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, setRef, containerElement, isHeld } = useFloatingPortalNode({
-  container: () => props.container,
-  componentProps: props,
-  children: true,
-  inPlace: () => props.inPlace,
-});
+const { element, elementProps, setRef, usesRenderSlot, containerElement, isHeld } =
+  useFloatingPortalNode({
+    container: () => props.container,
+    componentProps: props,
+    children: true,
+    inPlace: () => props.inPlace,
+  });
 
 // The capture phase runs these listeners before a listener of the focus manager. A Vue listener
 // here would get each focus in the popup first. Vue would then skip the Vue listener of a target
@@ -268,7 +269,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="inPlace && $slots.render"
+    v-if="inPlace && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"
@@ -284,7 +285,7 @@ defineExpose({ element });
     :disabled="isHeld"
   >
     <slot
-      v-if="$slots.render"
+      v-if="usesRenderSlot()"
       name="render"
       :props="elementProps()"
       :state="state"

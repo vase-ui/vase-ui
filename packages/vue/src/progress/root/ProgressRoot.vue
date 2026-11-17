@@ -128,7 +128,7 @@ provide(ProgressRootContext, {
   state,
 });
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
@@ -150,7 +150,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ProgressRootChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ProgressRootChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <ProgressRootChildren><slot :state="state" /></ProgressRootChildren>
   </component>

@@ -49,10 +49,14 @@ if (store === undefined) {
 const nodeId = useFloatingNodeId();
 provideFloatingNode(nodeId);
 
-const { element, elementProps, setRef, state, positioning } = usePopupPositioner(store, props, {
-  keepMounted: () => props.keepMounted,
-  positioning: { nodeId },
-});
+const { element, elementProps, setRef, usesRenderSlot, state, positioning } = usePopupPositioner(
+  store,
+  props,
+  {
+    keepMounted: () => props.keepMounted,
+    positioning: { nodeId },
+  },
+);
 
 provide(PopupFixturePositionerContext, { side: positioning.side });
 
@@ -60,7 +64,7 @@ defineExpose({ element, update: positioning.update });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

@@ -51,7 +51,7 @@ const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
 const { isLeaving } = useCalendarMonthContext();
 
-const { element, elementProps, setRef, text } = useDayButton(props, {
+const { element, elementProps, setRef, usesRenderSlot, text } = useDayButton(props, {
   root,
   day,
   state,
@@ -64,7 +64,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="!state.hidden && $slots.render"
+    v-if="!state.hidden && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

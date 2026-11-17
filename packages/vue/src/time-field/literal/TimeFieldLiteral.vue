@@ -64,7 +64,7 @@ const state = computed<TimeFieldLiteralState>(() => ({
 
 const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, usesRenderSlot } = useRenderElement('span', props, {
   state,
   stateAttributesMapping,
   ref: [setElement],
@@ -83,7 +83,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <DateTimeFieldLiteralElement
     v-else
     :tag="as"

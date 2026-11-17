@@ -559,7 +559,7 @@ provide(CheckboxRootContext, state);
 const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
 const ariaAfterHydration = useAriaAfterHydration();
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
   stateAttributesMapping,
@@ -674,7 +674,7 @@ defineExpose({ element, inputElement });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

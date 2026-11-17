@@ -139,7 +139,7 @@ const panelState = computed<AccordionPanelState>(() => ({
   transitionStatus: panelTransitionStatus.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: panelState,
   ref: panelRef,
   props: (attrs) => [
@@ -170,7 +170,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="shouldRender && $slots.render"
+    v-if="shouldRender && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="panelState"

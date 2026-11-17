@@ -146,7 +146,7 @@ const state = computed<FieldErrorState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => [{ id: errorId.value }, attrs],
   stateAttributesMapping,
@@ -168,7 +168,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="mounted && $slots.render" name="render" :props="elementProps()" :state="state" :children="FieldErrorChildren" />
+  <slot v-if="mounted && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="FieldErrorChildren" />
   <component :is="as" v-else-if="mounted" v-bind="elementProps()" :ref="setRef">
     <FieldErrorChildren><template v-if="$slots.default" #default><slot :state="state" /></template></FieldErrorChildren>
   </component>
