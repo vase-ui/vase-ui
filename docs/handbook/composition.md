@@ -21,60 +21,6 @@ The custom component needs one root element. Vue gives the attributes to that el
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
-## Wrap a part
-
-Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to optional booleans in `defineProps<...>()`.
-
-When your wrapper declares an optional boolean prop and gives it to the part, set that prop's default to `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
-
-This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
-
-<<< ../examples/composition/MyAccordionPanel.vue{11-14}
-
-You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
-
-The distinction between `undefined` and `false` matters in three cases.
-
-### Parent or internal state
-
-- `Accordion.Panel`: `keepMounted` and `hiddenUntilFound` follow the root when absent. An explicit `false` overrides the root value of that prop.
-- `Menu.Trigger`: absent `openOnHover` permits hover to open a menu while another menu in the menubar is open. An explicit `false` disables this behavior.
-- `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
-- `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
-- `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
-- `Calendar.Root`, `RangeCalendar.Root`, `DatePicker.Calendar` and `DateRangePicker.Calendar`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
-- `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
-
-`Field.Root` treats `invalid` the same when it is absent or `false`.
-
-### Controlled state
-
-A value of `false` makes these props controlled:
-
-- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox, Autocomplete, Date Picker, Date Range Picker and Time Picker roots, and `Menu.SubmenuRoot`.
-- `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
-- `pressed` on `Toggle`.
-
-The state stays `false` until the caller updates the prop. Handle change events to update a controlled prop, or use the default `undefined` to preserve uncontrolled behavior.
-
-### A default of true
-
-`undefined` preserves the part's `true` default. A wrapper with no default, or with the default `false`, disables it.
-
-- `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
-- `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
-- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots, and `Menu.SubmenuRoot`.
-- `openOnInputClick` on `Combobox.Root`.
-- `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
-- `openOnHover` on `Menu.SubmenuTrigger`.
-- `alignItemWithTrigger` on `Select.Positioner`.
-- `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
-- `pushPanels` on `Resizable.Root`.
-- `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
-- `nativeLabel` on `Field.Label`.
-- `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
-- `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
-
 ## Composing multiple components
 
 To compose more than one part with your own components, nest the `#render` slots as deeply as you need. Tooltip is a common example.
@@ -134,6 +80,64 @@ The `#render` slot gives you complete control over where `props` go. It also let
 The default slot also gets `{ state }`. Some parts have nodes of their own. `Slider.Thumb` has a range input. Such a part gives `#render` a third slot prop, `children`. Mount `children` in your element. A development build shows a warning when the slot does not mount it.
 
 <<< ../examples/composition/RenderChildren.vue{10-12}
+
+## Wrap a part
+
+Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`.
+
+When your wrapper declares an optional Boolean prop and gives it to the part, set the default of that prop to `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
+
+This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
+
+<<< ../examples/composition/MyAccordionPanel.vue{11-14}
+
+You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
+
+An absent prop and `false` give different results in four cases.
+
+### Parent or internal state
+
+- `Accordion.Panel`: `keepMounted` and `hiddenUntilFound` follow the root when absent. An explicit `false` overrides the root value of that prop.
+- `Menu.Trigger`: absent `openOnHover` lets the pointer open a menu while another menu in the menubar is open. An explicit `false` disables this behavior.
+- `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
+- `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
+- `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
+- `Calendar.Root`, `RangeCalendar.Root`, `DatePicker.Calendar` and `DateRangePicker.Calendar`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
+- `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
+
+`Field.Root` treats `invalid` the same when it is absent or `false`.
+
+### Controlled state
+
+A value of `false` makes these props controlled:
+
+- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox, Autocomplete, Date Picker, Date Range Picker and Time Picker roots, and `Menu.SubmenuRoot`.
+- `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
+- `pressed` on `Toggle`.
+
+The state stays `false` until the caller updates the prop. Handle change events to update a controlled prop, or use the default `undefined` to keep the part uncontrolled.
+
+### A default of true
+
+`undefined` keeps the `true` default of the part. A wrapper with no default, or with the default `false`, disables it.
+
+- `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
+- `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
+- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots, and `Menu.SubmenuRoot`.
+- `openOnInputClick` on `Combobox.Root`.
+- `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
+- `openOnHover` on `Menu.SubmenuTrigger`.
+- `alignItemWithTrigger` on `Select.Positioner`.
+- `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
+- `pushPanels` on `Resizable.Root`.
+- `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
+- `nativeLabel` on `Field.Label`.
+- `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
+- `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
+
+### A warning in development
+
+- `Collapsible.Panel`, `Accordion.Root` and `Accordion.Panel`: with `hiddenUntilFound`, an explicit `false` for `keepMounted` gives a warning.
 
 ## Vapor mode
 

@@ -50,7 +50,7 @@ Import the component and assemble its parts:
 
 <<< ./menubar/Anatomy.vue
 
-While a menu of the menubar is open, the pointer on another trigger opens that trigger's menu. Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to preserve this behavior.
+While a menu of the menubar is open, the pointer on another trigger opens the menu of that trigger. Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to keep this behavior.
 
 ## API reference
 

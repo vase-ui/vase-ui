@@ -73,7 +73,7 @@ With no value, a new end has the kind that `granularity` and `referenceDate` giv
 
 `closeOnSelect` says if the second press in the calendar closes the popup. It is `true`, also for a range with a time, because the popup has no part for a time: the user sets a time in a field. The first press only starts the range. A drag closes the popup too, because it makes the whole range. This is also true for a drag that makes the range that the picker already has, although the calendar gives no change for it. A key that extends the range does not, because the user can extend it more. Escape and a press outside the popup close it.
 
-In a [wrapper of `DateRangePicker.Root`](/handbook/composition#wrap-a-part), give `closeOnSelect` the default `undefined` to preserve this behavior.
+In a [wrapper of `DateRangePicker.Root`](/handbook/composition#wrap-a-part), give `closeOnSelect` the default `undefined` to keep this behavior.
 
 ## In a form
 
