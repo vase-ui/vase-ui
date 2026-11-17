@@ -24,6 +24,8 @@ To make a component that wraps a part, use the `Props` type to accept all of the
 
 Vue changes an absent Boolean prop to `false`. The wrapper gives `open` the default `undefined`, so that the tooltip stays uncontrolled.
 
+See [Wrap a part](/handbook/composition#wrap-a-part) for the other boolean props that need this default.
+
 ### State
 
 The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.

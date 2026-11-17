@@ -76,6 +76,8 @@ Import the component and assemble its parts:
 
 To open the menu when the pointer is on the trigger, set the `openOnHover` prop of `<Menu.Trigger>`.
 
+Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to preserve hover behavior while another menubar menu is open.
+
 The `delay` prop gives the time in milliseconds to wait before the menu opens on hover.
 
 <DemoFrame>

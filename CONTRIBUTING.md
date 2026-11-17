@@ -2017,6 +2017,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
+- Give each optional boolean that a sample wrapper declares and forwards the default `undefined` to preserve the part's behavior.
 - Compose two parts in a sample or a demo as the Base UI code does. Where Base UI gives `render` an element with no props, give its tag or its component to `as`. Where that element has props of its own, use the `#render` slot and bind `props`.
 - A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
 - The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6. Dates and times has no Base UI page, and its `order` is 7.

@@ -50,6 +50,8 @@ Import the component and assemble its parts:
 
 <<< ./menubar/Anatomy.vue
 
+Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to preserve hover behavior while another menubar menu is open.
+
 ## API reference
 
 <ApiReference />

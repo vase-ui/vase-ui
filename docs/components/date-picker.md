@@ -79,6 +79,8 @@ With no value, a new value has the kind that `granularity` and `referenceDate` g
 
 `closeOnSelect` says if a selection in the calendar closes the popup. It is `true` for a value with no time. It is `false` for a value with a time, because the user then sets the time. A press on the selected day closes the popup too, although the calendar gives no change for it. Escape and a press outside the popup close it and keep the value.
 
+In a [wrapper of `DatePicker.Root`](/handbook/composition#wrap-a-part), give `closeOnSelect` the default `undefined` to preserve this behavior.
+
 ## Examples
 
 ### Date and time

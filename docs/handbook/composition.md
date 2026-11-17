@@ -21,6 +21,56 @@ The custom component needs one root element. Vue gives the attributes to that el
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
+## Wrap a part
+
+Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to optional booleans in `defineProps<...>()`.
+
+Give each optional boolean that your wrapper declares and forwards the default `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
+
+This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
+
+<<< ../examples/composition/MyAccordionPanel.vue{11-14}
+
+You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
+
+The distinction between `undefined` and `false` matters in three cases.
+
+### Parent or internal state
+
+- `Accordion.Panel`: `keepMounted` and `hiddenUntilFound` follow the root when absent. An explicit `false` overrides the root value of that prop.
+- `Menu.Trigger`: absent `openOnHover` permits hover to open a menu while another menu in the menubar is open. An explicit `false` disables this behavior.
+- `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
+- `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
+- `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
+
+`Field.Root` treats `invalid` the same when it is absent or `false`.
+
+### Controlled state
+
+A value of `false` makes these props controlled:
+
+- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox and Autocomplete roots.
+- `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
+- `pressed` on `Toggle`.
+
+The state stays `false` until the caller updates the prop. Handle change events to update a controlled prop, or use the default `undefined` to preserve uncontrolled behavior.
+
+### A default of true
+
+`undefined` preserves the part's `true` default. A wrapper default of `false` disables it.
+
+- `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
+- `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
+- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots.
+- `openOnInputClick` on `Combobox.Root`.
+- `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
+- `openOnHover` on `Menu.SubmenuTrigger`.
+- `alignItemWithTrigger` on `Select.Positioner`.
+- `focusableWhenDisabled` on `Toolbar.Button`, `Toolbar.Link` and `Toolbar.Input`.
+- `pushPanels` on `Resizable.Root`.
+- `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
+- `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
+
 ## Composing multiple components
 
 To compose more than one part with your own components, nest the `#render` slots as deeply as you need. Tooltip is a common example.

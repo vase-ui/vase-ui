@@ -87,6 +87,8 @@ With no value, the clock shows the time of `referenceDate`, or midnight, and a p
 
 `closeOnSelect` says if a selection closes the popup. A press on a time of the list closes it. The commit of the last view of the clock closes it. A press in a column does not, because the user sets more than one unit. Set `closeOnSelect` on the root to change this for the list, the columns and the clock. Escape and a press outside the popup close it and keep the value.
 
+In a [wrapper of `TimePicker.Root`](/handbook/composition#wrap-a-part), give `closeOnSelect` the default `undefined` to preserve this behavior.
+
 ## Examples
 
 ### Columns
