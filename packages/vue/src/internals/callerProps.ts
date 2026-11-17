@@ -24,7 +24,7 @@ export interface CallerInstance {
   };
   /** The declared props, with mixins and `extends`. A component with no props has an empty list. */
   propsOptions: [Record<string, DeclaredProp | null>?, unknown?];
-  /** The declared events, with mixins and `extends`. `null` for a component with no declared event. */
+  /** The declared events, with mixins and `extends`. `null` when no `emits` option exists. */
   emitsOptions: Record<string, unknown> | null;
 }
 
