@@ -13,9 +13,9 @@
 
 Base UI, arranged for Vue.
 
-Vase UI brings [Base UI](https://base-ui.com) to Vue 3: unstyled, accessible components with the same engineering behind them. It ships no styles. A vase should not pick your flowers.
+Unstyled Vue components from [Base UI](https://base-ui.com). Actively maintained. All 38 Base UI components, plus date, time and resizable panels. It ships no styles. A vase should not pick your flowers.
 
-We maintain Vase UI closely: every Base UI release reaches Vase UI within two weeks. More than 23,000 tests run in Chromium, Firefox and WebKit before each merge.
+Vase UI is maintained independently: every Base UI release is ported within two weeks, and more than 23,000 tests run in Chromium, Firefox and WebKit before each merge.
 
 Vase UI also has some components that Base UI does not have, such as Resizable. [The parity page](https://vase-ui.com/parity) lists them.
 
