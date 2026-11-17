@@ -343,6 +343,93 @@ describe('useAriaLabelledBy', () => {
 
       expect(control).toHaveAttribute('aria-labelledby', 'a-label');
     });
+
+    it('names the control with a label that appears in a shadow root after a `Teleport` moves the control there', async () => {
+      const host = document.createElement('div');
+      const container = document.createElement('div');
+      host.attachShadow({ mode: 'open' }).append(container);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const inShadowRoot = shallowRef(false);
+      const showLabel = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <Teleport to={container} disabled={!inShadowRoot.value}>
+          {showLabel.value && <label for="a">Name</label>}
+          <HiddenInputControl id="a" data-testid="control" />
+        </Teleport>
+      ));
+      await render(<Test />);
+      const control = screen.getByTestId('control');
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      inShadowRoot.value = true;
+      await flushMicrotasks();
+      expect(within(container).getByTestId('control')).toBe(control);
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      showLabel.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'a-label');
+    });
+
+    it('names the control with a label that appears in the document after a `Teleport` moves the control back', async () => {
+      const host = document.createElement('div');
+      const container = document.createElement('div');
+      host.attachShadow({ mode: 'open' }).append(container);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const inShadowRoot = shallowRef(true);
+      const showLabel = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <>
+          {showLabel.value && <label for="a">Name</label>}
+          <Teleport to={container} disabled={!inShadowRoot.value}>
+            <HiddenInputControl id="a" data-testid="control" />
+          </Teleport>
+        </>
+      ));
+      await render(<Test />);
+      const control = within(container).getByTestId('control');
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      inShadowRoot.value = false;
+      await flushMicrotasks();
+      expect(screen.getByTestId('control')).toBe(control);
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      showLabel.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'a-label');
+    });
+
+    it('names the control with a label that appears in the document after the control leaves the document and comes back', async () => {
+      const { container } = await render(
+        <div data-testid="wrapper">
+          <HiddenInputControl id="a" data-testid="control" />
+        </div>,
+      );
+      const wrapper = screen.getByTestId('wrapper');
+      const control = screen.getByTestId('control');
+      expect(wrapper.parentElement).toBe(container);
+
+      wrapper.remove();
+      await flushMicrotasks();
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      container.append(wrapper);
+      await flushMicrotasks();
+
+      const label = document.createElement('label');
+      label.htmlFor = 'a';
+      label.textContent = 'Name';
+      document.body.append(label);
+      onTestFinished(() => label.remove());
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'a-label');
+    });
   });
 
   describe('under `KeepAlive`', () => {
@@ -435,6 +522,70 @@ describe('useAriaLabelledBy', () => {
         await flushMicrotasks();
 
         expect(disconnected()).toBe(1);
+      } finally {
+        observe.mockRestore();
+        disconnect.mockRestore();
+      }
+    });
+
+    it('moves the observer to the new root node of the control, and disconnects the observer of the old root node', async () => {
+      const host = document.createElement('div');
+      const container = document.createElement('div');
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      shadowRoot.append(container);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+      const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+      const inShadowRoot = shallowRef(false);
+      const showLabel = shallowRef(false);
+      const showControl = shallowRef(true);
+      const Test = defineComponent(() => () => (
+        <Teleport to={container} disabled={!inShadowRoot.value}>
+          {showLabel.value && <label for="a">Name</label>}
+          {showControl.value && <HiddenInputControl id="a" />}
+        </Teleport>
+      ));
+
+      try {
+        await render(<Test />);
+
+        const labelObservations = () =>
+          observe.mock.calls
+            .map(([target, options], index) => ({
+              target,
+              options,
+              observer: observe.mock.contexts[index],
+            }))
+            .filter(({ options }) => options?.attributeFilter?.includes('for'));
+        const disconnected = () => {
+          const observers = labelObservations().map(({ observer }) => observer);
+          return disconnect.mock.contexts.filter((observer) => observers.includes(observer)).length;
+        };
+
+        expect(labelObservations().map(({ target }) => target)).toEqual([document]);
+        expect(disconnected()).toBe(0);
+
+        inShadowRoot.value = true;
+        await flushMicrotasks();
+
+        const [firstObserver, secondObserver] = labelObservations().map(({ observer }) => observer);
+        expect(labelObservations().map(({ target }) => target)).toEqual([document, shadowRoot]);
+        expect(disconnected()).toBe(1);
+
+        showLabel.value = true;
+        await flushMicrotasks();
+
+        expect(labelObservations().map(({ observer }) => observer)).toEqual([
+          firstObserver,
+          secondObserver,
+        ]);
+        expect(disconnected()).toBe(1);
+
+        showControl.value = false;
+        await flushMicrotasks();
+
+        expect(disconnected()).toBe(2);
       } finally {
         observe.mockRestore();
         disconnect.mockRestore();
