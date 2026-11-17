@@ -499,8 +499,6 @@ watch(
 
 useFormRestore(inputElement, takeInputState);
 
-watch(isIndeterminate, writeStateToInput, { flush: 'post' });
-
 const enterTimeout = useTimeout();
 
 function onKeydown(event: VaseUIEvent<KeyboardEvent>) {
@@ -649,6 +647,7 @@ function inputProps() {
     ...validationProps,
     'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     checked: isChecked.value,
+    '.indeterminate': isIndeterminate.value,
     disabled: isDisabled.value,
     form: props.form,
     id: hiddenInputId.value,
