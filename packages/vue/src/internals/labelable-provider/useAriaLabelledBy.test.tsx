@@ -430,6 +430,30 @@ describe('useAriaLabelledBy', () => {
 
       expect(control).toHaveAttribute('aria-labelledby', 'a-label');
     });
+
+    it('names a control that mounted in a tree outside the document with a label that appears in that tree after the consumer attaches it', async () => {
+      const container = document.createElement('div');
+      const showLabel = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <Teleport to={container}>
+          {showLabel.value && <label for="a">Name</label>}
+          <HiddenInputControl id="a" data-testid="control" />
+        </Teleport>
+      ));
+      await render(<Test />);
+      const control = within(container).getByTestId('control');
+      expect(control.getRootNode()).toBe(container);
+
+      document.body.append(container);
+      onTestFinished(() => container.remove());
+      await flushMicrotasks();
+      expect(control).not.toHaveAttribute('aria-labelledby');
+
+      showLabel.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'a-label');
+    });
   });
 
   describe('under `KeepAlive`', () => {

@@ -74,8 +74,9 @@ export function useAriaLabelledBy(
       const update = () => {
         fallbackAriaLabelledBy.value = getAriaLabelledBy(labelSource, generatedLabelId.value);
         const root = labelSource.getRootNode();
-        // An element root gets no record when its tree enters a document or a shadow root.
-        // The observer thus keeps the previous root node.
+        // A root node that is an element is the top of a tree in no document and no shadow root.
+        // An observer of it gets no record when the consumer attaches that tree, so the observer
+        // stays on the previous root node.
         if (root !== observedRoot && (!observedRoot || !isElement(root))) {
           stopObserver?.();
           observedRoot = root;
