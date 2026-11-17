@@ -99,15 +99,24 @@ function handleKeydown(event: KeyboardEvent) {
     event.stopPropagation();
   }
 
+  const isEscape = event.key === 'Escape';
   if (
     (isF6 ||
+      isEscape ||
       (event.key === 'Tab' && event.shiftKey && getTarget(event) === store.state.viewport)) &&
     store.state.prevFocusElement &&
     store.restoreFocusToPrevElement()
   ) {
-    // Cancel only if focus moved: a hidden or disabled return target leaves the
-    // browser free to move focus. `handleFocusout` resumes the timers.
-    event.preventDefault();
+    if (isEscape) {
+      // The focus was in the viewport, so the viewport owns this Escape. A popup under the toasts,
+      // such as a modal dialog, listens for Escape on the document. It must not close for the same
+      // press (VUE-130).
+      event.stopPropagation();
+    } else {
+      // Cancel only if focus moved: a hidden or disabled return target leaves the
+      // browser free to move focus. `handleFocusout` resumes the timers.
+      event.preventDefault();
+    }
   }
 }
 
