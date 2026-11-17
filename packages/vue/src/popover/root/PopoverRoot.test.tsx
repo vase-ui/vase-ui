@@ -413,9 +413,7 @@ describe('<Popover.Root />', () => {
           watch(
             open,
             () => {
-              if (open.value) {
-                open.value = false;
-              }
+              open.value &&= false;
             },
             { flush: 'post' },
           );
