@@ -620,28 +620,26 @@ function isOutsideGuard(element: Element) {
   return element === outsideNodes?.before || element === outsideNodes?.after;
 }
 
-// `KeepAlive` takes the inside guards out of the document with the viewport, and a browser does not
-// focus such an element. The Tab key then skips the popup, as it skips a popup with no tabbable
+// `KeepAlive` takes the inside guards out of the document with the viewport, and a root with no
+// viewport has none. The Tab key then skips the popup, as it skips a popup with no tabbable
 // element.
 function handleBeforeOutsideFocusin(event: FocusEvent) {
   const referenceElement = hoverPopupElement.value;
   const beforeInside = beforeInsideRef.value;
 
-  if (referenceElement && isOutsideEvent(event, referenceElement)) {
-    if (beforeInside?.isConnected) {
-      beforeInside.focus();
-    } else {
-      exitForward(event, getTabbableNearElement(triggerElement.value, 1, isOutsideGuard));
-    }
-  } else {
+  if (referenceElement && !isOutsideEvent(event, referenceElement)) {
     getPreviousTabbable(triggerElement.value)?.focus();
+  } else if (beforeInside?.isConnected) {
+    beforeInside.focus();
+  } else {
+    exitForward(event, getTabbableNearElement(triggerElement.value, 1, isOutsideGuard));
   }
 }
 
 async function handleAfterOutsideFocusin(event: FocusEvent) {
   const referenceElement = hoverPopupElement.value;
 
-  if (referenceElement && isOutsideEvent(event, referenceElement)) {
+  if (!referenceElement || isOutsideEvent(event, referenceElement)) {
     // The viewport has `inert` while the focus is out of it, and a browser cannot focus an element
     // that is inert.
     setViewportInert(false);
