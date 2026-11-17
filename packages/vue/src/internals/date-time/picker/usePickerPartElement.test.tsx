@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { defineComponent, shallowRef, Transition } from 'vue';
+import { createApp, defineComponent, shallowRef, Transition } from 'vue';
 import type { VNodeChild } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
@@ -7,6 +7,7 @@ import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { recordVueWarnings } from '../../../../test/reportedMessages';
 import { createPickerPartElements, usePickerPartElement } from './usePickerPartElement';
 
 describe('createPickerPartElements', () => {
@@ -41,6 +42,19 @@ describe('createPickerPartElements', () => {
     expect(parts.first.value).toBe(second);
     removeSecond();
     expect(parts.first.value).toBe(null);
+  });
+
+  it('gives the first registered element while no element is in the document', () => {
+    const { first } = mountElements();
+    const detached = document.createElement('div');
+    const parts = createPickerPartElements();
+    parts.add(() => null);
+    parts.add(() => detached);
+    const removeFirst = parts.add(() => first);
+    expect(parts.first.value).toBe(first);
+
+    removeFirst();
+    expect(parts.first.value).toBe(detached);
   });
 });
 
@@ -126,21 +140,23 @@ describe.each([
     const { render } = createRenderer();
     const { Trigger, Portal, Positioner, Popup } = parts;
 
-    function renderPicker(content: () => VNodeChild) {
-      return render(() =>
-        root(
-          <>
-            {content()}
-            <Portal>
-              <Positioner data-testid="positioner" sideOffset={0}>
-                <Popup aria-label="Choose" style={{ width: '100px', height: '50px' }}>
-                  {choice()}
-                </Popup>
-              </Positioner>
-            </Portal>
-          </>,
-        ),
+    function picker(content: () => VNodeChild) {
+      return root(
+        <>
+          {content()}
+          <Portal>
+            <Positioner data-testid="positioner" sideOffset={0}>
+              <Popup aria-label="Choose" style={{ width: '100px', height: '50px' }}>
+                {choice()}
+              </Popup>
+            </Positioner>
+          </Portal>
+        </>,
       );
+    }
+
+    function renderPicker(content: () => VNodeChild) {
+      return render(() => picker(content));
     }
 
     function trigger(id = 'trigger') {
@@ -264,6 +280,40 @@ describe.each([
       expect(positioner.getBoundingClientRect().top).toBeCloseTo(button.bottom, 0);
 
       await show();
+      await waitFor(() => {
+        expect(positioner.getBoundingClientRect().left).toBeCloseTo(fieldLeft, 0);
+      });
+    });
+
+    it('follows the field of an app that mounts in a detached element', async () => {
+      const container = document.createElement('div');
+      const app = createApp({
+        render: () =>
+          picker(() => (
+            <>
+              <fieldset disabled style={{ position: 'absolute', left: '40px', top: '50px' }}>
+                {fields()}
+              </fieldset>
+              <div style={{ position: 'absolute', left: '180px', top: '120px' }}>{trigger()}</div>
+            </>
+          )),
+      });
+      recordVueWarnings(app);
+      app.mount(container);
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      await flushMicrotasks();
+
+      document.body.append(container);
+      const target = await screen.findByTestId('choice');
+      const positioner = screen.getByTestId('positioner');
+      const fieldLeft = screen.getByTestId('field').getBoundingClientRect().left;
+
+      await waitFor(() => {
+        expect(target).toHaveAttribute(disabledAttribute, disabledValue);
+      });
       await waitFor(() => {
         expect(positioner.getBoundingClientRect().left).toBeCloseTo(fieldLeft, 0);
       });

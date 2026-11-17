@@ -35,7 +35,10 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   fields: PickerPartElements;
   /** A picker with no field reads its native fieldset at the first trigger in the document. */
   triggers: PickerPartElements;
-  /** Whether the disabled prop, a field or a fieldset disables the picker. */
+  /**
+   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
+   * fieldset around it.
+   */
   disabled: ComputedRef<boolean>;
 }
 
