@@ -1598,7 +1598,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `noValidate` as a prop or as a key of a props object | `novalidate`. An assertion on the DOM property keeps `noValidate`. |
 | `crossOrigin`, `referrerPolicy` or `srcSet` as a prop or as a key of a props object | `crossorigin`, `referrerpolicy` or `srcset`. A DOM property keeps its name. |
 | `minLength` or `readOnly` as a prop or as a key of a props object | `minlength` or `readonly`. A DOM property keeps its name. |
-| `autoFocus` that gives the focus to an element before the case acts | A `focus()` call after `render`, or in `onMounted` for an element that mounts later. React focuses such an element when it mounts. Vue does not, and the browser can ignore `autofocus` on an element that a script adds. |
+| `autoFocus` that gives the focus to an element before the case acts | A `focus()` call after `render`, or in `onMounted` for an element that mounts later. React focuses such an element when it mounts. Vue does not, and the browser can ignore `autofocus` on an element that a script adds. Do not focus it in a function ref, because Vue can run that ref before the element is in the document. |
 | `render={<x />}`, an element with no props | `as` |
 | `render={<x a={b} />}`, an element with props of its own | `v-slots={{ render }}`. The function returns `<x {...props} a={b} />`, with the own props after the spread. |
 | A render function | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns. |
@@ -1629,7 +1629,6 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | A component in `render` that counts its renders, such as `LoggingRoot` | A function of the `#render` slot that counts its calls. Vue calls it in each render of the part, one time. React renders two times under Strict Mode, so the case asserts the numbers of Vue. |
 | A count of renders that starts after `render`, for the positioner of a popup | `await waitForPositioned(positioner)` before the count starts. The first position pass of the popup renders the positioner again. It does not render the parts below the positioner. |
 | `useStableCallback(fn)` | `fn` |
-| `autoFocus` on an element | A function ref that focuses the element. React focuses such an element at the mount. A browser focuses only the first `autofocus` element of a document. |
 | `element.focus()` in a case that reads the scroll position of a container | `element.focus({ preventScroll: true })`. Chromium scrolls the element into view in the call. Firefox and WebKit can scroll it later. |
 | A `user.click` on an input, before a case sets the scroll position of a container that holds the input | `await waitSingleFrame()` after the click. In the frame after the click, Firefox can scroll that container again. That scroll replaces the position that the case sets. The helper waits for one animation frame. |
 | A case that compares the result of `React.useCallback` or `React.useMemo` in two renders | No counterpart. `setup` runs one time, so a function or an object that it makes keeps its identity. Give the case a `not-applicable` row. |

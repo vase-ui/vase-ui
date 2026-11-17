@@ -124,6 +124,7 @@ describe('select store synchronization', () => {
                             itemProps.ref(element);
                             if (element && clickOnUpdate && !clicked) {
                               clicked = true;
+                              // eslint-disable-next-line no-restricted-syntax -- This case tests a click in a ref callback during an update, after the element is in the document.
                               (element as HTMLElement).click();
                             }
                           },

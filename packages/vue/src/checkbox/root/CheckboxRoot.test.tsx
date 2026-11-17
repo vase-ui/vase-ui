@@ -242,9 +242,11 @@ describe('<Checkbox.Root />', () => {
                     if (element && calls === 0) {
                       calls += 1;
                       inputAtCall = element.parentElement.querySelector('input');
+                      /* eslint-disable no-restricted-syntax -- This case tests a ref callback that acts before the hidden input mounts, as the Base UI case does. */
                       element.focus();
                       element.blur();
                       element.click();
+                      /* eslint-enable no-restricted-syntax */
                     }
                   }}
                 />
