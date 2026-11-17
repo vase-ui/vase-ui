@@ -95,7 +95,11 @@ const hasSelectedItem = computed(() => {
   );
 });
 
-const { props: compositeProps, rootRef, elementsRef } = useCompositeRoot({
+const {
+  props: compositeProps,
+  rootRef,
+  elementsRef,
+} = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
   hasActiveItem: hasSelectedItem,

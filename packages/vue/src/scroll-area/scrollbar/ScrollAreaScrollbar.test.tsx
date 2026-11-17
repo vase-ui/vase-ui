@@ -245,10 +245,7 @@ describe('<ScrollArea.Scrollbar />', () => {
     });
   });
 
-  async function renderAxisTrack(
-    orientation: 'horizontal' | 'vertical',
-    direction: TextDirection,
-  ) {
+  async function renderAxisTrack(orientation: 'horizontal' | 'vertical', direction: TextDirection) {
     await render(
       <DirectionProvider direction={direction}>
         <ScrollArea.Root style={{ width: '200px', height: '200px', direction }}>
