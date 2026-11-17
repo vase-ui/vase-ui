@@ -25,7 +25,7 @@ Under `#render`, the part does not render its default slot. Put the content in y
 
 Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to optional booleans in `defineProps<...>()`.
 
-Give each optional boolean that your wrapper declares and forwards the default `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
+When your wrapper declares an optional boolean prop and gives it to the part, set that prop's default to `undefined`. The part then keeps its default or parent value. An explicit `false` still reaches the part.
 
 This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
 
@@ -49,7 +49,7 @@ The distinction between `undefined` and `false` matters in three cases.
 
 A value of `false` makes these props controlled:
 
-- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox and Autocomplete roots.
+- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox, Autocomplete, Date Picker, Date Range Picker and Time Picker roots, and `Menu.SubmenuRoot`.
 - `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
 - `pressed` on `Toggle`.
 
@@ -57,7 +57,7 @@ The state stays `false` until the caller updates the prop. Handle change events 
 
 ### A default of true
 
-`undefined` preserves the part's `true` default. A wrapper default of `false` disables it.
+`undefined` preserves the part's `true` default. A wrapper with no default, or with the default `false`, disables it.
 
 - `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
 - `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
@@ -66,9 +66,10 @@ The state stays `false` until the caller updates the prop. Handle change events 
 - `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
 - `openOnHover` on `Menu.SubmenuTrigger`.
 - `alignItemWithTrigger` on `Select.Positioner`.
-- `focusableWhenDisabled` on `Toolbar.Button`, `Toolbar.Link` and `Toolbar.Input`.
+- `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
 - `pushPanels` on `Resizable.Root`.
 - `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
+- `nativeLabel` on `Field.Label`.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 
 ## Composing multiple components
