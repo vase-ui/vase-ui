@@ -52,7 +52,7 @@ describe('useForwardProps', () => {
   it('forwards an explicit false', async () => {
     const { Probe, read } = createProbe();
     await render(() => <Probe keepMounted={false} />);
-    expect(read()).toEqual({ keepMounted: false });
+    expect(read()).toStrictEqual({ keepMounted: false });
     await render(() => (
       <Accordion.Root keepMounted>
         <Accordion.Item>
@@ -68,9 +68,9 @@ describe('useForwardProps', () => {
     const { rerender } = await render(() =>
       h(Probe, { keepMounted: '' } as Record<string, unknown>),
     );
-    expect(read()).toEqual({ keepMounted: true });
+    expect(read()).toStrictEqual({ keepMounted: true });
     await rerender(() => h(Probe, { 'keep-mounted': '' }));
-    expect(read()).toEqual({ keepMounted: true });
+    expect(read()).toStrictEqual({ keepMounted: true });
   });
 
   it('forwards a prop that has a default in the wrapper', async () => {
@@ -88,13 +88,13 @@ describe('useForwardProps', () => {
       },
     });
     await render(() => <Wrapper />);
-    expect(read()).toEqual({ disabled: false, id: 'x' });
+    expect(read()).toStrictEqual({ disabled: false, id: 'x' });
   });
 
   it('leaves out a prop with the value undefined', async () => {
     const { Probe, read } = createProbe();
     await render(() => <Probe id={undefined} keepMounted={undefined} />);
-    expect(read()).toEqual({});
+    expect(read()).toStrictEqual({});
   });
 
   it('leaves out an attribute and a listener that the wrapper does not declare', async () => {
@@ -103,7 +103,7 @@ describe('useForwardProps', () => {
     const { user } = await render(() =>
       h(Probe, { class: 'outer', 'data-x': 'value', onClick: click }),
     );
-    expect(read()).toEqual({});
+    expect(read()).toStrictEqual({});
     const button = screen.getByRole('button', { name: 'Target' });
     expect(button).toHaveClass('outer');
     expect(button).toHaveAttribute('data-x', 'value');
@@ -114,9 +114,9 @@ describe('useForwardProps', () => {
   it('follows a new value of a prop', async () => {
     const { Probe, read } = createProbe();
     const { setProps } = await render(() => <Probe id="first" />);
-    expect(read()).toEqual({ id: 'first' });
+    expect(read()).toStrictEqual({ id: 'first' });
     await setProps({ id: 'second' });
-    expect(read()).toEqual({ id: 'second' });
+    expect(read()).toStrictEqual({ id: 'second' });
     expect(screen.getByRole('button', { name: 'Target' })).toHaveAttribute('id', 'second');
   });
 
@@ -124,13 +124,13 @@ describe('useForwardProps', () => {
     const { Probe, read } = createProbe();
     const bound = shallowRef<Record<string, unknown>>({});
     await render(() => <Probe {...bound.value} />);
-    expect(read()).toEqual({});
+    expect(read()).toStrictEqual({});
     bound.value = { keepMounted: false };
     await nextTick();
-    expect(read()).toEqual({ keepMounted: false });
+    expect(read()).toStrictEqual({ keepMounted: false });
     bound.value = {};
     await nextTick();
-    expect(read()).toEqual({});
+    expect(read()).toStrictEqual({});
   });
 
   it.each([{ name: 'getter' }, { name: 'ref' }] as const)(
@@ -138,9 +138,9 @@ describe('useForwardProps', () => {
     async ({ name }) => {
       const { Probe, read } = createProbe(name);
       const { setProps } = await render(() => <Probe id="first" />);
-      expect(read()).toEqual({ id: 'first' });
+      expect(read()).toStrictEqual({ id: 'first' });
       await setProps({ id: 'second' });
-      expect(read()).toEqual({ id: 'second' });
+      expect(read()).toStrictEqual({ id: 'second' });
     },
   );
 
@@ -168,9 +168,9 @@ describe('useForwardProps', () => {
     const forwarded = useForwardProps(source);
     useForwardProps(source);
     expect(takeReportedMessages()).toEqual([NO_COMPONENT_MESSAGE]);
-    expect(forwarded.value).toEqual({ a: 1, b: false });
+    expect(forwarded.value).toStrictEqual({ a: 1, b: false });
     source.value = { a: 2, b: true, c: undefined };
-    expect(forwarded.value).toEqual({ a: 2, b: true });
+    expect(forwarded.value).toStrictEqual({ a: 2, b: true });
   });
 
   it.runIf(isVaporApp)('a Vapor wrapper gets the warning and its set props', async () => {
