@@ -6,6 +6,7 @@ import { testPropForwarding } from './conformanceTests/propForwarding';
 import { testRefForwarding } from './conformanceTests/refForwarding';
 import { testRenderProp } from './conformanceTests/renderProp';
 import { testRenderSlot } from './conformanceTests/renderSlot';
+import { testScopedStyle } from './conformanceTests/scopedStyle';
 import { testVaporConsumer } from './conformanceTests/vaporConsumer';
 import { createDescribe } from './createDescribe';
 import type { VaseUIRenderResult } from './createRenderer';
@@ -52,6 +53,14 @@ export interface VaseUiConformanceTestsOptions {
    * Give it for a part whose `#render` slot has the `children` prop.
    */
   childrenSelector?: string;
+  /**
+   * Whether the element of the part is the one root node of the part. Vue then gives the element
+   * the scope id of the component that renders the part, so a rule of `<style scoped>` matches it.
+   * Give `false` only when the design needs a node beside the element or the element is in a
+   * `Teleport`. The suite then asserts that the rule does not match.
+   * @default true
+   */
+  elementIsRoot?: boolean;
 }
 
 function describeConformanceFn(
@@ -64,6 +73,7 @@ function describeConformanceFn(
   testClassName(minimalElement, getOptions);
   testAsProp(minimalElement, getOptions);
   testRenderSlot(minimalElement, getOptions);
+  testScopedStyle(minimalElement, getOptions);
   testVaporConsumer(minimalElement, getOptions);
 
   const { button = false, testRenderPropWith } = getOptions();

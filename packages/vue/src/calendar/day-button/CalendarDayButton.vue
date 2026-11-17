@@ -63,15 +63,19 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="!state.hidden">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-    <component
-      :is="as"
-      v-else-if="$slots.default || as !== 'button'"
-      v-bind="elementProps()"
-      :ref="setRef"
-      ><slot :state="state" :text="text">{{ text }}</slot></component
-    >
-    <button v-else v-bind="elementProps()" :ref="setRef">{{ text }}</button>
-  </template>
+  <slot
+    v-if="!state.hidden && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+    :text="text"
+  />
+  <component
+    :is="as"
+    v-else-if="!state.hidden && ($slots.default || as !== 'button')"
+    v-bind="elementProps()"
+    :ref="setRef"
+    ><slot :state="state" :text="text">{{ text }}</slot></component
+  >
+  <button v-else-if="!state.hidden" v-bind="elementProps()" :ref="setRef">{{ text }}</button>
 </template>

@@ -167,11 +167,11 @@ describe('<Menu.Root /> on a server', () => {
         '</div><a role="menuitem" id="link" tabindex="-1" href="/docs"><!--[-->Docs<!--]-->' +
         '</a><!--]--></div>' +
         '<div data-checked role="menuitemcheckbox" id="checkbox" tabindex="-1" aria-checked="true">' +
-        '<!--[-->Bold<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
-        '<!--]--><!--]--></div><div role="group"><!--[-->' +
+        '<!--[-->Bold<span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--></div><div role="group"><!--[-->' +
         '<div data-checked role="menuitemradio" id="radio" tabindex="-1" aria-checked="true">' +
-        '<!--[-->A<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
-        '<!--]--><!--]--></div><!--]--></div><!--]--></div><!--]-->',
+        '<!--[-->A<span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--></div><!--]--></div><!--]--></div><!--]-->',
     );
   });
 });

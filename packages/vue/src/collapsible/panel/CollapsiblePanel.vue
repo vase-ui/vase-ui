@@ -154,10 +154,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="shouldRender">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="panelState" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="panelState" />
-    </component>
-  </template>
+  <slot
+    v-if="shouldRender && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="panelState"
+  />
+  <component :is="as" v-else-if="shouldRender" v-bind="elementProps()" :ref="setRef">
+    <slot :state="panelState" />
+  </component>
 </template>

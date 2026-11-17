@@ -35,6 +35,7 @@ describe('<Dialog.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Dialog.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     childrenSelector: INTERNAL_BACKDROP_SELECTOR,
     render(node) {

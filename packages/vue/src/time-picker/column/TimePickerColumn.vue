@@ -148,13 +148,11 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="isRendered">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <template v-for="(value, index) in values" :key="value">
-        <slot v-if="$slots.item" name="item" :value="value" :index="index" />
-        <TimePickerColumnItem v-else :value="value" />
-      </template>
-    </component>
-  </template>
+  <slot v-if="isRendered && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="isRendered" v-bind="elementProps()" :ref="setRef">
+    <template v-for="(value, index) in values" :key="value">
+      <slot v-if="$slots.item" name="item" :value="value" :index="index" />
+      <TimePickerColumnItem v-else :value="value" />
+    </template>
+  </component>
 </template>

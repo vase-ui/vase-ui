@@ -35,6 +35,7 @@ describe('FloatingPortalLite', () => {
   const { render } = createRenderer();
 
   describeConformance(<FloatingPortalLite />, () => ({
+    elementIsRoot: false,
     render,
     refInstanceof: window.HTMLDivElement,
   }));

@@ -27,6 +27,8 @@ const MESSAGES = {
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
   refByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
+  conditionalForms:
+    'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && $slots.render" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -335,6 +337,13 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector:
       "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
     message: MESSAGES.inputRefByName,
+  },
+  {
+    // The `#render` slot has a `v-if` only where the element form comes after it. A start tag has
+    // only its attributes below it, so the descendant form is exact.
+    selector:
+      "VElement[name='template']:not([parent.type='VDocumentFragment']) > VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.name.name='if']):has(VAttribute[directive=false][key.name='name'][value.value='render'])",
+    message: MESSAGES.conditionalForms,
   },
   {
     // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.

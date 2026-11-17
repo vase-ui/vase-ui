@@ -51,6 +51,7 @@ describe('<TimeField.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<TimeField.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render,
   }));

@@ -38,10 +38,8 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="visible">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot v-if="visible && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

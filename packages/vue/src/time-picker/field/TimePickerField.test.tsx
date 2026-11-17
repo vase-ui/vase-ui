@@ -29,6 +29,7 @@ describe('<TimePicker.Field />', () => {
   const { render } = createRenderer();
 
   describeConformance(<TimePicker.Field />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(<TimePicker.Root defaultValue={time}>{node}</TimePicker.Root>);

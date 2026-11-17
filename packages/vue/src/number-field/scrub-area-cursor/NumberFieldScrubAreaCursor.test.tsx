@@ -57,6 +57,7 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
   const { render } = createRenderer();
 
   describeConformance(<NumberField.ScrubAreaCursor />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLSpanElement,
     render(node) {
       return render(

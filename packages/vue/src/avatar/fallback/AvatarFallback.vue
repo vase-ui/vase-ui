@@ -66,10 +66,18 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed)">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </template>
+  <slot
+    v-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed) && $slots.render"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
+  <component
+    :is="as"
+    v-else-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed)"
+    v-bind="elementProps()"
+    :ref="setRef"
+  >
+    <slot :state="state" />
+  </component>
 </template>

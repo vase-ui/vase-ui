@@ -18,6 +18,7 @@ describe('<Combobox.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Combobox.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<Combobox.Root open>{node}</Combobox.Root>);

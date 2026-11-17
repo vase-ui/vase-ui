@@ -239,10 +239,8 @@ function getTargetScrollTop(
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="shouldRender">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren>
-    </component>
-  </template>
+  <slot v-if="shouldRender && $slots.render" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
+  <component :is="as" v-else-if="shouldRender" v-bind="elementProps()" :ref="setRef">
+    <SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren>
+  </component>
 </template>

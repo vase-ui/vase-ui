@@ -43,6 +43,7 @@ describe('<DateField.Root />', () => {
   const { render } = createRenderer();
 
   describeConformance(<DateField.Root />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     render,
   }));

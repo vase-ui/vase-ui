@@ -17,6 +17,7 @@ describe('<Popover.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Popover.Portal />, () => ({
+    elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(<Popover.Root open>{node}</Popover.Root>);

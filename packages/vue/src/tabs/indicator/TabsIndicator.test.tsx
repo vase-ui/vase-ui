@@ -17,6 +17,7 @@ import {
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { script as generatedPrehydrationScript } from './prehydrationScript.min';
 import TabsIndicatorHydration from './TabsIndicatorHydration.test.vue';
+import TabsIndicatorScoped from './TabsIndicatorScoped.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown> };
 
@@ -894,6 +895,12 @@ describe('<Tabs.Indicator />', () => {
 
   describe('pre-hydration rendering', () => {
     // The server render with no `hydrate()` runs in Node, in `TabsIndicator.node.test.tsx`.
+
+    it('VUE-60: a scoped rule of the consumer does not match the indicator with renderBeforeHydration', async () => {
+      await render(<TabsIndicatorScoped renderBeforeHydration />);
+
+      expect(getComputedStyle(screen.getByTestId('indicator')).outlineStyle).not.toBe('dashed');
+    });
 
     // The script element of the server HTML must stay while the part hydrates, and go once the part
     // is mounted. A part that renders no script element while it hydrates gives a hydration mismatch,

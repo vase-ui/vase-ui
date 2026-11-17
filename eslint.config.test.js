@@ -67,6 +67,26 @@ const REF_HINT = 'before the element is in the document';
 
 const reported = [
   {
+    name: 'conditional part forms inside template v-if',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<template v-if="shown"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
+    ),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'fragment',
+  },
+  {
+    name: 'conditional part forms inside template v-else',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<div v-if="other" /><template v-else><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
+    ),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'fragment',
+  },
+  {
     name: 'a spread of elementProps() with no ref by name',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc('', '<component :is="as" v-bind="elementProps()"><slot /></component>'),
@@ -970,6 +990,38 @@ const reported = [
 ];
 
 const passed = [
+  {
+    name: 'conditional part forms at the root',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<slot v-if="shown && $slots.render" name="render" :props="elementProps()" /><component :is="as" v-else-if="shown" v-bind="elementProps()" :ref="setRef" />',
+    ),
+  },
+  {
+    name: 'conditional part forms with a style before the render slot',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<template v-if="$slots.render"><Style /><slot name="render" :props="elementProps()" /></template><component :is="as" v-else v-bind="elementProps()" :ref="setRef" />',
+    ),
+  },
+  {
+    name: 'conditional part forms inside a Teleport',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(
+      '',
+      '<Teleport v-if="shown" to="body"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></Teleport>',
+    ),
+  },
+  {
+    name: 'conditional part forms inside a template in a test SFC',
+    file: `${SRC}/DialogPart.test.vue`,
+    code: docsSfc(
+      '',
+      '<template v-if="shown"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
+    ),
+  },
   {
     name: 'a spread of elementProps() with the ref by name',
     file: `${SRC}/DialogRoot.vue`,
