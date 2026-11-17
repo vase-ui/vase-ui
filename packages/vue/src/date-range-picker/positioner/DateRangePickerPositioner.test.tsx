@@ -141,8 +141,6 @@ describe('<DateRangePicker.Positioner />', () => {
     expect(positioner.getBoundingClientRect().top).toBeCloseTo(start.bottom, 0);
   });
 
-  // Vue stops the `watch` of a field before it unmounts the field, so the field clears its element
-  // itself. A removed field then no longer takes part in the box.
   it.each([
     { name: 'the end field', from: 'both' as const, to: 'start' as const, side: 'start-field' },
     { name: 'both fields', from: 'both' as const, to: 'none' as const, side: 'trigger' },
