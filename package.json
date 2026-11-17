@@ -28,7 +28,7 @@
     "docs:dev": "pnpm --filter @vase-ui/docs dev",
     "docs:build": "pnpm --filter @vase-ui/docs build",
     "docs:preview": "pnpm --filter @vase-ui/docs preview",
-    "docs:typecheck": "pnpm --filter @vase-ui/docs typecheck",
+    "docs:typecheck": "pnpm --filter @vase-ui/docs typecheck && node scripts/docs/sampleCompile.ts",
     "docs:axe": "node scripts/docs/axeSite.ts",
     "docs:search-focus": "node scripts/docs/searchBoxFocus.ts",
     "docs:demos": "node scripts/docs/upstreamDemos.ts",
