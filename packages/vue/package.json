@@ -1,7 +1,7 @@
 {
   "name": "@vase-ui/vue",
   "version": "2026.11.1",
-  "description": "Base UI, arranged for Vue.",
+  "description": "Unstyled Vue components from Base UI. Actively maintained. All 38 Base UI components, plus date, time and resizable panels.",
   "license": "MIT",
   "keywords": [
     "vue",
