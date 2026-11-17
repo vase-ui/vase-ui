@@ -51,7 +51,7 @@ Vase UI is a port, so the hard part was done before we started. The engineers be
 
 ## Contributing
 
-Vase UI is built in the open, and for now you can only watch. Issues, Discussions and outside pull requests are off while the port is in progress. To follow along, watch the repository: each pull request on `main` is one step of the port, and [the parity page](https://vase-ui.com/parity) shows where it stands. See [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for the rules that the port follows.
+Report bugs in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs). Request changes or features in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas). See [Contributing](https://vase-ui.com/contributing) for the process and [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for our code rules.
 
 Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 

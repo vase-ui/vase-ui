@@ -1,0 +1,56 @@
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An AI agent reads your report. Send security problems through [a private report](https://github.com/vase-ui/vase-ui/security/advisories/new).
+  - type: input
+    id: vase-ui-version
+    attributes:
+      label: '@vase-ui/vue version'
+    validations:
+      required: true
+  - type: input
+    id: vue-version
+    attributes:
+      label: Vue version
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+      description: Give the browser and system versions.
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Name the component or the site page.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give each step that shows the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expect
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens
+    validations:
+      required: true
+  - type: input
+    id: reproduction
+    attributes:
+      label: Link to a reproduction
+      description: Link to a StackBlitz project or a repository, if you can.

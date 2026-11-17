@@ -1,0 +1,26 @@
+title: '[Idea] '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: Describe the problem that you want to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: The change you want
+      description: Describe the behavior or the API that you want.
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: What you do now
+      description: Describe what you use in place of this change, if anything.
+  - type: input
+    id: base-ui
+    attributes:
+      label: Base UI link
+      description: If Base UI has this feature, give a link to it.

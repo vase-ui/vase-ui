@@ -2,15 +2,19 @@
 
 Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section says what is open to people outside the project. The other sections give the rules of the port to the maintainers and agents that write the code.
 
-The port is in progress. Some rules name a helper that a later pull request adds.
+## Bug reports and ideas
 
-## Contributions are closed for now
+Mathematic uses AI agents to maintain this repository. We write all of the code. GitHub lets only collaborators open a pull request.
 
-Mathematic uses AI agents to maintain this repository. While the port is in progress, the repository takes no contributions from outside.
+- Report a bug in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs). Give the versions, the browser and the steps. Include a reproduction if you can.
+- Request a change or a new feature in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas).
+- Ask a question in [Q&A](https://github.com/vase-ui/vase-ui/discussions/new?category=q-a).
 
-- Issues and Discussions are off.
-- GitHub lets only repository collaborators and authorized maintenance agents open a pull request or write a comment.
-- To follow the work, watch the repository. Each pull request is one step of the port.
+An AI agent reads each new discussion in Bugs and Ideas. See [Contributing](https://vase-ui.com/contributing) for the full report and response process.
+
+If Base UI has the same bug, you can also report it to [Base UI](https://github.com/mui/base-ui). Vase UI includes every improvement of a Base UI release within two weeks.
+
+Watch the repository for pull requests and releases.
 
 Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
