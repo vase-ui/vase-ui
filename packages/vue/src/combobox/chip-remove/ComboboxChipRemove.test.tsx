@@ -555,10 +555,11 @@ describe('<Combobox.ChipRemove />', () => {
     ])('VUE-122: ignores a press of the remove button with $name', async ({ value }) => {
       const handleValueChange = vi.fn();
       const handleChipClick = vi.fn();
+      const handleChipKeydown = vi.fn();
       const { user } = await render(
         <Combobox.Root defaultValue={value} onValueChange={handleValueChange}>
           <Combobox.Chips>
-            <Combobox.Chip onClick={handleChipClick}>
+            <Combobox.Chip onClick={handleChipClick} onKeydown={handleChipKeydown}>
               apple
               <Combobox.ChipRemove data-testid="remove" />
             </Combobox.Chip>
@@ -576,6 +577,7 @@ describe('<Combobox.ChipRemove />', () => {
       await fireEvent.keyDown(remove, { key: 'Enter' });
       await fireEvent.keyDown(remove, { key: ' ' });
       expect(handleValueChange).not.toHaveBeenCalled();
+      expect(handleChipKeydown).toHaveBeenCalledTimes(2);
     });
   });
 

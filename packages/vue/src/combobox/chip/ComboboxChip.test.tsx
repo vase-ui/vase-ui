@@ -633,22 +633,29 @@ describe('<Combobox.Chip />', () => {
         >
           <Combobox.Root defaultValue={value} onValueChange={handleValueChange}>
             <Combobox.Chips>
-              <Combobox.Chip data-testid="chip">apple</Combobox.Chip>
+              <Combobox.Chip data-testid="chip">
+                apple
+                <Combobox.ChipRemove data-testid="remove" />
+              </Combobox.Chip>
               <Combobox.Input />
             </Combobox.Chips>
           </Combobox.Root>
         </div>,
       );
 
-      const chip = screen.getByTestId('chip');
-      chip.focus();
-      await flushMicrotasks();
-      await user.keyboard('{Backspace}');
-      await user.keyboard('{Delete}');
-      await flushMicrotasks();
+      // A key from an element in the chip also reaches the chip. The chip must not take the focus.
+      for (const target of [screen.getByTestId('chip'), screen.getByTestId('remove')]) {
+        prevented.length = 0;
+        target.focus();
+        await flushMicrotasks();
+        await user.keyboard('{Backspace}');
+        await user.keyboard('{Delete}');
+        await flushMicrotasks();
 
-      expect(prevented).toEqual([false, false]);
-      expect(chip).toHaveFocus();
+        expect(prevented).toEqual([false, false]);
+        expect(target).toHaveFocus();
+      }
+
       expect(handleValueChange).not.toHaveBeenCalled();
       expect(screen.getByRole('combobox')).toHaveValue(value ?? '');
     });
