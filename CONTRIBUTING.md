@@ -536,6 +536,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.
 - With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `value` and `defaultValue` as an empty array (`VUE-115`). A `null` `value` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
 - `Combobox.Input` in `Combobox.Chips` moves the focus to a chip only when the value is an array (`VUE-122`). With each other value, such as the `null` of a combobox with no `multiple` prop, the arrow key keeps its default action.
+- `Combobox.Chip` and `Combobox.ChipRemove` remove a value only when the value of the combobox is an array (`VUE-122`). With each other value, the chip ignores Backspace and Delete, and the remove button ignores a press.
 - A part whose input holds the uncontrolled value does not call `useControlled`. `Field.Control` is an example: it declares `value` and emits `valueChange` and `update:value`.
 
 `details` is upstream's object:
