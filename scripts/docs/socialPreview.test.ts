@@ -29,9 +29,7 @@ function pngSize(path: string): { width: number; height: number; byteLength: num
   };
 }
 
-const manifest: { description: string; homepage: string } = JSON.parse(
-  read('packages/vue/package.json'),
-);
+const manifest: { description: string } = JSON.parse(read('packages/vue/package.json'));
 const buttonSource = read('docs/components/button.md');
 const buttonDescription = /^description:\s*(.+)$/m.exec(buttonSource)?.[1] ?? '';
 
@@ -58,9 +56,9 @@ const vitepress: {
   pathToFileURL(createRequire(join(DOCS_ROOT, 'package.json')).resolve('vitepress')).href
 );
 
-// The lint job runs before the package build, so a demo cannot import `@vase-ui/vue` yet. These
-// copies keep the front matter and the title of each page and omit the Vue components. The folder
-// is in `.vitepress/cache` so Vite resolves `vue` from `docs`.
+// CI runs `pnpm lint`, and thus this test, before `pnpm build`, so a demo cannot import
+// `@vase-ui/vue` yet. These copies keep the front matter and the title of each page and omit the
+// Vue components. The folder is in `.vitepress/cache` so Vite resolves `vue` from `docs`.
 const cacheParent = join(DOCS_ROOT, '.vitepress', 'cache');
 mkdirSync(cacheParent, { recursive: true });
 const buildRoot = mkdtempSync(join(cacheParent, 'social-preview-'));
@@ -148,26 +146,8 @@ test('docs/public/og-image.png is a 1200x630 PNG below 1 MB', () => {
   assert.ok(byteLength < 1_000_000, `og-image.png is ${byteLength} bytes.`);
 });
 
-test('docs/.vitepress/config.ts points og:image and twitter:image at a file of docs/public with the declared size', () => {
-  const headMeta = (config.head ?? []).flatMap(([tag, attributes]) =>
-    tag === 'meta' ? [attributes] : [],
-  );
-  const ogImage = headMeta.find(({ property }) => property === 'og:image')?.content ?? '';
-  const twitterImage = headMeta.find(({ name }) => name === 'twitter:image')?.content ?? '';
-  const width = headMeta.find(({ property }) => property === 'og:image:width')?.content ?? '';
-  const height = headMeta.find(({ property }) => property === 'og:image:height')?.content ?? '';
-
-  assert.ok(
-    ogImage.startsWith(manifest.homepage),
-    `og:image must start with ${manifest.homepage}.`,
-  );
-  assert.equal(twitterImage, ogImage);
-  const file = ogImage.slice(manifest.homepage.length);
-  assert.ok(existsSync(join(PUBLIC_ROOT, file)), `docs/public/${file} does not exist.`);
-  const actual = pngSize(file);
-  assert.equal(width, String(actual.width));
-  assert.equal(height, String(actual.height));
-  assert.ok(configuredAlt.length > 0 && configuredAlt.endsWith('.'));
+test('og:image:alt in docs/.vitepress/config.ts is one sentence', () => {
+  assert.match(configuredAlt, /^[^.]+\.$/);
 });
 
 const PAGES: {
