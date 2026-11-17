@@ -1506,17 +1506,25 @@ for (const { name, file, code } of passed) {
   });
 }
 
-test('reports a root node read in a watch callback one time', async () => {
-  const messages = await lint(
-    `${SRC}/useRoot.ts`,
-    "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
-  );
-  assert.deepEqual(
-    messages.map(({ ruleId }) => ruleId),
-    ['no-restricted-syntax'],
-  );
-  assert.match(messages[0].message, /followRootNode/);
-});
+for (const { name, code } of [
+  {
+    name: 'a `watch` callback',
+    code: "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
+  },
+  {
+    name: 'a `useDomEffect` effect',
+    code: "import { useDomEffect } from '../utils/popups/useDomEffect';\n\ndeclare const element: Element;\nuseDomEffect([], () => {\n  element.getRootNode();\n});\n",
+  },
+]) {
+  test(`reports a root node read in ${name} one time`, async () => {
+    const messages = await lint(`${SRC}/useRoot.ts`, code);
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['no-restricted-syntax'],
+    );
+    assert.match(messages[0].message, /followRootNode/);
+  });
+}
 
 test('reports a row that has a vnode in a vnode one time', async () => {
   const messages = await lint(
