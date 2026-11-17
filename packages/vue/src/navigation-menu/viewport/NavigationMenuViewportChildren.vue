@@ -26,7 +26,7 @@ const {
   handleAfterInsideFocusin,
 } = useNavigationMenuViewportGuards();
 
-const setViewportTarget = createElementSetter(viewportTargetElement);
+const setViewportTarget = createElementSetter(viewportTargetElement, { keepWhileHeld: true });
 </script>
 
 <template>

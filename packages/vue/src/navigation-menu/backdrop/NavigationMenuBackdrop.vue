@@ -48,7 +48,7 @@ const state = computed<NavigationMenuBackdropState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: createElementSetter(backdropElement),
+  ref: createElementSetter(backdropElement, { keepWhileHeld: true }),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     { role: 'presentation', hidden: mounted.value ? undefined : true, style: BACKDROP_STYLE },
