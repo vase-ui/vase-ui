@@ -80,7 +80,7 @@ function setCursorElement(next: HTMLSpanElement | null) {
   ownElement = next;
 }
 
-const { element, elementProps, setRef } = useRenderElement<
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   NumberFieldScrubAreaCursorState,
   HTMLSpanElement
 >('span', props, {
@@ -96,7 +96,7 @@ defineExpose({ element });
 <template>
   <Teleport v-if="shouldRender" :to="getContainer()">
     <div v-bind="PORTAL_PROPS">
-      <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+      <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
       <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
         <slot :state="state" />
       </component>

@@ -166,7 +166,7 @@ function handleClick(event: MouseEvent) {
   setChecked(nextChecked);
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: itemMapping,
   ref: [itemRef, listItem.ref, filterItem.ref],
@@ -187,7 +187,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="filterItem.visible.value && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

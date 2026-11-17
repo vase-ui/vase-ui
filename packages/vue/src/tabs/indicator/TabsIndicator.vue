@@ -260,7 +260,7 @@ const state = computed<TabsIndicatorState>(() => ({
 // as `document.currentScript.previousElementSibling`.
 // The form with only the element comes last. Without `renderBeforeHydration`, the indicator is thus
 // the root node of the part.
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   props: (attrs) => {
     const measured = measurement.value;
@@ -297,7 +297,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="value != null && $slots.render">
+  <template v-if="value != null && usesRenderSlot()">
     <slot name="render" :props="elementProps()" :state="state" />
     <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />
   </template>

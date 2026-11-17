@@ -163,7 +163,7 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
   props: (attrs) => [
@@ -183,7 +183,7 @@ defineExpose({ element, focus });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="rootState" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="rootState" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="rootState" />
   </component>

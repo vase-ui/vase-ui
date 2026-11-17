@@ -70,7 +70,7 @@ const { indicatorPosition, inset, max, min, orientation, renderBeforeHydration, 
 
 const isHydrating = useIsHydrating();
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => {
     const isInset = inset.value;
@@ -114,7 +114,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

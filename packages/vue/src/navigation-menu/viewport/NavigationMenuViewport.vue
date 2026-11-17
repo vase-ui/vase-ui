@@ -104,7 +104,7 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, setRef } = useRenderElement<
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   NavigationMenuViewportState,
   HTMLElement
 >('div', props, {
@@ -137,7 +137,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren>
   </component>

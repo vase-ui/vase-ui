@@ -76,7 +76,7 @@ const state = computed<MenuRadioItemIndicatorState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   stateAttributesMapping: itemMapping,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
@@ -99,7 +99,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(keepMounted || mounted) && $slots.render"
+    v-if="(keepMounted || mounted) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

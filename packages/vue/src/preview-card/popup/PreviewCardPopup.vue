@@ -71,7 +71,7 @@ const state = computed<PreviewCardPopupState>(() => ({
 
 let popupElement: HTMLElement | null = null;
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [
     (popup) => {
@@ -97,7 +97,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

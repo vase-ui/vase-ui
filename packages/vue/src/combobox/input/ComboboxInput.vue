@@ -551,7 +551,7 @@ function handleKeydown(event: VaseUIEvent<KeyboardEvent>) {
   }
 }
 
-const { element, elementProps, setRef } = useRenderElement('input', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
   ref: setInputElement,
   props: (attrs) => {
@@ -609,6 +609,6 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef" />
 </template>

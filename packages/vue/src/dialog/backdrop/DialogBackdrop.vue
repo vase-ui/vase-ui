@@ -53,7 +53,7 @@ const state = computed<DialogBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: createElementSetter(store.context.backdropRef),
   stateAttributesMapping: popupTransitionStateMapping,
@@ -75,7 +75,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(forceRender || !nested) && $slots.render"
+    v-if="(forceRender || !nested) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

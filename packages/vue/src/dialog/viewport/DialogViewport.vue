@@ -68,7 +68,7 @@ function setViewport(viewport: HTMLElement | null) {
   ownViewport = viewport;
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: setViewport,
   stateAttributesMapping: dialogStateAttributesMapping,
@@ -89,7 +89,7 @@ defineExpose({ element });
 
 <template>
   <slot
-    v-if="(keepMounted || mounted) && $slots.render"
+    v-if="(keepMounted || mounted) && usesRenderSlot()"
     name="render"
     :props="elementProps()"
     :state="state"

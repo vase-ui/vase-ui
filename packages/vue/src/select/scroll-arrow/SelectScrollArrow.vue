@@ -150,7 +150,7 @@ function scrollNextItem() {
   timeout.start(40, scrollNextItem);
 }
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: transitionStatusMapping,
   props: (attrs) => [
@@ -239,7 +239,7 @@ function getTargetScrollTop(
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="shouldRender && $slots.render" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
+  <slot v-if="shouldRender && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
   <component :is="as" v-else-if="shouldRender" v-bind="elementProps()" :ref="setRef">
     <SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren>
   </component>

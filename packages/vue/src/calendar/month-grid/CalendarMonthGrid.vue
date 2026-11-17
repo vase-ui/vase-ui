@@ -47,7 +47,7 @@ provide(CalendarViewGridContext, { columns: columnCount });
 const rows = computed(() => getRows(monthCells.value, columnCount.value));
 const label = computed(() => formatFieldName('month', locale.value));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
@@ -64,7 +64,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="view === 'month' && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="view === 'month' && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="view === 'month'" v-bind="elementProps()" :ref="setRef">
     <template v-for="(months, index) in rows" :key="months[0]?.toString()"><slot name="row" :months="months" :index="index" /></template>
   </component>

@@ -47,7 +47,7 @@ const state = computed<ToastArrowState>(() => ({
   uncentered: arrowUncentered.value,
 }));
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: [arrowRef],
   props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
@@ -57,7 +57,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

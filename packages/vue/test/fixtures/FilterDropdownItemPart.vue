@@ -43,7 +43,7 @@ const {
   retainGroup: () => props.retainGroup,
 });
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   ref: itemRef,
   props: (attrs) => [{ role: 'menuitem' }, attrs],
@@ -53,7 +53,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="visible && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="visible && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

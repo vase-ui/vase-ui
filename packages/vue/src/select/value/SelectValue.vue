@@ -93,7 +93,7 @@ function setValueElement(span: HTMLElement | null) {
   ownElement = span as HTMLSpanElement | null;
 }
 
-const { element, elementProps, setRef } = useRenderElement('span', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
   ref: [setValueElement],
   stateAttributesMapping: { value: () => null },
@@ -105,7 +105,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SelectValueChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="SelectValueChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <SelectValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></SelectValueChildren>
   </component>

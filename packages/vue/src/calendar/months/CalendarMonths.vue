@@ -64,7 +64,7 @@ const stateAttributesMapping: StateAttributesMapping<CalendarMonthsState> = {
   }),
 };
 
-const { element, elementProps, setRef } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping,
 });
@@ -74,7 +74,7 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="view === 'day' && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="view === 'day' && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else-if="view === 'day'" v-bind="elementProps()" :ref="setRef">
     <template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template>
   </component>

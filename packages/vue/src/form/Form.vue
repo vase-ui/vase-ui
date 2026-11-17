@@ -214,14 +214,13 @@ function handleSubmit(event: SubmitEvent) {
   }
 }
 
-const { element, elementProps, setRef } = useRenderElement<FormState, HTMLFormElement>(
-  'form',
-  props,
-  {
-    state,
-    props: (attrs) => [{ novalidate: true, onSubmit: handleSubmit }, attrs],
-  },
-);
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  FormState,
+  HTMLFormElement
+>('form', props, {
+  state,
+  props: (attrs) => [{ novalidate: true, onSubmit: handleSubmit }, attrs],
+});
 
 function clearErrors(name: string | undefined) {
   if (!name) {
@@ -250,7 +249,7 @@ defineExpose({ element, validate });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
