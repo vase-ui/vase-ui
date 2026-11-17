@@ -149,9 +149,7 @@ describe('observeRootNode', () => {
     document.body.append(host);
     onTestFinished(() => host.remove());
     const callback = vi.fn(() => {
-      if (!input.id) {
-        input.id = 'name';
-      }
+      input.id ||= 'name';
     });
     onTestFinished(observeRootNode(input, callback, ['id']));
 
