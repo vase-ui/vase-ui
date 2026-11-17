@@ -6,8 +6,9 @@ import type { FloatingPortalContainer } from './useFloatingPortalNode';
 export interface FloatingPortalState {}
 
 /**
- * Puts the popup into a container, by default `<body>`, unless `inPlace` is true. A parent with `overflow: hidden` then
- * does not clip the popup. The popup keeps its place in the component tree.
+ * Puts the popup into a container, by default `<body>`, unless `inPlace` is true.
+ * In a container, a parent with `overflow: hidden` does not clip the popup.
+ * The popup keeps its place in the component tree.
  * @see https://floating-ui.com/docs/FloatingPortal
  */
 export interface FloatingPortalProps
@@ -24,8 +25,8 @@ export interface FloatingPortalProps
   portalOwnerRole?: string | undefined;
   /**
    * Whether the portal element renders in the place of the part, with no `Teleport`.
-   * The name is not `disabled`: a portal part gives its attributes to this component, and an
-   * attribute with the name of a prop is that prop.
+   * Other portal parts pass attributes to this component.
+   * The internal name keeps their `disabled` attributes separate from this mode.
    * @default false
    */
   inPlace?: boolean | undefined;

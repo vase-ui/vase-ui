@@ -1656,6 +1656,24 @@ async function expectHydratedDrawerPage(page: Page) {
   expect(await page.getByTestId('closed-popup').count()).toBe(0);
 }
 
+async function expectDialogInPlacePageOnServer(page: Page) {
+  const panel = page.getByTestId('panel');
+  expect(await panel.getAttribute('role')).toBe('dialog');
+  expect(await page.getByTestId('panel-title').textContent()).toBe('Panel title');
+  expect(await page.locator('main [data-testid="panel"]').count()).toBe(1);
+  expect(await page.locator('main > [data-vase-ui-portal] > [data-testid="panel"]').count()).toBe(
+    1,
+  );
+  expect(await page.locator('body > [data-vase-ui-portal]').count()).toBe(0);
+}
+
+async function expectHydratedDialogInPlacePage(page: Page) {
+  await expectDialogInPlacePageOnServer(page);
+  const titleId = await page.getByTestId('panel-title').getAttribute('id');
+  expect(titleId).not.toBe(null);
+  expect(await page.getByTestId('panel').getAttribute('aria-labelledby')).toBe(titleId);
+}
+
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
 // trigger of a handle has the closed form, because a server attaches no store to a handle.
 async function expectDialogPageOnServer(page: Page) {
@@ -2224,6 +2242,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedDrawerPage,
   },
   {
+    path: '/dialog-in-place',
+    expectPage: expectDialogInPlacePageOnServer,
+    expectHydratedPage: expectHydratedDialogInPlacePage,
+  },
+  {
     path: '/dialog',
     expectPage: expectDialogPageOnServer,
     expectHydratedPage: expectHydratedDialogPage,
@@ -2303,6 +2326,23 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expectHydratedPage(page);
     },
   );
+
+  it('keeps the tab order of /dialog-in-place after hydration and closes on Escape', async () => {
+    const page = await createPage('/dialog-in-place');
+    const messages = collectMessages(page);
+    await page.getByTestId('before').focus();
+
+    await page.keyboard.press('Tab');
+
+    expect(
+      await page
+        .getByTestId('panel-close')
+        .evaluate((element) => element === document.activeElement),
+    ).toBe(true);
+    await page.keyboard.press('Escape');
+    await page.getByTestId('panel').waitFor({ state: 'detached' });
+    expect(messages).toEqual([]);
+  });
 
   it('changes a switch on a click on its label and on the switch after hydration', async () => {
     const page = await createPage('/switch');

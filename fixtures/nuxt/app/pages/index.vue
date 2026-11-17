@@ -45,6 +45,7 @@
       <li><NuxtLink to="/tooltip">Tooltip</NuxtLink></li>
       <li><NuxtLink to="/drawer">Drawer</NuxtLink></li>
       <li><NuxtLink to="/dialog">Dialog</NuxtLink></li>
+      <li><NuxtLink to="/dialog-in-place">Dialog in place</NuxtLink></li>
       <li><NuxtLink to="/autocomplete">Autocomplete</NuxtLink></li>
       <li><NuxtLink to="/combobox">Combobox</NuxtLink></li>
       <li><NuxtLink to="/text-before-hydration">Text before hydration</NuxtLink></li>
