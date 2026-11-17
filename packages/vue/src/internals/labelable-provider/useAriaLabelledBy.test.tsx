@@ -477,8 +477,6 @@ describe('useAriaLabelledBy', () => {
   });
 
   describe('under `KeepAlive`', () => {
-    // `KeepAlive` keeps the input in a detached element while the control is hidden. A lookup there
-    // would observe that element, and not the document of the active control.
     it('names the control with a label that comes while the control is hidden, and follows that label after the control is shown', async () => {
       const shown = shallowRef(true);
       const controlId = shallowRef('a');
