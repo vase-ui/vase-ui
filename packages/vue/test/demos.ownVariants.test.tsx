@@ -1,9 +1,17 @@
 /// <reference types="vite/client" />
 import { afterEach, describe, expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { h } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor, within } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+  within,
+} from '#test-utils';
 // The package has no dependency on the font of the site, so the path names the copy in
 // `docs/node_modules`.
 import '../../../docs/node_modules/@fontsource-variable/hanken-grotesk/index.css';
@@ -492,6 +500,36 @@ describe.each(demos)('%s', (demo) => {
     }
 
     if (hasPart('RangeCalendar.DayButton')) {
+      it.each([390, 1280])('the focus ring is above adjacent days at %i px', async (width) => {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        await inEachVariantAt(width, async (frame, variant) => {
+          await waitForLaterMillisecond(() => openPopupOf(frame));
+          const start = document.querySelector<HTMLButtonElement>('button[data-range-start]')!;
+          const middle = document.querySelector<HTMLButtonElement>('button[data-range-middle]')!;
+          start.focus();
+          await userEvent.keyboard('{ArrowRight}');
+          await waitFor(() => {
+            expect(middle).toHaveFocus();
+          });
+          expect(middle.matches(':focus-visible'), variant).toBe(true);
+
+          const style = getComputedStyle(middle);
+          expect(style.position, variant).toBe('relative');
+          expect(style.outlineStyle, variant).toBe('solid');
+          expect(style.outlineWidth, variant).toBe('2px');
+          expect(style.outlineOffset, variant).toBe('2px');
+          const cell = middle.closest('td')!;
+          const neighbours = [cell.previousElementSibling, cell.nextElementSibling];
+          for (const neighbour of neighbours) {
+            const button = neighbour!.querySelector('button')!;
+            const zIndex = getComputedStyle(button).zIndex;
+            expect(Number(style.zIndex), `${variant}: ${button.textContent}`).toBeGreaterThan(
+              zIndex === 'auto' ? 0 : Number(zIndex),
+            );
+          }
+        });
+      });
+
       it.each([390, 1280])('the selected range has no gaps at %i px', async (width) => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
         await inEachVariantAt(width, async (frame, variant) => {
