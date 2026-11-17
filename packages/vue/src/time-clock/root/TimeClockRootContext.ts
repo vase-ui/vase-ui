@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
 import type {
   TimeClockDayPeriodValue,
   TimeClockFaceNumber,
@@ -33,6 +33,8 @@ export interface TimeClockRootContext {
   selectedNumber: ComputedRef<TimeClockFaceNumber>;
   /** The day period of the time of the clock. */
   dayPeriod: ComputedRef<TimeClockDayPeriodValue>;
+  /** The range input of the face. `TimeClock.Face` writes it. */
+  inputElement: ShallowRef<HTMLInputElement | null>;
   isNumberDisabled: (number: TimeClockFaceNumber) => boolean;
   isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriodValue) => boolean;
   setDragging: (dragging: boolean) => void;

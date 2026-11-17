@@ -9,6 +9,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   mockRuntimeDateTimeLocale,
   renderOnServer,
   screen,
@@ -489,6 +490,28 @@ describe('<TimeClock.Root />', () => {
 
       expect(within(container).getByRole('slider')).toHaveAttribute('max', '23');
       expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+    });
+
+    it('gives the focus of a day period to the face when the browser has a 24-hour clock', async () => {
+      mockRuntimeDateTimeLocale('de-DE');
+      const props = { time: '15:45' };
+      const serverHtml = await renderOnServer(
+        'src/time-clock/root/TimeClockRootHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrateAfter(TimeClockRootHydration, {
+        serverHtml,
+        props,
+        before: (server) => {
+          const pm = within(server).getByRole('button', { name: dayPeriodOf(15) });
+          pm.focus();
+          expect(pm).toHaveFocus();
+        },
+      });
+
+      expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+      expect(within(container).getByRole('slider')).toHaveFocus();
     });
 
     // A `-u-hc-` keyword gives the server another hour cycle than the browser, as other `Intl` data
