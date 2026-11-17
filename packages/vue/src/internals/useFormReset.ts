@@ -11,7 +11,7 @@ import { useKeepAliveState } from './useKeepAliveState';
  * The browser resets the controls after the listeners of the `reset` event, and a listener that
  * runs later can still prevent the event. `onReset` thus runs in a timeout of 0 ms, and only when
  * no listener prevented the event. It does not run when the event is for another form. The
- * listener follows the input to another root node.
+ * listener of a shown part follows the input to another root node.
  * @param input The element of a control that has a `form`, such as a hidden `<input>`. A ref that a
  * `ref` setter writes.
  * @param onReset Gets the `reset` event.
@@ -51,8 +51,10 @@ export function useFormReset(
         return addEventListener(target, 'reset', handleReset);
       }
 
-      // A reset stays in its shadow root. A leave transition can keep a held input in the
-      // document until it ends. No hook runs at that end, but the held form moves with the input.
+      // A `reset` event does not leave a shadow root, so a shown part listens on the root node.
+      // The change of `isHeld` starts this listener at activation. A leave transition keeps a
+      // held input in the document until it ends, and no hook runs at that end. A form in the
+      // held branch moves with the input, so a held part listens on the form of the input.
       if (held) {
         const form = (element as HTMLInputElement).form;
         if (form) {

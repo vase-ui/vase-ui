@@ -29,7 +29,8 @@ export function sanitizeValue(
  *
  * A text input removes CR and LF from its value, so the form gets other text than the value of
  * the part. Each submission and each `new FormData(form)` sends `formdata` to the form, and a
- * listener of that event can change the entries. The listener follows the input to another root node.
+ * listener of that event can change the entries. The listener of a shown part follows the input
+ * to another root node.
  * @param input The element of the control. A ref that a `ref` setter writes.
  * @param getValue Gives the value of the part as text.
  */
@@ -97,13 +98,16 @@ export function useFormEntryValue(
         return;
       }
 
-      // Capture lets the listeners of the consumer on the form read the value of the part.
+      // In the capture phase, the listener changes the entry before the listeners of the consumer
+      // on the form.
       function listen(target: Node) {
         return addEventListener(target, 'formdata', handleFormData, { capture: true });
       }
 
-      // A `formdata` event stays in its shadow root. A held form moves with the input, also
-      // after a leave transition ends without a hook.
+      // A `formdata` event does not leave a shadow root, so a shown part listens on the root node.
+      // The change of `isHeld` starts this listener at activation. A leave transition keeps a
+      // held input in the document until it ends, and no hook runs at that end. A form in the
+      // held branch moves with the input, so a held part listens on the form of the input.
       if (held) {
         if (element.form) {
           onCleanup(listen(element.form));
