@@ -96,8 +96,12 @@ function clearActiveIndexForRemovedItem(removedItem: any, event: Event) {
 }
 
 function removeChip(event: MouseEvent | KeyboardEvent) {
+  const selectedValue: unknown = toRaw(store.state).selectedValue;
+  if (!Array.isArray(selectedValue)) {
+    return undefined;
+  }
+
   const eventDetails = createChangeEventDetails(REASONS.chipRemovePress, event);
-  const { selectedValue } = toRaw(store.state);
   const removedItem = selectedValue[index.value];
 
   clearActiveIndexForRemovedItem(removedItem, event);
@@ -122,14 +126,14 @@ const { element, elementProps, setRef } = useRenderElement('button', props, {
       },
       onClick(event: MouseEvent) {
         const eventDetails = removeChip(event);
-        if (!eventDetails.isPropagationAllowed) {
+        if (eventDetails && !eventDetails.isPropagationAllowed) {
           event.stopPropagation();
         }
       },
       onKeydown(event: KeyboardEvent) {
         if (event.key === 'Enter' || event.key === ' ') {
           const eventDetails = removeChip(event);
-          if (!eventDetails.isPropagationAllowed) {
+          if (eventDetails && !eventDetails.isPropagationAllowed) {
             stopEvent(event);
           }
         }

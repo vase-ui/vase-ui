@@ -548,6 +548,35 @@ describe('<Combobox.ChipRemove />', () => {
       const remove = screen.getByTestId('remove');
       expect(remove).toHaveAttribute('tabindex', '-1');
     });
+
+    it.each([
+      { name: 'a null value', value: null },
+      { name: 'a string value', value: 'apple' },
+    ])('VUE-122: ignores a press of the remove button with $name', async ({ value }) => {
+      const handleValueChange = vi.fn();
+      const handleChipClick = vi.fn();
+      const { user } = await render(
+        <Combobox.Root defaultValue={value} onValueChange={handleValueChange}>
+          <Combobox.Chips>
+            <Combobox.Chip onClick={handleChipClick}>
+              apple
+              <Combobox.ChipRemove data-testid="remove" />
+            </Combobox.Chip>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const remove = screen.getByTestId('remove');
+
+      await user.click(remove);
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(handleChipClick).toHaveBeenCalledTimes(1);
+
+      await fireEvent.keyDown(remove, { key: 'Enter' });
+      await fireEvent.keyDown(remove, { key: ' ' });
+      expect(handleValueChange).not.toHaveBeenCalled();
+    });
   });
 
   // A case that throws in `setup` is the last case of its file.

@@ -59,7 +59,6 @@ async function handleKeydown(event: KeyboardEvent) {
   }
 
   const currentIndex = listItem.index.value;
-  const { selectedValue } = toRaw(store.state);
   const [previousChipKey, nextChipKey] = getChipNavigationKeys(direction.value);
   let nextIndex: number | undefined = currentIndex;
 
@@ -70,6 +69,11 @@ async function handleKeydown(event: KeyboardEvent) {
     event.preventDefault();
     nextIndex = currentIndex < chipsRef.value.length - 1 ? currentIndex + 1 : undefined;
   } else if (event.key === 'Backspace' || event.key === 'Delete') {
+    const selectedValue: unknown = toRaw(store.state).selectedValue;
+    if (!Array.isArray(selectedValue)) {
+      return;
+    }
+
     nextIndex = getIndexAfterChipRemoval(currentIndex, selectedValue.length);
 
     stopEvent(event);

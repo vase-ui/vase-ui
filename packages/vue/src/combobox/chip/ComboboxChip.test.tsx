@@ -618,6 +618,40 @@ describe('<Combobox.Chip />', () => {
       await user.click(chip);
       expect(input).toHaveFocus();
     });
+
+    it.each([
+      { name: 'a null value', value: null },
+      { name: 'a string value', value: 'apple' },
+    ])('VUE-122: ignores Backspace and Delete on a chip with $name', async ({ value }) => {
+      const prevented: boolean[] = [];
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <div
+          onKeydown={(event: KeyboardEvent) => {
+            prevented.push(event.defaultPrevented);
+          }}
+        >
+          <Combobox.Root defaultValue={value} onValueChange={handleValueChange}>
+            <Combobox.Chips>
+              <Combobox.Chip data-testid="chip">apple</Combobox.Chip>
+              <Combobox.Input />
+            </Combobox.Chips>
+          </Combobox.Root>
+        </div>,
+      );
+
+      const chip = screen.getByTestId('chip');
+      chip.focus();
+      await flushMicrotasks();
+      await user.keyboard('{Backspace}');
+      await user.keyboard('{Delete}');
+      await flushMicrotasks();
+
+      expect(prevented).toEqual([false, false]);
+      expect(chip).toHaveFocus();
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('combobox')).toHaveValue(value ?? '');
+    });
   });
 
   // A case that throws in `setup` is the last case of its file.
