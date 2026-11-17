@@ -15,6 +15,9 @@
     "directory": "packages/vue"
   },
   "homepage": "https://vase-ui.com/",
+  "bugs": {
+    "url": "https://github.com/vase-ui/vase-ui/discussions/categories/bugs"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
