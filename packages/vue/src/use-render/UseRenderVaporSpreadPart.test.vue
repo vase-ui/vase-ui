@@ -5,6 +5,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{ as?: string | undefined; shown: boolean }>();
 
+// The element has only the spread, so the cases can read the warning for a missing `ref`.
 const { element, elementProps, tag } = useRender(props);
 
 defineExpose({ element });

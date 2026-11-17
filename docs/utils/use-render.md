@@ -54,9 +54,9 @@ A component that calls `useRender` sets `inheritAttrs: false`. It passes its pro
 
 The element binds `elementProps()` with `v-bind`, and `setRef` by name with `:ref`. [Vapor mode](/handbook/composition#vapor-mode) applies only a ref bound by name and ignores the `ref` key of a bound object ([vuejs/core#15900](https://github.com/vuejs/core/pull/15900)).
 
-Call `usesRenderSlot()` in the `v-if` of the `#render` slot. It tells whether the consumer gave the slot. In a development build, it also tells `useRender` that the component renders the slot. A Vapor slot that uses no slot prop never calls `elementProps()`.
+Call `usesRenderSlot()` in the `v-if` of the `#render` slot. It tells whether the consumer gave the slot. In a development build, it also tells `useRender` that the component renders the slot. A slot of a Vapor component reads `props` only when it uses `props`, so `elementProps()` alone does not tell that.
 
-In a development build, `useRender` warns when the `#render` slot gives no element. It also warns when a Vapor component binds `elementProps()` to a native element without a named `ref`. Bind `:ref="setRef"` on that element.
+In a development build, `useRender` warns when the `#render` slot gives no element. It also warns when a Vapor component binds `elementProps()` on a native element and binds no `ref` by name. Bind `:ref="setRef"` on that element.
 
 ## Merging props
 
