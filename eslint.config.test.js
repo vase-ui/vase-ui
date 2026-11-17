@@ -63,6 +63,7 @@ const WAIT_FILES = [
 ];
 const VNODE_HINT = 'mounts a vnode one time';
 const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
+const REF_HINT = 'before the element is in the document';
 
 const reported = [
   {
@@ -907,6 +908,44 @@ const reported = [
     ruleId: 'vue/no-restricted-syntax',
     hint,
   })),
+  ...[
+    ['a focus call in a function ref of JSX', '<input ref={(element) => element?.focus()} />'],
+    ['a click call in a function ref of JSX', '<input ref={(element) => element?.click()} />'],
+    [
+      'a select call in a block function ref of JSX',
+      '<input\n  ref={(element) => {\n    if (element) {\n      element.select();\n    }\n  }}\n/>',
+    ],
+    ['a blur call in a function ref of JSX', '<input ref={(element) => element?.blur()} />'],
+    [
+      'a focus call with options in a function ref of JSX',
+      '<input ref={(element) => element?.focus({ preventScroll: true })} />',
+    ],
+    [
+      'a focus call in the ref key of h',
+      "h('input', { ref: (element) => (element as HTMLInputElement | null)?.focus() })",
+    ],
+  ].flatMap(([name, code]) =>
+    [
+      ['a test file', `${SRC}/DialogRoot.test.tsx`],
+      ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
+    ].map(([place, file]) => ({
+      name: `${name} in ${place}`,
+      file,
+      code: `import { h } from 'vue';\n\nexport const node = () => ${code};\n`,
+      ruleId: 'no-restricted-syntax',
+      hint: REF_HINT,
+    })),
+  ),
+  {
+    name: 'a focus call in a function ref of a bound ref in a test SFC',
+    file: `${SRC}/DialogRootInTemplate.test.vue`,
+    code: docsSfc(
+      '',
+      '<input :ref="(element) => (element as HTMLInputElement | null)?.focus()" />',
+    ),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: REF_HINT,
+  },
   {
     name: 'a style block in a Tailwind demo',
     file: 'docs/demos/sample/hero/tailwind/index.vue',
@@ -1099,6 +1138,26 @@ const passed = [
     name: 'a queryBy query for an absence after a wait on an element that the test holds',
     file: `${SRC}/DialogRoot.test.tsx`,
     code: `${WAIT_IMPORT}const dialog = screen.getByRole('dialog');\nawait waitFor(() => {\n  expect(dialog).not.toBeInTheDocument();\n});\nexpect(screen.queryByRole('dialog')).toBe(null);\nexpect(within(document.body).queryAllByRole('option')).toHaveLength(0);\n`,
+  },
+  {
+    name: 'a focus call in onMounted and a ref that stores the element',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { defineComponent, onMounted, shallowRef } from 'vue';\n\nexport const Focused = defineComponent(() => {\n  const input = shallowRef<HTMLInputElement | null>(null);\n  onMounted(() => input.value?.focus());\n  return () => <input ref={input} />;\n});\n",
+  },
+  {
+    name: 'a focus call in onVnodeMounted in a slot function',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { h } from 'vue';\n\nexport const render = ({ props }: { props: Record<string, unknown> }) =>\n  h('input', { ...props, onVnodeMounted: ({ el }) => (el as HTMLElement).focus() });\n",
+  },
+  {
+    name: 'a call of select with an argument in a function ref',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "declare const store: { select: (key: string) => unknown };\n\nexport const node = () => <input ref={() => store.select('open')} />;\n",
+  },
+  {
+    name: 'a focus call in a function ref in a source file',
+    file: `${SRC}/DialogRoot.ts`,
+    code: "import { h } from 'vue';\n\nexport const node = () => h('input', { ref: (element) => (element as HTMLElement | null)?.focus() });\n",
   },
   {
     name: 'a getBy query in waitFor in a shared suite',
