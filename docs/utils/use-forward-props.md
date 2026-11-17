@@ -70,7 +70,7 @@ One case can warn without a fault. A wrapper declares the prop without a default
 
 Vue does not expose the caller's set props to this helper in a Vapor wrapper. The helper warns in development and forwards each value other than `undefined`. An absent Boolean prop can thus remain `false`. Vue does not expose the declared events either, so `useForwardPropsEmits` warns in development and forwards no event.
 
-Give each optional Boolean prop the default `undefined`, or leave it undeclared and pass `$attrs` to the part. The same fallback applies to a call outside component setup.
+Give each optional Boolean prop the default `undefined`. Bind `props` on the part without this helper. You can instead leave the prop undeclared and pass `$attrs` to the part. Leave events undeclared so `$attrs` passes their listeners to the part. The same fallback applies to a call outside component setup.
 
 ## API reference
 

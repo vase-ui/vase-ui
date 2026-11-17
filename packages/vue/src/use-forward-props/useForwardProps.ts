@@ -27,10 +27,10 @@ export function useForwardProps<Props extends object>(
   if (!instance) {
     if (process.env.NODE_ENV !== 'production') {
       warn(
-        '`useForwardProps` ran with no virtual DOM component.',
-        'It cannot read the props that the caller set. It forwards each prop that is not `undefined`.',
-        'An absent Boolean prop can thus keep the value `false`.',
-        'Call it in the `setup` of a component that is not a Vapor component.',
+        '`useForwardProps` ran with no virtual DOM component, so it cannot read the props that the caller set.',
+        'It forwards each prop that is not `undefined`, so an absent Boolean prop can keep the value `false`.',
+        'In a Vapor component, give each optional Boolean prop the default `undefined` and bind `props` without this function.',
+        'Elsewhere, call it in the `setup` of a component.',
       );
     }
     return computed(
