@@ -39,6 +39,7 @@ test('readPageSnippets gives the path and the line number of each VitePress snip
     '<<< ./Titled.vue [Sample title]',
     '  <<< ./Indented.vue',
     '<<< @/examples/AtRoot.vue#part{1,2} [From docs]',
+    '<<< ./Bracketed.vue{ts twoslash} [Props [1]]',
   ].join('\n');
   assert.deepEqual(readPageSnippets(text), [
     { line: 1, path: './Plain.vue' },
@@ -47,6 +48,7 @@ test('readPageSnippets gives the path and the line number of each VitePress snip
     { line: 4, path: './Titled.vue' },
     { line: 5, path: './Indented.vue' },
     { line: 6, path: '@/examples/AtRoot.vue' },
+    { line: 7, path: './Bracketed.vue' },
   ]);
 });
 

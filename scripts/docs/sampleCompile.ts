@@ -7,8 +7,7 @@ const IGNORED_DOCS_FOLDERS = new Set(['.vitepress', 'node_modules']);
 const SAMPLE_SCOPE_ID = 'sample';
 
 const SNIPPET_LINE = /^\s*<<<\s*(.+?)\s*$/;
-const SNIPPET_TITLE = /\s*\[[^\]]+\]$/;
-const SNIPPET_BRACES = /\s*\{[^}]*\}$/;
+const SNIPPET_TITLE = /\s*\[.+\]$/;
 const SNIPPET_REGION = /#[\w.-]+$/;
 
 export interface PageSnippet {
@@ -36,11 +35,12 @@ export function readPageSnippets(text: string): PageSnippet[] {
       return [];
     }
     // VitePress removes the title, the braces and the region from the right, in that sequence.
-    const path = match[1]
-      .replace(SNIPPET_TITLE, '')
-      .replace(SNIPPET_BRACES, '')
-      .replace(SNIPPET_REGION, '')
-      .trim();
+    let path = match[1].replace(SNIPPET_TITLE, '');
+    const braceStart = path.lastIndexOf('{');
+    if (path.endsWith('}') && braceStart > 0) {
+      path = path.slice(0, braceStart).trimEnd();
+    }
+    path = path.replace(SNIPPET_REGION, '').trim();
     return path === '' ? [] : [{ line: index + 1, path }];
   });
 }
@@ -69,14 +69,12 @@ function walkDocsDirectory(
   }
 }
 
-export function listSampleFiles(root = REPOSITORY_ROOT): SampleFiles {
+export function listSampleFiles(root: string): SampleFiles {
   const docsRoot = join(root, 'docs');
   const vueFiles = new Set<string>();
   const pages: string[] = [];
   const problems: string[] = [];
-  if (existsSync(docsRoot)) {
-    walkDocsDirectory(root, docsRoot, vueFiles, pages);
-  }
+  walkDocsDirectory(root, docsRoot, vueFiles, pages);
   pages.sort();
   for (const page of pages) {
     const pageFile = join(root, page);
@@ -101,7 +99,7 @@ export function listSampleFiles(root = REPOSITORY_ROOT): SampleFiles {
 export function compileSampleFile(
   filename: string,
   text: string,
-  root = REPOSITORY_ROOT,
+  root: string,
 ): string | undefined {
   const pathFromRoot = toPosixPath(relative(root, filename));
   const { descriptor, errors } = parse(text, { filename });
