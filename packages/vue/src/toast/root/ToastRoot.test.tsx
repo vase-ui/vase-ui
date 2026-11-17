@@ -14,10 +14,9 @@ import {
   waitFor,
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManagerAddOptions } from '../useToastManager';
-import { List, Button } from '../utils/test-utils';
+import { List, Button, ToastWithDialog } from '../utils/test-utils';
 import { toastRootStateAttributesMapping } from './ToastRoot.vue';
 
 const toast: Toast.Root.ToastObject = {
@@ -1050,21 +1049,7 @@ describe('<Toast.Root />', () => {
       const manager = Toast.createToastManager();
       const onOpenChange = vi.fn();
       const result = await render(
-        <Toast.Provider toastManager={manager}>
-          <Dialog.Root defaultOpen onOpenChange={onOpenChange}>
-            <Dialog.Portal>
-              <Dialog.Popup data-testid="dialog">
-                <Dialog.Title>Dialog</Dialog.Title>
-                <button type="button">in dialog</button>
-              </Dialog.Popup>
-            </Dialog.Portal>
-          </Dialog.Root>
-          <Toast.Portal>
-            <Toast.Viewport data-testid="viewport">
-              <ToastTextList />
-            </Toast.Viewport>
-          </Toast.Portal>
-        </Toast.Provider>,
+        <ToastWithDialog manager={manager} onOpenChange={onOpenChange} />,
       );
       manager.add({ id: 'toast', title: 'Saved', timeout: 0 });
       await flushMicrotasks();

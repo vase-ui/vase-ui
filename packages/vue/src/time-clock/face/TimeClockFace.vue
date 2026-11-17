@@ -116,8 +116,13 @@ const valueText = computed(() =>
   }),
 );
 
+// A template can mount the face that replaces this face before it unmounts this face.
 function setInputElement(value: unknown) {
-  inputElement.value = value as HTMLInputElement | null;
+  const input = value as HTMLInputElement | null;
+  if (input !== null || root.inputElement.value === inputElement.value) {
+    root.inputElement.value = input;
+  }
+  inputElement.value = input;
 }
 
 function onInput(event: Event) {

@@ -30,7 +30,7 @@ import type { ToastManager } from '../createToastManager';
 import { Toast } from '@vase-ui/vue/toast';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import type { ToastStore } from '../store';
-import { List, Button } from '../utils/test-utils';
+import { List, Button, ToastWithDialog } from '../utils/test-utils';
 import ToastViewportHydration from './ToastViewportHydration.test.vue';
 import ToastViewportScoped from './ToastViewportScoped.test.vue';
 
@@ -909,6 +909,101 @@ describe('<Toast.Viewport />', () => {
 
     expect(root).not.toHaveAttribute('data-swiping');
     expect(viewport).not.toHaveAttribute('data-expanded');
+  });
+
+  describe('VUE-130: Escape in the viewport', () => {
+    it('returns the focus to the F6 origin and keeps a modal dialog open', async () => {
+      const manager = Toast.createToastManager();
+      const onOpenChange = vi.fn();
+      const { user } = await render(
+        <ToastWithDialog manager={manager} onOpenChange={onOpenChange} />,
+      );
+      manager.add({ id: 'toast', title: 'Saved', timeout: 0 });
+      await flushMicrotasks();
+
+      const inDialog = screen.getByRole('button', { name: 'in dialog' });
+      // The dialog takes the focus in a frame after it opens. A step before that frame loses the
+      // focus to the dialog.
+      await waitFor(() => {
+        expect(inDialog).toHaveFocus();
+      });
+
+      await user.keyboard('{F6}');
+      expect(screen.getByTestId('viewport')).toHaveFocus();
+
+      await user.keyboard('{Escape}');
+
+      expect(inDialog).toHaveFocus();
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('dialog')).not.toHaveAttribute('data-ending-style');
+      expect(screen.getByTestId('toast')).not.toHaveAttribute('data-ending-style');
+
+      await user.keyboard('{Escape}');
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.calls[0]?.[0]).toBe(false);
+    });
+
+    it('stops only an Escape that returns the focus', async () => {
+      const manager = Toast.createToastManager();
+      await renderViewport(manager);
+      manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
+      await flushMicrotasks();
+
+      const origin = screen.getByTestId('origin');
+      const viewport = screen.getByTestId('viewport');
+      const keys: string[] = [];
+      const record = (event: KeyboardEvent) => keys.push(event.key);
+      document.addEventListener('keydown', record);
+      onTestFinished(() => document.removeEventListener('keydown', record));
+
+      viewport.focus();
+      await fireEvent.keyDown(viewport, { key: 'Escape' });
+      expect(viewport).toHaveFocus();
+      expect(keys).toEqual(['Escape']);
+
+      origin.focus();
+      await fireEvent.keyDown(origin, { key: 'F6' });
+      expect(viewport).toHaveFocus();
+
+      await fireEvent.keyDown(viewport, { key: 'Enter' });
+      await fireEvent.keyDown(viewport, { key: 'Escape' });
+
+      expect(origin).toHaveFocus();
+      expect(keys).toEqual(['Escape', 'F6', 'Enter']);
+    });
+
+    it('returns the focus for an Escape on an element in the viewport that no toast handles', async () => {
+      const manager = Toast.createToastManager();
+      const { user } = await render(
+        <Toast.Provider toastManager={manager}>
+          <button type="button" data-testid="origin">
+            origin
+          </button>
+          <Toast.Viewport data-testid="viewport">
+            <button type="button">in viewport</button>
+            <ToastTextList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
+      await flushMicrotasks();
+
+      const origin = screen.getByTestId('origin');
+      const inViewport = screen.getByRole('button', { name: 'in viewport' });
+      const keys: string[] = [];
+      const record = (event: KeyboardEvent) => keys.push(event.key);
+      document.addEventListener('keydown', record);
+      onTestFinished(() => document.removeEventListener('keydown', record));
+
+      origin.focus();
+      await user.keyboard('{F6}');
+      inViewport.focus();
+      await user.keyboard('{Escape}');
+
+      expect(origin).toHaveFocus();
+      expect(keys).toEqual(['F6']);
+    });
   });
 
   describe('timers', () => {
