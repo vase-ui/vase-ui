@@ -22,6 +22,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # CONTRIBUTING.md, "Where a test runs", gives the rule for each `timeout-minutes`.
+#
+# A job that starts a browser runs in the Playwright image, which has the browsers and their
+# system packages. The user 1001 owns the home folder of the job, and Firefox does not start in a
+# home folder of another user. `--ipc=host` gives Chromium the shared memory of the runner.
+# CONTRIBUTING.md, "Tool versions", says when to change the tag.
 jobs:
   # A pull request runs only the tests that its changed files can affect. The merge queue skips
   # this job, so each test job there runs each test file. CONTRIBUTING.md, "Where a test runs",
@@ -124,6 +129,9 @@ jobs:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 15
     permissions:
       contents: read
@@ -159,7 +167,6 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps ${{ matrix.engine }}
       - uses: ./.github/actions/vitest
         with:
           command: ${{ needs.select.outputs.vitest-command }}
@@ -170,6 +177,9 @@ jobs:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 15
     permissions:
       contents: read
@@ -184,7 +194,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.12
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - uses: ./.github/actions/vitest
         with:
           command: ${{ needs.select.outputs.vitest-command }}
@@ -198,6 +207,9 @@ jobs:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.fixtures != 'false' }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 10
     permissions:
       contents: read
@@ -211,7 +223,6 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox webkit
       - run: pnpm build
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm test:nuxt
@@ -222,6 +233,9 @@ jobs:
   # search box.
   docs-axe:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 20
     permissions:
       contents: read
@@ -235,7 +249,6 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox
       - run: pnpm build
       - run: pnpm docs:build
       - run: pnpm docs:axe
@@ -247,6 +260,9 @@ jobs:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 25
     continue-on-error: true
     permissions:
@@ -262,7 +278,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - uses: ./.github/actions/vitest
         with:
           command: ${{ needs.select.outputs.vitest-command }}
@@ -289,6 +304,9 @@ jobs:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 10
     permissions:
       contents: read
@@ -303,7 +321,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - uses: ./.github/actions/vitest
         with:
           project: vapor-parts
