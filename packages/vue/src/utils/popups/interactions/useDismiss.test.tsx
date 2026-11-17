@@ -2632,59 +2632,66 @@ describe('useDismiss', () => {
     const intentional = { outsidePressEvent: 'intentional' } as const;
     const popupTree = ['parent', 'child', 'grandchild'];
 
-    function renderPopupTree() {
-      return render(
-        <Tree>
-          <Popup name="parent" node dismiss={intentional}>
-            <Popup name="child" node teleport dismiss={intentional}>
-              <Popup name="grandchild" node teleport dismiss={intentional}>
-                <button
-                  type="button"
-                  data-testid="scrubber"
-                  onPointerdown={(event: PointerEvent) => event.preventDefault()}
-                >
-                  Scrub
-                </button>
-              </Popup>
+    function renderDescendants(withNodes: boolean, onParentChange?: (change: Change) => void) {
+      const descendants = () => (
+        <Popup name="parent" node={withNodes} dismiss={intentional} onChange={onParentChange}>
+          <Popup name="child" node={withNodes} teleport dismiss={intentional}>
+            <Popup name="grandchild" node={withNodes} teleport dismiss={intentional}>
+              <button
+                type="button"
+                data-testid="scrubber"
+                onPointerdown={(event: PointerEvent) => event.preventDefault()}
+              >
+                Scrub
+              </button>
             </Popup>
           </Popup>
-        </Tree>,
+        </Popup>
       );
+      return render(withNodes ? <Tree>{descendants()}</Tree> : descendants());
     }
 
-    it.each([
-      { name: 'pointerdown', press: fireEvent.pointerDown, release: fireEvent.pointerUp },
-      { name: 'mousedown', press: fireEvent.mouseDown, release: fireEvent.mouseUp },
-    ])(
-      'VUE-4: a $name drag from a descendant keeps each ancestor open',
-      async ({ press, release }) => {
-        await renderPopupTree();
+    describe.each([
+      { name: 'in the popup tree', withNodes: true },
+      { name: 'outside the popup tree', withNodes: false },
+    ])('descendants $name', ({ withNodes }) => {
+      it.each([
+        { name: 'pointerdown', press: fireEvent.pointerDown, release: fireEvent.pointerUp },
+        { name: 'mousedown', press: fireEvent.mouseDown, release: fireEvent.mouseUp },
+      ])(
+        'VUE-4: a $name drag from a descendant keeps each ancestor open',
+        async ({ press, release }) => {
+          const parentChanges: Change[] = [];
+          await renderDescendants(withNodes, (change) => parentChanges.push(change));
 
-        await press(screen.getByTestId('grandchild'), { pointerType: 'mouse', button: 0 });
-        // The inside marker expires before the release.
+          await press(screen.getByTestId('grandchild'), { pointerType: 'mouse', button: 0 });
+          // The inside marker expires before the release.
+          await wait(0);
+          await release(document.body, { pointerType: 'mouse', button: 0 });
+          await fireEvent.click(document.body);
+          expect(parentChanges).toEqual([]);
+          expect(popupTree.map(isOpen)).toEqual([true, true, true]);
+
+          await fireEvent.click(document.body);
+          expect(parentChanges.map(({ reason }) => reason)).toEqual([REASONS.outsidePress]);
+          expect(popupTree.map(isOpen)).toEqual([false, false, false]);
+        },
+      );
+
+      it('VUE-4: the suppression of a prevented press in a descendant expires in each ancestor', async () => {
+        await renderDescendants(withNodes);
+
+        await fireEvent.pointerDown(screen.getByTestId('scrubber'), {
+          pointerType: 'mouse',
+          button: 0,
+        });
         await wait(0);
-        await release(document.body, { pointerType: 'mouse', button: 0 });
-        await fireEvent.click(document.body);
-        expect(popupTree.map(isOpen)).toEqual([true, true, true]);
-
+        await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+        // A prevented press can produce no click, so only the timer ends its suppression.
+        await wait(0);
         await fireEvent.click(document.body);
         expect(popupTree.map(isOpen)).toEqual([false, false, false]);
-      },
-    );
-
-    it('VUE-4: the suppression of a prevented press in a descendant expires in each ancestor', async () => {
-      await renderPopupTree();
-
-      await fireEvent.pointerDown(screen.getByTestId('scrubber'), {
-        pointerType: 'mouse',
-        button: 0,
       });
-      await wait(0);
-      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
-      // A prevented press can produce no click, so only the timer ends its suppression.
-      await wait(0);
-      await fireEvent.click(document.body);
-      expect(popupTree.map(isOpen)).toEqual([false, false, false]);
     });
 
     it('VUE-4: a press in a descendant outside the popup tree suppresses no later click', async () => {
@@ -2701,6 +2708,48 @@ describe('useDismiss', () => {
       await wait(0);
       await fireEvent.click(document.body);
       expect(['parent', 'child'].map(isOpen)).toEqual([false, false]);
+    });
+
+    it('VUE-4: a drag from a child popup to its own backdrop suppresses no later click in the popup above', async () => {
+      const parentChanges: Change[] = [];
+      await render(
+        <Popup
+          name="parent"
+          dismiss={intentional}
+          onChange={(change: Change) => parentChanges.push(change)}
+        >
+          <Popup
+            name="child"
+            portalContainer={document.body}
+            portalBackdrop
+            dismiss={intentional}
+          />
+        </Popup>,
+      );
+
+      const child = screen.getByTestId('child');
+      const childBackdrop = screen.getByTestId('child-backdrop');
+      const portal = childBackdrop.parentElement;
+      if (!portal) {
+        throw new Error('Expected portal element');
+      }
+
+      await Promise.all([
+        fireEvent.pointerDown(child, { pointerType: 'mouse', button: 0 }),
+        fireEvent.mouseDown(child, { button: 0 }),
+      ]);
+      await wait(0);
+      await Promise.all([
+        fireEvent.pointerUp(childBackdrop, { pointerType: 'mouse', button: 0 }),
+        fireEvent.mouseUp(childBackdrop, { button: 0 }),
+        fireEvent.click(portal, { detail: 1 }),
+      ]);
+      expect(isOpen('parent')).toBe(true);
+
+      await wait(0);
+      await clickWithNoPress(document.body);
+      expect(parentChanges.map(({ reason }) => reason)).toEqual([REASONS.outsidePress]);
+      expect(isOpen('parent')).toBe(false);
     });
 
     it('VUE-4: a press in a child popup that Teleport moved does not close the parent popup', async () => {
@@ -2813,6 +2862,62 @@ describe('useDismiss', () => {
 
       await userEvent.click(outside);
       await flushMicrotasks();
+      expect(isOpen('parent')).toBe(false);
+    });
+
+    it.each([
+      { name: 'pointerdown', press: fireEvent.pointerDown, release: fireEvent.pointerUp },
+      { name: 'mousedown', press: fireEvent.mouseDown, release: fireEvent.mouseUp },
+    ])(
+      'VUE-4: a $name drag from a portal that no popup owns keeps the popup above open',
+      async ({ press, release }) => {
+        const parentChanges: Change[] = [];
+        await render(
+          <Popup
+            name="parent"
+            dismiss={intentional}
+            onChange={(change: Change) => parentChanges.push(change)}
+          >
+            <FloatingPortal>
+              <button type="button" data-testid="portaled" />
+            </FloatingPortal>
+          </Popup>,
+        );
+
+        await press(screen.getByTestId('portaled'), { pointerType: 'mouse', button: 0 });
+        await wait(0);
+        await release(document.body, { pointerType: 'mouse', button: 0 });
+        await fireEvent.click(document.body);
+        expect(parentChanges).toEqual([]);
+        expect(isOpen('parent')).toBe(true);
+
+        await fireEvent.click(document.body);
+        expect(parentChanges.map(({ reason }) => reason)).toEqual([REASONS.outsidePress]);
+        expect(isOpen('parent')).toBe(false);
+      },
+    );
+
+    it('VUE-4: the suppression of a prevented press in a portal that no popup owns expires in the popup above', async () => {
+      await render(
+        <Popup name="parent" dismiss={intentional}>
+          <FloatingPortal>
+            <button
+              type="button"
+              data-testid="portaled"
+              onPointerdown={(event: PointerEvent) => event.preventDefault()}
+            />
+          </FloatingPortal>
+        </Popup>,
+      );
+
+      await fireEvent.pointerDown(screen.getByTestId('portaled'), {
+        pointerType: 'mouse',
+        button: 0,
+      });
+      await wait(0);
+      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+      await wait(0);
+      await fireEvent.click(document.body);
       expect(isOpen('parent')).toBe(false);
     });
 

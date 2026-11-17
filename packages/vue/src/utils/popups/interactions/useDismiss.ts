@@ -99,8 +99,10 @@ function hostsPopup(target: EventTarget) {
 }
 
 interface DismissParent {
+  addElementBelow(getElement: () => Element | null | undefined): () => void;
   markInsideComponentTree(): void;
-  markInsidePortal(portal: Element): void;
+  markInsidePortal(portal: Element, event: Event): void;
+  markPortalPressStartPrevented(portal: Element, event: PointerEvent | MouseEvent): void;
   markPressStartedInside(event: PointerEvent | MouseEvent): void;
   markInsidePressStartPrevented(event: PointerEvent | MouseEvent): void;
   handleKeydown(event: KeyboardEvent): void;
@@ -208,9 +210,9 @@ export interface UseDismissProps {
  * Closes the floating element when a dismissal is requested — by default, when
  * the user presses the `escape` key or outside of the floating element.
  *
- * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
- * the popup, also when `Teleport` moved it, with each part in its portal, such as its backdrop.
- * Other content that `Teleport` moved out of the popup is outside it.
+ * Call it in the `setup` of the root of the popup. Each popup and each portal part below that root
+ * then count as inside the popup, also when `Teleport` moved them. Other content that `Teleport`
+ * moved out of the popup is outside it.
  *
  * Base UI differs in its boundary. It counts only the React children of the popup element as
  * inside, and that includes content that a React portal moves out of the element. Here the
@@ -281,8 +283,53 @@ export function useDismiss(
 
   const parent = inject(DismissParentContext, undefined);
 
-  // The popup tree cannot replace the marker. Dialog, Select, Combobox and Tooltip register no
-  // node, and a Select in a Popover must not close the Popover.
+  // Holds the positioner of each popup below and each portal element below. A release on a child
+  // backdrop sets the inside marker for the click, so the release check must count that portal as
+  // inside too.
+  const elementsBelow = new Set<() => Element | null | undefined>();
+
+  function addElementBelow(getElement: () => Element | null | undefined) {
+    elementsBelow.add(getElement);
+    const removeFromParent = parent?.addElementBelow(getElement);
+    return () => {
+      elementsBelow.delete(getElement);
+      removeFromParent?.();
+    };
+  }
+
+  function ownsPortal(portal: Element) {
+    const currentStore = getStore();
+    return (
+      contains(portal, currentStore.select('positionerElement')) ||
+      contains(portal, currentStore.context.backdropRef?.value) ||
+      contains(portal, currentStore.context.internalBackdropRef?.value)
+    );
+  }
+
+  function someElementBelow(predicate: (element: Element) => boolean) {
+    const nodeId = getStore().context.positioning?.nodeId;
+    if (
+      tree.value &&
+      getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) => {
+        const floatingElement = node.context?.elements.floating;
+        return floatingElement != null && predicate(floatingElement);
+      })
+    ) {
+      return true;
+    }
+
+    for (const getElement of elementsBelow) {
+      const element = getElement();
+      if (element && !ownsPortal(element) && predicate(element)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // In a closed shadow root, `composedPath()` at the document hides the target, and a press can
+  // unmount a child before the target listener runs. The capture listeners thus set this marker too.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
   function clearInsideComponentTree() {
@@ -303,18 +350,23 @@ export function useDismiss(
 
   // The portal of this popup can hold its backdrop and its other parts outside the popup element.
   // A press there is outside this popup and inside the popups above, so only they get the marker.
-  // A portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
+  // No popup records a press start there, because the backdrop can unmount before the release. A
+  // portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
   // popup.
-  function markInsidePortal(portal: Element) {
-    const store = getStore();
-    if (
-      contains(portal, store.select('positionerElement')) ||
-      contains(portal, store.context.backdropRef?.value) ||
-      contains(portal, store.context.internalBackdropRef?.value)
-    ) {
+  function markInsidePortal(portal: Element, event: Event) {
+    if (ownsPortal(portal)) {
       parent?.markInsideComponentTree();
-    } else {
-      markInsideComponentTree();
+      return;
+    }
+    markInsideComponentTree();
+    if (event.type === 'pointerdown' || event.type === 'mousedown') {
+      markPressStartedInside(event as PointerEvent | MouseEvent);
+    }
+  }
+
+  function markPortalPressStartPrevented(portal: Element, event: PointerEvent | MouseEvent) {
+    if (!ownsPortal(portal)) {
+      markInsidePressStartPrevented(event);
     }
   }
 
@@ -387,8 +439,10 @@ export function useDismiss(
   }
 
   provide(DismissParentContext, {
+    addElementBelow,
     markInsideComponentTree,
     markInsidePortal,
+    markPortalPressStartPrevented,
     markPressStartedInside,
     markInsidePressStartPrevented,
     handleKeydown(event) {
@@ -399,8 +453,7 @@ export function useDismiss(
   });
 
   // The inside marker expires in its timer before the release of a held press. The record of the
-  // press start lasts until the release, so each popup above a child popup needs it too. A drag
-  // from a nested popover to an outside element thus closes no popover above it (`VUE-4`).
+  // press start lasts until the release, so each popup above needs it too (`VUE-4`).
   function markPressStartedInside(event: PointerEvent | MouseEvent) {
     parent?.markPressStartedInside(event);
     if (!getStore().select('open') || !isEnabled() || event.button !== 0) {
@@ -408,17 +461,13 @@ export function useDismiss(
     }
 
     const target = getTarget(event) as Element | null;
-    const nodeId = getStore().context.positioning?.nodeId;
-    const insideChild =
-      tree.value &&
-      getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
-        contains(node.context?.elements.floating, target),
-      );
 
-    // The release check uses this popup tree, so the start uses the same boundary. A child popup
-    // of another family has no node in this tree. A record of its press would leave a suppression
-    // after a release in that child.
-    if (!contains(getStore().select('positionerElement'), target) && !insideChild) {
+    // `NavigationMenu.List` puts the `floating` handlers on the list element, outside the
+    // positioner. A press on the list must not record a start for the popup.
+    if (
+      !contains(getStore().select('positionerElement'), target) &&
+      !someElementBelow((element) => contains(element, target))
+    ) {
       return;
     }
 
@@ -603,15 +652,11 @@ export function useDismiss(
       );
     }
 
-    function isEventWithinFloatingTree(event: Event) {
-      const nodeId = getStore().context.positioning?.nodeId;
-      const targetIsInsideChildren =
-        tree.value &&
-        getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
-          isEventWithin(event, node.context?.elements.floating),
-        );
-
-      return isEventWithinOwnElements(event) || targetIsInsideChildren;
+    function isEventWithinPopupOrBelow(event: Event) {
+      return (
+        isEventWithinOwnElements(event) ||
+        someElementBelow((element) => isEventWithin(event, element))
+      );
     }
 
     function closeOnPressOutside(event: MouseEvent | PointerEvent | TouchEvent) {
@@ -718,7 +763,7 @@ export function useDismiss(
         }
       }
 
-      if (isEventWithinFloatingTree(event)) {
+      if (isEventWithinPopupOrBelow(event)) {
         return;
       }
 
@@ -900,7 +945,7 @@ export function useDismiss(
         return;
       }
 
-      if (isEventWithinFloatingTree(event)) {
+      if (isEventWithinPopupOrBelow(event)) {
         return;
       }
 
@@ -1095,15 +1140,18 @@ export function useDismiss(
   );
 
   const getPositionerElement = () => getStore().select('positionerElement');
+  let removePositionerBelow: (() => void) | undefined;
 
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
   onMounted(() => {
     getPositionerElementGetters().add(getPositionerElement);
+    removePositionerBelow = parent?.addElementBelow(getPositionerElement);
     update();
   });
   watch(isHeld, update, { flush: 'sync' });
   onScopeDispose(() => {
+    removePositionerBelow?.();
     getPositionerElementGetters().delete(getPositionerElement);
     listenedStore?.context.events.off('openchange', handleOpenChange);
     cleanup?.();
@@ -1143,15 +1191,15 @@ export function useDismiss(
 }
 
 /**
- * Counts a press in the portal element of a popup as inside the popups above that popup. Call it in
- * the `setup` of the portal, with its element as a ref or a getter. It adds no listener when no
- * `useDismiss` call is above the portal.
+ * Registers a portal element with the `useDismiss` calls above it, and marks a press in the portal
+ * element as inside them. Call it in the `setup` of the portal, with its element as a ref or a
+ * getter. It does nothing when no `useDismiss` call is above the portal.
  *
  * The portal element can hold parts of the popup outside the popup element, such as the backdrop
  * and the positioner. A press on such a part reaches no listener of the popup element. The press
- * counts as outside the popup that owns the portal. A popup owns the portal when its positioner
- * element is in the portal element. A portal that no popup owns counts as inside the nearest popup
- * above it.
+ * counts as outside the popup that owns the portal. A popup owns the portal when its positioner or
+ * its backdrop is in the portal element. A portal that no popup owns counts as inside each popup
+ * above it. A press in such a portal also records a press start and its prevented state.
  *
  * The composable adds its listeners with `addEventListener`. Vue stamps an event in the first Vue
  * listener that gets it. Vue then skips each later listener that it attached in that millisecond
@@ -1170,12 +1218,17 @@ export function useDismissPortal(portal: MaybeRefOrGetter<Element | null>): void
       if (!element) {
         return;
       }
-      const mark = () => parent.markInsidePortal(element);
+      const mark = (event: Event) => parent.markInsidePortal(element, event);
+      const markPrevented = (event: PointerEvent | MouseEvent) =>
+        parent.markPortalPressStartPrevented(element, event);
       onCleanup(
         mergeCleanups(
+          parent.addElementBelow(() => element),
           ...PRESS_EVENTS.map((type) =>
             addEventListener(element, type, mark, { capture: true, passive: true }),
           ),
+          addEventListener(element, 'pointerdown', markPrevented),
+          addEventListener(element, 'mousedown', markPrevented),
         ),
       );
     },
