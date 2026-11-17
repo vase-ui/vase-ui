@@ -76,7 +76,6 @@ const ProbeInput = defineComponent({
 
 <script setup lang="ts">
 import type { DateTimeFieldChangeEventDetails } from '../../src/internals/date-time/field/DateTimeFieldContext';
-import DateTimeFieldHiddenInput from '../../src/internals/date-time/field/DateTimeFieldHiddenInput.vue';
 import {
   rootStateAttributesMapping,
   useDateTimeFieldRoot,
@@ -232,5 +231,5 @@ defineExpose({ context: root });
       Clear
     </button>
   </div>
-  <DateTimeFieldHiddenInput :input-props="root.hiddenInputProps()" />
+  <input v-bind="root.hiddenInputProps()" :ref="root.setHiddenInput" />
 </template>

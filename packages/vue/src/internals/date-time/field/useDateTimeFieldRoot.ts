@@ -907,15 +907,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   watch(customMessage, syncCustomValidity, { flush: 'post' });
 
-  // The style is the constant itself, in an object that no `mergeProps` call makes.
-  // `handleHiddenInputInvalid` then keeps the size that it writes.
   function hiddenInputProps() {
     const type = INPUT_TYPES[kind.value] ?? 'text';
     const validationProps = validation.getValidationProps(isDisabled.value);
     return {
       ...validationProps,
       'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-      ref: setHiddenInput,
       type,
       id:
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
@@ -1036,6 +1033,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     hiddenInputElement,
     getRootProps,
     hiddenInputProps,
+    setHiddenInput,
     clear,
   };
 

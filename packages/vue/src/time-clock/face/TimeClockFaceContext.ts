@@ -5,6 +5,8 @@ import type { TimeClockFaceNumber } from '../utils/clockViews';
 export interface TimeClockFaceContext {
   /** Makes the props of the range input of the face. The `children` component calls it in its render. */
   inputProps: () => Record<string, any>;
+  /** The `ref` setter of the range input. The `children` component binds it by name. */
+  setInputElement: (value: unknown) => void;
   /**
    * Keeps the element of a number, so that a press can measure the outer ring. Returns the
    * function that removes the element.

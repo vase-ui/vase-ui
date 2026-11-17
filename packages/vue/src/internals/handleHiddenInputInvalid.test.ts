@@ -1,8 +1,9 @@
-import { expect, describe, it } from 'vitest';
-import { defineComponent, h, shallowRef } from 'vue';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { describe, expect, it, vi } from 'vitest';
+import { h } from 'vue';
+import { createRenderer, isVaporApp, screen } from '#test-utils';
 import { visuallyHiddenInputPinned } from '../common/visuallyHidden';
 import { handleHiddenInputInvalid } from './handleHiddenInputInvalid';
+import HiddenInputPart from './HiddenInputPart.test.vue';
 
 describe('handleHiddenInputInvalid', () => {
   const { render } = createRenderer();
@@ -24,28 +25,23 @@ describe('handleHiddenInputInvalid', () => {
     expect(input).toHaveStyle({ width: '1px', height: '1px' });
   });
 
-  // Vue writes each key of a style again when the `style` object is not the object of the last
-  // render. A part must give the style constant itself, or a render sets the size back to zero.
+  // The template of a part binds the props of its hidden input beside the `ref` setter. Vue then
+  // writes each key of the style of the input again in each render.
   it('keeps the size after a render that changes another attribute of the input', async () => {
-    const count = shallowRef(0);
-    const Test = defineComponent(
-      () => () =>
-        h('input', {
-          type: 'checkbox',
-          required: true,
-          style: visuallyHiddenInputPinned,
-          'data-count': count.value,
-          onInvalid: handleHiddenInputInvalid,
-        }),
-    );
-    await render(h(Test));
+    const { setProps } = await render(h(HiddenInputPart, { count: 0, report: () => {} }));
     const input = screen.getByRole<HTMLInputElement>('checkbox');
     input.checkValidity();
 
-    count.value += 1;
-    await flushMicrotasks();
+    await setProps({ count: 1 });
 
     expect(input).toHaveAttribute('data-count', '1');
     expect(input).toHaveStyle({ width: '1px', height: '1px' });
+  });
+
+  it.runIf(isVaporApp)('gives the input to a part that is a Vapor component', async () => {
+    const report = vi.fn();
+    await render(h(HiddenInputPart, { count: 0, report }));
+
+    expect(report).toHaveBeenCalledExactlyOnceWith(screen.getByRole('checkbox'));
   });
 });

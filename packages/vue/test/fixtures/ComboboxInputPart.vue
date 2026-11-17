@@ -79,7 +79,6 @@ function handleInput(event: Event) {
 
 function inputAttributes() {
   return mergeProps(inputProps.value, {
-    ref: setInputElement,
     value: inputValue.value,
     name: inputOwnsFormValue.value && name.value ? name.value : undefined,
     onInput: handleInput,
@@ -88,5 +87,5 @@ function inputAttributes() {
 </script>
 
 <template>
-  <input v-bind="inputAttributes()" />
+  <input v-bind="inputAttributes()" :ref="setInputElement" />
 </template>

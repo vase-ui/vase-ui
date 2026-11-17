@@ -405,12 +405,9 @@ const { element, elementProps, setRef } = useRenderElement('span', props, {
   ],
 });
 
-// The style is the constant itself, in an object that no `mergeProps` call makes.
-// `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
   return {
     type: 'radio',
-    ref: setInputElement,
     form: group?.form.value,
     id: hiddenInputId.value,
     name: group?.name.value,
@@ -438,5 +435,5 @@ defineExpose({ element, inputElement });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputElement" />
 </template>

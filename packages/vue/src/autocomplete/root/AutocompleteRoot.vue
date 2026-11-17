@@ -290,7 +290,10 @@ const resolvedFilter = computed(() => {
   return props.filter ?? collator.contains;
 });
 
-const { actions, inputElement, hiddenInputProps } = useAriaCombobox<ItemValue, 'none'>(
+const { actions, inputElement, hiddenInputProps, setHiddenInputElement } = useAriaCombobox<
+  ItemValue,
+  'none'
+>(
   {
     selectionMode: 'none',
     selectedValue: undefined,
@@ -431,5 +434,5 @@ defineExpose({ ...actions, inputElement });
 
 <template>
   <slot />
-  <input v-bind="hiddenInputProps()" />
+  <input v-bind="hiddenInputProps()" :ref="setHiddenInputElement" />
 </template>

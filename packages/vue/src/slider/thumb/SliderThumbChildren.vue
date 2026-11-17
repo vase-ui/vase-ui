@@ -9,7 +9,7 @@ defineSlots<{
   default?(): unknown;
 }>();
 
-const { inputProps, hasPrehydrationScript, inputElement, getHandledInputValue } =
+const { inputProps, setInputElement, hasPrehydrationScript, inputElement, getHandledInputValue } =
   useSliderThumbContext();
 
 // This component renders the input, so the hooks of its renders keep a restored value.
@@ -20,6 +20,6 @@ markChildrenMounted();
 
 <template>
   <slot />
-  <input v-bind="inputProps()" />
+  <input v-bind="inputProps()" :ref="setInputElement" />
   <PrehydrationScript v-if="hasPrehydrationScript" :script="prehydrationScript" />
 </template>
