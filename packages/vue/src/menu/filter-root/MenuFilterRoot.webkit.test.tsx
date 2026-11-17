@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef, watch } from 'vue';
+import { defineComponent, h, shallowRef, watch } from 'vue';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -25,23 +25,11 @@ vi.mock('../../common/platform', async () => {
   };
 });
 
-// React focuses an `autoFocus` element when it mounts, before it gives the element to its ref. This
-// `#render` slot does the same one time for each element, because Vue calls a function ref again on
-// each patch.
-const autoFocusedElements = new WeakSet<Element>();
+// React focuses an `autoFocus` element when it mounts. A `ref` callback can run before the element
+// is in the document, so this `#render` slot focuses it in `onVnodeMounted`.
 const autoFocusSlots = {
-  render: ({ props }: { props: HTMLProps }) => (
-    <input
-      {...props}
-      ref={(element: unknown) => {
-        if (element instanceof HTMLElement && !autoFocusedElements.has(element)) {
-          autoFocusedElements.add(element);
-          element.focus();
-        }
-        props.ref(element as Element | null);
-      }}
-    />
-  ),
+  render: ({ props }: { props: HTMLProps }) =>
+    h('input', { ...props, onVnodeMounted: ({ el }) => (el as HTMLElement).focus() }),
 };
 
 const Test = defineComponent(
