@@ -283,7 +283,7 @@ The template of each such part has the `#render` slot, then the element, and no 
 ```
 
 - `elementProps` is a function that the template calls. It is not a `computed`.
-- Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor applies only a ref bound by name](https://github.com/vuejs/core/pull/15900). Vapor ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`.
+- Bind `setRef` of `useRenderElement` by name beside the spread, because [Vapor mode applies a `ref` only when the template binds it by name](https://github.com/vuejs/core/pull/15900). Vapor mode ignores the `ref` key of a bound object. ESLint refuses a spread of `elementProps()` without `:ref`. An input of a part has no such binding. See [Vapor mode](#vapor-mode).
 - When the element with its content exceeds 100 columns on one line, put the content on its own line. Vue removes white space between a tag and an element or a slot, so the render code stays the same. Prettier keeps this form. In the one-line form, Prettier breaks the line in the tags.
 - Keep text content, such as `{{ text }}`, on the line of its tag. White space beside text stays in the text.
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
@@ -444,7 +444,7 @@ Rules:
 ### `useRenderElement` and `useRender`
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the functions `elementProps` and `setRef`. The template binds `setRef` by name on the element.
-- `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the explicit ref into one `ref`. Vue thus calls the setter one time for each patch.
+- `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), an empty `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
 - The `Map` of that file has one row for each attribute that has a value that is not given, apart from `undefined`. A row holds the name of the attribute and the test for that value. A new such attribute needs a new row.
@@ -675,7 +675,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
 
-Inputs beside or inside a part's element still get their ref setter through the bound object. These include hidden form inputs and the range inputs of `Slider.Thumb` and `TimeClock.Face`. A hidden input must keep that object as its only attribute, as [Parts with a hidden input](#parts-with-a-hidden-input) describes. An explicit `:ref` makes Vue call `mergeProps`, which replaces the style object and clears the size that `handleHiddenInputInvalid` wrote. A part compiled as a Vapor component thus gets no such input element.
+An input that a part renders beside or in its element gets its `ref` setter only as a key of the bound object. Such inputs are the hidden input of a form control and the range inputs of `Slider.Thumb` and `TimeClock.Face`. The bound object must be the only attribute of a hidden input, so its template cannot bind the setter by name. See [Parts with a hidden input](#parts-with-a-hidden-input). A part compiled as a Vapor component thus gets no such input element.
 
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 

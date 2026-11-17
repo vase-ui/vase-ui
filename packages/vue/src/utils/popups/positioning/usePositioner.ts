@@ -38,7 +38,8 @@ export interface UsePositionerOptions<State> {
 /**
  * Makes the props of the outer positioner element that popups share. It gives the element its
  * role, its hidden state, its style and the state attributes of a popup.
- * Call it in `setup`. The template binds the result of `elementProps()` on the element.
+ * Call it in `setup`. The template binds the result of `elementProps()` on the element, and it
+ * binds `setRef` by name on that element.
  */
 export function usePositioner<State extends Record<string, any>>(
   componentProps: UseRenderElementComponentProps<State>,
