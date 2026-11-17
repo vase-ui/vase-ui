@@ -1224,6 +1224,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - A `Toast.Viewport` that mounts in a held branch adds its document and window listeners at the activation. While `KeepAlive` holds the viewport, F6 keeps the action of the browser.
 - `Toast.Root` measures no height while `KeepAlive` holds it, also when it mounts in a held branch. It measures at the activation. A new toast keeps `data-starting-style` until then, so its enter transition plays when it shows.
 - `Toast.Root` ends a swipe in progress with no dismissal when `KeepAlive` deactivates it.
+- `Toast.Root` closes on Escape while the focus is in it, and it stops that event (`VUE-127`). A popup under the toast, such as a modal dialog, listens for Escape on the document, so it stays open. The root does not stop an Escape that it does not handle.
 - A `Toast.Root` with no title takes its name from its last description (`VUE-99`), unless the consumer gives it a name. The root reads only its own attributes for this rule. Put `aria-label` or `aria-labelledby` on `Toast.Root`, not on the element of the `#render` slot.
 - In the `#render` slot of a label part, mount `children` for the label of the toast. To show your own content in another element, give the content in the default slot and the element in `as`.
 

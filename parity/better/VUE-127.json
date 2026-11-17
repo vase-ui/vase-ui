@@ -1,0 +1,11 @@
+{
+  "id": "VUE-127",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/root/ToastRoot.tsx#L366-L377",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/interactions/useDismiss.ts#L778-L782",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+    "https://dom.spec.whatwg.org/#dom-event-stoppropagation"
+  ],
+  "behavior": "Escape with the focus in a toast closes only that toast. The toast stops the event, so a popup under the toast, such as a modal dialog, stays open. The toast does not stop an Escape that it does not handle. In Base UI, the event goes on to the document, and a popup that listens there closes together with the toast.",
+  "dueWith": "packages/react/src/toast/root/ToastRoot.tsx"
+}

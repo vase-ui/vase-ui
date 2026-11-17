@@ -484,6 +484,9 @@ function handleKeydown(event: KeyboardEvent) {
     }
 
     store.closeToast(props.toast.id);
+    // The toast has the focus, so it owns this Escape. A popup under the toast, such as a modal
+    // dialog, listens for Escape on the document. It must not close for the same press (VUE-127).
+    event.stopPropagation();
   }
 }
 
