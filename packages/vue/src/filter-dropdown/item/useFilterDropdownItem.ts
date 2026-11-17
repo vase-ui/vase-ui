@@ -31,8 +31,8 @@ export interface UseFilterDropdownItemReturnValue {
    */
   ref: (element: HTMLElement | null) => void;
   /**
-   * Takes the text of the slot of a filtered-out item, which has no element to read. The part
-   * gives it to `FilterDropdownHiddenItemText`.
+   * Takes the text of the slot of an item that the query hides, which has no element to read. The
+   * part gives this function and the `label` of the item to `FilterDropdownHiddenItemText`.
    */
   setHiddenText: (text: string) => void;
 }
@@ -44,8 +44,8 @@ export interface UseFilterDropdownItemReturnValue {
  * popup can open with a query that already excludes the item, and a hidden item has no text left
  * to match against.
  *
- * Call it in `setup`. The part renders its element only while `visible` is `true`, and else
- * renders `FilterDropdownHiddenItemText` with its default slot.
+ * Call it in `setup`. The part renders its element only while `visible` is `true`. Else it renders
+ * `FilterDropdownHiddenItemText` with its `label` and its default slot.
  *
  * @internal
  */
@@ -62,6 +62,9 @@ export function useFilterDropdownItem(
 
   const itemId = Symbol('filter-dropdown-item');
   let element: HTMLElement | null = null;
+  // Kept separate from `registeredText`. When `label` becomes `undefined` on a hidden item,
+  // `resolveText` returns this text and not the old `label`.
+  let renderedText: string | undefined;
   let registeredText: string | undefined;
   // The text of the slot that the hidden item last gave, to tell whether it changed.
   let hiddenText: string | undefined;
@@ -74,6 +77,9 @@ export function useFilterDropdownItem(
   const registered = shallowRef(matched.value);
 
   function resolveText() {
+    if (element !== null) {
+      renderedText = element.textContent ?? '';
+    }
     const label = toValue(params.label);
     if (label != null) {
       return label;
@@ -81,7 +87,7 @@ export function useFilterDropdownItem(
     // A filtered-out item has no DOM node left. Its slot is only a stand-in for the text it
     // renders, which can differ (a translation component, for example), so the cached text wins
     // unless the slot text changed.
-    return element === null ? registeredText : (element.textContent ?? '');
+    return renderedText;
   }
 
   function register(resolvedText?: string) {
@@ -94,8 +100,11 @@ export function useFilterDropdownItem(
         // A mounted item reports what it renders now, even nothing, since a descendant can change
         // its text without the item re-rendering. A filtered-out item falls back to the cached
         // text.
-        if (toValue(params.label) == null && element !== null) {
-          registeredText = element.textContent ?? '';
+        if (element !== null) {
+          renderedText = element.textContent ?? '';
+          if (toValue(params.label) == null) {
+            registeredText = renderedText;
+          }
         }
         return registeredText;
       },
@@ -136,10 +145,13 @@ export function useFilterDropdownItem(
     hiddenText = text;
     // The first text after the element goes away is only a baseline: the cached text of the
     // element wins until the slot text changes.
-    if (previousText === undefined || text === previousText || toValue(params.label) != null) {
+    if (previousText === undefined || text === previousText) {
       return;
     }
-    registerChangedText(text);
+    renderedText = text;
+    if (toValue(params.label) == null) {
+      registerChangedText(text);
+    }
   }
 
   return {

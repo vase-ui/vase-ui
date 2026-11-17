@@ -129,4 +129,34 @@ describe('useFilterDropdownItem', () => {
 
     expect(screen.queryByRole('menuitem')).toBe(null);
   });
+
+  it('VUE-129: uses the rendered text when the label of a hidden item becomes undefined', async () => {
+    const query = shallowRef('mex');
+    const label = shallowRef<string | undefined>('Canada');
+    const Translated = defineComponent(() => () => 'Kanada');
+    await render(() => (
+      <TestFilterDropdownRoot value={query.value}>
+        <Item label={label.value}>
+          <Translated />
+        </Item>
+        <Item>Mexico</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+    expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
+
+    label.value = undefined;
+    query.value = 'can';
+    await flushMicrotasks();
+    expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
+
+    label.value = 'Canada';
+    query.value = 'kan';
+    await flushMicrotasks();
+    expect(screen.queryByRole('menuitem', { name: 'Kanada' })).toBe(null);
+
+    label.value = undefined;
+    await flushMicrotasks();
+    expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
+  });
 });
