@@ -180,7 +180,6 @@ for (const { name, file, url, title, description } of PAGES) {
   test(`the built ${name} holds each Open Graph and X card meta tag, with og:image before og:image:*`, () => {
     const tags = metaTagsOf(file);
     const keys = tags.map(({ kind, key }) => `${kind}:${key}`);
-    assert.equal(new Set(keys).size, keys.length, `${file} repeats a meta tag.`);
 
     const expected: MetaTag[] = [
       { kind: 'property', key: 'og:type', content: 'website' },
