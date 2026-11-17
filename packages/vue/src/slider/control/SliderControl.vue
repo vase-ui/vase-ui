@@ -552,9 +552,7 @@ function setControl(element: HTMLElement | null) {
   if (element) {
     control = element;
     controlElement.value = element;
-    if (styles == null) {
-      styles = ownerWindow(element).getComputedStyle(element);
-    }
+    styles ??= ownerWindow(element).getComputedStyle(element);
     return;
   }
 
