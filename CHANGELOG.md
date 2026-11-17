@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.11.1
+
+Same Base UI release and commit as 2026.11.0.
+
+### Added
+
+- Add `useForwardProps` and `useForwardPropsEmits` for wrappers. Warn in development about cast Boolean props that replace defaults or parent values. ([#601](https://github.com/vase-ui/vase-ui/pull/601))
+
+### Changed
+
+- Direct bug reports and ideas to GitHub Discussions. ([#598](https://github.com/vase-ui/vase-ui/pull/598))
+- Show how to keep omitted Boolean props as `undefined` in wrappers. ([#600](https://github.com/vase-ui/vase-ui/pull/600))
+
+### Fixed
+
+- Pair Date Picker with Time Picker in the date and time demo. Keep AM and PM text whole in the demos. ([#597](https://github.com/vase-ui/vase-ui/pull/597))
+- Keep the full focus ring of a day within a selected range in the range demos. ([#599](https://github.com/vase-ui/vase-ui/pull/599))
+
 ## 2026.11.0
 
 Matches Base UI 1.9.0. Includes later Base UI changes through `315eba7a` (2026-11-13).
