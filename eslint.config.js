@@ -81,6 +81,8 @@ const MESSAGES = {
     'Vue can run a function ref before the element is in the document, so this call can do nothing. Act in `onMounted`, or in `onVnodeMounted` in a slot function.',
   vendorStyleKey:
     "A server render writes this key with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `'-webkit-user-select'`.",
+  vendorStyleWrite:
+    "A server render writes this key of a style object with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `style['-webkit-user-select']`. For the `style` of an element, call `setProperty` with the CSS form.",
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -130,7 +132,7 @@ const RESTRICTED_PROPERTIES = [
 
 // HTML ignores the case of an attribute name, so the pattern ignores the case.
 const BASE_UI_NAME = '/base-ui/i';
-const VENDOR_STYLE_KEY = '/^(?:Webkit|Moz|ms)[A-Z]/';
+const VENDOR_STYLE_KEY = '/^(?:[Ww]ebkit|[Mm]oz|ms)[A-Z]/';
 
 // A template expression has these nodes too, so the script and the template share this list.
 const RESTRICTED_EXPRESSION_SYNTAX = [
@@ -143,8 +145,20 @@ const RESTRICTED_EXPRESSION_SYNTAX = [
     message: MESSAGES.baseUiName,
   },
   {
-    selector: `Property[key.name=${VENDOR_STYLE_KEY}], Property[key.value=${VENDOR_STYLE_KEY}]`,
+    // An object pattern has `Property` nodes too, and it reads the key.
+    selector: [
+      `ObjectExpression > Property[computed=false][key.name=${VENDOR_STYLE_KEY}]`,
+      `ObjectExpression > Property[key.value=${VENDOR_STYLE_KEY}]`,
+    ].join(', '),
     message: MESSAGES.vendorStyleKey,
+  },
+  {
+    // The object can also be the `style` of an element, so this entry has its own message.
+    selector: [
+      `AssignmentExpression > MemberExpression.left[computed=false][property.name=${VENDOR_STYLE_KEY}]`,
+      `AssignmentExpression > MemberExpression.left[property.value=${VENDOR_STYLE_KEY}]`,
+    ].join(', '),
+    message: MESSAGES.vendorStyleWrite,
   },
 ];
 
@@ -644,7 +658,7 @@ export default defineConfig([
       '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       'prefer-object-has-own': 'error',
-      'logical-assignment-operators': 'error',
+      'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
       // The port keeps the shape of the Base UI code, which has unused `_` names and rest siblings.
       '@typescript-eslint/no-unused-vars': [
         'error',
