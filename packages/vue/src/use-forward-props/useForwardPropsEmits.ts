@@ -26,9 +26,10 @@ export function useForwardPropsEmits<Props extends object>(
   if (!instance) {
     if (process.env.NODE_ENV !== 'production') {
       warn(
-        '`useForwardPropsEmits` ran with no virtual DOM component.',
-        'It cannot read the events that the wrapper declares, so it forwards no event.',
-        'Call it in the `setup` of a component that is not a Vapor component.',
+        '`useForwardPropsEmits` ran with no virtual DOM component, so it cannot read the events that the wrapper declares.',
+        'It forwards no event.',
+        'In a Vapor component, leave the events undeclared and pass `$attrs` to the part.',
+        'Elsewhere, call it in the `setup` of a component.',
       );
     }
     return forwarded;

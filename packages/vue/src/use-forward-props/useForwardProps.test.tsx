@@ -5,6 +5,7 @@ import { Collapsible } from '../collapsible';
 import { createRenderer, isVaporApp, screen, takeReportedMessages } from '#test-utils';
 import WrapperForward from '../internals/WrapperForward.test.vue';
 import ForwardVapor from './ForwardVapor.test.vue';
+import ForwardVaporDefaults from './ForwardVaporDefaults.test.vue';
 import { useForwardProps } from './index';
 
 function createProbe(mode: 'object' | 'getter' | 'ref' | 'attrs' = 'object') {
@@ -29,10 +30,10 @@ function createProbe(mode: 'object' | 'getter' | 'ref' | 'attrs' = 'object') {
 }
 
 const NO_COMPONENT_MESSAGE =
-  'console.warn: Vase UI: `useForwardProps` ran with no virtual DOM component. ' +
-  'It cannot read the props that the caller set. It forwards each prop that is not `undefined`. ' +
-  'An absent Boolean prop can thus keep the value `false`. ' +
-  'Call it in the `setup` of a component that is not a Vapor component.';
+  'console.warn: Vase UI: `useForwardProps` ran with no virtual DOM component, so it cannot read the props that the caller set. ' +
+  'It forwards each prop that is not `undefined`, so an absent Boolean prop can keep the value `false`. ' +
+  'In a Vapor component, give each optional Boolean prop the default `undefined` and bind `props` without this function. ' +
+  'Elsewhere, call it in the `setup` of a component.';
 
 describe('useForwardProps', () => {
   const { render } = createRenderer();
@@ -179,4 +180,17 @@ describe('useForwardProps', () => {
     expect(screen.getByText('Content')).toBeInTheDocument();
     expect(document.getElementById('vapor-root')).toBeInTheDocument();
   });
+
+  it.runIf(isVaporApp)(
+    'a Vapor wrapper with the default undefined keeps an absent Boolean prop absent',
+    async () => {
+      const change = vi.fn();
+      const { user } = await render(() => <ForwardVaporDefaults onOpenChange={change} />);
+      expect(screen.queryByText('Content')).toBeNull();
+      await user.click(screen.getByRole('button', { name: 'Toggle' }));
+      expect(screen.getByText('Content')).toBeInTheDocument();
+      expect(change).toHaveBeenCalledExactlyOnceWith(true, expect.any(Object));
+      expect(takeReportedMessages()).toEqual([]);
+    },
+  );
 });
