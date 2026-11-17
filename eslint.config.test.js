@@ -1457,7 +1457,7 @@ const passed = [
   {
     name: 'a read of a member and of an object pattern that have a vendor prefix, and a key from a variable',
     file: `${SRC}/useRoot.ts`,
-    code: 'declare const event: { webkitForce: number };\ndeclare const style: Record<string, string>;\ndeclare const msKey: string;\n\nconst { webkitForce } = event;\nexport const select = style.webkitUserSelect;\nexport const used = [webkitForce, { [msKey]: 1 }];\nstyle[msKey] = select;\n',
+    code: "declare const event: { webkitForce: number; mozInputSource: number };\ndeclare const style: Record<string, string>;\ndeclare const msKey: string;\n\nconst { webkitForce, 'mozInputSource': source } = event;\nexport const select = style.webkitUserSelect;\nexport const used = [webkitForce, source, { [msKey]: 1 }];\nstyle[msKey] = select;\nstyle.userSelect = style.webkitUserSelect;\n",
   },
   {
     name: 'a method of Temporal and a constant that has the name using',
