@@ -44,12 +44,14 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NumberFieldDecrementState>;
 }>();
 
-const { element, elementProps, state } = useNumberFieldStepperButton(props, false);
+const { element, elementProps, setRef, state } = useNumberFieldStepperButton(props, false);
 
 defineExpose({ element });
 </script>
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

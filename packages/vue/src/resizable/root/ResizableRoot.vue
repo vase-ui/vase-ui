@@ -1024,7 +1024,7 @@ provide(ResizableRootContext, {
   actions: { orientation: rootOrientation, getLayout, setLayout, reset },
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   children: true,
   // The listener of the consumer runs first, so `event.preventVaseUIHandler()` stops F6.
@@ -1102,5 +1102,7 @@ defineExpose({ element, getLayout, setLayout, reset });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ResizableRootChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ResizableRootChildren><slot :state="state" /></ResizableRootChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ResizableRootChildren><slot :state="state" /></ResizableRootChildren>
+  </component>
 </template>

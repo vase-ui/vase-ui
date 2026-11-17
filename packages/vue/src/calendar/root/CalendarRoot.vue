@@ -223,7 +223,7 @@ const rootState = computed<CalendarRootState>(() => ({
 
 provide(CalendarRootContext, { ...controller, state });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
   props: (attrs) => [
@@ -243,5 +243,7 @@ defineExpose({ element, focus });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="rootState" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="rootState" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="rootState" />
+  </component>
 </template>

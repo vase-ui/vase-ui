@@ -55,7 +55,7 @@ const state = computed<CalendarWeekdayState>(() => ({
 const text = computed(() => formatWeekday(props.weekday, props.format, locale.value));
 const name = computed(() => formatWeekday(props.weekday, 'long', locale.value));
 
-const { element, elementProps } = useRenderElement('th', props, {
+const { element, elementProps, setRef } = useRenderElement('th', props, {
   state,
   props: (attrs) => [
     {
@@ -74,8 +74,12 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-  <component :is="as" v-else-if="$slots.default || as !== 'th'" v-bind="elementProps()"
+  <component
+    :is="as"
+    v-else-if="$slots.default || as !== 'th'"
+    v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state" :text="text">{{ text }}</slot></component
   >
-  <th v-else v-bind="elementProps()">{{ text }}</th>
+  <th v-else v-bind="elementProps()" :ref="setRef">{{ text }}</th>
 </template>

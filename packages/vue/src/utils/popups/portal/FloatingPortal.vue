@@ -86,7 +86,7 @@ function handleFocus(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, containerElement, isHeld } = useFloatingPortalNode({
+const { element, elementProps, setRef, containerElement, isHeld } = useFloatingPortalNode({
   container: () => props.container,
   componentProps: props,
   children: true,
@@ -268,6 +268,8 @@ defineExpose({ element });
       :state="state"
       :children="FloatingPortalChildren"
     />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <slot :state="state" />
+    </component>
   </Teleport>
 </template>

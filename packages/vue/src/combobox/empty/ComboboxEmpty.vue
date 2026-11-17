@@ -43,7 +43,7 @@ function setEmptyElement(element: HTMLElement | null) {
 
 const state: ComboboxEmptyState = EMPTY_OBJECT;
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: [setEmptyElement, emptyRef],
   props: (attrs) => [{ role: 'status', 'aria-live': 'polite', 'aria-atomic': true }, attrs],
@@ -56,5 +56,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxEmptyChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ComboboxEmptyChildren><slot :state="state" /></ComboboxEmptyChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ComboboxEmptyChildren><slot :state="state" /></ComboboxEmptyChildren>
+  </component>
 </template>

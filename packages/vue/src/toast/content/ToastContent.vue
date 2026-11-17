@@ -42,7 +42,7 @@ const state = computed<ToastContentState>(() => ({
   behind: visibleIndex.value > 0,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, { state });
+const { element, elementProps, setRef } = useRenderElement('div', props, { state });
 
 // `KeepAlive` takes the element of a held content out of the document. The element then has no
 // layout, so the height stays as it was until the content is active again.
@@ -80,5 +80,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

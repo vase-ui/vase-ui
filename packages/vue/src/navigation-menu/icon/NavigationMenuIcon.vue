@@ -41,7 +41,7 @@ const state = computed<NavigationMenuIconState>(() => ({
   open: open.value && value.value === itemValue.value,
 }));
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
   stateAttributesMapping: triggerOpenStateMapping,
@@ -54,5 +54,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuIconChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><NavigationMenuIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></NavigationMenuIconChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <NavigationMenuIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></NavigationMenuIconChildren>
+  </component>
 </template>

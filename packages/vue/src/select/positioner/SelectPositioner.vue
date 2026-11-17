@@ -177,7 +177,7 @@ watch(positioning.side, writePopupSide);
 
 let positionerElement: HTMLElement | null = null;
 
-const { element, elementProps } = usePositioner(props, {
+const { element, elementProps, setRef } = usePositioner(props, {
   state,
   styles: () => (alignItemWithTriggerActive.value ? FIXED : positioning.positionerStyles.value),
   transitionStatus: () => store.select('transitionStatus'),
@@ -291,7 +291,7 @@ defineExpose({ element });
     <StyleDisableScrollbar />
     <slot name="render" :props="elementProps()" :state="state" />
   </template>
-  <component :is="as" v-else v-bind="elementProps()">
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <StyleDisableScrollbar />
     <slot :state="state" />
   </component>

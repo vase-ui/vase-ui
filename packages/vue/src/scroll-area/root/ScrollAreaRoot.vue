@@ -390,7 +390,7 @@ provide(ScrollAreaRootContext, {
   overflowEdgeThreshold: edgeThresholds,
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
@@ -421,5 +421,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ScrollAreaRootChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><ScrollAreaRootChildren><slot :state="state" /></ScrollAreaRootChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <ScrollAreaRootChildren><slot :state="state" /></ScrollAreaRootChildren>
+  </component>
 </template>

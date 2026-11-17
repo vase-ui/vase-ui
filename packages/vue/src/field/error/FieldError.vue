@@ -146,7 +146,7 @@ const state = computed<FieldErrorState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   props: (attrs) => [{ id: errorId.value }, attrs],
   stateAttributesMapping,
@@ -170,6 +170,8 @@ defineExpose({ element });
 <template>
   <template v-if="mounted">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="FieldErrorChildren" />
-    <component :is="as" v-else v-bind="elementProps()"><FieldErrorChildren><template v-if="$slots.default" #default><slot :state="state" /></template></FieldErrorChildren></component>
+    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+      <FieldErrorChildren><template v-if="$slots.default" #default><slot :state="state" /></template></FieldErrorChildren>
+    </component>
   </template>
 </template>

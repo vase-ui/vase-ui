@@ -354,7 +354,7 @@ const composite = useCompositeRoot({
   hasActiveItem: () => checkedValue.value != null,
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   ref: [composite.rootRef],
   stateAttributesMapping: fieldValidityMapping,
@@ -406,5 +406,7 @@ defineExpose({
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

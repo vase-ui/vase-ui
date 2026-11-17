@@ -90,7 +90,7 @@ function registerElement(element: HTMLElement | null) {
   unregister = element ? face?.registerNumber(element, () => props.number) : undefined;
 }
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   ref: registerElement,
   props: (attrs) => [
@@ -112,8 +112,12 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else-if="$slots.default || as !== 'span'" v-bind="elementProps()"
+  <component
+    :is="as"
+    v-else-if="$slots.default || as !== 'span'"
+    v-bind="elementProps()"
+    :ref="setRef"
     ><slot :state="state">{{ text }}</slot></component
   >
-  <span v-else v-bind="elementProps()">{{ text }}</span>
+  <span v-else v-bind="elementProps()" :ref="setRef">{{ text }}</span>
 </template>

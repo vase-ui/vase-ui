@@ -73,7 +73,7 @@ export function useDayButton<State extends DayState>(
     native: () => props.nativeButton,
   });
 
-  const { element, elementProps } = useRenderElement('button', props, {
+  const { element, elementProps, setRef } = useRenderElement('button', props, {
     state,
     ref: buttonRef,
     props: (attrs) => {
@@ -125,5 +125,5 @@ export function useDayButton<State extends DayState>(
     { flush: 'post' },
   );
 
-  return { element, elementProps, text };
+  return { element, elementProps, setRef, text };
 }

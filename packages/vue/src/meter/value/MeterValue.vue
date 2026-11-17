@@ -29,7 +29,7 @@ defineSlots<{
 
 const state: MeterValueState = EMPTY_OBJECT;
 
-const { element, elementProps } = useRenderElement('span', props, {
+const { element, elementProps, setRef } = useRenderElement('span', props, {
   state,
   props: (attrs) => [{ 'aria-hidden': true }, attrs],
   children: true,
@@ -41,5 +41,7 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="MeterValueChildren" />
-  <component :is="as" v-else v-bind="elementProps()"><MeterValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></MeterValueChildren></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <MeterValueChildren><template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template></MeterValueChildren>
+  </component>
 </template>

@@ -51,7 +51,7 @@ const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
 const { isLeaving } = useCalendarMonthContext();
 
-const { element, elementProps, text } = useDayButton(props, {
+const { element, elementProps, setRef, text } = useDayButton(props, {
   root,
   day,
   state,
@@ -65,9 +65,13 @@ defineExpose({ element });
 <template>
   <template v-if="!state.hidden">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-    <component :is="as" v-else-if="$slots.default || as !== 'button'" v-bind="elementProps()"
+    <component
+      :is="as"
+      v-else-if="$slots.default || as !== 'button'"
+      v-bind="elementProps()"
+      :ref="setRef"
       ><slot :state="state" :text="text">{{ text }}</slot></component
     >
-    <button v-else v-bind="elementProps()">{{ text }}</button>
+    <button v-else v-bind="elementProps()" :ref="setRef">{{ text }}</button>
   </template>
 </template>

@@ -44,7 +44,7 @@ const state = computed<ToolbarLinkState>(() => ({ orientation: orientation.value
 
 const { compositeProps, compositeRef } = useCompositeItem({ metadata: TOOLBAR_LINK_METADATA });
 
-const { element, elementProps } = useRenderElement('a', props, {
+const { element, elementProps, setRef } = useRenderElement('a', props, {
   state,
   ref: [compositeRef],
   props: (attrs) => [compositeProps.value, attrs],
@@ -55,5 +55,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <slot :state="state" />
+  </component>
 </template>

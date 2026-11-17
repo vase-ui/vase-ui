@@ -75,7 +75,7 @@ const { onChange } = useCalendarSelect({
 
 const label = computed(() => formatFieldName('month', locale.value));
 
-const { element, elementProps } = useRenderElement<CalendarState, HTMLSelectElement>(
+const { element, elementProps, setRef } = useRenderElement<CalendarState, HTMLSelectElement>(
   'select',
   props,
   {
@@ -103,5 +103,7 @@ defineExpose({ element });
     :state="state"
     :children="CalendarMonthSelectChildren"
   />
-  <component :is="as" v-else v-bind="elementProps()"><CalendarMonthSelectChildren /></component>
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+    <CalendarMonthSelectChildren />
+  </component>
 </template>

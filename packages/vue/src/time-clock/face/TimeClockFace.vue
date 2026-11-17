@@ -312,7 +312,7 @@ onScopeDispose(() => {
   }
 });
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps, setRef } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
@@ -334,7 +334,7 @@ defineExpose({ element, inputElement });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="TimeClockFaceChildren" />
-  <component :is="as" v-else v-bind="elementProps()">
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <TimeClockFaceChildren>
       <slot :state="state" />
       <template v-if="$slots.number" #number="slotProps"><slot name="number" v-bind="slotProps" /></template>
