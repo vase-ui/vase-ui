@@ -154,3 +154,5 @@ In a Vapor component (`<script setup vapor>`), bind the `ref` setter of `props` 
 The rule applies to each element and each component that gets `props`. With nested `#render` slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipTrigger.ref">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="props.ref"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
 
 A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to `#render`, also when the component that renders the part is not in Vapor mode.
+
+A component that you build with [useRender](/utils/use-render) exposes the `element` that `useRender` returns. Its template binds `setRef` by name on its element, as the samples of that page do.

@@ -23,7 +23,7 @@ const defaultProps: useRender.ElementProps<'button'> = {
   type: 'button',
 };
 
-const { element, elementProps, tag } = useRender(props, {
+const { element, elementProps, setRef, tag } = useRender(props, {
   defaultTagName: 'button',
   props: (attrs) => mergeProps<'button'>(defaultProps, attrs),
 });
@@ -33,5 +33,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="{}" />
-  <component :is="tag" v-else v-bind="elementProps()"><slot>Click me</slot></component>
+  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
+    <slot>Click me</slot>
+  </component>
 </template>

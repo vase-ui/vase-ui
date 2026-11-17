@@ -23,7 +23,7 @@ defineSlots<{
 const count = ref(0);
 const state = computed<CounterState>(() => ({ odd: count.value % 2 === 1, count: count.value }));
 
-const { element, elementProps, tag } = useRender(props, {
+const { element, elementProps, setRef, tag } = useRender(props, {
   defaultTagName: 'button',
   state,
   stateAttributesMapping: { count: () => null },
@@ -46,7 +46,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="tag" v-else v-bind="elementProps()">
+  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state">
       Counter: <span :class="styles.count">{{ count }}</span>
     </slot>

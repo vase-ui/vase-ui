@@ -8,7 +8,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{ as?: string | Component | undefined }>();
 
-const { element, elementProps, tag } = useRender(props, {
+const { element, elementProps, setRef, tag } = useRender(props, {
   defaultTagName: 'p',
   props: (attrs) => mergeProps<'p'>({ class: styles.Text }, attrs),
 });
@@ -18,5 +18,5 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="{}" />
-  <component :is="tag" v-else v-bind="elementProps()"><slot /></component>
+  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef"><slot /></component>
 </template>
