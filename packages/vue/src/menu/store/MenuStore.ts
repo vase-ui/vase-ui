@@ -164,6 +164,7 @@ const selectors = {
   // `aria-selected` is invalid on `menuitem`, but Safari VoiceOver needs it for arrow-key
   // navigation. Limit it to WebKit while the input has focus so normal VoiceOver navigation
   // does not encounter the invalid attribute.
+  // eslint-disable-next-line no-restricted-syntax -- The key is the name of a store selector, not a style key.
   webkitAriaSelected: (state: State<unknown>, highlighted: boolean) =>
     platform.engine.webkit && state.inputFocused && highlighted ? true : undefined,
   highlightedItemId: (state: State<unknown>) => state.highlightedItemId || undefined,
