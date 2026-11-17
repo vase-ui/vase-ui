@@ -51,12 +51,12 @@ describe('expectSetupErrorWarnings', () => {
     { name: 'an unrelated first warning', messages: ['another warning'] },
     { name: 'a render warning first', messages: [render, setup] },
     { name: 'an unrelated later warning', messages: [setup, 'another warning'] },
+    { name: 'two setup warnings', messages: [setup, setup] },
   ])('rejects $name', ({ messages }) => {
     expect(() => expectSetupErrorWarnings(messages)).toThrow();
   });
 
   it.each([
-    { name: 'two setup warnings', messages: [setup, setup] },
     { name: 'a setup and a render warning', messages: [setup, render] },
     { name: 'three parent render warnings', messages: [setup, render, render, render] },
   ])('accepts $name only for Vapor parts', ({ messages }) => {

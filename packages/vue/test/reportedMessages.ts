@@ -94,20 +94,21 @@ export function takeReportedMessages(): string[] {
 }
 
 /**
- * Expects the warnings of an error from setup. A Vapor parent reports the error of its child again
- * in its render: https://github.com/vuejs/core/issues/16309
- * Virtual DOM parts must give exactly one setup warning. Vapor parts can also give setup or render
- * warnings after the first setup warning. Each other message fails the assertion.
+ * Expects the warnings of an error that a part throws in `setup`. With virtual DOM parts, Vue gives
+ * exactly one setup warning. With parts compiled as Vapor components, each parent part also reports
+ * the error in its render, after the setup warning: https://github.com/vuejs/core/issues/16309
+ * Each other message fails the assertion.
  */
 export function expectSetupErrorWarnings(messages: string[]): void {
-  const setupWarning = 'Unhandled error during execution of setup function';
+  const setupWarning = expect.stringContaining(
+    'Unhandled error during execution of setup function',
+  );
   if (!isVaporParts) {
-    expect(messages).toEqual([expect.stringContaining(setupWarning)]);
+    expect(messages).toEqual([setupWarning]);
     return;
   }
-  expect(messages.length).toBeGreaterThan(0);
-  expect(messages[0]).toContain(setupWarning);
-  for (const message of messages.slice(1)) {
-    expect(message).toMatch(/Unhandled error during execution of (setup|render) function/);
-  }
+  const renderWarning = expect.stringContaining(
+    'Unhandled error during execution of render function',
+  );
+  expect(messages).toEqual([setupWarning, ...messages.slice(1).map(() => renderWarning)]);
 }
