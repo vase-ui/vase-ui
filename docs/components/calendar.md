@@ -218,7 +218,7 @@ With `multiple`, a person selects a list of days, and `maxDays` limits the list.
 
 ### Disabled days
 
-This calendar is for a delivery on a working day, from today to the end of the year. `disabledDates` matches Saturday and Sunday, so the keys skip them.
+This calendar is for a delivery on a working day in the 8 weeks from today. `disabledDates` matches Saturday and Sunday, so the keys skip them.
 
 <DemoFrame>
   <DemoCalendarDisabledDates />
@@ -482,7 +482,7 @@ This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearS
 
 ### Time zone
 
-The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar gives `today`, so it does not use the day of the clock.
+The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar has no `timeZone`, so its today is the day in Tokyo.
 
 <DemoFrame>
   <DemoCalendarTimeZone />
@@ -597,7 +597,7 @@ The root emits `valueChange` and `update:value` for a selection, and `monthChang
 
 The calendar renders with `renderToString`. The server HTML has the grid of the view, its labels, and one tab stop. A server does not know the locale of the visitor. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
 
-A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current`, `data-current`, the tab stop and the years of `Calendar.YearSelect` follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
+A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current`, `data-current`, the tab stop and the years of `Calendar.YearSelect` follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. Your own code has the same limit. For a value that follows today, such as `minDate`, read the clock in `onMounted`, as the [Disabled days](#disabled-days) demo does. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
 
 A server and a browser can also have another calendar, first day of the week or weekend for one locale. The calendar then hydrates with the grid of the server, and it shows the grid of the browser after the mount. Give `calendar` and `firstDayOfWeek`, and the server HTML has the days and the weeks of the final grid. The weekend has no prop, so `data-weekend` follows the browser. A browser whose `Temporal` does not have the calendar of the server cannot show the grid of the server, and Vue then reports a hydration mismatch. The entry `temporal-polyfill/global` has only the ISO and Gregorian calendars, so it is such a `Temporal`.
 

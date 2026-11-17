@@ -3,7 +3,6 @@ import { computed, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const call = shallowRef(Temporal.ZonedDateTime.from('2026-11-17T09:00[Asia/Tokyo]'));
 const summary = computed(() => {
   const date = call.value.toPlainDate().toString();
@@ -15,7 +14,6 @@ const summary = computed(() => {
 <template>
   <Calendar.Root
     v-model:value="call"
-    :today="today"
     locale="en-US"
     aria-label="Day of the call"
     :class="styles.Root"

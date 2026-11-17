@@ -3,7 +3,6 @@ import { computed, shallowRef } from 'vue';
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const value = shallowRef<RangeCalendar.Root.Value>([
   Temporal.PlainDate.from('2026-11-09'),
   Temporal.PlainDate.from('2026-11-12'),
@@ -36,8 +35,6 @@ const summary = computed(() => {
     aria-label="Rental dates"
     :min-days="3"
     :max-days="7"
-    :today="today"
-    time-zone="UTC"
     locale="en-US"
   >
     <RangeCalendar.PreviousButton :class="[styles.Navigation, styles.Previous]">

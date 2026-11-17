@@ -3,7 +3,6 @@ import { computed, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const holidays = [
   { date: Temporal.PlainDate.from('2026-11-11'), name: 'Veterans Day' },
   { date: Temporal.PlainDate.from('2026-11-26'), name: 'Thanksgiving Day' },
@@ -23,7 +22,6 @@ const message = computed(() => holidayName(selected.value) ?? 'A dot marks a pub
   <Calendar.Root
     v-model:value="selected"
     :modifiers="modifiers"
-    :today="today"
     locale="en-US"
     aria-label="Day off"
     :class="styles.Root"
