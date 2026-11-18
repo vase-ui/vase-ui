@@ -12,14 +12,14 @@ import type { TimePicker } from '@vase-ui/vue/time-picker';
 declare const day: Temporal.PlainDate;
 declare const time: Temporal.PlainTime;
 
-export const calendarProps: Calendar.Root.Props = { value: day };
-export const dateFieldProps: DateField.Root.Props = { value: day };
-export const datePickerProps: DatePicker.Root.Props = { value: day };
-export const dateRangePickerProps: DateRangePicker.Root.Props = { value: [day, null] };
-export const rangeCalendarProps: RangeCalendar.Root.Props = { value: [day, null] };
+export const calendarProps: Calendar.Root.Props = { modelValue: day };
+export const dateFieldProps: DateField.Root.Props = { modelValue: day };
+export const datePickerProps: DatePicker.Root.Props = { modelValue: day };
+export const dateRangePickerProps: DateRangePicker.Root.Props = { modelValue: [day, null] };
+export const rangeCalendarProps: RangeCalendar.Root.Props = { modelValue: [day, null] };
 export const temporalPartProps: TemporalPart.Props = { value: day };
 export const temporalReexportProps: TemporalReexport.Props = { value: day };
 export const timeClockProps: TimeClock.Root.Props = { defaultValue: time };
 
-export const timeFieldProps: TimeField.Root.Props = { value: time };
-export const timePickerProps: TimePicker.Root.Props = { value: time };
+export const timeFieldProps: TimeField.Root.Props = { modelValue: time };
+export const timePickerProps: TimePicker.Root.Props = { modelValue: time };
