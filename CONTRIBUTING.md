@@ -380,7 +380,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 
 - The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
 - The template has the `#render` slot and the element of a part. The inputs come after them.
-- Pass a single local input's named template ref to the composables that read it. For a hidden input with a props spread, bind its setter by name beside the spread. Vapor ignores a ref inside a bound object. ESLint checks this form.
+- Pass a single local input's named template ref to the composables that read it. For a hidden input with a props spread, put its named ref or its bound setter beside the spread. Vapor ignores a ref inside a bound object. ESLint checks this form.
 - `handleHiddenInputInvalid` grows an input with no `name` to 1px with `min-width` and `min-height`. The style of a hidden input has neither key.
 - A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
 - A part that keeps its focus guards beside its element with `useElementSiblings`, such as a trigger or a popup part, has one root node. See [Focus helpers](#focus-helpers).
