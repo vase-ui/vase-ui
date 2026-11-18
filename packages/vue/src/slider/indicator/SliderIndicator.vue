@@ -48,7 +48,6 @@ function getIndicatorStyles(
 </script>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -100,14 +99,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     ];
   },
   stateAttributesMapping: sliderStateAttributesMapping,
-});
-
-// For a range, the script of the server HTML also writes `--end-position`. No render has that
-// property, so the hydrated indicator differs from the indicator of a client-only render.
-onMounted(() => {
-  if (renderBeforeHydration.value) {
-    element.value?.style.removeProperty('--end-position');
-  }
 });
 
 defineExpose({ element });
