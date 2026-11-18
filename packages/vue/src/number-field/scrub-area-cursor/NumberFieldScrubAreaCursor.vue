@@ -70,9 +70,9 @@ const shouldRender = computed(
     !isPointerLockDenied.value,
 );
 
-// A template can mount the cursor that replaces this cursor before it unmounts this cursor.
 let transform: string | undefined;
 
+// A replacement cursor can register before its predecessor unmounts.
 function setCursorElement(next: HTMLSpanElement | null) {
   transform = undefined;
   if (next) {

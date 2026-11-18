@@ -1478,13 +1478,13 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration that a part writes to its element also in a record that the part renders. Remove the declaration from the record when the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
-- `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. They replace a value that `onProgress` wrote to a movement variable. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
+- `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. `Drawer.Popup` applies the same snap point damping to the rendered movement as it does during the drag. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
 - `Drawer.Popup` gives the `transform` and the `transition` of the drag to `useRenderElement` as `overridingStyle` while the drawer is swiping. The drag then wins over a `transform` or a `transition` in the `style` of the consumer.
-- `Drawer.SwipeArea` gives the popup its movement and the backdrop its progress. The popup binds `transition: none` for that gesture.
-- The popup and backdrop use the same release strength and dismiss flag. A new gesture, a new open or a replacement popup clears the release.
+- `Drawer.SwipeArea` gives the popup its movement and the backdrop its progress. The popup binds `transition: none` for that gesture. When the gesture ends, the backdrop and indent show the resting snap progress.
+- The popup and backdrop use the same release strength and dismiss flag. A new gesture, a reopen or a replacement popup clears the release. A rejected close restores the previous snap point.
 - `handleHiddenInputInvalid` writes `min-width` and `min-height`, and Base UI writes `width` and `height`. A Vue render writes each key of the style of the input again, and it writes no other property.
-- `ScrollArea.Viewport` binds `scroll-snap-type` to `none` for a thumb or track press. The track jump follows the style patch.
-- Save the prior inline value and its priority at the press. A consumer script can set both.
+- `ScrollArea.Viewport` binds `scroll-snap-type` to `none` for a thumb or track press. The track jump follows the style patch. Later drag moves scroll in the pointer event.
+- Restore the inline value and priority that the viewport had at the press. A held viewport or thumb takes no press.
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
@@ -1551,7 +1551,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useAnchorPositioning` is the only caller of `useFloating`. Its comments give the reasons for the `computed` of the reference, for its options and for the flush of each watcher.
 - A key that no rendered style has, such as `--anchor-width`, keeps the value that code writes on the element. A value that code writes for a key of the rendered style goes into a ref that the style reads, such as `--available-height`.
 - Compare a gesture style on its part against a native write with the same slot content. Measure frame work and child renders.
-- Drawer keeps a native write for each move of the popup, backdrop and indent. Their renders read the current gesture sample.
+- The drawer popup, backdrop and indent read the current gesture sample when they render. For a dismiss gesture, native writes to the popup transform start after Vue patches the drag styles.
 - `NumberField.ScrubAreaCursor` keeps its last transform for a render during a scrub.
 - A function ref of a composable reads no ref in the render, because the render then depends on that ref. Where the function ref must start work that depends on a ref, it reads the ref in a `queueMicrotask` callback. `arrowRef` of `useAnchorPositioning` does this.
 - The check for a rectangle must refuse a component. The ref of a component with no `expose` also gives its props. A component that has `width` and `height` props then has the names of a rectangle. A rectangle has no `nodeType` and no `$props`, and its `x`, `y`, `width` and `height` are numbers.
