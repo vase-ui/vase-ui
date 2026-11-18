@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { createRenderer, fireEvent, screen } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
@@ -7,6 +7,31 @@ import type { FilterDropdownRootChangeEventDetails } from '../root/FilterDropdow
 
 describe('useFilterDropdownInput', () => {
   const { render } = createRenderer();
+
+  it('ignores focus events from the input it replaced', async () => {
+    const key = shallowRef(0);
+    const listRef = shallowRef<HTMLElement[]>([]);
+    await render(() => (
+      <FilterDropdown.Root
+        open
+        value=""
+        listRef={listRef}
+        getActiveIndex={() => null}
+        setActiveIndex={NOOP}
+      >
+        <FilterDropdown.Input key={key.value} />
+      </FilterDropdown.Root>
+    ));
+    const old = screen.getByRole('searchbox');
+    key.value++;
+    await nextTick();
+    const input = screen.getByRole('searchbox');
+    await fireEvent.focusIn(input);
+    expect(input).toHaveAttribute('data-highlighted');
+
+    await fireEvent.focusOut(old);
+    expect(input).toHaveAttribute('data-highlighted');
+  });
 
   it('keeps a new composition when the previous composition timer runs', async () => {
     const value = shallowRef('');

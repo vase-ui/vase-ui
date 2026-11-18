@@ -182,7 +182,7 @@ export function useCollapsiblePanel(
     forcePanelIdle.value = false;
   });
 
-  function runSizeEffect() {
+  function runSizeEffect(): (() => void) | void {
     const open = isOpen();
     const mounted = isMounted();
     const transitionStatus = getTransitionStatus();

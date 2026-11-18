@@ -379,6 +379,37 @@ const App = defineComponent({
 describe('useDismiss', () => {
   const { render } = createRenderer();
 
+  it('treats a child positioner as outside after its dismissal scope unmounts', async () => {
+    const childElement = shallowRef<HTMLElement | null>(null);
+    const active = shallowRef(true);
+    const change = vi.fn();
+    const Child = defineComponent(() => {
+      useDismiss(useFloatingRootStore({ elements: { positionerElement: childElement } }));
+      return () => null;
+    });
+    const Parent = defineComponent(() => {
+      useDismiss(useFloatingRootStore({ open: true, onOpenChange: change }));
+      return () => (active.value ? <Child /> : null);
+    });
+    await render(() => (
+      <>
+        <button ref={childElement}>Child</button>
+        <Parent />
+      </>
+    ));
+    const child = screen.getByRole('button');
+    await fireEvent.pointerDown(child, { pointerType: 'mouse' });
+    expect(change).not.toHaveBeenCalled();
+
+    active.value = false;
+    await nextTick();
+    await fireEvent.pointerDown(child, { pointerType: 'mouse' });
+    expect(change).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.outsidePress }),
+    );
+  });
+
   describe('default options', () => {
     it('registers outside press touch listeners as passive', async () => {
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');

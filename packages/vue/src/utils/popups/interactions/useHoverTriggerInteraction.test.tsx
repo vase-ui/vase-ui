@@ -24,6 +24,24 @@ describe('useHoverTriggerInteraction', () => {
     await flushMicrotasks();
   }
 
+  it('ignores a close from the store after the hover trigger unmounts', async () => {
+    let store!: FloatingRootStore;
+    const Trigger = defineComponent(() => {
+      store = useFloating().context.rootStore;
+      useHoverTriggerInteraction(store);
+      return () => null;
+    });
+    const { unmount } = await render(<Trigger />);
+    const cancel = vi.spyOn(getHoverIntent(store), 'cancel');
+    store.context.events.emit('openchange', { open: false });
+    expect(cancel).toHaveBeenCalledOnce();
+
+    unmount();
+    cancel.mockClear();
+    store.context.events.emit('openchange', { open: false });
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
   it('updates the handleClose options during render', async () => {
     const block = shallowRef(false);
     let store!: FloatingRootStore;

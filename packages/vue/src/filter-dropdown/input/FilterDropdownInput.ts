@@ -220,7 +220,7 @@ export function useFilterDropdownInput(
 
 /**
  * Adds the `focusin` and `focusout` listeners of a part to its input with `addEventListener`.
- * Returns the function that removes them. Call it in the function ref of the input.
+ * Returns the function that removes them. Call it in a sync watcher of the input element.
  *
  * Chromium sends `focusout` when it removes a focused input. Vue calls the function ref with `null`
  * before the removal, so that event reaches no listener and keeps the focus ring. React also drops

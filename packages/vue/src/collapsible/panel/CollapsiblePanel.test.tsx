@@ -124,6 +124,69 @@ describe('<Collapsible.Panel />', () => {
     },
   }));
 
+  it('restores the layout styles when the panel unmounts before its first open frame', async () => {
+    const open = shallowRef(false);
+    const { unmount } = await render(() => (
+      <Collapsible.Root open={open.value}>
+        <Collapsible.Panel
+          data-testid="panel"
+          style={{ justifyContent: 'center', transition: 'height 1s' }}
+        >
+          Content
+        </Collapsible.Panel>
+      </Collapsible.Root>
+    ));
+    vi.useFakeTimers();
+    try {
+      open.value = true;
+      await nextTick();
+      const panel = screen.getByTestId('panel');
+      expect(panel.style.justifyContent).toBe('initial');
+
+      unmount();
+      expect(panel.style.justifyContent).toBe('center');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops the close animation check when KeepAlive holds the panel', async () => {
+    const open = shallowRef(true);
+    const shown = shallowRef(true);
+    await render(() => (
+      <Collapsible.Root open={open.value}>
+        <KeepAlive>
+          {shown.value && (
+            <Collapsible.Panel keepMounted data-testid="panel" style={{ transition: 'height 1s' }}>
+              Content
+            </Collapsible.Panel>
+          )}
+        </KeepAlive>
+      </Collapsible.Root>
+    ));
+    const panel = screen.getByTestId('panel');
+    const disabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    vi.useFakeTimers();
+    try {
+      open.value = false;
+      await nextTick();
+      vi.advanceTimersToNextFrame();
+      await nextTick();
+      expect(panel).toHaveAttribute('data-ending-style');
+      shown.value = false;
+      await nextTick();
+
+      const reads = vi.spyOn(panel, 'getAnimations');
+      vi.advanceTimersByTime(100);
+      await nextTick();
+      expect(reads).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = disabled;
+    }
+  });
+
   describe('VUE-60: the panel has one root node', () => {
     const FIXTURE = 'src/collapsible/panel/CollapsiblePanelScoped.test.vue';
 

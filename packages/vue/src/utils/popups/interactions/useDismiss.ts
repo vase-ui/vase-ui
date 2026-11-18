@@ -547,10 +547,6 @@ export function useDismiss(
     compositionEndPending = false;
     currentPointerType = '';
     touchState = null;
-  }
-
-  function endSession() {
-    resetSession();
     cancelDismissOnEndTimeout.clear();
     compositionTimeout.clear();
   }
@@ -561,7 +557,7 @@ export function useDismiss(
     if (!open || !isEnabled()) {
       // A source can change mid-gesture. Only a close or a hold ends the session.
       if (!open) {
-        endSession();
+        resetSession();
       }
       // A closed shadow root has no other inside-press signal. Keep the marker during a press.
       return () => clearInsideComponentTree(store);
@@ -1148,7 +1144,7 @@ export function useDismiss(
     isHeld,
     (held) => {
       if (held) {
-        endSession();
+        resetSession();
         clearInsideComponentTree();
       }
     },

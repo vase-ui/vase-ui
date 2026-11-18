@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type { HTMLProps } from '../../internals/types';
+import { useMenuRootContext } from '../root/MenuRootContext';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -13,6 +14,36 @@ import {
 
 describe('<Menu.Input />', () => {
   const { render } = createRenderer();
+
+  it('keeps the new input focused after a focusout from its previous element', async () => {
+    const key = shallowRef(0);
+    const Inputs = defineComponent(() => {
+      const { store } = useMenuRootContext(false);
+      return () => (
+        <>
+          <Menu.Input key={key.value} />
+          <output>{String(store.state.inputFocused)}</output>
+        </>
+      );
+    });
+    await render(
+      <Menu.FilterProvider>
+        <Menu.Root>
+          <Inputs />
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+    const old = screen.getByRole('searchbox');
+    key.value++;
+    await nextTick();
+    screen.getByRole('searchbox').focus();
+    await nextTick();
+    expect(screen.getByRole('status')).toHaveTextContent('true');
+
+    old.dispatchEvent(new FocusEvent('focusout'));
+    await nextTick();
+    expect(screen.getByRole('status')).toHaveTextContent('true');
+  });
 
   describe('VUE-111: aria-activedescendant follows the id of the highlighted item', () => {
     async function renderOpenMenu(renderItems: () => VNode[]) {
