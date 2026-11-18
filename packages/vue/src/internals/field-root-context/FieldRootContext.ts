@@ -156,21 +156,20 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
   },
 };
 
-export const FieldRootContext: InjectionKey<FieldRootContext> = Symbol();
+export const FieldRootContext: InjectionKey<FieldRootContext | null> = Symbol();
 
 /**
  * Gives the context of the nearest field, or a context that does nothing when there is none.
  * A control then works with no field around it.
- * To find out if a field is there, compare `setValidityData` with `NOOP`.
  */
 export function useFieldRootContext(optional = true): FieldRootContext {
-  const context = inject(FieldRootContext, DEFAULT_FIELD_ROOT_CONTEXT);
+  const context = inject(FieldRootContext, null);
 
-  if (context.setValidityData === NOOP && !optional) {
+  if (context === null && !optional) {
     throw new Error(
       'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',
     );
   }
 
-  return context;
+  return context ?? DEFAULT_FIELD_ROOT_CONTEXT;
 }

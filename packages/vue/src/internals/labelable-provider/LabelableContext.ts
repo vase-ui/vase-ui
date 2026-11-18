@@ -49,7 +49,7 @@ export interface LabelableContext {
  * A context for providing [labelable elements](https://html.spec.whatwg.org/multipage/forms.html#category-label)
  * with an accessible name (label) and description.
  */
-export const LabelableContext: InjectionKey<LabelableContext> = Symbol();
+export const LabelableContext: InjectionKey<LabelableContext | null> = Symbol();
 
 // All apps and all server requests share this object, so it holds no state.
 const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
@@ -68,8 +68,7 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
 /**
  * Gives the labelable context of the nearest provider, or a context that does nothing when there
  * is none. A control then works with no field around it.
- * To find out if a provider is there, compare `registerControlId` with `NOOP`.
  */
 export function useLabelableContext(): LabelableContext {
-  return inject(LabelableContext, DEFAULT_LABELABLE_CONTEXT);
+  return inject(LabelableContext, null) ?? DEFAULT_LABELABLE_CONTEXT;
 }

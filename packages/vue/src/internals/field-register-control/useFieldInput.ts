@@ -1,8 +1,8 @@
-import { nextTick, shallowRef, watch } from 'vue';
+import { inject, nextTick, shallowRef, watch } from 'vue';
 import type { ShallowRef } from 'vue';
 import { comesBeforeInSameTree } from '../comesBeforeInSameTree';
 import { NOOP } from '../noop';
-import { useFieldRootContext } from '../field-root-context/FieldRootContext';
+import { FieldRootContext } from '../field-root-context/FieldRootContext';
 import { useKeepAliveState } from '../useKeepAliveState';
 
 // The inputs of the controls of one field, in the order in which each control gave its input last.
@@ -28,13 +28,12 @@ const shownInputsOfField = new WeakMap<
  * the control that the new control replaces, and the new input then stays last.
  */
 export function useFieldInput(): (input: HTMLElement | null) => void {
-  const { validation, setValidityData } = useFieldRootContext();
-  // With no field, `validation.inputRef` drops each write, so there is nothing to keep.
-  if (setValidityData === NOOP) {
+  const field = inject(FieldRootContext, null);
+  if (!field) {
     return NOOP;
   }
 
-  const { inputRef } = validation;
+  const { inputRef } = field.validation;
   const inputs = inputsOfField.get(inputRef) ?? [];
   inputsOfField.set(inputRef, inputs);
 

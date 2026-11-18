@@ -52,7 +52,6 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import {
-  DEFAULT_FIELD_ROOT_CONTEXT,
   FieldRootContext,
   useFieldRootContext,
 } from '../../internals/field-root-context/FieldRootContext';
@@ -106,7 +105,7 @@ const direction = useDirection();
 // An input in the popup is not the control of the field. A part that the input renders, such as
 // a field control in its `as`, then gets no field.
 if (hasPositionerParent) {
-  provide(FieldRootContext, DEFAULT_FIELD_ROOT_CONTEXT);
+  provide(FieldRootContext, null);
 }
 
 // The input binds `aria-labelledby` and `aria-describedby`, and a label or a message can come

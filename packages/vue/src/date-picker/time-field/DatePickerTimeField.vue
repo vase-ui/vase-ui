@@ -32,10 +32,7 @@ export interface DatePickerTimeFieldProps extends Omit<
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import {
-  DEFAULT_FIELD_ROOT_CONTEXT,
-  FieldRootContext,
-} from '../../internals/field-root-context/FieldRootContext';
+import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
 import { isKind } from '../../internals/date-time/temporal';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -68,7 +65,7 @@ if (process.env.NODE_ENV !== 'production' && !hasTime(picker.template.value)) {
 // The popup is below the field of the picker in the component tree, although a portal moves it in
 // the document. This time field is not a control of that field: it takes no id from it, and it
 // does not register its input. It also has no label of the field.
-provide(FieldRootContext, DEFAULT_FIELD_ROOT_CONTEXT);
+provide(FieldRootContext, null);
 provideLabelableContext();
 
 function toTimeValue(value: DatePickerRootValue | null) {
