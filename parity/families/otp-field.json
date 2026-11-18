@@ -51,7 +51,13 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/otp-field/root/otpField.ts",
       "member": "OTPFieldRootContext",
-      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx"
+      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx",
+      "additional": [
+        {
+          "destination": "packages/vue/src/otp-field/input/OTPFieldInput.vue",
+          "member": "inputState"
+        }
+      ]
     },
     {
       "upstream": "packages/react/src/otp-field/utils/otp.ts",

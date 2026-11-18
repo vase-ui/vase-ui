@@ -2808,7 +2808,7 @@ describe('<OTPField.Root />', () => {
     });
 
     it('is kept when a previously focused slot unmounts after focus moves to a sibling', async () => {
-      // `inputCount` trails `length` by a render, so shrinking both at once warns about a
+      // The registry count trails `length` by a render, so a slot removal can report a
       // mismatch that never reaches the DOM.
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

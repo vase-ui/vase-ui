@@ -21,7 +21,7 @@ const defaultScrubAreaContext: NumberFieldScrubAreaContext = {
   isScrubbing: shallowRef(true),
   isTouchInput: shallowRef(false),
   isPointerLockDenied: shallowRef(false),
-  cursor: shallowRef(null),
+  registerCursor: () => () => {},
   scrubAreaElement: shallowRef<HTMLElement | null>(null),
 };
 
@@ -416,7 +416,7 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
 
         expect(getCenter(cursor).x).toBeCloseTo(230, 1);
         expect(getCenter(cursor).y).toBeCloseTo(160, 1);
-        // The box that reads the containing block is gone.
+        // The portal has only the cursor as a child.
         expect(cursor.parentElement!.children).toHaveLength(1);
       },
     );
@@ -431,6 +431,53 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
 
       expect(getCenter(cursor).x).toBeCloseTo(230, 1);
       expect(getCenter(cursor).y).toBeCloseTo(160, 1);
+    });
+
+    it('uses one measurement box in the render slot until release', async () => {
+      const lock = vi.spyOn(document.body, 'requestPointerLock').mockResolvedValue();
+      onTestFinished(() => lock.mockRestore());
+      await render(() => (
+        <NumberField.Root>
+          <NumberField.Input />
+          <NumberField.ScrubArea data-testid="area">
+            <NumberField.ScrubAreaCursor
+              data-testid="cursor"
+              v-slots={{
+                render: ({ props }: { props: Record<string, unknown> }) => (
+                  <div
+                    data-testid="wrapper"
+                    style="transform: translate(30px, 40px) scale(0.5); transform-origin: 0 0"
+                  >
+                    <span {...props} />
+                  </div>
+                ),
+              }}
+            />
+          </NumberField.ScrubArea>
+        </NumberField.Root>
+      ));
+      const area = screen.getByTestId('area');
+      area.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 120, clientY: 80 }),
+      );
+      await flushMicrotasks();
+      const cursor = screen.getByTestId('cursor');
+      const wrapper = screen.getByTestId('wrapper');
+      const box = wrapper.querySelector<HTMLElement>('[inert]');
+      expect(box).toHaveAttribute('aria-hidden', 'true');
+      expect(getComputedStyle(box!)).toMatchObject({ visibility: 'hidden', pointerEvents: 'none' });
+      expect(getCenter(cursor)).toEqual({ x: 120, y: 80 });
+
+      wrapper.style.transform = 'translate(60px, 10px) scale(2)';
+      window.dispatchEvent(new PointerEvent('pointermove', { movementX: 5, movementY: 8 }));
+      expect(getCenter(cursor)).toEqual({ x: 125, y: 88 });
+      expect(wrapper.querySelector('[inert]')).toBe(box);
+
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await waitFor(() =>
+        expect(document.querySelectorAll('[data-testid="wrapper"]')).toHaveLength(0),
+      );
+      expect(box!.isConnected).toBe(false);
     });
 
     it('renders the cursor in the document of its scrub area', async () => {

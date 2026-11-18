@@ -92,14 +92,14 @@ export const stateAttributesMapping: StateAttributesMapping<NumberFieldRootState
 
 export interface ScrubCursor {
   element: HTMLSpanElement;
-  setTransform: (transform: string) => void;
+  place: (x: number, y: number) => void;
 }
 
 export interface NumberFieldScrubAreaContext {
   isScrubbing: Readonly<Ref<boolean>>;
   isTouchInput: Readonly<Ref<boolean>>;
   isPointerLockDenied: Readonly<Ref<boolean>>;
-  cursor: ShallowRef<ScrubCursor | null>;
+  registerCursor: (cursor: ScrubCursor) => () => void;
   /**
    * The element of the scrub area. `NumberField.ScrubAreaCursor` renders in its root node.
    */

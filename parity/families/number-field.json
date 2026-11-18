@@ -48,7 +48,13 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
       "member": "useNumberFieldStepperButton",
-      "witness": "packages/vue/src/number-field/root/useNumberFieldStepperButton.test.tsx"
+      "witness": "packages/vue/src/number-field/root/useNumberFieldStepperButton.test.tsx",
+      "additional": [
+        {
+          "destination": "packages/vue/src/number-field/root/NumberFieldRoot.vue",
+          "member": "prepareStepper"
+        }
+      ]
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
@@ -91,6 +97,32 @@
       "destination": "packages/vue/src/number-field/utils/parse.ts",
       "member": "toValidatedNumber",
       "witness": "packages/vue/src/number-field/utils/validate.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/number-field/root/NumberFieldRoot.vue",
+      "member": "setValue",
+      "witness": "packages/vue/src/number-field/input/NumberFieldInput.test.tsx",
+      "additional": [
+        {
+          "destination": "packages/vue/src/number-field/input/NumberFieldInput.vue",
+          "member": "allowedNonNumericKeys"
+        }
+      ]
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/number-field/scrub-area/NumberFieldScrubArea.vue",
+      "member": "onScrub",
+      "witness": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
+      "additional": [
+        {
+          "destination": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.vue",
+          "member": "place"
+        }
+      ]
     }
   ]
 }

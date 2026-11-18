@@ -237,7 +237,7 @@ describe('the context of the root of Number Field', () => {
       has: ['(', ')', '$'],
       hasNot: [],
     },
-  ])('getAllowedNonNumericKeys has $name', async ({ props, has, hasNot }) => {
+  ])('accepts the keys for $name', async ({ props, has, hasNot }) => {
     await renderRoot({ locale: 'en-US', ...props });
     for (const key of has) {
       expect(
