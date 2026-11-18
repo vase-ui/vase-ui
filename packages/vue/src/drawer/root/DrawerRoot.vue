@@ -3,6 +3,7 @@ import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEvent
 import { REASONS } from '../../internals/reasons';
 import type { DrawerHandle } from '../handle';
 import type {
+  DrawerOpeningSwipe,
   DrawerNestedSwipeProgressStore,
   DrawerSnapPoint,
   DrawerSwipeDirection,
@@ -157,6 +158,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
+import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';
 
 const props = withDefaults(defineProps<DrawerRootProps<Payload>>(), {
@@ -238,7 +240,8 @@ const [activeSnapPoint, setActiveSnapPointUnwrapped] = useControlled<DrawerSnapP
 });
 
 let isNestedDrawerOpen = false;
-const swipeAreaActiveRef = shallowRef(false);
+const openingSwipe = shallowRef<DrawerOpeningSwipe | null>(null);
+const viewportGesture = shallowRef<DrawerViewportContext>();
 
 function setActiveSnapPoint(
   nextSnapPoint: DrawerSnapPoint | null,
@@ -349,9 +352,11 @@ const { store, payload, actions } = useRenderDialogRoot<Payload>('drawer', props
 const setOpen = store.setOpen as DrawerRootContext['setOpen'];
 
 provide(DrawerRootContext, {
+  dialogContext: store.context,
   setOpen,
   swipeDirection: computed(() => props.swipeDirection),
-  swipeAreaActiveRef,
+  openingSwipe,
+  viewportGesture,
   snapToSequentialPoints: computed(() => props.snapToSequentialPoints),
   snapPoints: computed(() => props.snapPoints),
   activeSnapPoint: resolvedActiveSnapPoint,

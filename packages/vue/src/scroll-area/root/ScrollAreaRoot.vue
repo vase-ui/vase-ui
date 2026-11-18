@@ -83,7 +83,7 @@ function normalizeOverflowEdgeThreshold(threshold: ScrollAreaRootProps['overflow
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -135,14 +135,18 @@ const thumbYElement = shallowRef<HTMLElement | null>(null);
 const thumbXElement = shallowRef<HTMLElement | null>(null);
 const cornerElement = shallowRef<HTMLElement | null>(null);
 
-let activePointerId: number | null = null;
-let startY = 0;
-let startX = 0;
-let startScrollTop = 0;
-let startScrollLeft = 0;
-let currentOrientation: Orientation = 'vertical';
+interface ScrollAreaPress {
+  id: number;
+  orientation: Orientation;
+  viewport: HTMLElement;
+  thumb: HTMLElement;
+  start: number;
+  startScroll: number;
+  pendingOffset: number | null;
+}
+
+const press = shallowRef<ScrollAreaPress | null>(null);
 let lastScrollPosition = DEFAULT_COORDS;
-let savedSnapType: string | null = null;
 
 function startScrolling(vertical: boolean) {
   const scrolling = vertical ? scrollingY : scrollingX;
@@ -181,95 +185,93 @@ watch(
       scrollingX.value = false;
       // `KeepAlive` took the element out of the document, so the browser dropped the
       // pointer capture. No release event and no leave event comes.
-      activePointerId = null;
-      restoreViewportSnap();
+      if (press.value) {
+        finishPress(press.value);
+      }
       hovering.value = false;
     }
   },
   { flush: 'sync' },
 );
 
-// CSS scroll snap puts each scroll on a snap point, so a thumb drag jumps between snap points.
-// A native scrollbar does not snap during a drag. Stop the snap until the pointer is released.
-// The restored value snaps the viewport again.
-// Save the value one time. A second pointer in the drag would save `none`.
-// A track press scrolls right after this call, so the function writes to the element at once.
-// The value goes to the element and not to the rendered style. A rendered declaration would make
-// Vue remove a value that the consumer wrote in script.
-function disableViewportSnap() {
+watch(
+  () => {
+    const active = press.value;
+    if (!active) {
+      return null;
+    }
+    const thumb = active.orientation === 'vertical' ? thumbYElement : thumbXElement;
+    return active.viewport !== viewportElement.value || active.thumb !== thumb.value
+      ? active
+      : null;
+  },
+  (retired) => {
+    if (retired) {
+      finishPress(retired);
+    }
+  },
+  { flush: 'sync' },
+);
+
+function handlePointerDown(event: PointerEvent, orientation: Orientation, trackPosition?: number) {
+  if (event.button !== 0 || press.value?.thumb.hasPointerCapture(press.value.id)) {
+    return;
+  }
+  const vertical = orientation === 'vertical';
+  const thumb = vertical ? thumbYElement.value : thumbXElement.value;
   const viewport = viewportElement.value;
-  if (viewport && savedSnapType === null) {
-    savedSnapType = viewport.style.scrollSnapType;
-    viewport.style.scrollSnapType = 'none';
-  }
-}
-
-function restoreViewportSnap() {
-  if (viewportElement.value && savedSnapType !== null) {
-    viewportElement.value.style.scrollSnapType = savedSnapType;
-  }
-  savedSnapType = null;
-}
-
-function reapplyViewportSnapNone() {
-  if (viewportElement.value && savedSnapType !== null) {
-    viewportElement.value.style.scrollSnapType = 'none';
-  }
-}
-
-function handlePointerDown(event: PointerEvent, orientation: Orientation) {
-  if (event.button !== 0) {
+  if (!viewport || !thumb) {
     return;
   }
 
-  if (activePointerId !== null) {
-    const activeThumb =
-      currentOrientation === 'vertical' ? thumbYElement.value : thumbXElement.value;
-    // A live drag holds the capture for the active pointer. Ignore other pointers.
-    // No capture means that the release went missing, for example with a lost touch contact.
-    // Then the new pointer takes the drag. If it did not, no drag could start again.
-    if (activeThumb?.hasPointerCapture(activePointerId)) {
+  const axis = vertical ? 'scrollTop' : 'scrollLeft';
+  const active: ScrollAreaPress = {
+    id: event.pointerId,
+    orientation,
+    viewport,
+    thumb,
+    start: vertical ? event.clientY : event.clientX,
+    startScroll: viewport[axis],
+    pendingOffset: 0,
+  };
+  press.value = active;
+  thumb.setPointerCapture(event.pointerId);
+
+  // A track jump or an early move must wait for the snap style of this press.
+  nextTick(() => {
+    if (press.value !== active) {
       return;
     }
+    if (trackPosition !== undefined) {
+      viewport[axis] = trackPosition;
+      active.startScroll = viewport[axis];
+      handleScroll({ x: viewport.scrollLeft, y: viewport.scrollTop });
+    }
+    if (active.pendingOffset) {
+      viewport[axis] = active.startScroll + active.pendingOffset;
+    }
+    active.pendingOffset = null;
+  });
+}
+
+function finishPress(active: ScrollAreaPress) {
+  press.value = null;
+  (active.orientation === 'vertical' ? scrollingY : scrollingX).value = false;
+  if (active.thumb.hasPointerCapture(active.id)) {
+    active.thumb.releasePointerCapture(active.id);
   }
-
-  activePointerId = event.pointerId;
-  startY = event.clientY;
-  startX = event.clientX;
-  currentOrientation = orientation;
-
-  const viewport = viewportElement.value;
-  if (viewport) {
-    startScrollTop = viewport.scrollTop;
-    startScrollLeft = viewport.scrollLeft;
-    disableViewportSnap();
-  }
-
-  const thumb = currentOrientation === 'vertical' ? thumbYElement.value : thumbXElement.value;
-  thumb?.setPointerCapture(event.pointerId);
 }
 
 function handlePointerUp(event: PointerEvent) {
-  if (event.pointerId !== activePointerId) {
-    return;
-  }
-
-  activePointerId = null;
-  // Clear the scrolling state at once and do not wait for the timer of the last move.
-  // Each release path then acts in the same way: a release, `pointercancel` and a missed release.
-  (currentOrientation === 'vertical' ? scrollingY : scrollingX).value = false;
-
-  restoreViewportSnap();
-
-  const thumb = currentOrientation === 'vertical' ? thumbYElement.value : thumbXElement.value;
-  // `pointercancel` releases the capture by itself. A release of a capture that is gone throws.
-  if (thumb?.hasPointerCapture(event.pointerId)) {
-    thumb.releasePointerCapture(event.pointerId);
+  const active = press.value;
+  if (active && event.pointerId === active.id) {
+    finishPress(active);
   }
 }
 
 function handlePointerMove(event: PointerEvent) {
-  if (event.pointerId !== activePointerId) {
+  const active = press.value;
+  if (!active || event.pointerId !== active.id) {
     return;
   }
 
@@ -281,15 +283,10 @@ function handlePointerMove(event: PointerEvent) {
     return;
   }
 
-  const viewport = viewportElement.value;
-  if (!viewport) {
-    return;
-  }
-
-  const vertical = currentOrientation === 'vertical';
-  const thumb = vertical ? thumbYElement.value : thumbXElement.value;
+  const { thumb, viewport } = active;
+  const vertical = active.orientation === 'vertical';
   const scrollbar = vertical ? scrollbarYElement.value : scrollbarXElement.value;
-  if (!thumb || !scrollbar) {
+  if (!scrollbar) {
     return;
   }
 
@@ -301,18 +298,16 @@ function handlePointerMove(event: PointerEvent) {
   const maxThumbOffset = trackSize - thumbSizePx - scrollbarOffset - thumbOffset;
   // A short or padded track gives a `maxThumbOffset` of zero or less when the thumb has the
   // minimum size. A division by it gives a non-finite or an inverted scroll position.
-  const delta = vertical ? event.clientY - startY : event.clientX - startX;
+  const delta = (vertical ? event.clientY : event.clientX) - active.start;
   const scrollRatio = maxThumbOffset <= 0 ? 0 : delta / maxThumbOffset;
 
   const scrollableSize = vertical ? viewport.scrollHeight : viewport.scrollWidth;
   const viewportSize = vertical ? viewport.clientHeight : viewport.clientWidth;
-  const startScroll = vertical ? startScrollTop : startScrollLeft;
-  const nextScroll = startScroll + scrollRatio * (scrollableSize - viewportSize);
-
-  if (vertical) {
-    viewport.scrollTop = nextScroll;
+  const offset = scrollRatio * (scrollableSize - viewportSize);
+  if (active.pendingOffset === null) {
+    viewport[vertical ? 'scrollTop' : 'scrollLeft'] = active.startScroll + offset;
   } else {
-    viewport.scrollLeft = nextScroll;
+    active.pendingOffset = offset;
   }
   event.preventDefault();
 
@@ -372,8 +367,7 @@ provide(ScrollAreaRootContext, {
   handlePointerMove,
   handlePointerUp,
   handleScroll,
-  disableViewportSnap,
-  reapplyViewportSnapNone,
+  press,
   rootId,
   hiddenState,
   setHiddenState(next) {

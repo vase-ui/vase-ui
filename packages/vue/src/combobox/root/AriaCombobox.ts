@@ -1934,44 +1934,17 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
-  // The value that the input has after the last event that the root handled. A write of Vue or of
-  // the root sets it too.
-  let handledValue: string | undefined;
-
-  // Vue writes the value to the input only when the root renders. A browser can change the input
-  // with no change of the state, such as an autofill.
-  function writeValueToInput() {
-    const input = hiddenInputElement.value;
-    if (input && input.value !== serializedValue.value) {
-      input.value = serializedValue.value;
-    }
-    handledValue = input?.value;
-  }
-
-  // Until the take of the hydration, the input can hold a value that the root did not handle.
-  onMounted(() => {
-    handledValue = writesHiddenValue.value
-      ? hiddenInputElement.value?.value
-      : serializedValue.value;
-  });
-  watch(
-    serializedValue,
-    () => {
-      handledValue = hiddenInputElement.value?.value;
-    },
-    { flush: 'post' },
+  const { valueProps, renderValue } = useFormRestoreAsInput(
+    hiddenInputElement,
+    () => serializedValue.value,
+    false,
   );
 
   // Handle browser autofill.
   function handleAutofill(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     const nextValue = input.value;
-    // A program can send `input` and `change` in one task. The root handles a value one time.
-    if (nextValue === handledValue) {
-      return;
-    }
-    handledValue = nextValue;
-    void nextTick(writeValueToInput);
+    renderValue();
     if (event.defaultPrevented || disabled.value || readOnly.value) {
       return;
     }
@@ -2087,7 +2060,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   });
 
-  useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
   useFormEntryValue(hiddenInputElement, () => serializedValue.value);
 
   function hiddenInputProps() {
@@ -2106,7 +2078,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       disabled: disabled.value,
       required: required.value && !hasMultipleSelection.value,
       readonly: readOnly.value,
-      ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
+      ...(writesHiddenValue.value ? valueProps() : undefined),
       style: hiddenInputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
       tabindex: -1,
       'aria-hidden': true,
@@ -2121,7 +2093,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         (inputRef.value ?? state.triggerElement)?.focus();
       },
       onInput: handleAutofill,
-      onChange: handleAutofill,
     };
   }
 

@@ -4,6 +4,8 @@ import type {
   DrawerRootChangeEventDetails,
   DrawerRootSnapPointChangeEventDetails,
 } from './DrawerRoot.vue';
+import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
 import type { SwipeDirection } from '../../utils/useSwipeDismiss';
 
 export type DrawerSwipeDirection = SwipeDirection;
@@ -14,17 +16,22 @@ export interface DrawerNestedSwipeProgressStore {
   subscribe: (listener: () => void) => () => void;
 }
 
+export interface DrawerOpeningSwipe {
+  movementX: number;
+  movementY: number;
+  progress: number;
+  height: Ref<number>;
+}
+
 export interface DrawerRootContext {
+  dialogContext: DialogStore<unknown>['context'];
   setOpen: (
     open: boolean,
     eventDetails: Omit<DrawerRootChangeEventDetails, 'preventUnmountOnClose'>,
   ) => void;
   swipeDirection: ComputedRef<DrawerSwipeDirection>;
-  /**
-   * Whether `Drawer.SwipeArea` is currently driving an open gesture (writing the popup's
-   * swipe-movement vars imperatively). The viewport reads this to skip resetting them on open.
-   */
-  swipeAreaActiveRef: Ref<boolean>;
+  openingSwipe: Ref<DrawerOpeningSwipe | null>;
+  viewportGesture: Ref<DrawerViewportContext | undefined>;
   /**
    * Whether to disable velocity-based snap skipping.
    */
@@ -65,9 +72,6 @@ export interface DrawerRootContext {
    * Whether a nested drawer is currently being swiped.
    */
   nestedSwiping: Readonly<Ref<boolean>>;
-  /**
-   * Provides nested swipe progress without re-rendering the drawer tree.
-   */
   nestedSwipeProgressStore: DrawerNestedSwipeProgressStore;
   /**
    * Called by a nested drawer to report whether it is still present (open or transitioning out).

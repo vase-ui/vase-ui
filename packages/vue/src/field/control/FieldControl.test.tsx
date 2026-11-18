@@ -856,10 +856,31 @@ describe('<Field.Control />', () => {
       expect(updates).toEqual(cancel ? [] : ['fixedx']);
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
     });
+
+    it('shows the value of the prop in a component of the consumer', async () => {
+      const TextInput = defineComponent({
+        inheritAttrs: false,
+        setup(_, { attrs }) {
+          return () => <input {...attrs} />;
+        },
+      });
+
+      await render(
+        <Field.Root>
+          <Field.Control as={TextInput} value="fixed" />
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      await fireEvent.input(input, { target: { value: 'fixedx' } });
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('fixed');
+    });
   });
 
   describe('change event', () => {
-    it('handles a change event that has a new value and no input event', async () => {
+    it('ignores a change event without an input event', async () => {
       const handleValueChange = vi.fn();
 
       await render(
@@ -871,9 +892,8 @@ describe('<Field.Control />', () => {
       const input = screen.getByRole<HTMLInputElement>('textbox');
       await fireEvent.change(input, { target: { value: 'filled' } });
 
-      expect(handleValueChange).toHaveBeenCalledTimes(1);
-      expect(handleValueChange.mock.lastCall?.[0]).toBe('filled');
-      expect(screen.getByTestId('root')).toHaveAttribute('data-filled', '');
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-filled');
     });
 
     it('ignores a change event that has the value of the last handled event', async () => {
@@ -953,7 +973,7 @@ describe('<Field.Control />', () => {
       },
     );
 
-    it('handles a change event that has the last typed value after the parent cleared the value', async () => {
+    it('takes the last typed value again after the parent cleared the value', async () => {
       const handleValueChange = vi.fn();
 
       const App = defineComponent(() => {
@@ -988,15 +1008,14 @@ describe('<Field.Control />', () => {
       expect(input).toHaveValue('');
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-filled');
 
-      // A program that fills a form can send only `change`, with the value that the user typed last.
-      await fireEvent.change(input, { target: { value: 'a' } });
+      await fireEvent.input(input, { target: { value: 'a' } });
 
       expect(handleValueChange).toHaveBeenCalledTimes(2);
       expect(handleValueChange).toHaveBeenLastCalledWith('a');
       expect(screen.getByTestId('root')).toHaveAttribute('data-filled', '');
     });
 
-    it('handles a change event that has a value that the parent refused', async () => {
+    it('takes another input event after the parent refuses a value', async () => {
       const handleValueChange = vi.fn();
 
       const App = defineComponent(() => {
@@ -1022,7 +1041,7 @@ describe('<Field.Control />', () => {
 
       expect(input).toHaveValue('abc');
 
-      await fireEvent.change(input, { target: { value: 'abcd' } });
+      await fireEvent.input(input, { target: { value: 'abcd' } });
 
       expect(handleValueChange).toHaveBeenCalledTimes(2);
       expect(handleValueChange).toHaveBeenLastCalledWith('abcd');
@@ -1079,7 +1098,7 @@ describe('<Field.Control />', () => {
       },
     );
 
-    it('BUG-6206: handles a change event that has the last typed value after a native reset', async () => {
+    it('BUG-6206: takes the last typed value again after a native reset', async () => {
       const handleValueChange = vi.fn();
 
       await render(
@@ -1100,8 +1119,7 @@ describe('<Field.Control />', () => {
       expect(input).toHaveValue('');
       expect(root).not.toHaveAttribute('data-filled');
 
-      // A program that fills a form can send only `change`, with the value that the user typed last.
-      await fireEvent.change(input, { target: { value: 'a' } });
+      await fireEvent.input(input, { target: { value: 'a' } });
 
       expect(handleValueChange.mock.calls.map(([value]) => value)).toEqual(['a', 'a']);
       expect(root).toHaveAttribute('data-filled', '');

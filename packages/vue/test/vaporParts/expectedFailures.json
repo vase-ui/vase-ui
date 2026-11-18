@@ -104,7 +104,13 @@
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },
+    "src/internals/checkedInputProps.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useFormReset.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useInputRender.test.tsx": {
       "fails": {}
     },
     "src/internals/useRenderElement.test.tsx": {

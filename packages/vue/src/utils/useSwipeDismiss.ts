@@ -192,7 +192,6 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
   let hasStationarySample = false;
   let lastDragVelocity: Point = { x: 0, y: 0 };
   let lastProgressDetails: SwipeProgressDetailsInternal | null = null;
-  let dragStyleSnapshot: [string, string] | null = null;
 
   function readSwipeThresholdDefault() {
     const value = toValue(options.swipeThreshold);
@@ -254,29 +253,26 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     onProgress?.(nextProgress, details);
   }
 
-  function syncDragStyles(nextSwiping: boolean) {
+  // Until Vue patches the drag styles, one flush can contain the whole gesture.
+  // A native transform in that flush would have no bound transform to clear it.
+  let dragStylesPatched = false;
+  watch(
+    swiping,
+    (active) => {
+      dragStylesPatched = active;
+    },
+    { flush: 'post' },
+  );
+
+  function paintDragOffset() {
     const element = getElement();
-    if (!(toValue(options.trackDrag) ?? true) || !element) {
-      if (!nextSwiping) {
-        dragStyleSnapshot = null;
-      }
+    if (!dragStylesPatched || !(toValue(options.trackDrag) ?? true) || !element) {
       return;
     }
 
     const style = element.style;
-    if (nextSwiping) {
-      dragStyleSnapshot ??= [style.transition, style.transform];
-
-      style.transition = 'none';
-    } else if (dragStyleSnapshot) {
-      [style.transition, style.transform] = dragStyleSnapshot;
-      dragStyleSnapshot = null;
-    }
-
-    if (nextSwiping) {
-      style.transform = getDragTransform(dragOffset, initialTransform.scale);
-    }
-
+    // A bound popup offset added more than 10% to frame work.
+    style.transform = getDragTransform(dragOffset, initialTransform.scale);
     style.setProperty(movementCssVars.x, `${dragOffset.x - initialTransform.x}px`);
     style.setProperty(movementCssVars.y, `${dragOffset.y - initialTransform.y}px`);
   }
@@ -339,7 +335,6 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     hasStationarySample = false;
     lastDragVelocity = { x: 0, y: 0 };
     lastProgressDetails = null;
-    syncDragStyles(false);
   }
 
   function getTargetAtPoint(position: Point, event: Event) {
@@ -437,7 +432,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     setSwiping(true);
     isFirstPointerMove = true;
     updateSwipeProgress(0);
-    syncDragStyles(true);
+    paintDragOffset();
 
     return true;
   }
@@ -465,7 +460,6 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     dragOffset = { x: initialTransform.x, y: initialTransform.y };
     currentSwipeDirection.value = undefined;
     sawPrimaryButtonsOnMove = false;
-    syncDragStyles(false);
 
     const element = getElement();
     if (element) {
@@ -642,7 +636,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       newOffsetY += dampedDelta.y;
     }
 
-    // Write the drag styles only when the offset changed. `syncDragStyles` writes the frozen
+    // Write the drag styles only when the offset changed. `paintDragOffset` writes the frozen
     // transform and the movement variables with no damping, and `onProgress` of the caller writes
     // the damped styles after it. `updateSwipeProgress` does not call `onProgress` for equal
     // deltas. A move that does not change the offset would then put the element at the position
@@ -652,7 +646,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
     dragOffset = { x: newOffsetX, y: newOffsetY };
     if (offsetChanged) {
-      syncDragStyles(true);
+      paintDragOffset();
     }
     recordDragSample({ x: newOffsetX, y: newOffsetY }, getValidTimeStamp(event.timeStamp));
     const dragDeltaX = newOffsetX - initialTransform.x;
@@ -769,12 +763,10 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     if (shouldClose && dismissDirection) {
       currentSwipeDirection.value = dismissDirection;
       dragDismissed.value = true;
-      syncDragStyles(false);
       onDismiss?.(event, { direction: dismissDirection });
     } else {
       dragOffset = { x: resolvedInitialTransform.x, y: resolvedInitialTransform.y };
       currentSwipeDirection.value = undefined;
-      syncDragStyles(false);
       updateSwipeProgress(0, progressDetails);
     }
   }
@@ -1004,8 +996,7 @@ export interface UseSwipeDismissOptions {
    */
   ignoreSelectorWhenTouch?: MaybeRefOrGetter<boolean | undefined>;
   /**
-   * Whether the composable writes the drag transform and the movement variables to the element
-   * during a swipe. Set it to `false` when the caller writes the styles from the events.
+   * Whether the composable writes the drag transform and movement variables during a swipe.
    * @default true
    */
   trackDrag?: MaybeRefOrGetter<boolean | undefined>;

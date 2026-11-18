@@ -107,8 +107,8 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
-import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -116,7 +116,6 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useFormContext } from '../../internals/form-context';
 import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
-import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
   useAriaLabelledBy,
   useControlLabelId,
@@ -257,16 +256,6 @@ const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabel,
 );
 
-// Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. A browser keeps the result of a click that a parent does not
-// accept. A form would then submit a state that the switch does not show.
-function writeCheckedToInput() {
-  const input = inputElement.value;
-  if (input && input.checked !== isChecked.value) {
-    input.checked = isChecked.value;
-  }
-}
-
 function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
@@ -296,7 +285,7 @@ function onInputClick(event: MouseEvent) {
   }
 
   // A parent that controls the switch can keep the old value. The input then has the new one.
-  void nextTick(writeCheckedToInput);
+  void nextTick(restoreInput);
 }
 
 // The input changed with no event that the switch handled: a press on a native label before the
@@ -311,7 +300,7 @@ function takeInputState(event?: Event) {
     requestChange(input.checked, event);
   }
 
-  void nextTick(writeCheckedToInput);
+  void nextTick(restoreInput);
 }
 
 useFormReset(inputElement, (event) => {
@@ -327,22 +316,21 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
-// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
+function restoreInput() {
+  restoreChecked(inputElement.value, isChecked.value);
+}
+
 watch(
   inputElement,
   (input) => {
-    if (!input) {
-      return;
-    }
-
-    if (input.checked === input.defaultChecked) {
-      writeCheckedToInput();
-    } else {
+    // The field registers its initial value before it takes a click from before hydration.
+    if (input && input.checked !== input.defaultChecked) {
       queueInputTake(() => {
         takeInputState();
         return true;
       });
+    } else {
+      restoreInput();
     }
   },
   { flush: 'post' },
@@ -411,21 +399,17 @@ function inputProps() {
   return {
     ...validationProps,
     'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    checked: isChecked.value,
-    disabled: isDisabled.value,
-    form: props.form,
-    id: hiddenInputId.value,
-    name: inputName.value,
-    required: props.required,
-    style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
-    tabindex: -1,
-    type: 'checkbox',
-    'aria-hidden': true,
-    onInvalid: handleHiddenInputInvalid,
-    onClick: onInputClick,
-    onFocusin() {
-      element.value?.focus();
-    },
+    ...checkedInputProps({
+      type: 'checkbox',
+      checked: isChecked.value,
+      disabled: isDisabled.value,
+      form: props.form,
+      id: hiddenInputId.value,
+      name: inputName.value,
+      required: props.required,
+      onClick: onInputClick,
+      element: () => element.value,
+    }),
     ...(props.value !== undefined ? { value: props.value } : undefined),
   };
 }

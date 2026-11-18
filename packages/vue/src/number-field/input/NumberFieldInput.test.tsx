@@ -2280,7 +2280,7 @@ describe('<NumberField.Input />', () => {
       expect(getHiddenInput().value).toBe('5');
     });
 
-    it('changes the value for a `change` event that has no `input` event', async () => {
+    it('ignores a change event without an input event', async () => {
       const onValueChange = vi.fn();
       await render(
         <NumberField.Root onValueChange={onValueChange}>
@@ -2291,11 +2291,7 @@ describe('<NumberField.Input />', () => {
 
       await fireEvent.change(input, { target: { value: '42' } });
 
-      expect(onValueChange).toHaveBeenCalledTimes(1);
-      expect(onValueChange.mock.calls[0][0]).toBe(42);
-      expect(onValueChange.mock.calls[0][1].reason).toBe(REASONS.inputChange);
-      expect(onValueChange.mock.calls[0][1].event.type).toBe('change');
-      expect(input).toHaveValue('42');
+      expect(onValueChange).not.toHaveBeenCalled();
     });
 
     it('ignores a `change` event for the text that the input had at the mount', async () => {

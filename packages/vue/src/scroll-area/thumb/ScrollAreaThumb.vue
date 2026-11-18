@@ -23,6 +23,7 @@ export interface ScrollAreaThumbProps
 import { computed, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import * as ScrollAreaScrollbarCssVars from '../scrollbar/ScrollAreaScrollbarCssVars';
 import { useScrollAreaScrollbarContext } from '../scrollbar/ScrollAreaScrollbarContext';
@@ -58,28 +59,7 @@ const state = computed<ScrollAreaThumbState>(() => ({
   orientation: orientation.value,
 }));
 
-function getElementHolder(thumbOrientation: 'vertical' | 'horizontal') {
-  return thumbOrientation === 'vertical' ? thumbYElement : thumbXElement;
-}
-
-// `useRenderElement` sets `element` before it calls the callback, so the callback keeps the element.
-let mountedElement: HTMLElement | null = null;
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  // A change of the orientation can remove the scrollbar and this thumb together. The `watch`
-  // below does not run then, so the callback clears each holder of the element that left.
-  ref: (thumb) => {
-    if (thumb) {
-      getElementHolder(orientation.value).value = thumb;
-    } else {
-      for (const holder of [thumbYElement, thumbXElement]) {
-        if (holder.value === mountedElement) {
-          holder.value = null;
-        }
-      }
-    }
-    mountedElement = thumb;
-  },
   state,
   props: (attrs) => [
     {
@@ -87,6 +67,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       onPointermove: handlePointerMove,
       onPointerup: handlePointerUp,
       onPointercancel: handlePointerUp,
+      onLostpointercapture: handlePointerUp,
       style: {
         visibility: hasMeasuredScrollbar.value ? undefined : 'hidden',
         ...(orientation.value === 'vertical'
@@ -98,18 +79,23 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-watch(orientation, (nextOrientation, previousOrientation) => {
-  const thumb = element.value;
-  if (!thumb) {
-    return;
-  }
-
-  const previousHolder = getElementHolder(previousOrientation);
-  if (previousHolder.value === thumb) {
-    previousHolder.value = null;
-  }
-  getElementHolder(nextOrientation).value = thumb;
-});
+const { isHeld } = useKeepAliveState();
+watch(
+  [element, orientation, isHeld],
+  ([thumb, axis, held], _, onCleanup) => {
+    if (!thumb || held) {
+      return;
+    }
+    const holder = axis === 'vertical' ? thumbYElement : thumbXElement;
+    holder.value = thumb;
+    onCleanup(() => {
+      if (holder.value === thumb) {
+        holder.value = null;
+      }
+    });
+  },
+  { flush: 'post' },
+);
 
 defineExpose({ element });
 </script>

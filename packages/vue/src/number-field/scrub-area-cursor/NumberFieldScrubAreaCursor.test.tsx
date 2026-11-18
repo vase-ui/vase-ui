@@ -21,7 +21,7 @@ const defaultScrubAreaContext: NumberFieldScrubAreaContext = {
   isScrubbing: shallowRef(true),
   isTouchInput: shallowRef(false),
   isPointerLockDenied: shallowRef(false),
-  scrubAreaCursorRef: shallowRef<HTMLSpanElement | null>(null),
+  cursor: shallowRef(null),
   scrubAreaElement: shallowRef<HTMLElement | null>(null),
 };
 
@@ -228,6 +228,37 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
     } finally {
       Element.prototype.requestPointerLock = originalRequestPointerLock;
     }
+  });
+
+  it('keeps the sampled position when the cursor renders during a scrub', async () => {
+    const pointerLock = vi.spyOn(document.body, 'requestPointerLock').mockResolvedValue();
+    onTestFinished(() => pointerLock.mockRestore());
+    const label = shallowRef('first');
+
+    await render(() => (
+      <NumberField.Root>
+        <NumberField.Input />
+        <NumberField.ScrubArea data-testid="area">
+          <NumberField.ScrubAreaCursor
+            data-testid="cursor"
+            data-label={label.value}
+            style={{ transform: 'scale(2)' }}
+          />
+        </NumberField.ScrubArea>
+      </NumberField.Root>
+    ));
+    screen
+      .getByTestId('area')
+      .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }));
+    await flushMicrotasks();
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, movementX: 4 }));
+    const cursor = screen.getByTestId('cursor');
+    const sample = cursor.style.transform;
+    expect(sample).toContain('translate3d(14px,');
+    label.value = 'second';
+    await flushMicrotasks();
+    expect(cursor).toHaveAttribute('data-label', 'second');
+    expect(cursor.style.transform).toBe(sample);
   });
 
   it('moves a cursor that mounts before the old cursor unmounts', async () => {

@@ -40,12 +40,13 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
+import { computed, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
@@ -119,29 +120,9 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-// The value that the input has after the last event and the last write of Vue. A form state that
-// the browser restores changes the value with neither.
-let handledValue: string | undefined;
-
-function syncHandledValue() {
-  handledValue = (element.value as HTMLInputElement | null)?.value;
-}
-
 const attrs = useAttrs();
-onMounted(syncHandledValue);
-// Vue writes the value at a render only when the input has the key `value`. Else the part reads
-// the input only when it held the handled value, so a restored value stays for the take. These
-// hooks come before the call of `useFormRestoreAsInput`, so the part reads the value of the render
-// before the composable writes a restored value back.
-let holdsHandledValue = false;
-onBeforeUpdate(() => {
-  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
-});
-onUpdated(() => {
-  if (holdsHandledValue || (writesValue.value && attrs.value !== undefined)) {
-    syncHandledValue();
-  }
-});
+// An uncontrolled input has no model to compare with a silent browser restore at pageshow.
+let lastInputText: string | undefined;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
@@ -154,17 +135,38 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       {
         onClick: preventWhenDisabled,
         onPointerdown: preventWhenDisabled,
-        onInput: syncHandledValue,
-        onChange: syncHandledValue,
+        onInput(event: Event) {
+          if (value === undefined) {
+            lastInputText = (event.currentTarget as HTMLInputElement).value;
+          } else {
+            inputRender.renderValue();
+          }
+        },
       },
       defaultValueProps(),
-      writesValue.value ? attrs : attrsWithoutValue,
+      attrsWithoutValue,
+      writesValue.value && value !== undefined ? inputRender.valueProps() : undefined,
       focusableWhenDisabledProps.value,
     ];
   },
 });
 
-useFormRestoreAsInput(element, () => handledValue, true);
+const inputRender: ReturnType<typeof useFormRestoreAsInput<unknown>> = useFormRestoreAsInput(
+  element,
+  () => attrs.value,
+  true,
+  () => lastInputText,
+);
+watch(
+  [element, () => attrs.value !== undefined],
+  () => {
+    lastInputText = undefined;
+  },
+  { flush: 'sync' },
+);
+useFormReset(element, () => {
+  lastInputText = undefined;
+});
 
 defineExpose({ element });
 </script>

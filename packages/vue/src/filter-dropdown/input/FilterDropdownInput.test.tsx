@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
-import { createRenderer, fireEvent, screen } from '#test-utils';
+import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
 import type { FilterDropdownRootChangeEventDetails } from '../root/FilterDropdownRootContext';
@@ -113,7 +113,33 @@ describe('useFilterDropdownInput', () => {
     expect(input).toHaveValue('ca');
   });
 
-  it('reports a change event only when its value is new', async () => {
+  it('reports a refused composition once when WebKit sends its final input', async () => {
+    const onValueChange = vi.fn();
+    await render(
+      <FilterDropdown.Root
+        open
+        value="old"
+        listRef={shallowRef([])}
+        getActiveIndex={() => null}
+        setActiveIndex={NOOP}
+        onValueChange={onValueChange}
+      >
+        <FilterDropdown.Input aria-label="Filter" />
+      </FilterDropdown.Root>,
+    );
+    const input = screen.getByRole<HTMLInputElement>('searchbox', { name: 'Filter' });
+    await fireEvent.compositionStart(input);
+    input.value = 'マ';
+    const end = fireEvent.compositionEnd(input);
+    await fireEvent.input(input, { target: { value: 'マ' }, inputType: 'insertCompositionText' });
+    await end;
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith('マ', expect.anything());
+    await waitFor(() => expect(input).toHaveValue('old'));
+  });
+
+  it('reports edits only from input events', async () => {
     const value = shallowRef('');
     const onValueChange = vi.fn((nextValue: string) => {
       value.value = nextValue;
@@ -138,12 +164,11 @@ describe('useFilterDropdownInput', () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
 
-    // A browser can fill an input and send only `change`.
     await fireEvent.change(input, { target: { value: 'canada' } });
 
-    expect(onValueChange).toHaveBeenCalledTimes(2);
+    expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenLastCalledWith(
-      'canada',
+      'can',
       expect.objectContaining({ reason: 'input-change' }),
     );
   });
