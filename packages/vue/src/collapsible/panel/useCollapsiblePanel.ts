@@ -169,8 +169,6 @@ export function useCollapsiblePanel(
     });
   }
 
-  // `KeepAlive` keeps the state of a held part. The effects below do not run for a held panel,
-  // because the element is out of the document and its computed style is empty.
   // If `KeepAlive` deactivates an open panel with a keyframe animation, the next reveal must not
   // play the open animation again.
   function markActivityResumeAnimationSuppressed() {
@@ -321,6 +319,7 @@ export function useCollapsiblePanel(
     }
   }
 
+  // A held panel is outside the document, so its computed style is empty.
   useDomEffect([isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus], runSizeEffect);
 
   useOpenChangeComplete({
