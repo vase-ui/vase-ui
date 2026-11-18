@@ -20,11 +20,13 @@ import { NOOP } from '../../internals/noop';
 import * as Menu from '../../menu/index.parts';
 import * as Select from '../../select/index.parts';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
-import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
+import { CompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
 
 const testCompositeContext: CompositeRootContext = {
   hasFocus: () => false,
-  detachedItemHandlers: { onFocusin: NOOP, onFocusout: NOOP, onKeydown: NOOP },
+  focusDetachedItem: NOOP,
+  blurDetachedItem: NOOP,
+  keydownDetachedItem: NOOP,
   highlightedIndex: computed(() => 0),
   onHighlightedIndexChange: NOOP,
   highlightItemOnHover: computed(() => false),

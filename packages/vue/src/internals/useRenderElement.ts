@@ -176,11 +176,16 @@ export function useRenderElement<
 >(
   element: MaybeRefOrGetter<string>,
   componentProps: UseRenderElementComponentProps<State>,
-  params: UseRenderElementParameters<State, RenderedElementType> = {},
+  params: UseRenderElementParameters<State, RenderedElementType> & {
+    /** An element ref that another composable needs during setup. */
+    elementRef?: ShallowRef<RenderedElementType | null>;
+    /** Supplies button actions for the final element and its render slot. */
+    button?: (element: ShallowRef<RenderedElementType | null>) => ButtonBehavior;
+  } = {},
 ): UseRenderElementReturnValue<RenderedElementType> {
   const attrs = useAttrs();
   const slots = useSlots();
-  const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
+  const elementRef: ShallowRef<RenderedElementType | null> = params.elementRef ?? shallowRef(null);
   const button = params.button?.(elementRef);
   const callbacks = params.ref;
   let hasRendered = false;
@@ -295,9 +300,11 @@ export function useRenderElement<
       resolvedProps = {
         ...button.attributes.value,
         ...resolvedProps,
-        onClick: (event: MouseEvent) => button.press(event, onClick || undefined),
-        onPointerdown: (event: PointerEvent) => button.press(event, onPointerdown || undefined),
-        onMousedown: (event: MouseEvent) => button.mouseDown(event, onMousedown || undefined),
+        onClick: (event: VaseUIEvent<MouseEvent>) => button.press(event, onClick || undefined),
+        onPointerdown: (event: VaseUIEvent<PointerEvent>) =>
+          button.press(event, onPointerdown || undefined),
+        onMousedown: (event: VaseUIEvent<MouseEvent>) =>
+          button.mouseDown(event, onMousedown || undefined),
         onKeydown: (event: VaseUIEvent<KeyboardEvent>) =>
           button.keyDown(event, onKeydown || undefined),
         onKeyup: (event: VaseUIEvent<KeyboardEvent>) => button.keyUp(event, onKeyup || undefined),
@@ -496,8 +503,6 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    * The state of the part. The default is an empty object.
    */
   state?: MaybeRefOrGetter<State> | undefined;
-  /** Supplies button actions for the final element and its render slot. */
-  button?: (element: ShallowRef<RenderedElementType | null>) => ButtonBehavior;
   /**
    * A function that gets the attributes and listeners of the consumer, without `class`, `style`
    * and each attribute that `givenAttributes` leaves out.

@@ -46,8 +46,8 @@ export interface MenuItemProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { shallowRef, computed } from 'vue';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -76,16 +76,18 @@ defineSlots<{
 
 const { store } = useMenuRootContext();
 
-const listItem = useCompositeListItem({ label: () => props.label });
 // A filterable menu removes the element of an item that the query hides. The template then gives
 // the content of the item to a component that reads its text and adds no element to the document.
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
-const highlighted = computed(() => store.select('isActive', listItem.index.value));
+const element = shallowRef<HTMLElement | null>(null);
+const listIndex = useCompositeListItem(element, { label: () => props.label });
+
+const highlighted = computed(() => store.select('isActive', listIndex.value));
 const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
-const { button, getItemProps, itemRef } = useMenuItem({
+const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
@@ -100,11 +102,12 @@ const state = computed<MenuItemState>(() => ({
   highlighted: highlighted.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   button,
   state,
-  ref: [itemRef, listItem.ref, filterItem.ref],
-  props: (attrs) => [store.select('itemProps'), attrs, getItemProps],
+  ref: filterItem.ref,
+  props: (attrs) => [commonProps.value, mouseEnterProps, store.select('itemProps'), attrs],
 });
 
 defineExpose({ element });

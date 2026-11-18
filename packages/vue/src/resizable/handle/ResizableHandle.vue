@@ -100,8 +100,8 @@ import {
   HOME,
   PAGE_DOWN,
   PAGE_UP,
-} from '../../internals/composite/composite';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+} from '../../internals/composite/listIndex';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
@@ -142,7 +142,8 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
+const element = shallowRef<HTMLElement | null>(null);
+const index = useCompositeListItem(element, { list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
 // The index in `panels` of the panel before the handle. A handle with no panel on one side has -1.
@@ -433,10 +434,10 @@ const state = computed<ResizableHandleState>(() => ({
   atMax: ends.value.atMax,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
   stateAttributesMapping,
-  ref: [listItemRef],
   children: true,
   props: (attrs) => [
     {

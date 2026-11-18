@@ -45,7 +45,7 @@ export interface ComboboxItemProps
 
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import {
   compareItemEquality,
   findItemIndex,
@@ -80,7 +80,8 @@ defineSlots<{
 }>();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const listItem = useCompositeListItem({ index: () => props.index, textRef });
+const element = shallowRef<HTMLElement | null>(null);
+const listIndex = useCompositeListItem(element, { index: () => props.index, textRef });
 
 const store = useComboboxRootContext();
 const isRow = useComboboxRowContext();
@@ -101,7 +102,7 @@ const indexFromFilter = computed(() =>
     ? findItemIndex(flatFilteredValues.value, props.value, store.select('isItemEqualToValue'))
     : undefined,
 );
-const itemIndex = computed(() => props.index ?? indexFromFilter.value ?? listItem.index.value);
+const itemIndex = computed(() => props.index ?? indexFromFilter.value ?? listIndex.value);
 const hasRegistered = computed(() => itemIndex.value !== -1);
 
 const highlighted = computed(() => store.select('isActive', itemIndex.value));
@@ -191,7 +192,8 @@ function isInteractive() {
   return !isDisabled.value && !itemRoot.value.readOnly;
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -200,7 +202,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       composite: true,
     }),
   state,
-  ref: listItem.ref,
   props: (attrs) => [
     itemRoot.value.props,
     {

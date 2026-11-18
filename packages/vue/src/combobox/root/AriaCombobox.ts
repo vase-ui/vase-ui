@@ -66,7 +66,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
-import { gridNavigation } from '../../utils/popups/interactions/gridNavigation';
+import { navigateUniformGrid } from '../../internals/composite/gridNavigation';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
@@ -1799,7 +1799,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     orientation: () => (grid.value ? 'horizontal' : undefined),
     rtl: () => direction.value === 'rtl',
     disabledIndices: EMPTY_ARRAY,
-    grid: () => (grid.value ? gridNavigation : undefined),
+    grid: () => (grid.value ? navigateUniformGrid : undefined),
     onNavigate(nextActiveIndex, event) {
       // Ignore automatic navigation while closed, including selected-index sync for inline lists.
       // Inline lists remain navigable while `open` is false, so still allow resets (clearing the

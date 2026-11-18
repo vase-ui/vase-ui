@@ -27,8 +27,8 @@ export interface NavigationMenuLinkProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { shallowRef, computed } from 'vue';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -59,13 +59,15 @@ const tree = useFloatingTree();
 
 const state = computed<NavigationMenuLinkState>(() => ({ active: props.active }));
 
-const { compositeProps, compositeRef } = useCompositeItem();
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element);
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
+  elementRef: element,
   state,
-  ref: [compositeRef],
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     {
       'aria-current': props.active ? 'page' : undefined,
       // The key removes the `tabindex` of the composite, so the link stays a native tab stop.

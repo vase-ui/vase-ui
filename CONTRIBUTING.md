@@ -456,6 +456,7 @@ Rules:
 ### `useRenderElement` and `useRender`
 
 - Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Input` forwards its render slot to the inner part and exposes the inner element.
+- Supply `useButton(element, options)` through the `button` option of `useRenderElement`. Disabled buttons block press and key listeners. Enabled buttons call the consumer before keyboard activation.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), a blank `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
@@ -593,7 +594,7 @@ The change event carries these details:
 - A public composable that gives the methods of the nearest part above the caller returns `null` when the caller is not inside that part. It calls `inject(key, null)`, so Vue shows no warning, and it throws no error. `Resizable.useParentPanel()` and `Resizable.useParentRoot()` do this. A composable that a part needs for its own work throws, as [Context of a root](#context-of-a-root) says.
 - Choose a plain setup function, getter, computed or exposed ref from what its caller needs. Return a ref for live state that a caller can destructure.
 - Return a `ComputedRef` for a derived value, as `useDirection()` does. Give readers a `Readonly<Ref<T>>` for state the composable writes.
-- Compute a props object when its members depend on reactive values. `useLabel()` and `compositeProps` of `useCompositeItem()` do this. Read it in the props function of `useRenderElement`.
+- Compute reactive attributes, as `useLabel` and `useCompositeItem` do. Read them in the props function of `useRenderElement`.
 - Keep a stable object when it contains only handlers. Each listener of `useSwipeDismiss` reads the current callback when its event arrives.
 - Return actions as plain functions that read the current options. `Combobox.useFilter` and `Autocomplete.useFilter` take the options object as one `MaybeRefOrGetter` because `value` can itself be a function.
 - A composable can have an option that is always a function and that must follow a change, such as `matchMedia` of `useMediaQuery(query, options)`. It takes the whole options object as one `MaybeRefOrGetter`. Such a member cannot be a `MaybeRefOrGetter`, because `toValue` calls a function.
@@ -1378,25 +1379,25 @@ A composite is a group of items with one tab stop, such as a toolbar or a list o
 
 The composite root:
 
-- A composite root can pass a single ref callback directly. Give `ref: rootRef` and `props: (attrs) => [compositeProps, ownProps, attrs]` to `useRenderElement`.
+- Pass `registerRoot` as the root ref. Place `onFocusin`, `onFocusout` and `onKeydown` before the part and consumer listeners in the props sequence.
 - Keep that sequence of `props`. A `keydown` listener of the consumer then runs first, and `event.preventVaseUIHandler()` stops the navigation.
 - `useCompositeRoot` returns `elementsRef` and `itemMap`. The time picker uses the map to find the selected enabled option when its popup opens.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - When two tabs have the selected value, only the first in the registered order moves the tab stop. While a registered tab has focus outside the list element, the tab stop stays on that tab.
-- The root checks the active item when focus leaves its element and its registered items (`VUE-113`). A root whose disabled items stay focusable gives `disabledIndices`, as `Tabs.List` and `Toolbar.Root` do.
+- The root checks the active item when focus leaves its element and its registered items (`VUE-113`). Use `getDisabledIndices` when some disabled items can take focus. The toolbar derives these indexes from the item map.
 - The root watches the active and disabled state in each registration. A render slot can change the native or ARIA disabled state of a registered element. The root observes those attributes on the item. A native control also follows its fieldset after a move. The first legend of a disabled fieldset keeps its native exemption. An async child can hold the only tab stop in server HTML until it hydrates.
-- An uncontrolled root checks edits to `disabledIndices` after the DOM patch. The focused item keeps its tab stop during the edit. Removing the list restores the disabled state from each item and its element.
+- An uncontrolled root checks changes to the disabled indexes after the DOM patch. The focused item keeps its tab stop until focus leaves. If the callback returns `undefined`, each item and its element supply their disabled state.
 
 Grid navigation:
 
-- A root part that is a grid gives `grid: gridNavigation(config)` to `useCompositeRoot`. The function is in `root/gridNavigation.ts`. A root part with no grid does not import that file. A bundler can then remove the grid code.
+- Pass `grid: gridNavigation(config)` for a composite grid. Import the navigator from `internals/composite/gridNavigation.ts` only where the root needs grid keys.
 - `grid` is a plain function and not a `MaybeRefOrGetter`, because `toValue` calls a function. The root reads it when a key comes.
 - `config` holds `cols`, `dense` and `itemSizes`. It is a value, a ref or a getter. The navigator reads it when a key comes.
 
 The composite item:
 
-- An item part writes `const { compositeProps, compositeRef } = useCompositeItem({ metadata, active, disabled })`. It gives `ref: [compositeRef, …]` and `props: (attrs) => [compositeProps.value, ownProps, attrs]` to `useRenderElement`.
-- Put `compositeRef` first in `ref`. When two items share one element, the outer item then registers last and owns the entry.
+- Pass the rendered element ref and item options to `useCompositeItem`. Bind its attributes and focus and key actions before the part and consumer listeners.
+- If the index must exist before the render setup, pass the same shallow ref as `elementRef` to `useRenderElement`.
 - Give the list live values for `active`, `disabled` and, for a picker option, `selected`. The first two also determine the initial server tab stop. An item relays its focus and keyboard events to the root when its native event path does not reach the root.
 
 A part that is in a composite only in some trees:
@@ -1404,19 +1405,19 @@ A part that is in a composite only in some trees:
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `Radio.Root` is an item only in a `RadioGroup`.
 - `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
-- The part reads the context that decides with `inject`, in `setup`. It calls `useCompositeItem` or `useCompositeRoot` only when that context allows it: `const compositeItem = groupContext ? useCompositeItem({ … }) : undefined`.
+- Read the optional context in setup. Call `useCompositeItem(element, options)` or `useCompositeRoot(options)` when that context requires it.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
 - `useCompositeItem` throws when it has no composite root, so a part cannot call it in each tree.
 - A root part that is in another composite calls no `useCompositeRoot`. It provides no composite context and no list. Its items register with the outer root, and the composite has one tab stop.
 - The outer root owns the keys. The `orientation` and `loopFocus` of the inner part do not change them.
-- The part writes the composite sets with an optional chain. Pass the optional callback as `ref: composite?.rootRef`. An absent props set adds nothing to `props: (attrs) => [composite?.props, ownProps, attrs]`. An item part writes `compositeItem?.compositeProps.value` in the same way.
+- An optional root passes `composite?.registerRoot` as its ref. An optional item binds `item?.attributes.value` and `item?.events`.
 
 The item registry:
 
-- An item registers its element in its ref callback, and it removes the element there.
+- Pass the element ref to `useCompositeListItem` for registration and its index.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
 - At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder. Changing the target of a `Teleport` updates the automatic indexes in document order.
-- `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element and registers it again in a `watch` of `isHeld` of `useKeepAliveState` with `flush: 'sync'`.
+- One synchronous watcher registers the element while the item is visible. Its cleanup removes the registration on replacement, a KeepAlive hold or unmount.
 - An item that mounts in a held branch can miss `onDeactivated`. `useKeepAliveState` checks the branch in `setup`. The list also skips disconnected elements when it sorts.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
 - Each registration supplies live metadata, label, explicit index and text element values. The list reads them from its current registrations. A held item supplies its latest values on activation.

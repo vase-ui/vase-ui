@@ -2,10 +2,40 @@ import { describe, expect, it, vi } from 'vitest';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, screen } from '#test-utils';
 
 describe('toolbar activation', () => {
   const { render } = createRenderer();
+
+  it('keeps a disabled custom button focusable when it receives the element', async () => {
+    const disabled = vi.fn();
+    await render(
+      <Toolbar.Root>
+        <Toolbar.Button
+          disabled
+          v-slots={{
+            render: ({ props }: { props: HTMLProps }) => (
+              <button
+                {...props}
+                disabled
+                ref={(node) => {
+                  props.ref(node);
+                  if (node instanceof HTMLButtonElement) {
+                    disabled(node.disabled);
+                  }
+                }}
+              />
+            ),
+          }}
+        />
+      </Toolbar.Root>,
+    );
+    expect(disabled.mock.calls[0]).toEqual([false]);
+    const button = screen.getByRole('button');
+    button.focus();
+    expect(button).toHaveFocus();
+  });
 
   it('submits once when a listener vetoes the native Space release', async () => {
     const submit = vi.fn((event: Event) => event.preventDefault());

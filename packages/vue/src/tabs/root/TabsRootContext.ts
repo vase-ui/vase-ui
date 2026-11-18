@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
-import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import type { TabsTabActivationDirection, TabsTabMetadata, TabsTabValue } from '../tab/TabsTab.vue';
 import type { TabsRootChangeEventDetails, TabsRootOrientation } from './TabsRoot.vue';

@@ -54,7 +54,7 @@ export interface DialogPopupProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { COMPOSITE_KEYS } from '../../internals/composite/composite';
+import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';

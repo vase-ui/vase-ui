@@ -27,7 +27,7 @@ import {
 import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { reset as resetWarnings } from '../../../common/warn';
-import { useCompositeListItem } from '../../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
@@ -42,7 +42,7 @@ import {
   useFloatingParentNodeId,
 } from '../tree/FloatingTree';
 import type { InteractionProps } from '../types';
-import { gridNavigation } from './gridNavigation';
+import { navigateUniformGrid } from '../../../internals/composite/gridNavigation';
 import { useClick } from './useClick';
 import { useDismiss } from './useDismiss';
 import { useListNavigation } from './useListNavigation';
@@ -183,7 +183,7 @@ const VirtualizedGridRows = defineComponent(
         loopFocus,
         orientation: 'horizontal',
         disabledIndices,
-        grid: () => gridNavigation,
+        grid: () => navigateUniformGrid,
       }),
     ]);
 
@@ -243,7 +243,7 @@ const VirtualizedGridRows = defineComponent(
 
 // The test components of Base UI in `test/floating-ui-tests`, with only what the cases read.
 
-function gridNavigationWithColumns(cols: number): typeof gridNavigation {
+function gridNavigationWithColumns(cols: number): typeof navigateUniformGrid {
   return (
     event,
     prevIndex,
@@ -255,7 +255,7 @@ function gridNavigationWithColumns(cols: number): typeof gridNavigation {
     minIndex,
     maxIndex,
   ) =>
-    gridNavigation(
+    navigateUniformGrid(
       event,
       prevIndex,
       listRef,
@@ -618,7 +618,8 @@ const ListboxOption = defineComponent(
   (props: { label: string }) => {
     const { activeIndex, selectedIndex, getItemProps, handleSelect } = inject(SelectContext)!;
 
-    const { ref, index } = useCompositeListItem({ label: () => props.label });
+    const element = shallowRef<HTMLElement | null>(null);
+    const index = useCompositeListItem(element, { label: () => props.label });
 
     return () => {
       const isActive = activeIndex() === index.value;
@@ -633,7 +634,7 @@ const ListboxOption = defineComponent(
 
       return (
         <button
-          ref={(node) => ref(node as HTMLElement | null)}
+          ref={element}
           type="button"
           role="option"
           aria-selected={isActive && isSelected}
@@ -2514,7 +2515,7 @@ describe('useListNavigation', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       onTestFinished(() => warn.mockRestore());
 
-      await renderList({ options: { allowEscape: true, grid: () => gridNavigation } });
+      await renderList({ options: { allowEscape: true, grid: () => navigateUniformGrid } });
 
       expect(warn.mock.calls.map(([message]) => message)).toEqual([
         'Vase UI: `useListNavigation` has `allowEscape` and no `loopFocus`. `allowEscape` has no effect while `loopFocus` is `false`. Set `loopFocus` to `true`, or remove `allowEscape`.',
@@ -2634,7 +2635,7 @@ describe('useListNavigation', () => {
       const image: Entry = {
         label: 'image',
         orientation: 'horizontal',
-        options: { grid: () => gridNavigation },
+        options: { grid: () => navigateUniformGrid },
         items: ['.png', '.jpg', '.svg', '.gif'],
       };
       await render(

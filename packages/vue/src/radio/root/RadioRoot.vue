@@ -92,7 +92,7 @@ import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
@@ -188,7 +188,6 @@ const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabel,
 );
 
-// The part sets `composite` to `false`, so the Space key selects a radio on keyup in a group too.
 function restoreInput() {
   restoreChecked(inputElement.value, checked.value);
 }
@@ -312,23 +311,25 @@ const state = computed<RadioRootState>(() => ({
 
 provide(RadioRootContext, state);
 
-// Only a radio in a group is an item of a composite, and `useCompositeItem` throws with no
-// composite root. The context of a component does not change, so `setup` makes this choice one
-// time.
-const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = group
+  ? useCompositeItem(element, { active: checked, disabled: isDisabled })
+  : undefined;
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
       native: () => props.nativeButton,
+      // Space selects a radio on keyup even within a group.
       composite: false,
     }),
   state,
-  ref: item?.compositeRef,
   stateAttributesMapping,
   props: (attrs) => [
-    item?.compositeProps.value,
+    compositeItem?.attributes.value,
+    compositeItem?.events,
     {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'radio',

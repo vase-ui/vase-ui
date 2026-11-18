@@ -51,7 +51,7 @@ import {
   HOME,
   PAGE_DOWN,
   PAGE_UP,
-} from '../../internals/composite/composite';
+} from '../../internals/composite/listIndex';
 import {
   createChangeEventDetails,
   createGenericEventDetails,

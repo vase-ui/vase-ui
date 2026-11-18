@@ -42,7 +42,7 @@ import {
   ARROW_DOWN,
   HOME,
   END,
-} from '../../internals/composite/composite';
+} from '../../internals/composite/listIndex';
 import type { Orientation } from '../../internals/types';
 import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
 import SliderRootHydration from './SliderRootHydration.test.vue';

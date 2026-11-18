@@ -88,7 +88,7 @@ import {
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { ownerVisuallyHidden, PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
@@ -448,9 +448,11 @@ const state = computed<NavigationMenuTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { compositeProps, compositeRef } = useCompositeItem();
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element);
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -460,13 +462,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
   ref: [
-    compositeRef,
     (trigger) => {
       triggerElement.value = trigger;
     },
   ],
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     click.reference,
     hoverProps,
     { style: hoverStyle.value },

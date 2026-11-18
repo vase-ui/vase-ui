@@ -74,18 +74,17 @@ const text = computed(() =>
   ),
 );
 
-const { compositeRef, optionProps } = useTimePickerOption({
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  state,
+  props: (attrs) => [...optionProps(), attrs],
+});
+
+const optionProps = useTimePickerOption(element, {
   picker,
   selected,
   disabled: isDisabled,
   closeOnSelect: picker.closeOnSelect,
   time: () => props.time,
-});
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: [compositeRef],
-  props: (attrs) => [...optionProps(), attrs],
 });
 
 defineExpose({ element });

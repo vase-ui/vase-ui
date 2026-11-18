@@ -66,10 +66,10 @@ export type MenuCheckboxItemChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { shallowRef, computed, provide } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -123,17 +123,19 @@ const isChecked = useControlled({
 
 const { store } = useMenuRootContext();
 
-const listItem = useCompositeListItem({ label: () => props.label });
 // A filterable menu removes the element of an item that the query hides. The template then gives
 // the content of the item to a component that reads its text and adds no element to the document.
 // The state of the item stays in this part, so a hidden item keeps it.
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
-const highlighted = computed(() => store.select('isActive', listItem.index.value));
+const element = shallowRef<HTMLElement | null>(null);
+const listIndex = useCompositeListItem(element, { label: () => props.label });
+
+const highlighted = computed(() => store.select('isActive', listIndex.value));
 const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
-const { button, getItemProps, itemRef } = useMenuItem({
+const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
@@ -166,12 +168,15 @@ function handleClick(event: MouseEvent) {
   isChecked.value = nextChecked;
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   button,
   state,
   stateAttributesMapping: itemMapping,
-  ref: [itemRef, listItem.ref, filterItem.ref],
+  ref: filterItem.ref,
   props: (attrs) => [
+    commonProps.value,
+    mouseEnterProps,
     store.select('itemProps'),
     {
       role: 'menuitemcheckbox',
@@ -179,7 +184,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       onClick: handleClick,
     },
     attrs,
-    getItemProps,
   ],
 });
 

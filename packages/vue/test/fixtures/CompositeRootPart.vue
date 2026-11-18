@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes, Ref } from 'vue';
-import type { ModifierKey } from '../../src/internals/composite/composite';
+import type { ModifierKey } from '../../src/internals/composite/listIndex';
 import type { CompositeMetadata } from '../../src/internals/composite/list/useCompositeList';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../src/internals/types';
 
@@ -67,8 +67,10 @@ defineSlots<{
 const state: CompositeRootPartState = EMPTY_OBJECT;
 
 const {
-  props: compositeProps,
-  rootRef,
+  onFocusin,
+  onFocusout,
+  onKeydown,
+  registerRoot,
   highlightedIndex: rootHighlightedIndex,
 } = useCompositeRoot({
   orientation: () => props.orientation,
@@ -79,7 +81,7 @@ const {
   onHighlightedIndexChange: (index) => props.onHighlightedIndexChange?.(index),
   enableHomeAndEndKeys: () => props.enableHomeAndEndKeys,
   stopEventPropagation: () => props.stopEventPropagation,
-  disabledIndices: () => props.disabledIndices,
+  getDisabledIndices: () => props.disabledIndices,
   modifierKeys: () => props.modifierKeys,
   highlightItemOnHover: () => props.highlightItemOnHover,
   onMapChange: (newMap) => props.onMapChange?.(newMap),
@@ -87,9 +89,9 @@ const {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: rootRef,
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     { 'data-highlighted-index': rootHighlightedIndex.value },
     attrs,
   ],

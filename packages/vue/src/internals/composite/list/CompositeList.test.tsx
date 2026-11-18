@@ -21,12 +21,7 @@ import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
 import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPart.vue';
 import { useRenderElement } from '../../useRenderElement';
 import CompositeListHydration from './CompositeListHydration.test.vue';
-import { useCompositeListItem } from './useCompositeListItem';
-
-// Vue types a template ref as an element, a component or `null`.
-function bindRef(ref: (node: HTMLElement | null) => void) {
-  return (node: unknown) => ref(node as HTMLElement | null);
-}
+import { useCompositeListItem } from './useCompositeList';
 
 describe('<CompositeList />', () => {
   const { render } = createRenderer();
@@ -62,9 +57,10 @@ describe('<CompositeList />', () => {
     it('keeps refs populated for items whose guessed index is already correct', async () => {
       const GuessedItem = defineComponent(
         (props: { label: string }) => {
-          const { ref } = useCompositeListItem({ label: () => props.label });
+          const element = shallowRef<HTMLElement | null>(null);
+          useCompositeListItem(element, { label: () => props.label });
           return () => (
-            <div ref={bindRef(ref)} data-testid={props.label}>
+            <div ref={element} data-testid={props.label}>
               {props.label}
             </div>
           );
@@ -176,10 +172,11 @@ describe('<CompositeList />', () => {
 
       const GuessedItem = defineComponent(
         (props: { label: string; index?: number }) => {
-          const { ref, index } = useCompositeListItem({ index: () => props.index });
+          const element = shallowRef<HTMLElement | null>(null);
+          const index = useCompositeListItem(element, { index: () => props.index });
           const initialIndex = index.value;
           return () => (
-            <div ref={bindRef(ref)} data-testid={props.label} data-initial-index={initialIndex} />
+            <div ref={element} data-testid={props.label} data-initial-index={initialIndex} />
           );
         },
         { props: ['label', 'index'] },
@@ -209,7 +206,8 @@ describe('<CompositeList />', () => {
 
       const SwitchingItem = defineComponent(() => {
         const useButton = shallowRef(false);
-        const { ref } = useCompositeListItem();
+        const element = shallowRef<HTMLElement | null>(null);
+        useCompositeListItem(element);
 
         return () => (
           <>
@@ -222,11 +220,11 @@ describe('<CompositeList />', () => {
               Replace target
             </button>
             {useButton.value ? (
-              <button ref={bindRef(ref)} data-testid="item" type="button">
+              <button ref={element} data-testid="item" type="button">
                 item
               </button>
             ) : (
-              <div ref={bindRef(ref)} data-testid="item">
+              <div ref={element} data-testid="item">
                 item
               </div>
             )}
@@ -396,13 +394,14 @@ describe('<CompositeList />', () => {
 
       const GuessedItem = defineComponent(
         (props: { label: string }) => {
-          const { ref, index } = useCompositeListItem();
+          const element = shallowRef<HTMLElement | null>(null);
+          const index = useCompositeListItem(element);
           return () => {
             renderCounts[props.label] += 1;
             if (!(props.label in initialIndexes)) {
               initialIndexes[props.label] = index.value;
             }
-            return <div ref={bindRef(ref)} data-testid={props.label} data-index={index.value} />;
+            return <div ref={element} data-testid={props.label} data-index={index.value} />;
           };
         },
         { props: ['label'] },
@@ -434,7 +433,8 @@ describe('<CompositeList />', () => {
 
       const TrackedItem = defineComponent(
         (props: { index?: number }) => {
-          const { ref, index } = useCompositeListItem({ index: () => props.index });
+          const element = shallowRef<HTMLElement | null>(null);
+          const index = useCompositeListItem(element, { index: () => props.index });
           const { elementProps } = useRenderElement(
             'div',
             {},
@@ -442,7 +442,7 @@ describe('<CompositeList />', () => {
               ref: [
                 (node) => {
                   refCalls.push(node);
-                  ref(node);
+                  element.value = node;
                 },
               ],
             },
@@ -509,7 +509,8 @@ describe('<CompositeList />', () => {
       const refCalls: (HTMLElement | null)[] = [];
 
       const TrackedItem = defineComponent(() => {
-        const { ref, index } = useCompositeListItem();
+        const element = shallowRef<HTMLElement | null>(null);
+        const index = useCompositeListItem(element);
         const { elementProps } = useRenderElement(
           'div',
           {},
@@ -517,7 +518,7 @@ describe('<CompositeList />', () => {
             ref: [
               (node) => {
                 refCalls.push(node);
-                ref(node);
+                element.value = node;
               },
             ],
           },
@@ -627,7 +628,8 @@ describe('<CompositeList />', () => {
       const VanishingItem = defineComponent(() => {
         // Starts with no element at all, so the item registers nothing until it renders one.
         const hidden = shallowRef(true);
-        const { ref, index } = useCompositeListItem({
+        const element = shallowRef<HTMLElement | null>(null);
+        const index = useCompositeListItem(element, {
           label: () => (hidden.value ? 'hidden' : 'shown'),
         });
         return () => (
@@ -643,7 +645,7 @@ describe('<CompositeList />', () => {
             {hidden.value ? (
               createCommentVNode()
             ) : (
-              <div ref={bindRef(ref)} data-testid="vanishing" data-index={index.value}>
+              <div ref={element} data-testid="vanishing" data-index={index.value}>
                 vanishing
               </div>
             )}
@@ -948,9 +950,10 @@ describe('<CompositeList />', () => {
 
       const BoundItem = defineComponent(
         (props: { label: string }) => {
-          const { ref } = useCompositeListItem();
+          const element = shallowRef<HTMLElement | null>(null);
+          useCompositeListItem(element);
           return () => (
-            <div ref={bindRef(ref)} data-testid={props.label}>
+            <div ref={element} data-testid={props.label}>
               {text.value}
             </div>
           );
@@ -982,10 +985,11 @@ describe('<CompositeList />', () => {
 
       const CountedItem = defineComponent(
         (props: { label: string }) => {
-          const { ref, index } = useCompositeListItem();
+          const element = shallowRef<HTMLElement | null>(null);
+          const index = useCompositeListItem(element);
           return () => {
             renderCounts[props.label] += 1;
-            return <div ref={bindRef(ref)} data-testid={props.label} data-index={index.value} />;
+            return <div ref={element} data-testid={props.label} data-index={index.value} />;
           };
         },
         { props: ['label'] },
@@ -1039,12 +1043,13 @@ describe('<CompositeList />', () => {
     const LabelledItem = defineComponent(
       (props: { testId: string; label?: string | null; text?: string; useTextRef?: boolean }) => {
         const textRef = shallowRef<HTMLElement | null>(null);
-        const { ref } = useCompositeListItem({
+        const element = shallowRef<HTMLElement | null>(null);
+        useCompositeListItem(element, {
           label: () => props.label,
           textRef: () => (props.useTextRef ? textRef.value : undefined),
         });
         return () => (
-          <div ref={bindRef(ref)} data-testid={props.testId}>
+          <div ref={element} data-testid={props.testId}>
             <span ref={props.useTextRef ? textRef : undefined}>{props.text}</span>
             {props.useTextRef ? '-ignored' : ''}
           </div>
@@ -1122,8 +1127,9 @@ describe('<CompositeList />', () => {
       const MetadataItem = defineComponent(
         (props: { testId: string; kind: string }) => {
           const metadata = computed(() => ({ kind: props.kind }));
-          const { ref } = useCompositeListItem({ metadata });
-          return () => <div ref={bindRef(ref)} data-testid={props.testId} />;
+          const element = shallowRef<HTMLElement | null>(null);
+          useCompositeListItem(element, { metadata });
+          return () => <div ref={element} data-testid={props.testId} />;
         },
         { props: ['testId', 'kind'] },
       );
@@ -1201,8 +1207,9 @@ describe('<CompositeList />', () => {
   describe('without a parent list', () => {
     it('renders an item that is not wrapped in a list', async () => {
       const OrphanItem = defineComponent(() => {
-        const { ref, index } = useCompositeListItem();
-        return () => <div ref={bindRef(ref)} data-testid="orphan" data-index={index.value} />;
+        const element = shallowRef<HTMLElement | null>(null);
+        const index = useCompositeListItem(element);
+        return () => <div ref={element} data-testid="orphan" data-index={index.value} />;
       });
 
       const { unmount } = await render(<OrphanItem />);

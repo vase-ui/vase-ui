@@ -49,18 +49,18 @@ export type ToggleChangeEventDetails = VaseUIChangeEventDetails<ToggleChangeEven
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { shallowRef, computed, watchPostEffect } from 'vue';
 import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useButton } from '../internals/use-button/useButton';
 import { useVaseUiId } from '../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
-import { useToggleGroupContext } from '../toggle-group/ToggleGroupContext';
+import { useToggleGroupContext } from '../toggle-group/ToggleGroup.vue';
 import type { ToolbarRootItemMetadata } from '../toolbar/root/ToolbarRoot.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -107,7 +107,7 @@ const toggleDisabled = computed(
 );
 
 if (process.env.NODE_ENV !== 'production' && groupContext) {
-  const checkValue = () => {
+  watchPostEffect(() => {
     if (props.value === undefined && groupContext.isValueInitialized.value) {
       error(
         'A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop.',
@@ -115,9 +115,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
         'Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
       );
     }
-  };
-  onMounted(checkValue);
-  watch([() => props.value, groupContext.isValueInitialized], checkValue);
+  });
 }
 
 const isPressed = useControlled({
@@ -163,26 +161,25 @@ const itemMetadata = computed<ToolbarRootItemMetadata>(() => ({
   focusableWhenDisabled: false,
 }));
 
-// Only a toggle in a group is an item of a composite, and `useCompositeItem` throws with no
-// composite root. The context of a component does not change, so `setup` makes this choice one
-// time.
+const element = shallowRef<HTMLElement | null>(null);
 const compositeItem = groupContext
-  ? useCompositeItem({ metadata: itemMetadata, disabled: toggleDisabled })
+  ? useCompositeItem(element, { metadata: itemMetadata, disabled: toggleDisabled })
   : undefined;
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: toggleDisabled,
       native: () => props.nativeButton,
     }),
   state,
-  ref: compositeItem?.compositeRef,
   props: (attrs) => {
     // A toggle is never a submit button and never a part of a form.
     const { form, type, ...elementAttrs } = attrs;
     return [
-      compositeItem?.compositeProps.value,
+      compositeItem?.attributes.value,
+      compositeItem?.events,
       { 'aria-pressed': isPressed.value, onClick },
       elementAttrs,
     ];

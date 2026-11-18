@@ -46,5 +46,14 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/utils/useFocusableWhenDisabled.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/use-button/useButton.ts",
+      "member": "useFocusableWhenDisabled",
+      "witness": "packages/vue/src/toolbar/input/ToolbarInput.test.tsx"
+    }
+  ]
 }

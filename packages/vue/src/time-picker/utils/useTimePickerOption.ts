@@ -1,6 +1,6 @@
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
@@ -19,16 +19,15 @@ export interface UseTimePickerOptionParameters {
   time: () => Temporal.PlainTime;
 }
 
-/**
- * The role, the tab stop, the press and the keys of an option of a list or of a column of a time
- * picker. The part gives `compositeRef` first in `ref` and the result of `optionProps()` as the
- * first sets of `props` of `useRenderElement`.
- */
-export function useTimePickerOption(parameters: UseTimePickerOptionParameters) {
+/** Supplies the tab stop and activation of a time option. */
+export function useTimePickerOption(
+  element: Readonly<Ref<HTMLElement | null>>,
+  parameters: UseTimePickerOptionParameters,
+) {
   const { picker, selected, disabled } = parameters;
   const popup = usePickerPopup();
   const isHydrating = useIsHydrating();
-  const { compositeProps, compositeRef } = useCompositeItem({
+  const item = useCompositeItem(element, {
     active: selected,
     selected,
     disabled,
@@ -61,7 +60,8 @@ export function useTimePickerOption(parameters: UseTimePickerOptionParameters) {
 
   function optionProps() {
     return [
-      compositeProps.value,
+      item.attributes.value,
+      item.events,
       {
         role: 'option',
         'aria-selected': selected.value,
@@ -75,5 +75,5 @@ export function useTimePickerOption(parameters: UseTimePickerOptionParameters) {
     ];
   }
 
-  return { compositeRef, optionProps };
+  return optionProps;
 }

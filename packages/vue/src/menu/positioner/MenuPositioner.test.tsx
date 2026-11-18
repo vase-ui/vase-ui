@@ -31,7 +31,7 @@ import {
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { UseAnchorPositioningParameters } from '../../internals/useAnchorPositioning';
@@ -982,8 +982,9 @@ describe('<Menu.Positioner />', () => {
     // An element that registers in the list of the positioner, as an item part does.
     const TestItem = defineComponent({
       setup() {
-        const { ref } = useCompositeListItem({ label: () => 'Test item' });
-        return () => <div role="menuitem" ref={ref as (element: unknown) => void} />;
+        const element = shallowRef<HTMLElement | null>(null);
+        useCompositeListItem(element, { label: () => 'Test item' });
+        return () => <div role="menuitem" ref={element} />;
       },
     });
     await render(() => (

@@ -1,10 +1,10 @@
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { computed, toValue, watchPostEffect } from 'vue';
+import { computed, toValue, watch, watchPostEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { error } from '../../common/error';
 import { makeEventPreventable } from '../../merge-props';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
-import { useCompositeRootContext } from '../composite/root/CompositeRootContext';
+import { useCompositeRootContext } from '../composite/root/useCompositeRoot';
 import type { VaseUIEvent } from '../types';
 
 /** Gives an element button semantics and keyboard activation. */
@@ -28,8 +28,7 @@ export function useButton(
     ...focus.attributes.value,
   }));
 
-  watchPostEffect(() => {
-    const node = toValue(element);
+  function restoreFocusability(node: Element | null) {
     // A custom button can forward disabled to a native button that must keep its tab stop.
     if (
       isButtonElement(node) &&
@@ -40,7 +39,14 @@ export function useButton(
     ) {
       node.disabled = false;
     }
-  });
+  }
+  // The render slot must receive the corrected native disabled state as soon as it sets the ref.
+  watch(() => toValue(element), restoreFocusability, { flush: 'sync' });
+  watch(
+    [isDisabled, isComposite, () => focus.attributes.value.disabled],
+    () => restoreFocusability(toValue(element)),
+    { flush: 'post' },
+  );
 
   if (process.env.NODE_ENV !== 'production') {
     watchPostEffect(() => {
@@ -66,7 +72,8 @@ export function useButton(
     });
   }
 
-  function press(event: MouseEvent, listener?: (event: MouseEvent) => void) {
+  function press(event: VaseUIEvent<MouseEvent>, listener?: (event: MouseEvent) => void) {
+    makeEventPreventable(event);
     if (isDisabled()) {
       event.preventDefault();
     } else {
@@ -74,112 +81,69 @@ export function useButton(
     }
   }
 
-  function mouseDown(event: MouseEvent, listener?: (event: MouseEvent) => void) {
+  function mouseDown(event: VaseUIEvent<MouseEvent>, listener?: (event: MouseEvent) => void) {
+    makeEventPreventable(event);
     if (!isDisabled()) listener?.(event);
   }
 
   function keyDown(event: VaseUIEvent<KeyboardEvent>, listener?: (event: KeyboardEvent) => void) {
+    makeEventPreventable(event);
     focus.onKeydown(event);
     if (isDisabled()) return;
-    makeEventPreventable(event);
     listener?.(event);
-    if (event.vaseUIHandlerPrevented) return;
+    if (event.vaseUIHandlerPrevented || event.target !== event.currentTarget) return;
 
-    const isCurrentTarget = event.target === event.currentTarget;
-    const currentTarget = event.currentTarget as Element;
-    const isButton = isButtonElement(currentTarget);
-    const isNativeButton = isNative();
-    const isLink = !isNativeButton && isValidLinkElement(currentTarget);
-    const shouldClick = isCurrentTarget && (isNativeButton ? isButton : !isLink);
-    const isEnterKey = event.key === 'Enter';
-    const isSpaceKey = event.key === ' ';
-    const role = currentTarget.getAttribute('role');
-    const isTextNavigationRole =
-      role?.startsWith('menuitem') || role === 'option' || role === 'gridcell';
+    const target = event.currentTarget as Element;
+    const space = event.key === ' ';
+    if (!space && event.key !== 'Enter') return;
 
-    if (isCurrentTarget && isComposite() && isSpaceKey) {
-      // In a list with typeahead, a prevented Space is text and not an activation.
-      if (event.defaultPrevented && isTextNavigationRole) {
+    const native = isNative();
+    if (space && isComposite()) {
+      const role = target.getAttribute('role');
+      // Typeahead can use Space as text.
+      if (
+        event.defaultPrevented &&
+        (role?.startsWith('menuitem') || role === 'option' || role === 'gridcell')
+      )
         return;
-      }
-
-      // Space scrolls the page.
       event.preventDefault();
-
-      // Only a native-mode item that is not a real <button> gets no click.
-      if (!isNativeButton || isButton) {
-        event.preventVaseUIHandler();
-        dispatchClickWithModifiers(currentTarget, event);
-      }
-
+      if (!native || isButtonElement(target)) activate(target, event);
       return;
     }
 
-    if (!shouldClick || isNativeButton || (!isSpaceKey && !isEnterKey)) {
-      // Space activates a link on keyup, as it does for `role="button"`. The keydown must
-      // still stop the page scroll that Space causes.
-      // The browser activates a link on Enter by itself.
-      if (isCurrentTarget && isLink && isSpaceKey) {
-        event.preventDefault();
-      }
+    if (native) return;
+    if (isValidLinkElement(target)) {
+      // The browser follows a link on Enter. Space must not scroll.
+      if (space) event.preventDefault();
       return;
     }
-
-    // A native button does the same: a prevented keydown default cancels the activation.
-    if (event.defaultPrevented) {
-      return;
-    }
+    if (event.defaultPrevented) return;
 
     event.preventDefault();
-
-    if (isEnterKey) {
-      event.preventVaseUIHandler();
-      dispatchClickWithModifiers(currentTarget, event);
-    }
+    if (!space) activate(target, event);
   }
 
   function keyUp(event: VaseUIEvent<KeyboardEvent>, listener?: (event: KeyboardEvent) => void) {
-    if (isDisabled()) return;
     makeEventPreventable(event);
+    if (isDisabled()) return;
     listener?.(event);
-    const isNativeButton = isNative();
-    const isCompositeItem = isComposite();
+    if (event.key !== ' ' || event.target !== event.currentTarget) return;
 
-    // A <button> clicks on the Space keyup. The keydown already dispatched the click, and a
-    // prevented keyup stops the second click.
-    // https://codesandbox.io/p/sandbox/button-keyup-preventdefault-dn7f0
-    if (
-      event.target === event.currentTarget &&
-      isNativeButton &&
-      isCompositeItem &&
-      isButtonElement(event.currentTarget as HTMLElement) &&
-      event.key === ' '
-    ) {
-      event.preventDefault();
-      return;
-    }
-
-    if (event.vaseUIHandlerPrevented) {
-      return;
-    }
-
-    // A native button does the same: a prevented keyup default cancels the Space activation.
-    // A prevented keydown cannot cancel it, because the code keeps no state between the
-    // keydown and the keyup. The code cannot tell if the keydown was prevented, or if it
-    // happened on this element.
-    if (
-      event.target === event.currentTarget &&
-      !isNativeButton &&
-      !isCompositeItem &&
-      !event.defaultPrevented &&
-      event.key === ' '
-    ) {
-      event.preventVaseUIHandler();
-      dispatchClickWithModifiers(event.currentTarget as Element, event);
+    const target = event.currentTarget as Element;
+    if (isComposite()) {
+      // Space already activated the native button on keydown.
+      if (isNative() && isButtonElement(target)) event.preventDefault();
+    } else if (!isNative() && !event.vaseUIHandlerPrevented && !event.defaultPrevented) {
+      activate(target, event);
     }
   }
 
   return { attributes, press, mouseDown, keyDown, keyUp };
+}
+
+function activate(target: Element, event: VaseUIEvent<KeyboardEvent>) {
+  event.preventVaseUIHandler();
+  dispatchClickWithModifiers(target, event);
 }
 
 export type ButtonBehavior = ReturnType<typeof useButton>;

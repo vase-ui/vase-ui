@@ -76,11 +76,11 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { shallowRef, computed, onMounted, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
+import { useCompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
@@ -144,13 +144,15 @@ const tabMetadata = computed<TabsTabMetadata>(() => ({
   value: props.value,
 }));
 
-const { compositeProps, compositeRef, index } = useCompositeItem<TabsTabMetadata>({
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem<TabsTabMetadata>(element, {
   metadata: tabMetadata,
   active,
   // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
   // when it is disabled. The server HTML gives it the same tab stop.
   disabled: () => isDisabled.value && activeTabValue.value !== null,
 });
+const { index } = compositeItem;
 
 let isNavigating = false;
 
@@ -251,7 +253,8 @@ const state = computed<TabsTabState>(() => ({
   tabActivationDirection: tabActivationDirection.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -259,9 +262,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       focusableWhenDisabled: true,
     }),
   state,
-  ref: compositeRef,
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     {
       role: 'tab',
       'aria-controls': getTabPanelIdByValue(props.value),

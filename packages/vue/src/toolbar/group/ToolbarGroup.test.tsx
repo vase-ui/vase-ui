@@ -4,11 +4,13 @@ import { Toolbar } from '@vase-ui/vue/toolbar';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import { NOOP } from '../../internals/noop';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
-import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
+import { CompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
 
 const testCompositeContext: CompositeRootContext = {
   hasFocus: () => false,
-  detachedItemHandlers: { onFocusin: NOOP, onFocusout: NOOP, onKeydown: NOOP },
+  focusDetachedItem: NOOP,
+  blurDetachedItem: NOOP,
+  keydownDetachedItem: NOOP,
   highlightedIndex: computed(() => 0),
   onHighlightedIndexChange: NOOP,
   highlightItemOnHover: computed(() => false),

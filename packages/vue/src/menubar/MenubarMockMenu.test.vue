@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCompositeItem } from '../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../internals/composite/root/useCompositeRoot';
 import { useMenubarContext } from '../internals/menubar-context/MenubarContext';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { MenuOpenEventDetails } from '../menu/utils/types';
@@ -41,15 +41,17 @@ function report(
   tree.value?.events.emit('menuopenchange', details);
 }
 
-const { compositeProps, compositeRef } = useCompositeItem({ disabled: () => props.disabled });
-
 const { element, elementProps, setRef } = useRenderElement('button', props, {
-  ref: [compositeRef],
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     { role: 'menuitem', disabled: props.disabled || menubar.disabled.value ? '' : undefined },
     attrs,
   ],
+});
+
+const compositeItem: ReturnType<typeof useCompositeItem> = useCompositeItem(element, {
+  disabled: () => props.disabled,
 });
 
 defineExpose({ element, report, menubar, nodeId, parentNodeId, tree });

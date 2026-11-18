@@ -71,7 +71,7 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -118,7 +118,6 @@ const { store, parentVirtualFocus } = context;
 const parentMenuStore = context.parent.store;
 const submenuRootContext = useMenuSubmenuRootContext();
 
-const listItem = useCompositeListItem({ label: () => props.label });
 // The trigger is an item of the list of the parent menu. A filterable parent removes its element
 // while the query hides it. The template then gives its content to a component that reads the text
 // and adds no element to the document.
@@ -182,18 +181,21 @@ if (process.env.NODE_ENV !== 'production') {
   onUpdated(warnForDisabledElement);
 }
 
-const highlighted = computed(() => parentMenuStore.select('isActive', listItem.index.value));
+const element = shallowRef<HTMLElement | null>(null);
+const listIndex = useCompositeListItem(element, { label: () => props.label });
+
+const highlighted = computed(() => parentMenuStore.select('isActive', listIndex.value));
 
 const itemMetadata: UseMenuItemMetadata = {
   type: 'submenu-trigger',
   setActive(event: MouseEvent) {
     if (parentMenuStore.select('highlightItemOnHover')) {
-      parentMenuStore.setActiveIndex(listItem.index.value, REASONS.pointer, event);
+      parentMenuStore.setActiveIndex(listIndex.value, REASONS.pointer, event);
     }
   },
 };
 
-const { button, getItemProps, itemRef } = useMenuItem({
+const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
   closeOnClick: false,
   disabled: isDisabled,
   highlighted,
@@ -271,13 +273,12 @@ const ownProps = {
   },
 };
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   button,
   state,
   stateAttributesMapping: triggerOpenStateMapping,
   ref: [
-    listItem.ref,
-    itemRef,
     registerTrigger,
     (trigger) => {
       triggerElement.value = trigger;
@@ -285,6 +286,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     filterItem.ref,
   ],
   props: (attrs) => [
+    commonProps.value,
+    mouseEnterProps,
     click.reference,
     hoverProps,
     { style: hoverStyle.value },
@@ -310,8 +313,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     ownProps,
     filterItem.props,
     attrs,
-    // `getItemProps` stays last so `useButton` keeps gating consumer handlers while disabled.
-    getItemProps,
   ],
 });
 

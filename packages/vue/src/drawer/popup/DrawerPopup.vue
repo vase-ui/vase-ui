@@ -163,7 +163,7 @@ import * as TransitionStatusDataAttributes from '../../internals/TransitionStatu
 import { error } from '../../common/error';
 import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
-import { COMPOSITE_KEYS } from '../../internals/composite/composite';
+import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';

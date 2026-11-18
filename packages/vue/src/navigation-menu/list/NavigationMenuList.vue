@@ -100,10 +100,14 @@ function onKeydown(event: KeyboardEvent) {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('ul', props, {
   state,
-  ref: composite ? [composite.rootRef] : [],
+  ref: composite?.registerRoot,
   props: (attrs) => [
     { style: hoverStyle.value },
-    composite?.props,
+    {
+      onFocusin: composite?.onFocusin,
+      onFocusout: composite?.onFocusout,
+      onKeydown: composite?.onKeydown,
+    },
     dismissProps.value?.floating,
     nested ? undefined : { onKeydown },
     attrs,

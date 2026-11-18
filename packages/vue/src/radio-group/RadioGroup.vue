@@ -76,7 +76,7 @@ import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
-import { SHIFT } from '../internals/composite/composite';
+import { SHIFT } from '../internals/composite/listIndex';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
@@ -356,10 +356,14 @@ const composite = useCompositeRoot({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [composite.rootRef],
+  ref: composite.registerRoot,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    composite.props,
+    {
+      onFocusin: composite.onFocusin,
+      onFocusout: composite.onFocusout,
+      onKeydown: composite.onKeydown,
+    },
     {
       id: given('id', props.id),
       role: 'radiogroup',

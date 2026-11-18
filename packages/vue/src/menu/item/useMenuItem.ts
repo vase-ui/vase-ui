@@ -1,7 +1,5 @@
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { useButton } from '../../internals/use-button/useButton';
-import { mergeProps } from '../../merge-props';
-import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import type { MenuStore } from '../store/MenuStore';
 import { useMenuItemCommonProps } from './useMenuItemCommonProps';
 
@@ -14,12 +12,11 @@ export const REGULAR_ITEM = {
  * Call it in `setup`, because it reads the contexts of the menu with `inject`.
  * Each parameter that can change is a value, a ref or a getter.
  */
-export function useMenuItem(params: UseMenuItemParameters): UseMenuItemReturnValue {
+export function useMenuItem(
+  element: Readonly<Ref<HTMLElement | null>>,
+  params: UseMenuItemParameters,
+) {
   const { store, typingRef = store.context.typingRef, itemMetadata } = params;
-
-  // Vue calls the ref of a part during the render of that part. A reactive write there would make
-  // the render depend on it, so this is a plain variable.
-  let itemElement: HTMLElement | null = null;
 
   const commonProps = useMenuItemCommonProps({
     closeOnClick: params.closeOnClick,
@@ -27,7 +24,7 @@ export function useMenuItem(params: UseMenuItemParameters): UseMenuItemReturnVal
     id: params.id,
     store,
     typingRef,
-    getItemElement: () => itemElement,
+    getItemElement: () => element.value,
     itemMetadata,
   });
 
@@ -41,18 +38,10 @@ export function useMenuItem(params: UseMenuItemParameters): UseMenuItemReturnVal
     },
   };
 
-  function getItemProps(externalProps?: Record<string, any>): Record<string, any> {
-    return mergeProps<'div'>(commonProps.value, mouseEnterProps, externalProps);
-  }
-
-  function itemRef(element: HTMLElement | null) {
-    itemElement = element;
-  }
-
   return {
-    getItemProps,
-    itemRef,
-    button: (element) =>
+    commonProps,
+    mouseEnterProps,
+    button: () =>
       useButton(element, {
         disabled: params.disabled,
         focusableWhenDisabled: true,
@@ -107,17 +96,3 @@ export type UseMenuItemMetadata =
       type: 'submenu-trigger';
       setActive: (event: MouseEvent) => void;
     };
-
-export interface UseMenuItemReturnValue {
-  button: NonNullable<UseRenderElementParameters<{}>['button']>;
-  /**
-   * Resolver for the props of the element.
-   * @param externalProps The props of the part and of the consumer.
-   * @returns The props to give to the element.
-   */
-  getItemProps: (externalProps?: Record<string, any>) => Record<string, any>;
-  /**
-   * Gives the element of the item to the composable.
-   */
-  itemRef: (element: HTMLElement | null) => void;
-}

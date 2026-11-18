@@ -68,8 +68,8 @@ import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
+import { useCompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
 import { useButton } from '../../internals/use-button/useButton';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
@@ -180,9 +180,6 @@ const isDisabled = computed(
     (menubarContext?.disabled.value ?? false) ||
     (props.nativeButton && fieldsetDisabled.value),
 );
-
-// In a menubar the trigger is an item of the composite of the menubar.
-const compositeItem = isInMenubar ? useCompositeItem() : undefined;
 
 // A server runs no `onMounted` hook, so a server render writes nothing to the store of a handle.
 function resetMouseUpTrigger() {
@@ -374,7 +371,11 @@ const state = computed<MenuTriggerState>(() => ({
   open: isOpenedByThisTrigger.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = isInMenubar ? useCompositeItem(element) : undefined;
+
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -383,14 +384,14 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
   ref: [
-    compositeItem?.compositeRef,
     registerTrigger,
     (trigger) => {
       triggerElement.value = trigger;
     },
   ],
   props: (attrs) => [
-    compositeItem?.compositeProps.value,
+    compositeItem?.attributes.value,
+    compositeItem?.events,
     focusProps,
     click.reference,
     hoverProps,

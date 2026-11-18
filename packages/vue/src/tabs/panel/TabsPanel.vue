@@ -43,8 +43,8 @@ export interface TabsPanelProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { shallowRef, computed } from 'vue';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
@@ -89,8 +89,6 @@ useDeferredServerRender();
 
 const panelId = useVaseUiId(() => props.id);
 
-const { ref: listItemRef, index } = useCompositeListItem({ list: panelList });
-
 const open = computed(() => props.value === selectedValue.value);
 // The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.
 const { mounted, transitionStatus, setMounted } = useTransitionStatus(
@@ -109,6 +107,9 @@ useRegisteredId(
   () => element.value,
 );
 
+const element = shallowRef<HTMLElement | null>(null);
+const index = useCompositeListItem(element, { list: panelList });
+
 const state = computed<TabsPanelState>(() => ({
   hidden: hidden.value,
   orientation: orientation.value,
@@ -116,9 +117,9 @@ const state = computed<TabsPanelState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
-  ref: [listItemRef],
   props: (attrs) => [
     {
       'aria-labelledby': getTabIdByPanelValue(props.value),

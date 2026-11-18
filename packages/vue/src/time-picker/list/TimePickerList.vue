@@ -95,11 +95,7 @@ const hasSelectedItem = computed(() => {
   );
 });
 
-const {
-  props: compositeProps,
-  rootRef,
-  itemMap,
-} = useCompositeRoot({
+const { onFocusin, onFocusout, onKeydown, registerRoot, itemMap } = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
   hasActiveItem: hasSelectedItem,
@@ -112,9 +108,9 @@ const state = computed<TimePickerListState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [rootRef],
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     {
       role: 'listbox',
       'aria-label': 'Time',

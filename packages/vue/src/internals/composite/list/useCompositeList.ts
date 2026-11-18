@@ -1,5 +1,6 @@
 import {
   computed,
+  inject,
   onMounted,
   onScopeDispose,
   onWatcherCleanup,
@@ -9,14 +10,9 @@ import {
   triggerRef,
   watch,
 } from 'vue';
-import type { ShallowRef } from 'vue';
+import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 import { areArraysEqual } from '../../../common/areArraysEqual';
-import { CompositeListContext } from './CompositeListContext';
-import type {
-  CompositeItemState,
-  CompositeListContextValue,
-  CompositeListRegistration,
-} from './CompositeListContext';
+import { useKeepAliveState } from '../../useKeepAliveState';
 
 export type CompositeMetadata<CustomMetadata> = {
   index: number;
@@ -298,4 +294,110 @@ export interface UseCompositeListParameters<Metadata> {
    * @default true
    */
   provide?: boolean | undefined;
+}
+
+export interface CompositeItemState {
+  active?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  disabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  selected?: MaybeRefOrGetter<boolean | undefined> | undefined;
+}
+
+export interface CompositeListRegistration<Metadata> {
+  itemState?: CompositeItemState | undefined;
+  metadata: MaybeRefOrGetter<Metadata | undefined>;
+  index: MaybeRefOrGetter<number | undefined>;
+  label: MaybeRefOrGetter<string | null | undefined>;
+  textRef: MaybeRefOrGetter<HTMLElement | null | undefined>;
+}
+
+export interface CompositeListContextValue<Metadata> {
+  register: (node: Element, registration: CompositeListRegistration<Metadata>) => void;
+  unregister: (node: Element, registration: CompositeListRegistration<Metadata>) => void;
+  takeIndexGuess: () => number;
+  map: ComputedRef<ReadonlyMap<Element, CompositeMetadata<Metadata>>>;
+}
+
+export const CompositeListContext: InjectionKey<CompositeListContextValue<any>> = Symbol();
+
+export function useCompositeListContext(): CompositeListContextValue<any> | undefined {
+  // The default `undefined` stops the Vue warning for a missing provider.
+  // An item with no list is valid, so this function does not throw.
+  return inject(CompositeListContext, undefined);
+}
+
+/**
+ * Registers a list item and gives it its index (DOM position) in the list that
+ * `useCompositeList` made. An item with no list has the explicit index, or `-1`.
+ */
+export function useCompositeListItem<Metadata>(
+  element: Readonly<Ref<HTMLElement | null>>,
+  params: UseCompositeListItemParameters<Metadata> = {},
+): ComputedRef<number> {
+  const context = params.list ?? useCompositeListContext();
+
+  // The server has no DOM order. Use setup order until the list can sort the elements.
+  const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
+
+  const registration: CompositeListRegistration<Metadata> = {
+    metadata: params.metadata,
+    itemState: params.itemState,
+    index: params.index,
+    label: params.label,
+    textRef: params.textRef,
+  };
+
+  const index = computed<number>(() => {
+    const explicitIndex = toValue(params.index);
+    if (explicitIndex != null) {
+      return explicitIndex;
+    }
+
+    return (element.value ? context?.map.value.get(element.value)?.index : undefined) ?? guess;
+  });
+
+  if (context) {
+    const { isHeld } = useKeepAliveState();
+    // A hold moves the item without calling its ref. Register synchronously to preserve the
+    // order of the ref calls when two items share an element.
+    watch(
+      [element, isHeld],
+      ([node, held], _previous, onCleanup) => {
+        if (node && !held) {
+          context.register(node, registration);
+          onCleanup(() => context.unregister(node, registration));
+        }
+      },
+      { flush: 'sync' },
+    );
+  }
+
+  return index;
+}
+
+export interface UseCompositeListItemParameters<Metadata> {
+  itemState?: CompositeItemState | undefined;
+  /**
+   * The list that the item registers with. The default is the nearest list that a
+   * `useCompositeList` above the item provides. The item reads it one time, in `setup`.
+   */
+  list?: CompositeListContextValue<Metadata>;
+  /**
+   * The explicit index of the item. An item with no explicit index gets its index from its position
+   * in the document.
+   */
+  index?: MaybeRefOrGetter<number | undefined>;
+  /**
+   * The label of the item. `null` means that the item has no label.
+   * The default is the text of `textRef`, or the text of the element of the item.
+   */
+  label?: MaybeRefOrGetter<string | null | undefined>;
+  /**
+   * Metadata that the list publishes with the item. Give an object through a `computed` or a ref.
+   * A getter that makes a new object on each call makes the list publish a new map on each sort.
+   */
+  metadata?: MaybeRefOrGetter<Metadata | undefined>;
+  /**
+   * The element that holds the text of the label.
+   */
+  textRef?: MaybeRefOrGetter<HTMLElement | null | undefined>;
 }

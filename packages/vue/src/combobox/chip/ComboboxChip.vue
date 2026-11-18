@@ -17,7 +17,7 @@ export interface ComboboxChipProps
 
 <script setup lang="ts">
 import { computed, nextTick, provide, toRaw } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
@@ -51,14 +51,12 @@ const direction = useDirection();
 const disabled = computed(() => store.select('disabled'));
 const readOnly = computed(() => store.select('readOnly'));
 
-const listItem = useCompositeListItem({ list: chipList });
-
 async function handleKeydown(event: KeyboardEvent) {
   if (disabled.value || readOnly.value) {
     return;
   }
 
-  const currentIndex = listItem.index.value;
+  const currentIndex = listIndex.value;
   const [previousChipKey, nextChipKey] = getChipNavigationKeys(direction.value);
   let nextIndex: number | undefined = currentIndex;
 
@@ -121,7 +119,6 @@ const state = computed<ComboboxChipState>(() => ({ disabled: disabled.value }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [listItem.ref],
   props: (attrs) => [
     {
       tabindex: -1,
@@ -133,7 +130,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-provide(ComboboxChipContext, { index: listItem.index });
+const listIndex = useCompositeListItem(element, { list: chipList });
+
+provide(ComboboxChipContext, { index: listIndex });
 
 defineExpose({ element });
 </script>

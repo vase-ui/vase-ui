@@ -162,7 +162,7 @@ export interface ResizablePanelActions {
 <script setup lang="ts">
 import { computed, provide, watch } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useReferencedId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -222,11 +222,6 @@ const hydrating = useIsHydrating();
 const panelId = useVaseUiId(() => props.id);
 // The size at the start: a later change of the prop has no effect.
 const initialSize = props.defaultSize;
-// The list publishes its map again when the id changes, so the root sees a panel with a new id.
-const { ref: listItemRef, index } = useCompositeListItem({
-  list: root.list,
-  metadata: computed(() => ({ id: panelId.value })),
-});
 
 // A panel whose first size is a length has that length until the first measurement. The panel
 // cannot have a size in percent before: the room of the panels is not known. It can shrink, so it
@@ -275,7 +270,6 @@ useValueChanged(
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [listItemRef],
   props: (attrs) => [
     {
       id: panelId.value,
@@ -290,6 +284,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     attrs,
   ],
   stateAttributesMapping: { size: () => null },
+});
+
+// The root must see a new panel id at the same position.
+const index = useCompositeListItem(element, {
+  list: root.list,
+  metadata: computed(() => ({ id: panelId.value })),
 });
 
 // `KeepAlive` takes the panel out of the document. The root then gives its space to the other

@@ -42,9 +42,8 @@ const FORWARDED_DISABLED = { disabled: '' };
 </script>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue';
-import { EMPTY_OBJECT } from '../../common/empty';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { shallowRef, computed, useSlots } from 'vue';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -91,12 +90,14 @@ const state = computed<ToolbarButtonState>(() => ({
   focusable: props.focusableWhenDisabled,
 }));
 
-const { compositeProps, compositeRef } = useCompositeItem({
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element, {
   metadata: itemMetadata,
   disabled: () => itemDisabled.value && !props.focusableWhenDisabled,
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: itemDisabled,
@@ -104,21 +105,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       native: () => props.nativeButton,
     }),
   state,
-  ref: compositeRef,
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     attrs,
-    // With `as` or a `#render` slot, the element can be another part, such as a menu trigger.
-    // That part needs `disabled` to make its own disabled state. The default button gets no
-    // `disabled` here, so a disabled button that can get focus still gets hover events, for
-    // example for a tooltip. An enabled item gets no key. On an element that has no `disabled`
-    // property, a browser writes `false` as `disabled="false"` and a server writes no attribute.
-    // The hydrated DOM then differs from a client-only render. Also, `isElementDisabled` and a
-    // `[disabled]` selector read the attribute as disabled, whatever its value.
-    // TODO: follow up after https://github.com/mui/base-ui/issues/1976#issuecomment-2916905663
-    (slots.render || props.as !== 'button') && itemDisabled.value
-      ? FORWARDED_DISABLED
-      : EMPTY_OBJECT,
+    // A custom target needs the disabled prop even when its native button keeps focus.
+    (slots.render || props.as !== 'button') && itemDisabled.value ? FORWARDED_DISABLED : undefined,
   ],
 });
 

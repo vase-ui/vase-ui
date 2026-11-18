@@ -2,8 +2,8 @@ import { runInNewContext } from 'node:vm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { createGridCellMap, getGridCellIndexOfCorner } from './listIndex';
-import { gridNavigation } from './root/gridNavigation';
-import type { CompositeGridNavigationState } from './root/gridNavigation';
+import { gridNavigation } from './gridNavigation';
+import type { CompositeGridNavigationState } from './gridNavigation';
 
 const SIZES = [
   { width: 1, height: 1 },

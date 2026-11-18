@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { inject } from 'vue';
+import type { ComputedRef, HTMLAttributes, InjectionKey } from 'vue';
 import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { REASONS } from '../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
@@ -67,6 +68,27 @@ export interface ToggleGroupProps<Value extends string = string>
 export type ToggleGroupChangeEventReason = typeof REASONS.none;
 
 export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroupChangeEventReason>;
+
+interface ToggleGroupContext<Value> {
+  value: ComputedRef<readonly Value[]>;
+  setGroupValue: (
+    newValue: Value,
+    nextPressed: boolean,
+    eventDetails: ToggleGroupChangeEventDetails,
+  ) => void;
+  disabled: ComputedRef<boolean>;
+  /**
+   * Whether the group got `modelValue` or `defaultValue`.
+   * A Toggle with no `value` prop reports an error only then.
+   */
+  isValueInitialized: ComputedRef<boolean>;
+}
+
+const toggleGroupKey: InjectionKey<ToggleGroupContext<any>> = Symbol();
+
+export function useToggleGroupContext<Value>(): ToggleGroupContext<Value> | undefined {
+  return inject(toggleGroupKey, undefined);
+}
 </script>
 
 <script setup lang="ts" generic="Value extends string = any">
@@ -81,7 +103,6 @@ import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
 import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
-import { ToggleGroupContext } from './ToggleGroupContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -121,9 +142,10 @@ const toolbarGroupContext = useToolbarGroupContext();
 
 const groupDisabled = computed(
   () =>
-    (toolbarContext?.disabled.value ?? false) ||
-    (toolbarGroupContext?.disabled.value ?? false) ||
-    props.disabled,
+    props.disabled ||
+    toolbarContext?.disabled.value ||
+    toolbarGroupContext?.disabled.value ||
+    false,
 );
 
 const groupValue = useControlled<readonly Value[]>({
@@ -167,7 +189,7 @@ const state = computed<ToggleGroupState>(() => ({
   orientation: props.orientation,
 }));
 
-provide(ToggleGroupContext, {
+provide(toggleGroupKey, {
   disabled: groupDisabled,
   setGroupValue,
   value: groupValue,
@@ -190,8 +212,16 @@ const composite = toolbarContext
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: composite ? [composite.rootRef] : [],
-  props: (attrs) => [composite?.props, { role: 'group' }, attrs],
+  ref: composite?.registerRoot,
+  props: (attrs) => [
+    {
+      onFocusin: composite?.onFocusin,
+      onFocusout: composite?.onFocusout,
+      onKeydown: composite?.onKeydown,
+    },
+    { role: 'group' },
+    attrs,
+  ],
 });
 
 defineExpose({ element });

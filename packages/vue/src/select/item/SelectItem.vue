@@ -47,7 +47,7 @@ export interface SelectItemProps
 
 <script setup lang="ts">
 import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import {
   compareItemEquality,
@@ -80,8 +80,8 @@ defineSlots<{
 const store = useSelectRootContext();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const listItem = useCompositeListItem({ label: () => props.label, textRef });
-const index = listItem.index;
+const element = shallowRef<HTMLElement | null>(null);
+const index = useCompositeListItem(element, { label: () => props.label, textRef });
 
 const itemRoot = computed(() => store.select('itemRoot'));
 const isDisabled = computed(() => itemRoot.value.disabled || props.disabled);
@@ -212,7 +212,8 @@ function resetDragMovement() {
   store.context.selectionRef.value.dragY = 0;
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -221,7 +222,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       composite: true,
     }),
   state,
-  ref: [setItemElement, listItem.ref],
+  ref: setItemElement,
   props: (attrs) => [
     itemRoot.value.props,
     {

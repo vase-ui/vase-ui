@@ -20,8 +20,8 @@ import {
 import { NOOP } from '../../internals/noop';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import type { Orientation } from '../../internals/types';
-import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
-import { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from '../../internals/composite/composite';
+import { CompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
+import { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from '../../internals/composite/listIndex';
 import ToolbarInputBeforeHydration from './ToolbarInputBeforeHydration.test.vue';
 import ToolbarInputHydration from './ToolbarInputHydration.test.vue';
 
@@ -35,7 +35,9 @@ function readTabindexes(root: ParentNode) {
 
 const testCompositeContext: CompositeRootContext = {
   hasFocus: () => false,
-  detachedItemHandlers: { onFocusin: NOOP, onFocusout: NOOP, onKeydown: NOOP },
+  focusDetachedItem: NOOP,
+  blurDetachedItem: NOOP,
+  keydownDetachedItem: NOOP,
   highlightedIndex: computed(() => 0),
   onHighlightedIndexChange: NOOP,
   highlightItemOnHover: computed(() => false),

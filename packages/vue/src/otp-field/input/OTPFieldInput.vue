@@ -38,7 +38,7 @@ import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -93,7 +93,6 @@ const {
   value,
 } = useOTPFieldRootContext();
 
-const { ref: listItemRef, index } = useCompositeListItem({ list: inputList });
 const setFocused = useSetFieldFocused(disabled, () => element.value, setRootFocused);
 const direction = useDirection();
 
@@ -105,6 +104,9 @@ const composingValue = shallowRef<string | null>(null);
 // After a move in the history or a reload, the browser can restore the code of an earlier visit to
 // the first slot. The slot takes nothing, so the root does not complete and submit an old code.
 const writesValue = useValueBeforeHydration(props, () => element.value, { restorable: false });
+
+const element = shallowRef<HTMLElement | null>(null);
+const index = useCompositeListItem(element, { list: inputList });
 
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
@@ -321,9 +323,9 @@ function handlePaste(event: ClipboardEvent) {
   commitValue(rawValue, REASONS.inputPaste, event);
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
+  elementRef: element,
   state: inputState,
-  ref: [listItemRef],
   stateAttributesMapping: inputStateAttributesMapping,
   props: (attrs) => {
     // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string `off`

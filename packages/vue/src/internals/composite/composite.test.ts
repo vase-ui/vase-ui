@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { scrollIntoViewIfNeeded } from './composite';
+import { scrollIntoViewIfNeeded } from './listIndex';
 
 describe('Composite', () => {
   describe('scrollIntoViewIfNeeded', () => {

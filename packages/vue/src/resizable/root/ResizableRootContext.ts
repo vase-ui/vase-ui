@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
-import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';

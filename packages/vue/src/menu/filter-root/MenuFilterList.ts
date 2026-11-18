@@ -9,7 +9,7 @@ import {
   useFilterDropdownValueContext,
 } from '../../filter-dropdown/root/FilterDropdownRootContext';
 import { refocusOwner } from '../../filter-dropdown/utils/refocusOwner';
-import { useCompositeListContext } from '../../internals/composite/list/CompositeListContext';
+import { useCompositeListContext } from '../../internals/composite/list/useCompositeList';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import { mergeProps } from '../../merge-props';

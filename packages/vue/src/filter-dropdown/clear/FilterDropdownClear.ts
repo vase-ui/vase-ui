@@ -81,6 +81,6 @@ export interface UseFilterDropdownClearReturnValue {
   /** Whether the button renders: the query is not empty. */
   visible: ComputedRef<boolean>;
   state: ComputedRef<FilterDropdownClearState>;
-  button: NonNullable<UseRenderElementParameters<FilterDropdownClearState>['button']>;
+  button: (element: Parameters<typeof useButton>[0]) => ReturnType<typeof useButton>;
   props: NonNullable<UseRenderElementParameters<FilterDropdownClearState>['props']>;
 }

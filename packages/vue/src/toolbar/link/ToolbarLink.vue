@@ -23,8 +23,8 @@ const TOOLBAR_LINK_METADATA: ToolbarRootItemMetadata = {
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { shallowRef, computed } from 'vue';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../root/ToolbarRootContext';
@@ -42,12 +42,13 @@ const { orientation } = useToolbarRootContext();
 
 const state = computed<ToolbarLinkState>(() => ({ orientation: orientation.value }));
 
-const { compositeProps, compositeRef } = useCompositeItem({ metadata: TOOLBAR_LINK_METADATA });
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element, { metadata: TOOLBAR_LINK_METADATA });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
+  elementRef: element,
   state,
-  ref: [compositeRef],
-  props: (attrs) => [compositeProps.value, attrs],
+  props: (attrs) => [compositeItem.attributes.value, compositeItem.events, attrs],
 });
 
 defineExpose({ element });

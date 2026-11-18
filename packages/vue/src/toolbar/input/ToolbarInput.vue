@@ -40,9 +40,9 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, watch } from 'vue';
+import { shallowRef, computed, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
@@ -113,25 +113,27 @@ function preventWhenDisabled(event: Event) {
   }
 }
 
-const { compositeProps, compositeRef } = useCompositeItem({
-  metadata: itemMetadata,
-  disabled: () => itemDisabled.value && !props.focusableWhenDisabled,
-});
-
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
 const attrs = useAttrs();
 // An uncontrolled input has no model to compare with a silent browser restore at pageshow.
 let lastInputText: string | undefined;
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element, {
+  metadata: itemMetadata,
+  disabled: () => itemDisabled.value && !props.focusableWhenDisabled,
+});
+
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
+  elementRef: element,
   state,
-  ref: [compositeRef],
   props: (attrs) => {
     // The part declares no `value` prop, so the `value` of the consumer is in `attrs`.
     const { value, ...attrsWithoutValue } = attrs;
     return [
-      compositeProps.value,
+      compositeItem.attributes.value,
+      compositeItem.events,
       {
         onClick: preventWhenDisabled,
         onPointerdown: preventWhenDisabled,
