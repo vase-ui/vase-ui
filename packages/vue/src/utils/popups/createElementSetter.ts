@@ -18,12 +18,11 @@ export interface ElementTarget {
  * Makes the `ref` setter of a part that gives its element to a target of its root. Call it in
  * `setup`. The setter takes an element or a component that exposes `element`.
  *
- * The setter clears the target only while the target holds the element of its own part. By default,
- * `value` gets `null` while `KeepAlive` holds the part and the element again at activation. A mount
- * in a held branch gives the element to `kept` at once and to `value` at activation.
+ * The setter clears a target only if it still holds this part's element. By default, the part
+ * releases `value` during a hold and gives it the current element at activation.
  *
- * With `keepWhileHeld`, the target keeps the element while `KeepAlive` holds the part. Set it only
- * when a reader of the target needs the element of a held part.
+ * The optional `kept` target receives the element even when the part mounts in a held branch.
+ * Set `keepWhileHeld` when a reader of `value` needs the element during the hold.
  */
 export function createElementSetter(
   target: ElementTarget,
