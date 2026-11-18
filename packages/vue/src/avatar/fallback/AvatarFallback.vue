@@ -19,12 +19,11 @@ export interface AvatarFallbackProps
 </script>
 
 <script setup lang="ts">
-import { onMounted, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, watchEffect } from 'vue';
 import { useTimeout } from '../../common/useTimeout';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useAvatarRootContext } from '../root/AvatarRootContext';
-import { avatarStateAttributesMapping } from '../root/stateAttributesMapping';
+import { avatarStateAttributesMapping, useAvatarRootContext } from '../root/AvatarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -37,25 +36,27 @@ defineSlots<{
 
 const { state } = useAvatarRootContext();
 
-// A server does not run `onMounted`. With no delay, the fallback is then in the server HTML.
-const delayPassed = shallowRef(props.delay === 0);
 const timeout = useTimeout();
+const delayPassed = shallowRef(props.delay === 0);
+const visible = computed(
+  () => state.value.imageLoadingStatus !== 'loaded' && (props.delay === 0 || delayPassed.value),
+);
 
-// `delayPassed` never goes back to `false`. A fallback that shows with no delay stays visible
-// when `delay` changes to a number later.
-function updateDelayPassed() {
-  if (props.delay > 0) {
-    timeout.start(props.delay, () => {
+onMounted(() => {
+  watchEffect(() => {
+    if (delayPassed.value) {
+      return;
+    }
+    if (props.delay > 0) {
+      timeout.start(props.delay, () => {
+        delayPassed.value = true;
+      });
+    } else {
+      timeout.clear();
       delayPassed.value = true;
-    });
-  } else {
-    timeout.clear();
-    delayPassed.value = true;
-  }
-}
-
-onMounted(updateDelayPassed);
-watch(() => props.delay, updateDelayPassed);
+    }
+  });
+});
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
@@ -66,18 +67,8 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot
-    v-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed) && usesRenderSlot()"
-    name="render"
-    :props="elementProps()"
-    :state="state"
-  />
-  <component
-    :is="as"
-    v-else-if="state.imageLoadingStatus !== 'loaded' && (delay === 0 || delayPassed)"
-    v-bind="elementProps()"
-    :ref="setRef"
-  >
+  <slot v-if="visible && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
 </template>
