@@ -1,32 +1,29 @@
-import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { computed, inject, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { given } from '../givenAttributes';
-import { NOOP } from '../noop';
 import { useVaseUiId } from '../useVaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
-import { useLabelableContext } from './LabelableContext';
+import { LabelableContext } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
 
 /**
- * A control calls it in `setup` and binds the result to its `id`. The label of the same provider
- * then has the `for` that names the control.
+ * A control calls it in `setup` and binds the result to its `id`. The label uses this id for its control.
  */
 export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedRef<string> {
-  const { controlId, registerControlId, resetControlId, registerControlElementId } =
-    useLabelableContext();
-
+  const context = inject(LabelableContext, null);
   const defaultId = useVaseUiId();
-
-  const source = Symbol();
   const id = () => given('id', toValue(params.id));
+  if (!context) {
+    return computed(() => id() ?? defaultId.value);
+  }
+
+  const { controlId, registerControlId, resetControlId, registerControlElementId } = context;
+  const source = Symbol();
   const isEnabled = () => toValue(params.enabled) ?? true;
 
   let hasRegistered = false;
   let hadExplicitId = false;
-  let isMounted = false;
-  // `KeepAlive` removes the DOM of a held control from the document, so the control gives no id
-  // then. Its entry stays. `KeepAlive` runs the `onActivated` hooks of one branch from the last part
-  // to the first part. A new entry in that hook would reverse the order of the controls.
+  // A held control keeps its place. Activation hooks can run in reverse document order.
   const { isHeld, shown } = useKeepAliveState();
 
   function getRegisteredId() {
@@ -38,7 +35,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   }
 
   function unregister() {
-    if (!hasRegistered || registerControlId === NOOP) {
+    if (!hasRegistered) {
       return;
     }
 
@@ -47,7 +44,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   }
 
   function register() {
-    if (!isEnabled() || registerControlId === NOOP) {
+    if (!isEnabled()) {
       unregister();
       return;
     }
@@ -69,37 +66,22 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
     }
   }
 
-  // The registration waits for the mount. The `setup` of a replacement can run before Vue removes or
-  // deactivates the old control. The old registration is still there then.
+  // A replacement can enter setup before the previous control releases its id.
   onMounted(() => {
-    isMounted = true;
-    register();
+    watch([id, isEnabled], register, { immediate: true });
   });
 
-  // A change before the mount also waits, for the same reason.
-  watch([id, isEnabled], () => {
-    if (isMounted) {
-      register();
-    }
-  });
-
-  // A control with no id claims the default id of the provider again when `KeepAlive` shows it.
-  // The claim waits for the flush after the hooks. In its own hook, the controls before it in the
-  // branch are still held and give no id, so the claim would reset the selected id.
+  // Wait until every control in the branch has its id again.
   watch(shown, register);
 
-  // `onScopeDispose` runs while Vue unmounts the control. The `onMounted` of a control that
-  // replaces it runs in the flush after that, so the new control never sees the old registration.
   onScopeDispose(unregister);
 
-  // The id of the provider wins until the registration. The label has `for` with that id in the
-  // server HTML. An id of the control here would leave the label and the control with two ids, and
-  // a label that names no element names nothing.
+  // Before mount, the control must match the id in the server label's for attribute.
   const boundId = computed(
     () => (isEnabled() ? controlId.value : undefined) ?? id() ?? defaultId.value,
   );
 
-  if (registerControlId !== NOOP && params.element !== undefined) {
+  if (params.element !== undefined) {
     useRegisteredId(
       () => (isEnabled() ? boundId.value : undefined),
       registerControlElementId,

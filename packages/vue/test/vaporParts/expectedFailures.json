@@ -106,6 +106,9 @@
         "<Field.Label /> > KeepAlive > names the control with a label that mounts while held only after the show: no label outside": "vue-16305-keep-alive"
       }
     },
+    "src/fieldset/root/FieldsetDisabled.test.tsx": {
+      "fails": {}
+    },
     "src/fieldset/root/useFieldsetDisabled.test.tsx": {
       "fails": {}
     },
@@ -116,6 +119,9 @@
       "fails": {}
     },
     "src/internals/date-time/field/inputRegistration.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/field-root-context/FieldProvider.test.tsx": {
       "fails": {}
     },
     "src/internals/ownedElements.test.tsx": {

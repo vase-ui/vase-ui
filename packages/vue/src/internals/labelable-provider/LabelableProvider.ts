@@ -10,8 +10,6 @@ import { createLabelIdRegistry } from './createLabelIdRegistry';
  * A component cannot `inject` what it provides, so the root uses the context that this returns.
  */
 export function provideLabelableContext(): LabelableContext {
-  // The outer provider. `inject` reads the provides of the parent component, so it does not
-  // return the context that this function makes.
   const parent = useLabelableContext();
 
   const defaultControlId = useVaseUiId();
@@ -22,9 +20,7 @@ export function provideLabelableContext(): LabelableContext {
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const { ids: messageIds, registerId: registerMessageId } = createIdRegistry();
 
-  // The selection runs one time for each flush, against all ids, as the state updater of Base UI
-  // does. `KeepAlive` activates the controls of a branch from the last to the first. A selection
-  // after each activation would select the last control.
+  // KeepAlive can activate the controls in reverse order. Select once after all their ids are available.
   watch(controlIds, (ids) => {
     const [firstId] = ids;
     // With no id, the selected id stays. `KeepAlive` can deactivate each control, and the control
@@ -71,7 +67,7 @@ export function provideLabelableContext(): LabelableContext {
   }
 
   const context: LabelableContext = {
-    controlId: computed(() => controlIdState.value),
+    controlId: controlIdState,
     registerControlId,
     resetControlId,
     controlElementId,

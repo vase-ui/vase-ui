@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, provide, shallowRef, useAttrs } from 'vue';
+import { createFieldFocusOwner } from '../../src/internals/field-root-context/useSetFieldFocused';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../src/internals/field-constants';
+import { createFieldInputRegistry } from '../../src/internals/field-register-control/useFieldInput';
 import { useFieldControlRegistration } from '../../src/internals/field-register-control';
 import {
   DEFAULT_FIELD_ROOT_CONTEXT,
@@ -36,7 +38,6 @@ const touched = shallowRef(false);
 const dirty = shallowRef(false);
 const filled = shallowRef(false);
 const focused = shallowRef(false);
-const focusOwnerRef = shallowRef<unknown>();
 const markedDirtyRef = shallowRef(false);
 const validityData = shallowRef<FieldValidityData>({
   state: DEFAULT_VALIDITY_STATE,
@@ -116,10 +117,15 @@ provide(FieldRootContext, {
   setFocused(next) {
     focused.value = next;
   },
-  focusOwnerRef,
+  setFocusOwner: createFieldFocusOwner(),
   state,
   registerFieldControl,
-  validation: { ...DEFAULT_FIELD_ROOT_CONTEXT.validation, change, commit },
+  validation: {
+    ...DEFAULT_FIELD_ROOT_CONTEXT.validation,
+    ...createFieldInputRegistry(),
+    change,
+    commit,
+  },
 });
 
 function elementProps() {

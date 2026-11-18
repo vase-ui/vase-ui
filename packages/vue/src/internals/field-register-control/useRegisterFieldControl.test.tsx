@@ -32,7 +32,6 @@ describe('useRegisterFieldControl', () => {
     const Field = defineComponent((_props, { slots }) => {
       provide(FieldRootContext, {
         ...DEFAULT_FIELD_ROOT_CONTEXT,
-        setValidityData: vi.fn(),
         registerFieldControl,
       });
       return () => slots.default?.();
@@ -54,6 +53,16 @@ describe('useRegisterFieldControl', () => {
 
     return { values, registerFieldControl, callsInSetup, Field, Control };
   }
+
+  it('skips the registration sources of a standalone control', async () => {
+    const value = vi.fn(() => 'email');
+    const Control = defineComponent(() => {
+      useRegisterFieldControl(null, 'standalone', value);
+      return () => <input />;
+    });
+    await render(<Control />);
+    expect(value).not.toHaveBeenCalled();
+  });
 
   it('registers one getter after the mount, and the getter follows a change of `id`, `name` and `value`', async () => {
     const { values, registerFieldControl, callsInSetup, Field, Control } = setup();

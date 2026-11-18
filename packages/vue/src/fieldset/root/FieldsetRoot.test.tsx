@@ -318,27 +318,20 @@ describe('<Fieldset.Root />', () => {
       },
     );
 
-    it('hydrates a root that has an aria-label and a legend, and the legend then names the root', async () => {
-      const props = { ariaLabel: 'Billing' };
+    it('VUE-89: keeps the generated legend id through hydration', async () => {
       const serverHtml = await renderOnServer(
         'src/fieldset/legend/FieldsetLegendHydration.test.vue',
-        props,
       );
-
-      // The server cannot know that the legend exists, so the root has no `aria-labelledby` yet.
-      // A `<template>` element parses the HTML with no side effect.
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
-      expect(
-        template.content.querySelector('fieldset')?.getAttribute('aria-labelledby'),
-      ).toBeNull();
-
-      const { container } = await hydrate(FieldsetLegendHydration, { serverHtml, props });
-
-      expect(within(container).getByRole('group')).toHaveAttribute(
-        'aria-labelledby',
-        within(container).getByTestId('legend').id,
+      const legendId = template.content.querySelector('[data-testid="legend"]')?.id;
+      expect(legendId).toMatch(/^vase-ui-./);
+      expect(template.content.querySelector('fieldset')?.getAttribute('aria-labelledby')).toBe(
+        legendId,
       );
+
+      const { container } = await hydrate(FieldsetLegendHydration, { serverHtml });
+      expect(within(container).getByRole('group')).toHaveAttribute('aria-labelledby', legendId);
     });
   });
 

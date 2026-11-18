@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { defineComponent, provide } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import { NOOP } from '../noop';
+import { LabelableContext } from './LabelableContext';
+import { provideLabelableContext } from './LabelableProvider';
 import LabelableAsyncLabel from './LabelableAsyncLabel.test.vue';
 import LabelableOrder from './LabelableOrder.test.vue';
 
@@ -45,6 +49,25 @@ describe('VUE-17: the server HTML of a control in a field', () => {
     expect(server.labelId).toMatch(/^vase-ui-./);
     expect(server.labelledBy).toBe(server.labelId);
     expect(server.describedBy).toBe(`${server.descriptionId} ${server.errorId}`);
+  });
+
+  it('names a control from a later label when the provider ignores control ids', async () => {
+    const Scope = defineComponent((_props, { slots }) => {
+      provide(LabelableContext, { ...provideLabelableContext(), registerControlId: NOOP });
+      return () => slots.default?.();
+    });
+    const labels = ['first-label', 'second-label'];
+    const pages = await Promise.all(
+      labels.map((labelId) =>
+        renderToString(
+          <Scope>
+            <LabelableOrder parts={['control', 'label']} provider={false} labelId={labelId} />
+          </Scope>,
+        ),
+      ),
+    );
+
+    expect(pages.map((html) => read(html).labelledBy)).toEqual(labels);
   });
 
   it('names a control with the `id` prop of a label that comes after it', async () => {

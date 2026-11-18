@@ -28,7 +28,7 @@ describe('field and form contexts on a server', () => {
       filled: false,
       focused: false,
     },
-    focusOwnerRef: null,
+    claimsFocus: false,
     inputRef: null,
     registeredInputs: 0,
   };
@@ -50,7 +50,7 @@ describe('field and form contexts on a server', () => {
       validationMode: field.validationMode.value,
       shouldValidateOnChange: field.shouldValidateOnChange(),
       state: field.state.value,
-      focusOwnerRef: field.focusOwnerRef,
+      claimsFocus: field.setFocusOwner(Symbol(), true),
       inputRef: field.validation.inputRef.value,
       registeredInputs: field.validation.registeredInputs.size,
     };
@@ -80,7 +80,7 @@ describe('field and form contexts on a server', () => {
     field.setFilled(true);
     field.setFocused(true);
     field.registerFieldControl(Symbol(), () => ({ controlRef: input, id: 'control', value: 'x' }));
-    field.validation.inputRef.value = input;
+    field.validation.setFieldInput(Symbol(), input);
     field.validation.registerInput(input, { controlRef: input, value: 'x' });
     field.validation.change('x');
     form.clearErrors('name');

@@ -1,5 +1,5 @@
-import { computed, customRef, inject } from 'vue';
-import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
+import { computed, inject } from 'vue';
+import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { DEFAULT_FIELD_ROOT_STATE, DEFAULT_VALIDITY_STATE } from '../field-constants/constants';
 import type { FormValidationMode } from '../form-context/FormContext';
@@ -72,7 +72,8 @@ export type RegisteredInputs = ReadonlyMap<HTMLInputElement, RegisteredInput>;
 
 export interface UseFieldValidationReturnValue {
   getValidationProps: (disabled: boolean, props?: Record<string, any>) => Record<string, any>;
-  inputRef: ShallowRef<HTMLInputElement | null>;
+  inputRef: Readonly<Ref<HTMLInputElement | null>>;
+  setFieldInput: (source: symbol, input: HTMLInputElement | null, atShow?: boolean) => void;
   registeredInputs: RegisteredInputs;
   registerInput: (element: HTMLInputElement, registration: RegisteredInput) => void | (() => void);
   getInputControl: () => HTMLElement | null;
@@ -95,12 +96,7 @@ export interface FieldRootContext {
   setDirty: (dirty: boolean) => void;
   setFilled: (filled: boolean) => void;
   setFocused: (focused: boolean) => void;
-  /**
-   * Identifies the control the focused state belongs to, so that disabling or unmounting a
-   * different control in the same field can't clear it. Written through `useSetFieldFocused`.
-   * It is `null` when there is no field. A control then keeps the owner itself.
-   */
-  focusOwnerRef: Ref<unknown> | null;
+  setFocusOwner: (source: symbol, focused: boolean) => boolean;
   validationMode: ComputedRef<FormValidationMode>;
   shouldValidateOnChange: () => boolean;
   state: ComputedRef<FieldRootState>;
@@ -138,15 +134,15 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
   setDirty: NOOP,
   setFilled: NOOP,
   setFocused: NOOP,
-  focusOwnerRef: null,
+  setFocusOwner: () => false,
   validationMode: computed(() => 'onSubmit'),
   shouldValidateOnChange: () => false,
   state: computed(() => DEFAULT_FIELD_ROOT_STATE),
   registerFieldControl: NOOP,
   validation: {
     getValidationProps: (_disabled, props = EMPTY_OBJECT) => props,
-    // Each control with no field writes its input here. The ref keeps none of them.
-    inputRef: customRef(() => ({ get: () => null, set: NOOP })),
+    inputRef: computed(() => null),
+    setFieldInput: NOOP,
     registeredInputs: new Map(),
     registerInput: NOOP,
     getInputControl: () => null,
@@ -156,21 +152,20 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
   },
 };
 
-export const FieldRootContext: InjectionKey<FieldRootContext> = Symbol();
+export const FieldRootContext: InjectionKey<FieldRootContext | null> = Symbol();
 
 /**
  * Gives the context of the nearest field, or a context that does nothing when there is none.
  * A control then works with no field around it.
- * To find out if a field is there, compare `setValidityData` with `NOOP`.
  */
 export function useFieldRootContext(optional = true): FieldRootContext {
-  const context = inject(FieldRootContext, DEFAULT_FIELD_ROOT_CONTEXT);
+  const context = inject(FieldRootContext, null);
 
-  if (context.setValidityData === NOOP && !optional) {
+  if (context === null && !optional) {
     throw new Error(
       'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',
     );
   }
 
-  return context;
+  return context ?? DEFAULT_FIELD_ROOT_CONTEXT;
 }

@@ -1,5 +1,6 @@
 import {
   computed,
+  inject,
   nextTick,
   onMounted,
   onScopeDispose,
@@ -29,7 +30,11 @@ import type {
 } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
+import {
+  DEFAULT_FIELD_ROOT_CONTEXT,
+  FieldRootContext,
+  useClearFieldError,
+} from '../../internals/field-root-context';
 import { getFilter } from '../../internals/filter';
 import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
@@ -442,6 +447,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   callbacks: AriaComboboxCallbacks,
 ): UseAriaComboboxReturnValue {
   const { clearErrors } = useFormContext();
+  const field = inject(FieldRootContext, null);
   const {
     setDirty,
     validityData,
@@ -452,8 +458,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     setFocused,
     validationMode,
     validation,
-    setValidityData,
-  } = useFieldRootContext();
+  } = field ?? DEFAULT_FIELD_ROOT_CONTEXT;
 
   const id = useLabelableId({
     id: () => props.id,
@@ -1289,7 +1294,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function requestSubmit() {
-    // Not `validation.inputRef`: outside a Field, every control shares it.
+    // A field can contain other controls. Submit the form that owns this combobox.
     const formElement = hiddenInputElement.value?.form ?? toRaw(store.state).inputElement?.form;
     if (formElement && typeof formElement.requestSubmit === 'function') {
       formElement.requestSubmit();
@@ -2068,12 +2073,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       id: id.value && hiddenInputName.value == null ? `${id.value}-hidden-input` : undefined,
       form: props.form,
       name: hiddenInputName.value,
-      type: getHiddenInputType(
-        setValidityData !== NOOP,
-        name.value,
-        props.formAutoComplete,
-        required.value,
-      ),
+      type: getHiddenInputType(field !== null, name.value, props.formAutoComplete, required.value),
       autocomplete: props.formAutoComplete,
       disabled: disabled.value,
       required: required.value && !hasMultipleSelection.value,

@@ -177,21 +177,21 @@ describe('<Fieldset.Legend />', () => {
   it.skipIf(isJSDOM)(
     'sets `aria-labelledby` after hydration without a custom legend id',
     async () => {
+      // An explicit name suppresses the assumed legend id in the server HTML (VUE-89).
+      const props = { ariaLabel: 'Billing' };
       const serverHtml = await renderOnServer(
         'src/fieldset/legend/FieldsetLegendHydration.test.vue',
+        props,
       );
 
-      // A `<template>` element parses the HTML with no side effect.
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
       const serverFieldset = template.content.querySelector('[data-testid="fieldset"]')!;
       const legendId = template.content.querySelector('[data-testid="legend"]')!.id;
       expect(legendId).not.toBe('');
-      // Base UI has no `aria-labelledby` here. The root of Vase UI assumes a legend until it is
-      // mounted, so the server HTML has the id of the legend.
-      expect(serverFieldset.getAttribute('aria-labelledby')).toBe(legendId);
+      expect(serverFieldset.getAttribute('aria-labelledby')).toBeNull();
 
-      const { container } = await hydrate(FieldsetLegendHydration, { serverHtml });
+      const { container } = await hydrate(FieldsetLegendHydration, { serverHtml, props });
 
       expect(within(container).getByTestId('fieldset')).toHaveAttribute(
         'aria-labelledby',

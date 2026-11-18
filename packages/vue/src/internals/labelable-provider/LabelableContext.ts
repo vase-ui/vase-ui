@@ -1,5 +1,5 @@
 import { computed, inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { NOOP } from '../noop';
 
@@ -21,7 +21,7 @@ export interface LabelableContext {
    * When `null`, the label omits `for`, either because the association is implicit or
    * because the control takes its name from `aria-labelledby`.
    */
-  controlId: ComputedRef<string | null | undefined>;
+  controlId: Readonly<Ref<string | null | undefined>>;
   registerControlId: RegisterId<string | null>;
   resetControlId: () => void;
   /**
@@ -49,7 +49,7 @@ export interface LabelableContext {
  * A context for providing [labelable elements](https://html.spec.whatwg.org/multipage/forms.html#category-label)
  * with an accessible name (label) and description.
  */
-export const LabelableContext: InjectionKey<LabelableContext> = Symbol();
+export const LabelableContext: InjectionKey<LabelableContext | null> = Symbol();
 
 // All apps and all server requests share this object, so it holds no state.
 const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
@@ -68,8 +68,7 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
 /**
  * Gives the labelable context of the nearest provider, or a context that does nothing when there
  * is none. A control then works with no field around it.
- * To find out if a provider is there, compare `registerControlId` with `NOOP`.
  */
 export function useLabelableContext(): LabelableContext {
-  return inject(LabelableContext, DEFAULT_LABELABLE_CONTEXT);
+  return inject(LabelableContext, null) ?? DEFAULT_LABELABLE_CONTEXT;
 }

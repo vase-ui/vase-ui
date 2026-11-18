@@ -158,7 +158,7 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 <script setup lang="ts" generic="Value = never, Multiple extends boolean | undefined = false">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
-import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, inject, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useHiddenValueBeforeHydration } from '../../common/hydration';
@@ -169,7 +169,11 @@ import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/vis
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
+import {
+  DEFAULT_FIELD_ROOT_CONTEXT,
+  FieldRootContext,
+  useClearFieldError,
+} from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
@@ -252,6 +256,7 @@ const emit = defineEmits<{
 defineSlots<{ default(): unknown }>();
 
 const { clearErrors } = useFormContext();
+const field = inject(FieldRootContext, null);
 const {
   setDirty,
   setTouched,
@@ -262,8 +267,7 @@ const {
   disabled: fieldDisabled,
   validation,
   validationMode,
-  setValidityData,
-} = useFieldRootContext();
+} = field ?? DEFAULT_FIELD_ROOT_CONTEXT;
 
 const controlId = useLabelableId({
   id: () => props.id,
@@ -793,12 +797,7 @@ function inputProps() {
         : undefined,
     form: props.form,
     name: hiddenInputName.value,
-    type: getHiddenInputType(
-      setValidityData !== NOOP,
-      inputName.value,
-      props.autoComplete,
-      props.required,
-    ),
+    type: getHiddenInputType(field !== null, inputName.value, props.autoComplete, props.required),
     autocomplete: props.autoComplete,
     ...(writesHiddenValue.value ? valueProps() : undefined),
     disabled: isDisabled.value,

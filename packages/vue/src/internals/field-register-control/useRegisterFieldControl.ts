@@ -1,6 +1,6 @@
-import { onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { inject, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { useFieldRootContext } from '../field-root-context/FieldRootContext';
+import { FieldRootContext } from '../field-root-context/FieldRootContext';
 import { useKeepAliveState } from '../useKeepAliveState';
 import type { FieldControlRegistration } from './useFieldControlRegistration';
 
@@ -18,7 +18,12 @@ export function useRegisterFieldControl(
   enabled: MaybeRefOrGetter<boolean> = true,
   name?: MaybeRefOrGetter<FieldControlRegistration['name']>,
 ): void {
-  const { registerFieldControl } = useFieldRootContext();
+  const field = inject(FieldRootContext, null);
+  if (!field) {
+    return;
+  }
+
+  const { registerFieldControl } = field;
   const source = Symbol();
   // The getter reads the state, and the entry keeps its place. `KeepAlive` runs the `onActivated`
   // hooks of one branch from the last part to the first part. A new entry in that hook would
@@ -41,24 +46,11 @@ export function useRegisterFieldControl(
         };
   }
 
-  let isMounted = false;
-
-  // The registration waits for the mount. A lazy control runs its `setup` after its root hydrates,
-  // and its `name` can add an element, such as the error of a form. A registration in `setup` would
-  // then give a hydration mismatch. A server render never calls `onMounted`, so it writes to no
-  // registry.
+  // A lazy control can supply a field name that adds an error element. Wait until its HTML has hydrated.
   onMounted(() => {
-    isMounted = true;
-    registerFieldControl(source, getRegistration);
-  });
-
-  // The registration effect of Base UI runs again on these four changes. A change before the mount
-  // waits for the mount. The default flush runs before the DOM update. The field then drops the
-  // work of the control that it replaces before this control starts work of its own.
-  watch([getId, getName, value, isEnabled], () => {
-    if (isMounted) {
-      registerFieldControl(source, getRegistration);
-    }
+    watch([getId, getName, value, isEnabled], () => registerFieldControl(source, getRegistration), {
+      immediate: true,
+    });
   });
 
   onScopeDispose(() => registerFieldControl(source, undefined));

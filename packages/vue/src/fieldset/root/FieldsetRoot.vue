@@ -22,7 +22,7 @@ export interface FieldsetRootProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, onBeforeUpdate, provide, resolveDynamicComponent, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
@@ -33,7 +33,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<FieldsetRootProps>(), { as: 'fieldset', disabled: false });
 
-defineSlots<{
+const slots = defineSlots<{
   default(props: { state: FieldsetRootState }): unknown;
   render: ComponentRenderFn<HTMLProps, FieldsetRootState>;
 }>();
@@ -42,6 +42,13 @@ defineSlots<{
 const outerDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => outerDisabled.value || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
+
+// A Vapor prop binding can run outside the component context that resolves a registered name.
+const rendersTag = () => typeof resolveDynamicComponent(props.as) === 'string';
+const isTag = shallowRef(rendersTag());
+onBeforeUpdate(() => {
+  isTag.value = rendersTag();
+});
 
 const { labelId, labelRoot, getAriaLabelledBy } = useLabelId();
 
@@ -53,14 +60,16 @@ provide(FieldsetRootContext, {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fieldset', props, {
   state,
-  props: (attrs) => [
-    {
-      'aria-labelledby': getAriaLabelledBy(attrs),
-      // Vue writes `false` as `disabled="false"` on an element that has no `disabled` property.
-      disabled: isDisabled.value ? true : undefined,
-    },
-    attrs,
-  ],
+  props: (attrs) => {
+    const disabled = slots.render !== undefined || !isTag.value ? true : '';
+    return [
+      {
+        'aria-labelledby': getAriaLabelledBy(attrs),
+        disabled: isDisabled.value ? disabled : undefined,
+      },
+      attrs,
+    ];
+  },
 });
 
 defineExpose({ element });

@@ -1,4 +1,4 @@
-import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { computed, inject, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { getCombinedFieldValidityData } from '../field-root-context/getCombinedFieldValidityData';
 import type {
@@ -6,7 +6,7 @@ import type {
   FieldRootContext,
   FieldValidityData,
 } from '../field-root-context/FieldRootContext';
-import { useFormContext } from '../form-context/FormContext';
+import { FormContext } from '../form-context/FormContext';
 import { createIdRegistry } from '../labelable-provider/createIdRegistry';
 
 export type { FieldControlRegistration } from '../field-root-context/FieldRootContext';
@@ -20,7 +20,7 @@ export function useFieldControlRegistration(
 ): UseFieldControlRegistrationReturnValue {
   const { change, commit, invalid, markedDirtyRef, name, setValidityData, validityData } = params;
 
-  const { registerField } = useFormContext();
+  const form = inject(FormContext, null);
 
   const { ids: controls, registerId: registerControl } = createIdRegistry<{
     source: symbol;
@@ -73,26 +73,6 @@ export function useFieldControlRegistration(
     commit(registration ? getRegistrationValue(registration) : validityData.value.value);
   }
 
-  // The baseline belongs to the field, not to a control instance: a control that unmounts and
-  // remounts (or is swapped for another one) comes back as a brand new registration. Capturing
-  // more than once would turn whichever value the control happens to hold at that point into the
-  // initial value, so a modified field would read pristine and its real initial value would read
-  // dirty. Consumers that want a fresh baseline remount or key `<Field.Root>` itself.
-  let initialValueCaptured = false;
-  function captureInitialValue() {
-    const registration = activeControl.value?.registration;
-    if (initialValueCaptured || !registration) {
-      return;
-    }
-
-    initialValueCaptured = true;
-    const initialValue = getRegistrationValue(registration);
-
-    if (validityData.value.initialValue !== initialValue) {
-      setValidityData({ ...validityData.value, initialValue });
-    }
-  }
-
   // Drop work owned by a replaced control, but not on first registration.
   watch(getActiveSource, (_source, previousSource) => {
     if (previousSource !== undefined) {
@@ -100,31 +80,42 @@ export function useFieldControlRegistration(
     }
   });
 
-  watch(getActiveSource, captureInitialValue, { flush: 'post' });
-
-  const fieldSource = Symbol();
-
-  // The registration waits for the mount, as the registration of a control does. The key of the
-  // entry is the source, and not the `id` of the control. A change of the `id` or of the control
-  // then keeps the place of the field in the form.
-  onMounted(() => {
-    registerField(fieldSource, () => {
+  // A replacement control must compare its value with the field's first value.
+  watch(
+    getActiveSource,
+    () => {
       const registration = activeControl.value?.registration;
-      if (!registration?.id) {
-        return undefined;
+      if (registration) {
+        const initialValue = getRegistrationValue(registration);
+        if (validityData.value.initialValue !== initialValue) {
+          setValidityData({ ...validityData.value, initialValue });
+        }
       }
+    },
+    { flush: 'post', once: true },
+  );
 
-      return {
-        name: toValue(name) ?? registration.name,
-        validate,
-        validityData: getCombinedFieldValidityData(validityData.value, toValue(invalid)),
-        controlRef: registration.controlRef,
-        getValue: getValueForForm,
-      };
+  if (form) {
+    const fieldSource = Symbol();
+    // The same source keeps the field's place when its control or id changes.
+    onMounted(() => {
+      form.registerField(fieldSource, () => {
+        const registration = activeControl.value?.registration;
+        if (!registration?.id) {
+          return undefined;
+        }
+
+        return {
+          name: toValue(name) ?? registration.name,
+          validate,
+          validityData: getCombinedFieldValidityData(validityData.value, toValue(invalid)),
+          controlRef: registration.controlRef,
+          getValue: getValueForForm,
+        };
+      });
     });
-  });
-
-  onScopeDispose(() => registerField(fieldSource, undefined));
+    onScopeDispose(() => form.registerField(fieldSource, undefined));
+  }
 
   return { validate, registerFieldControl, registeredFieldName };
 }

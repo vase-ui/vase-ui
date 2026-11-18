@@ -3,7 +3,6 @@ import { defineComponent, provide } from 'vue';
 import { createRenderer, hydrate, renderOnServer, screen, takeReportedMessages } from '#test-utils';
 import FieldScope from '../../../test/fixtures/FieldScope.vue';
 import { DEFAULT_VALIDITY_STATE } from '../field-constants/constants';
-import { NOOP } from '../noop';
 import {
   DEFAULT_FIELD_ROOT_CONTEXT,
   FieldRootContext,
@@ -23,8 +22,8 @@ describe('FieldRootContext', () => {
     return { Probe, getField: () => field! };
   }
 
-  const ProvideDefault = defineComponent((_props, { slots }) => {
-    provide(FieldRootContext, DEFAULT_FIELD_ROOT_CONTEXT);
+  const MaskField = defineComponent((_props, { slots }) => {
+    provide(FieldRootContext, null);
     return () => slots.default?.();
   });
 
@@ -37,7 +36,6 @@ describe('FieldRootContext', () => {
       validationMode: field.validationMode.value,
       shouldValidateOnChange: field.shouldValidateOnChange(),
       state: field.state.value,
-      focusOwnerRef: field.focusOwnerRef,
       inputRef: field.validation.inputRef.value,
       registeredInputs: field.validation.registeredInputs.size,
     };
@@ -67,7 +65,7 @@ describe('FieldRootContext', () => {
       filled: false,
       focused: false,
     });
-    expect(field.focusOwnerRef).toBeNull();
+    expect(field.setFocusOwner(Symbol(), true)).toBe(false);
     expect(field.shouldValidateOnChange()).toBe(false);
   });
 
@@ -85,7 +83,7 @@ describe('FieldRootContext', () => {
     field.setFilled(true);
     field.setFocused(true);
     field.registerFieldControl(Symbol(), () => ({ controlRef: input, id: 'control', value: 'x' }));
-    field.validation.inputRef.value = input;
+    field.validation.setFieldInput(Symbol(), input);
     field.validation.registerInput(input, { controlRef: input, value: 'x' });
     field.validation.change('x');
 
@@ -99,23 +97,24 @@ describe('FieldRootContext', () => {
 
   it('gives a part in a field the context of that field', async () => {
     const { Probe, getField } = defineProbe(false);
-    await render(
-      <FieldScope>
-        <Probe />
-      </FieldScope>,
-    );
+    const field = { ...DEFAULT_FIELD_ROOT_CONTEXT };
+    const Provider = defineComponent(() => {
+      provide(FieldRootContext, field);
+      return () => <Probe />;
+    });
 
-    expect(getField()).not.toBe(DEFAULT_FIELD_ROOT_CONTEXT);
-    expect(getField().setValidityData).not.toBe(NOOP);
+    await render(<Provider />);
+
+    expect(getField()).toBe(field);
   });
 
-  it('gives a part the default context when a provider of the default context is between the part and the field', async () => {
+  it('gives a part the default context when a nearer provider masks the field', async () => {
     const { Probe, getField } = defineProbe();
     await render(
       <FieldScope>
-        <ProvideDefault>
+        <MaskField>
           <Probe />
-        </ProvideDefault>
+        </MaskField>
       </FieldScope>,
     );
 
@@ -190,15 +189,15 @@ describe('FieldRootContext', () => {
     const message =
       'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.';
 
-    it('throws when a provider of the default context is between the part and the field', async () => {
+    it('throws when a nearer provider masks the field', async () => {
       const { Probe } = defineProbe(false);
 
       await expect(
         render(
           <FieldScope>
-            <ProvideDefault>
+            <MaskField>
               <Probe />
-            </ProvideDefault>
+            </MaskField>
           </FieldScope>,
         ),
       ).rejects.toThrow(message);

@@ -1,32 +1,33 @@
-import { onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { inject, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from '../useKeepAliveState';
-import { useFieldRootContext } from './FieldRootContext';
+import { FieldRootContext } from './FieldRootContext';
 
-/**
- * Returns the field's `setFocused`, recording which control the focused state belongs to.
- *
- * Disabling or unmounting a focused control moves focus away without firing `blur`, so the focused
- * state would otherwise stay latched. A field can have several focus targets, so a control only
- * clears the shared state when focus last landed on itself. The returned function doubles as that
- * identity.
- */
+export function createFieldFocusOwner(): FieldRootContext['setFocusOwner'] {
+  let owner: symbol | undefined;
+  return (source, focused) => {
+    if (!focused && source !== owner) {
+      return false;
+    }
+    owner = focused ? source : undefined;
+    return true;
+  };
+}
+
+/** Only the control that last took focus can release the field's focused state. */
 export function useSetFieldFocused(
   disabled: MaybeRefOrGetter<boolean | undefined>,
   focusTargetRef: MaybeRefOrGetter<Element | null>,
   onFocusedChange?: (focused: boolean) => void,
 ): (focused: boolean) => void {
-  const context = useFieldRootContext();
-  // The default context holds no state. With no field, the control keeps the owner itself.
-  const focusOwnerRef = context.focusOwnerRef ?? shallowRef<unknown>();
+  const field = inject(FieldRootContext, null);
+  const setFocusOwner = field?.setFocusOwner ?? createFieldFocusOwner();
+  const source = Symbol();
 
   function setFieldFocused(focused: boolean) {
-    // A disabled target can still be focused (`aria-disabled` elements stay programmatically
-    // focusable), but must not publish the field's focused styling.
-    if (focused ? !toValue(disabled) : focusOwnerRef.value === setFieldFocused) {
-      focusOwnerRef.value = focused && setFieldFocused;
+    if ((!focused || !toValue(disabled)) && setFocusOwner(source, focused)) {
       onFocusedChange?.(focused);
-      context.setFocused(focused);
+      field?.setFocused(focused);
     }
   }
 

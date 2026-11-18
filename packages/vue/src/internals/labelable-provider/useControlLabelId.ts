@@ -1,6 +1,6 @@
+import { computed, inject } from 'vue';
 import type { ComputedRef } from 'vue';
-import { NOOP } from '../noop';
-import { useLabelableContext } from './LabelableContext';
+import { LabelableContext } from './LabelableContext';
 import { useDeferredServerRender } from './useDeferredServerRender';
 
 /**
@@ -13,12 +13,11 @@ import { useDeferredServerRender } from './useDeferredServerRender';
  * the control, also in the server HTML.
  */
 export function useControlLabelId(): ComputedRef<string | undefined> {
-  const { labelId, registerControlId } = useLabelableContext();
-
-  // A control with no provider has no label to wait for.
-  if (registerControlId !== NOOP) {
-    useDeferredServerRender();
+  const context = inject(LabelableContext, null);
+  if (!context) {
+    return computed(() => undefined);
   }
 
-  return labelId;
+  useDeferredServerRender();
+  return context.labelId;
 }
