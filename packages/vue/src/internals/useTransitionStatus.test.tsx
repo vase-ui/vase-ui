@@ -94,7 +94,7 @@ describe('useTransitionStatus', () => {
       return () => (
         <EffectOwner
           setupEffect={() => {
-            phase = useTransitionStatus(() => true, false, false, true).transitionStatus;
+            phase = useTransitionStatus(true, false, false, true).transitionStatus;
           }}
         />
       );

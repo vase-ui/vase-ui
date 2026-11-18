@@ -1,5 +1,5 @@
 import { onMounted, shallowRef, toValue, watch } from 'vue';
-import type { MaybeRefOrGetter, Ref, WatchSource } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
 import { AnimationFrame } from '../common/useAnimationFrame';
 
 export type TransitionStatus = 'starting' | 'ending' | 'idle' | undefined;
@@ -22,7 +22,7 @@ function watchFrame<T>(source: () => T, effect: (phase: T) => (() => void) | und
 
 /**
  * Provides a status string for CSS animations.
- * @param open - a ref or a getter for a boolean that determines if the element is open.
+ * @param open - Whether the element is open.
  * @param enableIdleState - a boolean that enables the `'idle'` state between `'starting'` and `'ending'`
  * @param deferEndingState - a boolean that delays the `'ending'` state by a frame
  * @param animateInitialOpen - a boolean that makes an element which mounts already open still go
@@ -33,7 +33,7 @@ function watchFrame<T>(source: () => T, effect: (phase: T) => (() => void) | und
  *   removes the status. Omit it for an element that has no enter transition.
  */
 export function useTransitionStatus(
-  open: WatchSource<boolean>,
+  open: MaybeRefOrGetter<boolean>,
   enableIdleState = false,
   deferEndingState = false,
   animateInitialOpen = false,
