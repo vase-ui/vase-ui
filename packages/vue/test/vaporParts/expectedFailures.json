@@ -109,6 +109,9 @@
     "src/internals/checkedInputProps.test.tsx": {
       "fails": {}
     },
+    "src/internals/date-time/field/inputRegistration.test.tsx": {
+      "fails": {}
+    },
     "src/internals/field-root-context/FieldProvider.test.tsx": {
       "fails": {}
     },

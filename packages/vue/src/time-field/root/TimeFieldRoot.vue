@@ -125,6 +125,7 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
 </script>
 
 <script setup lang="ts" generic="Value extends TimeFieldRootValue = Temporal.PlainTime">
+import { shallowRef } from 'vue';
 import {
   rootStateAttributesMapping,
   useDateTimeFieldRoot,
@@ -174,7 +175,9 @@ defineSlots<{
 
 assertTemporal('TimeField.Root');
 
+const inputElement = shallowRef<HTMLInputElement | null>(null);
 const context = useDateTimeFieldRoot<Value>({
+  hiddenInputElement: inputElement,
   family: 'time',
   value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
@@ -202,7 +205,7 @@ const context = useDateTimeFieldRoot<Value>({
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: context.state,
   stateAttributesMapping: rootStateAttributesMapping,
-  ref: [context.setRootElement],
+  ref: context.setRootElement,
   props: context.getRootProps,
 });
 
@@ -222,5 +225,8 @@ defineExpose({
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="context.hiddenInputProps()" :ref="context.setHiddenInput" />
+  <input
+    v-bind="context.hiddenInputProps()"
+    :ref="(input) => (inputElement = input as HTMLInputElement | null)"
+  />
 </template>

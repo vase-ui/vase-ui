@@ -1,5 +1,6 @@
-import { computed, onBeforeUnmount, shallowRef, toValue } from 'vue';
+import { computed, onBeforeUnmount, shallowRef, toValue, triggerRef, watchPostEffect } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { observeRootNode } from '../../observeRootNode';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { getFirstInDocument } from './usePickerPopup';
 
@@ -17,11 +18,24 @@ export interface PickerPartElements {
 /** A picker root creates one registry for each kind of part that gives it an element. */
 export function createPickerPartElements(): PickerPartElements {
   const getters = shallowRef<(() => HTMLElement | null)[]>([]);
-  const first = computed(() => {
-    const elements = getters.value.map((get) => get());
-    // An app can mount in an element that it adds to the document later. Vue reports no such
-    // move, so the registry gives the element from the mount on.
-    return getFirstInDocument(elements) ?? elements.find((element) => element !== null) ?? null;
+  const elements = computed(() => getters.value.map((get) => get()).filter((el) => el !== null));
+  const readFirst = () => getFirstInDocument(elements.value) ?? elements.value[0] ?? null;
+  const first = computed(readFirst);
+
+  watchPostEffect((onCleanup) => {
+    if (elements.value.length < 2) {
+      return;
+    }
+    // A keyed move can change DOM order without replacing any part's ref.
+    function checkOrder() {
+      if (first.value !== readFirst()) {
+        triggerRef(getters);
+      }
+    }
+    checkOrder();
+    for (const element of elements.value) {
+      onCleanup(observeRootNode(element, checkOrder));
+    }
   });
 
   function add(element: () => HTMLElement | null) {
