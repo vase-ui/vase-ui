@@ -345,7 +345,7 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
 - Put the extra nodes in an internal SFC. Meter and Progress share `RangeLabelChildren.vue` for their screen reader text.
-- That SFC reads the values that its nodes need with `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
+- Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
 - A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
@@ -843,7 +843,7 @@ The hydration state:
 - For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
 - The server HTML and the first client render then have the same text.
 - A composable that filters text with a locale calls `useFormatLocale` too. The first client render then gives the list that the server HTML has. `Combobox.useFilter` and `Autocomplete.useFilter` are examples.
-- A composable that reads another value of the browser obeys the same rule. It gives the server value in the first client render, and it reads the real value in `onMounted`. `useMediaQuery` does this. A client-only mount thus renders again when the two values differ.
+- Read browser values in `onMounted` so the first client render uses the server value. By default, `useMediaQuery` takes its initial value from `ssrMatchMedia` or `defaultMatches` and updates at mount if the values differ. With `noSsr`, it uses an available `matchMedia` for the initial value.
 - A server can give a value in another way than the browser. When the first client render needs the value of the server, the value goes into the server HTML. Get it with `useServerValue(attribute, read, parse, write)` of `src/common/hydration.ts`. Bind `attributes()` to the element of the part. While `useIsHydrating()` is `true`, the element has the value in `attribute`, a `data-vase-ui-*` name. While Vue hydrates the part, the value is the one of that attribute, when `parse` accepts its text. On a server, in a client-only mount and after the mount, the value is `read()`. A calendar root keeps the day of the clock of the server in `data-vase-ui-today`.
 - The hour cycle, the calendar, the first day of the week and the weekend of a locale change the elements of a part, and Node and a browser can have other `Intl` data for them. `TimeClock.Root` keeps its hour cycle in this way. `Calendar.Root` and `RangeCalendar.Root` keep the calendar, the first day of the week and the weekend of their grid. `read` applies the props that replace the data of the locale, such as `hourCycle`, `calendar` and `firstDayOfWeek`.
 - After the mount, the part renders with the value of the browser. Vue patches that render as any other update, with no warning. The hydrated DOM is then equal to a client-only render. A part below it that mounts again after the mount, such as a page of a calendar, gets new generated ids.
@@ -997,7 +997,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - To test for a field or labelable provider, call `inject(key, null)`. A required field reader throws if the result is `null`.
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
-- The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
+- `DirectionProvider` provides a computed ref of the text direction. `CSPProvider` provides a computed ref of its `nonce` and `disableStyleElements` settings. Each composable returns the nearest provider's ref.
 - A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
