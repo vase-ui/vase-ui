@@ -513,16 +513,14 @@ describe('useRegisteredLabelId', () => {
             <Root>
               {(root: LabelIdRoot) => {
                 labelRoot = root;
-                return (
-                  <>
-                    <held.HeldBranch />
-                    {options.outside ? (
-                      <Label id="label-c" root={root}>
-                        C
-                      </Label>
-                    ) : null}
-                  </>
-                );
+                return [
+                  <held.HeldBranch />,
+                  options.outside ? (
+                    <Label id="label-c" root={root}>
+                      C
+                    </Label>
+                  ) : null,
+                ];
               }}
             </Root>
           ),

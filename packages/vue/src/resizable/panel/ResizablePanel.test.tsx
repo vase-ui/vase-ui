@@ -33,12 +33,14 @@ describe('<Resizable.Panel />', () => {
     return render(() => (
       <div style={{ width: `${options.width?.value ?? 1000}px`, height: '400px' }}>
         <Resizable.Root style={{ height: '100%' }} {...options.root}>
-          {options.panels.flatMap((panel, index) => [
-            index > 0 ? (
-              <Resizable.Handle key={`handle-${index}`} data-testid={`handle-${index}`} />
-            ) : null,
-            <Resizable.Panel key={`panel-${index}`} data-testid={`panel-${index}`} {...panel} />,
-          ])}
+          {() =>
+            options.panels.flatMap((panel, index) => [
+              index > 0 ? (
+                <Resizable.Handle key={`handle-${index}`} data-testid={`handle-${index}`} />
+              ) : null,
+              <Resizable.Panel key={`panel-${index}`} data-testid={`panel-${index}`} {...panel} />,
+            ])
+          }
         </Resizable.Root>
       </div>
     ));

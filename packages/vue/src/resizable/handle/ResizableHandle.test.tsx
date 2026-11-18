@@ -37,16 +37,22 @@ describe('<Resizable.Handle />', () => {
       <DirectionProvider direction={direction}>
         <div dir={direction} style={{ width: '1000px', height: '400px' }}>
           <Resizable.Root data-testid="root" style={{ height: '100%' }} {...root}>
-            {panels.flatMap((panel, index) => [
-              index > 0 ? (
-                <Resizable.Handle
-                  key={`handle-${index}`}
-                  data-testid={`handle-${index}`}
-                  {...handle}
-                />
-              ) : null,
-              <Resizable.Panel key={`panel-${index}`} data-testid={`panel-${index}`} {...panel} />,
-            ])}
+            {() =>
+              panels.flatMap((panel, index) => [
+                index > 0 ? (
+                  <Resizable.Handle
+                    key={`handle-${index}`}
+                    data-testid={`handle-${index}`}
+                    {...handle}
+                  />
+                ) : null,
+                <Resizable.Panel
+                  key={`panel-${index}`}
+                  data-testid={`panel-${index}`}
+                  {...panel}
+                />,
+              ])
+            }
           </Resizable.Root>
         </div>
       </DirectionProvider>,

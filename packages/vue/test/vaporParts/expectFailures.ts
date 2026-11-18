@@ -1,8 +1,12 @@
-import { beforeAll } from 'vitest';
+import { afterAll, beforeAll } from 'vitest';
 import type { RunnerTask, RunnerTestCase } from 'vitest';
+import { checkFragmentChildren } from './checkFragmentChildren';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
 const files: Record<string, { fails: Record<string, string> }> = expectations.files;
+
+// A suite can create a fixture vnode while Vitest collects its cases.
+afterAll(checkFragmentChildren());
 
 /** The titles of the suites of a case and its own title, with ` > ` between them. */
 function nameOf(task: RunnerTask): string {
