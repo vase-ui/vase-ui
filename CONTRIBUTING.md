@@ -344,8 +344,8 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
-- Each such part has one internal SFC, `<Part>Children.vue`.
-- That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
+- Put the extra nodes in an internal SFC. Meter and Progress share `RangeLabelChildren.vue` for their screen reader text.
+- That SFC reads the values that its nodes need with `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
 - A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
@@ -1520,7 +1520,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 - Choose the watcher from the change that must trigger it. During server setup, a default `watchEffect` or an immediate default-flush `watch` runs once. A lazy callback watcher observes later changes there only with a synchronous flush.
 - For work that requires a mount, start the watcher in `onMounted`. For a later DOM read, choose a post-flush effect or an explicit post-flush source. Check whether one watcher can cover mount and replacement.
-- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and `useImageLoadingStatus` use this order.
+- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and the preload in `Avatar.Image` use this order.
 - `useAnchorPositioning` updates `isPositioned` synchronously. `usePopupRoot` also copies `mounted` and `transitionStatus` in the same task.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. A change while `KeepAlive` holds the part waits for the activation. The callback then gets the value before the hold, or the value of the mount when the part mounts in a held branch.
 - A parent update can leave a child with stable props and slots untouched. Track the reactive value that changes the part's own DOM.
@@ -2069,7 +2069,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot. In a Vapor app, a part of a later case can also find the context of the earlier case.
 - A case that fails with virtual DOM parts in a Vapor app gets `{ fails: isVaporApp && !isVaporParts }`. Give the cause in a comment. `#test-utils` exports both flags. Vitest fails such a case when it passes, so the fix also removes the option. A case that fails only with Vapor parts gets an entry in `expectedFailures.json`, as [Where a test runs](#where-a-test-runs) describes. Do not use the modifier `it.fails`, because `pnpm parity:check` refuses it.
 - After a `Maximum recursive updates exceeded` error, Vue runs no post-flush job in a later case of the file. Put a case that can give that error last in its file.
-- A mock of a composable keeps the contract of the composable. The mock of `useImageLoadingStatus` in `avatar/fallback/AvatarFallback.test.tsx` gives `'idle'` until the mount, as the composable does.
+- A mock of a composable keeps the contract of the composable.
 - A test that expects a `Vase UI:` message on the console asserts the list of `takeReportedMessages()`, or it uses a console spy that has `mockImplementation`.
 - In the list, such a message is one string that starts with `console.warn: Vase UI:` or `console.error: Vase UI:`. Assert the whole list. The test then fails on a message that it does not expect.
 - A console spy that has `mockImplementation` takes each call of its method, so those calls are not in the list. The test then fails on a call that it does not expect only if it asserts each call of the spy. A spy with no implementation passes the call to the console, and the test fails unless it takes the message from the list.
