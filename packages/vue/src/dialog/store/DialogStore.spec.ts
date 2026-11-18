@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { DialogRootChangeEventDetails } from '../root/DialogRoot.vue';
 import { DialogStore } from './DialogStore';

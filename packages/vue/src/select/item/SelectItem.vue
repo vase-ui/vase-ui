@@ -48,7 +48,7 @@ export interface SelectItemProps
 <script setup lang="ts">
 import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import {
   compareItemEquality,
   removeItem,

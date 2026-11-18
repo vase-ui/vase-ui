@@ -2,7 +2,7 @@ import { computed, onMounted, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains } from '../../../common/shadowDom';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';

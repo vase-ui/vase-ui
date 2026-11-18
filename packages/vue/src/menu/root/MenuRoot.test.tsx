@@ -42,7 +42,7 @@ import { reset as resetWarnings } from '../../common/warn';
 import * as ContextMenu from '../../context-menu/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { createAttribute } from '../../utils/popups/createAttribute';
@@ -3573,7 +3573,7 @@ describe('<Menu.Root />', () => {
       });
     });
 
-    describe('BaseUIChangeEventDetails', () => {
+    describe('VaseUIChangeEventDetails', () => {
       it('unmounts on a later normal close after a preventUnmountOnClose cycle and reopen', async () => {
         let preventNextUnmount = true;
         const { user } = await render(

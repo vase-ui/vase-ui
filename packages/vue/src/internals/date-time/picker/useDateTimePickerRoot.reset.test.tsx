@@ -5,7 +5,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { createRenderer, flushMicrotasks, screen, wait } from '#test-utils';
 import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { NOOP } from '../../noop';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';

@@ -33,7 +33,7 @@ import { useElementRegistration } from '../../../internals/useElementRegistratio
 import { clickTriggers } from '../registeredParts';
 import { platform } from '../../../common/platform';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useClick } from '../interactions/useClick';

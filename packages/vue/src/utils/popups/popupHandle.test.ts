@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { watch } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { createAlertDialogHandle } from '../../alert-dialog/handle';
 import { createDialogHandle } from '../../dialog/store/DialogHandle';

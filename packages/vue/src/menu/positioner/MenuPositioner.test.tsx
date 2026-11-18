@@ -33,7 +33,7 @@ import {
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { UseAnchorPositioningParameters } from '../../internals/useAnchorPositioning';
 import { REASONS } from '../../internals/reasons';
 import { provideFloatingNode, useFloatingParentNodeId } from '../../utils/popups/tree/FloatingTree';

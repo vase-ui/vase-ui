@@ -13,7 +13,7 @@ import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { Timeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';

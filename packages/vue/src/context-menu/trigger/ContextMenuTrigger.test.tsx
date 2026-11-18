@@ -370,7 +370,7 @@ describe('<ContextMenu.Trigger />', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('blocks the native context menu when onContextMenu skips the Base UI handler', async () => {
+  it('blocks the native context menu when onContextMenu skips the Vase UI handler', async () => {
     await render(
       <ContextMenu.Root>
         <ContextMenu.Trigger

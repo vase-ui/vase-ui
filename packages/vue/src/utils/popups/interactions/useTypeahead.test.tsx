@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, shallowRef, Teleport } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -7,6 +7,7 @@ import {
   screen,
   useTestInteractions,
 } from '#test-utils';
+import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { useClick } from './useClick';
 import { useTypeahead } from './useTypeahead';
@@ -417,11 +418,14 @@ describe('useTypeahead', () => {
 
   describe('options and the session', () => {
     const List = defineComponent(
-      (props: {
-        options: Omit<Partial<UseTypeaheadProps>, 'listRef'>;
-        list: string[];
-        open?: boolean;
-      }) => {
+      (
+        props: {
+          options: Omit<Partial<UseTypeaheadProps>, 'listRef'>;
+          list: string[];
+          open?: boolean;
+        },
+        { slots },
+      ) => {
         const { refs, context } = useFloating({ open: () => props.open ?? true });
         const activeIndex = shallowRef<number | null>(null);
         const typeahead = useTypeahead(context.rootStore, {
@@ -437,6 +441,7 @@ describe('useTypeahead', () => {
           <>
             <input role="combobox" ref={refs.setReference} {...typeahead.reference} />
             <div role="listbox" tabindex={-1} ref={refs.setFloating} {...typeahead.floating}>
+              {slots.default?.()}
               {props.list.map((value) => (
                 <div key={value} role="option" tabindex={-1}>
                   {value}
@@ -541,6 +546,27 @@ describe('useTypeahead', () => {
       await press('l');
 
       expect(matches).toEqual([1, 2]);
+    });
+
+    it('VUE-138: keeps the typed prefix when focus moves to a button in the popup slot', async () => {
+      const button = document.createElement('button');
+      const root = createSlotHost(button);
+      const onMatch = vi.fn();
+      await render(
+        <Teleport to={root}>
+          <List list={['banana', 'blue', 'lime']} options={{ onMatch }}>
+            {h('slot')}
+          </List>
+        </Teleport>,
+      );
+      const input = root.querySelector('input')!;
+      input.focus();
+      await fireEvent.keyDown(input, { key: 'b' });
+      expect(onMatch.mock.lastCall?.[0]).toBe(0);
+
+      button.focus();
+      await fireEvent.keyDown(button, { key: 'l' });
+      expect(onMatch.mock.lastCall?.[0]).toBe(1);
     });
 
     it('ends the session when the focus leaves the reference and the popup', async () => {

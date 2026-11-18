@@ -41,7 +41,7 @@ import {
 } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { REASONS } from '../../internals/reasons';

@@ -21,7 +21,7 @@ import { useAnimationFrame } from '../../common/useAnimationFrame';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';

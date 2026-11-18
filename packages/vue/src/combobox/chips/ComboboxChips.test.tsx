@@ -154,7 +154,7 @@ describe('<Combobox.Chips />', () => {
     expect(screen.queryByRole('listbox')).toBe(null);
   });
 
-  it('lets nested chip onContextMenu call preventBaseUIHandler', async () => {
+  it('lets nested chip onContextMenu call preventVaseUIHandler', async () => {
     const handleContextMenu = vi.fn((event) => event.preventVaseUIHandler());
 
     await render(

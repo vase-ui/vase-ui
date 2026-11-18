@@ -1154,7 +1154,7 @@ describe('<Tooltip.Root />', () => {
       });
     });
 
-    describe('BaseUIChangeEventDetails', () => {
+    describe('VaseUIChangeEventDetails', () => {
       it('allowPropagation() prevents stopPropagation on Escape while still closing', async () => {
         const stopPropagationSpy = vi.spyOn(Event.prototype, 'stopPropagation');
 

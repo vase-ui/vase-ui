@@ -94,7 +94,7 @@ import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/vis
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
@@ -111,7 +111,7 @@ import { REASONS } from '../../internals/reasons';
 import { serializeValue } from '../../internals/serializeValue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';

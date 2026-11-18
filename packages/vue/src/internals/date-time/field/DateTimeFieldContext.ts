@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import type { FieldRootState } from '../../field-root-context/FieldRootContext';
 import type { REASONS } from '../../reasons';
 import type { EditableSegmentType } from './segmentLayout';

@@ -1,7 +1,7 @@
 import type { ComputedRef } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
 import { REASONS } from '../../internals/reasons';

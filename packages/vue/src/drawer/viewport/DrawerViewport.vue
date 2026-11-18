@@ -267,7 +267,7 @@ import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import DialogViewport from '../../dialog/viewport/DialogViewport.vue';
 import * as DialogViewportDataAttributes from '../../dialog/viewport/DialogViewportDataAttributes';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';

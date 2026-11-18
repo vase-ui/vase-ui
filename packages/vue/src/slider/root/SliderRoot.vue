@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
@@ -197,14 +197,14 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { given } from '../../internals/givenAttributes';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';

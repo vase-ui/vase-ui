@@ -4,7 +4,7 @@ import { ownerDocument } from '../../../common/owner';
 import { Timeout } from '../../../common/useTimeout';
 import { closest, contains, getTarget } from '../../../common/shadowDom';
 import { isElement } from '@floating-ui/utils/dom';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type {
   Delay,

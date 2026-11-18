@@ -1,6 +1,6 @@
 import type { InjectionKey } from 'vue';
 import { NOOP } from '../../src/common/empty';
-import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { NullStore } from '../../src/utils/popups/NullStore';
 import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
 import { PopupTriggerMap } from '../../src/utils/popups/popupTriggerMap';

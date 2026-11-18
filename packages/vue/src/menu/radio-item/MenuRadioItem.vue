@@ -57,10 +57,10 @@ export interface MenuRadioItemProps
 import { computed, provide } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { REGULAR_ITEM, useMenuItem } from '../item/useMenuItem';
 import { useMenuRadioGroupContext } from '../radio-group/MenuRadioGroupContext';

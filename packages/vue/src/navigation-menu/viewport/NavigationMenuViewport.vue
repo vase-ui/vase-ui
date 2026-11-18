@@ -26,7 +26,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { contains } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
 import type { HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';

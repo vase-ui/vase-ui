@@ -1,7 +1,7 @@
 import { computed, inject, onMounted, provide, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { getFilter } from '../../internals/filter';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useItemRegistry } from '../../internals/useItemRegistry';
 import { useElementId } from '../../utils/popups/useElementId';
 import { FilterDropdownStore } from '../store';

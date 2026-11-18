@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isReactive } from 'vue';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { getEmptyRootStore } from './getEmptyRootStore';
 

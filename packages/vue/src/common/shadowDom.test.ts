@@ -1,11 +1,32 @@
 import { expect, describe, it, afterEach, vi } from 'vitest';
-import { closest, closestInEventPath, getTarget } from './shadowDom';
+import { createSlotHost } from '../../test/fixtures/slotHost';
+import { closest, closestInEventPath, contains, getTarget } from './shadowDom';
 
 afterEach(() => {
   document.body.innerHTML = '';
 });
 
 describe('shadow DOM utilities', () => {
+  it('VUE-138: follows a slot on an ancestor and its current assignment', () => {
+    const field = document.createElement('input');
+    const group = document.createElement('div');
+    group.append(field);
+    const root = createSlotHost(group);
+    const popup = document.createElement('section');
+    const slot = document.createElement('slot');
+    const other = document.createElement('slot');
+    other.name = 'other';
+    popup.append(slot);
+    root.append(popup, other);
+
+    expect(contains(popup, field)).toBe(true);
+    expect(closest(field, 'section')).toBe(popup);
+    group.slot = 'other';
+    expect(contains(popup, field)).toBe(false);
+    expect(closest(field, 'section')).toBeNull();
+    expect(contains(other, field)).toBe(true);
+  });
+
   describe('closest', () => {
     it('finds an ancestor across nested shadow roots from a non-Element node', () => {
       const button = document.createElement('button');

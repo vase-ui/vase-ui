@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { FormHTMLAttributes } from 'vue';
-import type { VaseUIGenericEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIGenericEventDetails } from '../internals/createVaseUIEventDetails';
 import type { Errors, FormValidationMode } from '../internals/form-context';
 import { REASONS } from '../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
@@ -65,7 +65,7 @@ export interface FormProps<FormValues extends Record<string, any> = Record<strin
 import { computed, provide, shallowRef, toValue, watch } from 'vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
-import { createGenericEventDetails } from '../internals/createBaseUIEventDetails';
+import { createGenericEventDetails } from '../internals/createVaseUIEventDetails';
 import { FormContext } from '../internals/form-context';
 import type { FormField } from '../internals/form-context';
 import { createIdRegistry } from '../internals/labelable-provider/createIdRegistry';

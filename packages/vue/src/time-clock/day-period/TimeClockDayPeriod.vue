@@ -40,7 +40,7 @@ import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { dayPeriodText } from '../../internals/date-time/format';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';

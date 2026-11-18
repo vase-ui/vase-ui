@@ -1,7 +1,7 @@
 import { computed, provide, useAttrs } from 'vue';
 import type { Ref } from 'vue';
 import { given, givenAttributes } from '../../internals/givenAttributes';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
 import { DateTimeFieldHostContext } from '../../internals/date-time/field/dateTimeFieldHost';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
@@ -10,7 +10,7 @@ import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { useControlLabelId } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';

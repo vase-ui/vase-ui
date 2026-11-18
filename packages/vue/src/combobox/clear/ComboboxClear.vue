@@ -47,7 +47,7 @@ export interface ComboboxClearProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Component } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { REASONS } from '../../internals/reasons';

@@ -28,7 +28,7 @@ export interface DialogCloseProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';

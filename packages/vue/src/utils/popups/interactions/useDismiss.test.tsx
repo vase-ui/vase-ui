@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, inject, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
+import { defineComponent, h, inject, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -15,14 +15,15 @@ import {
   waitForLaterMillisecond,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
+import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
@@ -3267,6 +3268,28 @@ describe('useDismiss', () => {
       await pressInFrame(outer.frame, { x: 40, y: 20 });
 
       expect(isOpen('popup')).toBe(false);
+    });
+
+    it('VUE-138: keeps the popup open for a press in a frame assigned to its slot', async () => {
+      const button = document.createElement('button');
+      const root = createSlotHost(button);
+      const { frame, loaded } = addFrame({ parent: root.host });
+      await render(
+        <Teleport to={root}>
+          <Popup name="popup">{h('slot')}</Popup>
+        </Teleport>,
+      );
+      await loaded;
+      const popup = root.querySelector('[data-testid="popup"]')!;
+      expect(popup.contains(frame.assignedSlot)).toBe(true);
+
+      await pressAndClick(button);
+      expect(popup).toBeInTheDocument();
+      await pressAndClick(frame.contentDocument!.querySelector('button')!);
+      expect(popup).toBeInTheDocument();
+
+      await pressAndClick(document.body);
+      expect(popup).not.toBeInTheDocument();
     });
 
     it('keeps the popup open for a press in an iframe in the popup', async () => {

@@ -5,7 +5,7 @@ import { activeElement } from '../../../common/shadowDom';
 import { useServerValue } from '../../../common/hydration';
 import { useControlled } from '../../../common/useControlled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { REASONS } from '../../reasons';
 import { displayCalendar } from '../displayCalendar';

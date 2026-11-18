@@ -49,7 +49,7 @@ export interface MenuItemProps
 import { computed } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';

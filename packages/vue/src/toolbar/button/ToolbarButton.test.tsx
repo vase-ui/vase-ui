@@ -224,7 +224,7 @@ describe('<Toolbar.Button />', () => {
     });
   });
 
-  describe('rendering other Base UI components', () => {
+  describe('rendering other Vase UI components', () => {
     describe('Switch', () => {
       it('renders a switch', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
