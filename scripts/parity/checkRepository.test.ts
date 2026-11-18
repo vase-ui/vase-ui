@@ -278,6 +278,13 @@ test('a runtime source cannot move into a test helper', (t) => {
       check().problems.some((problem) => problem.includes(`${destination} must be a source`)),
     );
   }
+  row.destination = pointOwner;
+  write(pointOwner, 'export const point = 0;');
+  const helper = 'packages/utils/src/test-utils.tsx';
+  family('helpers', { sources: [helper] }, [
+    { ...merged, upstream: helper, destination: 'packages/vue/test/point.ts' },
+  ]);
+  assert.deepEqual(check().problems, []);
 });
 
 test('a behavior needs a runnable witness before its source gets credit', (t) => {
@@ -317,7 +324,7 @@ test('a member in either SFC script counts and a reference in the template does 
     destination,
     [
       '<script lang="ts">export type Axis = number;</script>',
-      '<script setup lang="ts">const point: Axis = 1;</script>',
+      '<script setup lang="ts">const point: Axis = 1; const axes = { ["point-axis"]: point };</script>',
       '<template><span>{{ point }} {{ absent }}</span></template>',
     ].join('\n'),
   );
@@ -325,6 +332,8 @@ test('a member in either SFC script counts and a reference in the template does 
   family('geometry', { sources: [upstreamPoint] }, [row]);
   assert.deepEqual(check().problems, []);
   row.member = 'point';
+  assert.deepEqual(check().problems, []);
+  row.member = 'point-axis';
   assert.deepEqual(check().problems, []);
   row.member = 'absent';
   assert.ok(
@@ -412,12 +421,73 @@ test('two families can share a test file but each occurrence belongs to one upst
     ],
   );
   write(destination, cases.replace("it('fires', () => {}); ", ''));
-  assert.match(check().problems.join('\n'), new RegExp(`uncovered case "shared > fires" in ${b}`));
+  assert.ok(
+    check().problems.some((problem) =>
+      problem.includes(`uncovered case "shared > fires" in ${b}:`),
+    ),
+  );
   write(
     destination,
     cases.replace("describe('B', () => { it('opens'", "describe('B', () => { it('opens later'"),
   );
-  assert.match(check().problems.join('\n'), new RegExp(`uncovered case "B > opens" in ${b}`));
+  assert.ok(
+    check().problems.some((problem) => problem.includes(`uncovered case "B > opens" in ${b}:`)),
+  );
+});
+
+test('families that share a title keep their own engine conditions and exceptions', (t) => {
+  const { write, family, check, parity } = relocationFixture(t);
+  const a = 'packages/utils/src/a.test.ts';
+  const b = 'packages/utils/src/b.test.ts';
+  const destination = 'packages/vue/src/common/b.test.ts';
+  const portable = { describe: ['point'], title: 'tracks' };
+  const guarded = { ...portable, conditions: ['skipIf(isWebKit)'] };
+  family('a', { cases: [{ file: a, rows: [portable] }] }, [
+    {
+      upstream: a,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Track A.',
+      witness: destination,
+    },
+  ]);
+  family('b', { cases: [{ file: b, rows: [guarded] }] });
+  write(
+    destination,
+    "describe('point', () => { it.skipIf(isWebKit)('tracks', () => {}); it('tracks', () => {}); });",
+  );
+  assert.deepEqual(check().problems, []);
+  write(destination, "describe('point', () => { it.skipIf(isWebKit)('tracks', () => {}); });");
+  const { problems } = check();
+  assert.equal(problems.length, 1);
+  assert.ok(problems[0].includes(`uncovered case "point > tracks" in ${a}`), problems[0]);
+  const firstFamily = parity.families[0].family as FamilyFile;
+  firstFamily.exceptions.push({
+    upstream: a,
+    ...portable,
+    kind: 'not-applicable',
+    reason: 'The first suite checks a React hook.',
+  });
+  const result = check();
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.families[0].summary.cases['not-applicable'], 1);
+  assert.equal(result.families[1].summary.cases.matched, 1);
+  firstFamily.exceptions = [
+    {
+      upstream: a,
+      ...portable,
+      kind: 'engine',
+      engine: 'webkit',
+      link: 'https://example.com/issue',
+      reason: 'The first suite skips WebKit.',
+    },
+  ];
+  write(
+    destination,
+    "describe('point', () => { it('tracks', () => {}); it.skipIf(isWebKit)('tracks', () => {}); });",
+  );
+  assert.deepEqual(check().problems, []);
+  assert.equal(check().families[0].summary.cases.engine.webkit, 1);
 });
 
 test('a moved browser suite cannot become a Node test', (t) => {

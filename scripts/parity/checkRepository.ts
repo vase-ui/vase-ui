@@ -221,7 +221,7 @@ function resolveRelocations(
     if (!typeTests) {
       const folder = join(root, 'packages/vue');
       const configPath = join(folder, 'tsconfig.test.json');
-      const config = ts.readConfigFile(configPath, ts.sys.readFile);
+      const config = ts.readConfigFile(configPath, (file) => ts.sys.readFile(file));
       typeTests = new Set(
         config.error
           ? []
@@ -366,10 +366,7 @@ export function checkRepository(input: CheckInput): CheckResult & { files: VaseF
       return rowsOf(path);
     },
   };
-  const matches = matchCases(
-    current.flatMap(({ extract }) => extract.cases),
-    vase,
-  );
+  const matches = matchCases(current, vase);
   for (const { name, family, extract } of current) {
     const cases = checkFamily(name, family, extract, vase, matches);
     problems.push(...cases.problems);

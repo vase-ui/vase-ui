@@ -459,6 +459,23 @@ test('a split helper leaves a shared occurrence for a suite with only one destin
   assert.equal(result.summary.rowsWithoutUpstream, 0);
 });
 
+test('a split helper compares duplicate guards in the file that retains each case', () => {
+  const file = 'packages/react/test/shared.tsx';
+  const left = 'packages/vue/test/pointer.ts';
+  const right = 'packages/vue/test/keyboard.ts';
+  const blink = { ...first, conditions: ['skipIf(isBlink)'] };
+  const webkit = { ...first, conditions: ['skipIf(isWebKit)'] };
+  const options = {
+    extract: makeExtract({ sources: [file], cases: [{ file, rows: [blink, webkit] }] }),
+    paths: [left, right],
+    relocations: new Map([[file, [left, right]]]),
+    rows: { [left]: [webkit], [right]: [blink] },
+  };
+  assert.deepEqual(run([], options).problems, []);
+  options.rows[right] = [webkit];
+  assert.match(run([], options).problems.join('\n'), /added condition.*skipIf\(isWebKit\)/);
+});
+
 const SOURCE = 'packages/utils/src/clamp.ts';
 const sourceExtract = makeExtract({ sources: [SOURCE], cases: [] });
 

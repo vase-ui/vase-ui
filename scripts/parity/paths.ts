@@ -96,7 +96,9 @@ export function relocationKind(path: string): string {
     return 'declaration';
   }
   if (isScriptFile(path) || path.endsWith('.vue')) {
-    return /^packages\/(react|vue)\/test\//.test(path) || /\.(test|spec)\.[^/]+$/.test(path)
+    return /^packages\/(react|vue)\/test\//.test(path) ||
+      /\.(test|spec)\.[^/]+$/.test(path) ||
+      /\/test-utils\.tsx?$/.test(path)
       ? 'test helper'
       : 'source';
   }
