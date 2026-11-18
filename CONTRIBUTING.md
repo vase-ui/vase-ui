@@ -526,7 +526,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - The props `x` and `defaultX` keep their names.
 - Declare each controlled prop with `default: undefined` through `withDefaults`. Without it, Vue changes an absent Boolean prop to `false`.
-- `x !== undefined` means that the part is controlled. A development build shows a warning when the mode changes.
+- When `x` returns to `undefined`, the part keeps the last value from the parent. An update listener alone leaves the part in control.
 - The part emits `xChange(value, details)` and then `update:x(value)`, synchronously.
 - The part does not emit `update:x` when `details.isCanceled` is true.
 - `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:value` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
@@ -534,7 +534,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
 - A consumer writes `v-model:x`, such as `v-model:open`. There is no `modelValue` alias.
-- For example, `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })` reads both props through getters.
+- `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })` returns a writable computed. Assign its `.value` after the veto check.
 - The default getter lets a development build warn when the default of an uncontrolled part changes.
 - A prop can take more forms than its event gives, as `layout` of `Resizable.Root` does. The JSDoc of such a prop gives each form, and the form that the event gives.
 - `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.

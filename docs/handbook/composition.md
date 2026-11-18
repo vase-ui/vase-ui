@@ -121,7 +121,9 @@ A value of `false` makes these props controlled:
 - `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
 - `pressed` on `Toggle`.
 
-The state stays `false` until the caller updates the prop. Handle change events to update a controlled prop, or use the default `undefined` to keep the part uncontrolled.
+A defined model prop gives the parent control, even without an update listener. With `v-model:open`, a parent can take control after mount by setting its ref to `true` or `false`.
+
+When the parent sets the prop to `undefined`, the part keeps the last value and accepts local changes. A wrapper can forward `undefined` with an update listener and still leave the part in control.
 
 ### A default of true
 
