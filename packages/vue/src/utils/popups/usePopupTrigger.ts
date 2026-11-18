@@ -89,13 +89,16 @@ export function useTriggerOwner<Store>(
   missingRoot: string,
 ) {
   const attached = usePopupHandleStore(handle);
-  return computed(() => {
+  const owner = computed(() => {
     const current = attached.value ?? root;
     if (current === undefined) {
       throw new Error(missingRoot);
     }
     return current;
   });
+  // Report a missing owner during setup, before the registration watcher runs.
+  void owner.value;
+  return owner;
 }
 
 function syncTriggerCount(store: PopupTriggerDataStore<PopupStoreState<unknown>>) {
