@@ -330,12 +330,9 @@ const { name: controlName } = useFieldControl(element, {
 });
 const clearFieldError = useClearFieldError(controlName);
 
-watch(
-  [element, () => suppliedValue.value !== undefined],
-  () => {
-    lastInputText = undefined;
-  },
-);
+watch([element, () => suppliedValue.value !== undefined], () => {
+  lastInputText = undefined;
+});
 
 // A native reset of the form gives the control its default value and sends no `input` event.
 useFormReset(element, () => {
