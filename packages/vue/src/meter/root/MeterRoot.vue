@@ -42,13 +42,13 @@ import { computed, provide } from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { EMPTY_OBJECT } from '../../common/empty';
+import RangeLabelChildren from '../../internals/RangeLabelChildren.vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { formatRangeValue } from '../../utils/formatRangeValue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
 import { valueToPercent } from '../../utils/valueToPercent';
-import MeterRootChildren from './MeterRootChildren.vue';
 import { MeterRootContext } from './MeterRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -93,10 +93,8 @@ const ariaValueText = computed(() =>
 
 provide(MeterRootContext, {
   clampedValue,
-  format: computed(() => props.format),
-  locale: computed(() => props.locale),
+  props,
   percentageValue,
-  value: computed(() => props.value),
   labelRoot,
 });
 
@@ -121,8 +119,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="MeterRootChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="RangeLabelChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <MeterRootChildren><slot :state="state" /></MeterRootChildren>
+    <RangeLabelChildren><slot :state="state" /></RangeLabelChildren>
   </component>
 </template>

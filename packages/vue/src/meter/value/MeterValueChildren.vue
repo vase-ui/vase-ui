@@ -9,19 +9,19 @@ defineSlots<{
   default?(props: { formattedValue: string; value: number }): unknown;
 }>();
 
-const { clampedValue, format, locale, percentageValue, value } = useMeterRootContext();
+const { clampedValue, percentageValue, props } = useMeterRootContext();
 
 // This part resolves the locale itself, because it can hydrate after the root, for example in an
 // async component in `<Suspense>`.
-const formatLocale = useFormatLocale(locale);
+const formatLocale = useFormatLocale(() => props.locale);
 const formattedValue = computed(() =>
-  formatRangeValue(clampedValue.value, percentageValue.value, formatLocale.value, format.value),
+  formatRangeValue(clampedValue.value, percentageValue.value, formatLocale.value, props.format),
 );
 
 markChildrenMounted();
 </script>
 
 <template>
-  <slot v-if="$slots.default" :formatted-value="formattedValue" :value="value" />
+  <slot v-if="$slots.default" :formatted-value="formattedValue" :value="props.value" />
   <template v-else>{{ formattedValue }}</template>
 </template>
