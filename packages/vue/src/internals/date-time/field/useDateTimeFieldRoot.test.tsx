@@ -1405,6 +1405,37 @@ describe('useDateTimeFieldRoot', () => {
       expect(hiddenInputOf(container).validity.valid).toBe(true);
     });
 
+    it('updates native validity when only the unavailable dates change', async () => {
+      const { container, setProps } = await render(
+        <DateTimeFieldProbe defaultValue="2026-11-14" />,
+      );
+      const input = hiddenInputOf(container);
+      expect(input.validity.valid).toBe(true);
+
+      await setProps({ unavailableDates: { dayOfWeek: 6 } });
+      expect(input.validity.customError).toBe(true);
+
+      await setProps({ unavailableDates: undefined });
+      expect(input.validity.valid).toBe(true);
+    });
+
+    it('discards a partial entry after the parent supplies a complete value', async () => {
+      const { container, setProps, user } = await render(
+        <DateTimeFieldProbe modelValue={null} referenceDate="2026-11-14" locale="en-US" />,
+      );
+      const month = segmentOf(container, 'month');
+      await user.click(month);
+      await user.keyboard('{ArrowUp}');
+      expect(month.value).toBe('11');
+
+      await setProps({ modelValue: '2026-12-31' });
+      expect(month.value).toBe('12');
+
+      await setProps({ modelValue: null });
+      expect(month.value).toBe('');
+      expect(hiddenInputOf(container).validity.valid).toBe(true);
+    });
+
     it('takes the custom error back when the entry is complete again', async () => {
       const { container, user } = await render(
         <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />,
