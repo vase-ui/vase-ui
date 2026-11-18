@@ -81,6 +81,9 @@
     "src/combobox/value/ComboboxValue.test.tsx": {
       "fails": {}
     },
+    "src/common/shadowDom.test.ts": {
+      "fails": {}
+    },
     "src/drawer/popup/DrawerPopup.test.tsx": {
       "fails": {
         "<Drawer.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"

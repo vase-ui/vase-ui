@@ -68,7 +68,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 import { tooltipTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, shallowRef, useSlots, watch } from 'vue';
-import { isElement } from '@floating-ui/utils/dom';
+import { closestInEventPath } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -180,15 +180,12 @@ function getOpenDelay() {
 }
 
 function isEnabledNestedTriggerTarget(event: MouseEvent | FocusEvent) {
-  for (const node of event.composedPath()) {
-    if (node === triggerElement.value) {
-      return false;
-    }
-    if (isElement(node) && tooltipTriggers.get(node)?.() === false) {
-      return true;
-    }
-  }
-  return false;
+  const trigger = triggerElement.value;
+  const nearest = closestInEventPath(
+    event,
+    (node) => node === trigger || tooltipTriggers.get(node)?.() === false,
+  );
+  return trigger !== null && nearest !== null && nearest !== trigger;
 }
 
 function detectNestedTriggerHover(event: MouseEvent) {
@@ -229,7 +226,6 @@ function handleNestedTriggerHover(event: MouseEvent) {
   const wasNestedTriggerHovered = isNestedTriggerHovered;
   const nestedTriggerHovered = detectNestedTriggerHover(event);
   const trigger = triggerElement.value;
-  const targetInsideTrigger = trigger && event.composedPath().includes(trigger);
 
   // Close only a tooltip that hover opened. A tooltip that another interaction opened stays open.
   if (
@@ -244,7 +240,8 @@ function handleNestedTriggerHover(event: MouseEvent) {
   if (
     wasNestedTriggerHovered &&
     !nestedTriggerHovered &&
-    targetInsideTrigger &&
+    trigger &&
+    closestInEventPath(event, (node) => node === trigger) &&
     !isDisabled.value &&
     !currentStore.select('open') &&
     // The hover composable also accepts an empty pointer type for a sequence of mouse events.

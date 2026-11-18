@@ -17,7 +17,7 @@ export interface NavigationMenuListProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
-import { isElement } from '@floating-ui/utils/dom';
+import { closestInEventPath } from '../../common/shadowDom';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -70,7 +70,7 @@ const dismiss = useDismiss(store, {
   enabled: () => positionerElement.value != null || value.value == null,
   outsidePressEvent: 'intentional',
   outsidePress(event) {
-    return !event.composedPath().some((node) => isElement(node) && navigationTriggers.has(node));
+    return !closestInEventPath(event, (node) => navigationTriggers.has(node));
   },
 });
 

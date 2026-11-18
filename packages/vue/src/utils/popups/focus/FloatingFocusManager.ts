@@ -11,12 +11,18 @@ import {
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, InjectionKey, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
-import { getNodeName, isElement, isHTMLElement } from '@floating-ui/utils/dom';
+import { getNodeName, isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
-import { activeElement, closest, contains, getTarget } from '../../../common/shadowDom';
+import {
+  activeElement,
+  closest,
+  closestInEventPath,
+  contains,
+  getTarget,
+} from '../../../common/shadowDom';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { useTimeout } from '../../../common/useTimeout';
@@ -1133,7 +1139,7 @@ export function useFloatingFocusManager(
         pointerDownOutside = !pointerTargetInside;
         lastInteractionType = (event.pointerType as InteractionType) || 'keyboard';
 
-        if (event.composedPath().some((node) => isElement(node) && clickTriggers.has(node))) {
+        if (closestInEventPath(event, (node) => clickTriggers.has(node))) {
           isPointerDown = true;
           // Reset on the next tick so a single click on a click-trigger doesn't
           // permanently suppress focus-out closing for the lifetime of the instance.

@@ -1,7 +1,7 @@
 import { watch } from 'vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../common/owner';
-import { activeElement, contains, getTarget } from '../../common/shadowDom';
+import { activeElement, closestInEventPath, contains, getTarget } from '../../common/shadowDom';
 import { useFilterDropdownList } from '../../filter-dropdown/list/FilterDropdownList';
 import {
   useFilterDropdownItemContext,
@@ -88,7 +88,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
       true,
       child.parent === store &&
         child.popup &&
-        event.composedPath().includes(child.popup) &&
+        closestInEventPath(event, (node) => node === child.popup) &&
         isHTMLElement(trigger) &&
         trigger.isConnected &&
         listRef.value.includes(trigger)
