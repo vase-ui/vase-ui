@@ -138,8 +138,9 @@ describe('<Menu.Item />', () => {
     );
 
     const item = screen.getByRole('menuitem');
-
-    await fireEvent.mouseDown(item);
+    const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    await fireEvent(item, event);
+    expect(event).toHaveProperty('vaseUIHandlerPrevented', true);
   });
 
   it('perf: does not rerender menu items unnecessarily', async ({ skip }) => {

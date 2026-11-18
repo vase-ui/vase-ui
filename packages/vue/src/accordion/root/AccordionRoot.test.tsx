@@ -620,8 +620,9 @@ describe('<Accordion.Root />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Trigger 1' });
-
-    await fireEvent.mouseUp(trigger);
+    const event = new MouseEvent('mouseup', { bubbles: true, cancelable: true });
+    await fireEvent(trigger, event);
+    expect(event).toHaveProperty('vaseUIHandlerPrevented', true);
   });
 
   describe.skipIf(isJSDOM)('keyboard interactions', () => {
