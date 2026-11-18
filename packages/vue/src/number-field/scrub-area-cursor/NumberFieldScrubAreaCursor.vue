@@ -52,7 +52,7 @@ defineSlots<{
 }>();
 
 const { state } = useNumberFieldRootContext();
-const { isScrubbing, isTouchInput, isPointerLockDenied, scrubAreaCursorRef, scrubAreaElement } =
+const { isScrubbing, isTouchInput, isPointerLockDenied, cursor, scrubAreaElement } =
   useNumberFieldScrubAreaContext();
 
 // The styles of a shadow root apply only in that root. The coordinates of the pointer are those of
@@ -72,14 +72,24 @@ const shouldRender = computed(
     !isPointerLockDenied.value,
 );
 
-// A template can mount the cursor that replaces this cursor before it unmounts this cursor.
-let ownElement: HTMLSpanElement | null = null;
+let transform: string | undefined;
 
+// A replacement cursor can register before its predecessor unmounts.
 function setCursorElement(next: HTMLSpanElement | null) {
-  if (next !== null || scrubAreaCursorRef.value === ownElement) {
-    scrubAreaCursorRef.value = next;
+  transform = undefined;
+  if (next) {
+    cursor.value = { element: next, setTransform };
+  } else if (cursor.value?.setTransform === setTransform) {
+    cursor.value = null;
   }
-  ownElement = next;
+}
+
+function setTransform(value: string) {
+  transform = value;
+  // A bound cursor transform added more than 10% to frame work.
+  if (element.value) {
+    element.value.style.transform = value;
+  }
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
@@ -89,6 +99,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: setCursorElement,
   state,
   props: (attrs) => [{ role: 'presentation', style: CURSOR_STYLE }, attrs],
+  overridingStyle: () => (transform ? { transform } : undefined),
   stateAttributesMapping,
 });
 

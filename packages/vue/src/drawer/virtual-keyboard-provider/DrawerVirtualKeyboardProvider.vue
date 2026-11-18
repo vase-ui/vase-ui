@@ -498,6 +498,7 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
   getOpenKeyboardViewport = getKeyboardViewport;
 
   const setDrawerKeyboardInset = (inset: number) => {
+    // A bound inset added more than 10% to the work of a keyboard frame.
     resolvedRootElement.style.setProperty(
       DrawerViewportCssVars.keyboardInset,
       `${Math.max(0, Math.ceil(inset))}px`,

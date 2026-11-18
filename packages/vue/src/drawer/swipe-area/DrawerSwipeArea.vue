@@ -110,7 +110,6 @@ import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { getDisplacement, useSwipeDismiss } from '../../utils/useSwipeDismiss';
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
 import * as DrawerPopupCssVars from '../popup/DrawerPopupCssVars';
-import * as DrawerPopupDataAttributes from '../popup/DrawerPopupDataAttributes';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 
@@ -133,7 +132,7 @@ const {
   setOpen,
   swipeDirection: rootSwipeDirection,
   frontmostHeight,
-  swipeAreaActiveRef,
+  openingSwipe,
 } = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
 
@@ -144,9 +143,7 @@ let swipeStartEvent: PointerEvent | TouchEvent | null = null;
 let openedBySwipe = false;
 const dragDelta = { x: 0, y: 0 };
 let closedOffset: number | null = null;
-let swipePopupElement: HTMLElement | null = null;
-let swipeBackdropElement: HTMLElement | null = null;
-let popupTransition: string | null = null;
+const sample = { movementX: 0, movementY: 0, progress: 0, height: shallowRef(0) };
 const releaseDocument = shallowRef<Document | null>(null);
 
 const swipeAreaId = useVaseUiId(() => props.id);
@@ -284,57 +281,43 @@ function applySwipeMovement() {
   const openProgress = clamp(clampedDisplacement / closedOffset, 0, 1);
   const backdropProgress = clamp(1 - openProgress, 0, 1);
 
+  const height = openProgress > 0 ? frontmostHeight.value : 0;
+  sample.movementX = movementX;
+  sample.movementY = movementY;
+  sample.progress = backdropProgress;
+  sample.height.value = height;
+  openingSwipe.value = sample;
+  // Bound styles on the popup and backdrop added more than 10% to frame work.
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementX, `${movementX}px`);
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementY, `${movementY}px`);
-  popupElement.setAttribute(DrawerPopupDataAttributes.swiping, '');
-  swipePopupElement = popupElement;
-  popupTransition ??= popupElement.style.transition;
-  popupElement.style.transition = 'none';
-
-  const backdropElement = store.context.backdropRef.value;
-  if (backdropElement) {
-    backdropElement.setAttribute(DrawerPopupDataAttributes.swiping, '');
-    swipeBackdropElement = backdropElement;
-    backdropElement.style.setProperty(DrawerBackdropCssVars.swipeProgress, `${backdropProgress}`);
-    if (openProgress > 0 && frontmostHeight.value > 0) {
-      backdropElement.style.setProperty(DrawerPopupCssVars.height, `${frontmostHeight.value}px`);
-    } else {
-      backdropElement.style.removeProperty(DrawerPopupCssVars.height);
-    }
-  }
-
-  providerContext?.visualStateStore.set({
-    swipeProgress: openProgress,
-    frontmostHeight: openProgress > 0 ? frontmostHeight.value : 0,
-  });
-  swipeAreaActiveRef.value = true;
+  store.context.backdropRef.value?.style.setProperty(
+    DrawerBackdropCssVars.swipeProgress,
+    String(backdropProgress),
+  );
+  providerContext?.visualStateStore.set(
+    { swipeProgress: openProgress, frontmostHeight: height },
+    sample,
+  );
 }
 
 function clearSwipeStyles() {
-  const popupElement = swipePopupElement;
-  if (popupElement) {
-    popupElement.style.removeProperty(DrawerPopupCssVars.swipeMovementX);
-    popupElement.style.removeProperty(DrawerPopupCssVars.swipeMovementY);
-    popupElement.removeAttribute(DrawerPopupDataAttributes.swiping);
+  if (openingSwipe.value === sample) {
+    openingSwipe.value = null;
+    providerContext?.visualStateStore.set({ swipeProgress: 0, frontmostHeight: 0 }, sample);
   }
-
-  if (popupElement && popupTransition !== null) {
-    popupElement.style.transition = popupTransition;
-    popupTransition = null;
-  }
-
-  const backdropElement = swipeBackdropElement;
-  if (backdropElement) {
-    backdropElement.removeAttribute(DrawerPopupDataAttributes.swiping);
-    backdropElement.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');
-    backdropElement.style.removeProperty(DrawerPopupCssVars.height);
-  }
-
-  providerContext?.visualStateStore.set({ swipeProgress: 0, frontmostHeight: 0 });
-  swipePopupElement = null;
-  swipeBackdropElement = null;
-  swipeAreaActiveRef.value = false;
 }
+
+watch(
+  store.context.popupRef,
+  (popup, previous) => {
+    if (previous && previous !== popup && openingSwipe.value === sample) {
+      finishSwipeInteraction();
+    } else if (popup && swipeActive.value && openedBySwipe) {
+      applySwipeMovement();
+    }
+  },
+  { flush: 'post' },
+);
 
 function openDrawer(event?: PointerEvent | TouchEvent) {
   openedBySwipe = true;
@@ -436,6 +419,13 @@ const swipe = useSwipeDismiss({
     return false;
   },
   onCancel: finishSwipeInteraction,
+});
+
+watch(open, (isOpen) => {
+  if (!isOpen && swipeActive.value && openedBySwipe) {
+    finishSwipeInteraction();
+    swipe.reset();
+  }
 });
 
 watch(enabled, (isEnabled) => {

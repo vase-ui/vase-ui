@@ -27,12 +27,14 @@ export interface DrawerBackdropState {
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useDrawerRootContext } from '../root/DrawerRootContext';
+import * as DrawerPopupDataAttributes from '../popup/DrawerPopupDataAttributes';
 import * as DrawerPopupCssVars from '../popup/DrawerPopupCssVars';
 import * as DrawerBackdropCssVars from './DrawerBackdropCssVars';
 
@@ -56,39 +58,52 @@ const state = computed<DrawerBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-let ownBackdrop: HTMLElement | null = null;
-
-// A swipe can write its progress to the element in each frame. Vue writes each key of the style
-// again when the part renders. The render thus gives the value that the element holds, so that a
-// render does not replace the progress of the swipe.
-function swipeProgressValue() {
-  return ownBackdrop?.style.getPropertyValue(DrawerBackdropCssVars.swipeProgress) || '0';
-}
+const root = useDrawerRootContext(true);
+// A nested dialog can have a drawer ancestor and its own backdrop.
+const drawer = root?.dialogContext === store.context ? root : undefined;
+const viewportGesture = drawer?.viewportGesture;
+const openingSwipe = drawer?.openingSwipe;
+const height = computed(
+  () => openingSwipe?.value?.height.value ?? viewportGesture?.value?.height.value ?? 0,
+);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [
-    createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
-    (backdrop: HTMLElement | null) => {
-      ownBackdrop = backdrop;
-    },
-  ],
+  ref: createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     {
       role: 'presentation',
+      [DrawerPopupDataAttributes.swiping]:
+        openingSwipe?.value || viewportGesture?.value?.swiping.value ? '' : undefined,
+      [DrawerPopupDataAttributes.swipeDismiss]: viewportGesture?.value?.release.value
+        ? ''
+        : undefined,
       hidden: mounted.value ? undefined : true,
       style: {
         'pointer-events': open.value ? undefined : 'none',
         'user-select': 'none',
         '-webkit-user-select': 'none',
-        [DrawerBackdropCssVars.swipeProgress]: swipeProgressValue(),
-        [DrawerPopupCssVars.swipeStrength]: '1',
+        [DrawerBackdropCssVars.swipeProgress]:
+          openingSwipe?.value?.progress ?? viewportGesture?.value?.getProgress() ?? 0,
+        [DrawerPopupCssVars.height]: height.value > 0 ? `${height.value}px` : undefined,
+        [DrawerPopupCssVars.swipeStrength]: viewportGesture?.value?.release.value?.strength ?? 1,
       },
     },
     attrs,
   ],
 });
+
+watch(
+  element,
+  (backdrop, _, onCleanup) => {
+    // A retained backdrop has no further patch after Vue releases it.
+    if (backdrop) {
+      onCleanup(() => backdrop.removeAttribute(DrawerPopupDataAttributes.swiping));
+    }
+  },
+  { flush: 'post' },
+);
 
 defineExpose({ element });
 </script>

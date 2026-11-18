@@ -4,62 +4,32 @@ import type { DrawerVisualState, DrawerVisualStateStore } from './DrawerProvider
 export interface DrawerProviderState {}
 
 export interface DrawerProviderProps {}
-
-type VisualStateListener = () => void;
-
-function createVisualStateStore(): DrawerVisualStateStore {
-  let state: DrawerVisualState = {
-    swipeProgress: 0,
-    frontmostHeight: 0,
-  };
-  const listeners = new Set<VisualStateListener>();
-
-  return {
-    getSnapshot: () => state,
-    set(nextState) {
-      let nextSwipeProgress = state.swipeProgress;
-      if (nextState.swipeProgress !== undefined) {
-        nextSwipeProgress = Number.isFinite(nextState.swipeProgress) ? nextState.swipeProgress : 0;
-      }
-
-      let nextFrontmostHeight = state.frontmostHeight;
-      if (nextState.frontmostHeight !== undefined) {
-        nextFrontmostHeight = Number.isFinite(nextState.frontmostHeight)
-          ? nextState.frontmostHeight
-          : 0;
-      }
-
-      if (
-        nextSwipeProgress === state.swipeProgress &&
-        nextFrontmostHeight === state.frontmostHeight
-      ) {
-        return;
-      }
-
-      state = {
-        swipeProgress: nextSwipeProgress,
-        frontmostHeight: nextFrontmostHeight,
-      };
-
-      listeners.forEach((listener) => {
-        listener();
-      });
-    },
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
 </script>
 
 <script setup lang="ts">
-import { provide, shallowRef } from 'vue';
+import { provide, shallowReactive, shallowRef } from 'vue';
 import { DrawerProviderContext } from './DrawerProviderContext';
 
 defineSlots<{ default?: () => unknown }>();
+
+const visualState = shallowReactive<DrawerVisualState>({ swipeProgress: 0, frontmostHeight: 0 });
+let visualOwner: object | undefined;
+
+const visualStateStore: DrawerVisualStateStore = {
+  state: visualState,
+  set(next, owner) {
+    const progress = next.swipeProgress ?? visualState.swipeProgress;
+    const height = next.frontmostHeight ?? visualState.frontmostHeight;
+    const swipeProgress = Number.isFinite(progress) ? progress : 0;
+    const frontmostHeight = Number.isFinite(height) ? height : 0;
+    if (swipeProgress === 0 && frontmostHeight === 0 && owner !== visualOwner) {
+      return;
+    }
+    visualOwner = swipeProgress || frontmostHeight ? owner : undefined;
+    visualState.frontmostHeight = frontmostHeight;
+    visualState.swipeProgress = swipeProgress;
+  },
+};
 
 const openDrawers = new Set<object>();
 const active = shallowRef(false);
@@ -85,7 +55,7 @@ provide(DrawerProviderContext, {
   setDrawerOpen,
   removeDrawer,
   active,
-  visualStateStore: createVisualStateStore(),
+  visualStateStore,
 });
 </script>
 

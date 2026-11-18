@@ -29,12 +29,11 @@ export interface ScrollAreaRootContext {
   scrollbarXElement: ShallowRef<HTMLElement | null>;
   thumbXElement: ShallowRef<HTMLElement | null>;
   cornerElement: ShallowRef<HTMLElement | null>;
-  handlePointerDown(event: PointerEvent, orientation: Orientation): void;
+  handlePointerDown(event: PointerEvent, orientation: Orientation, trackPosition?: number): void;
   handlePointerMove(event: PointerEvent): void;
   handlePointerUp(event: PointerEvent): void;
   handleScroll(scrollPosition: Coords): void;
-  disableViewportSnap(): void;
-  reapplyViewportSnapNone(): void;
+  press: Readonly<ShallowRef<{ viewport: HTMLElement } | null>>;
   rootId: ComputedRef<string>;
   hiddenState: Readonly<Ref<HiddenState>>;
   setHiddenState(hiddenState: HiddenState): void;

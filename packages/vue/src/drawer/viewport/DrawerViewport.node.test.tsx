@@ -23,6 +23,7 @@ describe('<Drawer.Viewport /> on a server', () => {
         render: () => (
           <Drawer.Root defaultOpen snapPoints={['100px', 1]}>
             <ServerPortal>
+              <Drawer.Backdrop />
               <Drawer.Viewport data-testid="viewport">
                 <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
               </Drawer.Viewport>
@@ -35,5 +36,9 @@ describe('<Drawer.Viewport /> on a server', () => {
     expect(html).toContain('data-testid="viewport"');
     expect(html).toMatch(/<div[^>]*role="dialog"[^>]*data-testid="popup"/);
     expect(html).toContain('--drawer-snap-point-offset:0px;');
+    expect(html).toContain('--drawer-swipe-progress:0;');
+    expect(html).toContain('--drawer-swipe-strength:1;');
+    expect(html).not.toContain('data-swiping');
+    expect(html).not.toContain('data-swipe-dismiss');
   });
 });
