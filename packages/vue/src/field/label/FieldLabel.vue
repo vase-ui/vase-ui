@@ -26,7 +26,7 @@ export interface FieldLabelProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, watchPostEffect } from 'vue';
 import { error } from '../../common/error';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -45,12 +45,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FieldLabelState>;
 }>();
 
-const fieldRootContext = useFieldRootContext(false);
-const fieldItemContext = useFieldItemContext();
+const { state: fieldState, disabled: fieldDisabled } = useFieldRootContext(false);
+const { disabled: itemDisabled } = useFieldItemContext();
 
 const state = computed<FieldLabelState>(() => ({
-  ...fieldRootContext.state.value,
-  disabled: (fieldRootContext.disabled.value ?? false) || fieldItemContext.disabled.value,
+  ...fieldState.value,
+  disabled: fieldDisabled.value || itemDisabled.value,
 }));
 
 const labelProps = useLabel({
@@ -67,7 +67,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('labe
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Field.Label');
-  const checkElement = () => {
+  watchPostEffect(() => {
     const label = element.value;
     if (!label) {
       return;
@@ -88,10 +88,7 @@ if (process.env.NODE_ENV !== 'production') {
         'Use a non-<label> element with the `as` prop or the `#render` slot, or set `nativeLabel` to `true`.',
       );
     }
-  };
-
-  onMounted(checkElement);
-  watch(() => props.nativeLabel, checkElement, { flush: 'post' });
+  });
 }
 
 defineExpose({ element });

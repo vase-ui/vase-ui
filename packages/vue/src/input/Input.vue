@@ -83,25 +83,9 @@ defineSlots<{
   render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, InputState>;
 }>();
 
-// As in Base UI, this part renders `Field.Control` and makes no element of its own. The two parts
-// then share the value, the state and the validation.
-// The template has one form for `#render` and one for no slot. A `v-if` on a slot template makes
-// the slots of `Field.Control` dynamic. Vue then renders `Field.Control` again each time this part
-// renders.
+// Separate branches keep the child slots stable across updates.
 const control = useTemplateRef('control');
 const element = computed(() => control.value?.element ?? null);
-
-// Vue takes a declared event out of `$attrs`, so the template gives `Field.Control` a listener for
-// each event. Each handler emits the event again at once with the same arguments.
-// `Field.Control` reads `details.isCanceled` after its `valueChange` emit returns. A
-// `details.cancel()` in a listener of this part thus stops `update:modelValue`.
-function emitValueChange(value: string, eventDetails: InputChangeEventDetails) {
-  emit('valueChange', value, eventDetails);
-}
-
-function emitUpdateValue(value: string) {
-  emit('update:modelValue', value);
-}
 
 defineExpose({ element });
 </script>
@@ -111,8 +95,8 @@ defineExpose({ element });
     v-if="$slots.render"
     ref="control"
     v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
-    @value-change="emitValueChange"
-    @update:model-value="emitUpdateValue"
+    @value-change="(value, details) => emit('valueChange', value, details)"
+    @update:model-value="emit('update:modelValue', $event)"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -122,7 +106,7 @@ defineExpose({ element });
     v-else
     ref="control"
     v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
-    @value-change="emitValueChange"
-    @update:model-value="emitUpdateValue"
+    @value-change="(value, details) => emit('valueChange', value, details)"
+    @update:model-value="emit('update:modelValue', $event)"
   />
 </template>

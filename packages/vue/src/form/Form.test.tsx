@@ -1670,6 +1670,28 @@ describe('<Form />', () => {
       expect(screen.getByTestId('second')).not.toHaveFocus();
     });
 
+    it('shows an error again when the consumer appends a message after an edit', async () => {
+      const errors = ref({ name: ['First'] });
+      await render(() => (
+        <Form errors={errors.value}>
+          <Field.Root name="name">
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>
+        </Form>
+      ));
+      expect(screen.getByText('First')).toBeVisible();
+      await fireEvent.input(screen.getByRole('textbox'), { target: { value: 'edit' } });
+      expect(screen.queryByText('First')).toBeNull();
+
+      errors.value.name.push('Second');
+      await flushMicrotasks();
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        'First',
+        'Second',
+      ]);
+    });
+
     it('VUE-13: follows a key that the consumer adds in place to a reactive errors object, also after a clearErrors', async () => {
       const { Probe, getContext } = defineFormContextProbe();
       const errors = ref<Errors>({});

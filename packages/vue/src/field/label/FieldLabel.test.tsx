@@ -194,6 +194,22 @@ describe('<Field.Label />', () => {
       );
     });
 
+    it('reports a replacement element that loses its native label association', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const tag = shallowRef('label');
+      await render(() => (
+        <Field.Root>
+          <Field.Control />
+          <Field.Label as={tag.value}>Name</Field.Label>
+        </Field.Root>
+      ));
+      expect(error).not.toHaveBeenCalled();
+      tag.value = 'span';
+      await flushMicrotasks();
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error.mock.calls[0]?.[0]).toContain('expected a <label> element');
+    });
+
     it('reports a nativeLabel value that stops matching the element', async () => {
       const errorSpy = vi
         .spyOn(console, 'error')
