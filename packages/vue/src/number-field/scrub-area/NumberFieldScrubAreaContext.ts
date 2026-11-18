@@ -1,14 +1,16 @@
 import { inject } from 'vue';
 import type { InjectionKey, Ref, ShallowRef } from 'vue';
 
+export interface ScrubCursor {
+  element: HTMLSpanElement;
+  setTransform: (transform: string) => void;
+}
+
 export interface NumberFieldScrubAreaContext {
   isScrubbing: Readonly<Ref<boolean>>;
   isTouchInput: Readonly<Ref<boolean>>;
   isPointerLockDenied: Readonly<Ref<boolean>>;
-  /**
-   * The element of the cursor. `NumberField.ScrubAreaCursor` writes it.
-   */
-  scrubAreaCursorRef: ShallowRef<HTMLSpanElement | null>;
+  cursor: ShallowRef<ScrubCursor | null>;
   /**
    * The element of the scrub area. `NumberField.ScrubAreaCursor` renders in its root node.
    */

@@ -128,8 +128,7 @@ describe('<Drawer.Root /> on a server', () => {
           removeDrawer,
           active: shallowRef(false),
           visualStateStore: {
-            getSnapshot: () => ({ swipeProgress: 0, frontmostHeight: 0 }),
-            subscribe: () => () => {},
+            state: { swipeProgress: 0, frontmostHeight: 0 },
             set: () => {},
           },
         });

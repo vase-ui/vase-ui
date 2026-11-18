@@ -1,5 +1,13 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, Teleport, defineComponent, shallowRef, type VNodeChild } from 'vue';
+import {
+  KeepAlive,
+  Teleport,
+  defineComponent,
+  onUnmounted,
+  shallowRef,
+  watch,
+  type VNodeChild,
+} from 'vue';
 import { Slider } from '@vase-ui/vue/slider';
 import {
   createRenderer,
@@ -15,8 +23,6 @@ import * as Combobox from '../../combobox/index.parts';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';
-import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
-import { useDrawerRootContext } from '../root/DrawerRootContext';
 
 type Point = { clientX: number; clientY: number };
 
@@ -31,6 +37,15 @@ function stubElementFromPoint(
   };
   onTestFinished(restore);
   return restore;
+}
+
+const mouse = { pointerType: 'mouse', pointerId: 1, clientX: 0 };
+
+async function dragPopup(popup: HTMLElement, distance: number) {
+  stubElementFromPoint(document, () => popup);
+  await firePointer.down(popup, { ...mouse, button: 0, buttons: 1, clientY: 0, timeStamp: 1 });
+  await firePointer.move(popup, { ...mouse, buttons: 1, clientY: 1, timeStamp: 30 });
+  await firePointer.move(popup, { ...mouse, buttons: 1, clientY: 1 + distance, timeStamp: 120 });
 }
 
 function createTouch(target: EventTarget, point: Point): Touch | Point {
@@ -4066,101 +4081,108 @@ describe('<Drawer.Viewport />', () => {
   });
 
   it('publishes resting snap progress before descendant layout effects', async () => {
-    let taskAfterChangeRan = false;
-    let appliedBeforeTask: boolean | null = null;
     const snapPoint = shallowRef('100px');
+    const samples: string[] = [];
+    const Probe = defineComponent(() => {
+      watch(
+        snapPoint,
+        () => {
+          samples.push(
+            screen.getByTestId('backdrop').style.getPropertyValue('--drawer-swipe-progress'),
+          );
+        },
+        { flush: 'post' },
+      );
+      return () => null;
+    });
 
     await render(() => (
       <Drawer.Root open modal={false} snapPoints={['100px', '200px']} snapPoint={snapPoint.value}>
         <Drawer.Portal>
           <Drawer.Backdrop data-testid="backdrop" />
-          <Drawer.Viewport
-            v-slots={{
-              render: renderWithSize({ offsetHeight: 200 }, () => (
-                <Drawer.Popup
-                  v-slots={{ render: renderWithSize({ offsetHeight: 200 }, () => 'Drawer') }}
-                />
-              )),
-            }}
-          />
-        </Drawer.Portal>
-      </Drawer.Root>
-    ));
-    const backdrop = screen.getByTestId('backdrop');
-    const originalSetProperty = backdrop.style.setProperty.bind(backdrop.style);
-    const setPropertySpy = vi
-      .spyOn(backdrop.style, 'setProperty')
-      .mockImplementation((name, value, priority) => {
-        if (name === '--drawer-swipe-progress' && value === '0' && appliedBeforeTask === null) {
-          appliedBeforeTask = !taskAfterChangeRan;
-        }
-        originalSetProperty(name, value, priority);
-      });
-    onTestFinished(() => setPropertySpy.mockRestore());
-
-    setTimeout(() => {
-      taskAfterChangeRan = true;
-    });
-    snapPoint.value = '200px';
-    await flushMicrotasks();
-    expect(appliedBeforeTask).toBe(true);
-    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
-  });
-
-  it('clears kept-mounted swipe state before descendant layout effects on reopen', async () => {
-    let taskAfterOpenRan = false;
-    let resetBeforeTask: boolean | null = null;
-    const open = shallowRef(false);
-
-    await render(() => (
-      <Drawer.Root open={open.value} modal={false}>
-        <Drawer.Portal keepMounted>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          <Drawer.Viewport style={{ height: '200px' }}>
+            <Drawer.Popup style={{ height: '200px' }}>
+              <Probe />
+            </Drawer.Popup>
           </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>
     ));
-    const popup = screen.getByTestId('popup');
-    popup.style.setProperty('--drawer-swipe-movement-y', '50px');
-    popup.setAttribute('data-swipe-dismiss', '');
-    const originalToggleAttribute = popup.toggleAttribute.bind(popup);
-    const toggleAttributeSpy = vi
-      .spyOn(popup, 'toggleAttribute')
-      .mockImplementation((name, force) => {
-        if (name === 'data-swipe-dismiss' && force === false && resetBeforeTask === null) {
-          resetBeforeTask = !taskAfterOpenRan;
-        }
-        return originalToggleAttribute(name, force);
-      });
-    onTestFinished(() => toggleAttributeSpy.mockRestore());
+    expect(screen.getByTestId('backdrop').style.getPropertyValue('--drawer-swipe-progress')).toBe(
+      '1',
+    );
+    snapPoint.value = '200px';
+    await flushMicrotasks();
+    expect(samples).toEqual(['0']);
+  });
 
-    setTimeout(() => {
-      taskAfterOpenRan = true;
+  it('clears kept-mounted swipe state before descendant layout effects on reopen', async () => {
+    const open = shallowRef(true);
+    const samples: unknown[] = [];
+    const Probe = defineComponent(() => {
+      watch(
+        open,
+        (next) => {
+          if (next) {
+            const popup = screen.getByTestId('popup');
+            const backdrop = screen.getByTestId('backdrop');
+            samples.push([
+              popup.style.getPropertyValue('--drawer-swipe-movement-y'),
+              popup.hasAttribute('data-swipe-dismiss'),
+              backdrop.hasAttribute('data-swipe-dismiss'),
+            ]);
+          }
+        },
+        { flush: 'post' },
+      );
+      return () => null;
     });
+    await render(() => (
+      <Drawer.Root open={open.value} onOpenChange={(next) => (open.value = next)} modal={false}>
+        <Drawer.Portal keepMounted>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup" style={{ height: '100px' }}>
+              <Probe />
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    await dragPopup(popup, 60);
+    await firePointer.up(popup, { ...mouse, clientY: 61, timeStamp: 130 });
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('60px');
+    expect(popup).toHaveAttribute('data-swipe-dismiss', '');
+    expect(backdrop).toHaveAttribute('data-swipe-dismiss', '');
+    const strength = popup.style.getPropertyValue('--drawer-swipe-strength');
+    expect(Number(strength)).toBeGreaterThan(0);
+    expect(Number(strength)).toBeLessThan(1);
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe(strength);
+    expect(open.value).toBe(false);
     open.value = true;
     await flushMicrotasks();
-    expect(resetBeforeTask).toBe(true);
-    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
-    expect(popup).not.toHaveAttribute('data-swipe-dismiss');
+    expect(samples).toEqual([['0px', false, false]]);
   });
 
   it('clears nested progress before descendant layout effects when the child closes', async () => {
-    let taskAfterCloseRan = false;
-    let clearedBeforeTask: boolean | null = null;
-
-    const NestedProgressControl = defineComponent({
-      setup() {
-        const { onNestedSwipeProgressChange } = useDrawerRootContext();
-
-        return () => (
-          <button onClick={() => onNestedSwipeProgressChange(0.5)}>Set nested progress</button>
-        );
-      },
-    });
-
     const childOpen = shallowRef(true);
-    const { user } = await render(() => (
+    const samples: string[] = [];
+    const Probe = defineComponent(() => {
+      watch(
+        childOpen,
+        () => {
+          samples.push(
+            screen.getByTestId('parent-popup').style.getPropertyValue('--drawer-swipe-progress'),
+          );
+        },
+        { flush: 'post' },
+      );
+      return () => null;
+    });
+    await render(() => (
       <Drawer.Root open modal={false}>
         <Drawer.Portal>
           <Drawer.Viewport>
@@ -4168,109 +4190,109 @@ describe('<Drawer.Viewport />', () => {
               <Drawer.Root open={childOpen.value} modal={false}>
                 <Drawer.Portal keepMounted>
                   <Drawer.Viewport>
-                    <Drawer.Popup>Child drawer</Drawer.Popup>
+                    <Drawer.Popup data-testid="child" style={{ height: '100px' }}>
+                      <Probe />
+                    </Drawer.Popup>
                   </Drawer.Viewport>
                 </Drawer.Portal>
-                <NestedProgressControl />
               </Drawer.Root>
             </Drawer.Popup>
           </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>
     ));
-
-    await user.click(screen.getByRole('button', { name: 'Set nested progress' }));
+    await dragPopup(screen.getByTestId('child'), 50);
     expect(
       screen.getByTestId('parent-popup').style.getPropertyValue('--drawer-swipe-progress'),
     ).toBe('0.5');
-    const parentPopup = screen.getByTestId('parent-popup');
-    const originalSetProperty = parentPopup.style.setProperty.bind(parentPopup.style);
-    const setPropertySpy = vi
-      .spyOn(parentPopup.style, 'setProperty')
-      .mockImplementation((name, value, priority) => {
-        if (name === '--drawer-swipe-progress' && value === '0' && clearedBeforeTask === null) {
-          clearedBeforeTask = !taskAfterCloseRan;
-        }
-        originalSetProperty(name, value, priority);
-      });
-    onTestFinished(() => setPropertySpy.mockRestore());
-
-    setTimeout(() => {
-      taskAfterCloseRan = true;
-    });
     childOpen.value = false;
     await flushMicrotasks();
-    expect(clearedBeforeTask).toBe(true);
-    expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(samples).toEqual(['0']);
+  });
+
+  it('keeps the active drawer progress when another viewport enters a hold', async () => {
+    const first = shallowRef(true);
+    const second = shallowRef(true);
+    function drawer(name: string, shown: boolean) {
+      return (
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal keepMounted>
+            <Drawer.Backdrop data-testid={name + '-backdrop'} />
+            <KeepAlive>
+              {shown && (
+                <Drawer.Viewport>
+                  <Drawer.Popup data-testid={name} style={{ height: '100px' }} />
+                </Drawer.Viewport>
+              )}
+            </KeepAlive>
+          </Drawer.Portal>
+        </Drawer.Root>
+      );
+    }
+    await render(() => (
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        {drawer('first', first.value)}
+        {drawer('second', second.value)}
+      </Drawer.Provider>
+    ));
+    const indent = screen.getByTestId('indent');
+    const backdrop = screen.getByTestId('second-backdrop');
+    await dragPopup(screen.getByTestId('second'), 50);
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+
+    first.value = false;
+    await flushMicrotasks();
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    second.value = false;
+    await flushMicrotasks();
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
+    expect(backdrop).not.toHaveAttribute('data-swiping');
   });
 
   it('clears provider and backdrop swipe state during layout teardown', async () => {
-    let taskAfterTeardownRan = false;
-    let clearedBeforeTask: boolean | null = null;
-
-    const ProviderStateControl = defineComponent({
-      setup() {
-        const providerContext = useDrawerProviderContext();
-
-        return () => (
-          <button
-            onClick={() => {
-              providerContext?.visualStateStore.set({
-                swipeProgress: 0.5,
-                frontmostHeight: 100,
-              });
-            }}
-          >
-            Set provider state
-          </button>
-        );
-      },
+    const shown = shallowRef(true);
+    const samples: unknown[] = [];
+    function readParts() {
+      const indent = screen.getByTestId('indent');
+      const backdrop = screen.getByTestId('backdrop');
+      return [
+        indent.style.getPropertyValue('--drawer-swipe-progress'),
+        indent.style.getPropertyValue('--drawer-height'),
+        backdrop.style.getPropertyValue('--drawer-swipe-progress'),
+        backdrop.hasAttribute('data-swiping'),
+      ];
+    }
+    const Probe = defineComponent(() => {
+      onUnmounted(() => samples.push(readParts()));
+      return () => null;
     });
-
-    const showViewport = shallowRef(true);
-    const { user } = await render(() => (
+    await render(() => (
       <Drawer.Provider>
         <Drawer.Indent data-testid="indent" />
-        <ProviderStateControl />
         <Drawer.Root open modal={false}>
           <Drawer.Portal>
             <Drawer.Backdrop data-testid="backdrop" />
-            {showViewport.value && (
+            {shown.value && (
               <Drawer.Viewport>
-                <Drawer.Popup>Drawer</Drawer.Popup>
+                <Drawer.Popup data-testid="popup" style={{ height: '100px' }}>
+                  <Probe />
+                </Drawer.Popup>
               </Drawer.Viewport>
             )}
           </Drawer.Portal>
         </Drawer.Root>
       </Drawer.Provider>
     ));
-
-    await user.click(screen.getByRole('button', { name: 'Set provider state' }));
-    const indent = screen.getByTestId('indent');
-    const backdrop = screen.getByTestId('backdrop');
-    backdrop.setAttribute('data-swiping', '');
-    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
-    expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
-    const originalSetProperty = indent.style.setProperty.bind(indent.style);
-    const setPropertySpy = vi
-      .spyOn(indent.style, 'setProperty')
-      .mockImplementation((name, value, priority) => {
-        if (name === '--drawer-swipe-progress' && value === '0' && clearedBeforeTask === null) {
-          clearedBeforeTask = !taskAfterTeardownRan;
-        }
-        originalSetProperty(name, value, priority);
-      });
-    onTestFinished(() => setPropertySpy.mockRestore());
-
-    setTimeout(() => {
-      taskAfterTeardownRan = true;
-    });
-    showViewport.value = false;
+    await dragPopup(screen.getByTestId('popup'), 50);
+    expect(readParts()).toEqual(['0.5', '100px', '0.5', true]);
+    shown.value = false;
     await flushMicrotasks();
-    expect(clearedBeforeTask).toBe(true);
-    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
-    expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
-    expect(backdrop).not.toHaveAttribute('data-swiping');
+    expect(samples).toEqual([['0', '', '0', false]]);
   });
 
   it('leaves pinch-zoom touchmove to the browser', async () => {

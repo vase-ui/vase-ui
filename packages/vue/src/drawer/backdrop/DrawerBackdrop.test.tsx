@@ -5,6 +5,7 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  firePointer,
   flushMicrotasks,
   hydrate,
   renderOnServer,
@@ -12,6 +13,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
+import * as Dialog from '../../dialog/index.parts';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import DrawerBackdropHydration from './DrawerBackdropHydration.test.vue';
@@ -30,6 +32,18 @@ describe('<Drawer.Backdrop />', () => {
       );
     },
   }));
+
+  it('uses the dialog state when there is no drawer gesture', async () => {
+    await render(
+      <Dialog.Root open modal={false}>
+        <Drawer.Backdrop data-testid="backdrop" />
+      </Dialog.Root>,
+    );
+    const backdrop = screen.getByTestId('backdrop');
+    expect(backdrop).toHaveAttribute('data-open');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe('1');
+  });
 
   it('shows the state of the drawer, and takes no pointer event while the drawer is not open', async () => {
     const open = shallowRef(false);
@@ -94,25 +108,41 @@ describe('<Drawer.Backdrop />', () => {
     expect(backdrop).toHaveStyle({ userSelect: 'none' });
   });
 
-  it('keeps the swipe progress that code wrote when it renders again', async () => {
-    const open = shallowRef(false);
+  it('keeps the progress of the current swipe when the backdrop renders again', async () => {
+    const label = shallowRef('first');
     await render(() => (
-      <Drawer.Root open={open.value}>
-        <Drawer.Backdrop data-testid="backdrop" />
+      <Drawer.Root open modal={false}>
+        <Drawer.Backdrop data-testid="backdrop" data-label={label.value} />
+        <Dialog.Root>
+          <Drawer.Backdrop forceRender data-testid="dialog-backdrop" data-label={label.value} />
+        </Dialog.Root>
         <Drawer.Portal>
           <Drawer.Viewport>
-            <Drawer.Popup>Drawer</Drawer.Popup>
+            <Drawer.Popup
+              data-testid="popup"
+              style={{ position: 'fixed', inset: 0, height: '100px' }}
+            >
+              Drawer
+            </Drawer.Popup>
           </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>
     ));
     const backdrop = screen.getByTestId('backdrop');
-
-    backdrop.style.setProperty('--drawer-swipe-progress', '0.5');
-    open.value = true;
-    await flushMicrotasks();
-    expect(backdrop).toHaveAttribute('data-open');
+    const popup = screen.getByTestId('popup');
+    const pointer = { pointerType: 'mouse', pointerId: 1, buttons: 1, clientX: 5 };
+    await firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 });
+    await firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 });
+    await firePointer.move(popup, { ...pointer, clientY: 56, timeStamp: 100 });
     expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+
+    label.value = 'second';
+    await flushMicrotasks();
+    expect(backdrop).toHaveAttribute('data-label', 'second');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    const dialogBackdrop = screen.getByTestId('dialog-backdrop');
+    expect(dialogBackdrop).not.toHaveAttribute('data-swiping');
+    expect(dialogBackdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
   });
 
   describe('prop: forceRender', () => {
