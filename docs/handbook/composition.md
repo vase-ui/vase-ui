@@ -125,6 +125,8 @@ A defined model prop gives the parent control, even without an update listener. 
 
 When the parent sets one of these Boolean props to `undefined`, the part keeps the last value and accepts local changes. A wrapper can forward `undefined` with an update listener and still leave the part in control.
 
+Set a popup root’s `triggerId` to `null` to clear its active trigger. The popup can stay open.
+
 ### A default of true
 
 `undefined` keeps the `true` default of the part. A wrapper with no default, or with the default `false`, disables it.
