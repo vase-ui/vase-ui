@@ -3497,6 +3497,35 @@ describe('useDismiss', () => {
       expect(onB).toHaveBeenCalledWith('openchange', offA.mock.calls[0][1]);
     });
 
+    it('clears a press in the new store when the owner unmounts before the next flush', async () => {
+      const { current, stores, Popup } = renderSwitchingStores();
+      const { unmount } = await render(<Popup />);
+
+      current.value = 'b';
+      screen.getByTestId('popup').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(stores.b.context.insideComponentTree).toBe(true);
+      unmount();
+
+      expect(stores.b.context.insideComponentTree).toBe(false);
+    });
+
+    it('dismisses on the next outside press after a press in the new store before the flush', async () => {
+      const enabled = shallowRef(false);
+      const { current, stores, changes, Popup } = renderSwitchingStores({ enabled });
+      await render(<Popup />);
+
+      current.value = 'b';
+      enabled.value = true;
+      screen.getByTestId('popup').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(stores.b.context.insideComponentTree).toBe(true);
+      await wait(0);
+      await fireEvent.pointerDown(document.body, mouse);
+
+      expect(changes).toEqual([
+        { store: 'b', open: false, reason: REASONS.outsidePress, eventType: 'pointerdown' },
+      ]);
+    });
+
     it('clears the inside marker of the last store, so that its next outside press closes it', async () => {
       const { current, changes, Popup } = renderSwitchingStores();
       await render(<Popup />);

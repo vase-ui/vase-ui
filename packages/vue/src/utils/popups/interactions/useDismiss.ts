@@ -280,7 +280,7 @@ export function useDismiss(
 
   const cancelDismissOnEndTimeout = useTimeout();
   const clearInsideComponentTreeTimeout = useTimeout();
-  // Outlives the runs of `update`, so a pending reset can't leave `compositionEndPending` stuck.
+  // A change of document listeners must let a pending composition reset finish.
   const compositionTimeout = useTimeout();
   const preventedPressSuppressionTimeout = useTimeout();
 
@@ -337,10 +337,22 @@ export function useDismiss(
   // that popup before the popup above checks the press.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
+  let markedStore: PopupInteractionStore | undefined;
   function clearInsideComponentTree(store = getStore()) {
-    clearInsideComponentTreeTimeout.clear();
+    if (markedStore === store) {
+      clearInsideComponentTreeTimeout.clear();
+      markedStore = undefined;
+    }
     store.context.insideComponentTree &&= false;
   }
+
+  // A press can reach a new store before the post-flush watcher subscribes to it.
+  function clearMarkedStore() {
+    if (markedStore) {
+      clearInsideComponentTree(markedStore);
+    }
+  }
+  onScopeDispose(clearMarkedStore);
 
   function markInsideComponentTree() {
     parent?.markInsideComponentTree();
@@ -348,8 +360,12 @@ export function useDismiss(
     if (!isEnabled() || !store.select('open')) {
       return;
     }
+    if (markedStore !== store) {
+      clearMarkedStore();
+    }
+    markedStore = store;
     store.context.insideComponentTree = true;
-    clearInsideComponentTreeTimeout.start(0, () => clearInsideComponentTree(store));
+    clearInsideComponentTreeTimeout.start(0, clearMarkedStore);
   }
 
   // The portal of this popup can hold its backdrop and its other parts outside the popup element.
