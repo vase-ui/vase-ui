@@ -1,3 +1,4 @@
+import { menuPopups } from '../registeredParts';
 import { addEventListener } from '../../../common/addEventListener';
 import { ownerDocument } from '../../../common/owner';
 import { Timeout } from '../../../common/useTimeout';
@@ -519,9 +520,12 @@ export class HoverIntent {
     const parentScopeElement = parentFloating !== positionerElement ? parentFloating : null;
     const scopeElement =
       this.handleCloseOptions?.getScope?.() ??
+      closest<HTMLElement>(
+        triggerElement,
+        (element) => element.isConnected && menuPopups.has(element),
+      ) ??
       cachedScopeElement ??
       parentScopeElement ??
-      closest<PointerEventsScopeElement>(triggerElement, '[data-rootownerid]') ??
       doc.body;
 
     this.blockOutsidePointerEvents({ scopeElement, triggerElement, positionerElement });

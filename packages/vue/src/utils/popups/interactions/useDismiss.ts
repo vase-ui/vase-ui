@@ -1,3 +1,4 @@
+import { isPortalOfPart } from '../portal/portalElements';
 import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
 import type { InjectionKey, MaybeRefOrGetter, WatchSource } from 'vue';
 import {
@@ -304,9 +305,9 @@ export function useDismiss(
   function ownsPortal(portal: Element) {
     const currentStore = getStore();
     return (
-      contains(portal, currentStore.select('positionerElement')) ||
-      contains(portal, currentStore.context.backdropRef?.value) ||
-      contains(portal, currentStore.context.internalBackdropRef?.value)
+      isPortalOfPart(portal, currentStore.select('positionerElement')) ||
+      isPortalOfPart(portal, currentStore.context.backdropRef?.value) ||
+      isPortalOfPart(portal, currentStore.context.internalBackdropRef?.value)
     );
   }
 
@@ -1214,7 +1215,7 @@ export function useDismiss(
  * The portal element can hold parts of the popup outside the popup element, such as the backdrop
  * and the positioner. A press on such a part reaches no listener of the popup element. The press
  * counts as outside the popup that owns the portal. A popup owns the portal when its positioner or
- * its backdrop is in the portal element. A portal that no popup owns counts as inside each popup
+ * its backdrop has that portal as its nearest portal ancestor. A portal that no popup owns counts as inside each popup
  * above it. A press in such a portal also records a press start and its prevented state.
  *
  * The composable adds its listeners with `addEventListener`. Vue stamps an event in the first Vue

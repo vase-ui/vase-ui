@@ -54,6 +54,8 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
+import { menuPopups } from '../../utils/popups/registeredParts';
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, inject, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
@@ -291,6 +293,8 @@ useFloatingFocusManager(
   }),
   element,
 );
+
+useElementRegistration(menuPopups, element, () => store.select('rootId'));
 
 defineExpose({ element });
 </script>

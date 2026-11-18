@@ -1,3 +1,4 @@
+import { menuPopups, submenuTriggers } from '../../utils/popups/registeredParts';
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { onMounted, toValue, watch } from 'vue';
 import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
@@ -91,10 +92,11 @@ export function useMenuFilterPopup(
       if (!isHTMLElement(node)) {
         return false;
       }
-      if (node.getAttribute('role') === 'dialog' || node.hasAttribute('data-rootownerid')) {
+      // A consumer can nest a dialog from outside the menu in this slot.
+      if (menuPopups.has(node) || node.getAttribute('role') === 'dialog') {
         return true;
       }
-      if (node.hasAttribute('aria-haspopup')) {
+      if (submenuTrigger === null && submenuTriggers.has(node)) {
         submenuTrigger = node;
       }
       return false;

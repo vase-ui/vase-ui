@@ -11,7 +11,7 @@ import {
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, InjectionKey, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
-import { getNodeName, isHTMLElement } from '@floating-ui/utils/dom';
+import { getNodeName, isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../../../common/owner';
@@ -21,7 +21,7 @@ import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible } from '../../../internals/composite/listIndex';
-import { CLICK_TRIGGER_IDENTIFIER } from '../../../internals/constants';
+import { clickTriggers } from '../registeredParts';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';
@@ -30,6 +30,7 @@ import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { getFloatingFocusElement, isTypeableCombobox, isTypeableElement } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
+import { getNestedPortals } from '../portal/portalElements';
 import { usePortalContext } from '../portal/FloatingPortalContext';
 import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
@@ -420,7 +421,8 @@ export function useFloatingFocusManager(
   const open = computed(() => resolved.value.store.select('open'));
   const domReference = computed(() => resolved.value.store.select('anchorElement'));
   const floating = computed(() => resolved.value.store.select('positionerElement'));
-  const floatingFocusElement = computed(() => getFloatingFocusElement(floating.value));
+  const floatingFocusElement = () =>
+    getFloatingFocusElement(floating.value, resolved.value.store.context.popupRef?.value);
 
   // A typeable combobox reference (an input or a textarea) with `initialFocus` set to `false` has
   // different focus semantics: the focus is not trapped inside the floating element, so a modal
@@ -468,7 +470,7 @@ export function useFloatingFocusManager(
   }
 
   provide(ParentFocusManagerContext, {
-    getPopupElement: () => floatingFocusElement.value,
+    getPopupElement: floatingFocusElement,
     addPopupBelow(test) {
       popupsBelow.add(test);
       return () => {
@@ -582,7 +584,7 @@ export function useFloatingFocusManager(
   // A popup part that renders no element leaves the positioner as the popup element, and the two
   // guards of this part are in the positioner. A guard that counts as content gets the focus from the
   // other guard, and the two then pass the focus to each other with no end.
-  function getTabbableContent(container: Element | null = floatingFocusElement.value) {
+  function getTabbableContent(container: Element | null = floatingFocusElement()) {
     if (!container) {
       return [];
     }
@@ -626,7 +628,7 @@ export function useFloatingFocusManager(
       const sources = sourceLists[index]!;
       const lastSources = item.lastSources;
       if (
-        !lastSources ||
+        sources.length !== lastSources?.length ||
         sources.some((value, position) => !Object.is(value, lastSources[position]))
       ) {
         item.lastSources = sources;
@@ -637,9 +639,9 @@ export function useFloatingFocusManager(
   }
 
   effect(
-    () => [open.value, isDisabled(), floatingFocusElement.value],
+    () => [open.value, isDisabled(), floatingFocusElement()],
     () => {
-      const floatingFocusEl = floatingFocusElement.value;
+      const floatingFocusEl = floatingFocusElement();
       if (!open.value || isDisabled() || !isHTMLElement(floatingFocusEl)) {
         return;
       }
@@ -745,7 +747,7 @@ export function useFloatingFocusManager(
 
     const doc =
       targets?.doc.deref() ??
-      ownerDocument(floatingFocusElement.value ?? domReference.value ?? activeEl);
+      ownerDocument(floatingFocusElement() ?? domReference.value ?? activeEl);
     const recordedBeforeOpen = targets?.elementFocusedBeforeOpen?.deref();
     const previousElement =
       recordedBeforeOpen && getNodeName(recordedBeforeOpen) !== 'body' ? recordedBeforeOpen : null;
@@ -793,14 +795,14 @@ export function useFloatingFocusManager(
     () => [
       isDisabled(),
       floating.value,
-      floatingFocusElement.value,
+      floatingFocusElement(),
       tree.value,
       domReference.value,
       resolved.value.store,
     ],
     () => {
       const floatingEl = floating.value;
-      const floatingFocusEl = floatingFocusElement.value;
+      const floatingFocusEl = floatingFocusElement();
       const domReferenceEl = domReference.value;
       const currentTree = tree.value;
       const { events } = resolved.value.store.context;
@@ -1054,9 +1056,9 @@ export function useFloatingFocusManager(
   );
 
   effect(
-    () => [isDisabled(), floatingFocusElement.value],
+    () => [isDisabled(), floatingFocusElement()],
     () => {
-      const floatingFocusEl = floatingFocusElement.value;
+      const floatingFocusEl = floatingFocusElement();
       if (isDisabled() || !floatingFocusEl) {
         return undefined;
       }
@@ -1070,9 +1072,9 @@ export function useFloatingFocusManager(
   );
 
   effect(
-    () => [isDisabled(), resolved.value.modal, floatingFocusElement.value],
+    () => [isDisabled(), resolved.value.modal, floatingFocusElement()],
     () => {
-      const floatingFocusEl = floatingFocusElement.value;
+      const floatingFocusEl = floatingFocusElement();
       if (isDisabled() || !resolved.value.modal) {
         return undefined;
       }
@@ -1103,7 +1105,7 @@ export function useFloatingFocusManager(
       open.value,
       floating.value,
       domReference.value,
-      floatingFocusElement.value,
+      floatingFocusElement(),
       portalNode.value,
     ],
     () => {
@@ -1114,7 +1116,7 @@ export function useFloatingFocusManager(
         return undefined;
       }
 
-      const doc = ownerDocument(floatingFocusElement.value);
+      const doc = ownerDocument(floatingFocusElement());
 
       function clearPointerDownOutside() {
         pointerDownOutside = false;
@@ -1131,7 +1133,7 @@ export function useFloatingFocusManager(
         pointerDownOutside = !pointerTargetInside;
         lastInteractionType = (event.pointerType as InteractionType) || 'keyboard';
 
-        if (closest(target, `[${CLICK_TRIGGER_IDENTIFIER}]`)) {
+        if (event.composedPath().some((node) => isElement(node) && clickTriggers.has(node))) {
           isPointerDown = true;
           // Reset on the next tick so a single click on a click-trigger doesn't
           // permanently suppress focus-out closing for the lifetime of the instance.
@@ -1163,7 +1165,7 @@ export function useFloatingFocusManager(
       isDisabled(),
       domReference.value,
       floating.value,
-      floatingFocusElement.value,
+      floatingFocusElement(),
       resolved.value.modal,
       tree.value,
       resolved.value.store,
@@ -1177,7 +1179,7 @@ export function useFloatingFocusManager(
     () => {
       const domReferenceEl = domReference.value;
       const floatingEl = floating.value;
-      const floatingFocusEl = floatingFocusElement.value;
+      const floatingFocusEl = floatingFocusElement();
       const currentTree = tree.value;
       const { modal, restoreFocus, store } = resolved.value;
       const storeContext = store.context;
@@ -1298,7 +1300,10 @@ export function useFloatingFocusManager(
                   (node) =>
                     [
                       node.context?.elements.floating,
-                      getFloatingFocusElement(node.context?.elements.floating),
+                      getFloatingFocusElement(
+                        node.context?.elements.floating,
+                        node.context?.rootStore?.context.popupRef?.value,
+                      ),
                     ].includes(relatedTarget) ||
                     node.context?.elements.domReference === relatedTarget,
                 )))
@@ -1416,6 +1421,7 @@ export function useFloatingFocusManager(
       portalContext?.beforeOutsideRef.value,
       portalContext?.afterOutsideRef.value,
       parentMarksCount?.value,
+      ...getNestedPortals(portalNode.value),
     ],
     () => {
       const floatingEl = floating.value;
@@ -1423,10 +1429,7 @@ export function useFloatingFocusManager(
         return undefined;
       }
 
-      // Don't hide portals nested within the parent portal.
-      const portalNodes = Array.from(
-        portalNode.value?.querySelectorAll(`[${createAttribute('portal')}]`) ?? [],
-      );
+      const portalNodes = getNestedPortals(portalNode.value);
 
       const currentTree = tree.value;
       const ancestors = currentTree

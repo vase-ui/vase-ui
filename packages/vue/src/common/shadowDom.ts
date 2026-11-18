@@ -51,13 +51,19 @@ export function closest<K extends keyof SVGElementTagNameMap>(
 ): SVGElementTagNameMap[K] | null;
 export function closest<E extends Element = Element>(
   node: Node | null | undefined,
-  selector: string,
+  selector: string | ((element: Element) => boolean),
 ): E | null;
-export function closest(node: Node | null | undefined, selector: string): Element | null {
+export function closest(
+  node: Node | null | undefined,
+  selector: string | ((element: Element) => boolean),
+): Element | null {
   let current = node;
 
   while (current) {
-    if (isElement(current) && current.matches(selector)) {
+    if (
+      isElement(current) &&
+      (typeof selector === 'string' ? current.matches(selector) : selector(current))
+    ) {
       return current;
     }
 

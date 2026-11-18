@@ -1,7 +1,5 @@
 <script lang="ts">
 import type { ButtonHTMLAttributes } from 'vue';
-import { isElement } from '@floating-ui/utils/dom';
-import { getTarget } from '../../common/shadowDom';
 import type {
   ComponentRenderFn,
   HTMLProps,
@@ -12,11 +10,6 @@ import type {
 import type { TooltipHandle } from '../store/TooltipHandle';
 
 const TOOLTIP_TRIGGER_IDENTIFIER = 'data-vase-ui-tooltip-trigger';
-
-function getTargetElement(event: Event): Element | null {
-  const target = getTarget(event);
-  return isElement(target) ? target : null;
-}
 
 export interface TooltipTriggerState {
   /**
@@ -72,8 +65,10 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { tooltipTriggers } from '../../utils/popups/registeredParts';
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, shallowRef, useSlots, watch } from 'vue';
-import { closest, contains } from '../../common/shadowDom';
+import { isElement } from '@floating-ui/utils/dom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -184,18 +179,20 @@ function getOpenDelay() {
   return props.delay ?? providerDelay?.value ?? OPEN_DELAY;
 }
 
-function isEnabledNestedTriggerTarget(target: Element | null) {
-  const trigger = triggerElement.value;
-  if (!trigger || !target) {
-    return false;
+function isEnabledNestedTriggerTarget(event: MouseEvent | FocusEvent) {
+  for (const node of event.composedPath()) {
+    if (node === triggerElement.value) {
+      return false;
+    }
+    if (isElement(node) && tooltipTriggers.get(node)?.() === false) {
+      return true;
+    }
   }
-
-  const nearestTrigger = closest(target, `[${TOOLTIP_TRIGGER_IDENTIFIER}]`);
-  return nearestTrigger !== null && nearestTrigger !== trigger && contains(trigger, nearestTrigger);
+  return false;
 }
 
-function detectNestedTriggerHover(target: Element | null) {
-  const nestedTriggerHovered = isEnabledNestedTriggerTarget(target);
+function detectNestedTriggerHover(event: MouseEvent) {
+  const nestedTriggerHovered = isEnabledNestedTriggerTarget(event);
 
   isNestedTriggerHovered = nestedTriggerHovered;
   if (nestedTriggerHovered) {
@@ -230,10 +227,9 @@ const focusProps = useFocus(store, { enabled: () => !isDisabled.value });
 function handleNestedTriggerHover(event: MouseEvent) {
   const currentStore = store.value;
   const wasNestedTriggerHovered = isNestedTriggerHovered;
-  const target = getTargetElement(event);
-  const nestedTriggerHovered = detectNestedTriggerHover(target);
+  const nestedTriggerHovered = detectNestedTriggerHover(event);
   const trigger = triggerElement.value;
-  const targetInsideTrigger = trigger && target && contains(trigger, target);
+  const targetInsideTrigger = trigger && event.composedPath().includes(trigger);
 
   // Close only a tooltip that hover opened. A tooltip that another interaction opened stays open.
   if (
@@ -285,7 +281,7 @@ const rootTriggerProps = computed(() =>
 );
 
 function preventNestedTriggerFocus(event: FocusEvent) {
-  if (isEnabledNestedTriggerTarget(getTargetElement(event))) {
+  if (isEnabledNestedTriggerTarget(event)) {
     (event as VaseUIEvent<FocusEvent>).preventVaseUIHandler();
   }
 }
@@ -359,6 +355,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     attrs,
   ],
 });
+
+useElementRegistration(tooltipTriggers, element, () => isDisabled.value);
 
 defineExpose({ element });
 </script>

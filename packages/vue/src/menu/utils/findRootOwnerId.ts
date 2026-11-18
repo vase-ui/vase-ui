@@ -1,14 +1,7 @@
-import { getParentNode, isHTMLElement, isLastTraversableNode } from '@floating-ui/utils/dom';
+import { closest } from '../../common/shadowDom';
+import { menuPopups } from '../../utils/popups/registeredParts';
 
 export function findRootOwnerId(node: Node): string | undefined {
-  const rootOwnerId = isHTMLElement(node) ? node.getAttribute('data-rootownerid') : null;
-  if (rootOwnerId !== null) {
-    return rootOwnerId;
-  }
-
-  if (isLastTraversableNode(node)) {
-    return undefined;
-  }
-
-  return findRootOwnerId(getParentNode(node));
+  const popup = closest(node, (element) => element.isConnected && menuPopups.has(element));
+  return popup ? menuPopups.get(popup)?.() : undefined;
 }

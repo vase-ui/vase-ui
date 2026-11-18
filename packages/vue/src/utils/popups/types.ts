@@ -1,5 +1,5 @@
 import type { Placement, VirtualElement } from '@floating-ui/vue';
-import type { HTMLAttributes, ShallowRef } from 'vue';
+import type { HTMLAttributes, Ref, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
@@ -58,6 +58,7 @@ export interface PopupInteractionReader {
  * fields.
  */
 export interface PopupInteractionContext {
+  readonly popupRef?: Readonly<Ref<HTMLElement | null>> | undefined;
   readonly events: PopupEvents;
   /**
    * A ref to the element of the backdrop part. Only a popup store has it.

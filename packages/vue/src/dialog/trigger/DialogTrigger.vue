@@ -46,6 +46,8 @@ export interface DialogTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { clickTriggers } from '../../utils/popups/registeredParts';
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
@@ -145,6 +147,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     getButtonProps,
   ],
 });
+
+useElementRegistration(clickTriggers, element, () => true);
 
 defineExpose({ element });
 </script>

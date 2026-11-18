@@ -344,7 +344,8 @@ export function useListNavigation(
 
   const storeContext = store.context;
 
-  const readFloatingFocusElement = () => getFloatingFocusElement(store.select('positionerElement'));
+  const readFloatingFocusElement = () =>
+    getFloatingFocusElement(store.select('positionerElement'), store.context.popupRef?.value);
 
   const parentId = useFloatingParentNodeId();
   const tree = useFloatingTree(props.externalTree);

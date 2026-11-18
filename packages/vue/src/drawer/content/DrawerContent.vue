@@ -11,11 +11,12 @@ export interface DrawerContentState {}
 </script>
 
 <script setup lang="ts">
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { DRAWER_CONTENT_ATTRIBUTE } from './drawerContentAttribute';
+import { drawerContents, DRAWER_CONTENT_ATTRIBUTE } from './drawerContentAttribute';
 
 defineOptions({ inheritAttrs: false });
 
@@ -26,7 +27,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DrawerContentState>;
 }>();
 
-useDialogRootContext();
+const store = useDialogRootContext();
 
 const state: DrawerContentState = EMPTY_OBJECT;
 
@@ -34,6 +35,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   state,
   props: (attrs) => [{ [DRAWER_CONTENT_ATTRIBUTE]: '' }, attrs],
 });
+
+useElementRegistration(drawerContents, element, () => store);
 
 defineExpose({ element });
 </script>

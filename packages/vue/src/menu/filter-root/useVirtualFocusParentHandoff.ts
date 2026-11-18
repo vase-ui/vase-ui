@@ -36,7 +36,7 @@ export function useVirtualFocusParentHandoff(
 ): MenuFilterParentHandoff {
   const parentStore = parent.type === 'menu' ? parent.store : null;
   const parentVirtualFocusRef = parentStore?.context.virtualFocusRef;
-  const sendToParents = useNestedPopupEventSender();
+  const sendToParents = useNestedPopupEventSender(store, parentStore);
 
   function returnToParent(trigger: Element | null, reason: MenuRootChangeEventReason | null) {
     const focusOwner = parentVirtualFocusRef?.value;
