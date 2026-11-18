@@ -627,6 +627,11 @@ const noEmptyPart = {
     const { sourceCode } = context;
     const sfc = sourceCode.parserServices.getDocumentFragment?.();
     const template = sfc?.children.find((block) => block.name === 'template');
+    const scriptSetup = sfc?.children.find(
+      (block) =>
+        block.name === 'script' &&
+        block.startTag.attributes.some((attr) => attr.key.name === 'setup'),
+    );
     const returns = new WeakMap();
     const paths = [];
     const checks = new Map();
@@ -724,7 +729,7 @@ const noEmptyPart = {
       return setup ? everyValue(setup, (fn) => emptySetup(fn, fallback)) : fallback;
     }
 
-    function emptyTemplate(program) {
+    function emptySfc(program) {
       if (!sfc) return undefined;
       if (template) {
         if (
@@ -740,21 +745,27 @@ const noEmptyPart = {
         }
         return undefined;
       }
-      const setup = sfc.children.find(
-        (block) =>
-          block.name === 'script' &&
-          block.startTag.attributes.some((attr) => attr.key.name === 'setup'),
-      );
+      if (!scriptSetup) return undefined;
       const declaration = program.body.find(
         (node) => node.type === 'ExportDefaultDeclaration',
       )?.declaration;
       const options =
         declaration?.type === 'CallExpression' ? declaration.arguments[0] : declaration;
-      // With inline templates, script setup alone supplies an empty render even with defineOptions.
-      if (setup && !(options?.type === 'ObjectExpression' && option(options, 'render'))) {
-        return setup;
+      // Without a template, Vue inlines an empty render unless the normal script declares a
+      // render option by identifier. It then applies the options from script setup last.
+      if (!options?.properties?.some((property) => property.key?.name === 'render')) {
+        return scriptSetup;
       }
-      return undefined;
+      const macro = program.body.find(
+        ({ expression, range }) =>
+          expression?.type === 'CallExpression' &&
+          expression.callee.name === 'defineOptions' &&
+          range[0] >= scriptSetup.startTag.range[1] &&
+          range[1] <= scriptSetup.range[1],
+      )?.expression.arguments[0];
+      if (macro && macro.type !== 'ObjectExpression') return undefined;
+      const render = (macro && option(macro, 'render')) ?? option(options, 'render');
+      return everyValue(render, emptyRender) ? render : undefined;
     }
 
     return {
@@ -783,7 +794,7 @@ const noEmptyPart = {
       },
       "CallExpression[callee.name='defineComponent']"(call) {
         const [component, extra] = call.arguments;
-        if (!component) return;
+        if (!component || (scriptSetup && call.parent.type === 'ExportDefaultDeclaration')) return;
         checks.set(component, (node) => {
           const hasTemplate = template && call.parent.type === 'ExportDefaultDeclaration';
           if (node?.type === 'ObjectExpression') return emptyComponent(node, hasTemplate);
@@ -794,14 +805,8 @@ const noEmptyPart = {
           return emptySetup(node, fallback);
         });
       },
-      "CallExpression[callee.name='defineOptions']"(call) {
-        if (!sfc) return;
-        const [options] = call.arguments;
-        if (!options) return;
-        if (!template) checks.set(options, emptyComponent);
-      },
       ExportDefaultDeclaration(node) {
-        if (sfc) {
+        if (sfc && !scriptSetup) {
           checks.set(
             node.declaration,
             (value) => emptyComponent(value, Boolean(template)) || emptyRender(value),
@@ -819,7 +824,7 @@ const noEmptyPart = {
         checks.set(node, emptyRender);
       },
       'Program:exit'(program) {
-        const empty = emptyTemplate(program);
+        const empty = emptySfc(program);
         if (empty) {
           context.report({ node: empty, messageId: 'empty' });
           return;

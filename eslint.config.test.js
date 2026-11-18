@@ -1779,6 +1779,26 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
   },
 ];
 
+for (const [name, fallback, override, empty] of [
+  ['a visible render option that replaces a null default', 'null', "h('span')", false],
+  ['a null render option that replaces a visible default', "h('span')", 'null', true],
+]) {
+  test(`checks ${name}`, async () => {
+    const code = `<script lang="ts">
+import { h } from 'vue';
+export default { render() { return ${fallback}; } };
+</script>
+<script setup lang="ts">
+defineOptions({ render: () => ${override} });
+</script>`;
+    const messages = await lint(`${SRC}/DialogContent.vue`, code);
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId).filter((id) => id !== 'vue/component-api-style'),
+      empty ? ['vase-ui/no-empty-part'] : [],
+    );
+  });
+}
+
 for (const { name, file, code, ruleId, hint } of reported) {
   test(`reports ${name}`, async () => {
     const messages = await lint(file, code);
