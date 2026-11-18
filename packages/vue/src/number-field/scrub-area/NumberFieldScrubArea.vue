@@ -45,6 +45,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import { getViewportRect } from '../utils/getViewportRect';
 import { stateAttributesMapping } from '../utils/stateAttributesMapping';
+import type { ScrubCursor } from './NumberFieldScrubAreaContext';
 import { NumberFieldScrubAreaContext } from './NumberFieldScrubAreaContext';
 
 const SCRUB_AREA_STYLE: CSSProperties = {
@@ -84,7 +85,7 @@ let pointerDownTarget: EventTarget | null = null;
 let nativeClickReceived = false;
 let virtualCursorCoords = { x: 0, y: 0 };
 
-const scrubAreaCursorRef = shallowRef<HTMLSpanElement | null>(null);
+const cursor = shallowRef<ScrubCursor | null>(null);
 
 const exitPointerLockTimeout = useTimeout();
 const syntheticClickTimeout = useTimeout();
@@ -106,7 +107,8 @@ function readContainingBlock(virtualCursor: HTMLSpanElement) {
   return { left: rect.left, top: rect.top, scaleX: rect.width / 100, scaleY: rect.height / 100 };
 }
 
-function updateCursorTransform(virtualCursor: HTMLSpanElement, x: number, y: number) {
+function updateCursorTransform(target: ScrubCursor, x: number, y: number) {
+  const virtualCursor = target.element;
   // Invert the visual viewport scale so the cursor matches the OS cursor, which doesn't
   // scale with the content on pinch-zoom.
   const scale = ownerWindow(virtualCursor).visualViewport?.scale ?? 1;
@@ -118,17 +120,18 @@ function updateCursorTransform(virtualCursor: HTMLSpanElement, x: number, y: num
   const { left, top, scaleX, scaleY } = readContainingBlock(virtualCursor);
   const blockX = (x + halfWidth - left) / scaleX - halfWidth;
   const blockY = (y + halfHeight - top) / scaleY - halfHeight;
-  virtualCursor.style.transform = `translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`;
+  target.setTransform(`translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`);
 }
 
 function onScrub({ movementX, movementY }: PointerEvent) {
-  const virtualCursor = scrubAreaCursorRef.value;
+  const target = cursor.value;
   const scrubAreaEl = element.value;
 
-  if (!virtualCursor || !scrubAreaEl) {
+  if (!target || !scrubAreaEl) {
     return;
   }
 
+  const virtualCursor = target.element;
   const rect = getViewportRect(props.teleportDistance, scrubAreaEl);
 
   const coords = virtualCursorCoords;
@@ -156,7 +159,7 @@ function onScrub({ movementX, movementY }: PointerEvent) {
 
   virtualCursorCoords = newCoords;
 
-  updateCursorTransform(virtualCursor, newCoords.x, newCoords.y);
+  updateCursorTransform(target, newCoords.x, newCoords.y);
 }
 
 async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: PointerEvent) {
@@ -170,11 +173,12 @@ async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: 
   // The cursor mounts in the flush of the write above.
   await nextTick();
 
-  const virtualCursor = scrubAreaCursorRef.value;
-  if (!virtualCursor) {
+  const target = cursor.value;
+  if (!target) {
     return;
   }
 
+  const virtualCursor = target.element;
   const initialCoords = {
     x: clientX - virtualCursor.offsetWidth / 2,
     y: clientY - virtualCursor.offsetHeight / 2,
@@ -182,7 +186,7 @@ async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: 
 
   virtualCursorCoords = initialCoords;
 
-  updateCursorTransform(virtualCursor, initialCoords.x, initialCoords.y);
+  updateCursorTransform(target, initialCoords.x, initialCoords.y);
 }
 
 // React runs the effect of a change from a discrete event before the next event. A `pointermove`
@@ -393,7 +397,7 @@ provide(NumberFieldScrubAreaContext, {
   isScrubbing,
   isTouchInput,
   isPointerLockDenied,
-  scrubAreaCursorRef,
+  cursor,
   scrubAreaElement: element,
 });
 
