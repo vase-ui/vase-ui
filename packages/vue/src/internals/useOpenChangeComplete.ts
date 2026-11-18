@@ -1,4 +1,4 @@
-import { onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { onMounted, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { useAnimationsFinished } from './useAnimationsFinished';
 
@@ -10,29 +10,20 @@ export function useOpenChangeComplete(parameters: UseOpenChangeCompleteParameter
 
   const runOnceAnimationsFinish = useAnimationsFinished(ref, open, batch);
 
-  let abortController: AbortController | undefined;
-
-  // The wait needs the DOM update, not the paint. A `watch` with `flush: 'post'` runs after it.
-  // `watchPostEffect` is not an option: `run` does not read `restartKey`, and a change of
-  // `restartKey` must start a run.
-  function run() {
-    abortController?.abort();
-    abortController = undefined;
-
-    if (!(toValue(enabled) ?? true)) {
-      return;
-    }
-
-    abortController = new AbortController();
-    runOnceAnimationsFinish(onComplete, abortController.signal);
-  }
-
-  onMounted(run);
-  watch([() => toValue(enabled), () => toValue(open), () => toValue(restartKey)], run, {
-    flush: 'post',
-  });
-  onScopeDispose(() => {
-    abortController?.abort();
+  const readEnabled = () => toValue(enabled);
+  const readOpen = () => toValue(open);
+  const readRestartKey = () => toValue(restartKey);
+  onMounted(() => {
+    watch(
+      [readEnabled, readOpen, readRestartKey],
+      ([enabledValue], _, onCleanup) => {
+        if (!(enabledValue ?? true)) return;
+        const controller = new AbortController();
+        onCleanup(() => controller.abort());
+        runOnceAnimationsFinish(onComplete, controller.signal);
+      },
+      { immediate: true, flush: 'post' },
+    );
   });
 }
 

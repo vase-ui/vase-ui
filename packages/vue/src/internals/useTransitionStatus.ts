@@ -1,31 +1,23 @@
-import { onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { onMounted, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref, WatchSource } from 'vue';
 import { AnimationFrame } from '../common/useAnimationFrame';
 
 export type TransitionStatus = 'starting' | 'ending' | 'idle' | undefined;
 
-/**
- * Runs `effect` at mount and after each DOM update that follows a change of a source.
- * `effect` returns the animation frame that it requests. The next run and the end of the scope
- * cancel that frame.
- * A server has no `requestAnimationFrame`, and a server render does not run `effect`: it runs no
- * `onMounted` hook and no `watch` that has a callback and no `immediate`.
- */
-function registerFrameEffect(sources: WatchSource[], effect: () => number | undefined) {
-  let frame: number | undefined;
-  const cancel = () => {
-    if (frame !== undefined) {
-      AnimationFrame.cancel(frame);
-      frame = undefined;
-    }
-  };
-  const run = () => {
-    cancel();
-    frame = effect();
-  };
-  onMounted(run);
-  watch(sources, run, { flush: 'post' });
-  onScopeDispose(cancel);
+function watchFrame<T>(source: () => T, effect: (phase: T) => (() => void) | undefined) {
+  onMounted(() => {
+    watch(
+      source,
+      (phase, _, onCleanup) => {
+        const callback = effect(phase);
+        if (callback) {
+          const id = AnimationFrame.request(callback);
+          onCleanup(() => AnimationFrame.cancel(id));
+        }
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
 }
 
 /**
@@ -85,62 +77,44 @@ export function useTransitionStatus(
     { flush: 'sync', immediate: true },
   );
 
-  // `getBoundingClientRect` exists on each `Element`. `offsetHeight` exists only on `HTMLElement`,
-  // so on an `<svg>` it reads nothing and the browser computes no layout.
-  const readLayout = () => {
-    toValue(element)?.getBoundingClientRect();
-  };
-
   if (deferEndingState) {
-    registerFrameEffect([isOpen, mounted, transitionStatus], () =>
-      !isOpen() && mounted.value && transitionStatus.value !== 'ending'
-        ? AnimationFrame.request(() => {
+    const needsEndingFrame = () =>
+      !isOpen() && mounted.value && transitionStatus.value !== 'ending';
+    watchFrame(needsEndingFrame, (needed) =>
+      needed
+        ? () => {
             transitionStatus.value = 'ending';
-          })
+          }
         : undefined,
     );
   }
 
   if (enableIdleState) {
-    registerFrameEffect([isOpen, mounted, transitionStatus], () => {
-      if (!isOpen()) {
-        return undefined;
-      }
-
-      if (transitionStatus.value === 'starting') {
-        readLayout();
-      } else if (mounted.value && transitionStatus.value !== 'idle') {
-        // A reopen in the middle of an exit. This run is before the DOM update that applies the
-        // status, so it must not read the layout. The watcher runs again after that update.
+    const openPhase = () => {
+      if (!isOpen() || !mounted.value) return undefined;
+      const phase = transitionStatus.value;
+      return phase === 'starting' || phase === 'idle' ? phase : 'reopen';
+    };
+    watchFrame(openPhase, (phase) => {
+      if (phase === 'reopen') {
         transitionStatus.value = 'starting';
+      } else if (phase === 'starting') {
+        toValue(element)?.getBoundingClientRect();
+        return () => {
+          transitionStatus.value = 'idle';
+        };
       }
-
-      return AnimationFrame.request(() => {
-        transitionStatus.value = 'idle';
-      });
+      return undefined;
     });
   } else {
-    registerFrameEffect([isOpen, transitionStatus], () => {
-      // Nothing to clear when the element mounted open or reopened after its exit settled.
-      if (!isOpen() || transitionStatus.value === undefined) {
-        return undefined;
-      }
-
-      // The read comes after the DOM update that applies `data-starting-style`. The browser then
-      // computes the style of the element with the attribute before the frame callback removes it.
-      // A stale `'ending'` status needs no read, because the element has a computed style.
-      if (transitionStatus.value === 'starting') {
-        readLayout();
-      }
-
-      return AnimationFrame.request(() => {
-        // Vue applies this write in the microtask after the frame callback, before the browser
-        // computes the style of the frame. Without the read above, the element never has a
-        // computed style with the attribute. Chromium and Firefox then do not start the enter
-        // transition.
-        // See https://github.com/mui/base-ui/pull/3424
+    const openPhase = () => (isOpen() ? transitionStatus.value : undefined);
+    watchFrame(openPhase, (phase) => {
+      if (phase === undefined) return undefined;
+      // Compute the enter style before the frame removes its attribute.
+      if (phase === 'starting') toValue(element)?.getBoundingClientRect();
+      return () => {
         transitionStatus.value = undefined;
-      });
+      };
     });
   }
 
