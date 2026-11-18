@@ -16,9 +16,11 @@ import { watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
-import { scrollAreaStateAttributesMapping } from '../root/stateAttributes';
-import { useScrollAreaViewportContext } from '../viewport/ScrollAreaViewportContext';
+import {
+  scrollAreaStateAttributesMapping,
+  useScrollAreaRootContext,
+  useScrollAreaViewportContext,
+} from '../root/ScrollAreaRootContext';
 
 defineOptions({ inheritAttrs: false });
 

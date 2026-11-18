@@ -92,12 +92,14 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useStyleDisableScrollbar } from '../../utils/styles';
-import { SCROLL_TIMEOUT } from '../constants';
+import {
+  SCROLL_TIMEOUT,
+  ScrollAreaRootContext,
+  scrollAreaStateAttributesMapping,
+} from './ScrollAreaRootContext';
 import { getOffset } from '../utils/getOffset';
 import ScrollAreaRootChildren from './ScrollAreaRootChildren.vue';
-import { ScrollAreaRootContext } from './ScrollAreaRootContext';
 import * as ScrollAreaRootCssVars from './ScrollAreaRootCssVars';
-import { scrollAreaStateAttributesMapping } from './stateAttributes';
 
 defineOptions({ inheritAttrs: false });
 

@@ -24,9 +24,11 @@ import { computed, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import {
+  useScrollAreaRootContext,
+  useScrollAreaScrollbarContext,
+} from '../root/ScrollAreaRootContext';
 import * as ScrollAreaScrollbarCssVars from '../scrollbar/ScrollAreaScrollbarCssVars';
-import { useScrollAreaScrollbarContext } from '../scrollbar/ScrollAreaScrollbarContext';
 
 defineOptions({ inheritAttrs: false });
 

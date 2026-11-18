@@ -998,7 +998,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
-- A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
+- Provide a single computed ref for the scrollbar orientation. The thumb reads it from the nearest scrollbar.
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.

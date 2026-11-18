@@ -26,8 +26,11 @@ import {
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
-import { SCROLL_TIMEOUT } from '../constants';
-import { ScrollAreaRootContext, useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import {
+  SCROLL_TIMEOUT,
+  ScrollAreaRootContext,
+  useScrollAreaRootContext,
+} from '../root/ScrollAreaRootContext';
 import ScrollAreaThumbHydration from './ScrollAreaThumbHydration.test.vue';
 
 function readAttributes(element: HTMLElement) {

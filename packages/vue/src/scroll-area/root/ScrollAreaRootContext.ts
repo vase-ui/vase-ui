@@ -1,5 +1,7 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import * as ScrollAreaRootDataAttributes from './ScrollAreaRootDataAttributes';
 import type { Orientation } from '../../internals/types';
 import type {
   Coords,
@@ -56,6 +58,55 @@ export function useScrollAreaRootContext(): ScrollAreaRootContext {
   if (context === undefined) {
     throw new Error(
       'Vase UI: A part of Scroll Area must be inside <ScrollArea.Root>. Without a root the part has no scroll state to read. Put the part inside <ScrollArea.Root>.',
+    );
+  }
+
+  return context;
+}
+
+export const SCROLL_TIMEOUT = 500;
+export const MIN_THUMB_SIZE = 16;
+
+const attr = (name: string) => (value: boolean) => (value ? { [name]: '' } : null);
+
+export const scrollAreaStateAttributesMapping: StateAttributesMapping<ScrollAreaRootState> = {
+  hasOverflowX: attr(ScrollAreaRootDataAttributes.hasOverflowX),
+  hasOverflowY: attr(ScrollAreaRootDataAttributes.hasOverflowY),
+  overflowXStart: attr(ScrollAreaRootDataAttributes.overflowXStart),
+  overflowXEnd: attr(ScrollAreaRootDataAttributes.overflowXEnd),
+  overflowYStart: attr(ScrollAreaRootDataAttributes.overflowYStart),
+  overflowYEnd: attr(ScrollAreaRootDataAttributes.overflowYEnd),
+  cornerHidden: () => null,
+};
+
+export type ScrollAreaScrollbarContext = ComputedRef<'horizontal' | 'vertical'>;
+
+export const ScrollAreaScrollbarContext: InjectionKey<ScrollAreaScrollbarContext> = Symbol();
+
+export function useScrollAreaScrollbarContext(): ScrollAreaScrollbarContext {
+  // With one argument, Vue shows a warning when there is no provider. The error below says more.
+  const context = inject(ScrollAreaScrollbarContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: <ScrollArea.Thumb> must be inside <ScrollArea.Scrollbar>. Without a scrollbar the thumb has no orientation. Put <ScrollArea.Thumb> inside <ScrollArea.Scrollbar>.',
+    );
+  }
+
+  return context;
+}
+
+export interface ScrollAreaViewportContext {
+  computeThumbPosition: () => void;
+}
+
+export const ScrollAreaViewportContext: InjectionKey<ScrollAreaViewportContext> = Symbol();
+
+export function useScrollAreaViewportContext(): ScrollAreaViewportContext {
+  // With one argument, Vue shows a warning when there is no provider. The error below says more.
+  const context = inject(ScrollAreaViewportContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: <ScrollArea.Content> must be inside <ScrollArea.Viewport>. Without a viewport the content cannot start a measurement. Put <ScrollArea.Content> inside <ScrollArea.Viewport>.',
     );
   }
 

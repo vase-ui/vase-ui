@@ -3,7 +3,7 @@ import type { CSSProperties, HTMLAttributes } from 'vue';
 import { clamp } from '../../common/clamp';
 import { platform } from '../../common/platform';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import { MIN_THUMB_SIZE } from '../constants';
+import { MIN_THUMB_SIZE } from '../root/ScrollAreaRootContext';
 import type { HiddenState, ScrollAreaRootState } from '../root/ScrollAreaRoot.vue';
 import * as ScrollAreaViewportCssVars from './ScrollAreaViewportCssVars';
 
@@ -128,11 +128,13 @@ import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { getFiniteAnimations } from '../../utils/getFiniteAnimations';
 import { normalizeScrollOffset } from '../../utils/scrollEdges';
 import { styleDisableScrollbar } from '../../utils/styles';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
-import { scrollAreaStateAttributesMapping } from '../root/stateAttributes';
+import {
+  ScrollAreaViewportContext,
+  scrollAreaStateAttributesMapping,
+  useScrollAreaRootContext,
+} from '../root/ScrollAreaRootContext';
 import * as ScrollAreaScrollbarCssVars from '../scrollbar/ScrollAreaScrollbarCssVars';
 import { getOffset } from '../utils/getOffset';
-import { ScrollAreaViewportContext } from './ScrollAreaViewportContext';
 
 defineOptions({ inheritAttrs: false });
 

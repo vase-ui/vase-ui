@@ -27,9 +27,8 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import { styleDisableScrollbar } from '../../utils/styles';
-import { SCROLL_TIMEOUT } from '../constants';
+import { SCROLL_TIMEOUT, useScrollAreaRootContext } from './ScrollAreaRootContext';
 import ScrollAreaRootHydration from './ScrollAreaRootHydration.test.vue';
-import { useScrollAreaRootContext } from './ScrollAreaRootContext';
 
 const VIEWPORT_SIZE = 200;
 const SCROLLABLE_CONTENT_SIZE = 1000;

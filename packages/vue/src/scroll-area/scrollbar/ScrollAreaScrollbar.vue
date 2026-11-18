@@ -41,11 +41,13 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import {
+  ScrollAreaScrollbarContext,
+  scrollAreaStateAttributesMapping,
+  useScrollAreaRootContext,
+} from '../root/ScrollAreaRootContext';
 import * as ScrollAreaRootCssVars from '../root/ScrollAreaRootCssVars';
-import { scrollAreaStateAttributesMapping } from '../root/stateAttributes';
 import { getOffset } from '../utils/getOffset';
-import { ScrollAreaScrollbarContext } from './ScrollAreaScrollbarContext';
 import * as ScrollAreaScrollbarCssVars from './ScrollAreaScrollbarCssVars';
 
 defineOptions({ inheritAttrs: false });

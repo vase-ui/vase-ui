@@ -20,7 +20,7 @@ import {
 import type { VaseUIRenderResult } from '#test-utils';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
-import { SCROLL_TIMEOUT } from '../constants';
+import { SCROLL_TIMEOUT } from '../root/ScrollAreaRootContext';
 import ScrollAreaViewportHydration from './ScrollAreaViewportHydration.test.vue';
 
 // `data-id` holds an id that Vue generates, so it can differ between two apps.
