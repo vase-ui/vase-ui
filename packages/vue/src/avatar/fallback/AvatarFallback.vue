@@ -20,6 +20,7 @@ export interface AvatarFallbackProps
 
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, watchEffect } from 'vue';
+import { useTimeout } from '../../common/useTimeout';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { avatarStateAttributesMapping, useAvatarRootContext } from '../root/AvatarRootContext';
@@ -35,22 +36,23 @@ defineSlots<{
 
 const { state } = useAvatarRootContext();
 
+const timeout = useTimeout();
 const delayPassed = shallowRef(props.delay === 0);
 const visible = computed(
   () => state.value.imageLoadingStatus !== 'loaded' && (props.delay === 0 || delayPassed.value),
 );
 
 onMounted(() => {
-  watchEffect((onCleanup) => {
+  watchEffect(() => {
     if (delayPassed.value) {
       return;
     }
     if (props.delay > 0) {
-      const timer = setTimeout(() => {
+      timeout.start(props.delay, () => {
         delayPassed.value = true;
-      }, props.delay);
-      onCleanup(() => clearTimeout(timer));
+      });
     } else {
+      timeout.clear();
       delayPassed.value = true;
     }
   });
