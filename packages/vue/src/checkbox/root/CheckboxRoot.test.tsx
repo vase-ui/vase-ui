@@ -2235,20 +2235,20 @@ describe('<Checkbox.Root />', () => {
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
     });
 
-    it('emits `checkedChange`, `valueChange`, `update:modelValue` and then `update:modelValue` for a child of a group that has a parent', async () => {
+    it('updates the group model before the child model in a group with a parent checkbox', async () => {
       const order: string[] = [];
       await render(
         <CheckboxGroup
           allValues={['a']}
           onValueChange={() => order.push('valueChange')}
-          {...{ 'onUpdate:modelValue': () => order.push('update:modelValue') }}
+          {...{ 'onUpdate:modelValue': () => order.push('group update') }}
         >
           <Checkbox.Root parent />
           <Checkbox.Root
             value="a"
             data-testid="a"
             onCheckedChange={() => order.push('checkedChange')}
-            {...{ 'onUpdate:modelValue': () => order.push('update:modelValue') }}
+            {...{ 'onUpdate:modelValue': () => order.push('child update') }}
           />
         </CheckboxGroup>,
       );
@@ -2259,8 +2259,8 @@ describe('<Checkbox.Root />', () => {
       expect(order).toEqual([
         'checkedChange',
         'valueChange',
-        'update:modelValue',
-        'update:modelValue',
+        'group update',
+        'child update',
         'end of the click',
       ]);
     });

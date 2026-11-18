@@ -726,7 +726,7 @@ describe('<ToggleGroup />', () => {
   });
 
   describe('emits', () => {
-    it('emits pressedChange, valueChange, update:modelValue and update:modelValue in this sequence', async () => {
+    it('emits both change events before the group and the toggle update their models', async () => {
       const calls: unknown[][] = [];
 
       await render(
@@ -735,15 +735,14 @@ describe('<ToggleGroup />', () => {
             calls.push(['valueChange', value, eventDetails.reason, eventDetails.event.type]);
           }}
           {...{
-            'onUpdate:modelValue': (value: string[]) => calls.push(['update:modelValue', value]),
+            'onUpdate:modelValue': (value: string[]) => calls.push(['group update', value]),
           }}
         >
           <Toggle
             value="one"
             onPressedChange={(pressed) => calls.push(['pressedChange', pressed])}
             {...{
-              'onUpdate:modelValue': (pressed: boolean) =>
-                calls.push(['update:modelValue', pressed]),
+              'onUpdate:modelValue': (pressed: boolean) => calls.push(['toggle update', pressed]),
             }}
           />
         </ToggleGroup>,
@@ -755,8 +754,8 @@ describe('<ToggleGroup />', () => {
       expect(calls).toEqual([
         ['pressedChange', true],
         ['valueChange', ['one'], 'none', 'click'],
-        ['update:modelValue', ['one']],
-        ['update:modelValue', true],
+        ['group update', ['one']],
+        ['toggle update', true],
       ]);
     });
 

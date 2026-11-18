@@ -2344,7 +2344,7 @@ describe('<CheckboxGroup />', () => {
       {
         name: 'no listener cancels',
         cancelIn: undefined,
-        events: ['checkedChange', 'valueChange', 'update:modelValue', 'update:modelValue'],
+        events: ['checkedChange', 'valueChange', 'group update', 'child update'],
         checked: 'true',
       },
       {
@@ -2374,7 +2374,7 @@ describe('<CheckboxGroup />', () => {
                 eventDetails.cancel();
               }
             }}
-            {...{ 'onUpdate:modelValue': () => received.push('update:modelValue') }}
+            {...{ 'onUpdate:modelValue': () => received.push('group update') }}
           >
             <Checkbox.Root
               value="a"
@@ -2388,7 +2388,7 @@ describe('<CheckboxGroup />', () => {
                   eventDetails.cancel();
                 }
               }}
-              {...{ 'onUpdate:modelValue': () => received.push('update:modelValue') }}
+              {...{ 'onUpdate:modelValue': () => received.push('child update') }}
             />
           </CheckboxGroup>,
         );
