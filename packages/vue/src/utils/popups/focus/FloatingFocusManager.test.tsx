@@ -1522,7 +1522,8 @@ describe('FloatingFocusManager', () => {
     describe('BUG-5519: a popup in a popup', () => {
       // `button` gets the functions that close the outer popup and the inner popup. When `button` is
       // omitted, the inner popup renders a button for each popup. The focus moves to the first
-      // button of the inner popup at the open.
+      // button of the inner popup at the open. The middle popup is in a portal unless `inline` is
+      // set. Its element is then in the element of the outer popup.
       async function renderPopupInPopup({
         outer = {},
         middle,
@@ -1532,7 +1533,7 @@ describe('FloatingFocusManager', () => {
         button,
       }: {
         outer?: { keepMounted?: boolean; manager?: ManagerProps };
-        middle?: { keepMounted?: boolean; manager?: ManagerProps };
+        middle?: { keepMounted?: boolean; manager?: ManagerProps; inline?: boolean };
         innerKeepMounted?: boolean;
         openOuter?: () => Promise<void>;
         before?: () => VNode;
@@ -1563,7 +1564,7 @@ describe('FloatingFocusManager', () => {
                   middle ? (
                     <Popup
                       name="middle-"
-                      portal
+                      portal={!middle.inline}
                       keepMounted={middle.keepMounted}
                       manager={middle.manager}
                     >
@@ -1704,6 +1705,19 @@ describe('FloatingFocusManager', () => {
         await flushMicrotasks();
         await fireEvent.click(screen.getByTestId('close-middle'));
         await flushMicrotasks();
+        await fireEvent.click(screen.getByTestId('close-inner'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('reference')).toHaveFocus();
+      });
+
+      it('BUG-6037: returns the focus past an open popup whose element is in the closed outer popup', async () => {
+        await renderPopupInPopup({ outer: { keepMounted: true }, middle: { inline: true } });
+
+        await fireEvent.click(screen.getByTestId('close-outer'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('close-outer')).toHaveFocus();
+
         await fireEvent.click(screen.getByTestId('close-inner'));
         await flushMicrotasks();
 
@@ -2046,6 +2060,27 @@ describe('FloatingFocusManager', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('moved')).toHaveFocus();
+    });
+
+    it('moves the focus to the element that had it before a programmatic open, when the focus manager stops while the popup is open', async () => {
+      const disabled = shallowRef(false);
+      await render(() => (
+        <div>
+          <input data-testid="before" />
+          <Popup manager={{ openInteractionType: null, disabled: disabled.value }} />
+        </div>
+      ));
+      screen.getByTestId('before').focus();
+      await nextEvent(document, 'focusin', {
+        action: () => fireEvent.mouseDown(screen.getByTestId('reference')),
+      });
+      expect(screen.getByTestId('one')).toHaveFocus();
+
+      disabled.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('before')).toHaveFocus();
     });
 
     it('moves the focus to the element that had it before the open, when Vue removes the reference with the popup', async () => {
