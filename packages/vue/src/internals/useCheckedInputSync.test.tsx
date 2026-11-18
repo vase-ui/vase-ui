@@ -3,6 +3,7 @@ import { h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, hydrateAfter, isVaporApp, renderOnServer, screen } from '#test-utils';
 import { recordInputWrites } from '../../test/recordInputWrites';
+import CheckboxRoot from '../checkbox/root/CheckboxRoot.vue';
 import CheckedInputSyncPart from './CheckedInputSyncPart.test.vue';
 import CheckedInputSyncPartVapor from './CheckedInputSyncPartVapor.test.vue';
 import type { useCheckedInputSync } from './useCheckedInputSync';
@@ -79,5 +80,16 @@ describe('useCheckedInputSync', () => {
     expect(input.indeterminate).toBe(false);
     await setProps({ indeterminate: true });
     expect(input.indeterminate).toBe(true);
+  });
+});
+
+describe('checkedInputProps', () => {
+  const { render } = createRenderer();
+
+  it('keeps the input style of a named parent checkbox', async () => {
+    const { container } = await render(<CheckboxRoot parent name="fruit" />);
+    const input = container.querySelector('input')!;
+    expect(input).not.toHaveAttribute('name');
+    expect(input).toHaveStyle({ position: 'absolute', width: '1px' });
   });
 });
