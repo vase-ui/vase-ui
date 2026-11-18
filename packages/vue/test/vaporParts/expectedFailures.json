@@ -104,6 +104,9 @@
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },
+    "src/internals/ownedElements.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useFormReset.test.tsx": {
       "fails": {}
     },
