@@ -507,7 +507,6 @@ function handlePaste(event: ClipboardEvent) {
     allowInputSyncRef.value = false;
     setValue(parsedValue, createChangeEventDetails(REASONS.inputPaste, event));
     setInputValue(nextText);
-    valueSync.restore();
     // Vue's write of the text puts the caret at the end of the input. The part moves the caret
     // behind the pasted text.
     const caret = selectionStart + pastedData.length;

@@ -856,6 +856,27 @@ describe('<Field.Control />', () => {
       expect(updates).toEqual(cancel ? [] : ['fixedx']);
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
     });
+
+    it('shows the value of the prop in a component of the consumer', async () => {
+      const TextInput = defineComponent({
+        inheritAttrs: false,
+        setup(_, { attrs }) {
+          return () => <input {...attrs} />;
+        },
+      });
+
+      await render(
+        <Field.Root>
+          <Field.Control as={TextInput} value="fixed" />
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      await fireEvent.input(input, { target: { value: 'fixedx' } });
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('fixed');
+    });
   });
 
   describe('change event', () => {
