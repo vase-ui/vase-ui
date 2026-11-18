@@ -25,7 +25,8 @@ export function contains(parent?: Element | null, child?: Element | null) {
   }
 
   // A slot adds ancestors in another root. Within one root, the native check suffices.
-  if (parent.getRootNode() === child.getRootNode()) {
+  const root = child.getRootNode?.();
+  if (root && root === parent.getRootNode?.()) {
     return parent.contains(child);
   }
 

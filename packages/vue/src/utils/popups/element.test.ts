@@ -34,6 +34,19 @@ describe('isEventTargetWithin', () => {
     const eventWithoutComposedPath = { target: child } as unknown as Event;
     expect(isEventTargetWithin(eventWithoutComposedPath, parent)).toBe(true);
   });
+
+  it('checks the event target when composedPath and getRootNode are unavailable', () => {
+    const parent = document.createElement('div');
+    const child = document.createElement('button');
+    Object.defineProperty(parent, 'getRootNode', { value: undefined });
+    Object.defineProperty(child, 'getRootNode', { value: undefined });
+    const event = { target: child } as unknown as Event;
+
+    parent.append(child);
+    expect(isEventTargetWithin(event, parent)).toBe(true);
+    child.remove();
+    expect(isEventTargetWithin(event, parent)).toBe(false);
+  });
 });
 
 function disable(trigger: Element) {
