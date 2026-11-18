@@ -1075,6 +1075,7 @@ describe('<Collapsible.Panel />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
+        expect(panel).toHaveAttribute('data-closed');
         expect(panel).toHaveAttribute('hidden');
       });
 
@@ -1635,7 +1636,7 @@ describe('<Collapsible.Panel />', () => {
 
               .animation-test-panel[data-closed] {
                 animation-name: panel-slide-up;
-                  animation-iteration-count: 1000;
+                animation-iteration-count: 1000;
               }
             `}</style>
 
