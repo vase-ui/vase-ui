@@ -28,6 +28,7 @@ type MockImage = {
   sizes: string;
   src: string;
   srcset: string;
+  request?: Pick<MockImage, 'crossOrigin' | 'referrerPolicy' | 'sizes' | 'srcset'>;
 };
 
 // 1x1 transparent PNG
@@ -58,22 +59,24 @@ function mockImageLoading({ completeOnSet = false, naturalWidth = 100 } = {}) {
       },
       set src(value: string) {
         srcValue = value;
-        if (completeOnSet) {
-          obj.complete = true;
-          obj.naturalWidth = naturalWidth;
-        }
+        startRequest();
       },
       get srcset() {
         return srcSetValue;
       },
       set srcset(value: string) {
         srcSetValue = value;
-        if (completeOnSet) {
-          obj.complete = true;
-          obj.naturalWidth = naturalWidth;
-        }
+        startRequest();
       },
     };
+    function startRequest() {
+      const { crossOrigin, referrerPolicy, sizes, srcset } = obj;
+      obj.request ??= { crossOrigin, referrerPolicy, sizes, srcset };
+      if (completeOnSet) {
+        obj.complete = true;
+        obj.naturalWidth = naturalWidth;
+      }
+    }
     images.push(obj);
     return obj;
   } as unknown as typeof window.Image;
@@ -208,19 +211,31 @@ describe('<Avatar.Image />', () => {
       const policy = shallowRef<'origin' | 'no-referrer'>('origin');
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Avatar.Root>
-          <Avatar.Image alt="Profile" src="avatar.png" referrerpolicy={policy.value} />
+          <Avatar.Image
+            alt="Profile"
+            src="avatar.png"
+            srcset="avatar.png 1x"
+            sizes="48px"
+            crossorigin="anonymous"
+            referrerpolicy={policy.value}
+          />
           <Avatar.Fallback>JD</Avatar.Fallback>
         </Avatar.Root>
       ));
       const { unmount } = await render(<HeldBranch />);
       await mountWhileHeld();
       const first = images[0];
-      expect(first.referrerPolicy).toBe('origin');
+      expect(first.request).toEqual({
+        crossOrigin: 'anonymous',
+        referrerPolicy: 'origin',
+        sizes: '48px',
+        srcset: 'avatar.png 1x',
+      });
 
       policy.value = 'no-referrer';
       await nextTick();
       const second = images[1];
-      expect(second.referrerPolicy).toBe('no-referrer');
+      expect(second.request).toEqual({ ...first.request, referrerPolicy: 'no-referrer' });
       expect(first.onload).toBeNull();
       expect(first.onerror).toBeNull();
       second.onload?.();

@@ -138,11 +138,11 @@ describe('<Avatar.Fallback />', () => {
       vi.advanceTimersByTime(50);
       delay.value = 200;
       await flushMicrotasks();
-      vi.advanceTimersByTime(50);
+      vi.advanceTimersByTime(199);
       await show();
       expect(screen.queryByText('JD')).toBeNull();
 
-      vi.advanceTimersByTime(150);
+      vi.advanceTimersByTime(1);
       await flushMicrotasks();
       expect(screen.getByText('JD')).toBeVisible();
     });

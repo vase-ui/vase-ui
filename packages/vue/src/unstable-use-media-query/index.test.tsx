@@ -83,7 +83,7 @@ describe('useMediaQuery', () => {
 
   it.each([
     {
-      name: 'the default value, then the real value, without noSsr',
+      name: 'the default then the match without noSsr',
       options: {},
       expected: [false, true],
     },
