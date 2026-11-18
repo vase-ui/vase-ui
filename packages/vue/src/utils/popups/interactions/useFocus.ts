@@ -55,6 +55,7 @@ export function useFocus(
   // The element that the last `focusin` event reached: the trigger of this composable. `KeepAlive`
   // closes the popup only when this element is the anchor of the store.
   let lastFocusedTrigger: Element | null = null;
+  const { isHeld } = useKeepAliveState();
   let disposed = false;
 
   // As in Base UI, one timer serves the open request of a focus and the check of a focus out. The
@@ -81,7 +82,7 @@ export function useFocus(
     keyboardModality = false;
   }
 
-  useDomEffect([enabled, currentStore], () => {
+  function listenToWindow() {
     const win = ownerWindow(currentStore().select('anchorElement'));
     // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
     // enabled only while a menu of the menubar is open, so it would miss the press that opened the
@@ -112,7 +113,8 @@ export function useFocus(
     }
 
     return mergeCleanups(addEventListener(win, 'blur', onWindowBlur), stopTrackingModality);
-  });
+  }
+  useDomEffect([enabled, currentStore], listenToWindow, isHeld);
 
   // A dismissal by Escape or by a press of the trigger leaves the focus on the trigger. The same
   // focus must not open the popup again.
@@ -139,7 +141,6 @@ export function useFocus(
     );
   });
 
-  const { isHeld } = useKeepAliveState();
   // `KeepAlive` takes the focused trigger out of the document. Firefox and WebKit send no
   // `focusout` for it. A popup that focus opened would then stay open after the activation, with
   // no focus on its trigger.

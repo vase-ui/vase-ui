@@ -26,6 +26,7 @@ export interface ToastProviderProps {
 
 <script setup lang="ts">
 import { provide, watch } from 'vue';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { ToastManagerEvent } from '../createToastManager';
 import { ToastStore } from '../store';
@@ -70,9 +71,12 @@ function handleManagerEvent({ action, options }: ToastManagerEvent) {
 
 // Take the timers before the manager can deliver a toast. A server never subscribes, so a manager
 // that all requests share gets no listener of a request.
-useDomEffect([], store.disposeEffect);
-useDomEffect([() => props.toastManager], () =>
-  props.toastManager?.[' subscribe'](handleManagerEvent),
+const { isHeld } = useKeepAliveState();
+useDomEffect([], store.disposeEffect, isHeld);
+useDomEffect(
+  [() => props.toastManager],
+  () => props.toastManager?.[' subscribe'](handleManagerEvent),
+  isHeld,
 );
 
 // The store follows the props before the parts below render. A part that adds a toast in the same

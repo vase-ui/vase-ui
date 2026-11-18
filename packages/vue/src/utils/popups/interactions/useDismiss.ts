@@ -1172,7 +1172,7 @@ export function useDismiss(
       { flush: 'post' },
     );
   });
-  useDomEffect(listenerSources, listenToDocument);
+  useDomEffect(listenerSources, listenToDocument, isHeld);
 
   const reference: DismissElementProps['reference'] = {
     onKeydown: closeOnEscapeKeyDown,

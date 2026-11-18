@@ -227,8 +227,11 @@ function handleDocumentContextMenu(event: MouseEvent) {
   }
 }
 
-useDomEffect([], () =>
-  addEventListener(ownerDocument(element.value), 'contextmenu', handleDocumentContextMenu),
+const { isHeld } = useKeepAliveState();
+useDomEffect(
+  [],
+  () => addEventListener(ownerDocument(element.value), 'contextmenu', handleDocumentContextMenu),
+  isHeld,
 );
 
 function releasePress() {
@@ -240,7 +243,6 @@ function releasePress() {
   allowMouseUp = false;
 }
 
-const { isHeld } = useKeepAliveState();
 watch(
   isHeld,
   (held) => {

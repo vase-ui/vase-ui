@@ -169,6 +169,8 @@ export function useCollapsiblePanel(
     });
   }
 
+  const { isHeld } = useKeepAliveState();
+
   // If `KeepAlive` deactivates an open panel with a keyframe animation, the next reveal must not
   // play the open animation again.
   function markActivityResumeAnimationSuppressed() {
@@ -320,7 +322,11 @@ export function useCollapsiblePanel(
   }
 
   // A held panel is outside the document, so its computed style is empty.
-  useDomEffect([isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus], runSizeEffect);
+  useDomEffect(
+    [isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus],
+    runSizeEffect,
+    isHeld,
+  );
 
   useOpenChangeComplete({
     enabled: () => isOpen() && isMounted() && panelTransitionStatus.value === 'idle',
@@ -380,8 +386,7 @@ export function useCollapsiblePanel(
     };
   }
 
-  useDomEffect([isMounted, isOpen, panelTransitionStatus], runCloseEffect);
-  const { isHeld } = useKeepAliveState();
+  useDomEffect([isMounted, isOpen, panelTransitionStatus], runCloseEffect, isHeld);
 
   // The close effect reads the animations of the panel two frames after the ending style. A late
   // frame can end a keyframe exit before that read, and the panel then has its open style again.
