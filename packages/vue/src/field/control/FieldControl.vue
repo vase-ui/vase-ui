@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -144,6 +144,12 @@ watch(serializedValue, (value, previous) => {
   }
 });
 
+const attrs = useAttrs();
+function initialText() {
+  const value = serializedValue.value ?? serializedDefaultValue.value ?? attrs.value;
+  return value == null ? undefined : String(value);
+}
+
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
 // Until the hydration ends, the input can hold text that the part did not handle yet. The field
@@ -155,16 +161,15 @@ useRegisterFieldControl(
   () =>
     writesValue.value
       ? (element.value as HTMLInputElement | null)?.value
-      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
+      : (initialText() ?? ''),
   () => !isDisabled.value,
   () => props.name,
 );
 
-// The value that the props give. The server HTML of the control and of each part after it then has
-// `data-filled`.
-const valueOfProps = serializedValue.value ?? serializedDefaultValue.value;
-if (valueOfProps !== undefined) {
-  setFilled(valueOfProps !== '');
+// Later field parts read the filled state during the same server render.
+const initial = initialText();
+if (initial !== undefined) {
+  setFilled(initial !== '');
 }
 
 // An uncontrolled input has no model to compare with a silent browser restore at pageshow.
