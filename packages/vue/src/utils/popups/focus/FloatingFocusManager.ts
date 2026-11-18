@@ -489,11 +489,11 @@ export function useFloatingFocusManager(
   });
 
   // A server render calls no `onBeforeMount`, so it adds nothing.
-  let removeFromParent: (() => void) | undefined;
   onBeforeMount(() => {
-    removeFromParent = parentFocusManager?.addPopupBelow(isInClosedPopup);
+    if (parentFocusManager) {
+      onScopeDispose(parentFocusManager.addPopupBelow(isInClosedPopup));
+    }
   });
-  onScopeDispose(() => removeFromParent?.());
 
   let preventReturnFocus = false;
   let isPointerDown = false;

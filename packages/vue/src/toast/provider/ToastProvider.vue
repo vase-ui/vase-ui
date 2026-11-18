@@ -25,8 +25,9 @@ export interface ToastProviderProps {
 </script>
 
 <script setup lang="ts">
-import { onMounted, onScopeDispose, provide, watch } from 'vue';
+import { provide, watch } from 'vue';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { ToastManagerEvent } from '../createToastManager';
 import { ToastStore } from '../store';
 import { ToastContext } from './ToastProviderContext';
@@ -50,13 +51,9 @@ const store = new ToastStore({
 
 provide(ToastContext, store);
 
-// Suspend the timers of the store. `hold` starts them after the mount. A server never mounts the
+// Suspend the timers of the store until the mount. A server never mounts the
 // provider, so a toast that a `setup` adds on a server gets no timer.
 store.disposeEffect()();
-
-let releaseTimers: (() => void) | undefined;
-let unsubscribe: (() => void) | undefined;
-const { isHeld } = useKeepAliveState();
 
 function handleManagerEvent({ action, options }: ToastManagerEvent) {
   const id = options.id;
@@ -72,46 +69,15 @@ function handleManagerEvent({ action, options }: ToastManagerEvent) {
   }
 }
 
-// The provider listens to its manager only while it holds its timers: after the mount, and not
-// while `KeepAlive` holds it. A server never subscribes, so a manager that all requests share gets
-// no listener of a request.
-function subscribe() {
-  unsubscribe?.();
-  unsubscribe = undefined;
-
-  if (props.toastManager && releaseTimers) {
-    unsubscribe = props.toastManager[' subscribe'](handleManagerEvent);
-  }
-}
-
-// A component can mount the provider from its own state in the flush that shows its branch. The
-// provider then gets `onActivated` before `onMounted`, and both call `hold`.
-function hold() {
-  if (releaseTimers) {
-    return;
-  }
-  releaseTimers = store.disposeEffect();
-  subscribe();
-}
-
-function release() {
-  releaseTimers?.();
-  releaseTimers = undefined;
-  unsubscribe?.();
-  unsubscribe = undefined;
-}
-
-onMounted(() => {
-  if (!isHeld.value) {
-    hold();
-  }
-});
-
-watch(isHeld, (held) => (held ? release() : hold()), { flush: 'sync' });
-
-onScopeDispose(release);
-
-watch(() => props.toastManager, subscribe);
+// Take the timers before the manager can deliver a toast. A server never subscribes, so a manager
+// that all requests share gets no listener of a request.
+const { isHeld } = useKeepAliveState();
+useDomEffect([], store.disposeEffect, isHeld);
+useDomEffect(
+  [() => props.toastManager],
+  () => props.toastManager?.[' subscribe'](handleManagerEvent),
+  isHeld,
+);
 
 // The store follows the props before the parts below render. A part that adds a toast in the same
 // update then sees the new timeout and limit.

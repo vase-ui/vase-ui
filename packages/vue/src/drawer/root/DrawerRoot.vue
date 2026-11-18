@@ -396,79 +396,65 @@ onScopeDispose(() => {
   }
 });
 
-let stopCloseWatcher: (() => void) | undefined;
+onMounted(() => {
+  watch(
+    [
+      isOpen,
+      () => store.select('nestedOpenDialogCount') === 0,
+      () => store.select('popupElement'),
+      isHeld,
+    ],
+    ([open, frontmost, popup, held], _previous, onCleanup) => {
+      // CloseWatcher enables the Android back gesture (Chromium-only).
+      // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismiss`.
+      if (!open || !frontmost || held || !platform.os.android) {
+        return;
+      }
 
-function updateCloseWatcher() {
-  stopCloseWatcher?.();
-  stopCloseWatcher = undefined;
+      const win = ownerWindow(popup);
 
-  // CloseWatcher enables the Android back gesture (Chromium-only).
-  // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismiss`.
-  if (
-    !isOpen.value ||
-    store.select('nestedOpenDialogCount') !== 0 ||
-    isHeld.value ||
-    !platform.os.android
-  ) {
-    return;
-  }
+      const CloseWatcherCtor = (win as Window & { CloseWatcher?: (new () => any) | undefined })
+        .CloseWatcher;
+      if (!CloseWatcherCtor) {
+        return;
+      }
 
-  const win = ownerWindow(store.select('popupElement'));
+      function handleCancel(event: Event) {
+        if (!store.select('open')) {
+          return;
+        }
 
-  const CloseWatcherCtor = (win as Window & { CloseWatcher?: (new () => any) | undefined })
-    .CloseWatcher;
-  if (!CloseWatcherCtor) {
-    return;
-  }
+        const eventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
+          REASONS.closeWatcher,
+          event,
+        );
 
-  function handleCancel(event: Event) {
-    if (!store.select('open')) {
-      return;
-    }
+        if (!event.cancelable) {
+          // The browser lets only one close request per user activation be prevented; any further
+          // request closes the drawer regardless, like a native `<dialog>`.
+          eventDetails.cancel = NOOP;
+        }
 
-    const eventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
-      REASONS.closeWatcher,
-      event,
-    );
+        setOpen(false, eventDetails);
 
-    if (!event.cancelable) {
-      // The browser lets only one close request per user activation be prevented; any further
-      // request closes the drawer regardless, like a native `<dialog>`.
-      eventDetails.cancel = NOOP;
-    }
+        if (eventDetails.isCanceled) {
+          // Keeps this watcher active for the next close request.
+          event.preventDefault();
+        }
+      }
 
-    setOpen(false, eventDetails);
+      const closeWatcher = new CloseWatcherCtor();
+      // The browser destroys the watcher before `close` fires, so the request is handled from
+      // `cancel`, where it can still be prevented.
+      const unsubscribe = addEventListener(closeWatcher, 'cancel', handleCancel);
 
-    if (eventDetails.isCanceled) {
-      // Keeps this watcher active for the next close request.
-      event.preventDefault();
-    }
-  }
-
-  const closeWatcher = new CloseWatcherCtor();
-  // The browser destroys the watcher before `close` fires, so the request is handled from
-  // `cancel`, where it can still be prevented.
-  const unsubscribe = addEventListener(closeWatcher, 'cancel', handleCancel);
-
-  stopCloseWatcher = () => {
-    unsubscribe();
-    closeWatcher.destroy();
-  };
-}
-
-watch(
-  [
-    isOpen,
-    () => store.select('nestedOpenDialogCount') === 0,
-    () => store.select('popupElement'),
-    isHeld,
-  ],
-  updateCloseWatcher,
-  { flush: 'post' },
-);
-onMounted(updateCloseWatcher);
-onScopeDispose(() => {
-  stopCloseWatcher?.();
+      onCleanup(() => {
+        unsubscribe();
+        closeWatcher.destroy();
+      });
+    },
+    { immediate: true, flush: 'post' },
+  );
 });
 
 defineExpose({ unmount: actions.unmount, close: actions.close });

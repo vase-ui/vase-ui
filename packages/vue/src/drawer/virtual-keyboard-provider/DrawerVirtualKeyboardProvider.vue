@@ -280,6 +280,7 @@ let focusedKeyboardTarget: HTMLElement | null = null;
 let keyboardScrollAdjustment: ScrollAdjustment | null = null;
 let keyboardScrollSlack = 0;
 let keyboardScrollSlackStyle: ScrollSlackStyle | null = null;
+// eslint-disable-next-line no-restricted-syntax -- The observer belongs to the temporary keyboard scroll adjustment.
 let stopKeepingKeyboardScrollSlack = NOOP;
 let programmaticKeyboardFocus = false;
 let getOpenKeyboardViewport: (() => KeyboardVisualViewport | null) | null = null;
@@ -534,6 +535,7 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
   // WebKit's reveal scroll before `focusin` reaches us — cancelling it afterwards
   // visibly jitters the sheet. `focusout` on the outgoing field fires before focus
   // lands, so override the incoming field's geometry there and restore it in `focusin`.
+  // eslint-disable-next-line no-restricted-syntax -- The next focus event restores the geometry that the previous event changed.
   let restorePreemptedFocus: (() => void) | null = null;
 
   const consumePreemptedFocus = () => {

@@ -14,12 +14,18 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
  *
  * A server calls no `onMounted` hook and runs no such `watch`, so `run` reads nothing there.
  *
+ * Give effects that must run in order the same `isHeld` ref. Vue prepends each activation or
+ * deactivation hook of a descendant to the hooks of the root of a kept branch.
+ *
  * Call it in `setup`.
  */
-export function useDomEffect(sources: WatchSource[], run: () => (() => void) | void): void {
+export function useDomEffect(
+  sources: WatchSource[],
+  run: () => (() => void) | void,
+  isHeld = useKeepAliveState().isHeld,
+): void {
+  // eslint-disable-next-line no-restricted-syntax -- This helper owns the cleanup across the mount, the post flush and the hold hook.
   let cleanup: (() => void) | undefined;
-  const { isHeld } = useKeepAliveState();
-
   function update() {
     cleanup?.();
     cleanup = isHeld.value ? undefined : (run() ?? undefined);

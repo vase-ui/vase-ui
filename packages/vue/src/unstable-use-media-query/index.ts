@@ -1,4 +1,4 @@
-import { onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { onMounted, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 
@@ -52,46 +52,27 @@ export function useMediaQuery(
 
   // The first client render must equal the server HTML, so `onMounted` reads the real value.
   const matches = shallowRef(getInitialMatches());
-  let removeListener: (() => void) | undefined;
-  let isMounted = false;
-
-  function unsubscribe() {
-    removeListener?.();
-    removeListener = undefined;
-  }
-
-  function subscribe() {
-    unsubscribe();
-
-    const { defaultMatches, matchMedia } = getOptions();
-
-    if (matchMedia === null) {
-      matches.value = defaultMatches;
-      return;
-    }
-
-    const mediaQueryList = matchMedia(getQuery());
-    matches.value = mediaQueryList.matches;
-    removeListener = addEventListener(mediaQueryList, 'change', () => {
-      matches.value = mediaQueryList.matches;
-    });
-  }
-
   onMounted(() => {
-    isMounted = true;
-    subscribe();
+    // A getter can return a new options object on each call. Watch its members.
+    // The default flush runs before the render, so a new query renders the component one time.
+    watch(
+      [getQuery, () => getOptions().matchMedia, () => getOptions().defaultMatches],
+      ([media, matchMedia, defaultMatches], _previous, onCleanup) => {
+        if (matchMedia === null) {
+          matches.value = defaultMatches;
+          return;
+        }
+        const list = matchMedia(media);
+        matches.value = list.matches;
+        onCleanup(
+          addEventListener(list, 'change', () => {
+            matches.value = list.matches;
+          }),
+        );
+      },
+      { immediate: true },
+    );
   });
-
-  // The sources are the members of the options, because a getter can return a new object on each
-  // call. Before mount, `onMounted` reads the current values, so a change then needs no action.
-  // The default flush runs before the render, so a new query renders the component one time.
-  watch([getQuery, () => getOptions().matchMedia, () => getOptions().defaultMatches], () => {
-    if (isMounted) {
-      subscribe();
-    }
-  });
-
-  onScopeDispose(unsubscribe);
 
   return matches;
 }

@@ -1,5 +1,5 @@
-import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
   createHeldBranch,
@@ -339,6 +339,27 @@ describe('<Tabs.Tab />', () => {
       expect(disabledTab).not.toHaveAttribute('data-active');
       expect(disabledTab).toHaveAttribute('data-orientation', 'horizontal');
     });
+  });
+
+  it('stops the resize observer on the previous tab element', async () => {
+    const tag = shallowRef('button');
+    await render(() => (
+      <Tabs.Root>
+        <Tabs.List>
+          <Tabs.Tab as={tag.value} nativeButton={tag.value === 'button'} value="one">
+            One
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs.Root>
+    ));
+    const previous = screen.getByRole('tab');
+    const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
+    onTestFinished(() => unobserve.mockRestore());
+
+    tag.value = 'span';
+    await nextTick();
+    expect(screen.getByRole('tab')).not.toBe(previous);
+    expect(unobserve).toHaveBeenCalledWith(previous);
   });
 
   it('is not named by its panel while KeepAlive holds a tab that mounted in a held branch', async () => {

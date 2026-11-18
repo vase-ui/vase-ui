@@ -14,6 +14,7 @@ import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isTargetInsideEnabledTrigger, isTypeableElement, matchesFocusVisible } from '../element';
 import type { PopupInteractionStore } from '../types';
+import { useDomEffect } from '../useDomEffect';
 
 // The check is a function, so that a case can set the flags of `platform`.
 const isMacSafari = () => platform.os.mac && platform.engine.webkit;
@@ -81,14 +82,7 @@ export function useFocus(
     keyboardModality = false;
   }
 
-  let stopWindowListeners: (() => void) | undefined;
   function listenToWindow() {
-    stopWindowListeners?.();
-    stopWindowListeners = undefined;
-    if (isHeld.value) {
-      return;
-    }
-
     const win = ownerWindow(currentStore().select('anchorElement'));
     // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
     // enabled only while a menu of the menubar is open, so it would miss the press that opened the
@@ -99,8 +93,7 @@ export function useFocus(
       trackModality && addEventListener(win, 'pointerdown', onWindowPointerdown, true),
     );
     if (!enabled()) {
-      stopWindowListeners = stopTrackingModality;
-      return;
+      return stopTrackingModality;
     }
 
     // If the reference was focused and the user left the tab/window, and the
@@ -119,14 +112,9 @@ export function useFocus(
       }
     }
 
-    stopWindowListeners = mergeCleanups(
-      addEventListener(win, 'blur', onWindowBlur),
-      stopTrackingModality,
-    );
+    return mergeCleanups(addEventListener(win, 'blur', onWindowBlur), stopTrackingModality);
   }
-  onMounted(listenToWindow);
-  watch([enabled, currentStore], listenToWindow, { flush: 'post' });
-  onScopeDispose(() => stopWindowListeners?.());
+  useDomEffect([enabled, currentStore], listenToWindow, isHeld);
 
   // A dismissal by Escape or by a press of the trigger leaves the focus on the trigger. The same
   // focus must not open the popup again.
@@ -140,20 +128,18 @@ export function useFocus(
     }
   }
 
-  let stopListeningToOpenChange: (() => void) | undefined;
-  function listenToOpenChange() {
-    stopListeningToOpenChange?.();
-    stopListeningToOpenChange = undefined;
-    if (!enabled()) {
-      return;
-    }
-    const { events } = currentStore().context;
-    events.on('openchange', onOpenChangeLocal);
-    stopListeningToOpenChange = () => events.off('openchange', onOpenChangeLocal);
-  }
-  onMounted(listenToOpenChange);
-  watch([enabled, () => currentStore().context.events], listenToOpenChange);
-  onScopeDispose(() => stopListeningToOpenChange?.());
+  onMounted(() => {
+    watch(
+      [enabled, () => currentStore().context.events],
+      ([isEnabled, events], _previous, onCleanup) => {
+        if (isEnabled) {
+          events.on('openchange', onOpenChangeLocal);
+          onCleanup(() => events.off('openchange', onOpenChangeLocal));
+        }
+      },
+      { immediate: true },
+    );
+  });
 
   // `KeepAlive` takes the focused trigger out of the document. Firefox and WebKit send no
   // `focusout` for it. A popup that focus opened would then stay open after the activation, with
@@ -161,7 +147,6 @@ export function useFocus(
   watch(
     isHeld,
     (held) => {
-      listenToWindow();
       if (!held) {
         return;
       }
