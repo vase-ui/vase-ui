@@ -1,6 +1,6 @@
 import { computed, shallowRef } from 'vue';
 import type { VaseUIComponentProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { usePressAndHold } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
 import type { CalendarState } from '../root/CalendarRoot.vue';
@@ -45,27 +45,22 @@ export function useCalendarNavigationButton(props: NavigationButtonProps, step: 
     }
   }
 
-  const { getButtonProps, buttonRef } = useButton({
-    disabled: isUnavailable,
-    native: () => props.nativeButton,
-    // A button at a limit keeps its focus and says that it is unavailable. A hold that reaches the
-    // limit then does not lose the focus. A disabled button leaves the tab order.
-    focusableWhenDisabled: () => !isDisabled.value,
-  });
-
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+    button: (element) =>
+      useButton(element, {
+        disabled: isUnavailable,
+        native: () => props.nativeButton,
+        // A button at a limit keeps its focus and says that it is unavailable. A hold that reaches the
+        // limit then does not lose the focus. A disabled button leaves the tab order.
+        focusableWhenDisabled: () => !isDisabled.value,
+      }),
     ref: [
-      buttonRef,
       (value) => {
         buttonElement.value = value;
       },
     ],
     state,
-    props: (attrs) => [
-      { 'aria-label': label.value, ...pointerHandlers, onClick },
-      attrs,
-      getButtonProps,
-    ],
+    props: (attrs) => [{ 'aria-label': label.value, ...pointerHandlers, onClick }, attrs],
   });
 
   return { element, elementProps, setRef, usesRenderSlot, state };

@@ -34,7 +34,7 @@ defineSlots<{
 const {
   visible,
   state,
-  ref: clearRef,
+  button,
   props: clearProps,
 } = useFilterDropdownClear({
   disabled: () => props.disabled,
@@ -43,7 +43,7 @@ const {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
-  ref: clearRef,
+  button,
   props: clearProps,
 });
 

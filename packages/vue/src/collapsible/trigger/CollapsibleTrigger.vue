@@ -31,7 +31,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
@@ -80,14 +80,13 @@ const state = computed<CollapsibleTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => [
     {
       'aria-controls': open.value ? panelId.value : undefined,
@@ -95,7 +94,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onClick: handleTrigger,
     },
     attrs,
-    getButtonProps,
   ],
   stateAttributesMapping,
 });

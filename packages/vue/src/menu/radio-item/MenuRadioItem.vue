@@ -102,7 +102,7 @@ const isDisabled = computed(
 );
 const checked = computed(() => selectedValue.value === props.value);
 
-const { getItemProps, itemRef } = useMenuItem({
+const { button, getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
@@ -129,6 +129,7 @@ function handleClick(event: MouseEvent) {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  button,
   state,
   stateAttributesMapping: itemMapping,
   ref: [itemRef, listItem.ref, filterItem.ref],

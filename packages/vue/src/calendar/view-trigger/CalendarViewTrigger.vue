@@ -41,7 +41,7 @@ export interface CalendarViewTriggerProps
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
@@ -79,14 +79,13 @@ const state = computed<CalendarViewTriggerState>(() => ({
 }));
 const text = root.label;
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => [
     {
       // The name starts with the visible text, so that voice control finds the button by it.
@@ -101,7 +100,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

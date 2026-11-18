@@ -30,7 +30,7 @@ export interface ToastActionProps
 import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastRootContext } from '../root/ToastRootContext';
@@ -64,19 +64,18 @@ const rendered = computed(() => {
   return content === undefined ? hasDefaultSlot.value : isRenderableNode(content);
 });
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
-  native: () => props.nativeButton,
-});
-
 const state = computed<ToastActionState>(() => ({ type: toast.value.type }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: () => props.disabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => {
     const { children, ...actionAttrs } = toast.value.actionProps ?? {};
-    return [attrs, actionAttrs, getButtonProps];
+    return [attrs, actionAttrs];
   },
   children: true,
 });

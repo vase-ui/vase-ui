@@ -31,7 +31,7 @@ import { computed } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDialogRootContext } from '../root/DialogRootContext';
@@ -55,11 +55,6 @@ defineSlots<{
 
 const store = useDialogRootContext();
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
-  native: () => props.nativeButton,
-});
-
 const state = computed<DialogCloseState>(() => ({ disabled: props.disabled }));
 
 function handleClick(event: MouseEvent) {
@@ -69,9 +64,13 @@ function handleClick(event: MouseEvent) {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: () => props.disabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
-  props: (attrs) => [{ onClick: handleClick }, attrs, getButtonProps],
+  props: (attrs) => [{ onClick: handleClick }, attrs],
 });
 
 defineExpose({ element });

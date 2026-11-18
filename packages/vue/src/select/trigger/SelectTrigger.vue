@@ -64,7 +64,7 @@ import {
 } from '../../internals/labelable-provider';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { REASONS } from '../../internals/reasons';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
@@ -131,11 +131,6 @@ const ariaControls = computed(() => {
 useLabelableId({ id: () => props.id });
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
 
 // A compiled template can mount a new trigger before it unmounts the trigger that it replaces.
 // The old trigger then clears only its own element.
@@ -256,8 +251,13 @@ const stateAttributesMapping: StateAttributesMapping<SelectTriggerState<Value>> 
 };
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [buttonRef, setTriggerElement],
+  ref: setTriggerElement,
   stateAttributesMapping,
   props: (attrs) => [
     store.select('triggerProps', true),
@@ -313,8 +313,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
-    // `getButtonProps` gives an element that is not a native button the role `button`.
     (merged) => ({ ...validation.getValidationProps(isDisabled.value, merged), role: 'combobox' }),
   ],
 });

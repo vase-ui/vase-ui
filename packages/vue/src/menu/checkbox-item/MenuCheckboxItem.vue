@@ -133,7 +133,7 @@ const itemId = useVaseUiId(() => props.id);
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
 const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
-const { getItemProps, itemRef } = useMenuItem({
+const { button, getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
@@ -167,6 +167,7 @@ function handleClick(event: MouseEvent) {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  button,
   state,
   stateAttributesMapping: itemMapping,
   ref: [itemRef, listItem.ref, filterItem.ref],

@@ -48,7 +48,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
+import { useFocusableWhenDisabled } from '../../internals/use-button/useButton';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
 import type { ToolbarRootItemMetadata } from '../root/ToolbarRoot.vue';
 import { useToolbarRootContext } from '../root/ToolbarRootContext';
@@ -81,7 +81,7 @@ const itemMetadata = computed<ToolbarRootItemMetadata>(() => ({
   focusableWhenDisabled: props.focusableWhenDisabled,
 }));
 
-const { props: focusableWhenDisabledProps } = useFocusableWhenDisabled({
+const { attributes: focusAttributes, onKeydown } = useFocusableWhenDisabled({
   composite: true,
   disabled: itemDisabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
@@ -146,7 +146,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       defaultValueProps(),
       attrsWithoutValue,
       writesValue.value && value !== undefined ? inputRender.valueProps() : undefined,
-      focusableWhenDisabledProps.value,
+      focusAttributes.value,
+      { onKeydown },
     ];
   },
 });

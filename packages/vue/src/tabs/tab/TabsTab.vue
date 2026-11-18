@@ -86,7 +86,7 @@ import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -150,12 +150,6 @@ const { compositeProps, compositeRef, index } = useCompositeItem<TabsTabMetadata
   // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
   // when it is disabled. The server HTML gives it the same tab stop.
   disabled: () => isDisabled.value && activeTabValue.value !== null,
-});
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-  focusableWhenDisabled: true,
 });
 
 let isNavigating = false;
@@ -258,8 +252,14 @@ const state = computed<TabsTabState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+      focusableWhenDisabled: true,
+    }),
   state,
-  ref: [compositeRef, buttonRef],
+  ref: compositeRef,
   props: (attrs) => [
     compositeProps.value,
     {
@@ -275,7 +275,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
   ],
   stateAttributesMapping: tabsStateAttributesMapping,
 });

@@ -94,7 +94,7 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -448,14 +448,15 @@ const state = computed<NavigationMenuTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-});
 const { compositeProps, compositeRef } = useCompositeItem();
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+    }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
   ref: [
@@ -463,7 +464,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     (trigger) => {
       triggerElement.value = trigger;
     },
-    buttonRef,
   ],
   props: (attrs) => [
     compositeProps.value,
@@ -497,7 +497,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onFocusout: handleFocusout,
     },
     attrs,
-    getButtonProps,
   ],
 });
 

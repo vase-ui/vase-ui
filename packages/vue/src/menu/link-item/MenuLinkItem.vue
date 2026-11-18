@@ -34,7 +34,7 @@ export interface MenuLinkItemProps
 import { computed } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
@@ -69,11 +69,6 @@ const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
 
-const { getButtonProps, buttonRef } = useButton({
-  native: false,
-  composite: true,
-});
-
 const commonProps = useMenuItemCommonProps({
   closeOnClick: () => props.closeOnClick,
   highlighted,
@@ -85,18 +80,22 @@ const commonProps = useMenuItemCommonProps({
 });
 
 function getItemProps(externalProps?: Record<string, any>) {
-  return mergeProps<'a'>(commonProps.value, externalProps, getButtonProps);
+  return mergeProps<'a'>(commonProps.value, externalProps);
 }
 
 const state = computed<MenuLinkItemState>(() => ({ highlighted: highlighted.value }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
+  button: (element) =>
+    useButton(element, {
+      native: false,
+      composite: true,
+    }),
   state,
   ref: [
     (link) => {
       linkElement = link;
     },
-    buttonRef,
     listItem.ref,
     filterItem.ref,
   ],

@@ -193,7 +193,7 @@ const itemMetadata: UseMenuItemMetadata = {
   },
 };
 
-const { getItemProps, itemRef } = useMenuItem({
+const { button, getItemProps, itemRef } = useMenuItem({
   closeOnClick: false,
   disabled: isDisabled,
   highlighted,
@@ -272,6 +272,7 @@ const ownProps = {
 };
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  button,
   state,
   stateAttributesMapping: triggerOpenStateMapping,
   ref: [

@@ -56,7 +56,7 @@ import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useButton } from '../internals/use-button';
+import { useButton } from '../internals/use-button/useButton';
 import { useVaseUiId } from '../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
@@ -128,11 +128,6 @@ const isPressed = useControlled({
   state: 'pressed',
 });
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: toggleDisabled,
-  native: () => props.nativeButton,
-});
-
 const state = computed<ToggleState>(() => ({
   disabled: toggleDisabled.value,
   pressed: isPressed.value,
@@ -176,8 +171,13 @@ const compositeItem = groupContext
   : undefined;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: toggleDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: compositeItem ? [compositeItem.compositeRef, buttonRef] : [buttonRef],
+  ref: compositeItem?.compositeRef,
   props: (attrs) => {
     // A toggle is never a submit button and never a part of a form.
     const { form, type, ...elementAttrs } = attrs;
@@ -185,7 +185,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       compositeItem?.compositeProps.value,
       { 'aria-pressed': isPressed.value, onClick },
       elementAttrs,
-      getButtonProps,
     ];
   },
 });

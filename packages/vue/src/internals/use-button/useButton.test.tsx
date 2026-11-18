@@ -3,8 +3,24 @@ import { defineComponent, shallowRef } from 'vue';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, isJSDOM, screen } from '#test-utils';
 import CompositeRoot from '../../../test/fixtures/CompositeRootPart.vue';
-import type { VaseUIEvent, WithVaseUIEvent } from '../types';
+import type { HTMLProps, VaseUIEvent, WithVaseUIEvent } from '../types';
+import { useRenderElement } from '../useRenderElement';
 import { useButton } from './useButton';
+import type { UseButtonParameters } from './useButton';
+
+function useTestButton(
+  parameters: UseButtonParameters = {},
+  props?: () => Record<string, unknown>,
+) {
+  return useRenderElement(
+    'span',
+    {},
+    {
+      button: (element) => useButton(element, parameters),
+      props: (attrs) => [props?.(), attrs],
+    },
+  );
+}
 
 type ElementTestProps = WithVaseUIEvent<HTMLAttributes>;
 
@@ -24,18 +40,17 @@ describe('useButton', () => {
     const focusableWhenDisabled = shallowRef(false);
     const handler = vi.fn();
     const Button = defineComponent(() => {
-      const { getButtonProps } = useButton({ disabled, focusableWhenDisabled, native: false });
-      return () => (
-        <span
-          {...getButtonProps({
-            onClick: handler,
-            onMousedown: handler,
-            onPointerdown: handler,
-            onKeydown: handler,
-            onKeyup: handler,
-          })}
-        />
+      const { elementProps } = useTestButton(
+        { disabled, focusableWhenDisabled, native: false },
+        () => ({
+          onClick: handler,
+          onMousedown: handler,
+          onPointerdown: handler,
+          onKeydown: handler,
+          onKeyup: handler,
+        }),
       );
+      return () => <span {...elementProps()} />;
     });
     await render(<Button />);
     const button = screen.getByRole('button');
@@ -62,8 +77,8 @@ describe('useButton', () => {
     const composite = shallowRef(false);
     const onClick = vi.fn();
     const Button = defineComponent(() => {
-      const { getButtonProps } = useButton({ composite, native: false });
-      return () => <span {...getButtonProps({ onClick })} />;
+      const { elementProps } = useTestButton({ composite, native: false }, () => ({ onClick }));
+      return () => <span {...elementProps()} />;
     });
     await render(<Button />);
     const button = screen.getByRole('button');
@@ -83,12 +98,12 @@ describe('useButton', () => {
           const clickSpy = vi.fn();
 
           const Button = defineComponent(
-            (_props: ElementTestProps, { attrs }) => {
-              const { getButtonProps } = useButton({
+            (_props: ElementTestProps) => {
+              const { elementProps } = useTestButton({
                 native: false,
               });
 
-              return () => <span {...getButtonProps(attrs)} />;
+              return () => <span {...elementProps()} />;
             },
             { inheritAttrs: false },
           );
@@ -106,13 +121,13 @@ describe('useButton', () => {
       );
 
       it('does not set a type prop', async () => {
-        let buttonProps: Record<string, unknown> | undefined = undefined;
+        let buttonProps: HTMLProps | undefined;
 
         const Button = defineComponent(() => {
-          const { getButtonProps } = useButton({ native: false });
+          const { elementProps } = useTestButton({ native: false });
 
           return () => {
-            buttonProps = getButtonProps();
+            buttonProps = elementProps();
             return <span {...buttonProps} />;
           };
         });
@@ -127,13 +142,13 @@ describe('useButton', () => {
           const clickSpy = vi.fn();
 
           const Button = defineComponent(
-            (_props: ElementTestProps, { attrs }) => {
-              const { getButtonProps, buttonRef } = useButton({
+            (_props: ElementTestProps) => {
+              const { elementProps, setRef } = useTestButton({
                 native: false,
               });
 
               function handleRef(node: HTMLSpanElement | null) {
-                buttonRef(node);
+                setRef(node);
 
                 if (!node || node.shadowRoot) {
                   return;
@@ -147,7 +162,7 @@ describe('useButton', () => {
 
               return () => (
                 <span
-                  {...getButtonProps(attrs)}
+                  {...elementProps()}
                   ref={(element) => handleRef(element as HTMLSpanElement | null)}
                 />
               );
@@ -186,13 +201,13 @@ describe('useButton', () => {
   describe('param: focusableWhenDisabled', () => {
     it('allows disabled buttons to be focused', async () => {
       const TestButton = defineComponent(
-        (props: ButtonTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({
+        (props: ButtonTestProps) => {
+          const { elementProps } = useTestButton({
             disabled: () => props.disabled,
             focusableWhenDisabled: true,
           });
 
-          return () => <button {...getButtonProps(attrs)} />;
+          return () => <button {...elementProps()} />;
         },
         { props: ['disabled'], inheritAttrs: false },
       );
@@ -205,18 +220,15 @@ describe('useButton', () => {
     it('force overrides disabled attribute when put in a composite', async () => {
       const TestButton = defineComponent(
         (props: { buttonKey?: string | undefined }) => {
-          const { getButtonProps, buttonRef } = useButton({
-            disabled: true,
-            focusableWhenDisabled: true,
-          });
-
-          return () => (
-            <button
-              ref={(element) => buttonRef(element as HTMLElement | null)}
-              key={props.buttonKey}
-              {...getButtonProps({ disabled: true })}
-            />
+          const { elementProps, setRef } = useTestButton(
+            {
+              disabled: true,
+              focusableWhenDisabled: true,
+            },
+            () => ({ disabled: true }),
           );
+
+          return () => <button key={props.buttonKey} {...elementProps()} ref={setRef} />;
         },
         { props: ['buttonKey'] },
       );
@@ -252,14 +264,14 @@ describe('useButton', () => {
       const handleBlur = vi.fn();
 
       const TestButton = defineComponent(
-        (props: ElementTestProps & { disabled?: boolean | undefined }, { attrs }) => {
-          const { getButtonProps } = useButton({
+        (props: ElementTestProps & { disabled?: boolean | undefined }) => {
+          const { elementProps } = useTestButton({
             disabled: () => props.disabled,
             focusableWhenDisabled: true,
             native: false,
           });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { props: ['disabled'], inheritAttrs: false },
       );
@@ -304,18 +316,16 @@ describe('useButton', () => {
 
     it('removes the disabled property of a disabled composite button', async () => {
       const TestButton = defineComponent(() => {
-        const { getButtonProps, buttonRef } = useButton({
-          disabled: true,
-          focusableWhenDisabled: true,
-          composite: true,
-        });
-
-        return () => (
-          <button
-            ref={(element) => buttonRef(element as HTMLElement | null)}
-            {...getButtonProps({ disabled: true })}
-          />
+        const { elementProps, setRef } = useTestButton(
+          {
+            disabled: true,
+            focusableWhenDisabled: true,
+            composite: true,
+          },
+          () => ({ disabled: true }),
         );
+
+        return () => <button {...elementProps()} ref={setRef} />;
       });
 
       await render(<TestButton />);
@@ -329,18 +339,16 @@ describe('useButton', () => {
     it('removes the disabled property when a composite button becomes disabled', async () => {
       const TestButton = defineComponent(
         (props: { disabled?: boolean | undefined }) => {
-          const { getButtonProps, buttonRef } = useButton({
-            disabled: () => props.disabled,
-            focusableWhenDisabled: true,
-            composite: true,
-          });
-
-          return () => (
-            <button
-              ref={(element) => buttonRef(element as HTMLElement | null)}
-              {...getButtonProps({ disabled: props.disabled })}
-            />
+          const { elementProps, setRef } = useTestButton(
+            {
+              disabled: () => props.disabled,
+              focusableWhenDisabled: true,
+              composite: true,
+            },
+            () => ({ disabled: props.disabled }),
           );
+
+          return () => <button {...elementProps()} ref={setRef} />;
         },
         { props: ['disabled'] },
       );
@@ -360,12 +368,12 @@ describe('useButton', () => {
   describe('param: tabIndex', () => {
     it('returns tabIndex in getButtonProps when host component is BUTTON', async () => {
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton();
+        const { elementProps } = useTestButton();
 
         return () => {
-          expect(getButtonProps().tabindex).toBe(0);
+          expect(elementProps().tabindex).toBe(0);
 
-          return <button {...getButtonProps()} />;
+          return <button {...elementProps()} />;
         };
       });
 
@@ -375,12 +383,12 @@ describe('useButton', () => {
 
     it('returns tabIndex in getButtonProps when host component is not BUTTON', async () => {
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton({ native: false });
+        const { elementProps } = useTestButton({ native: false });
 
         return () => {
-          expect(getButtonProps().tabindex).toBe(0);
+          expect(elementProps().tabindex).toBe(0);
 
-          return <span {...getButtonProps()} />;
+          return <span {...elementProps()} />;
         };
       });
 
@@ -391,9 +399,9 @@ describe('useButton', () => {
     it('returns tabIndex in getButtonProps if it is explicitly provided', async () => {
       const customTabIndex = 3;
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton({ tabIndex: customTabIndex });
+        const { elementProps } = useTestButton({ tabIndex: customTabIndex });
 
-        return () => <button {...getButtonProps()} />;
+        return () => <button {...elementProps()} />;
       });
 
       await render(<TestButton />);
@@ -405,9 +413,9 @@ describe('useButton', () => {
     it('are passed to the host component', async () => {
       const buttonTestId = 'button-test-id';
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton();
+        const { elementProps } = useTestButton({}, () => ({ 'data-testid': buttonTestId }));
 
-        return () => <button {...getButtonProps({ 'data-testid': buttonTestId })} />;
+        return () => <button {...elementProps()} />;
       });
 
       await render(<TestButton />);
@@ -422,10 +430,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -454,10 +462,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false, composite: true });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -489,10 +497,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: WithVaseUIEvent<AnchorHTMLAttributes>, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: WithVaseUIEvent<AnchorHTMLAttributes>) => {
+          const { elementProps } = useTestButton({ native: false, composite: true });
 
-          return () => <a href="#test" {...getButtonProps(attrs)} />;
+          return () => <a href="#test" {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -515,10 +523,12 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: WithVaseUIEvent<AnchorHTMLAttributes>, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: WithVaseUIEvent<AnchorHTMLAttributes>) => {
+          const { elementProps } = useTestButton({ native: false, composite: true }, () => ({
+            role: 'menuitem',
+          }));
 
-          return () => <a href="#test" {...getButtonProps({ role: 'menuitem', ...attrs })} />;
+          return () => <a href="#test" {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -540,10 +550,13 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false, composite: true }, () => ({
+            role: 'gridcell',
+            tabindex: 0,
+          }));
 
-          return () => <div {...getButtonProps({ role: 'gridcell', tabindex: 0, ...attrs })} />;
+          return () => <div {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -565,10 +578,13 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false, composite: true }, () => ({
+            role: 'switch',
+            tabindex: 0,
+          }));
 
-          return () => <div {...getButtonProps({ role: 'switch', tabindex: 0, ...attrs })} />;
+          return () => <div {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -592,10 +608,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ButtonTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ composite: true });
+        (_props: ButtonTestProps) => {
+          const { elementProps } = useTestButton({ composite: true });
 
-          return () => <button {...getButtonProps(attrs)} />;
+          return () => <button {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -622,10 +638,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ButtonTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ composite: true });
+        (_props: ButtonTestProps) => {
+          const { elementProps } = useTestButton({ composite: true });
 
-          return () => <button {...getButtonProps(attrs)} />;
+          return () => <button {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -645,11 +661,18 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const outer = useButton({ native: false, composite: true });
-          const inner = useButton({ native: false, composite: true });
+        (_props: ElementTestProps) => {
+          const outer = useTestButton({ native: false, composite: true });
+          const inner = useRenderElement(
+            'span',
+            {},
+            {
+              button: (element) => useButton(element, { native: false, composite: true }),
+              props: () => outer.elementProps(),
+            },
+          );
 
-          return () => <span {...outer.getButtonProps(inner.getButtonProps(attrs))} />;
+          return () => <span {...inner.elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -674,11 +697,11 @@ describe('useButton', () => {
       });
 
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton({ composite: true });
+        const { elementProps } = useTestButton({ composite: true }, () => ({ type: 'submit' }));
 
         return () => (
           <form onSubmit={handleSubmit}>
-            <button {...getButtonProps({ type: 'submit' })}>Submit</button>
+            <button {...elementProps()}>Submit</button>
           </form>
         );
       });
@@ -703,11 +726,11 @@ describe('useButton', () => {
       });
 
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton({ composite: true });
+        const { elementProps } = useTestButton({ composite: true }, () => ({ type: 'reset' }));
 
         return () => (
           <form onReset={handleReset}>
-            <button {...getButtonProps({ type: 'reset' })}>Reset</button>
+            <button {...elementProps()}>Reset</button>
           </form>
         );
       });
@@ -730,10 +753,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: true });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false, composite: true });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -759,10 +782,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -797,10 +820,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -827,10 +850,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -859,10 +882,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -898,10 +921,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ButtonTestProps, { attrs }) => {
-          const { getButtonProps } = useButton();
+        (_props: ButtonTestProps) => {
+          const { elementProps } = useTestButton();
 
-          return () => <button {...getButtonProps(attrs)} />;
+          return () => <button {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -932,10 +955,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false, composite: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false, composite: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -965,10 +988,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -990,10 +1013,10 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
-        (_props: ElementTestProps, { attrs }) => {
-          const { getButtonProps } = useButton({ native: false });
+        (_props: ElementTestProps) => {
+          const { elementProps } = useTestButton({ native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...elementProps()} />;
         },
         { inheritAttrs: false },
       );
@@ -1025,9 +1048,9 @@ describe('useButton', () => {
       const second = vi.fn();
 
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton();
+        const { elementProps } = useTestButton({}, () => ({ onClick: [first, second] }));
 
-        return () => <button {...getButtonProps({ onClick: [first, second] })} />;
+        return () => <button {...elementProps()} />;
       });
 
       await render(<TestButton />);
@@ -1042,9 +1065,12 @@ describe('useButton', () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(() => {
-        const { getButtonProps } = useButton({ native: false });
+        const { elementProps } = useTestButton({ native: false }, () => ({
+          onKeydown: false,
+          onClick: handleClick,
+        }));
 
-        return () => <span {...getButtonProps({ onKeydown: false, onClick: handleClick })} />;
+        return () => <span {...elementProps()} />;
       });
 
       await render(<TestButton />);
@@ -1062,11 +1088,9 @@ describe('useButton', () => {
         .mockName('console.error')
         .mockImplementation(() => {});
       const TestButton = defineComponent(() => {
-        const { getButtonProps, buttonRef } = useButton({ native: true });
+        const { elementProps, setRef } = useTestButton({ native: true });
 
-        return () => (
-          <span {...getButtonProps()} ref={(element) => buttonRef(element as HTMLElement | null)} />
-        );
+        return () => <span {...elementProps()} ref={setRef} />;
       });
       await render(<TestButton />);
       expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -1086,14 +1110,9 @@ describe('useButton', () => {
         .mockName('console.error')
         .mockImplementation(() => {});
       const TestButton = defineComponent(() => {
-        const { getButtonProps, buttonRef } = useButton({ native: false });
+        const { elementProps, setRef } = useTestButton({ native: false });
 
-        return () => (
-          <button
-            {...getButtonProps()}
-            ref={(element) => buttonRef(element as HTMLElement | null)}
-          />
-        );
+        return () => <button {...elementProps()} ref={setRef} />;
       });
       await render(<TestButton />);
       expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -1115,14 +1134,9 @@ describe('useButton', () => {
         .mockImplementation(() => {});
       const TestButton = defineComponent(
         (props: { native?: boolean | undefined }) => {
-          const { getButtonProps, buttonRef } = useButton({ native: () => props.native });
+          const { elementProps, setRef } = useTestButton({ native: () => props.native });
 
-          return () => (
-            <button
-              {...getButtonProps()}
-              ref={(element) => buttonRef(element as HTMLElement | null)}
-            />
-          );
+          return () => <button {...elementProps()} ref={setRef} />;
         },
         { props: ['native'] },
       );

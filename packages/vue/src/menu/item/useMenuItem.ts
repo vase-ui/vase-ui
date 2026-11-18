@@ -1,6 +1,7 @@
 import type { MaybeRefOrGetter, Ref } from 'vue';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { mergeProps } from '../../merge-props';
+import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import type { MenuStore } from '../store/MenuStore';
 import { useMenuItemCommonProps } from './useMenuItemCommonProps';
 
@@ -19,13 +20,6 @@ export function useMenuItem(params: UseMenuItemParameters): UseMenuItemReturnVal
   // Vue calls the ref of a part during the render of that part. A reactive write there would make
   // the render depend on it, so this is a plain variable.
   let itemElement: HTMLElement | null = null;
-
-  const { getButtonProps, buttonRef } = useButton({
-    disabled: params.disabled,
-    focusableWhenDisabled: true,
-    native: params.nativeButton,
-    composite: true,
-  });
 
   const commonProps = useMenuItemCommonProps({
     closeOnClick: params.closeOnClick,
@@ -48,17 +42,23 @@ export function useMenuItem(params: UseMenuItemParameters): UseMenuItemReturnVal
   };
 
   function getItemProps(externalProps?: Record<string, any>): Record<string, any> {
-    return mergeProps<'div'>(commonProps.value, mouseEnterProps, externalProps, getButtonProps);
+    return mergeProps<'div'>(commonProps.value, mouseEnterProps, externalProps);
   }
 
   function itemRef(element: HTMLElement | null) {
     itemElement = element;
-    buttonRef(element);
   }
 
   return {
     getItemProps,
     itemRef,
+    button: (element) =>
+      useButton(element, {
+        disabled: params.disabled,
+        focusableWhenDisabled: true,
+        native: params.nativeButton,
+        composite: true,
+      }),
   };
 }
 
@@ -109,6 +109,7 @@ export type UseMenuItemMetadata =
     };
 
 export interface UseMenuItemReturnValue {
+  button: NonNullable<UseRenderElementParameters<{}>['button']>;
   /**
    * Resolver for the props of the element.
    * @param externalProps The props of the part and of the consumer.

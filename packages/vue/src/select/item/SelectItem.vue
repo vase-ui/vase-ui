@@ -56,7 +56,7 @@ import {
 } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isVirtualClick } from '../../utils/popups/event';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
@@ -181,13 +181,6 @@ watch(
 let pointerType = 'mouse';
 let allowMouseSelection = false;
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-  composite: true,
-});
-
 const state = computed<SelectItemState>(() => ({
   disabled: isDisabled.value,
   selected: selected.value,
@@ -220,8 +213,15 @@ function resetDragMovement() {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+      composite: true,
+    }),
   state,
-  ref: [setItemElement, buttonRef, listItem.ref],
+  ref: [setItemElement, listItem.ref],
   props: (attrs) => [
     itemRoot.value.props,
     {
@@ -313,7 +313,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

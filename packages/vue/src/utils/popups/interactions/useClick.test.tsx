@@ -16,7 +16,8 @@ import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
-import { useButton } from '../../../internals/use-button';
+import { useRenderElement } from '../../../internals/useRenderElement';
+import { useButton } from '../../../internals/use-button/useButton';
 import { useTriggerRegistration } from '../popupStoreUtils';
 import { useClick } from './useClick';
 import type { UseClickProps } from './useClick';
@@ -201,19 +202,20 @@ const DivButtonApp = defineComponent(() => {
       open.value = nextOpen;
     },
   });
-  const { getButtonProps, buttonRef } = useButton({ native: false });
   const { reference } = useClick(context.rootStore);
+  const { elementProps, setRef } = useRenderElement(
+    'div',
+    {},
+    {
+      button: (element) => useButton(element, { native: false }),
+      ref: refs.setReference,
+      props: () => [reference, { tabindex: 0 }],
+    },
+  );
 
   return () => (
     <>
-      <div
-        {...getButtonProps(reference)}
-        tabindex={0}
-        ref={(element) => {
-          buttonRef(element as HTMLElement | null);
-          refs.setReference(element);
-        }}
-      />
+      <div {...elementProps()} ref={setRef} />
       {open.value && <div role="tooltip" />}
     </>
   );

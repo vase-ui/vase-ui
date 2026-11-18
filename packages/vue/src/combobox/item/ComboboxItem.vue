@@ -52,7 +52,7 @@ import {
   resolveSelectedIndex,
 } from '../../internals/itemEquality';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
@@ -171,13 +171,6 @@ useDomEffect(
   },
 );
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-  composite: true,
-});
-
 const state = computed<ComboboxItemState>(() => ({
   disabled: isDisabled.value,
   selected: selected.value,
@@ -199,8 +192,15 @@ function isInteractive() {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+      composite: true,
+    }),
   state,
-  ref: [buttonRef, listItem.ref],
+  ref: listItem.ref,
   props: (attrs) => [
     itemRoot.value.props,
     {
@@ -248,7 +248,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

@@ -109,7 +109,7 @@ import {
 import { REASONS } from '../../internals/reasons';
 import { serializeValue } from '../../internals/serializeValue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
@@ -189,12 +189,6 @@ const ariaLabelledBy = useAriaLabelledBy(
 );
 
 // The part sets `composite` to `false`, so the Space key selects a radio on keyup in a group too.
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-  composite: false,
-});
-
 function restoreInput() {
   restoreChecked(inputElement.value, checked.value);
 }
@@ -324,8 +318,14 @@ provide(RadioRootContext, state);
 const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+      composite: false,
+    }),
   state,
-  ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
+  ref: item?.compositeRef,
   stateAttributesMapping,
   props: (attrs) => [
     item?.compositeProps.value,
@@ -379,7 +379,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
       },
     },
     attrs,
-    getButtonProps,
     getDescriptionProps,
     group && ((merged) => group.validation.getValidationProps(isDisabled.value, merged)),
   ],

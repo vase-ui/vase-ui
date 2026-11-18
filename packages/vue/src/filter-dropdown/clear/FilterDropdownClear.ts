@@ -2,7 +2,7 @@ import { computed, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import {
   useFilterDropdownRootContext,
@@ -11,7 +11,7 @@ import {
 
 /**
  * The button that clears the query of a filter dropdown. The part that calls it renders its
- * element only while `visible` is `true`, and gives `state`, `ref` and `props` to
+ * element only while `visible` is `true`, and gives `state`, `button` and `props` to
  * `useRenderElement` with the default tag `button`.
  *
  * Call it in `setup`.
@@ -26,11 +26,6 @@ export function useFilterDropdownClear(
 
   const disabled = computed(() => context.disabled.value || Boolean(toValue(params.disabled)));
   const visible = computed(() => value.value !== '');
-
-  const { buttonRef, getButtonProps } = useButton({
-    disabled,
-    native: () => toValue(params.nativeButton) ?? true,
-  });
 
   // `visible` is deliberately absent from the state: the component renders nothing when it is
   // false, so a `data-visible` attribute would be present on every rendered instance.
@@ -53,8 +48,12 @@ export function useFilterDropdownClear(
   return {
     visible,
     state,
-    ref: buttonRef,
-    props: (attrs) => [ownProps, attrs, getButtonProps],
+    button: (element) =>
+      useButton(element, {
+        disabled,
+        native: () => toValue(params.nativeButton) ?? true,
+      }),
+    props: (attrs) => [ownProps, attrs],
   };
 }
 
@@ -82,7 +81,6 @@ export interface UseFilterDropdownClearReturnValue {
   /** Whether the button renders: the query is not empty. */
   visible: ComputedRef<boolean>;
   state: ComputedRef<FilterDropdownClearState>;
-  /** The function ref of the button element. */
-  ref: (element: HTMLElement | null) => void;
+  button: NonNullable<UseRenderElementParameters<FilterDropdownClearState>['button']>;
   props: NonNullable<UseRenderElementParameters<FilterDropdownClearState>['props']>;
 }

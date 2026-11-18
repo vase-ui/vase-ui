@@ -149,7 +149,7 @@ import {
   useLabelableId,
 } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormReset } from '../../internals/useFormReset';
@@ -342,11 +342,6 @@ useValueChanged(isChecked, () => {
   validation.change(isChecked.value);
 });
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabelledby,
   useControlLabelId(),
@@ -536,8 +531,12 @@ const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
 const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [buttonRef],
   stateAttributesMapping,
   props: (attrs) => [
     {
@@ -580,7 +579,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
     props.parent && groupParent.value
       ? { 'aria-controls': groupProps.value['aria-controls'] }
       : undefined,
-    getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],

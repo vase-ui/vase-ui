@@ -7,7 +7,7 @@ import {
 } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { isTouchLikePointerType, usePressAndHold } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { parseNumber } from '../utils/parse';
@@ -149,22 +149,21 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
     pointerHandlers.onPointerdown(event);
   }
 
-  const { getButtonProps, buttonRef } = useButton({
-    // Read-only steppers are exposed as unavailable through button disabled semantics, while
-    // `data-readonly` (from `state`) is preserved for styling. `aria-readonly` isn't valid on the
-    // `button` role, so it's intentionally not set.
-    disabled: isDisabledOrReadOnly,
-    native: () => props.nativeButton,
-    focusableWhenDisabled: true,
-  });
-
   const buttonState = computed<NumberFieldRootState>(() => ({
     ...state.value,
     disabled: disabled.value,
   }));
 
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
-    ref: buttonRef,
+    button: (element) =>
+      useButton(element, {
+        // Read-only steppers are exposed as unavailable through button disabled semantics, while
+        // `data-readonly` (from `state`) is preserved for styling. `aria-readonly` isn't valid on the
+        // `button` role, so it's intentionally not set.
+        disabled: isDisabledOrReadOnly,
+        native: () => props.nativeButton,
+        focusableWhenDisabled: true,
+      }),
     state: buttonState,
     props: (attrs) => [
       {
@@ -181,7 +180,6 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
         onPointerdown,
       },
       attrs,
-      getButtonProps,
     ],
     stateAttributesMapping,
   });

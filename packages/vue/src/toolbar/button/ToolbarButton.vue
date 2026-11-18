@@ -46,7 +46,7 @@ import { computed, useSlots } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
@@ -85,12 +85,6 @@ const itemMetadata = computed<ToolbarRootItemMetadata>(() => ({
   focusableWhenDisabled: props.focusableWhenDisabled,
 }));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: itemDisabled,
-  focusableWhenDisabled: () => props.focusableWhenDisabled,
-  native: () => props.nativeButton,
-});
-
 const state = computed<ToolbarButtonState>(() => ({
   disabled: itemDisabled.value,
   orientation: orientation.value,
@@ -103,8 +97,14 @@ const { compositeProps, compositeRef } = useCompositeItem({
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: itemDisabled,
+      focusableWhenDisabled: () => props.focusableWhenDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [compositeRef, buttonRef],
+  ref: compositeRef,
   props: (attrs) => [
     compositeProps.value,
     attrs,
@@ -119,7 +119,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     (slots.render || props.as !== 'button') && itemDisabled.value
       ? FORWARDED_DISABLED
       : EMPTY_OBJECT,
-    getButtonProps,
   ],
 });
 

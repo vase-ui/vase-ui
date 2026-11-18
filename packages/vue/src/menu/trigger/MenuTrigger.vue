@@ -70,7 +70,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
 import { REASONS } from '../../internals/reasons';
@@ -180,11 +180,6 @@ const isDisabled = computed(
     (menubarContext?.disabled.value ?? false) ||
     (props.nativeButton && fieldsetDisabled.value),
 );
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
 
 // In a menubar the trigger is an item of the composite of the menubar.
 const compositeItem = isInMenubar ? useCompositeItem() : undefined;
@@ -380,11 +375,15 @@ const state = computed<MenuTriggerState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
   ref: [
     compositeItem?.compositeRef,
-    buttonRef,
     registerTrigger,
     (trigger) => {
       triggerElement.value = trigger;
@@ -407,7 +406,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     isInMenubar ? { role: 'menuitem' } : {},
     mixedToggleHandlers,
     attrs,
-    getButtonProps,
   ],
 });
 

@@ -3,7 +3,7 @@ import type { HTMLAttributes, Ref } from 'vue';
 import { useIsHydrating } from '../../../common/hydration';
 import type { StateAttributesMapping } from '../../getStateAttributesProps';
 import type { NativeButtonProps, VaseUIComponentProps } from '../../types';
-import { useButton } from '../../use-button';
+import { useButton } from '../../use-button/useButton';
 import { useRenderElement } from '../../useRenderElement';
 import { isSameDay } from '../temporal';
 import type { DayState } from './dayState';
@@ -68,14 +68,13 @@ export function useDayButton<State extends DayState>(
   const text = computed(() => formatText(day.value, { day: 'numeric' }, root.locale.value));
   const label = computed(() => formatText(day.value, props.format ?? FULL_DATE, root.locale.value));
 
-  const { getButtonProps, buttonRef } = useButton({
-    disabled: () => state.value.disabled,
-    native: () => props.nativeButton,
-  });
-
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+    button: (element) =>
+      useButton(element, {
+        disabled: () => state.value.disabled,
+        native: () => props.nativeButton,
+      }),
     state,
-    ref: buttonRef,
     props: (attrs) => {
       const tabindex = isTabStop.value ? 0 : -1;
       return [
@@ -105,7 +104,6 @@ export function useDayButton<State extends DayState>(
           ...extraProps,
         },
         attrs,
-        getButtonProps,
       ];
     },
     stateAttributesMapping,

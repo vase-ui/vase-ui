@@ -9,10 +9,10 @@ describe('useButton', () => {
       expect(typeof document).toBe('undefined');
 
       const TestButton = defineComponent(
-        (props: { disabled?: boolean | undefined }, { attrs }) => {
-          const { getButtonProps } = useButton({ disabled: () => props.disabled, native: false });
+        (props: { disabled?: boolean | undefined }) => {
+          const { attributes } = useButton(null, { disabled: () => props.disabled, native: false });
 
-          return () => <span {...getButtonProps(attrs)} />;
+          return () => <span {...attributes.value} />;
         },
         { props: ['disabled'], inheritAttrs: false },
       );
@@ -24,10 +24,10 @@ describe('useButton', () => {
 
     it('adds disabled attribute', async () => {
       const TestButton = defineComponent(
-        (props: { disabled?: boolean | undefined }, { attrs }) => {
-          const { getButtonProps } = useButton({ disabled: () => props.disabled });
+        (props: { disabled?: boolean | undefined }) => {
+          const { attributes } = useButton(null, { disabled: () => props.disabled });
 
-          return () => <button {...getButtonProps(attrs)}>Submit</button>;
+          return () => <button {...attributes.value}>Submit</button>;
         },
         { props: ['disabled'], inheritAttrs: false },
       );

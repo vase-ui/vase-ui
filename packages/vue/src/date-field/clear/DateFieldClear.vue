@@ -29,7 +29,7 @@ import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import DateFieldClearChildren from './DateFieldClearChildren.vue';
@@ -67,15 +67,14 @@ const state = computed<DateFieldClearState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { buttonRef, getButtonProps } = useButton({
-  native: () => props.nativeButton,
-  disabled: isDisabled,
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      native: () => props.nativeButton,
+      disabled: isDisabled,
+    }),
   state,
   stateAttributesMapping: rootStateAttributesMapping,
-  ref: [buttonRef],
   props: (attrs) => [
     {
       // The button names itself only when it shows its own `x`.
@@ -85,7 +84,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
   ],
   children: true,
 });
