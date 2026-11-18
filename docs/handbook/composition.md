@@ -73,17 +73,17 @@ Each Vase UI part renders the most appropriate element by default. In most cases
 
 ## The render slot
 
-The `#render` slot gives you `props` and `state`. Bind `props` on your element. Use `state` for its content, class or style.
+The `#render` slot gives you `props` and `state`. Bind `props` on your element. In a Vapor template, also bind `:ref="props.ref"`. Use `state` for the content, class or style.
 
 <<< ../examples/composition/RenderSlot.vue{8-13}
 
-The default slot also gets `{ state }`. Some parts have nodes of their own. `Slider.Thumb` has a range input. Such a part gives `#render` a third slot prop, `children`. Mount `children` inside your element to keep the input. In a Vapor template, also bind `:ref="props.ref"` on the element.
+The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Slider.Thumb` inside your element to keep its range input. A development build warns if the slot opens without those children.
 
 <<< ../examples/composition/RenderChildren.vue{10-12}
 
 ## Element refs
 
-A template ref on a part gives you its public instance. Read `element` for its DOM element.
+A template ref on a part gives you its public instance. For a part that renders an element, read `element` to get the DOM node.
 Some parts expose another element or an action. For example, `Checkbox.Root` exposes its native input as `inputElement`.
 If the part removes its element, its exposed `element` becomes `null`.
 

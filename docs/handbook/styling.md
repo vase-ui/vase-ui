@@ -17,7 +17,7 @@ A part that renders an HTML element accepts a `class` attribute. Use it to style
 
 <<< ../examples/styling/ClassAttribute.vue{7}
 
-The class you give comes before the class of the part. For a class that depends on state, bind `:class` in the render slot.
+The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
 
 <<< ../examples/styling/SlotClass.vue{8-9}
 

@@ -19,7 +19,7 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
 
 /**
  * Gives the API of a Vase UI part to a component.
- * The component gets the `as` prop, the `#render` slot, state data attributes and an exposed `element`.
+ * It returns the element bindings and the ref that the component can expose.
  *
  * Call it in `setup`.
  * Set `inheritAttrs: false`. The composable reads the attributes with `useAttrs()`
