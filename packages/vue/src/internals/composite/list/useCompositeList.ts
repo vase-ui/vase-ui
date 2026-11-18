@@ -105,30 +105,43 @@ export function useCompositeList<Metadata>(
     }
 
     const observer = new MutationObserver((entries) => {
-      // An item or its wrapper can move outside the observed root without a new ref callback.
       for (const entry of entries) {
         for (const node of entry.removedNodes) {
           if (node.isConnected && sortedNodes.some((item) => node.contains(item))) {
-            triggerRef(registry);
+            observeRoots(true);
             return;
           }
         }
       }
     });
 
-    onWatcherCleanup(() => observer.disconnect());
-
-    // A Teleport can move an item between descendants of the same common ancestor.
-    const roots = new Set<Element>();
-    for (let i = 1; i < sortedNodes.length; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from 1 to the last index, so `i - 1` and `i` are indexes of `sortedNodes`.
-      const root = getCommonAncestor(sortedNodes[i - 1]!, sortedNodes[i]!);
-      if (root) {
-        roots.add(root);
+    function observeRoots(checkOrder: boolean) {
+      const roots = new Set<Element>();
+      let previous: HTMLElement | undefined;
+      for (const node of sortedNodes) {
+        if (!node.isConnected) {
+          continue;
+        }
+        if (previous) {
+          if (checkOrder && sortByDocumentPosition(previous, node) > 0) {
+            triggerRef(registry);
+            return;
+          }
+          const root = getCommonAncestor(previous, node);
+          if (root) {
+            roots.add(root);
+          }
+        }
+        previous = node;
       }
+
+      // A Teleport can move an item out of its observed subtree without changing its index.
+      observer.disconnect();
+      roots.forEach((root) => observer.observe(root, { childList: true, subtree: true }));
     }
 
-    roots.forEach((root) => observer.observe(root, { childList: true, subtree: true }));
+    observeRoots(false);
+    onWatcherCleanup(() => observer.disconnect());
   }
 
   onMounted(() => {

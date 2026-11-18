@@ -707,9 +707,12 @@ describe('<CompositeList />', () => {
       await render(() => (
         <CompositeList elementsRef={elementsRef}>
           <div>
-            <div id="before" />
+            <div id="nearby" />
             <div>
-              <Item label="fixed" />
+              <div id="before" />
+              <div>
+                <Item label="fixed" />
+              </div>
             </div>
             <div id="after" />
             <Teleport defer to={target.value}>
@@ -720,7 +723,13 @@ describe('<CompositeList />', () => {
       ));
       const moving = screen.getByTestId('moving');
       const fixed = screen.getByTestId('fixed');
-      expect(elementsRef.value).toEqual([moving, fixed]);
+      const initialOrder = elementsRef.value;
+      expect(initialOrder).toEqual([moving, fixed]);
+
+      target.value = '#nearby';
+      await flushMicrotasks();
+      expect(moving.parentElement).toHaveAttribute('id', 'nearby');
+      expect(elementsRef.value).toBe(initialOrder);
 
       target.value = '#after';
       await flushMicrotasks();
