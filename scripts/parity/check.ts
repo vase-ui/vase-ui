@@ -43,7 +43,7 @@ export function runParityCheck(root = REPOSITORY_ROOT): ParityCheckRun {
     rowsOf,
     project: () => (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.build.json'))),
   });
-  return { parity, files, rowsOf, result };
+  return { parity, files: result.files, rowsOf, result };
 }
 
 function main(): void {

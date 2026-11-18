@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { counterparts, hasCounterpart, matchesAny, toVaseName, vaseFiles } from './paths.ts';
+import {
+  counterparts,
+  directCounterparts,
+  hasCounterpart,
+  matchesAny,
+  toVaseName,
+  vaseFiles,
+} from './paths.ts';
 
 const counterpartRules: { name: string; upstream: string; files: string[]; expected: string[] }[] =
   [
@@ -84,6 +91,19 @@ for (const { name, upstream, files, expected } of counterpartRules) {
     assert.equal(hasCounterpart(upstream, vaseFiles(files)), expected.length > 0);
   });
 }
+
+test('a relocation resolves only the exact file and gives each destination of a split', () => {
+  const upstream = 'packages/utils/src/point.ts';
+  const port = 'packages/vue/src/common/point.test.ts';
+  const destinations = ['packages/vue/src/tooltip/Root.vue', 'packages/vue/src/common/axis.ts'];
+  const files = {
+    ...vaseFiles([port, ...destinations]),
+    relocations: new Map([[upstream, destinations]]),
+  };
+  assert.deepEqual(counterparts(upstream, files), destinations);
+  assert.deepEqual(directCounterparts(upstream, files), []);
+  assert.deepEqual(counterparts('packages/utils/src/point.test.ts', files), [port]);
+});
 
 test('the name map preserves case and maps the words Base UI only in titles', () => {
   const text = 'BaseUI BaseUi baseUI baseUi base-ui Base UI BASE_UI Baseui data-base-ui-open';

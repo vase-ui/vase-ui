@@ -1,4 +1,6 @@
 import { join } from 'node:path';
+import ts from 'typescript';
+import { parse } from 'vue/compiler-sfc';
 import { checkTitleNames, isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { checkFamily } from './checkFamily.ts';
@@ -6,8 +8,16 @@ import type { FamilySummary, FileTally, RowTally } from './checkFamily.ts';
 import { checkOwnComponent } from './checkOwn.ts';
 import { checkSurface } from './checkSurface.ts';
 import type { SurfaceSummary, Tally } from './checkSurface.ts';
-import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
-import { hasCounterpart, isTestFile, matchesAny, VASE_SOURCE_ROOT } from './paths.ts';
+import type { BetterRow, FamilyExtract, FamilyFile, UpstreamFile } from './parityFiles.ts';
+import {
+  directCounterparts,
+  hasCounterpart,
+  isTestFile,
+  isTypeTestFile,
+  matchesAny,
+  relocationKind,
+  VASE_SOURCE_ROOT,
+} from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import {
   checkPathNames,
@@ -145,8 +155,140 @@ function checkHiddenProps(files: VaseFiles, root: string): string[] {
     );
 }
 
-export function checkRepository(input: CheckInput): CheckResult {
-  const { parity, files, root } = input;
+interface CurrentFamily {
+  name: string;
+  family: FamilyFile;
+  extract: FamilyExtract;
+}
+
+function retainedMembers(path: string, source: string): Set<string> {
+  const names = new Set<string>();
+  function visit(node: ts.Node): void {
+    if (
+      ts.isDeclarationStatement(node) ||
+      ts.isVariableDeclaration(node) ||
+      ts.isBindingElement(node) ||
+      ts.isClassElement(node) ||
+      ts.isTypeElement(node) ||
+      ts.isObjectLiteralElementLike(node) ||
+      ts.isEnumMember(node)
+    ) {
+      const { name } = node;
+      if (
+        name &&
+        (ts.isIdentifier(name) || ts.isPrivateIdentifier(name) || ts.isStringLiteral(name))
+      ) {
+        names.add(name.text);
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  if (path.endsWith('.vue')) {
+    const { script, scriptSetup } = parse(source, { filename: path }).descriptor;
+    for (const block of [script, scriptSetup]) {
+      if (block) {
+        visit(
+          ts.createSourceFile(
+            `script.${block.lang ?? 'js'}`,
+            block.content,
+            ts.ScriptTarget.Latest,
+          ),
+        );
+      }
+    }
+  } else {
+    visit(ts.createSourceFile(path, source, ts.ScriptTarget.Latest));
+  }
+  return names;
+}
+
+function resolveRelocations(
+  families: CurrentFamily[],
+  input: CheckInput,
+  rowsOf: CheckInput['rowsOf'],
+  problems: string[],
+): VaseFiles {
+  const { files, root } = input;
+  const relocations = new Map<string, string[]>();
+  const owners = new Map<string, string>();
+  const members = new Map<string, Set<string>>();
+  let typeTests: Set<string> | undefined;
+  function compiled(path: string): boolean {
+    if (!typeTests) {
+      const folder = join(root, 'packages/vue');
+      const config = ts.readConfigFile(join(folder, 'tsconfig.test.json'), ts.sys.readFile);
+      typeTests = new Set(
+        ts.parseJsonConfigFileContent(config.config ?? {}, ts.sys, folder).fileNames,
+      );
+    }
+    return typeTests.has(join(root, path));
+  }
+  for (const { name, family, extract } of families) {
+    const paths = new Set([
+      ...extract.sources,
+      ...extract.typeTests,
+      ...extract.cases.map(({ file }) => file),
+    ]);
+    for (const path of paths) {
+      const owner = owners.get(path);
+      if (owner) {
+        problems.push(
+          `${name}: ${path} also belongs to ${owner}. Keep one family per upstream file.`,
+        );
+      }
+      owners.set(path, name);
+    }
+    for (const [index, row] of (family.relocations ?? []).entries()) {
+      const before = problems.length;
+      const report = (message: string) =>
+        problems.push(`${name}: relocations[${index}] (${row.upstream}): ${message}`);
+      if (!paths.has(row.upstream)) {
+        report('the family extract has no such file.');
+      }
+      const direct = directCounterparts(row.upstream, files);
+      if (direct.length) {
+        report(`the direct counterpart ${direct.join(', ')} exists. Remove the conflict.`);
+      }
+      const { witness } = row;
+      if (!files.paths.has(witness) || !(isTestFile(witness) || isTypeTestFile(witness))) {
+        report(`the witness ${witness} must name a test file.`);
+      } else if (isTypeTestFile(witness)) {
+        if (!compiled(witness) || (!row.member && !isTypeTestFile(row.upstream))) {
+          report(`the witness ${witness} must cover the retained behavior or type.`);
+        }
+      } else if (rowsOf(witness).length === 0) {
+        report(`the witness ${witness} has no case or suite call.`);
+      }
+      const targets = [row, ...(row.additional ?? [])];
+      for (const { destination, member } of targets) {
+        if (!files.paths.has(destination)) {
+          report(`the destination ${destination} does not exist.`);
+        } else if (relocationKind(destination) !== relocationKind(row.upstream)) {
+          report(`${destination} must be a ${relocationKind(row.upstream)}.`);
+        } else if (isTypeTestFile(destination) && !compiled(destination)) {
+          report(`the test project does not include ${destination}.`);
+        } else if (member) {
+          if (!members.has(destination)) {
+            members.set(
+              destination,
+              retainedMembers(destination, readRepositoryFile(root, destination)),
+            );
+          }
+          if (!members.get(destination)?.has(member)) {
+            report(`${destination} has no declaration for "${member}".`);
+          }
+        }
+      }
+      if (problems.length === before) {
+        relocations.set(row.upstream, [...new Set(targets.map(({ destination }) => destination))]);
+      }
+    }
+  }
+  return { ...files, relocations };
+}
+
+export function checkRepository(input: CheckInput): CheckResult & { files: VaseFiles } {
+  const { parity, root } = input;
   const problems = [...parity.problems, ...checkPathNames(root)];
   const families: FamilyReport[] = [];
 
@@ -154,7 +296,6 @@ export function checkRepository(input: CheckInput): CheckResult {
   const refused = new Set<string>();
   const readTests = new Set<string>();
   const rowsOf = (path: string): TestRow[] => {
-    readTests.add(path);
     if (refused.has(path)) {
       return [];
     }
@@ -167,6 +308,7 @@ export function checkRepository(input: CheckInput): CheckResult {
     }
   };
 
+  const current: CurrentFamily[] = [];
   for (const found of [...parity.families].sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
     const { name, family, extract } = found;
     if (found.hasFamilyFile && !found.hasExtract) {
@@ -186,10 +328,19 @@ export function checkRepository(input: CheckInput): CheckResult {
     }
     const stale = checkFreshExtract(name, found);
     problems.push(...stale);
-    if (stale.length > 0) {
-      continue;
+    if (stale.length === 0) {
+      current.push({ name, family, extract });
     }
-    const cases = checkFamily(name, family, extract, { files, rowsOf });
+  }
+  const files = resolveRelocations(current, input, rowsOf, problems);
+  for (const { name, family, extract } of current) {
+    const cases = checkFamily(name, family, extract, {
+      files,
+      rowsOf(path) {
+        readTests.add(path);
+        return rowsOf(path);
+      },
+    });
     problems.push(...cases.problems);
     const report: FamilyReport = { name, summary: cases.summary };
     if (
@@ -225,7 +376,7 @@ export function checkRepository(input: CheckInput): CheckResult {
   const better = checkBetter(parity.better, files, () => tests.flatMap(rowsOf));
   problems.push(...better.problems);
   problems.push(...checkHiddenProps(files, root));
-  return { problems, families, better: better.summary };
+  return { problems, families, better: better.summary, files };
 }
 
 const EXCEPTION_KINDS = ['replaced', 'not-applicable', 'waits-on'] as const;
