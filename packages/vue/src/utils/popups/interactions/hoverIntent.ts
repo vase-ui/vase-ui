@@ -206,8 +206,7 @@ export class HoverIntent {
   }
 
   /**
-   * Removes a trigger that `addHoverTrigger()` added. When the trigger got its pointer events from
-   * the block, it loses them at once.
+   * Removes a registered hover trigger. The active trigger keeps its override until the block ends.
    */
   removeHoverTrigger(element: HoverTriggerElement) {
     this.#hoverTriggers.delete(element);

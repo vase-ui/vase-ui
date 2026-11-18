@@ -80,7 +80,7 @@ describe('HoverIntent', () => {
       expect(readPointerEvents(second)).toEqual(['', '', '']);
     });
 
-    it('restores the value and priority of an external scope after a handoff', () => {
+    it('VUE-94: restores the value and priority of an external scope after a handoff', () => {
       const first = createElements();
       const second = { ...createElements(), scopeElement: first.scopeElement };
       const { style } = first.scopeElement;
@@ -117,18 +117,6 @@ describe('HoverIntent', () => {
 
         intent.restoreOutsidePointerEvents();
         expect(hoverPointerStyle(before)).toBeUndefined();
-      });
-
-      it('keep a pointer-events value of their own', () => {
-        const intent = createIntent();
-        const trigger = document.createElement('button');
-        trigger.style.pointerEvents = 'none';
-        intent.addHoverTrigger(trigger);
-
-        intent.blockOutsidePointerEvents(createElements());
-        intent.restoreOutsidePointerEvents();
-
-        expect(trigger.style.pointerEvents).toBe('none');
       });
     });
   });

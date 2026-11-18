@@ -80,13 +80,15 @@ it.each([true, false])(
 );
 
 it('VUE-94: keeps the author pointer style when a hover block moves between triggers', async () => {
-  const pointerEvents = shallowRef<'inherit' | 'all'>('inherit');
+  const pointerEvents = shallowRef<'none' | 'all'>('none');
   await render(() => (
     <NavigationMenu.Root delay={0}>
       <NavigationMenu.List data-testid="list">
         {['One', 'Two'].map((value) => (
           <NavigationMenu.Item value={value}>
-            <NavigationMenu.Trigger style={{ pointerEvents: pointerEvents.value }}>
+            <NavigationMenu.Trigger
+              style={{ pointerEvents: value === 'One' ? 'all' : pointerEvents.value }}
+            >
               {value}
             </NavigationMenu.Trigger>
             <NavigationMenu.Content>{value}</NavigationMenu.Content>
@@ -94,7 +96,7 @@ it('VUE-94: keeps the author pointer style when a hover block moves between trig
         ))}
       </NavigationMenu.List>
       <NavigationMenu.Portal keepMounted>
-        <NavigationMenu.Positioner>
+        <NavigationMenu.Positioner data-testid="positioner" style={{ pointerEvents: 'all' }}>
           <NavigationMenu.Popup>
             <NavigationMenu.Viewport />
           </NavigationMenu.Popup>
@@ -108,7 +110,9 @@ it('VUE-94: keeps the author pointer style when a hover block moves between trig
   await fireEvent.mouseMove(one);
   await flushMicrotasks();
   expect(screen.getByTestId('list').style.pointerEvents).toBe('none');
-  expect(one.style.pointerEvents).toBe('inherit');
+  expect(one.style.pointerEvents).toBe('all');
+  expect(two.style.pointerEvents).toBe('none');
+  expect(screen.getByTestId('positioner').style.pointerEvents).toBe('all');
   pointerEvents.value = 'all';
   await fireEvent.mouseEnter(two);
   await fireEvent.mouseMove(two);
