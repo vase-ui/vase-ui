@@ -21,7 +21,7 @@ import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { HeldRootCallContext } from './popupHandle';
 import type { ReactiveStore } from './ReactiveStore';
-import { popupStoreSelectors } from './store';
+import { canClaimOpenPopup, popupStoreSelectors } from './store';
 import type {
   PopupStoreContext,
   PopupStoreSelectors,
@@ -177,12 +177,16 @@ export function usePopupRoot<Store extends PopupRootStore>(
   );
   watch(
     () => props.triggerId,
-    (triggerId) => {
+    (triggerId, previous) => {
       if (triggerId === undefined) {
         store.update({
-          activeTriggerId: store.select('activeTriggerId'),
+          activeTriggerId: previous ?? null,
           triggerIdProp: undefined,
+          openedWithoutTrigger:
+            previous === null ? store.select('open') : store.state.openedWithoutTrigger,
         });
+      } else if (triggerId === null) {
+        store.update({ triggerIdProp: null, activeTriggerElement: null });
       } else {
         store.set('triggerIdProp', triggerId);
       }
@@ -443,9 +447,8 @@ function usePopupRootTransitions(
  * Keeps the trigger registration and the state of an open popup in step. Call it in `setup` of the
  * root. It does nothing while `KeepAlive` holds the root, also at a mount in a held branch.
  *
- * - A popup with no active trigger takes the only registered trigger, unless the open request
- *   named no trigger.
- * - When triggers join an open popup that has no active trigger and none claims it, the first
+ * - An open popup can take its only registered trigger when it allows an implicit trigger.
+ * - When triggers join such a popup and none claims it, the first
  *   trigger of the trigger map that is in the document becomes the active trigger. `KeepAlive`
  *   activates the triggers in an order that depends on the tree, so a claim by each trigger
  *   would not give the result of the mount.
@@ -533,7 +536,7 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
       resolvedActiveTriggerId = null;
     }
 
-    if (!lostActiveTriggerId && !currentActiveTriggerId && !state.openedWithoutTrigger) {
+    if (canClaimOpenPopup(state)) {
       for (const [triggerId, triggerElement] of triggerElements.entries()) {
         if (triggerCount === 1 || (hasJoined && triggerElement.isConnected)) {
           stateUpdates.activeTriggerId = triggerId;

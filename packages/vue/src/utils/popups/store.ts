@@ -68,10 +68,8 @@ export type PopupStoreState<Payload> = {
    */
   anchorElement: Element | null;
   /**
-   * Whether a request that had no trigger opened the popup, such as `open(null)` or
-   * `openWithPayload()` of a handle. While this is set, a lone registered trigger is not
-   * associated with the popup. The state that the trigger owns, such as `payload`, is then not
-   * forwarded. The root resets it when the popup is closed.
+   * Whether the open popup keeps no trigger after a triggerless request or the release of a null
+   * `triggerId`. A new registration then leaves the payload with the popup.
    */
   openedWithoutTrigger: boolean;
   /**
@@ -201,7 +199,8 @@ export function createPopupStoreContext() {
 
 type S = PopupStoreState<unknown>;
 
-const activeTriggerIdSelector = (state: S) => state.triggerIdProp ?? state.activeTriggerId;
+const activeTriggerIdSelector = (state: S) =>
+  state.triggerIdProp === undefined ? state.activeTriggerId : state.triggerIdProp;
 
 const openSelector = (state: S) => state.openProp ?? state.open;
 
@@ -218,17 +217,12 @@ function triggerOwnsOpenPopup(state: S, triggerId: string | undefined) {
   );
 }
 
-function triggerOwnsOpenPopupOrIsOnlyTrigger(state: S, triggerId: string | undefined) {
-  if (triggerOwnsOpenPopup(state, triggerId)) {
-    return true;
-  }
-
+export function canClaimOpenPopup(state: S) {
   return (
-    triggerId !== undefined &&
     openSelector(state) &&
-    activeTriggerIdSelector(state) == null &&
-    !state.openedWithoutTrigger &&
-    state.triggerCount === 1
+    state.triggerIdProp === undefined &&
+    state.activeTriggerId === null &&
+    !state.openedWithoutTrigger
   );
 }
 
@@ -268,7 +262,10 @@ export const popupStoreSelectors = {
    * The popup id for the trigger that owns the open popup.
    */
   triggerPopupId: (state: S, triggerId: string | undefined) =>
-    triggerOwnsOpenPopupOrIsOnlyTrigger(state, triggerId) ? popupIdSelector(state) : undefined,
+    triggerOwnsOpenPopup(state, triggerId) ||
+    (triggerId !== undefined && state.triggerCount === 1 && canClaimOpenPopup(state))
+      ? popupIdSelector(state)
+      : undefined,
   popupProps: (state: S) => state.popupProps,
 
   popupElement: (state: S) => state.popupElement,
@@ -345,12 +342,9 @@ export function createPopupOpenState(
     open,
     preventUnmountingOnClose,
     activeTriggerId,
-    activeTriggerElement,
-    // An open request with no trigger, such as `open(null)` or `openWithPayload()` of a handle,
-    // must not join a lone registered trigger later. A controlled open and a default open do not
-    // pass here, so they still claim a lone trigger. A close request keeps the flag. A controlled
-    // root can decline the close and stay open, so the root clears the flag when the popup is
-    // closed.
+    activeTriggerElement: state.triggerIdProp === null ? null : activeTriggerElement,
+    // A handle can open with its own payload. A later trigger registration must leave it in place.
+    // A close request keeps the flag until the parent accepts the close.
     openedWithoutTrigger: open ? trigger == null : state.openedWithoutTrigger,
   };
 }

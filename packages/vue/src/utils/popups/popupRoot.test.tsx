@@ -997,6 +997,40 @@ describe('usePopupRoot', () => {
       expect(a).toHaveAttribute('aria-expanded', 'false');
     });
 
+    it('VUE-142: clears the active trigger when the parent refuses a press and sets null', async () => {
+      const root = createRootRef();
+      const triggerId = shallowRef<string | null | undefined>('b');
+      const { getByText, getByRole } = await render(() => (
+        <PopupRootPart ref={root.ref} open triggerId={triggerId.value}>
+          <PopupTriggerPart id="a">A</PopupTriggerPart>
+          <PopupTriggerPart id="b">B</PopupTriggerPart>
+          <PopupPart>popup</PopupPart>
+        </PopupRootPart>
+      ));
+      const a = getByText('A');
+      const b = getByText('B');
+      await fireEvent.click(a);
+      expect(b).toHaveAttribute('aria-expanded', 'true');
+
+      triggerId.value = null;
+      await flushMicrotasks();
+      expect(getByRole('dialog')).toBeVisible();
+      expect(a).toHaveAttribute('aria-expanded', 'false');
+      expect(b).toHaveAttribute('aria-expanded', 'false');
+      expect(root.current.store.select('activeTriggerId')).toBeNull();
+      expect(root.current.store.select('activeTriggerElement')).toBeNull();
+
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'false');
+      triggerId.value = undefined;
+      await flushMicrotasks();
+      expect(root.current.store.select('activeTriggerId')).toBeNull();
+      expect(root.current.store.select('activeTriggerElement')).toBeNull();
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'true');
+      expect(root.current.store.select('activeTriggerElement')).toBe(a);
+    });
+
     it.each([
       { name: 'open', prop: 'defaultOpen', props: { defaultOpen: true } },
       { name: 'triggerId', prop: 'defaultTriggerId', props: { defaultTriggerId: 'trigger' } },
