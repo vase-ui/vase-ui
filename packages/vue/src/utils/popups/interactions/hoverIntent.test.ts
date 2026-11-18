@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../popupTriggerMap';
+import { hoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';
 import type { HoverIntent } from './hoverIntent';
 
@@ -28,8 +29,8 @@ function createElements() {
 function readPointerEvents(elements: ReturnType<typeof createElements>) {
   return [
     elements.scopeElement.style.pointerEvents,
-    elements.triggerElement.style.pointerEvents,
-    elements.positionerElement.style.pointerEvents,
+    hoverPointerStyle(elements.triggerElement)?.pointerEvents ?? '',
+    hoverPointerStyle(elements.positionerElement)?.pointerEvents ?? '',
   ];
 }
 
@@ -86,17 +87,20 @@ describe('HoverIntent', () => {
         const before = document.createElement('button');
         const after = document.createElement('button');
         intent.addHoverTrigger(before);
-        expect(before.style.pointerEvents).toBe('');
+        expect(hoverPointerStyle(before)).toBeUndefined();
 
         intent.blockOutsidePointerEvents(elements);
         intent.addHoverTrigger(after);
-        expect([before.style.pointerEvents, after.style.pointerEvents]).toEqual(['auto', 'auto']);
+        expect([
+          hoverPointerStyle(before)?.pointerEvents,
+          hoverPointerStyle(after)?.pointerEvents,
+        ]).toEqual(['auto', 'auto']);
 
         intent.removeHoverTrigger(after);
-        expect(after.style.pointerEvents).toBe('');
+        expect(hoverPointerStyle(after)).toBeUndefined();
 
         intent.restoreOutsidePointerEvents();
-        expect(before.style.pointerEvents).toBe('');
+        expect(hoverPointerStyle(before)).toBeUndefined();
       });
 
       it('keep a pointer-events value of their own', () => {

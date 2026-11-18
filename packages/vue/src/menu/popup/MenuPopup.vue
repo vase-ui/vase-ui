@@ -64,6 +64,7 @@ import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -165,6 +166,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
+    { style: hoverStyle.value },
     // This listener runs after each other listener of the popup.
     { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
@@ -201,6 +203,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     },
   ],
 });
+const hoverStyle = useHoverPointerStyle(element);
 
 const initialFocus = computed<FocusOption>(() => {
   if (filterPopup) {

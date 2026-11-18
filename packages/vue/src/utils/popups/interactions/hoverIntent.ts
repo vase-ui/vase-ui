@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { isInteractiveElement } from '../element';
 import { isMouseLikePointerType } from '../event';
+import { hasHoverBinding, setHoverPointerEvents } from './hoverPointerEvents';
 import { getNodeChildren } from '../tree/nodes';
 import type { HandleClose, HandleCloseContextBase, HandleCloseOptions } from './useHoverShared';
 import {
@@ -87,10 +88,9 @@ export class HoverIntent {
 
   readonly #hoverTriggers = new Set<HoverTriggerElement>();
 
-  // The hover triggers that got `pointer-events: auto` from the block. The restore removes the
-  // value only from these triggers. Vue does not write a style binding again when its value does
-  // not change, so a removed inline value of the consumer would stay lost.
-  readonly #unblockedHoverTriggers = new Set<HoverTriggerElement>();
+  #foreignScopeStyle: { value: string; priority: string } | null = null;
+
+  #parentFloating: HTMLElement | null = null;
 
   #restTimeoutPending = false;
 
@@ -172,18 +172,20 @@ export class HoverIntent {
     this.#blockedPointerEvents = elements;
     pointerEventsOwnerByScopeElement.set(scopeElement, this);
 
-    scopeElement.style.pointerEvents = 'none';
-    triggerElement.style.pointerEvents = 'auto';
-    positionerElement.style.pointerEvents = 'auto';
-    for (const hoverTrigger of this.#hoverTriggers) {
-      this.#unblockHoverTrigger(hoverTrigger);
+    if (hasHoverBinding(scopeElement)) {
+      setHoverPointerEvents(scopeElement, this, 'none');
+    } else {
+      // The document body or an external scope has no part to bind its style.
+      this.#foreignScopeStyle = {
+        value: scopeElement.style.getPropertyValue('pointer-events'),
+        priority: scopeElement.style.getPropertyPriority('pointer-events'),
+      };
+      scopeElement.style.setProperty('pointer-events', 'none');
     }
-  }
-
-  #unblockHoverTrigger(element: HoverTriggerElement) {
-    if (element.style.getPropertyValue('pointer-events') === '') {
-      element.style.pointerEvents = 'auto';
-      this.#unblockedHoverTriggers.add(element);
+    setHoverPointerEvents(triggerElement, this, 'auto');
+    setHoverPointerEvents(positionerElement, this, 'auto');
+    for (const trigger of this.#hoverTriggers) {
+      setHoverPointerEvents(trigger, this, 'auto');
     }
   }
 
@@ -196,7 +198,7 @@ export class HoverIntent {
     this.#hoverTriggers.add(element);
     // A popup that blocks the same scope element first restores the block of this popup.
     if (this.#blockedPointerEvents) {
-      this.#unblockHoverTrigger(element);
+      setHoverPointerEvents(element, this, 'auto');
     }
   }
 
@@ -206,8 +208,8 @@ export class HoverIntent {
    */
   removeHoverTrigger(element: HoverTriggerElement) {
     this.#hoverTriggers.delete(element);
-    if (this.#unblockedHoverTriggers.delete(element)) {
-      element.style.removeProperty('pointer-events');
+    if (this.#blockedPointerEvents && this.#blockedPointerEvents.triggerElement !== element) {
+      setHoverPointerEvents(element, this);
     }
   }
 
@@ -237,13 +239,22 @@ export class HoverIntent {
     const { scopeElement, triggerElement, positionerElement } = blocked;
 
     if (pointerEventsOwnerByScopeElement.get(scopeElement) === this) {
-      scopeElement.style.removeProperty('pointer-events');
-      triggerElement.style.removeProperty('pointer-events');
-      positionerElement.style.removeProperty('pointer-events');
-      for (const hoverTrigger of this.#unblockedHoverTriggers) {
-        hoverTrigger.style.removeProperty('pointer-events');
+      if (this.#foreignScopeStyle) {
+        const { value, priority } = this.#foreignScopeStyle;
+        scopeElement.style.setProperty('pointer-events', value, priority);
+        this.#foreignScopeStyle = null;
+      } else {
+        setHoverPointerEvents(scopeElement, this);
       }
-      this.#unblockedHoverTriggers.clear();
+      setHoverPointerEvents(triggerElement, this);
+      setHoverPointerEvents(positionerElement, this);
+      for (const trigger of this.#hoverTriggers) {
+        setHoverPointerEvents(trigger, this);
+      }
+      if (this.#parentFloating) {
+        setHoverPointerEvents(this.#parentFloating, this);
+        this.#parentFloating = null;
+      }
       pointerEventsOwnerByScopeElement.delete(scopeElement);
     }
 
@@ -506,10 +517,6 @@ export class HoverIntent {
     const parentFloating = tree?.nodesRef.value.find((node) => node.id === parentId)?.context
       ?.elements.floating as HTMLElement | null;
 
-    if (parentFloating) {
-      parentFloating.style.pointerEvents = '';
-    }
-
     // A keep-mounted submenu can appear in the tree before it opens, so a
     // cached scope or parent lookup may resolve to the submenu itself. That
     // would not shield sibling items in the parent menu.
@@ -525,6 +532,10 @@ export class HoverIntent {
       doc.body;
 
     this.blockOutsidePointerEvents({ scopeElement, triggerElement, positionerElement });
+    if (parentFloating && parentFloating !== scopeElement && parentFloating !== positionerElement) {
+      this.#parentFloating = parentFloating;
+      setHoverPointerEvents(parentFloating, this, 'inherit');
+    }
 
     return true;
   }
