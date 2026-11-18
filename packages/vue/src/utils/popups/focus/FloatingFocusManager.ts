@@ -98,22 +98,22 @@ export interface FloatingFocusManagerProps {
   initialFocus?: FocusOption | undefined;
   /**
    * Determines the element to focus when the floating element is closed.
-   * The default behavior is to focus the first of these elements that can take the focus: the
-   * reference, the element that had the focus before the floating element opened, the floating
-   * element of the focus manager above, and the newest element that had the focus before an open.
+   * By default, the focus manager checks the reference, the element that had focus before the
+   * floating element opened, the floating element of the focus manager above, and the newest
+   * eligible element that had focus before an open, in that order.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
-   * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus. The return skips targets in this popup while it is closed and in
-   * closed popups below it. It follows assigned slots, DOM parents and shadow hosts. For a
-   * non-tabbable target, it uses the first eligible tabbable descendant, or the target itself if
+   * It skips detached targets and targets with a `hidden` attribute on themselves or an ancestor.
+   * It also skips targets in this popup while it is closed and in closed popups below it. This
+   * includes controls that a slot in an open shadow root projects into those popups. For a
+   * non-tabbable target, it tries the first eligible tabbable descendant, or the target itself if
    * it has none. When the element is in the closed floating element of a disabled focus manager
    * above, the return element of that focus manager replaces it, because that focus manager returns
    * no focus at its unmount. The same rule applies to the new element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
-   * - An element, a component, or a ref of one: Move the focus to that element. When it cannot take
-   *   the focus, the default behavior applies. `null` and an empty ref use the default behavior.
+   * - An element, a component, or a ref of one: Check this target before the default targets.
+   *   `null` and an empty ref use the default behavior.
    * - A function: Called with the type of the interaction that closed the floating element (`mouse`,
    *   `touch`, `pen`, or `keyboard`). The type is an empty string when no event of the user closed
    *   it. The return of the focus of a floating element below also calls the function, with the

@@ -40,7 +40,8 @@ export function contains(parent?: Element | null, child?: Element | null) {
 }
 
 /**
- * Finds the closest matching element in the composed tree, through slots and shadow roots.
+ * Finds the closest matching element. It follows slot assignments in open shadow roots, DOM
+ * parents and shadow hosts.
  * It does not support `:scope`.
  */
 export function closest<K extends keyof HTMLElementTagNameMap>(
