@@ -305,6 +305,14 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   stateAttributesMapping: fieldValidityMapping,
 });
 
+watch(
+  [element, () => props.value !== undefined],
+  () => {
+    lastInputText = undefined;
+  },
+  { flush: 'sync' },
+);
+
 // A native reset of the form gives the control its default value and sends no `input` event.
 useFormReset(element, () => {
   const value = (element.value as HTMLInputElement).value;

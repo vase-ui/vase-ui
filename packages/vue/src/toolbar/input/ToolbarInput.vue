@@ -40,7 +40,7 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
+import { computed, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -156,6 +156,13 @@ const inputRender: ReturnType<typeof useFormRestoreAsInput<unknown>> = useFormRe
   () => attrs.value,
   true,
   () => lastInputText,
+);
+watch(
+  [element, () => attrs.value !== undefined],
+  () => {
+    lastInputText = undefined;
+  },
+  { flush: 'sync' },
 );
 useFormReset(element, () => {
   lastInputText = undefined;

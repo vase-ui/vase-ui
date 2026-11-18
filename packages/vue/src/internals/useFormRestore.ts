@@ -107,9 +107,13 @@ export function useFormRestoreAsInput<Value>(
 
   const resetTarget = shallowRef<HTMLInputElement | null>(null);
   watch(
-    resetTarget,
-    (element) => {
-      if (element && element === input.value && model.value !== undefined) {
+    [input, resetTarget],
+    ([current, element], [previous]) => {
+      // A replacement input starts with the model, even if the old input held a silent edit.
+      if (current && previous && current !== previous && model.value !== undefined) {
+        render.renderValue();
+      }
+      if (element && element === current && model.value !== undefined) {
         const text = String(model.value ?? '');
         if (element.defaultValue !== text) {
           // Vue also sets the value attribute when it binds the restored text, which changes form.reset().

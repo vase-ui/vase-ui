@@ -1,6 +1,8 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Ref } from 'vue';
+import { Field } from '@vase-ui/vue/field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -359,6 +361,36 @@ describe('VUE-81: a render before the page show', () => {
     window.dispatchEvent(new PageTransitionEvent('pageshow'));
     await flushMicrotasks();
     expect(events).toEqual(LEAVES);
+  });
+
+  it.each([
+    { name: 'Field.Control', Part: Field.Control, Root: Field.Root },
+    { name: 'Toolbar.Input', Part: Toolbar.Input, Root: Toolbar.Root },
+  ])('starts a replacement $name with its own value', async ({ Part, Root }) => {
+    mockPageBeforeLoad();
+    const tag = shallowRef<'input' | 'textarea'>('input');
+    const { container } = await render(() => (
+      <Root>
+        <Part as={tag.value} aria-label="controlled" value="model" />
+        <Part as={tag.value} aria-label="uncontrolled" defaultValue="default" />
+      </Root>
+    ));
+    const controlled = screen.getByLabelText<HTMLInputElement>('controlled');
+    const uncontrolled = screen.getByLabelText<HTMLInputElement>('uncontrolled');
+    uncontrolled.value = 'typed';
+    uncontrolled.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await flushMicrotasks();
+    controlled.value = 'restored';
+
+    tag.value = 'textarea';
+    await flushMicrotasks();
+    const events = recordInputEvents(container);
+    expect(screen.getByLabelText('controlled')).toHaveValue('model');
+    expect(screen.getByLabelText('uncontrolled')).toHaveValue('default');
+
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual([]);
   });
 
   it.each(RESTORED_FAMILIES)(
