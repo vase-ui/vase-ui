@@ -132,7 +132,7 @@ const popupId = computed(() => store.select('triggerPopupId', thisTriggerId.valu
 // `useImplicitActiveTrigger` does this work.
 const { registerTrigger } = useTriggerRegistration(thisTriggerId, store);
 
-const triggerElement = shallowRef<HTMLElement | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
 let focusReturnedThroughGuard = false;
 
@@ -181,8 +181,7 @@ if (process.env.NODE_ENV !== 'production') {
   onUpdated(warnForDisabledElement);
 }
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
-const listIndex = useCompositeListItem(element, { label: () => props.label });
+const listIndex = useCompositeListItem(triggerElement, { label: () => props.label });
 
 const highlighted = computed(() => parentMenuStore.select('isActive', listIndex.value));
 
@@ -195,7 +194,7 @@ const itemMetadata: UseMenuItemMetadata = {
   },
 };
 
-const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
+const { button, commonProps, mouseEnterProps } = useMenuItem(triggerElement, {
   closeOnClick: false,
   disabled: isDisabled,
   highlighted,
@@ -273,18 +272,12 @@ const ownProps = {
   },
 };
 
-const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  elementRef: element,
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: triggerElement,
   button,
   state,
   stateAttributesMapping: triggerOpenStateMapping,
-  ref: [
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-    filterItem.ref,
-  ],
+  ref: [registerTrigger, filterItem.ref],
   props: (attrs) => [
     commonProps.value,
     mouseEnterProps,

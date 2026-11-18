@@ -188,18 +188,14 @@ const state = computed<PopoverTriggerState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
       native: () => props.nativeButton,
     }),
   state,
-  ref: [
-    registerTrigger,
-    (trigger: HTMLElement | null) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   stateAttributesMapping,
   props: (attrs) => [
     click.reference,

@@ -152,7 +152,7 @@ const floatingTreeRoot = computed(() => floatingTreeRootFromContext.value ?? own
 const floatingNodeId = useFloatingNodeId(floatingTreeRoot);
 const floatingParentNodeId = useFloatingParentNodeId();
 
-const triggerElement = shallowRef<Element | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
 const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   thisTriggerId,
@@ -373,11 +373,10 @@ const state = computed<MenuTriggerState>(() => ({
   open: isOpenedByThisTrigger.value,
 }));
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
-const compositeItem = isInMenubar ? useCompositeItem(element) : undefined;
+const compositeItem = isInMenubar ? useCompositeItem(triggerElement) : undefined;
 
-const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
-  elementRef: element,
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -385,12 +384,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', prop
     }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
-  ref: [
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   props: (attrs) => [
     compositeItem?.attributes.value,
     compositeItem?.events,

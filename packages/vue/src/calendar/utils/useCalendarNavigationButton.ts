@@ -46,6 +46,7 @@ export function useCalendarNavigationButton(props: NavigationButtonProps, step: 
   }
 
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+    elementRef: buttonElement,
     button: (element) =>
       useButton(element, {
         disabled: isUnavailable,
@@ -54,11 +55,6 @@ export function useCalendarNavigationButton(props: NavigationButtonProps, step: 
         // limit then does not lose the focus. A disabled button leaves the tab order.
         focusableWhenDisabled: () => !isDisabled.value,
       }),
-    ref: [
-      (value) => {
-        buttonElement.value = value;
-      },
-    ],
     state,
     props: (attrs) => [{ 'aria-label': label.value, ...pointerHandlers, onClick }, attrs],
   });

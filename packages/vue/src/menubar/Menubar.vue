@@ -145,14 +145,10 @@ const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: contentElement,
   state,
   stateAttributesMapping: menubarStateAttributesMapping,
-  ref: [
-    registerRoot,
-    (menubar) => {
-      contentElement.value = menubar;
-    },
-  ],
+  ref: registerRoot,
   props: (attrs) => [
     { onFocusin, onFocusout, onKeydown },
     { role: 'menubar', id: rootId.value, 'aria-orientation': props.orientation },

@@ -180,7 +180,7 @@ const direction = useDirection();
 const stickIfOpenTimeout = useTimeout();
 
 const triggerId = useVaseUiId();
-const triggerElement = shallowRef<HTMLElement | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
@@ -449,11 +449,10 @@ const state = computed<NavigationMenuTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
-const compositeItem = useCompositeItem(element);
+const compositeItem = useCompositeItem(triggerElement);
 
-const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
-  elementRef: element,
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,
@@ -462,11 +461,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', prop
     }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
-  ref: [
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
   props: (attrs) => [
     compositeItem.attributes.value,
     compositeItem.events,

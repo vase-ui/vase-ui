@@ -182,14 +182,10 @@ function handleFocusout(event: FocusEvent) {
 const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({});
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: renderedElement,
   state,
   stateAttributesMapping,
-  ref: [
-    registerRoot,
-    (content) => {
-      renderedElement.value = content;
-    },
-  ],
+  ref: registerRoot,
   props: (attrs) => [
     { onFocusin, onFocusout, onKeydown },
     {

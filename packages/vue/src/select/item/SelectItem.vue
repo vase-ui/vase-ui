@@ -90,12 +90,9 @@ const activeWhileOpen = computed(() => store.select('isActiveWhileOpen', index.v
 const selected = computed(() => store.select('isSelected', props.value));
 const selectedByFocus = computed(() => store.select('isSelectedByFocus', index.value));
 
-let itemElement: HTMLElement | null = null;
-
 // The positioner reads the value of each item from its element when the list changes. The list can
 // change before the `onMounted` hook of a new item runs, so the value goes in with the element.
 function setItemElement(node: HTMLElement | null) {
-  itemElement = node;
   if (node) {
     store.context.itemValues.set(node, props.value);
   }
@@ -115,8 +112,8 @@ function syncValue() {
 watch(
   () => props.value,
   (value) => {
-    if (itemElement) {
-      store.context.itemValues.set(itemElement, value);
+    if (element.value) {
+      store.context.itemValues.set(element.value, value);
     }
     syncValue();
   },
