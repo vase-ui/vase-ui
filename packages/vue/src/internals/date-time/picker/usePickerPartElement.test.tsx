@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { createApp, defineComponent, shallowRef, Transition } from 'vue';
+import { createApp, createCommentVNode, defineComponent, shallowRef, Transition } from 'vue';
 import type { VNodeChild } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
@@ -167,7 +167,7 @@ describe.each([
       const hasField = shallowRef(true);
       await renderPicker(() => (
         <>
-          {hasField.value ? fields() : null}
+          {hasField.value ? fields() : createCommentVNode()}
           <fieldset disabled>{trigger()}</fieldset>
         </>
       ));
@@ -224,7 +224,7 @@ describe.each([
         <>
           <fieldset disabled>{addTriggers.value ? trigger('before') : null}</fieldset>
           {trigger()}
-          {addTriggers.value ? trigger('after') : null}
+          {addTriggers.value ? trigger('after') : createCommentVNode()}
         </>
       ));
       const target = await screen.findByTestId('choice');

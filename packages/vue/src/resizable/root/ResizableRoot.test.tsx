@@ -853,12 +853,14 @@ describe('<Resizable.Root />', () => {
       await render(() => (
         <div style={{ width: '1000px' }}>
           <Resizable.Root defaultLayout={{ a: 20, b: 30, c: 50 }}>
-            {ids.value.flatMap((id, index) => [
-              index > 0 ? (
-                <Resizable.Handle key={`handle-${id}`} data-testid={`before-${id}`} />
-              ) : null,
-              <Resizable.Panel key={id} id={id} data-testid={id} />,
-            ])}
+            {() =>
+              ids.value.flatMap((id, index) => [
+                index > 0 ? (
+                  <Resizable.Handle key={`handle-${id}`} data-testid={`before-${id}`} />
+                ) : null,
+                <Resizable.Panel key={id} id={id} data-testid={id} />,
+              ])
+            }
           </Resizable.Root>
         </div>
       ));
@@ -1970,16 +1972,18 @@ describe('<Resizable.Root />', () => {
       return (
         <div style={{ width: `${props.width?.value ?? 1000}px` }}>
           <Resizable.Root data-testid="root" {...props.root}>
-            {panels.flatMap((panel, index) => [
-              index > 0 ? (
-                <Resizable.Handle key={`handle-${index}`} data-testid={`handle-${index}`} />
-              ) : null,
-              <Resizable.Panel
-                key={`panel-${index}`}
-                data-testid={panel.id as string}
-                {...panel}
-              />,
-            ])}
+            {() =>
+              panels.flatMap((panel, index) => [
+                index > 0 ? (
+                  <Resizable.Handle key={`handle-${index}`} data-testid={`handle-${index}`} />
+                ) : null,
+                <Resizable.Panel
+                  key={`panel-${index}`}
+                  data-testid={panel.id as string}
+                  {...panel}
+                />,
+              ])
+            }
           </Resizable.Root>
         </div>
       );

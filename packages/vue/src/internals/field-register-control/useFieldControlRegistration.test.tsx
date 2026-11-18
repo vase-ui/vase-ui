@@ -426,9 +426,10 @@ describe('useFieldControlRegistration', () => {
       const Test = defineComponent(() => () => (
         <FormScope data-testid="form" onSubmit={onSubmit}>
           <FieldScope ref={field} onValidationCommit={onValidationCommit}>
-            {ids.map(
-              (id) =>
-                state.value[id].shown && (
+            {() =>
+              ids
+                .filter((id) => state.value[id].shown)
+                .map((id) => (
                   <FieldControlPart
                     key={id}
                     id={id}
@@ -436,8 +437,8 @@ describe('useFieldControlRegistration', () => {
                     value={state.value[id].value}
                     disabled={state.value[id].disabled}
                   />
-                ),
-            )}
+                ))
+            }
           </FieldScope>
         </FormScope>
       ));
