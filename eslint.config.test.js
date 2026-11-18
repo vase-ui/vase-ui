@@ -69,6 +69,33 @@ const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
 const reported = [
+  ...[
+    ['an optional release', 'let release: (() => void) | undefined;'],
+    ['a void release', 'let release: (() => void) | void;'],
+    ['a typed NOOP', 'let stop: () => void = NOOP;'],
+    ['an inferred NOOP', 'let stop = NOOP;'],
+    ['a release in a function', 'function listen() { let stop: () => void = start(); }'],
+  ].map(([name, code]) => ({
+    name,
+    file: `${SRC}/useSample.ts`,
+    code,
+    ruleId: 'no-restricted-syntax',
+    hint: 'onCleanup',
+  })),
+  {
+    name: 'a release in a part',
+    file: `${SRC}/Sample.vue`,
+    code: docsSfc('let stop: (() => void) | null = null;'),
+    ruleId: 'no-restricted-syntax',
+    hint: 'onCleanup',
+  },
+  {
+    name: 'a copy of the held state',
+    file: `${SRC}/useSample.ts`,
+    code: 'let held = isHeld.value;',
+    ruleId: 'no-restricted-syntax',
+    hint: 'as a source',
+  },
   {
     name: 'a direct popup element write in a part',
     file: `${SRC}/DialogPopup.vue`,
@@ -1099,6 +1126,23 @@ const reported = [
 ];
 
 const passed = [
+  ...[
+    ['a constant release', 'export const release: () => void = start();'],
+    ['a function with a result', 'export let read: (() => string) | null = null;\nread = getText;'],
+    [
+      'an array of callbacks',
+      'export let callbacks: (() => void)[] | null = null;\ncallbacks = [];',
+    ],
+    [
+      'a value other than the held state',
+      'export let latestValues = values.value;\nlatestValues = [];',
+    ],
+  ].map(([name, code]) => ({ name, file: `${SRC}/useSample.ts`, code: `${code}\n` })),
+  {
+    name: 'a release in a test',
+    file: `${SRC}/useSample.test.ts`,
+    code: 'export let release: (() => void) | undefined;\n',
+  },
   {
     name: 'a popup element write in the shared setter',
     file: 'packages/vue/src/utils/popups/createElementSetter.ts',
