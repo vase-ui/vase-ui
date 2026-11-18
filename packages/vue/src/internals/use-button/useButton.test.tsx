@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, isJSDOM, screen } from '#test-utils';
 import CompositeRoot from '../../../test/fixtures/CompositeRootPart.vue';
@@ -18,6 +18,62 @@ describe('useButton', () => {
     element.focus();
     await flushMicrotasks();
   };
+
+  it('blocks input when disabled before the next render', async () => {
+    const disabled = shallowRef(false);
+    const focusableWhenDisabled = shallowRef(false);
+    const handler = vi.fn();
+    const Button = defineComponent(() => {
+      const { getButtonProps } = useButton({ disabled, focusableWhenDisabled, native: false });
+      return () => (
+        <span
+          {...getButtonProps({
+            onClick: handler,
+            onMousedown: handler,
+            onPointerdown: handler,
+            onKeydown: handler,
+            onKeyup: handler,
+          })}
+        />
+      );
+    });
+    await render(<Button />);
+    const button = screen.getByRole('button');
+    const keydown = (key: string) =>
+      button.dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true }));
+
+    disabled.value = true;
+    button.click();
+    button.dispatchEvent(new MouseEvent('mousedown'));
+    expect(button.dispatchEvent(new PointerEvent('pointerdown', { cancelable: true }))).toBe(false);
+    expect(keydown('a')).toBe(true);
+    focusableWhenDisabled.value = true;
+    expect(keydown('a')).toBe(false);
+    expect(keydown('Tab')).toBe(true);
+    button.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }));
+    expect(handler).not.toHaveBeenCalled();
+
+    disabled.value = false;
+    button.click();
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the current composite mode for Space before the next render', async () => {
+    const composite = shallowRef(false);
+    const onClick = vi.fn();
+    const Button = defineComponent(() => {
+      const { getButtonProps } = useButton({ composite, native: false });
+      return () => <span {...getButtonProps({ onClick })} />;
+    });
+    await render(<Button />);
+    const button = screen.getByRole('button');
+
+    composite.value = true;
+    button.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    button.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
 
   describe('non-native button', () => {
     describe('keyboard interactions', () => {
