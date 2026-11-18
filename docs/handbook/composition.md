@@ -39,9 +39,9 @@ A blank `aria-label` or `aria-labelledby` also counts as not set: an empty strin
 
 A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control. A part that declares `aria-describedby` as a prop, such as `Slider.Thumb`, follows the same rule.
 
-A part keeps its own id when you give it an empty `id` or one with only white space, as a prop or an attribute. HTML requires a nonempty id with no ASCII white space. A title can then name its dialog, and a label can name its control.
+A blank `id` that you give to a part also counts as not set, as an attribute or as a prop: an empty `id`, or an `id` of white space only. HTML allows neither. The part keeps its own id, so a title still names its dialog and a label still names its control.
 
-Attributes beside `v-bind="props"` in the `#render` slot and later sets in `mergeProps` follow Vue's rules. In either place, `undefined`, a blank name, a blank ID reference or a blank `id` can replace the part's value.
+These rules are for the attributes that you give to a part. Two other places keep the rule of Vue, in which `undefined`, a blank name, a blank ID reference or a blank `id` replaces a value: an attribute that you write beside `v-bind="props"` in the `#render` slot, and a later set of `mergeProps`.
 
 With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`. In [Vapor mode](#vapor-mode), also bind the `ref` setter by name.
 

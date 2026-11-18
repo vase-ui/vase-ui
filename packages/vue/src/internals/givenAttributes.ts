@@ -3,10 +3,10 @@ function isBlank(value: unknown): boolean {
 }
 
 // `undefined` is not given for each attribute, so it has no entry (`VUE-103`).
-// An empty `form` leaves the control without a form owner, so it stays.
+// `form` has no entry: an empty `form` has a meaning in HTML. The control then has no form owner.
 const BLANK_IS_NOT_GIVEN = [
-  // HTML forbids empty ids and ASCII white space in ids. An ID reference list with only
-  // separators names no element (`VUE-93`).
+  // HTML requires at least one character in an id and allows no white space in it. White space
+  // separates the ids of an ID reference, so no reference can name a blank id (`VUE-93`).
   'id',
   // A blank name gives an element no accessible name (`VUE-106`).
   'aria-label',
@@ -23,7 +23,7 @@ const BLANK_IS_NOT_GIVEN = [
   'for',
 ] as const;
 
-// Set membership ignores inherited property names such as `constructor`.
+// A `Set` has no key that an object inherits, such as `constructor`.
 const blankIsNotGiven = new Set<string>(BLANK_IS_NOT_GIVEN);
 
 function isGiven(attribute: string, value: unknown): boolean {
