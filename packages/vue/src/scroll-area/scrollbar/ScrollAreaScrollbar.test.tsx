@@ -458,26 +458,35 @@ describe('<ScrollArea.Scrollbar />', () => {
       expect(verticalScrollbar).toHaveAttribute('data-scrolling');
     });
 
-    it('scrolls farther down when the pointer drags from the vertical track', async () => {
-      const { viewport, scrollbar } = await renderAxisTrack('vertical', 'ltr');
-      const { width, height } = scrollbar.getBoundingClientRect();
-      releasePointerAfterTest();
+    it.each([
+      { name: 'vertical', scrollProperty: 'scrollTop' },
+      { name: 'horizontal', scrollProperty: 'scrollLeft' },
+    ] as const)(
+      'scrolls farther when the pointer drags from the $name track',
+      async ({ name: orientation, scrollProperty }) => {
+        const { viewport, scrollbar } = await renderAxisTrack(orientation, 'ltr');
+        const { width, height } = scrollbar.getBoundingClientRect();
+        releasePointerAfterTest();
 
-      await userEvent.pointer({
-        target: scrollbar,
-        coords: { x: width / 2, y: height / 2 },
-        keys: '[MouseLeft>]',
-      });
-      const scrollTopAfterPress = viewport.scrollTop;
-      expect(scrollTopAfterPress).toBeGreaterThan(0);
+        await userEvent.pointer({
+          target: scrollbar,
+          coords: { x: width / 2, y: height / 2 },
+          keys: '[MouseLeft>]',
+        });
+        const scrollAfterPress = viewport[scrollProperty];
+        expect(scrollAfterPress).toBeGreaterThan(0);
 
-      await userEvent.pointer({
-        target: scrollbar,
-        coords: { x: width / 2, y: (height * 3) / 4 },
-      });
+        await userEvent.pointer({
+          target: scrollbar,
+          coords:
+            orientation === 'vertical'
+              ? { x: width / 2, y: (height * 3) / 4 }
+              : { x: (width * 3) / 4, y: height / 2 },
+        });
 
-      expect(viewport.scrollTop).toBeGreaterThan(scrollTopAfterPress);
-    });
+        expect(viewport[scrollProperty]).toBeGreaterThan(scrollAfterPress);
+      },
+    );
 
     it('clears track drag state on pointer cancel', async () => {
       await render(
