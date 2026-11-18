@@ -176,12 +176,12 @@ function reserveRow(claim: RowClaim, visited: Set<RowPool>): boolean {
       continue;
     }
     visited.add(pool);
-    const index = pool.claims.findLastIndex(
-      (prior) => prior.choices.length > 1 && reserveRow(prior, visited),
-    );
-    if (index >= 0) {
-      pool.claims[index] = claim;
-      return true;
+    for (let index = pool.claims.length - 1; index >= 0; index -= 1) {
+      const prior = pool.claims[index];
+      if (prior.choices.length > 1 && reserveRow(prior, visited)) {
+        pool.claims[index] = claim;
+        return true;
+      }
     }
   }
   return false;
@@ -230,12 +230,18 @@ export function matchCases(
       }
     }
     const byKey = new Map<string, RowPool>();
-    for (const [key, occurrences] of Map.groupBy(rows, (row) => keyOf(row, 'vase'))) {
+    for (const row of rows) {
+      const key = keyOf(row, 'vase');
+      const pool = byKey.get(key);
+      if (pool) {
+        pool.rows.push(row);
+        continue;
+      }
       const extraOwner =
-        describePaths(occurrences[0].describe)
+        describePaths(row.describe)
           .map((block) => blocks.get(block))
           .find(Boolean) ?? owners[0];
-      byKey.set(key, { path, rows: occurrences, claims: [], extraOwner });
+      byKey.set(key, { path, rows: [row], claims: [], extraOwner });
     }
     pools.set(path, byKey);
   }
