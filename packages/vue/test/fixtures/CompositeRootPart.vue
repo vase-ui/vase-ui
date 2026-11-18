@@ -87,7 +87,7 @@ const {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [rootRef],
+  ref: rootRef,
   props: (attrs) => [
     compositeProps,
     { 'data-highlighted-index': rootHighlightedIndex.value },

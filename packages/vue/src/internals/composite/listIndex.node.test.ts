@@ -39,6 +39,12 @@ function keyPressState(
   };
 }
 
+it('keeps the highlighted index when the grid has no cells', () => {
+  const navigate = gridNavigation({ cols: 2 });
+  const state = keyPressState('ArrowDown', { elementsRef: shallowRef([]), maxIndex: -1 });
+  expect(navigate(state)).toBe(state.highlightedIndex);
+});
+
 describe('VUE-8: an item that is wider than the grid', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

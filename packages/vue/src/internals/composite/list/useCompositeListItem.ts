@@ -1,5 +1,5 @@
 import { computed, shallowRef, toValue, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { useCompositeListContext } from './CompositeListContext';
 import type {
@@ -18,23 +18,7 @@ export function useCompositeListItem<Metadata>(
 ): UseCompositeListItemReturnValue {
   const context = params.list ?? useCompositeListContext();
 
-  // An item with no explicit index takes its first index from a counter of the list. The counter
-  // counts the `setup` calls of such items. Each sort sets it to the length of `elementsRef`.
-  // When a server and a browser run `setup` in the same order, the server HTML and the first client
-  // render have the same index.
-  // The first index can be wrong until the sort that follows the mount, in five cases.
-  // (1) The list has an item with an explicit index. The counter does not know the slot that
-  //     the explicit index takes.
-  // (2) The list has an item in an async component that is not loaded yet, or the item is a
-  //     descendant of a component with an async `setup`. The `setup` of that item runs after the
-  //     `setup` of the items that follow it. An async `setup` causes this on each server render.
-  // (3) The list has an item in a `Teleport`. The element of that item is in the target, but its
-  //     `setup` runs in the order of the template.
-  // (4) An item whose `setup` ran before registers no element of its own. It renders no element,
-  //     or it shares its element with another item of the list. The counter still counts it.
-  // (5) The item mounts in a mounted list. The counter continues from the value that the last sort
-  //     set. The first index is then wrong if the item comes before an item that was in the list at
-  //     that sort. It is also wrong if an item left the list since that sort.
+  // The server has no DOM order. Use setup order until the list can sort the elements.
   const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
 
   const element = shallowRef<HTMLElement | null>(null);
@@ -61,18 +45,6 @@ export function useCompositeListItem<Metadata>(
   }
 
   if (context) {
-    // A metadata change must not give an inner item ownership of an element it shares with the
-    // outer item.
-    watch(
-      [
-        () => toValue(params.index),
-        () => toValue(params.label),
-        () => toValue(params.metadata),
-        () => toValue(params.textRef),
-      ],
-      () => context.scheduleMapUpdate(),
-    );
-
     const { isHeld } = useKeepAliveState();
     // A hold moves the item without calling its ref. Register synchronously to preserve the
     // order of the ref calls when two items share an element.
@@ -88,7 +60,7 @@ export function useCompositeListItem<Metadata>(
     );
   }
 
-  return { ref, index };
+  return { ref, element, index };
 }
 
 export interface UseCompositeListItemParameters<Metadata> {
@@ -120,6 +92,7 @@ export interface UseCompositeListItemParameters<Metadata> {
 }
 
 interface UseCompositeListItemReturnValue {
+  element: Readonly<Ref<HTMLElement | null>>;
   /**
    * Gives the element of the item to the list. Call it with `null` when the element is removed.
    */

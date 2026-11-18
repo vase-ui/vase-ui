@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 
 export interface CompositeRootContext {
   hasFocus: () => boolean;
@@ -18,24 +18,12 @@ export interface CompositeRootContext {
     onFocusout: (event: FocusEvent) => void;
     onKeydown: (event: KeyboardEvent) => void;
   };
-  /**
-   * Tells an item if it holds the tab stop until the item is mounted. An item calls it one time,
-   * in `setup`. Base UI does not have this function. Its server HTML has `tabindex="-1"` on each
-   * item. The root gives `true` to at most one caller.
-   */
+  /** Reserve at most one tab stop in setup order before the items mount. */
   takeInitialTabStop: (index: number, active: boolean, disabled: boolean) => boolean;
-  /**
-   * The id of the root. An item gives it in an attribute while it hydrates, so the root can find
-   * its own items in the DOM. Base UI does not have this field. Its server HTML has no tab stop,
-   * so its root does not look for an item that is not mounted.
-   */
+  /** Identifies this root's items in the server HTML. */
   id: string;
-  /**
-   * Whether the server HTML has the tab stop on an item of this root that is not mounted. While it
-   * is `true`, the mounted items do not take the tab stop. Base UI does not have this field, for
-   * the reason of `id`.
-   */
-  hasUnmountedTabStop: ComputedRef<boolean>;
+  /** An async item still holds this root's server tab stop. */
+  hasUnmountedTabStop: Readonly<Ref<boolean>>;
 }
 
 export const CompositeRootContext: InjectionKey<CompositeRootContext> = Symbol();

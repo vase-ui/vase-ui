@@ -19,7 +19,6 @@ export interface CompositeListRegistration<Metadata> {
 export interface CompositeListContextValue<Metadata> {
   register: (node: Element, registration: CompositeListRegistration<Metadata>) => void;
   unregister: (node: Element, registration: CompositeListRegistration<Metadata>) => void;
-  scheduleMapUpdate: () => void;
   takeIndexGuess: () => number;
   map: ComputedRef<ReadonlyMap<Element, CompositeMetadata<Metadata>>>;
 }

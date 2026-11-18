@@ -1,5 +1,5 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
-import { createApp, createSSRApp } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { createApp, createSSRApp, defineComponent, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import {
   createRenderer,
@@ -276,6 +276,41 @@ describe('useCompositeItem', () => {
       expect(within(container).getByTestId('a')).toHaveAttribute('tabindex', '0');
       expect(within(container).getByTestId('c')).toHaveAttribute('tabindex', '-1');
       expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('stops the tab stop observer when the root leaves before its async item mounts', async () => {
+      const props = { hasActiveItem: true, active: ['b'], late: true };
+      const serverHtml = await renderOnServer(TAB_STOP_FIXTURE, props);
+      const show = shallowRef(true);
+      const Page = defineComponent(
+        () => () =>
+          show.value ? <CompositeItemTabStop {...props} /> : <button type="button">Next</button>,
+      );
+      const { container, mount } = startHydration(Page, serverHtml, {});
+      const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+      onTestFinished(() => {
+        observe.mockRestore();
+      });
+      mount();
+      await settle();
+
+      const root = container.firstElementChild;
+      const index = observe.mock.calls.findLastIndex(
+        ([target, options]) =>
+          target === root &&
+          options?.attributeFilter?.includes('data-vase-ui-hydrating-composite-item'),
+      );
+      const observer = observe.mock.contexts[index];
+      if (!(observer instanceof MutationObserver) || !root) {
+        throw new Error('The root has no observer for its server tab stop.');
+      }
+      expect(readTabindexes(container)).toEqual(['-1', '0', '-1']);
+
+      show.value = false;
+      await settle();
+      expect(within(container).getByRole('button', { name: 'Next' })).toBeInTheDocument();
+      root.append(document.createElement('span'));
+      expect(observer.takeRecords()).toEqual([]);
     });
 
     it('keeps one tab stop when focus moves while an item waits for its mount', async () => {

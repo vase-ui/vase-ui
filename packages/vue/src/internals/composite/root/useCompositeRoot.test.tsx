@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, reactive, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -109,6 +109,62 @@ describe('useCompositeRoot', () => {
     await flushMicrotasks();
 
     expect(root).toHaveAttribute('data-highlighted-index', '1');
+  });
+
+  it('moves the tab stop when the disabled index list changes in place', async () => {
+    const disabledIndices = reactive<number[]>([]);
+    const { setProps, user } = await render(
+      <CompositeRoot disabledIndices={disabledIndices}>
+        <CompositeItem as="button">First</CompositeItem>
+        <CompositeItem as="button" aria-disabled="true">
+          Second
+        </CompositeItem>
+      </CompositeRoot>,
+    );
+    const first = screen.getByRole('button', { name: 'First' });
+    const second = screen.getByRole('button', { name: 'Second' });
+    expect(first.tabIndex).toBe(0);
+
+    disabledIndices.push(0);
+    await flushMicrotasks();
+
+    expect(first.tabIndex).toBe(-1);
+    expect(second.tabIndex).toBe(0);
+    await user.tab();
+    expect(second).toHaveFocus();
+
+    second.blur();
+    await setProps({ disabledIndices: undefined });
+    expect(first.tabIndex).toBe(0);
+    expect(second.tabIndex).toBe(-1);
+  });
+
+  it('keeps the focused tab stop until focus leaves after an index edit', async () => {
+    const disabledIndices = reactive<number[]>([]);
+    const { user } = await render(
+      <div>
+        <CompositeRoot disabledIndices={disabledIndices}>
+          <CompositeItem as="button">First</CompositeItem>
+          <CompositeItem as="button">Second</CompositeItem>
+        </CompositeRoot>
+        <button type="button">After</button>
+      </div>,
+    );
+    const first = screen.getByRole('button', { name: 'First' });
+    const second = screen.getByRole('button', { name: 'Second' });
+    await user.tab();
+    expect(first).toHaveFocus();
+
+    disabledIndices.push(0);
+    await flushMicrotasks();
+    expect(first.tabIndex).toBe(0);
+    expect(second.tabIndex).toBe(-1);
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+    expect(first.tabIndex).toBe(-1);
+    await user.tab({ shift: true });
+    expect(second).toHaveFocus();
   });
 
   it('reads a grid configuration that changes after the mount', async () => {

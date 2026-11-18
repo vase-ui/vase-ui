@@ -96,8 +96,9 @@ export function gridNavigation(
       -1,
     );
     const cellIndex = getGridNavigatedIndex(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A cell holds the index of an item, and `itemSizes` has a size for each item.
-      cellMap.map((itemIndex) => (itemIndex != null ? elementsRef.value[itemIndex]! : null)),
+      cellMap.map((itemIndex) =>
+        itemIndex != null ? (elementsRef.value[itemIndex] ?? null) : null,
+      ),
       {
         event,
         orientation,
@@ -133,7 +134,6 @@ export function gridNavigation(
       },
     );
 
-    // The navigated cell is never empty.
-    return cellMap[cellIndex] as number;
+    return cellMap[cellIndex] ?? highlightedIndex;
   };
 }

@@ -5,6 +5,6 @@
     "https://vuejs.org/guide/components/async.html#lazy-hydration",
     "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex"
   ],
-  "behavior": "Between the server HTML and the mount of its last item, a composite does not have two tab stops. While the server HTML has the tab stop on an item that is not mounted, the mounted items do not take it.",
+  "behavior": "While server HTML inside a composite root holds the tab stop on an item that has not mounted, mounted items keep `tabindex=\"-1\"`. When that server tab stop clears, mounted items set their tabindex from the highlighted index.",
   "dueWith": "packages/react/src/internals/composite/item/useCompositeItem.ts"
 }

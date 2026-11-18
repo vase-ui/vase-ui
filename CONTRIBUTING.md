@@ -1382,9 +1382,9 @@ The composite root:
 - `useCompositeRoot` returns `elementsRef` and `itemMap`. The time picker uses the map to find the selected enabled option when its popup opens.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - When two tabs have the selected value, only the first in the registered order moves the tab stop. While a registered tab has focus outside the list element, the tab stop stays on that tab.
-- The comments of `useCompositeRoot.ts` give the rules for the highlighted index while the focus is outside the root and its registered items (`VUE-113`). A root whose disabled items stay focusable gives `disabledIndices`, as `Tabs.List` and `Toolbar.Root` do.
+- The root checks the active item when focus leaves its element and its registered items (`VUE-113`). A root whose disabled items stay focusable gives `disabledIndices`, as `Tabs.List` and `Toolbar.Root` do.
 - The root watches the active and disabled state in each registration. A render slot can change the native or ARIA disabled state of a registered element. The root observes those attributes on the item. A native control also follows its fieldset after a move. The first legend of a disabled fieldset keeps its native exemption. An async child can hold the only tab stop in server HTML until it hydrates.
-- The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
+- An uncontrolled root checks edits to `disabledIndices` after the DOM patch. The focused item keeps its tab stop during the edit. Removing the list restores the disabled state from each item and its element.
 
 Grid navigation:
 
@@ -1414,11 +1414,11 @@ The item registry:
 
 - An item registers its element in its ref callback, and it removes the element there.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
-- The list sorts the elements by their position in the document. It does this at mount and in a `watch` with `flush: 'post'`, after the DOM update that follows a registration.
+- At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder. Changing the target of a `Teleport` updates the automatic indexes in document order.
 - `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element and registers it again in a `watch` of `isHeld` of `useKeepAliveState` with `flush: 'sync'`.
-- An item that mounts while `KeepAlive` holds its branch gets no `onDeactivated` call. The list skips its element, because the element is not in a document. `isHeld` of the item thus starts `true`, and the activation registers the element again.
+- An item that mounts in a held branch can miss `onDeactivated`. `useKeepAliveState` checks the branch in `setup`. The list also skips disconnected elements when it sorts.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
-- The metadata, the label, the explicit index and the text element of an item are values, refs or getters. When one of them changes, the item tells the list to sort again. It does not register again.
+- Each registration supplies live metadata, label, explicit index and text element values. The list reads them from its current registrations. A held item supplies its latest values on activation.
 - Give an object as metadata through a `computed` or a ref. A getter that makes a new object on each call makes the list publish a new map on each sort.
 - A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
 - A part that uses the registry only for its own parts gives `provide: false` to `useCompositeList`. It gives the list to its own parts through its context. Each of those parts gives that list to `useCompositeListItem` as `list`. `Tabs.Root`, `Accordion.Root`, `Resizable.Root`, `Slider.Root`, `OTPField.Root` and `Combobox.Chips` do this.

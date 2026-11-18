@@ -1,5 +1,12 @@
 import { expect, vi, describe, it } from 'vitest';
-import { computed, defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
+import {
+  computed,
+  createCommentVNode,
+  defineComponent,
+  KeepAlive,
+  shallowRef,
+  Teleport,
+} from 'vue';
 import {
   createHeldBranch,
   createRenderer,
@@ -270,7 +277,7 @@ describe('<CompositeList />', () => {
             >
               Add item
             </button>
-            {showItem.value && <Item label="nested" />}
+            {showItem.value ? <Item label="nested" /> : createCommentVNode()}
           </>
         );
       });
@@ -308,7 +315,7 @@ describe('<CompositeList />', () => {
             >
               Remove item
             </button>
-            {showItem.value && <Item label="nested" />}
+            {showItem.value ? <Item label="nested" /> : createCommentVNode()}
           </>
         );
       });
@@ -604,9 +611,7 @@ describe('<CompositeList />', () => {
       const a = screen.getByTestId('a');
       const c = screen.getByTestId('c');
 
-      // One batch that both detaches a registered item and moves another. The move makes the
-      // observer verify order, and the verification walks the detached item, which no longer
-      // has a meaningful document position.
+      // The detached item has no document position when the observer receives the move.
       screen.getByTestId('b').remove();
       list.insertBefore(c, a);
 
@@ -635,7 +640,9 @@ describe('<CompositeList />', () => {
             >
               Toggle element
             </button>
-            {!hidden.value && (
+            {hidden.value ? (
+              createCommentVNode()
+            ) : (
               <div ref={bindRef(ref)} data-testid="vanishing" data-index={index.value}>
                 vanishing
               </div>
@@ -692,6 +699,44 @@ describe('<CompositeList />', () => {
         screen.getByTestId('c'),
         screen.getByTestId('a'),
       ]);
+    });
+
+    it('updates indexes when a Teleport moves an item past another group', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const target = shallowRef('#before');
+      await render(() => (
+        <CompositeList elementsRef={elementsRef}>
+          <div>
+            <div id="nearby" />
+            <div>
+              <div id="before" />
+              <div>
+                <Item label="fixed" />
+              </div>
+            </div>
+            <div id="after" />
+            <Teleport defer to={target.value}>
+              <Item label="moving" />
+            </Teleport>
+          </div>
+        </CompositeList>
+      ));
+      const moving = screen.getByTestId('moving');
+      const fixed = screen.getByTestId('fixed');
+      const initialOrder = elementsRef.value;
+      expect(initialOrder).toEqual([moving, fixed]);
+
+      target.value = '#nearby';
+      await flushMicrotasks();
+      expect(moving.parentElement).toHaveAttribute('id', 'nearby');
+      expect(elementsRef.value).toBe(initialOrder);
+
+      target.value = '#after';
+      await flushMicrotasks();
+      expect(moving.parentElement).toHaveAttribute('id', 'after');
+      expect(elementsRef.value).toEqual([fixed, moving]);
+      expect(fixed).toHaveAttribute('data-index', '0');
+      expect(moving).toHaveAttribute('data-index', '1');
     });
 
     it('observes each shared mutation root once', async () => {
@@ -967,6 +1012,30 @@ describe('<CompositeList />', () => {
   });
 
   describe('prop: labelsRef', () => {
+    it('reads a new label after an item returns to the document outside Vue', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
+      const label = shallowRef('before');
+      await render(() => (
+        <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
+          <div data-testid="parent">
+            <CompositeListItemPart data-testid="item" label={label.value} />
+          </div>
+        </CompositeList>
+      ));
+      const item = screen.getByTestId('item');
+      item.remove();
+      label.value = 'detached';
+      await flushMicrotasks();
+      expect(labelsRef.value).toEqual([]);
+
+      screen.getByTestId('parent').append(item);
+      label.value = 'after';
+      await flushMicrotasks();
+      expect(elementsRef.value).toEqual([item]);
+      expect(labelsRef.value).toEqual(['after']);
+    });
+
     const LabelledItem = defineComponent(
       (props: { testId: string; label?: string | null; text?: string; useTextRef?: boolean }) => {
         const textRef = shallowRef<HTMLElement | null>(null);
@@ -1114,11 +1183,18 @@ describe('<CompositeList />', () => {
         '1',
       );
 
-      const { container } = await hydrate(CompositeListHydration, { serverHtml });
-
-      expect(within(container).getByTestId('a')).toHaveAttribute('data-index', '0');
-      expect(within(container).getByTestId('b')).toHaveAttribute('data-index', '1');
-      expect(container.firstElementChild).toHaveAttribute('data-elements', 'a,b');
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const { container } = await hydrate(CompositeListHydration, {
+        serverHtml,
+        props: { elementsRef },
+      });
+      const a = within(container).getByTestId('a');
+      const b = within(container).getByTestId('b');
+      expect(a).toHaveAttribute('data-index', '0');
+      expect(b).toHaveAttribute('data-index', '1');
+      expect(elementsRef.value).toHaveLength(2);
+      expect(elementsRef.value[0]).toBe(a);
+      expect(elementsRef.value[1]).toBe(b);
     });
   });
 
@@ -1139,6 +1215,34 @@ describe('<CompositeList />', () => {
   });
 
   describe('KeepAlive', () => {
+    it('keeps the visible labels until a held item returns', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
+      const label = shallowRef('before');
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <CompositeListItemPart label={label.value} />,
+        { mounted: true },
+      );
+      await render(
+        <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
+          <CompositeListItemPart label="first" />
+          <HeldBranch />
+        </CompositeList>,
+      );
+
+      expect(labelsRef.value).toEqual(['first', 'before']);
+      await hide();
+      const visibleLabels = labelsRef.value;
+      expect(visibleLabels).toEqual(['first']);
+
+      label.value = 'after';
+      await flushMicrotasks();
+      expect(labelsRef.value).toBe(visibleLabels);
+
+      await show();
+      expect(labelsRef.value).toEqual(['first', 'after']);
+    });
+
     it('removes a deactivated item and registers it again when it is active', async () => {
       const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
