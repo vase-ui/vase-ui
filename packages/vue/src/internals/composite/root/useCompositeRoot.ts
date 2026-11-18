@@ -1,4 +1,4 @@
-import { computed, provide, shallowRef, toValue, useId, watch, watchPostEffect } from 'vue';
+import { computed, provide, shallowRef, toValue, useId, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { useIsHydrated } from '../../../common/hydration';
@@ -122,7 +122,7 @@ export function useCompositeRoot<Metadata>(
     if (activeIndex !== -1) {
       onHighlightedIndexChange(activeIndex);
     } else {
-      ensureEnabledIndex(disabledIndices);
+      moveTabStopOffSkippedItem(elements, activeIndex);
     }
 
     lastActiveItem = readActiveItem(elementsRef.value).item;
@@ -262,23 +262,19 @@ export function useCompositeRoot<Metadata>(
     },
   });
 
-  function ensureEnabledIndex(disabledIndices: DisabledIndices) {
-    const elements = elementsRef.value;
-    if (isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)) {
-      const first = findNonDisabledListIndex(elements, { disabledIndices });
-      if (!isIndexOutOfListBounds(elements, first)) {
-        onHighlightedIndexChange(first);
-      }
-    }
-  }
-
   // A parent can derive disabled indexes from the map after the items register.
-  watchPostEffect(() => {
-    const disabledIndices = toValue(params.disabledIndices);
-    if (disabledIndices != null && toValue(params.highlightedIndex) == null) {
-      ensureEnabledIndex(disabledIndices);
-    }
-  });
+  watch(
+    [
+      () => toValue(params.highlightedIndex) == null,
+      () => toValue(params.disabledIndices)?.slice(),
+    ],
+    ([uncontrolled]) => {
+      if (uncontrolled) {
+        moveTabStopToActiveItem();
+      }
+    },
+    { flush: 'post' },
+  );
 
   function wrappedOnLoop(event: KeyboardEvent, prevIndex: number, nextIndex: number) {
     if (!params.onLoop) {
