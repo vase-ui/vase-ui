@@ -76,6 +76,32 @@ describe('useFilterDropdownInput', () => {
     expect(input).toHaveValue('ca');
   });
 
+  it('reports a refused composition once when WebKit sends its final input', async () => {
+    const onValueChange = vi.fn();
+    await render(
+      <FilterDropdown.Root
+        open
+        value="old"
+        listRef={shallowRef([])}
+        getActiveIndex={() => null}
+        setActiveIndex={NOOP}
+        onValueChange={onValueChange}
+      >
+        <FilterDropdown.Input aria-label="Filter" />
+      </FilterDropdown.Root>,
+    );
+    const input = screen.getByRole<HTMLInputElement>('searchbox', { name: 'Filter' });
+    await fireEvent.compositionStart(input);
+    input.value = 'マ';
+    const end = fireEvent.compositionEnd(input);
+    await fireEvent.input(input, { target: { value: 'マ' }, inputType: 'insertCompositionText' });
+    await end;
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith('マ', expect.anything());
+    await vi.waitFor(() => expect(input).toHaveValue('old'));
+  });
+
   it('reports edits only from input events', async () => {
     const value = shallowRef('');
     const onValueChange = vi.fn((nextValue: string) => {

@@ -124,6 +124,13 @@ export function useFilterDropdownInput(
       composingValue.value = nextValue;
       return;
     }
+    const { inputType } = event as InputEvent;
+    if (
+      compositionTimeout.isStarted() &&
+      (inputType === 'insertCompositionText' || inputType === 'insertFromComposition')
+    ) {
+      return;
+    }
     commitValue(nextValue, event);
     restoreText();
   }

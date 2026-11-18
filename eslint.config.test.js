@@ -69,6 +69,12 @@ const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
 const INPUT_SYNC_SAMPLES = [
+  ['a native input write', '(event.target as HTMLInputElement).value = text;', 'Vue value binding'],
+  [
+    'a native textarea write',
+    '(event.target as HTMLTextAreaElement).value = text;',
+    'Vue value binding',
+  ],
   ['a checked write', 'input.checked = true;', 'restoreChecked'],
   ['an indeterminate write', 'input.indeterminate = false;', 'restoreChecked'],
   [

@@ -516,6 +516,26 @@ describe('<NumberField />', () => {
   });
 
   describe('VUE-81: the state that the input got before the hydration', () => {
+    it('keeps the visible edit when both inputs changed before hydration', async () => {
+      const props = { value: 5 };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(NumberFieldRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(server) {
+          within(server).getByTestId<HTMLInputElement>('input').value = '7';
+          server.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value = '9';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model')).toHaveTextContent('7');
+      expect(fixture.getByTestId('changes').textContent).toBe('7 (input-change)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('7');
+      expect(getHiddenInput().value).toBe('7');
+    });
+
     it('takes the value that a program wrote into the hidden input', async () => {
       const props = { value: 5 };
       const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);

@@ -340,6 +340,27 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
 describe('VUE-81: a render before the page show', () => {
   const { render } = createRenderer();
 
+  it.each([
+    { name: 'Field.Control', family: 'field-default', inputName: 'name' },
+    { name: 'Toolbar.Input', family: 'toolbar-default', inputName: 'filter' },
+  ] as const)('takes only a silent edit of uncontrolled $name', async ({ family, inputName }) => {
+    const { container } = await render(<FormRestoreRender family={family} revision={0} />);
+    const [input] = getInputs(container, inputName);
+    input!.value = 'typed';
+    input!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await flushMicrotasks();
+    const events = recordInputEvents(container);
+
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual([]);
+
+    input!.value = input!.defaultValue;
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual(LEAVES);
+  });
+
   it.each(RESTORED_FAMILIES)(
     'takes the value that the browser restored into $name',
     async ({ family, inputName, written, model, changes, events }) => {
@@ -450,6 +471,32 @@ describe('useFormRestoreAsInput before the page show', () => {
     await flushMicrotasks();
 
     expect(input).toHaveValue('loaded');
+    expect(events).toEqual([]);
+  });
+
+  it('keeps the native reset value through a render before pageshow', async () => {
+    const showPage = mockPageBeforeLoad();
+    const value = shallowRef('server');
+    const revision = shallowRef(0);
+    const Control = createStatefulInput(value, revision);
+    const { container } = await render(
+      <form>
+        <Control />
+      </form>,
+    );
+    const input = screen.getByTestId<HTMLInputElement>('input');
+    const events = recordInputEvents(container);
+    input.value = 'restored';
+
+    revision.value += 1;
+    await flushMicrotasks();
+    expect(input.value).toBe('restored');
+    expect(input.defaultValue).toBe('server');
+
+    input.form!.reset();
+    showPage();
+    await flushMicrotasks();
+    expect(input.value).toBe('server');
     expect(events).toEqual([]);
   });
 

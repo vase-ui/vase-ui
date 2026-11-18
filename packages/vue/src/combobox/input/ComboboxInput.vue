@@ -252,6 +252,13 @@ function handleInput(event: Event) {
   // Autofill may not provide `inputType` (Chrome) or may report
   // `insertReplacementText` (Firefox).
   const inputType = (event as InputEvent).inputType;
+  if (
+    !isComposing &&
+    compositionTimeout.isStarted() &&
+    (inputType === 'insertCompositionText' || inputType === 'insertFromComposition')
+  ) {
+    return;
+  }
   const autofillLikeInput = !inputType || inputType === 'insertReplacementText';
   // During composition the input is always considered typed into.
   const shouldOpenOnInput = isComposing || !autofillLikeInput;

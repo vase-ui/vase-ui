@@ -74,6 +74,7 @@ const MESSAGES = {
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
   checkedInput: 'Use `restoreChecked` for a native click that changes an equal checked binding.',
+  inputValueWrite: 'Restore the input through its Vue value binding.',
   handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
     '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
@@ -336,6 +337,11 @@ const RESTRICTED_SYNTAX = [
     selector:
       'AssignmentExpression > MemberExpression.left[computed=false][property.name=/^(checked|indeterminate)$/]',
     message: MESSAGES.checkedInput,
+  },
+  {
+    selector:
+      'AssignmentExpression > MemberExpression.left[computed=false][property.name="value"] > TSAsExpression.object:has(TSTypeReference[typeName.name=/^HTML(Input|TextArea)Element$/])',
+    message: MESSAGES.inputValueWrite,
   },
   {
     selector: 'VariableDeclarator[id.name=/^handled\\w*(Value|Text)$/]',

@@ -1,16 +1,14 @@
 import { shallowRef, toValue } from 'vue';
 
-// A refused edit leaves the model unchanged. Read the revision in the binding so Vue patches
-// the same input and keeps its focus and selection.
+// A refused edit leaves the model unchanged. The revision gives Vue a reason to patch the input.
 export function useInputRender() {
   const revision = shallowRef(0);
-  return {
-    valueProps<Value>(value: Value) {
-      toValue(revision);
-      return { value };
-    },
-    renderValue() {
-      revision.value += 1;
-    },
-  };
+  function valueProps<Value>(value: Value) {
+    toValue(revision);
+    return { value };
+  }
+  function renderValue() {
+    revision.value += 1;
+  }
+  return { valueProps, renderValue };
 }

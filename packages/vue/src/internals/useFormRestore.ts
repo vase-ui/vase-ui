@@ -1,4 +1,4 @@
-import { computed, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { dispatchTakeEvents, isTextControl } from '../common/hydration';
@@ -94,11 +94,32 @@ export function useFormRestoreAsInput<Value>(
     if (model.value !== undefined && !binding.value.applied) {
       return;
     }
-    const text = String(model.value ?? uncontrolledText?.() ?? element.defaultValue);
-    if (element.value !== text && element.value !== sanitizeValue(element, text)) {
+    const lastText = model.value === undefined ? uncontrolledText?.() : undefined;
+    const text = String(model.value ?? element.defaultValue);
+    if (
+      lastText !== undefined
+        ? element.value !== lastText
+        : element.value !== text && element.value !== sanitizeValue(element, text)
+    ) {
       dispatchTakeEvents(element, leaves);
     }
   });
+
+  const resetTarget = shallowRef<HTMLInputElement | null>(null);
+  watch(
+    resetTarget,
+    (element) => {
+      if (element && element === input.value && model.value !== undefined) {
+        const text = String(model.value ?? '');
+        if (element.defaultValue !== text) {
+          // Vue also sets the value attribute when it binds the restored text, which changes form.reset().
+          element.defaultValue = text;
+        }
+      }
+      resetTarget.value = null;
+    },
+    { flush: 'post' },
+  );
 
   function valueProps() {
     const current = binding.value;
@@ -111,6 +132,9 @@ export function useFormRestoreAsInput<Value>(
         element.value !== text &&
         element.value !== sanitizeValue(element, text)
       ) {
+        if (element.localName === 'input') {
+          resetTarget.value = element as HTMLInputElement;
+        }
         return { value: element.value };
       }
     }

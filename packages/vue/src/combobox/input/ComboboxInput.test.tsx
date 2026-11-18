@@ -1883,6 +1883,25 @@ describe('<Combobox.Input />', () => {
       expect(handleInputValueChange.mock.lastCall?.[1].event.type).toBe('compositionend');
     });
 
+    it('reports a refused composition once when WebKit sends its final input', async () => {
+      const onInputValueChange = vi.fn();
+      await render(
+        <Combobox.Root inputValue="old" onInputValueChange={onInputValueChange}>
+          <Combobox.Input />
+        </Combobox.Root>,
+      );
+      const input = getInput();
+      await fireEvent.compositionStart(input);
+      input.value = 'マ';
+      const end = fireEvent.compositionEnd(input);
+      await type('マ', 'insertCompositionText');
+      await end;
+
+      expect(onInputValueChange).toHaveBeenCalledTimes(1);
+      expect(onInputValueChange).toHaveBeenCalledWith('マ', expect.anything());
+      await vi.waitFor(() => expect(input).toHaveValue('old'));
+    });
+
     it('keeps a new composition when the previous composition timer runs', async () => {
       const onInputValueChange = vi.fn();
       await render(

@@ -638,11 +638,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   stateAttributesMapping,
 });
 
-const hiddenInputText = computed(() =>
-  numberValue.value === null ? '' : String(numberValue.value),
-);
-
 const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
+// When both inputs changed before hydration, the edit in the visible input sets the model first.
+const hiddenInputText = computed<string | null>((previous) => {
+  const value = numberValue.value;
+  if (!writesHiddenValue.value && previous === undefined) {
+    return null;
+  }
+  return value === null ? '' : String(value);
+});
 
 const { valueProps, renderValue } = useFormRestoreAsInput(
   hiddenInputElement,
@@ -697,7 +701,7 @@ function inputProps() {
     type: 'number',
     form: props.form,
     name: inputName.value,
-    ...(writesHiddenValue.value ? valueProps() : undefined),
+    ...(hiddenInputText.value === null ? undefined : valueProps()),
     min: props.min,
     max: props.max,
     // stepMismatch validation is broken unless an explicit `min` is added.
