@@ -243,11 +243,17 @@ A part that Base UI takes from another family is exported again and not copied: 
 
 ### Parts that render an element
 
-| API | Function | Base UI form | | --- A disabled `Fieldset.Root` passes `disabled: true` to a render slot or component. It binds an empty `disabled` attribute on its own DOM element.
-
-- | --- | --- | | `as` prop: a tag, or a component. The default is upstream's tag. | Sets the element or the component that the part renders. | `render={<a />}` | | `#render` slot with the slot props `{ props, state }` | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` | | Default slot with the slot props `{ state }` | Holds the content. | `children` | | `class` and `style` attributes | The part merges them with its own class and style. The class of the consumer comes first. The style of the consumer wins over the ordinary style of the part. | `className`, `style` | | `nativeButton` prop, where upstream has it | The same as upstream. | `nativeButton` | | Exposed `element` | Gives the DOM element through a template ref. | `ref` |
+| API | Function | Base UI form |
+| --- | --- | --- |
+| `as` prop: a tag, or a component. The default is upstream's tag. | Sets the element or the component that the part renders. | `render={<a />}` |
+| `#render` slot with the slot props `{ props, state }` | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` |
+| Default slot with the slot props `{ state }` | Holds the content. | `children` |
+| `class` and `style` attributes | The part merges them with its own class and style. The class of the consumer comes first. The style of the consumer wins over the ordinary style of the part. | `className`, `style` |
+| `nativeButton` prop, where upstream has it | The same as upstream. | `nativeButton` |
+| Exposed `element` | Gives the DOM element through a template ref. | `ref` |
 
 - `docs/handbook/composition.md` gives the rules of the `#render` slot for a consumer. A development build shows a warning for a slot that gives the part no element, and for `as` together with `#render`. `useRenderElement` makes these checks.
+- A disabled `Fieldset.Root` passes `disabled: true` to a render slot or component. It binds an empty `disabled` attribute on its own DOM element.
 - Select a state with its `data-*` attribute in CSS. To calculate a class or style from state, bind it on the element in the `#render` slot.
 - A part whose declarations must win over the `style` attribute gives them to `useRenderElement` as `overridingStyle`. `Collapsible.Panel` does this. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.

@@ -53,17 +53,16 @@ provide(FieldsetRootContext, {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fieldset', props, {
   state,
-  props: (attrs) => [
-    {
-      'aria-labelledby': getAriaLabelledBy(attrs),
-      disabled: isDisabled.value
-        ? slots.render || typeof props.as !== 'string'
-          ? true
-          : ''
-        : undefined,
-    },
-    attrs,
-  ],
+  props: (attrs) => {
+    const disabled = slots.render || typeof props.as !== 'string' ? true : '';
+    return [
+      {
+        'aria-labelledby': getAriaLabelledBy(attrs),
+        disabled: isDisabled.value ? disabled : undefined,
+      },
+      attrs,
+    ];
+  },
 });
 
 defineExpose({ element });
