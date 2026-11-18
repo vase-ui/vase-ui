@@ -302,7 +302,7 @@ function getFirstTabbableElement(
     return container;
   }
 
-  return tabbable(container).find((element) => !isInClosedPopup(element)) ?? container;
+  return tabbable(container, isInClosedPopup)[0] ?? container;
 }
 
 // A detached element, a hidden element, or an element in a closed popup cannot take the focus.
