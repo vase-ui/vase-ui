@@ -17,7 +17,7 @@ function update(value: boolean) {
     <Toggle ref="toggle" v-slot="{ state }" :pressed="pressed" @update:pressed="update">
       {{ state.pressed ? 'On' : 'Off' }}
     </Toggle>
-    <output v-if="updates.length">Vue {{ version }} emitted {{ updates.join(',') }}</output>
+    <output v-if="updates.length">Vue {{ version }} emitted {{ JSON.stringify(updates) }}</output>
     <button @click="toggleRef?.element?.focus()">Focus the toggle</button>
   </main>
 </template>
