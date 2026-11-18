@@ -69,6 +69,8 @@ const MESSAGES = {
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
+  checkedInput: 'Use `useCheckedInputSync` to write the checked state of an input.',
+  handledInput: 'Use `useInputValueSync` to record the value of an input.',
   defineModel:
     '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
   groupBy:
@@ -320,6 +322,15 @@ const RESTRICTED_SYNTAX = [
     selector:
       "BinaryExpression[operator='instanceof']:matches([right.object.name='Temporal'], [right.object.property.name='Temporal'])",
     message: MESSAGES.temporalInstanceof,
+  },
+  {
+    selector:
+      'AssignmentExpression > MemberExpression.left[computed=false][property.name=/^(checked|indeterminate)$/]',
+    message: MESSAGES.checkedInput,
+  },
+  {
+    selector: 'VariableDeclarator[id.name=/^handled\\w*(Value|Text)$/]',
+    message: MESSAGES.handledInput,
   },
   { selector: "CallExpression[callee.name='defineModel']", message: MESSAGES.defineModel },
   { selector: 'VariableDeclaration[kind=/using$/]', message: MESSAGES.resourceManagement },

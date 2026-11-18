@@ -104,7 +104,7 @@ export function useFormRestoreAsInput(
     | {
         element: HTMLInputElement | HTMLTextAreaElement;
         value: string;
-        handledValue: string | undefined;
+        lastValue: string | undefined;
       }
     | undefined;
   onBeforeUpdate(() => {
@@ -112,14 +112,14 @@ export function useFormRestoreAsInput(
     if (!waitsForPageshow() || !isTextControl(element)) {
       return;
     }
-    const handledValue = getHandledValue();
-    if (element.value !== handledValue) {
-      unhandled = { element, value: element.value, handledValue };
+    const lastValue = getHandledValue();
+    if (element.value !== lastValue) {
+      unhandled = { element, value: element.value, lastValue };
     }
   });
   onUpdated(() => {
     // A render that gave the input a new value keeps it.
-    if (unhandled && unhandled.element.value === unhandled.handledValue) {
+    if (unhandled && unhandled.element.value === unhandled.lastValue) {
       unhandled.element.value = unhandled.value;
     }
     unhandled = undefined;

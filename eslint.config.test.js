@@ -68,7 +68,21 @@ const REF_HINT = 'before the element is in the document';
 const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
+const INPUT_SYNC_SAMPLES = [
+  ['a checked write', 'input.checked = true;', 'useCheckedInputSync'],
+  ['an indeterminate write', 'input.indeterminate = false;', 'useCheckedInputSync'],
+  ['a handled input value', 'const handledHiddenValue = input.value; read(handledHiddenValue);', 'useInputValueSync'],
+  ['a handled input text', 'const handledText = input.value; read(handledText);', 'useInputValueSync'],
+];
+
 const reported = [
+  ...INPUT_SYNC_SAMPLES.map(([name, code, hint]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(code),
+    ruleId: 'no-restricted-syntax',
+    hint,
+  })),
   {
     name: 'conditional part forms inside template v-if',
     file: `${SRC}/DialogRoot.vue`,
@@ -1085,6 +1099,11 @@ const reported = [
 ];
 
 const passed = [
+  ...INPUT_SYNC_SAMPLES.map(([name, code]) => ({
+    name: `${name} in a test`,
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code,
+  })),
   {
     name: 'filtered attributes on a portal part',
     file: PORTAL_PART,

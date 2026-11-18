@@ -129,9 +129,9 @@ import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
-import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { checkedInputProps } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import {
   useInputRegistration,
@@ -142,7 +142,6 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useFormContext } from '../../internals/form-context';
 import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
-import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
   useAriaLabelledBy,
   useControlLabelId,
@@ -153,6 +152,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { useCheckedInputSync } from '../../internals/useCheckedInputSync';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -357,26 +357,6 @@ const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabel,
 );
 
-// Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. HTML has no attribute for `indeterminate`, so a server cannot write
-// it. A click on the input sets `indeterminate` to `false` and keeps the new `checked`, also when a
-// parent does not accept the click. A form would then submit a state that the checkbox does not
-// show.
-function writeStateToInput() {
-  const input = inputElement.value;
-  if (!input) {
-    return;
-  }
-
-  if (input.checked !== isChecked.value) {
-    input.checked = isChecked.value;
-  }
-
-  if (input.indeterminate !== isIndeterminate.value) {
-    input.indeterminate = isIndeterminate.value;
-  }
-}
-
 function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
@@ -425,7 +405,7 @@ function onInputClick(event: MouseEvent) {
   }
 
   // A parent that controls the checkbox can keep the old value. The input then has the new one.
-  void nextTick(writeStateToInput);
+  void nextTick(checkedSync.write);
 }
 
 // The input changed with no event that the checkbox handled: a press on a native label before the
@@ -440,7 +420,7 @@ function takeInputState(event?: Event) {
     requestChange(input.checked, event);
   }
 
-  void nextTick(writeStateToInput);
+  void nextTick(checkedSync.write);
 }
 
 // An uncontrolled checkbox goes back to its default value through its change event. The result is
@@ -476,31 +456,17 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
-// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
-watch(
-  inputElement,
-  (input) => {
-    if (!input) {
-      return;
-    }
-
-    if (input.checked === input.defaultChecked) {
-      writeStateToInput();
-    } else {
-      queueInputTake(() => {
-        takeInputState();
-        return true;
-      });
-    }
-  },
-  { flush: 'post' },
-);
+// The field records its initial value before the part takes a change from before hydration.
+const checkedSync = useCheckedInputSync(inputElement, () => isChecked.value, {
+  indeterminate: () => isIndeterminate.value,
+  take: () =>
+    queueInputTake(() => {
+      takeInputState();
+      return true;
+    }),
+});
 
 useFormRestore(inputElement, takeInputState);
-
-watch(isIndeterminate, writeStateToInput, { flush: 'post' });
-
 const enterTimeout = useTimeout();
 
 function onKeydown(event: VaseUIEvent<KeyboardEvent>) {
@@ -648,22 +614,19 @@ function inputProps() {
   return {
     ...validationProps,
     'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    checked: isChecked.value,
-    disabled: isDisabled.value,
-    form: props.form,
-    id: hiddenInputId.value,
-    // The parent checkbox has no name, so the form does not get it.
-    name: props.parent ? undefined : inputName.value,
-    required: props.required,
-    style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
-    tabindex: -1,
-    type: 'checkbox',
-    'aria-hidden': true,
-    onInvalid: handleHiddenInputInvalid,
-    onClick: onInputClick,
-    onFocusin() {
-      element.value?.focus();
-    },
+    ...checkedInputProps({
+      type: 'checkbox',
+      checked: isChecked.value,
+      disabled: isDisabled.value,
+      form: props.form,
+      id: hiddenInputId.value,
+      name: inputName.value,
+      required: props.required,
+      onClick: onInputClick,
+      element: () => element.value,
+    }),
+    // A parent keeps the input style for its name, but the form must omit its value.
+    ...(props.parent ? { name: undefined } : undefined),
     ...(props.value !== undefined
       ? { value: (group ? isChecked.value && props.value : props.value) || '' }
       : undefined),
