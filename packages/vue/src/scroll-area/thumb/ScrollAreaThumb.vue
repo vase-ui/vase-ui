@@ -49,6 +49,10 @@ const {
 
 const orientation = useScrollAreaScrollbarContext();
 
+function handleThumbPointerDown(event: PointerEvent) {
+  handlePointerDown(event, orientation.value);
+}
+
 const state = computed<ScrollAreaThumbState>(() => ({
   scrolling: (orientation.value === 'vertical' ? scrollingY : scrollingX).value,
   orientation: orientation.value,
@@ -79,7 +83,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   state,
   props: (attrs) => [
     {
-      onPointerdown: handlePointerDown,
+      onPointerdown: handleThumbPointerDown,
       onPointermove: handlePointerMove,
       onPointerup: handlePointerUp,
       onPointercancel: handlePointerUp,
