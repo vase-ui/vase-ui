@@ -103,9 +103,9 @@ export interface FloatingFocusManagerProps {
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus. When the element is in the closed popup of a disabled focus manager
-   * above, the return element of that focus manager replaces it. This rule repeats for each such
-   * popup above, because a disabled focus manager returns no focus at its unmount.
+   * it, cannot take the focus. When the element is in the closed floating element of a disabled
+   * focus manager above, the return element of that focus manager replaces it, because that focus
+   * manager returns no focus at its unmount. The same rule applies to the new element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -113,9 +113,10 @@ export interface FloatingFocusManagerProps {
    *   the focus, the default behavior applies. `null` and an empty ref use the default behavior.
    * - A function: Called with the type of the interaction that closed the floating element (`mouse`,
    *   `touch`, `pen`, or `keyboard`). The type is an empty string when no event of the user closed
-   *   it. A popup below that closes while this popup is closed and disabled also calls the function
-   *   with its close type. Return an element to focus, `true` or `null` to use the default
-   *   behavior, or `false` or `undefined` to do nothing.
+   *   it. The return of the focus of a floating element below also calls the function, with the
+   *   close type of that element, when it replaces a target in this closed floating element. Return
+   *   an element to focus, `true` or `null` to use the default behavior, or `false` or `undefined`
+   *   to do nothing.
    * @default true
    */
   returnFocus?: FocusOption | undefined;
