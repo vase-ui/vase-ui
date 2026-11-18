@@ -170,6 +170,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     // This listener runs after each other listener of the popup.
     { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
+    { style: store.context.viewportStyles.value?.popup.value },
     {
       id: given('id', props.id) ?? store.select('defaultPopupId'),
       // A rendered `Menu.List` carries the `menu` semantics instead.

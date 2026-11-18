@@ -1,12 +1,4 @@
-import {
-  computed,
-  onBeforeMount,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onBeforeMount, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { ComputedRef, CSSProperties, MaybeRefOrGetter } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
@@ -239,7 +231,7 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     { flush: 'post' },
   );
 
-  usePopupAutoResize({
+  const viewportStyles = usePopupAutoResize({
     popupElement,
     positionerElement,
     mounted,
@@ -280,16 +272,16 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     { flush: 'sync' },
   );
 
-  // The first position pass needs the middleware, and a server renders no pass. A viewport that
-  // replaces another one mounts before the old one unmounts, and the old one clears the key.
+  // The first position pass needs these bindings before the viewport mounts.
   onBeforeMount(() => {
-    store.set('adaptiveOrigin', adaptiveOrigin);
-  });
-  onMounted(() => {
+    store.context.viewportStyles.value = viewportStyles;
     store.set('adaptiveOrigin', adaptiveOrigin);
   });
   onScopeDispose(() => {
-    store.set('adaptiveOrigin', undefined);
+    if (store.context.viewportStyles.value === viewportStyles) {
+      store.context.viewportStyles.value = null;
+      store.set('adaptiveOrigin', undefined);
+    }
     cleanupController?.abort();
   });
 

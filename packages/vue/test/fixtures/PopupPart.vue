@@ -59,7 +59,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
-    { id: defaultPopupId.value, role: 'dialog', hidden: mounted.value ? undefined : true },
+    {
+      id: defaultPopupId.value,
+      role: 'dialog',
+      hidden: mounted.value ? undefined : true,
+      style: store.context.viewportStyles.value?.popup.value,
+    },
     attrs,
   ],
 });

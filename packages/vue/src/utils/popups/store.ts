@@ -1,5 +1,6 @@
 import { shallowRef, toRaw } from 'vue';
 import type { HTMLAttributes, ShallowRef } from 'vue';
+import type { usePopupAutoResize } from './viewport/usePopupAutoResize';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createEventEmitter } from './createEventEmitter';
 import { dispatchOpenChange } from './floating-root/dispatchOpenChange';
@@ -146,6 +147,7 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
    * The registered trigger elements.
    */
   readonly triggerElements: PopupTriggerMap;
+  readonly viewportStyles: ShallowRef<ReturnType<typeof usePopupAutoResize> | null>;
   /**
    * A ref to the element of the popup.
    */
@@ -185,6 +187,7 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
  */
 export function createPopupStoreContext() {
   return {
+    viewportStyles: shallowRef<ReturnType<typeof usePopupAutoResize> | null>(null),
     popupRef: shallowRef<HTMLElement | null>(null),
     keptPopupRef: shallowRef<HTMLElement | null>(null),
     backdropRef: shallowRef<HTMLElement | null>(null),

@@ -25,6 +25,7 @@ describe('usePopupViewport', () => {
     expect(html).toBe(
       '<div><!--[--><!----><div data-current="true"><!--[--><!--[-->Content<!--]--><!--]--></div><!--]--></div>',
     );
+    expect(store.context.viewportStyles.value).toBeNull();
     expect(store.state.adaptiveOrigin).toBe(undefined);
   });
 });

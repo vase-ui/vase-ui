@@ -155,6 +155,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),
+    { style: store.context.viewportStyles.value?.popup.value },
     {
       id: store.select('defaultPopupId'),
       role: 'dialog',

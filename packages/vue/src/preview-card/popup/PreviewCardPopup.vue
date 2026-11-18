@@ -80,6 +80,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,
     store.select('popupProps'),
+    { style: store.context.viewportStyles.value?.popup.value },
     transitionStatus.value === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
     attrs,
   ],

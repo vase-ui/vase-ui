@@ -1,14 +1,15 @@
-import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
-import { EMPTY_OBJECT, NOOP } from '../../../common/empty';
+import { EMPTY_OBJECT } from '../../../common/empty';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import type { Side } from '../../../internals/useAnchorPositioning';
 import { useAnimationsFinished } from '../../../internals/useAnimationsFinished';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
+import { useDomEffect } from '../useDomEffect';
 import { getCssDimensions } from '../../getCssDimensions';
 import * as CommonPositionerCssVars from '../positioning/CommonPositionerCssVars';
-import * as CommonPopupCssVars from './CommonPopupCssVars';
+import { popupSizeStyles, positionerSizeStyles } from './popupSizeStyles';
 
 /**
  * Allows the element to automatically resize based on its content while supporting animations.
@@ -26,156 +27,110 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
 
   let committedDimensions: Dimensions | null = null;
 
-  // The rendered style of the popup element and the positioner element has none of the size
-  // variables, so Vue keeps the values that the resize writes. A `style` of the consumer on the
-  // popup replaces an anchoring declaration that has the same property at the next render.
+  const { isHeld } = useKeepAliveState();
+  const ready = shallowRef(false);
+  onMounted(() => {
+    ready.value = true;
+  });
+
   const anchoringStyles = computed(() =>
     getPopupAnchoringStyles(toValue(parameters.side), toValue(parameters.direction)),
   );
-
-  function measure(): (() => void) | undefined {
-    const popupElement = toValue(parameters.popupElement);
-    const positionerElement = toValue(parameters.positionerElement);
-
-    // Reset the state when the popup is closed.
-    if (!toValue(parameters.mounted)) {
-      committedDimensions = null;
-      return undefined;
-    }
-
-    // `KeepAlive` moves the popup out of the document before it calls `onDeactivated`. A
-    // measurement in that gap gives 0, and the next resize would start from it.
-    if (!popupElement || !positionerElement || !popupElement.isConnected) {
-      return undefined;
-    }
-
-    const restoreAnchoringStyles = applyElementStyles(popupElement, anchoringStyles.value);
-
-    // Measure the rendered size to enable transitions:
-    setPopupCssSize(popupElement, 'auto');
-
-    const restorePopupPosition = overrideElementStyle(popupElement, 'position', 'static');
-    const restorePopupTransform = overrideElementStyle(popupElement, 'transform', 'none');
-    const restorePopupScale = overrideElementStyle(popupElement, 'scale', '1');
-    const restorePositionerAvailableSize = applyElementStyles(positionerElement, {
-      [CommonPositionerCssVars.availableWidth]: 'max-content',
-      [CommonPositionerCssVars.availableHeight]: 'max-content',
-    });
-
-    function restoreMeasurementOverrides() {
-      restorePopupPosition();
-      restorePopupTransform();
-      restorePositionerAvailableSize();
-      restorePopupScale();
-    }
-
-    onMeasureLayout?.();
-
-    // Initial render (for each time the popup opens).
-    if (committedDimensions === null) {
-      setPositionerCssSize(positionerElement, 'max-content');
-
-      const dimensions = getCssDimensions(popupElement);
-
-      committedDimensions = dimensions;
-
-      setPositionerCssSize(positionerElement, dimensions);
-      restoreMeasurementOverrides();
-      onMeasureLayoutComplete?.(null, dimensions);
-
-      return restoreAnchoringStyles;
-    }
-
-    // Subsequent renders while open (when `content` changes).
-    setPositionerCssSize(positionerElement, 'max-content');
-
-    const previousDimensions = committedDimensions;
-    const newDimensions = getCssDimensions(popupElement);
-
-    // Commit immediately so future content changes have a stable previous size.
-    committedDimensions = newDimensions;
-
-    setPopupCssSize(popupElement, previousDimensions);
-    restoreMeasurementOverrides();
-    onMeasureLayoutComplete?.(previousDimensions, newDimensions);
-
-    setPositionerCssSize(positionerElement, newDimensions);
-
-    const abortController = new AbortController();
-
-    animationFrame.request(() => {
-      setPopupCssSize(popupElement, newDimensions);
-
-      runOnceAnimationsFinish(() => {
-        popupElement.style.setProperty(CommonPopupCssVars.popupWidth, 'auto');
-        popupElement.style.setProperty(CommonPopupCssVars.popupHeight, 'auto');
-      }, abortController.signal);
-    });
-
-    return () => {
-      abortController.abort();
-      animationFrame.cancel();
-      restoreAnchoringStyles();
-    };
-  }
-
-  // `KeepAlive` takes the elements out of the document, where they have no layout. A measurement
-  // then gives a size of 0.
-  const { isHeld } = useKeepAliveState();
-  let cleanup: (() => void) | undefined;
-
-  function stop() {
-    cleanup?.();
-    cleanup = undefined;
-  }
-
-  function readSources() {
-    return [
-      toValue(parameters.content),
-      toValue(parameters.popupElement),
-      toValue(parameters.positionerElement),
-      toValue(parameters.mounted),
-      anchoringStyles.value,
-      isHeld.value,
-    ];
-  }
-
-  // A part gives its element to the store in a `ref` callback, after the watcher read its sources
-  // and before `onMounted`. The mount run then sees the elements, and the watcher also fires. A
-  // watcher call with the sources of the last run starts no second run, as the dependency list of
-  // a React effect does. Without this check, each open runs the first branch and then the later
-  // branch.
-  let lastSources: unknown[] | undefined;
-
-  function run() {
-    stop();
-    lastSources = readSources();
-    if (!isHeld.value) {
-      cleanup = measure();
-    }
-  }
-
-  watch(
-    isHeld,
-    (held) => {
-      if (held) {
-        stop();
+  // An ancestor's deactivation hook reads the detached popup before Vue can patch its style.
+  useDomEffect(
+    [() => toValue(parameters.popupElement), () => toValue(parameters.mounted), anchoringStyles],
+    () => {
+      const popup = toValue(parameters.popupElement);
+      if (!popup || !toValue(parameters.mounted)) {
+        return undefined;
       }
+      const anchors = Object.entries(anchoringStyles.value).filter(
+        ([key]) => !popup.style.getPropertyValue(key),
+      );
+      for (const [key, value] of anchors) {
+        popup.style.setProperty(key, value);
+      }
+      return () => {
+        for (const [key, value] of anchors) {
+          if (popup.style.getPropertyValue(key) === value) {
+            popup.style.removeProperty(key);
+          }
+        }
+      };
     },
-    { flush: 'sync' },
   );
-
-  onMounted(run);
+  const popupSize = shallowRef<Dimensions | 'auto' | null>(null);
+  const positionerSize = shallowRef<Dimensions | null>(null);
+  const active = computed(() => ready.value && !isHeld.value && toValue(parameters.mounted));
   watch(
-    readSources,
-    (sources) => {
-      if (sources.some((source, index) => source !== lastSources?.[index])) {
-        run();
+    [
+      active,
+      () => toValue(parameters.popupElement),
+      () => toValue(parameters.positionerElement),
+      () => toValue(parameters.content),
+      anchoringStyles,
+    ],
+    ([shown, popup, positioner], _, onCleanup) => {
+      if (!toValue(parameters.mounted)) {
+        committedDimensions = null;
       }
+      if (!shown || !popup?.isConnected || !positioner) {
+        return;
+      }
+
+      // Both boxes must have their intrinsic size in the same layout read.
+      const restorePopup = applyElementStyles(popup, {
+        ...popupSizeStyles('auto'),
+        position: 'static',
+        transform: 'none',
+        scale: '1',
+      });
+      const restorePositioner = applyElementStyles(positioner, {
+        [CommonPositionerCssVars.availableWidth]: 'max-content',
+        [CommonPositionerCssVars.availableHeight]: 'max-content',
+        [CommonPositionerCssVars.positionerWidth]: 'max-content',
+        [CommonPositionerCssVars.positionerHeight]: 'max-content',
+      });
+      const previous = committedDimensions;
+      let target: Dimensions;
+      try {
+        onMeasureLayout?.();
+        target = getCssDimensions(popup);
+      } finally {
+        restorePopup();
+        restorePositioner();
+      }
+      onMeasureLayoutComplete?.(previous, target);
+      committedDimensions = target;
+      positionerSize.value = target;
+      popupSize.value = previous ?? 'auto';
+      if (!previous) {
+        return;
+      }
+
+      const controller = new AbortController();
+      onCleanup(() => {
+        controller.abort();
+        animationFrame.cancel();
+      });
+      animationFrame.request(() => {
+        popupSize.value = target;
+        void nextTick(() => {
+          if (!controller.signal.aborted) {
+            runOnceAnimationsFinish(() => {
+              popupSize.value = 'auto';
+            }, controller.signal);
+          }
+        });
+      });
     },
     { flush: 'post' },
   );
-  onScopeDispose(stop);
+
+  return {
+    popup: computed(() => popupSizeStyles(popupSize.value)),
+    positioner: computed(() => positionerSizeStyles(positionerSize.value)),
+  };
 }
 
 interface UsePopupAutoResizeParameters {
@@ -225,44 +180,21 @@ function getPopupAnchoringStyles(side: Side, direction: 'ltr' | 'rtl'): Record<s
 
   return {
     position: 'absolute',
-    [isPhysicalTop ? 'bottom' : 'top']: '0',
-    [isPhysicalLeft ? 'right' : 'left']: '0',
-  };
-}
-
-function overrideElementStyle(element: HTMLElement, property: string, value: string) {
-  const originalValue = element.style.getPropertyValue(property);
-  element.style.setProperty(property, value);
-
-  return () => {
-    element.style.setProperty(property, originalValue);
+    [isPhysicalTop ? 'bottom' : 'top']: '0px',
+    [isPhysicalLeft ? 'right' : 'left']: '0px',
   };
 }
 
 function applyElementStyles(element: HTMLElement, styles: Record<string, string>) {
-  const restorers: (() => void)[] = [];
-
-  for (const [key, value] of Object.entries(styles)) {
-    restorers.push(overrideElementStyle(element, key, value));
-  }
-
-  return restorers.length
-    ? () => {
-        restorers.forEach((restore) => restore());
-      }
-    : NOOP;
-}
-
-function setPopupCssSize(popupElement: HTMLElement, size: Dimensions | 'auto') {
-  const width = size === 'auto' ? 'auto' : `${size.width}px`;
-  const height = size === 'auto' ? 'auto' : `${size.height}px`;
-  popupElement.style.setProperty(CommonPopupCssVars.popupWidth, width);
-  popupElement.style.setProperty(CommonPopupCssVars.popupHeight, height);
-}
-
-function setPositionerCssSize(positionerElement: HTMLElement, size: Dimensions | 'max-content') {
-  const width = size === 'max-content' ? 'max-content' : `${size.width}px`;
-  const height = size === 'max-content' ? 'max-content' : `${size.height}px`;
-  positionerElement.style.setProperty(CommonPositionerCssVars.positionerWidth, width);
-  positionerElement.style.setProperty(CommonPositionerCssVars.positionerHeight, height);
+  const { style } = element;
+  const previous = Object.entries(styles).map(([key, value]) => {
+    const original = [key, style.getPropertyValue(key), style.getPropertyPriority(key)] as const;
+    style.setProperty(key, value);
+    return original;
+  });
+  return () => {
+    for (const [key, value, priority] of previous) {
+      style.setProperty(key, value, priority);
+    }
+  };
 }
