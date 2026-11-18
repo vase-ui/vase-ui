@@ -407,6 +407,14 @@ const relocation = withRule<Relocation>(
     if (test && row.additional) {
       report(place, 'a moved test has one destination.');
     }
+    const pairs = new Set([JSON.stringify([row.destination, row.member])]);
+    row.additional?.forEach(({ destination, member }, i) => {
+      const key = JSON.stringify([destination, member]);
+      if (pairs.has(key)) {
+        report(`${place}.additional[${i}]`, 'the row already names this destination and member.');
+      }
+      pairs.add(key);
+    });
   },
 );
 

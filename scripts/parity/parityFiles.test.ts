@@ -59,6 +59,11 @@ test('a relocation records a behavior or member and each part of a split on one 
   const check = (...relocations: unknown[]) =>
     validateFamilyFile(FILE, { ...makeFamily(), relocations });
   assert.deepEqual(check(row), []);
+  assert.match(
+    check({ ...row, additional: [...row.additional, ...row.additional] })[0],
+    /additional\[1\].*already names/,
+  );
+  assert.match(check({ ...row, ...row.additional[0] })[0], /additional\[0\].*already names/);
   assert.deepEqual(check({ ...row, member: 'point', behavior: 'Track the cursor.' }), []);
   assert.match(check(row, row)[0], /relocations\[1\].*same thing as relocations\[0\]/);
   const { behavior, witness, ...rest } = row;
