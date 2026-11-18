@@ -17,16 +17,17 @@ describe('range label text', () => {
       expect(range.tagName).toBe('SECTION');
       expect(range.children).toHaveLength(2);
       expect(range.firstElementChild).toHaveTextContent('Capacity');
-      expect(text.mock.calls).toEqual([['Capacity']]);
+      expect(text).toHaveBeenCalledWith('Capacity');
       expect(hidden).toHaveAttribute('role', 'presentation');
       expect(hidden).toHaveTextContent('x');
       expect(hidden).toHaveStyle({ clipPath: 'inset(50%)' });
 
+      text.mockClear();
       await setProps({ label: 'Charge' });
       expect(range).toHaveAccessibleName('Charge');
       expect(range.firstElementChild).toHaveTextContent('Charge');
       expect(range.lastElementChild).toBe(hidden);
-      expect(text.mock.calls).toEqual([['Capacity'], ['Charge']]);
+      expect(text.mock.calls).toEqual([['Charge']]);
     },
   );
 });
