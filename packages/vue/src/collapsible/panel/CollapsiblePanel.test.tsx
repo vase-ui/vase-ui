@@ -2352,8 +2352,6 @@ describe('<Collapsible.Panel />', () => {
       // The browser drops `hidden` as part of revealing the match.
       panel.removeAttribute('hidden');
 
-      // Vue renders the same props while the panel stays closed, so it cannot restore the
-      // collapsed styles or the `hidden` state on its own.
       await waitFor(() => {
         expect(panel).toHaveAttribute('hidden', 'until-found');
       });

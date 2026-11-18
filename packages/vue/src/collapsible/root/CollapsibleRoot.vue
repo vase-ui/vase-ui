@@ -83,7 +83,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CollapsibleRootState>;
 }>();
 
-const open = useControlled({
+const isOpen = useControlled({
   controlled: () => props.open,
   default: () => props.defaultOpen,
   name: 'Collapsible',
@@ -94,12 +94,12 @@ function requestOpen(nextOpen: boolean, details: CollapsibleRootChangeEventDetai
   emit('openChange', nextOpen, details);
   if (!details.isCanceled) {
     emit('update:open', nextOpen);
-    open.value = nextOpen;
+    isOpen.value = nextOpen;
   }
 }
 
 const { state } = useCollapsibleRoot(
-  open,
+  isOpen,
   () => props.disabled,
   requestOpen,
   () => element.value,
