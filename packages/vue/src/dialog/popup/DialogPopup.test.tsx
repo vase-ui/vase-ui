@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
@@ -24,6 +24,7 @@ import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
 import * as Select from '../../select/index.parts';
 import type { DialogStore } from '../store/DialogStore';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
 
 describe('<Dialog.Popup />', () => {
@@ -105,6 +106,55 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Root>
       ),
     });
+  });
+
+  it('VUE-138: traps Tab on a field in the popup slot when no element is tabbable', async () => {
+    const field = document.createElement('input');
+    field.tabIndex = -1;
+    const root = createSlotHost(field);
+    await render(
+      <Dialog.Root defaultOpen modal="trap-focus">
+        <Dialog.Portal container={root}>
+          <Dialog.Popup initialFocus={field}>{h('slot')}</Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>,
+    );
+    await waitFor(() => expect(field).toHaveFocus());
+
+    expect(await fireEvent.keyDown(field, { key: 'Tab' })).toBe(false);
+    expect(field).toHaveFocus();
+  });
+
+  it('VUE-138: returns focus to the trigger when finalFocus is a field in the popup slot', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const field = document.createElement('input');
+    const root = createSlotHost(field);
+    const complete = vi.fn();
+    const { user } = await render(
+      <Dialog.Root modal={false} onOpenChangeComplete={complete}>
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal container={root}>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Dialog.Popup class="popup" finalFocus={field}>
+            <Dialog.Close>Close</Dialog.Close>
+            {h('slot')}
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    await user.click(trigger);
+    await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+    const popup = root.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(popup.contains(field.assignedSlot)).toBe(true);
+    await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+    expect(trigger).toHaveFocus();
+    for (const animation of popup.getAnimations()) {
+      animation.finish();
+    }
+    await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
+    expect(popup).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 
   describe('prop: initialFocus', () => {

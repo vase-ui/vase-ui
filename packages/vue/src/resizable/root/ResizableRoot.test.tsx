@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, Teleport, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
+import { KeepAlive, Teleport, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -21,6 +21,7 @@ import {
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import { Resizable } from '@vase-ui/vue/resizable';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import ResizableRootHydration from './ResizableRootHydration.test.vue';
 import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
@@ -973,6 +974,25 @@ describe('<Resizable.Root />', () => {
     }
 
     const button = (name: string) => screen.getByRole('button', { name });
+
+    it('VUE-138: moves focus to the next panel on F6 from a button in a panel slot', async () => {
+      const first = document.createElement('button');
+      const root = createSlotHost(first);
+      await render(
+        <Teleport to={root}>
+          <Resizable.Root>
+            <Resizable.Panel>{h('slot')}</Resizable.Panel>
+            <Resizable.Handle aria-label="Resize" />
+            <Resizable.Panel>
+              <button>Next</button>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </Teleport>,
+      );
+      first.focus();
+      await userEvent.keyboard('{F6}');
+      expect(root.activeElement?.textContent).toBe('Next');
+    });
 
     it.each([
       { name: 'F6 from a control', from: 'B', keys: '{F6}', to: 'C' },

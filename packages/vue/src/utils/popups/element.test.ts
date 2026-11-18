@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import * as TooltipTriggerDataAttributes from '../../tooltip/trigger/TooltipTriggerDataAttributes';
 import { isEventTargetWithin, isTargetInsideEnabledTrigger } from './element';
 import { PopupTriggerMap } from './popupTriggerMap';
@@ -40,6 +41,20 @@ function disable(trigger: Element) {
 }
 
 describe('isTargetInsideEnabledTrigger', () => {
+  it('VUE-138: recognizes a press on content assigned to the trigger slot', () => {
+    const label = document.createElement('span');
+    const root = createSlotHost(label);
+    const trigger = document.createElement('button');
+    trigger.append(document.createElement('slot'));
+    root.append(trigger);
+    const triggers = new PopupTriggerMap();
+    triggers.add('trigger', trigger);
+
+    expect(isTargetInsideEnabledTrigger(label, triggers)).toBe(true);
+    disable(trigger);
+    expect(isTargetInsideEnabledTrigger(label, triggers)).toBe(false);
+  });
+
   it('returns true for an enabled trigger and for a target inside it', () => {
     const trigger = document.createElement('button');
     const target = document.createElement('span');
