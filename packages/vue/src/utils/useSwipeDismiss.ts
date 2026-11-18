@@ -107,14 +107,12 @@ function safelyChangePointerCapture(
   pointerId: number,
   method: 'setPointerCapture' | 'releasePointerCapture',
 ) {
-  // eslint-disable-next-line @typescript-eslint/unbound-method -- The call below binds the method to the element with `call`.
-  const pointerCaptureMethod = element[method];
-  if (typeof pointerCaptureMethod !== 'function') {
+  if (typeof element[method] !== 'function') {
     return;
   }
 
   try {
-    pointerCaptureMethod.call(element, pointerId);
+    element[method](pointerId);
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'NotFoundError') {
       return;
@@ -140,16 +138,8 @@ function isTouchLikeEvent(event: SwipeDismissEvent) {
 }
 
 export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismissReturnValue {
-  const {
-    movementCssVars,
-    canStart,
-    onDismiss,
-    onProgress,
-    onCancel,
-    onSwipeStart,
-    onRelease,
-    onSwipingChange,
-  } = options;
+  const { movementCssVars } = options;
+  const { isHeld } = useKeepAliveState();
 
   const directionState = computed(() => {
     const directions = toValue(options.directions);
@@ -203,7 +193,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
   }
 
   function isEnabled() {
-    return toValue(options.enabled);
+    return !isHeld.value && toValue(options.enabled);
   }
 
   function setSwiping(nextSwiping: boolean) {
@@ -212,7 +202,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     }
 
     swiping.value = nextSwiping;
-    onSwipingChange?.(nextSwiping);
+    options.onSwipingChange?.(nextSwiping);
   }
 
   function resolveSwipeThreshold(direction: SwipeDirection | undefined) {
@@ -250,7 +240,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     } else if (progressChanged) {
       lastProgressDetails = null;
     }
-    onProgress?.(nextProgress, details);
+    options.onProgress?.(nextProgress, details);
   }
 
   // Until Vue patches the drag styles, one flush can contain the whole gesture.
@@ -427,7 +417,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       }
     }
 
-    onSwipeStart?.(event);
+    options.onSwipeStart?.(event);
 
     setSwiping(true);
     isFirstPointerMove = true;
@@ -468,7 +458,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
     updateSwipeProgress(0, { deltaX: 0, deltaY: 0, direction: undefined });
 
-    onCancel?.(event);
+    options.onCancel?.(event);
   }
 
   function canSwipeFromScrollEdgeOnPendingMove(
@@ -513,6 +503,17 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     return null;
   }
 
+  function canStartAt(position: Point, event: SwipeDismissEvent) {
+    const { canStart } = options;
+    return (
+      !canStart ||
+      canStart(position, {
+        nativeEvent: event,
+        direction: directionState.value.primaryDirection,
+      })
+    );
+  }
+
   function handleStart(event: SwipeDismissEvent) {
     if (!isEnabled()) {
       return;
@@ -536,13 +537,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     swipeFromScrollable = false;
     sawPrimaryButtonsOnMove = !('touches' in event);
 
-    const allowedToStart = canStart
-      ? canStart(startPos, {
-          nativeEvent: event,
-          direction: directionState.value.primaryDirection,
-        })
-      : true;
-    if (!allowedToStart) {
+    if (!canStartAt(startPos, event)) {
       return;
     }
 
@@ -732,7 +727,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       }
     }
 
-    const releaseDecision = onRelease?.({
+    const releaseDecision = options.onRelease?.({
       event,
       direction: intendedSwipeDirection,
       deltaX,
@@ -763,7 +758,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     if (shouldClose && dismissDirection) {
       currentSwipeDirection.value = dismissDirection;
       dragDismissed.value = true;
-      onDismiss?.(event, { direction: dismissDirection });
+      options.onDismiss?.(event, { direction: dismissDirection });
     } else {
       dragOffset = { x: resolvedInitialTransform.x, y: resolvedInitialTransform.y };
       currentSwipeDirection.value = undefined;
@@ -816,14 +811,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
         return;
       }
 
-      const allowedToStart = canStart
-        ? canStart(currentPos, {
-            nativeEvent: event,
-            direction: directionState.value.primaryDirection,
-          })
-        : true;
-
-      if (allowedToStart) {
+      if (canStartAt(currentPos, event)) {
         const pendingStartPos = pendingSwipeStartPos;
         let ignoreScrollableOnStart = false;
         if (isTouchLikeEvent(event)) {
@@ -914,13 +902,11 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     };
   }
 
-  // `KeepAlive` removes the element from the document, and the browser then releases the pointer
-  // capture. No `pointerup` comes to the element after that.
-  const { isHeld } = useKeepAliveState();
+  // The pointer can be released outside the cached element before the next activation.
   watch(
     isHeld,
     (held) => {
-      if (held && swiping.value) {
+      if (held && (pendingSwipe || swiping.value)) {
         reset();
       }
     },

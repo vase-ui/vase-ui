@@ -10,6 +10,7 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import { useFormReset } from './useFormReset';
 
 // `Switch.Root` calls the composable.
@@ -26,6 +27,47 @@ describe('useFormReset', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('follows a getter from an existing input to a different form', async () => {
+    const onReset = vi.fn();
+    const { container } = await render(
+      <div>
+        <form>
+          <input name="first" />
+        </form>
+        <form>
+          <input name="second" />
+        </form>
+      </div>,
+    );
+    const [first, second] = container.querySelectorAll('input');
+    if (!first?.form || !second?.form) {
+      throw new Error('Both inputs need a form.');
+    }
+    const input = shallowRef(first);
+    const setupElement = () => {
+      useFormReset(() => input.value, onReset);
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
+    vi.useFakeTimers();
+    first.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(1);
+
+    input.value = second;
+    await flushMicrotasks();
+    first.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(1);
+    second.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
+
+    unmount();
+    second.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
   });
 
   it('drops a reset that waits when its input changes', async () => {
@@ -61,6 +103,38 @@ describe('useFormReset', () => {
     form.reset();
     vi.advanceTimersByTime(0);
     expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('BUG-6206: follows each reset even if a later reset is canceled in the same task', async () => {
+    const onReset = vi.fn<(event: Event) => void>();
+    const Control = defineComponent(() => {
+      const input = shallowRef<HTMLInputElement | null>(null);
+      useFormReset(input, onReset);
+      return () => <input ref={input} />;
+    });
+    const { unmount } = await render(
+      <form data-testid="form">
+        <Control />
+      </form>,
+    );
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    const events: Event[] = [];
+    form.addEventListener('reset', (event) => events.push(event));
+    vi.useFakeTimers();
+    form.reset();
+    form.reset();
+    form.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+    form.reset();
+
+    expect(onReset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(0);
+    expect(onReset.mock.calls.map(([event]) => events.indexOf(event))).toEqual([0, 1]);
+
+    form.reset();
+    form.reset();
+    unmount();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
   });
 
   it.each([
