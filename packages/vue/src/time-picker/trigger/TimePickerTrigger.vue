@@ -82,7 +82,8 @@ const label = computed(() => {
     return ariaLabelValue;
   }
   const value = picker.value.value;
-  // A server and a browser can have another `Intl` text, and Vue writes no attribute while it hydrates.
+  // A server and a browser can have another `Intl` text, and Vue writes no attribute of a `v-bind`
+  // object while it hydrates.
   return value === null ? 'Choose time' : `Change time, ${describe(value)}`;
 });
 

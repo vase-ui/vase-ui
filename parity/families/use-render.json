@@ -10,7 +10,7 @@
     {
       "entry": "useRender",
       "returns": "useRender.ReturnValue<RenderedElementType>",
-      "reason": "A composable cannot return the rendered element. It returns `element`, `elementProps`, `setRef` and `tag`. The template of the component renders the element, and binds `setRef` on it by name."
+      "reason": "A composable cannot return the rendered element. It returns `element`, `elementProps`, `setRef`, `tag` and `usesRenderSlot`. The template of the component renders the element, binds `setRef` on it by name, and calls `usesRenderSlot()` in the `v-if` of its `#render` slot."
     }
   ],
   "notApplicableCommits": []

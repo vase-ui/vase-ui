@@ -2211,8 +2211,8 @@ describe('usePopupRoot', () => {
     const openOnServer: TriggerValues = { expanded: 'true', controls: null, open: true };
 
     // A server registers no trigger and attaches no store to a handle. A trigger that the root has
-    // not named gets its values in the first flush after the mount. Vue does not patch an attribute
-    // when it hydrates, so the first render of each trigger must have the values of the server HTML.
+    // not named gets its values in the first flush after the mount. While Vue hydrates, the ARIA
+    // and data attributes of a `v-bind` object keep their server values.
     it.each<{
       name: string;
       props: Record<string, unknown>;

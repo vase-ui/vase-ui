@@ -29,7 +29,7 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
  * Write the `#render` slot and the element in the template:
  *
  * ```vue
- * <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+ * <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
  * <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
  *   <slot :state="state" />
  * </component>
@@ -37,6 +37,8 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
  *
  * Bind `setRef` by name beside `elementProps()`.
  * Vapor mode applies only a ref that the template binds by name.
+ * Call `usesRenderSlot()` in the `v-if` of the `#render` slot.
+ * A slot of a Vapor component reads `props` only when it uses `props`.
  *
  * @param componentProps The reactive props object of the component. Do not destructure it.
  * The composable reads `as`, `stateClass` and `stateStyle` from it.
@@ -54,14 +56,17 @@ export function useRender<
   const { defaultTagName, ...elementParams } = params;
   const getDefaultTag = () => toValue(defaultTagName) ?? 'div';
 
-  const { element, elementProps, setRef } = useRenderElement<State, RenderedElementType>(
-    getDefaultTag,
-    componentProps,
-    { ...elementParams, serverAttributes: false },
-  );
+  const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+    State,
+    RenderedElementType
+  >(getDefaultTag, componentProps, {
+    ...elementParams,
+    serverAttributes: false,
+    refBindingCheck: true,
+  });
   const tag = computed(() => componentProps.as ?? getDefaultTag());
 
-  return { element, elementProps, setRef, tag };
+  return { element, elementProps, setRef, tag, usesRenderSlot };
 }
 
 /**
@@ -140,12 +145,21 @@ export interface UseRenderReturnValue<RenderedElementType extends Element = HTML
    * The `ref` setter of the element. `elementProps()` holds the same function as `ref`.
    * Bind it by name on the element, beside `elementProps()`: `:ref="setRef"`.
    * Vapor mode applies only a ref that the template binds by name.
+   * In a development build, a Vapor component that binds only `elementProps()` on a native
+   * element gets a warning.
    */
   setRef: (value: Element | ComponentPublicInstance | null) => void;
   /**
    * The tag or the component that the template renders: the `as` prop, or the default tag.
    */
   tag: ComputedRef<string | Component>;
+  /**
+   * Tells whether the consumer gave the `#render` slot.
+   * Call it as the last condition of the `v-if` of that slot, as in `v-if="usesRenderSlot()"`.
+   * In a development build, a `true` result also tells `useRender` that the component renders
+   * the slot. A slot of a Vapor component reads `props` only when it uses `props`.
+   */
+  usesRenderSlot: () => boolean;
 }
 
 export interface UseRenderState {}
