@@ -207,7 +207,11 @@ watch([mounted, isActiveItem, value], ([isMounted, isActive, currentValue]) => {
   renderedValue = currentValue;
 });
 
-const popupSize = useNavigationMenuPopupSize(itemValue, isActiveItem);
+const { isHeld } = useKeepAliveState();
+const popupSize = useNavigationMenuPopupSize(
+  itemValue,
+  computed(() => isActiveItem.value && !isHeld.value),
+);
 
 function handleOpenChange(
   nextOpen: boolean,
@@ -539,8 +543,6 @@ function openHoveredTrigger() {
   hoverProps.onMouseenter?.(createHoverEvent('mouseenter', trigger));
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
-
-const { isHeld } = useKeepAliveState();
 
 onMounted(openHoveredTrigger);
 

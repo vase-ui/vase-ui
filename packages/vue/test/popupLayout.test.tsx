@@ -1,5 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -24,7 +24,8 @@ it.each([true, false])(
       style.zoom = zoom;
     });
     const open = shallowRef(false);
-    await render(() => <SelectLayout open={open.value} aligned={aligned} />);
+    const width = shallowRef(160);
+    await render(() => <SelectLayout open={open.value} aligned={aligned} width={width.value} />);
     const positioner = screen.getByTestId('positioner');
 
     open.value = true;
@@ -44,10 +45,17 @@ it.each([true, false])(
     }
 
     open.value = false;
-    await waitSingleFrame();
+    await nextTick();
     expect(positioner).toHaveAttribute('hidden');
     expect(positioner.style.height).toBe('');
     expect(screen.getByTestId('popup').style.getPropertyValue('--transform-origin')).toBe('');
+    width.value = 240;
+    open.value = true;
+    await waitSingleFrame();
+    expect(positioner).not.toHaveAttribute('hidden');
+    expect(parseFloat(positioner.dataset.width ?? '')).toBeGreaterThan(200);
+    expect(positioner.dataset.width).toBe(positioner.style.getPropertyValue('--anchor-width'));
+    expect(positioner.dataset.origin).toMatch(/px|%/);
   },
 );
 

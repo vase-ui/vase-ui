@@ -1,4 +1,4 @@
-import { nextTick, watch } from 'vue';
+import { nextTick, onScopeDispose, watch } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
 import type { ComputedRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
@@ -52,15 +52,23 @@ export function useNavigationMenuPopupSize(
     popupAutoSizeResetRef.owner = null;
   }
 
-  watch(isActiveItem, (isActive) => {
-    if (isActive) {
-      return;
-    }
-
+  function releaseSize() {
     mutationFrame.cancel();
+    resizeFrame.cancel();
     sizeFrame.cancel();
     cancelAutoSizeReset();
-  });
+  }
+
+  watch(
+    isActiveItem,
+    (active) => {
+      if (!active) {
+        releaseSize();
+      }
+    },
+    { flush: 'sync' },
+  );
+  onScopeDispose(releaseSize);
 
   function ownsPopup(popup: HTMLElement, positioner: HTMLElement) {
     return (

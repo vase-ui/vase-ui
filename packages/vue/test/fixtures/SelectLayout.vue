@@ -4,7 +4,7 @@ import { Select } from '@vase-ui/vue/select';
 import { normalizeStyle } from 'vue';
 import type { StyleValue } from 'vue';
 
-defineProps<{ open: boolean; aligned: boolean }>();
+defineProps<{ open: boolean; aligned: boolean; width: number }>();
 
 function property(style: StyleValue, key: string) {
   const normalized = normalizeStyle(style);
@@ -16,7 +16,7 @@ function property(style: StyleValue, key: string) {
   <DirectionProvider direction="rtl">
     <div dir="rtl" style="position: absolute; top: 150px; left: 100px">
       <Select.Root :open="open" default-value="two" :modal="false">
-        <Select.Trigger style="width: 160px"><Select.Value /></Select.Trigger>
+        <Select.Trigger :style="{ width: width + 'px' }"><Select.Value /></Select.Trigger>
         <Select.Positioner :align-item-with-trigger="aligned" align="start">
           <template #render="{ props }">
             <div
