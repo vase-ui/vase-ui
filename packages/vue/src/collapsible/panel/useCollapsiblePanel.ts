@@ -1,4 +1,13 @@
-import { computed, nextTick, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onScopeDispose,
+  shallowReactive,
+  shallowRef,
+  toValue,
+  watch,
+} from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -84,7 +93,7 @@ export function useCollapsiblePanel(
   // Vue writes each key of the rendered style again on each render. A temporary inline style that
   // the code writes to the DOM is also in this record. The part merges the record after the style
   // of the consumer, so a render does not put the value of the consumer back.
-  const temporaryStyle = shallowRef<TemporaryStyle | undefined>();
+  const temporaryStyle = shallowReactive<TemporaryStyle>({});
 
   const runOnceCloseAnimationsFinish = useAnimationsFinished(() => panel);
 
@@ -121,7 +130,7 @@ export function useCollapsiblePanel(
   }
 
   const recordTemporaryStyle: RecordTemporaryStyle = (declarations) => {
-    temporaryStyle.value = { ...temporaryStyle.value, ...declarations };
+    Object.assign(temporaryStyle, declarations);
 
     let isRecorded = true;
     return () => {
@@ -130,11 +139,9 @@ export function useCollapsiblePanel(
       }
       isRecorded = false;
 
-      const remaining = { ...temporaryStyle.value };
       for (const property of Object.keys(declarations)) {
-        delete remaining[property];
+        delete temporaryStyle[property];
       }
-      temporaryStyle.value = Object.keys(remaining).length > 0 ? remaining : undefined;
     };
   };
 
@@ -572,7 +579,9 @@ export function useCollapsiblePanel(
     shouldRender: computed(
       () => toValue(parameters.keepMounted) || isHiddenUntilFound() || isMounted() || isOpen(),
     ),
-    temporaryStyle: computed(() => temporaryStyle.value),
+    temporaryStyle: computed(() =>
+      Object.keys(temporaryStyle).length > 0 ? { ...temporaryStyle } : undefined,
+    ),
     transitionStatus: panelTransitionStatus,
     width: computed(() => renderedDimensions.value.width),
   };

@@ -10,11 +10,11 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
-import { useDomEffect } from '../useDomEffect';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isTargetInsideEnabledTrigger, isTypeableElement, matchesFocusVisible } from '../element';
 import type { PopupInteractionStore } from '../types';
+import { useDomEffect } from '../useDomEffect';
 
 // The check is a function, so that a case can set the flags of `platform`.
 const isMacSafari = () => platform.os.mac && platform.engine.webkit;

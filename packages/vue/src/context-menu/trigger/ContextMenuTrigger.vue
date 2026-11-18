@@ -16,7 +16,7 @@ export interface ContextMenuTriggerProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onScopeDispose, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -24,12 +24,13 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
 import { findRootOwnerId } from '../../menu/utils/findRootOwnerId';
 import { stopEvent } from '../../utils/popups/event';
-import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useContextMenuRootContext } from '../root/ContextMenuRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -226,21 +227,30 @@ function handleDocumentContextMenu(event: MouseEvent) {
   }
 }
 
-useDomEffect([], () => {
-  const removeListener = addEventListener(
-    ownerDocument(element.value),
-    'contextmenu',
-    handleDocumentContextMenu,
-  );
-  return () => {
-    removeListener();
-    mouseUpAbortController?.abort();
-    mouseUpAbortController = null;
-    cancelLongPress();
-    allowMouseUpTimeout.clear();
-    allowMouseUp = false;
-  };
-});
+useDomEffect([], () =>
+  addEventListener(ownerDocument(element.value), 'contextmenu', handleDocumentContextMenu),
+);
+
+function releasePress() {
+  // A held or absent trigger cannot receive the release of a pending press.
+  mouseUpAbortController?.abort();
+  mouseUpAbortController = null;
+  cancelLongPress();
+  allowMouseUpTimeout.clear();
+  allowMouseUp = false;
+}
+
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      releasePress();
+    }
+  },
+  { flush: 'sync' },
+);
+onScopeDispose(releasePress);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,

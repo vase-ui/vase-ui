@@ -1,5 +1,5 @@
 import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
-import type { InjectionKey, MaybeRefOrGetter } from 'vue';
+import type { InjectionKey, MaybeRefOrGetter, WatchSource } from 'vue';
 import {
   getComputedStyle,
   getParentNode,
@@ -18,7 +18,6 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
-import { useDomEffect } from '../useDomEffect';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isEventTargetWithin, isRootElement } from '../element';
@@ -27,6 +26,7 @@ import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeChildren } from '../tree/nodes';
 import type { DismissElementProps, PopupInteractionStore } from '../types';
+import { useDomEffect } from '../useDomEffect';
 
 type PressType = 'intentional' | 'sloppy';
 type PressTypes = PressType | { mouse: PressType; touch: PressType };
@@ -339,18 +339,17 @@ export function useDismiss(
   // marker only for an open popup and only when it is set.
   function clearInsideComponentTree(store = getStore()) {
     clearInsideComponentTreeTimeout.clear();
-    if (store.context.insideComponentTree) {
-      store.context.insideComponentTree = false;
-    }
+    store.context.insideComponentTree &&= false;
   }
 
   function markInsideComponentTree() {
     parent?.markInsideComponentTree();
-    if (!isEnabled() || !getStore().select('open')) {
+    const store = getStore();
+    if (!isEnabled() || !store.select('open')) {
       return;
     }
-    getStore().context.insideComponentTree = true;
-    clearInsideComponentTreeTimeout.start(0, clearInsideComponentTree);
+    store.context.insideComponentTree = true;
+    clearInsideComponentTreeTimeout.start(0, () => clearInsideComponentTree(store));
   }
 
   // The portal of this popup can hold its backdrop and its other parts outside the popup element.
@@ -1101,7 +1100,18 @@ export function useDismiss(
     };
   }
 
+  const { isHeld } = useKeepAliveState();
   const getPositionerElement = () => getStore().select('positionerElement');
+  const listenerSources: [typeof getStore, ...WatchSource[]] = [
+    getStore,
+    () => getStore().select('open'),
+    isEnabled,
+    () => ownerDocument(getStore().select('positionerElement')),
+    isEscapeKeyEnabled,
+    () => getBubbles().escapeKey,
+    () => getBubbles().outsidePress,
+    tree,
+  ];
 
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
@@ -1119,37 +1129,32 @@ export function useDismiss(
         onCleanup(() => {
           store.context.events.off('openchange', handleOpenChange);
           // A marker left on the previous store would count its next outside press as inside.
-          clearInsideComponentTree(store);
+          store.context.insideComponentTree &&= false;
         });
       },
       { immediate: true, flush: 'post' },
     );
+    watch(
+      isHeld,
+      (held, _previous, onCleanup) => {
+        if (held) {
+          // The hold ends the gesture. Its inside marker lasts until the next update or activation.
+          onCleanup(
+            watch(
+              listenerSources,
+              ([store], _previousSources, onMarkerCleanup) => {
+                resetSession();
+                onMarkerCleanup(() => clearInsideComponentTree(store));
+              },
+              { immediate: true, flush: 'post' },
+            ),
+          );
+        }
+      },
+      { immediate: true, flush: 'sync' },
+    );
   });
-  useDomEffect(
-    [
-      getStore,
-      () => getStore().select('open'),
-      isEnabled,
-      () => ownerDocument(getStore().select('positionerElement')),
-      isEscapeKeyEnabled,
-      () => getBubbles().escapeKey,
-      () => getBubbles().outsidePress,
-      tree,
-    ],
-    listenToDocument,
-  );
-
-  const { isHeld } = useKeepAliveState();
-  watch(
-    isHeld,
-    (held) => {
-      if (held) {
-        resetSession();
-        clearInsideComponentTree();
-      }
-    },
-    { flush: 'sync' },
-  );
+  useDomEffect(listenerSources, listenToDocument);
 
   const reference: DismissElementProps['reference'] = {
     onKeydown: closeOnEscapeKeyDown,
