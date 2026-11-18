@@ -1,5 +1,12 @@
 import { expect, vi, describe, it } from 'vitest';
-import { computed, defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
+import {
+  computed,
+  createCommentVNode,
+  defineComponent,
+  KeepAlive,
+  shallowRef,
+  Teleport,
+} from 'vue';
 import {
   createHeldBranch,
   createRenderer,
@@ -270,7 +277,7 @@ describe('<CompositeList />', () => {
             >
               Add item
             </button>
-            {showItem.value && <Item label="nested" />}
+            {showItem.value ? <Item label="nested" /> : createCommentVNode()}
           </>
         );
       });
@@ -308,7 +315,7 @@ describe('<CompositeList />', () => {
             >
               Remove item
             </button>
-            {showItem.value && <Item label="nested" />}
+            {showItem.value ? <Item label="nested" /> : createCommentVNode()}
           </>
         );
       });
@@ -635,7 +642,9 @@ describe('<CompositeList />', () => {
             >
               Toggle element
             </button>
-            {!hidden.value && (
+            {hidden.value ? (
+              createCommentVNode()
+            ) : (
               <div ref={bindRef(ref)} data-testid="vanishing" data-index={index.value}>
                 vanishing
               </div>
