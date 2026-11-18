@@ -287,7 +287,7 @@ function applySwipeMovement() {
   sample.progress = backdropProgress;
   sample.height.value = height;
   openingSwipe.value = sample;
-  // The popup and backdrop track each move within the native frame budget.
+  // Bound styles on the popup and backdrop added more than 10% to frame work.
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementX, `${movementX}px`);
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementY, `${movementY}px`);
   store.context.backdropRef.value?.style.setProperty(

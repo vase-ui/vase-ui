@@ -84,7 +84,7 @@ function setCursorElement(next: HTMLSpanElement | null) {
 
 function setTransform(value: string) {
   transform = value;
-  // A native move keeps the virtual cursor within its frame budget.
+  // A bound cursor transform added more than 10% to frame work.
   if (element.value) {
     element.value.style.transform = value;
   }

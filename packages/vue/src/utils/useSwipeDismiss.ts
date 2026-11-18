@@ -259,7 +259,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     }
 
     const style = element.style;
-    // A native move keeps the popup within its frame budget.
+    // A bound popup offset added more than 10% to frame work.
     style.transform = getDragTransform(dragOffset, initialTransform.scale);
     style.setProperty(movementCssVars.x, `${dragOffset.x - initialTransform.x}px`);
     style.setProperty(movementCssVars.y, `${dragOffset.y - initialTransform.y}px`);

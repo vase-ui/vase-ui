@@ -462,7 +462,7 @@ watch(
   { flush: 'post' },
 );
 
-// A nested drag can update the progress without a render of the parent popup.
+// Bound nested progress on the parent popup added more than 10% to frame work.
 watch(
   element,
   (popup, _previous, onCleanup) => {

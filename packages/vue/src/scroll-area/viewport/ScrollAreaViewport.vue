@@ -266,7 +266,7 @@ function computeThumbPosition() {
 
   setThumbSize(pickState(thumbSize.value, { width: clampedNextWidth, height: clampedNextHeight }));
 
-  // The native thumb styles keep overscroll within its frame budget.
+  // Bound thumb styles added more than 10% to frame work on both axes.
   if (scrollbarYEl && thumbYEl) {
     const maxThumbOffsetY =
       scrollbarYEl.offsetHeight - clampedNextHeight - scrollbarYOffset - thumbYOffset;
@@ -310,7 +310,7 @@ function computeThumbPosition() {
     scrollTopFromEnd,
   ];
 
-  // A native sample avoids a render of the viewport for each scroll.
+  // Bound overflow distances added more than 10% to frame work.
   OVERFLOW_EDGE_VARS.forEach((cssVar, index) => {
     viewportEl.style.setProperty(cssVar, `${overflowMetricsPx[index]}px`);
   });

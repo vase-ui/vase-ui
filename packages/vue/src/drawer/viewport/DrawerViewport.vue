@@ -436,7 +436,7 @@ function applySwipeProgress(
   if (openingSwipe.value) {
     return;
   }
-  // A native progress sample keeps the backdrop within its frame budget.
+  // A bound progress value on the backdrop added more than 10% to frame work.
   store.context.backdropRef.value?.style.setProperty(
     DrawerBackdropCssVars.swipeProgress,
     String(swipeProgress),

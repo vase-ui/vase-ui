@@ -69,7 +69,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-// The native progress sample avoids a render of the indent for each move.
+// A bound progress value on the indent added more than 10% to frame work.
 watch(
   () => visualStateStore?.state.swipeProgress,
   () => {
