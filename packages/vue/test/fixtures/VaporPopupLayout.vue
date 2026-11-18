@@ -8,18 +8,20 @@ const width = ref(120);
 <template>
   <Popover.Root default-open default-trigger-id="anchor">
     <Popover.Trigger id="anchor" :payload="width">Open</Popover.Trigger>
-    <Popover.Positioner data-testid="positioner">
-      <Popover.Popup>
-        <template #render="{ props }">
-          <div v-bind="props" :ref="props.ref" data-testid="popup">
-            <Popover.Viewport>
-              <button :style="{ width: width + 'px', height: '40px' }" @click="width = 180">
-                Resize
-              </button>
-            </Popover.Viewport>
-          </div>
-        </template>
-      </Popover.Popup>
-    </Popover.Positioner>
+    <Popover.Portal>
+      <Popover.Positioner data-testid="positioner">
+        <Popover.Popup>
+          <template #render="{ props }">
+            <div v-bind="props" :ref="props.ref" data-testid="popup">
+              <Popover.Viewport>
+                <button :style="{ width: width + 'px', height: '40px' }" @click="width = 180">
+                  Resize
+                </button>
+              </Popover.Viewport>
+            </div>
+          </template>
+        </Popover.Popup>
+      </Popover.Positioner>
+    </Popover.Portal>
   </Popover.Root>
 </template>
