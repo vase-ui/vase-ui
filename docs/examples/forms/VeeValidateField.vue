@@ -17,7 +17,12 @@ useForm({ initialValues: { username: '' } });
       <Field.Description>
         May appear where you contribute or are mentioned. You can remove it at any time.
       </Field.Description>
-      <Field.Control placeholder="e.g. alice132" v-bind="componentField" />
+      <Field.Control
+        placeholder="e.g. alice132"
+        :model-value="componentField.modelValue"
+        @update:model-value="componentField['onUpdate:modelValue']"
+        @blur="componentField.onBlur"
+      />
       <Field.Error :match="!!errorMessage">{{ errorMessage }}</Field.Error>
     </Field.Root>
   </VeeField>

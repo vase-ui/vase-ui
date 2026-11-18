@@ -175,7 +175,12 @@ const protocols = ['http', 'https', 'ssh'];
         :touched="meta.touched"
       >
         <Field.Label>Server name</Field.Label>
-        <Field.Control v-bind="componentField" placeholder="e.g. api-server-01" />
+        <Field.Control
+          placeholder="e.g. api-server-01"
+          :model-value="componentField.modelValue"
+          @update:model-value="componentField['onUpdate:modelValue']"
+          @blur="componentField.onBlur"
+        />
         <Field.Description>Must be 3 or more characters long</Field.Description>
         <Field.Error :match="!!errorMessage">
           {{ errorMessage }}

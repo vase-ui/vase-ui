@@ -13,9 +13,7 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   value: ComputedRef<Value | null>;
   /**
    * The value that gives the kind, the calendar, the time and the time zone of a new value: the
-   * value, else the default value, else the last value that the picker had, else the fallback. Each
-   * part that makes a value, such as the field and the calendar, gets it as its default value, so a
-   * new value has the same kind whichever part makes it.
+   * value, else the default value, else the last value that the picker had, else the fallback.
    */
   template: ComputedRef<Value>;
   /**

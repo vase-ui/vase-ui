@@ -28,7 +28,11 @@ function validateUsername(value: unknown) {
       :dirty="meta.dirty"
     >
       <Field.Label>Username</Field.Label>
-      <Field.Control v-bind="componentField" />
+      <Field.Control
+        :model-value="componentField.modelValue"
+        @update:model-value="componentField['onUpdate:modelValue']"
+        @blur="componentField.onBlur"
+      />
       <Field.Error :match="!!errorMessage">{{ errorMessage }}</Field.Error>
     </Field.Root>
   </VeeField>

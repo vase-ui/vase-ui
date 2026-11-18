@@ -213,9 +213,9 @@ Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default sl
 - `componentField.name` goes to the `name` prop of `<Field.Root>`.
 - `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>` and to `match` of `<Field.Error>`.
 - `meta.touched` and `meta.dirty` go to `touched` and `dirty` of `<Field.Root>`.
-- Bind `componentField` to `<Field.Control>`. It supplies `modelValue` and the listeners for the field.
+- Bind `componentField.modelValue` to `<Field.Control>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
 
-<<< ../examples/forms/VeeValidateField.vue{9,11-14,20-21}
+<<< ../examples/forms/VeeValidateField.vue{9,11-14,22-24}
 
 For a composite control, pass `value` to `modelValue` and `handleChange` to `update:modelValue`. Attach `handleBlur` to the part that takes focus.
 
@@ -223,7 +223,7 @@ For a composite control, pass `value` to `modelValue` and `handleChange` to `upd
 
 Give `<Field>` a `rules` function. It returns `true` when the value is valid, or an error message. Use the `match` prop of `<Field.Error>` to show the message:
 
-<<< ../examples/forms/VeeValidateRules.vue{7-15,22,32}
+<<< ../examples/forms/VeeValidateRules.vue{7-15,22,32-34,36}
 
 VeeValidate gives the function a value of the type `unknown`. Check the type in the function.
 

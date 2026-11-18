@@ -19,7 +19,7 @@ pressedChange: (pressed, eventDetails) => void
 
 The part passes `eventDetails` as the second argument to a change listener. It lets you customize the event. It also lets you run a side effect only for the reason or the DOM event that caused the change.
 
-After the listener returns, the part emits `update:open` or `update:modelValue` with the same value. `v-model` uses that event. The part does not emit it when the listener cancels the change.
+After the listener accepts a change, the part emits its model update with the new value. For example, `v-model:open` listens for `update:open`, and `v-model` listens for `update:modelValue`. Automatic tab selection always emits its update, even if the listener calls `cancel()`.
 
 ```ts
 interface VaseUIChangeEventDetails {
@@ -35,7 +35,7 @@ interface VaseUIChangeEventDetails {
 
 - `reason` tells why the change event occurred. Use it to run a side effect only for some reasons. An editor can show the possible string values after you type `reason === '`.
 - `event` is the native DOM event that caused the change. When no DOM event caused it, `event` is a plain `Event`.
-- `cancel` stops the part from changing its internal state.
+- `cancel` stops a cancelable change.
 - `allowPropagation` allows the DOM event to propagate where Vase UI stops the propagation.
 - `isCanceled` shows whether the change event is canceled.
 - `isPropagationAllowed` shows whether the DOM event is allowed to propagate.
