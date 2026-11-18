@@ -36,7 +36,7 @@ describe('<Toggle />', () => {
                 pressed.value = !pressed.value;
               }}
             />
-            <Toggle pressed={pressed.value} />;
+            <Toggle modelValue={pressed.value} />;
           </div>
         );
       });
@@ -108,7 +108,7 @@ describe('<Toggle />', () => {
       expect(button).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('emits pressedChange with the details and then update:pressed', async () => {
+    it('emits pressedChange with the details and then update:modelValue', async () => {
       const calls: unknown[][] = [];
 
       await render(
@@ -116,7 +116,9 @@ describe('<Toggle />', () => {
           onPressedChange={(pressed, eventDetails) => {
             calls.push(['pressedChange', pressed, eventDetails.reason, eventDetails.event.type]);
           }}
-          {...{ 'onUpdate:pressed': (pressed: boolean) => calls.push(['update:pressed', pressed]) }}
+          {...{
+            'onUpdate:modelValue': (pressed: boolean) => calls.push(['update:modelValue', pressed]),
+          }}
         />,
       );
 
@@ -125,11 +127,11 @@ describe('<Toggle />', () => {
 
       expect(calls).toEqual([
         ['pressedChange', true, 'none', 'click'],
-        ['update:pressed', true],
+        ['update:modelValue', true],
       ]);
     });
 
-    it('does not emit update:pressed when the event is canceled', async () => {
+    it('does not emit update:modelValue when the event is canceled', async () => {
       const handleUpdate = vi.fn();
 
       await render(
@@ -137,7 +139,7 @@ describe('<Toggle />', () => {
           onPressedChange={(_pressed, eventDetails) => {
             eventDetails.cancel();
           }}
-          {...{ 'onUpdate:pressed': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         />,
       );
 

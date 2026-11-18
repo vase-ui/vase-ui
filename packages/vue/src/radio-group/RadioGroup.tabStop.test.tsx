@@ -31,7 +31,7 @@ function createControlledGroup(initialValue: string, disabled?: string) {
   const value = shallowRef<string | null>(initialValue);
   const Group = defineComponent(() => () => (
     <RadioGroup
-      value={value.value}
+      modelValue={value.value}
       onValueChange={(next: string | null) => {
         value.value = next;
       }}
@@ -130,7 +130,7 @@ describe('VUE-54: the tab stop of <RadioGroup /> follows the checked radio', () 
     async ({ buttonProps }) => {
       const disabled = shallowRef(true);
       const Group = defineComponent(() => () => (
-        <RadioGroup value="c">
+        <RadioGroup modelValue="c">
           <Radio.Root value="a" data-testid="a" />
           <Radio.Root value="b" data-testid="b" />
           <Radio.Root value="c" data-testid="c" disabled={disabled.value} {...buttonProps} />

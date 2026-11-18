@@ -12,7 +12,7 @@ export interface TimePickerFieldState extends TimeFieldRootState {}
  */
 export interface TimePickerFieldProps extends Omit<
   TimeFieldRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
   | 'granularity'
@@ -107,7 +107,7 @@ function fieldProps(attributes: Record<string, unknown>) {
   return {
     ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
-    value: picker.value.value,
+    modelValue: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for each other part.
     defaultValue: picker.template.value,
     referenceDate: root.referenceDate,

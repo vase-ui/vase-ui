@@ -77,7 +77,7 @@ function toDate(text: string | undefined) {
 
 function rootProps() {
   return {
-    value: toValue(props.value),
+    modelValue: toValue(props.value),
     defaultValue: toValue(props.defaultValue),
     referenceDate: toValue(props.referenceDate),
     granularity: props.granularity,

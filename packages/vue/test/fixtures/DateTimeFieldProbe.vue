@@ -94,7 +94,7 @@ type Input = TemporalValue | string | null | undefined;
 const props = withDefaults(
   defineProps<{
     family?: 'date' | 'time';
-    value?: Input;
+    modelValue?: Input;
     defaultValue?: Input;
     referenceDate?: Input;
     granularity?: DateTimeFieldGranularity | undefined;
@@ -121,7 +121,7 @@ const props = withDefaults(
   }>(),
   {
     family: 'date',
-    value: undefined,
+    modelValue: undefined,
     defaultValue: undefined,
     referenceDate: undefined,
     granularity: undefined,
@@ -145,7 +145,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   valueChange: [value: TemporalValue | null, details: DateTimeFieldChangeEventDetails];
-  'update:value': [value: TemporalValue | null];
+  'update:modelValue': [value: TemporalValue | null];
 }>();
 
 // The kind of a text follows its form.
@@ -177,7 +177,7 @@ assertTemporal('DateTimeFieldProbe');
 
 const root = useDateTimeFieldRoot<TemporalValue>({
   family: props.family,
-  value: () => toTemporal(props.value),
+  value: () => toTemporal(props.modelValue),
   defaultValue: () => toTemporal(props.defaultValue),
   referenceDate: () => toTemporal(props.referenceDate) ?? undefined,
   granularity: () => props.granularity,
@@ -202,7 +202,7 @@ const root = useDateTimeFieldRoot<TemporalValue>({
   autoComplete: () => props.autoComplete,
   ariaLabelledby: () => props.ariaLabelledby,
   valueChange: (value, details) => emit('valueChange', value, details),
-  updateValue: (value) => emit('update:value', value),
+  updateValue: (value) => emit('update:modelValue', value),
 });
 
 const { elementProps, setRef } = useRenderElement(

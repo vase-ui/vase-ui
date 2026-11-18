@@ -38,7 +38,7 @@ export interface FieldControlProps
   /**
    * The value of the input. Use when controlled.
    */
-  value?: string | number | readonly string[] | undefined;
+  modelValue?: string | number | readonly string[] | undefined;
   /**
    * The default value of the input. Use when uncontrolled.
    */
@@ -80,7 +80,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<FieldControlProps>(), {
   as: 'input',
   disabled: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -90,9 +90,9 @@ const emit = defineEmits<{
   valueChange: [value: string, eventDetails: FieldControlChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
 }>();
 
 defineSlots<{
@@ -131,7 +131,9 @@ const state = computed<FieldControlState>(() => ({
 const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
-const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
+const serializedValue = computed(() =>
+  props.modelValue == null ? undefined : String(props.modelValue),
+);
 const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
@@ -207,8 +209,13 @@ const enterValidationTimeout = useTimeout();
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps():
-  (Pick<FieldControlProps, 'value' | 'defaultValue'> & { '.value'?: string }) | undefined {
-  if (props.value !== undefined) {
+  | {
+      value?: FieldControlProps['modelValue'];
+      defaultValue?: FieldControlProps['defaultValue'];
+      '.value'?: string;
+    }
+  | undefined {
+  if (props.modelValue !== undefined) {
     return writesValue.value ? inputRender.valueProps() : undefined;
   }
   if (releasedText.value !== undefined && writesValue.value) {
@@ -230,12 +237,12 @@ function handleInput(event: Event) {
   const details = createChangeEventDetails(REASON_VALUES.none, event);
   emit('valueChange', inputValue, details);
   if (!details.isCanceled) {
-    emit('update:value', inputValue);
+    emit('update:modelValue', inputValue);
   }
 
-  // A controlled value comes from the `value` prop, so a value that the consumer refuses or
+  // A controlled value comes from the `modelValue` prop, so a value that the consumer refuses or
   // changes does not reach the state of the field.
-  if (props.value !== undefined) {
+  if (props.modelValue !== undefined) {
     inputRender.renderValue();
     return;
   }
@@ -263,7 +270,7 @@ function handleFocusout(event: FocusEvent) {
   const inputValue = (event.currentTarget as HTMLInputElement).value;
   validation.commit(inputValue);
 
-  if (props.value !== undefined) {
+  if (props.modelValue !== undefined) {
     // A `focusout` listener of the consumer can change the controlled value before this microtask.
     // A value that goes back to the initial value is a reset by the program. The field then looks
     // unchanged, so a commit would only show a `valueMissing` error.
@@ -308,7 +315,7 @@ const giveFieldInput = useFieldInput();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
   ref: giveFieldInput,
-  props: (attrs) => [
+  props: ({ value, ...attrs }) => [
     {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
@@ -321,15 +328,17 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       onFocusout: handleFocusout,
       onKeydown: handleKeydown,
     },
-    valueProps(),
     attrs,
+    // An outer part can pass the native value through `as`. Preserve text typed before hydration.
+    writesValue.value && value !== undefined ? { value } : undefined,
+    valueProps(),
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
   stateAttributesMapping: fieldValidityMapping,
 });
 
 watch(
-  [element, () => props.value !== undefined],
+  [element, () => props.modelValue !== undefined],
   () => {
     lastInputText = undefined;
   },
@@ -347,7 +356,7 @@ useFormReset(element, () => {
 
 const inputRender = useFormRestoreAsInput(
   element,
-  () => props.value,
+  () => props.modelValue,
   true,
   () => lastInputText,
 );

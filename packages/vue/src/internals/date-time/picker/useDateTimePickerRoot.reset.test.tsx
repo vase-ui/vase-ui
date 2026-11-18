@@ -60,7 +60,7 @@ const PickerOfTwoFields = defineComponent({
         <DateTimeFieldProbe
           ref={probes[end]}
           locale="en-US"
-          value={(picker.value.value ?? EMPTY)[index] ?? null}
+          modelValue={(picker.value.value ?? EMPTY)[index] ?? null}
           onValueChange={(
             value: TemporalValue | null,
             details: DateTimeFieldChangeEventDetails,

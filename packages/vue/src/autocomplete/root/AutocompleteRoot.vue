@@ -98,13 +98,13 @@ export interface AutocompleteRootProps<ItemValue = any> extends Omit<
   /**
    * The uncontrolled input value of the autocomplete when it's initially rendered.
    *
-   * To render a controlled autocomplete, use the `value` prop instead.
+   * To render a controlled autocomplete, use the `modelValue` prop instead.
    */
   defaultValue?: ComboboxInputElementValue;
   /**
    * The input value of the autocomplete. Use when controlled.
    */
-  value?: ComboboxInputElementValue;
+  modelValue?: ComboboxInputElementValue;
   /**
    * Whether clicking an item should submit the autocomplete's owning form.
    * By default, clicking an item via a pointer or <kbd>Enter</kbd> key does not submit the owning form.
@@ -180,7 +180,7 @@ type ItemValue = AutocompleteItemValue<Items>;
 const props = withDefaults(defineProps<AutocompleteRootSetupProps<Items>>(), {
   open: undefined,
   defaultOpen: false,
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   disabled: false,
   readOnly: false,
@@ -211,9 +211,9 @@ const emit = defineEmits<{
   valueChange: [value: string, eventDetails: AutocompleteRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
   /**
    * Event handler called when the popup is opened or closed.
    */
@@ -251,9 +251,9 @@ const enableInline = computed(
 );
 const staticItems = computed(() => props.mode === 'inline' || props.mode === 'none');
 
-const isControlled = computed(() => props.value !== undefined);
+const isControlled = computed(() => props.modelValue !== undefined);
 const typedValue = useControlled<ComboboxInputElementValue>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue ?? '',
   name: 'Autocomplete',
   state: 'value',
@@ -265,7 +265,7 @@ const inlineInputValue = shallowRef('');
 // completion. This watcher runs before the `post` watchers of the highlight, so it drops each
 // completion until the flush ends.
 let dropCompletions = false;
-watch([() => props.value, isControlled, enableInline], () => {
+watch([() => props.modelValue, isControlled, enableInline], () => {
   if (isControlled.value || !enableInline.value) {
     inlineInputValue.value = '';
     dropCompletions = true;
@@ -405,7 +405,7 @@ const { actions, inputElement, hiddenInputProps, setHiddenInputElement } = useAr
         return;
       }
       typedValue.value = value;
-      emit('update:value', value);
+      emit('update:modelValue', value);
     },
     onOpenChange(open, eventDetails) {
       emit('openChange', open, eventDetails);

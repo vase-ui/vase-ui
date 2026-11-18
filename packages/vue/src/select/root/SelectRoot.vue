@@ -110,14 +110,14 @@ export interface SelectRootProps<Value, Multiple extends boolean | undefined = f
    * The uncontrolled value of the select when it's initially rendered.
    * With `multiple`, `null` is an empty value.
    *
-   * To render a controlled select, use the `value` prop instead.
+   * To render a controlled select, use the `modelValue` prop instead.
    */
   defaultValue?: SelectInputValue<Value, Multiple> | null | undefined;
   /**
    * The value of the select. Use when controlled.
    * With `multiple`, `null` is an empty value, and the select stays controlled.
    */
-  value?: SelectInputValue<Value, Multiple> | null | undefined;
+  modelValue?: SelectInputValue<Value, Multiple> | null | undefined;
 }
 
 export interface SelectRootState {}
@@ -206,7 +206,7 @@ import { SelectRootContext } from './SelectRootContext';
 const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   open: undefined,
   defaultOpen: false,
-  value: undefined,
+  modelValue: undefined,
   defaultValue: null,
   disabled: false,
   readOnly: false,
@@ -229,9 +229,9 @@ const emit = defineEmits<{
   ];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [
+  'update:modelValue': [
     value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null),
   ];
   /**
@@ -286,7 +286,8 @@ function getDefaultValue() {
 
 const selectedValue = useControlled<any>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
-  controlled: () => (isMultiple.value && props.value === null ? EMPTY_ARRAY : props.value),
+  controlled: () =>
+    isMultiple.value && props.modelValue === null ? EMPTY_ARRAY : props.modelValue,
   default: getDefaultValue,
   name: 'Select',
   state: 'value',
@@ -514,7 +515,7 @@ function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails)
     return false;
   }
 
-  emit('update:value', nextValue);
+  emit('update:modelValue', nextValue);
   selectedValue.value = nextValue;
   return true;
 }
@@ -760,7 +761,7 @@ useFormReset(inputElement, (event) => {
   // `setValue` keeps a value that `isItemEqualToValue` matches with the default object. The dirty
   // state compares a single value by identity, so the reset puts back that object.
   const hasChanged =
-    props.value === undefined &&
+    props.modelValue === undefined &&
     isSelectedValueDirty(selectedValue.value, defaultValue, comparer.value) &&
     commitValue(defaultValue, createChangeEventDetails(REASONS.none, event));
 

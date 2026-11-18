@@ -17,7 +17,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>([]);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -69,7 +69,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>([]);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -147,7 +147,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>(['a']);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -173,7 +173,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>(['a']);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -212,7 +212,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>([]);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -383,7 +383,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>([]);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -484,7 +484,7 @@ describe('useCheckboxGroupParent', () => {
     });
 
     await render(
-      <CheckboxGroup value={['a']} allValues={allValues} onValueChange={handleValueChange}>
+      <CheckboxGroup modelValue={['a']} allValues={allValues} onValueChange={handleValueChange}>
         <Checkbox.Root parent data-testid="parent" />
         <Checkbox.Root value="a" />
         <Checkbox.Root value="b" />
@@ -512,7 +512,7 @@ describe('useCheckboxGroupParent', () => {
     });
 
     await render(
-      <CheckboxGroup value={allValues} allValues={allValues} onValueChange={handleValueChange}>
+      <CheckboxGroup modelValue={allValues} allValues={allValues} onValueChange={handleValueChange}>
         <Checkbox.Root parent data-testid="parent" />
         <Checkbox.Root value="a" data-testid="checkboxA" />
         <Checkbox.Root value="b" />
@@ -537,7 +537,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>([]);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}
@@ -565,7 +565,7 @@ describe('useCheckboxGroupParent', () => {
       const value = shallowRef<string[]>(['a']);
       return () => (
         <CheckboxGroup
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string[]) => {
             value.value = nextValue;
           }}

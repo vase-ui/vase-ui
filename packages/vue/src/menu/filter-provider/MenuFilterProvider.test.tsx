@@ -26,25 +26,25 @@ describe('<Menu.FilterProvider />', () => {
     );
   }
 
-  it('emits valueChange and then update:value with the new query', async () => {
+  it('emits valueChange and then update:modelValue with the new query', async () => {
     const calls: string[] = [];
     const { user } = await renderMenu({
       onValueChange: (value: string, details: Menu.FilterProvider.ChangeEventDetails) =>
         calls.push(`valueChange ${value} ${details.reason}`),
-      'onUpdate:value': (value: string) => calls.push(`update:value ${value}`),
+      'onUpdate:modelValue': (value: string) => calls.push(`update:modelValue ${value}`),
     });
 
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'r');
 
-    expect(calls).toEqual(['valueChange r input-change', 'update:value r']);
+    expect(calls).toEqual(['valueChange r input-change', 'update:modelValue r']);
   });
 
-  it('follows a query that the consumer holds with v-model:value', async () => {
+  it('follows a query that the consumer holds with v-model', async () => {
     const query = shallowRef('');
     const Test = defineComponent(() => () => (
       <Menu.FilterProvider
-        value={query.value}
-        onUpdate:value={(value: string) => {
+        modelValue={query.value}
+        onUpdate:modelValue={(value: string) => {
           query.value = value;
         }}
       >
@@ -78,12 +78,12 @@ describe('<Menu.FilterProvider />', () => {
     expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
   });
 
-  it('keeps the query and emits no update:value when valueChange is canceled', async () => {
+  it('keeps the query and emits no update:modelValue when valueChange is canceled', async () => {
     const onUpdate = vi.fn();
     const { user } = await renderMenu({
       onValueChange: (_value: string, details: Menu.FilterProvider.ChangeEventDetails) =>
         details.cancel(),
-      'onUpdate:value': onUpdate,
+      'onUpdate:modelValue': onUpdate,
     });
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
 

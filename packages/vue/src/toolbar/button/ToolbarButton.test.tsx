@@ -1127,7 +1127,7 @@ describe('<Toolbar.Button />', () => {
           return () => (
             <Toolbar.Root>
               <ToggleGroup
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}

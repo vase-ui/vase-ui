@@ -9,7 +9,7 @@ declare const date: Temporal.PlainDate;
 
 const timeValue = (
   <TimeField.Root
-    value={time}
+    modelValue={time}
     onValueChange={(v) => expectType<Temporal.PlainTime | null, typeof v>(v)}
   />
 );
@@ -21,7 +21,7 @@ const timeDefaultValue = (
 );
 const dateTimeValue = (
   <TimeField.Root
-    value={dateTime}
+    modelValue={dateTime}
     onValueChange={(v) => expectType<Temporal.PlainDateTime | null, typeof v>(v)}
   />
 );
@@ -29,7 +29,7 @@ const zonedValue = (
   <TimeField.Root
     defaultValue={zoned}
     onValueChange={(v) => expectType<Temporal.ZonedDateTime | null, typeof v>(v)}
-    onUpdate:value={(v) => expectType<Temporal.ZonedDateTime | null, typeof v>(v)}
+    onUpdate:modelValue={(v) => expectType<Temporal.ZonedDateTime | null, typeof v>(v)}
   />
 );
 const noValue = (
@@ -47,12 +47,12 @@ const referenceDate = (
   />
 );
 // @ts-expect-error the reference date has the kind of the value
-const referenceDateOfAnotherKind = <TimeField.Root value={time} referenceDate={zoned} />;
+const referenceDateOfAnotherKind = <TimeField.Root modelValue={time} referenceDate={zoned} />;
 
 // @ts-expect-error a date has no time
-const dateValue = <TimeField.Root value={date} />;
+const dateValue = <TimeField.Root modelValue={date} />;
 // @ts-expect-error a text is not a time
-const textValue = <TimeField.Root value="15:04" />;
+const textValue = <TimeField.Root modelValue="15:04" />;
 // @ts-expect-error `granularity` has no `day`
 const dayGranularity = <TimeField.Root granularity="day" />;
 // @ts-expect-error `hourCycle` is 12 or 24

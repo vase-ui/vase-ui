@@ -30,7 +30,7 @@ describe('<Select.Item />', () => {
     // A controlled multiple select can legitimately be handed `null` (for example while its
     // value is still loading) instead of an array.
     const { user } = await render(
-      <Select.Root multiple value={null} onValueChange={handleValueChange}>
+      <Select.Root multiple modelValue={null} onValueChange={handleValueChange}>
         <Select.Trigger data-testid="trigger">
           <Select.Value />
         </Select.Trigger>

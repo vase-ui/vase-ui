@@ -6,7 +6,7 @@ import ComboboxRoot from './ComboboxRoot.vue';
 import type { ComboboxRootChangeEventDetails } from './ComboboxRoot.vue';
 
 const props = defineProps<{
-  // The first value of `v-model:value`.
+  // The first value of `v-model`.
   value?: string | undefined;
 }>();
 
@@ -21,12 +21,7 @@ function handleValueChange(value: unknown, details: ComboboxRootChangeEventDetai
 
 <template>
   <form data-testid="form" @submit.prevent>
-    <ComboboxRoot
-      v-model:value="model"
-      name="city"
-      :items="cities"
-      @value-change="handleValueChange"
-    >
+    <ComboboxRoot v-model="model" name="city" :items="cities" @value-change="handleValueChange">
       <ComboboxInputPart />
       <ComboboxListPart />
     </ComboboxRoot>

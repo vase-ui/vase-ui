@@ -61,7 +61,7 @@ const groupedItemsReadonly = [
 
 <Select.Root
   items={objectItems}
-  value="a"
+  modelValue="a"
   itemToStringLabel={(item) => {
     item.startsWith('a');
     return item;
@@ -95,7 +95,7 @@ const objectValueItems: { value: Obj; label: string }[] = [
 
 <Select.Root
   items={objectValueItems}
-  value={objectValueItems[0].value}
+  modelValue={objectValueItems[0].value}
   itemToStringLabel={(item) => item.code}
   itemToStringValue={(item) => item.code}
   onValueChange={(value) => {
@@ -105,7 +105,7 @@ const objectValueItems: { value: Obj; label: string }[] = [
 />;
 
 <Select.Root
-  value="a"
+  modelValue="a"
   isItemEqualToValue={(item, value) => {
     expectType<string, typeof item>(item);
     expectType<string, typeof value>(value);
@@ -116,7 +116,7 @@ const objectValueItems: { value: Obj; label: string }[] = [
 />;
 
 <Select.Root
-  value={objectValueItems[0]}
+  modelValue={objectValueItems[0]}
   isItemEqualToValue={(item, value) => {
     expectType<(typeof objectValueItems)[number], typeof item>(item);
     expectType<(typeof objectValueItems)[number], typeof value>(value);
@@ -196,12 +196,12 @@ declare const multiple: boolean;
 />;
 
 // Should accept null value
-<Select.Root items={objectItemsReadonly} value={null} />;
+<Select.Root items={objectItemsReadonly} modelValue={null} />;
 
 declare function setString(value: string): void;
 
 <Select.Root
-  value="a"
+  modelValue="a"
   onValueChange={(newValue) => {
     // @ts-expect-error The selection can be cleared even when the current value is a string.
     newValue.length;
@@ -213,7 +213,7 @@ declare function setString(value: string): void;
 declare function setNullableString(value: string | null): void;
 
 <Select.Root
-  value="a"
+  modelValue="a"
   onValueChange={(newValue) => {
     // @ts-expect-error The selected value may be null.
     newValue.length;
@@ -225,11 +225,11 @@ declare function setValues(value: string[]): void;
 declare const readonlyValue: readonly string[];
 const tupleValue = ['javascript', 'typescript'] as const;
 
-<Select.Root multiple value={readonlyValue} onValueChange={setValues} />;
+<Select.Root multiple modelValue={readonlyValue} onValueChange={setValues} />;
 <Select.Root multiple defaultValue={readonlyValue} onValueChange={setValues} />;
 <Select.Root
   multiple
-  value={tupleValue}
+  modelValue={tupleValue}
   onValueChange={(newValue) => {
     expectType<('javascript' | 'typescript')[], typeof newValue>(newValue);
     newValue.pop();

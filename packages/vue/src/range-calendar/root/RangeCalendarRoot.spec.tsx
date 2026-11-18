@@ -7,13 +7,13 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 
 // A range gives the type that it got.
 <RangeCalendar.Root
-  value={[date, null]}
+  modelValue={[date, null]}
   onValueChange={(value, details) => {
     expectType<[Temporal.PlainDate | null, Temporal.PlainDate | null], typeof value>(value);
     expectType<RangeCalendar.Root.ChangeEventDetails, typeof details>(details);
   }}
   {...{
-    'onUpdate:value': (value: [Temporal.PlainDate | null, Temporal.PlainDate | null]) => {
+    'onUpdate:modelValue': (value: [Temporal.PlainDate | null, Temporal.PlainDate | null]) => {
       expectType<[Temporal.PlainDate | null, Temporal.PlainDate | null], typeof value>(value);
     },
   }}
@@ -27,7 +27,7 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 />;
 
 <RangeCalendar.Root
-  value={[zoned, null]}
+  modelValue={[zoned, null]}
   onValueChange={(value) => {
     expectType<[Temporal.ZonedDateTime | null, Temporal.ZonedDateTime | null], typeof value>(value);
   }}
@@ -41,16 +41,16 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 />;
 
 // An empty range has two null ends.
-<RangeCalendar.Root value={[null, null]} />;
+<RangeCalendar.Root modelValue={[null, null]} />;
 
 // @ts-expect-error A range is a list of two ends.
-<RangeCalendar.Root value={date} />;
+<RangeCalendar.Root modelValue={date} />;
 
 // @ts-expect-error A range has two ends, and no more.
-<RangeCalendar.Root value={[date, date, date]} />;
+<RangeCalendar.Root modelValue={[date, date, date]} />;
 
 // @ts-expect-error The value of a calendar is a date, not a time.
-<RangeCalendar.Root value={[Temporal.PlainTime.from('09:30'), null]} />;
+<RangeCalendar.Root modelValue={[Temporal.PlainTime.from('09:30'), null]} />;
 
 // The props that the range adds, and the props of the calendar.
 <RangeCalendar.Root

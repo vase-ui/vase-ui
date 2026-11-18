@@ -29,7 +29,7 @@ describe('<Combobox.Positioner />', () => {
       });
 
       return () => (
-        <Combobox.Root multiple value={[]}>
+        <Combobox.Root multiple modelValue={[]}>
           <Combobox.Input data-render={renderCount.value} />
           <Combobox.Portal>
             <Combobox.Positioner />

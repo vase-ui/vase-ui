@@ -29,11 +29,11 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
    *
    * To render an uncontrolled field, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The value of an uncontrolled field when it first renders.
    *
-   * To render a controlled field, use the `value` prop instead.
+   * To render a controlled field, use the `modelValue` prop instead.
    */
   defaultValue?: Value | null | undefined;
   /**
@@ -137,7 +137,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimeFieldRootProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   forceLeadingZeros: false,
   hideTimeZone: false,
   disabled: false,
@@ -162,9 +162,9 @@ const emit = defineEmits<{
   valueChange: [value: Value | null, eventDetails: TimeFieldRootChangeEventDetails];
   /**
    * Event fired after `valueChange` with the new value, unless a listener cancels the change.
-   * `v-model:value` uses it.
+   * `v-model` uses it.
    */
-  'update:value': [value: Value | null];
+  'update:modelValue': [value: Value | null];
 }>();
 
 defineSlots<{
@@ -176,7 +176,7 @@ assertTemporal('TimeField.Root');
 
 const context = useDateTimeFieldRoot<Value>({
   family: 'time',
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
   referenceDate: () => props.referenceDate,
   granularity: () => props.granularity,
@@ -196,7 +196,7 @@ const context = useDateTimeFieldRoot<Value>({
   autoComplete: () => props.autoComplete,
   ariaLabelledby: () => props.ariaLabelledby,
   valueChange: (value, details) => emit('valueChange', value, details),
-  updateValue: (value) => emit('update:value', value),
+  updateValue: (value) => emit('update:modelValue', value),
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

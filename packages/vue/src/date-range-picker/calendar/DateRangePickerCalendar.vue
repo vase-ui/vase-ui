@@ -14,7 +14,7 @@ export interface DateRangePickerCalendarState extends RangeCalendarRootState {}
  */
 export interface DateRangePickerCalendarProps extends Omit<
   RangeCalendarRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'minDate'
   | 'maxDate'
@@ -152,7 +152,7 @@ const calendarHandlers = {
 function calendarProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   const valueProps: Record<string, any> = {
-    value: picker.range.value,
+    modelValue: picker.range.value,
     defaultValue: [picker.template.value, picker.template.value],
   };
   return {

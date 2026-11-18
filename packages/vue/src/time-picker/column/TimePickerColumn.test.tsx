@@ -269,14 +269,14 @@ describe('<TimePicker.Column />', () => {
 
     it('selects 12 for midnight and for noon', async () => {
       const { setProps } = await render(
-        <TimePicker.Root locale="en-US" hourCycle={12} value={time('00:15')}>
+        <TimePicker.Root locale="en-US" hourCycle={12} modelValue={time('00:15')}>
           <TimePicker.Column unit="hour" />
         </TimePicker.Root>,
       );
       expect(selectedTexts()).toEqual(['12']);
       expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');
 
-      await setProps({ value: time('12:15') });
+      await setProps({ modelValue: time('12:15') });
 
       expect(selectedTexts()).toEqual(['12']);
       expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');

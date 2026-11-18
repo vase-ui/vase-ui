@@ -16,7 +16,7 @@ const dateTime = Temporal.PlainDateTime.from('2026-11-14T10:30');
 const zoned = Temporal.ZonedDateTime.from('2026-11-14T10:30[Europe/Paris]');
 
 export const props: TimeClock.Root.Props<Temporal.PlainDateTime> = {
-  value: null,
+  modelValue: null,
   defaultValue: dateTime,
   view: 'minute',
   defaultView: 'hour',
@@ -66,7 +66,7 @@ export const plainTimeClock = (
 );
 export const zonedClock = (
   <TimeClock.Root
-    value={zoned}
+    modelValue={zoned}
     onValueChange={(value) => {
       expectType<Temporal.ZonedDateTime, typeof value>(value);
     }}
@@ -74,7 +74,7 @@ export const zonedClock = (
 );
 export const referenceClock = (
   <TimeClock.Root
-    value={null}
+    modelValue={null}
     referenceDate={dateTime}
     onValueChange={(value) => {
       expectType<Temporal.PlainDateTime, typeof value>(value);
@@ -95,7 +95,7 @@ export const noValueClock = (
 
 // A date is not a time.
 // @ts-expect-error `value` takes a time, a date and time, or a date and time in a zone
-export const dateValue = <TimeClock.Root value={Temporal.PlainDate.from('2026-11-14')} />;
+export const dateValue = <TimeClock.Root modelValue={Temporal.PlainDate.from('2026-11-14')} />;
 // @ts-expect-error `minTime` takes a plain time
 export const dateTimeLimit = <TimeClock.Root minTime={dateTime} />;
 // @ts-expect-error the granularity is an hour, a minute or a second

@@ -71,12 +71,12 @@ describe('<TimePicker.Item />', () => {
 
     it('follows the value of a controlled picker', async () => {
       const { setProps } = await render(
-        <TimePicker.Root locale="en-US" value={time('09:00')}>
+        <TimePicker.Root locale="en-US" modelValue={time('09:00')}>
           <TimePicker.List step={60} />
         </TimePicker.Root>,
       );
 
-      await setProps({ value: time('11:00') });
+      await setProps({ modelValue: time('11:00') });
 
       expect(optionOf('09:00')).toHaveAttribute('aria-selected', 'false');
       expect(optionOf('11:00')).toHaveAttribute('aria-selected', 'true');
@@ -138,7 +138,7 @@ describe('<TimePicker.Item />', () => {
     it('gives the time to the picker with the reason item-press', async () => {
       const onValueChange = vi.fn();
       const onUpdateValue = vi.fn();
-      const { user } = await renderList({ onValueChange, 'onUpdate:value': onUpdateValue });
+      const { user } = await renderList({ onValueChange, 'onUpdate:modelValue': onUpdateValue });
 
       await user.click(optionOf('14:00'));
 
@@ -180,13 +180,13 @@ describe('<TimePicker.Item />', () => {
       const { user, setProps } = await render(
         <TimePicker.Root
           locale="en-US"
-          value={Temporal.PlainDateTime.from('2026-11-14T09:00')}
+          modelValue={Temporal.PlainDateTime.from('2026-11-14T09:00')}
           onValueChange={onValueChange}
         >
           <TimePicker.List step={60} />
         </TimePicker.Root>,
       );
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       await user.click(optionOf('14:00'));
 
@@ -250,8 +250,8 @@ describe('<TimePicker.Item />', () => {
     it('gives no change of a controlled picker, and leaves the decision to the parent', async () => {
       const onUpdateValue = vi.fn();
       const { user } = await renderList({
-        value: time('09:00'),
-        'onUpdate:value': onUpdateValue,
+        modelValue: time('09:00'),
+        'onUpdate:modelValue': onUpdateValue,
       });
 
       await user.click(optionOf('14:00'));

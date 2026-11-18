@@ -36,11 +36,11 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
    *
    * To render an uncontrolled field, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The uncontrolled value of the field when it is initially rendered.
    *
-   * To render a controlled field, use the `value` prop instead.
+   * To render a controlled field, use the `modelValue` prop instead.
    */
   defaultValue?: Value | null | undefined;
   /**
@@ -158,7 +158,7 @@ const props = withDefaults(defineProps<DateFieldRootProps<Value>>(), {
   disabled: false,
   readOnly: false,
   required: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -178,9 +178,9 @@ const emit = defineEmits<{
   valueChange: [value: Value | null, eventDetails: DateFieldRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value | null];
+  'update:modelValue': [value: Value | null];
 }>();
 
 defineSlots<{
@@ -195,7 +195,7 @@ assertTemporal('DateField.Root');
 
 const context = useDateTimeFieldRoot<Value>({
   family: 'date',
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
   referenceDate: () => props.referenceDate,
   granularity: () => props.granularity,
@@ -217,7 +217,7 @@ const context = useDateTimeFieldRoot<Value>({
   autoComplete: () => props.autoComplete,
   ariaLabelledby: () => props.ariaLabelledby,
   valueChange: (value, details) => emit('valueChange', value, details),
-  updateValue: (value) => emit('update:value', value),
+  updateValue: (value) => emit('update:modelValue', value),
 });
 
 const { state } = context;

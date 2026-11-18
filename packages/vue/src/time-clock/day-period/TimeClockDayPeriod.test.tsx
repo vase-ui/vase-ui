@@ -42,7 +42,7 @@ describe('<TimeClock.DayPeriod />', () => {
 
   it('is pressed for the day period of the time', async () => {
     const { setProps } = await render(
-      <TimeClock.Root hourCycle={12} value={time('10:30')}>
+      <TimeClock.Root hourCycle={12} modelValue={time('10:30')}>
         <TimeClock.DayPeriod value="am" data-testid="am" />
         <TimeClock.DayPeriod value="pm" data-testid="pm" />
       </TimeClock.Root>,
@@ -53,7 +53,7 @@ describe('<TimeClock.DayPeriod />', () => {
     expect(screen.getByTestId('pm')).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('pm')).not.toHaveAttribute('data-selected');
 
-    await setProps({ value: time('12:00') });
+    await setProps({ modelValue: time('12:00') });
 
     expect(screen.getByTestId('am')).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('pm')).toHaveAttribute('aria-pressed', 'true');

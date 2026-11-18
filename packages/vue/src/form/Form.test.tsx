@@ -1009,7 +1009,7 @@ describe('<Form />', () => {
           <Form errors={errors}>
             <Field.Root name="a">
               <Switch.Root
-                checked={a.value}
+                modelValue={a.value}
                 onCheckedChange={(checked: boolean) => {
                   a.value = checked;
                 }}
@@ -1018,7 +1018,7 @@ describe('<Form />', () => {
             </Field.Root>
             <Field.Root name="b">
               <Switch.Root
-                checked={b.value}
+                modelValue={b.value}
                 onCheckedChange={(checked: boolean) => {
                   b.value = checked;
                 }}
@@ -1027,7 +1027,7 @@ describe('<Form />', () => {
             </Field.Root>
             <Field.Root name="c">
               <Switch.Root
-                checked={c.value}
+                modelValue={c.value}
                 onCheckedChange={(checked: boolean) => {
                   c.value = checked;
                 }}

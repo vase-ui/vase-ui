@@ -109,13 +109,13 @@ describe('<TimePicker.Trigger />', () => {
 
     it('follows the value and the locale of the picker', async () => {
       const { setProps } = await render(
-        <TimePicker.Root locale="en-US" value={time}>
+        <TimePicker.Root locale="en-US" modelValue={time}>
           <TimePicker.Trigger />
         </TimePicker.Root>,
       );
       expect(screen.getByRole('button')).toHaveAttribute('aria-label', changeTime(time, SHORT));
 
-      await setProps({ value: Temporal.PlainTime.from('09:30'), locale: 'de-DE' });
+      await setProps({ modelValue: Temporal.PlainTime.from('09:30'), locale: 'de-DE' });
 
       expect(screen.getByRole('button')).toHaveAttribute(
         'aria-label',
@@ -125,12 +125,12 @@ describe('<TimePicker.Trigger />', () => {
 
     it('says what the trigger does again after the picker is emptied', async () => {
       const { setProps } = await render(
-        <TimePicker.Root locale="en-US" value={time}>
+        <TimePicker.Root locale="en-US" modelValue={time}>
           <TimePicker.Trigger />
         </TimePicker.Root>,
       );
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(screen.getByRole('button', { name: 'Choose time' })).not.toBe(null);
     });

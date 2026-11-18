@@ -6,7 +6,7 @@ import type { SelectRootChangeEventDetails } from '@vase-ui/vue/select';
 const props = defineProps<{
   // With no name, the hidden input is `type="hidden"`.
   name?: string | undefined;
-  // The first value of `v-model:value`.
+  // The first value of `v-model`.
   value?: string | undefined;
 }>();
 
@@ -21,12 +21,7 @@ function handleValueChange(value: string | null, details: SelectRootChangeEventD
 
 <template>
   <form data-testid="form" @submit.prevent>
-    <Select.Root
-      v-model:value="model"
-      :name="name"
-      :items="fonts"
-      @value-change="handleValueChange"
-    >
+    <Select.Root v-model="model" :name="name" :items="fonts" @value-change="handleValueChange">
       <Select.Trigger data-testid="trigger">
         <Select.Value data-testid="value" />
       </Select.Trigger>

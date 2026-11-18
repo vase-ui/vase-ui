@@ -42,7 +42,7 @@ function checkboxProps() {
     as: props.nativeButton ? 'button' : undefined,
     nativeButton: props.nativeButton,
     defaultChecked: props.defaultChecked,
-    checked: props.checked,
+    modelValue: props.checked,
     indeterminate: props.indeterminate,
     disabled: props.disabled,
     readOnly: props.readOnly,

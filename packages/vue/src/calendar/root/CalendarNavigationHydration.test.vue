@@ -41,7 +41,7 @@ function getDuration() {
 <template>
   <CalendarNavigationAnatomy
     :today="date(props.today)"
-    :value="date(props.value)"
+    :model-value="date(props.value)"
     :min-date="date(props.minDate)"
     :max-date="date(props.maxDate)"
     :locale="props.locale"

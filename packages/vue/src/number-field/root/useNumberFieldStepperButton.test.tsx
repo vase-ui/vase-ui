@@ -167,7 +167,7 @@ describe('useNumberFieldStepperButton', () => {
             const value = shallowRef<number | null>(null);
             return () => (
               <NumberField.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next: number | null) => {
                   value.value = next;
                 }}
@@ -243,7 +243,7 @@ describe('useNumberFieldStepperButton', () => {
             const value = shallowRef<number | null>(0);
             return () => (
               <NumberField.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(
                   next: number | null,
                   details: NumberField.Root.ChangeEventDetails,
@@ -320,7 +320,11 @@ describe('useNumberFieldStepperButton', () => {
           // Controlled and pinned to 0, so the typed text stays out of sync with the stored value
           // and any dirty-text sync from the press would be reported.
           await render(
-            <TestNumberField defaultValue={undefined} value={0} onValueChange={onValueChange} />,
+            <TestNumberField
+              defaultValue={undefined}
+              modelValue={0}
+              onValueChange={onValueChange}
+            />,
           );
 
           const input = screen.getByRole('textbox');
@@ -560,7 +564,7 @@ describe('useNumberFieldStepperButton', () => {
             const value = shallowRef<number | null>(0);
             return () => (
               <NumberField.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(
                   nextValue: number | null,
                   details: NumberField.Root.ChangeEventDetails,

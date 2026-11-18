@@ -8,7 +8,7 @@ declare const zoned: Temporal.ZonedDateTime;
 
 // The type of the range that the picker gives follows the range that the parent gives.
 <DateRangePicker.Root
-  value={[day, day]}
+  modelValue={[day, day]}
   onValueChange={(value) => {
     expectType<[Temporal.PlainDate | null, Temporal.PlainDate | null], typeof value>(value);
   }}
@@ -25,17 +25,17 @@ declare const zoned: Temporal.ZonedDateTime;
     expectType<[Temporal.ZonedDateTime | null, Temporal.ZonedDateTime | null], typeof value>(value);
   }}
 />;
-<DateRangePicker.Root value={null} />;
-<DateRangePicker.Root value={[null, null]} />;
+<DateRangePicker.Root modelValue={null} />;
+<DateRangePicker.Root modelValue={[null, null]} />;
 
 // @ts-expect-error a plain `Date` is not an end of the range
-<DateRangePicker.Root value={[new Date(), null]} />;
+<DateRangePicker.Root modelValue={[new Date(), null]} />;
 // @ts-expect-error a time has no date
-<DateRangePicker.Root value={[Temporal.PlainTime.from('15:04'), null]} />;
+<DateRangePicker.Root modelValue={[Temporal.PlainTime.from('15:04'), null]} />;
 // @ts-expect-error a year and month is not a day
-<DateRangePicker.Root value={[Temporal.PlainYearMonth.from('2026-11'), null]} />;
+<DateRangePicker.Root modelValue={[Temporal.PlainYearMonth.from('2026-11'), null]} />;
 // @ts-expect-error a range has two ends
-<DateRangePicker.Root value={[day]} />;
+<DateRangePicker.Root modelValue={[day]} />;
 // @ts-expect-error `minDate` is a `Temporal` value
 <DateRangePicker.Root minDate={new Date()} />;
 

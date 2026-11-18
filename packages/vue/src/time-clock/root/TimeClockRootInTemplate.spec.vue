@@ -23,13 +23,13 @@ function onTimeCommitted(
   <TimeClock.Root @value-change="onTimeChange" />
   <TimeClock.Root @value-change.once="onTimeChange" />
   <TimeClock.Root @value-committed="onTimeCommitted" />
-  <TimeClock.Root @update:value="(value: Temporal.PlainTime) => value" />
+  <TimeClock.Root @update:model-value="(value: Temporal.PlainTime) => value" />
   <TimeClock.Root @value-change="(value) => expectType<Temporal.PlainTime, typeof value>(value)" />
   <TimeClock.Root :default-value="plainTime" @value-change="onTimeChange" />
   <TimeClock.Root :default-value="zoned" @value-change="(value: Temporal.ZonedDateTime) => value" />
   <TimeClock.Root
     :reference-date="zoned"
-    @update:value="(value: Temporal.ZonedDateTime) => value"
+    @update:model-value="(value: Temporal.ZonedDateTime) => value"
   />
   <TimeClock.Root @view-change="(view: TimeClockView) => view" />
   <!-- @vue-expect-error With no `value`, `default-value` and `reference-date`, the value is a plain time. -->

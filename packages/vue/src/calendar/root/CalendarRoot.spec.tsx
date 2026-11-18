@@ -7,13 +7,13 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 
 // A single calendar gives the type that it got.
 <Calendar.Root
-  value={date}
+  modelValue={date}
   onValueChange={(value, details) => {
     expectType<Temporal.PlainDate, typeof value>(value);
     expectType<Calendar.Root.ChangeEventDetails, typeof details>(details);
   }}
   {...{
-    'onUpdate:value': (value: Temporal.PlainDate) => {
+    'onUpdate:modelValue': (value: Temporal.PlainDate) => {
       expectType<Temporal.PlainDate, typeof value>(value);
     },
   }}
@@ -27,7 +27,7 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 />;
 
 <Calendar.Root
-  value={zoned}
+  modelValue={zoned}
   onValueChange={(value) => {
     expectType<Temporal.ZonedDateTime, typeof value>(value);
   }}
@@ -41,12 +41,12 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 />;
 
 // A value of null is an empty selection.
-<Calendar.Root value={null as Temporal.PlainDate | null} />;
+<Calendar.Root modelValue={null as Temporal.PlainDate | null} />;
 
 // With `multiple`, the value is a list, and the event gives a list.
 <Calendar.Root
   multiple
-  value={[date]}
+  modelValue={[date]}
   minDays={1}
   maxDays={3}
   onValueChange={(value) => {
@@ -55,13 +55,13 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 />;
 
 // @ts-expect-error A list needs `multiple`.
-<Calendar.Root value={[date]} />;
+<Calendar.Root modelValue={[date]} />;
 
 // @ts-expect-error A single value cannot be a list.
-<Calendar.Root multiple value={date} />;
+<Calendar.Root multiple modelValue={date} />;
 
 // @ts-expect-error The value of a calendar is a date, not a time.
-<Calendar.Root value={Temporal.PlainTime.from('09:30')} />;
+<Calendar.Root modelValue={Temporal.PlainTime.from('09:30')} />;
 
 <Calendar.Root
   month={Temporal.PlainYearMonth.from('2026-11')}
@@ -102,7 +102,7 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 // @ts-expect-error The first day of the week is from 1 to 7.
 <Calendar.Root firstDayOfWeek={0} />;
 
-const rootProps: Calendar.Root.Props = { value: date };
+const rootProps: Calendar.Root.Props = { modelValue: date };
 const rootState: Calendar.Root.State = {
   disabled: false,
   readOnly: false,
@@ -161,7 +161,7 @@ const yearOrder: Calendar.YearSelect.Props = { order: 'random' };
 const yearMonth = Temporal.PlainYearMonth.from('2026-11');
 
 <Calendar.Root
-  value={yearMonth}
+  modelValue={yearMonth}
   onValueChange={(value) => {
     expectType<Temporal.PlainYearMonth, typeof value>(value);
   }}
@@ -176,7 +176,7 @@ const yearMonth = Temporal.PlainYearMonth.from('2026-11');
 />;
 
 // @ts-expect-error A time is not a value of a calendar.
-<Calendar.Root value={Temporal.PlainTime.from('09:30')} />;
+<Calendar.Root modelValue={Temporal.PlainTime.from('09:30')} />;
 
 // The views, and the functions that disable a month or a year.
 <Calendar.Root

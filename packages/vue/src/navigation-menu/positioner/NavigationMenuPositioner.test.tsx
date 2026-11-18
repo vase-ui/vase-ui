@@ -42,7 +42,7 @@ describe('<NavigationMenu.Positioner />', () => {
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(
-        <NavigationMenu.Root value="test">
+        <NavigationMenu.Root modelValue="test">
           <NavigationMenu.Portal>{node}</NavigationMenu.Portal>
         </NavigationMenu.Root>,
       );
@@ -53,7 +53,7 @@ describe('<NavigationMenu.Positioner />', () => {
 
   it('uses the layout viewport', async () => {
     await render(
-      <NavigationMenu.Root value="test">
+      <NavigationMenu.Root modelValue="test">
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner />
         </NavigationMenu.Portal>
@@ -124,14 +124,14 @@ describe('<NavigationMenu.Positioner />', () => {
             <NavigationMenu.Item value="one">
               <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
               <NavigationMenu.Content>
-                <NavigationMenu.Root value="nested">{portal}</NavigationMenu.Root>
+                <NavigationMenu.Root modelValue="nested">{portal}</NavigationMenu.Root>
               </NavigationMenu.Content>
             </NavigationMenu.Item>
           </NavigationMenu.List>
           <NavigationMenu.Viewport />
         </NavigationMenu.Root>
       ) : (
-        <NavigationMenu.Root value="test">{portal}</NavigationMenu.Root>
+        <NavigationMenu.Root modelValue="test">{portal}</NavigationMenu.Root>
       ),
     );
 
@@ -271,7 +271,7 @@ describe('<NavigationMenu.Positioner />', () => {
   it('throws a descriptive error when rendered outside <NavigationMenu.Portal>', async () => {
     await expect(
       render(
-        <NavigationMenu.Root value="test">
+        <NavigationMenu.Root modelValue="test">
           <NavigationMenu.Positioner />
         </NavigationMenu.Root>,
       ),

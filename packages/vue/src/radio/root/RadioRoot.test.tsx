@@ -483,7 +483,7 @@ describe('<Radio.Root />', () => {
     ])('after a click that the parent of $name does not accept', async ({ groupName }) => {
       const handleUpdate = vi.fn();
       await render(
-        <RadioGroup value="a" name={groupName} {...{ 'onUpdate:value': handleUpdate }}>
+        <RadioGroup modelValue="a" name={groupName} {...{ 'onUpdate:modelValue': handleUpdate }}>
           <Radio.Root value="a" data-testid="a" />
           <Radio.Root value="b" data-testid="b" />
         </RadioGroup>,
@@ -620,7 +620,7 @@ describe('<Radio.Root />', () => {
     it('emits `valueChange` one time for a click on the radio, also when the parent keeps its value', async () => {
       const handleChange = vi.fn();
       await render(
-        <RadioGroup value="a" onValueChange={handleChange}>
+        <RadioGroup modelValue="a" onValueChange={handleChange}>
           <label>
             <Radio.Root value="b" data-testid="radio" />B
           </label>

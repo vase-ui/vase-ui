@@ -24,7 +24,7 @@ const parseValue = (text: string | undefined) =>
 <template>
   <CalendarViewsAnatomy
     :today="date(props.today)"
-    :value="parseValue(props.value)"
+    :model-value="parseValue(props.value)"
     :view="props.view"
     :min-date="date(props.minDate)"
     :max-date="date(props.maxDate)"

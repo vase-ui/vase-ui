@@ -155,7 +155,7 @@ describe('Combobox.createItems', () => {
         return () => (
           <Combobox.Root
             items={items.value}
-            value={assignment.value?.assigneeId ?? null}
+            modelValue={assignment.value?.assigneeId ?? null}
             onValueChange={(assigneeId) => {
               const current = assignment.value;
               assignment.value = current ? { ...current, assigneeId } : current;
@@ -266,7 +266,7 @@ describe('Combobox.createItems', () => {
           <Combobox.Root
             items={items}
             filteredItems={props.searchResults}
-            value={selectedEmployee.id}
+            modelValue={selectedEmployee.id}
             onValueChange={onValueChange}
             defaultOpen
           >
@@ -327,7 +327,7 @@ describe('Combobox.createItems', () => {
         return () => (
           <Combobox.Root
             items={items.value}
-            value={assigneeId.value}
+            modelValue={assigneeId.value}
             onValueChange={(nextAssigneeId) => {
               assigneeId.value = nextAssigneeId;
               results.value = undefined;
@@ -705,7 +705,7 @@ describe('Combobox.createItems', () => {
         return (
           <Combobox.Root
             items={items}
-            value={props.value}
+            modelValue={props.value}
             itemToStringLabel={(id: number) => labelCache.get(id) ?? `User ${id}`}
           >
             <Combobox.Input data-testid="input" />
@@ -1229,7 +1229,7 @@ describe('Combobox.createItems', () => {
 
       function App(props: { results: ApiUser[]; value: string | null }) {
         return (
-          <Combobox.Root items={items} filteredItems={props.results} value={props.value}>
+          <Combobox.Root items={items} filteredItems={props.results} modelValue={props.value}>
             <Combobox.Input data-testid="input" />
             <span data-testid="value">
               <Combobox.Value />
@@ -1256,7 +1256,7 @@ describe('Combobox.createItems', () => {
 
       function App(props: { results: ApiUser[] }) {
         return (
-          <Combobox.Root items={items} filteredItems={props.results} value="user-1">
+          <Combobox.Root items={items} filteredItems={props.results} modelValue="user-1">
             <Combobox.Input data-testid="input" />
           </Combobox.Root>
         );
@@ -1442,7 +1442,7 @@ describe('Combobox.createItems', () => {
 
       function App(props: { results: User[] }) {
         return (
-          <Combobox.Root items={items} filteredItems={props.results} value={99}>
+          <Combobox.Root items={items} filteredItems={props.results} modelValue={99}>
             <Combobox.Input data-testid="input" />
           </Combobox.Root>
         );
@@ -1463,13 +1463,17 @@ describe('Combobox.createItems', () => {
       function App(props: { resultsA: Person[] }) {
         return (
           <>
-            <Combobox.Root items={sharedPersonItems} filteredItems={props.resultsA} value="user-1">
+            <Combobox.Root
+              items={sharedPersonItems}
+              filteredItems={props.resultsA}
+              modelValue="user-1"
+            >
               <Combobox.Input data-testid="input-a" />
             </Combobox.Root>
             <Combobox.Root
               items={sharedPersonItems}
               filteredItems={[{ id: 'user-1', name: 'Alicia' }]}
-              value="user-1"
+              modelValue="user-1"
             >
               <Combobox.Input data-testid="input-b" />
             </Combobox.Root>
@@ -1497,7 +1501,7 @@ describe('Combobox.createItems', () => {
             multiple
             items={sharedPersonItems}
             filteredItems={props.results}
-            value={['user-1', 'user-2']}
+            modelValue={['user-1', 'user-2']}
           >
             <Combobox.Input data-testid="input" />
             <span data-testid="value">
@@ -1649,7 +1653,7 @@ describe('Combobox.createItems', () => {
           getLabel: getUserName,
         });
         return (
-          <Combobox.Root items={items} value={props.value}>
+          <Combobox.Root items={items} modelValue={props.value}>
             <Combobox.Input data-testid="input" />
           </Combobox.Root>
         );

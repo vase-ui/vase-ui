@@ -81,18 +81,18 @@ function handleToolbarInput(event: Event) {
 <template>
   <form @submit.prevent>
     <Field.Root v-if="family === 'field'" name="name">
-      <Field.Control v-model:value="text" :data-revision="revision" @value-change="record" />
+      <Field.Control v-model="text" :data-revision="revision" @value-change="record" />
     </Field.Root>
     <Field.Root v-else-if="family === 'field-default'" name="name">
       <Field.Control
         :default-value="defaultText"
         @value-change="record"
-        @update:value="text = $event"
+        @update:model-value="text = $event"
       />
     </Field.Root>
     <Input
       v-else-if="family === 'input'"
-      v-model:value="text"
+      v-model="text"
       name="text"
       :data-revision="revision"
       @value-change="record"
@@ -102,7 +102,7 @@ function handleToolbarInput(event: Event) {
       :default-value="defaultText"
       name="text"
       @value-change="record"
-      @update:value="text = $event"
+      @update:model-value="text = $event"
     />
     <Toolbar.Root v-else-if="family === 'toolbar'">
       <Toolbar.Input
@@ -122,7 +122,7 @@ function handleToolbarInput(event: Event) {
     </Toolbar.Root>
     <Select.Root
       v-else-if="family === 'select'"
-      v-model:value="font"
+      v-model="font"
       name="font"
       :items="{ ...FONTS }"
       @value-change="record"
@@ -140,7 +140,7 @@ function handleToolbarInput(event: Event) {
     </Select.Root>
     <Combobox.Root
       v-else-if="family === 'combobox'"
-      v-model:value="fruit"
+      v-model="fruit"
       name="fruit"
       :items="[...FRUITS]"
       @value-change="record"
@@ -160,7 +160,7 @@ function handleToolbarInput(event: Event) {
     </Combobox.Root>
     <NumberField.Root
       v-else-if="family === 'number-field'"
-      v-model:value="quantity"
+      v-model="quantity"
       name="quantity"
       locale="en-US"
       :data-revision="revision"
@@ -170,7 +170,7 @@ function handleToolbarInput(event: Event) {
     </NumberField.Root>
     <Slider.Root
       v-else-if="family === 'slider'"
-      v-model:value="volume"
+      v-model="volume"
       name="volume"
       aria-label="Volume"
       :locale="locale"
@@ -180,12 +180,7 @@ function handleToolbarInput(event: Event) {
         <Slider.Thumb :data-revision="revision" style="width: 20px; height: 10px" />
       </Slider.Control>
     </Slider.Root>
-    <Slider.Root
-      v-else-if="family === 'range'"
-      v-model:value="range"
-      name="range"
-      @value-change="record"
-    >
+    <Slider.Root v-else-if="family === 'range'" v-model="range" name="range" @value-change="record">
       <Slider.Control style="position: relative; width: 200px; height: 10px">
         <Slider.Thumb
           aria-label="Minimum"
@@ -201,7 +196,7 @@ function handleToolbarInput(event: Event) {
     </Slider.Root>
     <DateField.Root
       v-else-if="family === 'date-field'"
-      v-model:value="when"
+      v-model="when"
       name="when"
       locale="en-US"
       :data-revision="revision"
@@ -211,7 +206,7 @@ function handleToolbarInput(event: Event) {
     </DateField.Root>
     <TimeField.Root
       v-else-if="family === 'time-field'"
-      v-model:value="alarm"
+      v-model="alarm"
       name="alarm"
       locale="en-US"
       :hour-cycle="24"

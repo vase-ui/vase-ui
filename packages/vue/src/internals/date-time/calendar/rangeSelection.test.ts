@@ -43,7 +43,7 @@ describe('useRangeSelection', () => {
         ['2026-11-10', null],
         ['2026-11-10', '2026-11-14'],
       ]);
-      expect(emit).toHaveBeenCalledWith('update:value', expect.anything());
+      expect(emit).toHaveBeenCalledWith('update:modelValue', expect.anything());
       expect(emit.mock.calls[0]![2].reason).toBe('day-press');
     });
 
@@ -96,7 +96,7 @@ describe('useRangeSelection', () => {
 
     it('gives a new end of an empty controlled range the kind of an end of defaultValue', () => {
       const { press, changes } = createSelection({
-        value: [null, null],
+        modelValue: [null, null],
         defaultValue: [null, Temporal.ZonedDateTime.from('2026-11-04T17:30[Asia/Tokyo]')],
       });
 
@@ -197,15 +197,15 @@ describe('useRangeSelection', () => {
   describe('a controlled range', () => {
     it('emits the change and keeps its value until the consumer gives a new one', () => {
       const { press, props, selection, emit } = createSelection({
-        value: [day('2026-11-03'), day('2026-11-05')],
+        modelValue: [day('2026-11-03'), day('2026-11-05')],
       });
 
       press('2026-11-10');
 
-      expect(emit).toHaveBeenCalledWith('update:value', expect.anything());
+      expect(emit).toHaveBeenCalledWith('update:modelValue', expect.anything());
       expect(texts(selection.values.value)).toEqual(['2026-11-03', '2026-11-05']);
 
-      props.value = [day('2026-11-10'), null];
+      props.modelValue = [day('2026-11-10'), null];
       expect(selection.selecting.value).toBe(true);
     });
 

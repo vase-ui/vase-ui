@@ -21,7 +21,7 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   /**
    * Applies a change that a part reports. The root emits `valueChange` with the details of the
    * part, so a `details.cancel()` of a listener also stops the change of the part. Then the root
-   * emits `update:value` and takes the value.
+   * emits `update:modelValue` and takes the value.
    */
   commit: (value: Value | null, details: Details) => void;
   /**

@@ -99,13 +99,13 @@ describe('<TimeClock.Hand />', () => {
 
   it('follows a change of the time and of the view', async () => {
     const { setProps } = await render(
-      <TimeClock.Root hourCycle={12} value={time('10:30')} view="hour">
+      <TimeClock.Root hourCycle={12} modelValue={time('10:30')} view="hour">
         <TimeClock.Hand data-testid="hand" />
       </TimeClock.Root>,
     );
     const hand = screen.getByTestId('hand');
 
-    await setProps({ value: time('03:30') });
+    await setProps({ modelValue: time('03:30') });
     expect(hand.style.getPropertyValue('--time-clock-hand-angle')).toBe('90deg');
 
     await setProps({ view: 'minute' });
@@ -114,17 +114,17 @@ describe('<TimeClock.Hand />', () => {
 
   it('renders nothing while the clock has no value', async () => {
     const { setProps } = await render(
-      <TimeClock.Root value={null}>
+      <TimeClock.Root modelValue={null}>
         <TimeClock.Hand data-testid="hand" />
       </TimeClock.Root>,
     );
 
     expect(screen.queryByTestId('hand')).toBeNull();
 
-    await setProps({ value: time('10:30') });
+    await setProps({ modelValue: time('10:30') });
     expect(screen.getByTestId('hand')).toBeInTheDocument();
 
-    await setProps({ value: null });
+    await setProps({ modelValue: null });
     expect(screen.queryByTestId('hand')).toBeNull();
   });
 

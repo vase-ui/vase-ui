@@ -12,7 +12,7 @@ describe('<Combobox.ItemIndicator />', () => {
       keepMounted: { type: Boolean, default: undefined },
     },
     setup: (props) => () => (
-      <Combobox.Root value={props.value} open>
+      <Combobox.Root modelValue={props.value} open>
         <Combobox.Input />
         <Combobox.Portal>
           <Combobox.Positioner>

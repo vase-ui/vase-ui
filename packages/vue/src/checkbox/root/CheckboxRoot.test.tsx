@@ -330,7 +330,7 @@ describe('<Checkbox.Root />', () => {
             >
               Toggle
             </button>
-            <Checkbox.Root checked={checked.value} />;
+            <Checkbox.Root modelValue={checked.value} />;
           </div>
         );
       });
@@ -533,7 +533,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('should not be overridden by `checked` prop', async () => {
-      await render(<Checkbox.Root indeterminate checked />);
+      await render(<Checkbox.Root indeterminate modelValue />);
       expect(screen.getAllByRole('checkbox')[0]).toHaveAttribute('aria-checked', 'mixed');
     });
 
@@ -553,7 +553,7 @@ describe('<Checkbox.Root />', () => {
           <Checkbox.Root
             data-testid="button"
             indeterminate
-            checked={checked.value}
+            modelValue={checked.value}
             onCheckedChange={(next: boolean) => {
               checked.value = next;
             }}
@@ -586,7 +586,7 @@ describe('<Checkbox.Root />', () => {
 
     it('sets grouped parent aria when manually indeterminate', async () => {
       await render(
-        <CheckboxGroup value={[]} allValues={['one']}>
+        <CheckboxGroup modelValue={[]} allValues={['one']}>
           <Checkbox.Root parent indeterminate data-testid="parent" />
           <Checkbox.Root value="one" />
         </CheckboxGroup>,
@@ -597,7 +597,7 @@ describe('<Checkbox.Root />', () => {
 
     it('sets grouped parent native input state when manually indeterminate', async () => {
       await render(
-        <CheckboxGroup value={[]} allValues={['one']}>
+        <CheckboxGroup modelValue={[]} allValues={['one']}>
           <Checkbox.Root parent indeterminate data-testid="parent" />
           <Checkbox.Root value="one" />
         </CheckboxGroup>,
@@ -1411,7 +1411,7 @@ describe('<Checkbox.Root />', () => {
             <Field.Root data-testid="root">
               <Checkbox.Root
                 key={String(unchecked.value)}
-                checked={!unchecked.value}
+                modelValue={!unchecked.value}
                 onCheckedChange={() => {}}
               />
               <button
@@ -1673,7 +1673,7 @@ describe('<Checkbox.Root />', () => {
             <Field.Root validationMode="onChange" validate={validateSpy} name="terms">
               <Checkbox.Root
                 data-testid="button"
-                checked={checked.value}
+                modelValue={checked.value}
                 onCheckedChange={(next: boolean) => {
                   checked.value = next;
                 }}
@@ -2174,30 +2174,32 @@ describe('<Checkbox.Root />', () => {
     });
   });
 
-  describe('v-model:checked', () => {
-    it('emits `checkedChange` and then `update:checked`, before the click handler returns', async () => {
+  describe('v-model', () => {
+    it('emits `checkedChange` and then `update:modelValue`, before the click handler returns', async () => {
       const order: string[] = [];
       await render(
         <Checkbox.Root
           onCheckedChange={(checked: boolean) => order.push(`checkedChange ${checked}`)}
-          {...{ 'onUpdate:checked': (checked: boolean) => order.push(`update:checked ${checked}`) }}
+          {...{
+            'onUpdate:modelValue': (checked: boolean) => order.push(`update:modelValue ${checked}`),
+          }}
         />,
       );
 
       screen.getByRole('checkbox').click();
       order.push('end of the click');
 
-      expect(order).toEqual(['checkedChange true', 'update:checked true', 'end of the click']);
+      expect(order).toEqual(['checkedChange true', 'update:modelValue true', 'end of the click']);
     });
 
-    it('does not emit `update:checked` for a change that a listener cancels', async () => {
+    it('does not emit `update:modelValue` for a change that a listener cancels', async () => {
       const handleUpdate = vi.fn();
       await render(
         <Checkbox.Root
           onCheckedChange={(_checked: boolean, details: Checkbox.Root.ChangeEventDetails) =>
             details.cancel()
           }
-          {...{ 'onUpdate:checked': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         />,
       );
 
@@ -2233,20 +2235,20 @@ describe('<Checkbox.Root />', () => {
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
     });
 
-    it('emits `checkedChange`, `valueChange`, `update:value` and then `update:checked` for a child of a group that has a parent', async () => {
+    it('emits `checkedChange`, `valueChange`, `update:modelValue` and then `update:modelValue` for a child of a group that has a parent', async () => {
       const order: string[] = [];
       await render(
         <CheckboxGroup
           allValues={['a']}
           onValueChange={() => order.push('valueChange')}
-          {...{ 'onUpdate:value': () => order.push('update:value') }}
+          {...{ 'onUpdate:modelValue': () => order.push('update:modelValue') }}
         >
           <Checkbox.Root parent />
           <Checkbox.Root
             value="a"
             data-testid="a"
             onCheckedChange={() => order.push('checkedChange')}
-            {...{ 'onUpdate:checked': () => order.push('update:checked') }}
+            {...{ 'onUpdate:modelValue': () => order.push('update:modelValue') }}
           />
         </CheckboxGroup>,
       );
@@ -2257,8 +2259,8 @@ describe('<Checkbox.Root />', () => {
       expect(order).toEqual([
         'checkedChange',
         'valueChange',
-        'update:value',
-        'update:checked',
+        'update:modelValue',
+        'update:modelValue',
         'end of the click',
       ]);
     });
@@ -2266,7 +2268,7 @@ describe('<Checkbox.Root />', () => {
     it.each([
       { name: 'the parent', testId: 'parent' },
       { name: 'a child', testId: 'a' },
-    ])('does not emit `update:checked` when the group cancels for $name', async ({ testId }) => {
+    ])('does not emit `update:modelValue` when the group cancels for $name', async ({ testId }) => {
       const handleUpdateChecked = vi.fn();
       const handleUpdateValue = vi.fn();
       await render(
@@ -2275,17 +2277,17 @@ describe('<Checkbox.Root />', () => {
           onValueChange={(_value: string[], details: CheckboxGroup.ChangeEventDetails) =>
             details.cancel()
           }
-          {...{ 'onUpdate:value': handleUpdateValue }}
+          {...{ 'onUpdate:modelValue': handleUpdateValue }}
         >
           <Checkbox.Root
             parent
             data-testid="parent"
-            {...{ 'onUpdate:checked': handleUpdateChecked }}
+            {...{ 'onUpdate:modelValue': handleUpdateChecked }}
           />
           <Checkbox.Root
             value="a"
             data-testid="a"
-            {...{ 'onUpdate:checked': handleUpdateChecked }}
+            {...{ 'onUpdate:modelValue': handleUpdateChecked }}
           />
         </CheckboxGroup>,
       );
@@ -2323,7 +2325,9 @@ describe('<Checkbox.Root />', () => {
 
     it('after a click that the parent of a controlled checkbox does not accept', async () => {
       const handleUpdate = vi.fn();
-      await render(<Checkbox.Root checked={false} {...{ 'onUpdate:checked': handleUpdate }} />);
+      await render(
+        <Checkbox.Root modelValue={false} {...{ 'onUpdate:modelValue': handleUpdate }} />,
+      );
 
       await fireEvent.click(screen.getByRole('checkbox'));
       await fireEvent.click(screen.getByRole('checkbox'));
@@ -2375,7 +2379,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('has `indeterminate` again after a click that the parent of a controlled checkbox keeps', async () => {
-      await render(<Checkbox.Root checked={false} indeterminate />);
+      await render(<Checkbox.Root modelValue={false} indeterminate />);
 
       await fireEvent.click(screen.getByRole('checkbox'));
 
@@ -2641,10 +2645,10 @@ describe('<Checkbox.Root />', () => {
             <form data-testid="form">
               <Checkbox.Root
                 name="notifications"
-                checked={checked.value}
+                modelValue={checked.value}
                 onCheckedChange={handleChange}
                 {...{
-                  'onUpdate:checked': (next: boolean) => {
+                  'onUpdate:modelValue': (next: boolean) => {
                     handleUpdate(next);
                     checked.value = next;
                   },
@@ -2920,8 +2924,8 @@ describe('<Checkbox.Root />', () => {
                 >
                   <Checkbox.Root
                     aria-label="Notifications"
-                    checked={checked.value}
-                    {...{ 'onUpdate:checked': (next: boolean) => (checked.value = next) }}
+                    modelValue={checked.value}
+                    {...{ 'onUpdate:modelValue': (next: boolean) => (checked.value = next) }}
                   />
                   <Field.Error data-testid="error" />
                 </Field.Root>

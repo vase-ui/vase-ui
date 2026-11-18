@@ -524,6 +524,29 @@ test('the reference of button has the prop disabled and the attribute data-disab
   ]);
 });
 
+test('the reference lists the default model, the named models and the item value', () => {
+  const [toggle] = read('toggle').parts;
+  const [select] = read('select').parts;
+  const [checkbox] = read('checkbox').parts;
+
+  for (const [part, formerModel] of [
+    [toggle, 'pressed'],
+    [select, 'value'],
+    [checkbox, 'checked'],
+  ] as const) {
+    const props = part.props.map(({ name }) => name);
+    const events = part.events.map(({ name }) => name);
+    assert.ok(props.includes('modelValue'));
+    assert.ok(!props.includes(formerModel));
+    assert.ok(events.includes('update:modelValue'));
+    assert.ok(!events.includes('update:' + formerModel));
+  }
+
+  assert.ok(toggle.props.some(({ name }) => name === 'value'));
+  assert.ok(toggle.events.some(({ name }) => name === 'pressedChange'));
+  assert.ok(select.events.some(({ name }) => name === 'update:open'));
+});
+
 test('the reference of progress has its parts in the sequence of the Base UI page', () => {
   assert.deepEqual(
     read('progress').parts.map(({ name }) => name),

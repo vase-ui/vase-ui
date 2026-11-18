@@ -853,7 +853,7 @@ describe('<Select.Root />', () => {
   describe('prop: value', () => {
     it('should select the item specified by the value prop', async () => {
       await render(
-        <Select.Root value="b">
+        <Select.Root modelValue="b">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -882,7 +882,7 @@ describe('<Select.Root />', () => {
 
     it('selects the controlled value when the popup is mounted on the initial render', async () => {
       await render(
-        <Select.Root defaultOpen value="b">
+        <Select.Root defaultOpen modelValue="b">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -909,7 +909,7 @@ describe('<Select.Root />', () => {
 
     it('should update the selected item when the value prop changes', async () => {
       const { setProps } = await render(
-        <Select.Root value="a">
+        <Select.Root modelValue="a">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -935,7 +935,7 @@ describe('<Select.Root />', () => {
         '',
       );
 
-      await setProps({ value: 'b' });
+      await setProps({ modelValue: 'b' });
 
       expect(screen.getByRole('option', { name: 'b', hidden: false })).toHaveAttribute(
         'data-selected',
@@ -962,7 +962,7 @@ describe('<Select.Root />', () => {
             <div>
               <Select.Root
                 multiple={multiple}
-                value={value.value as any}
+                modelValue={value.value as any}
                 onValueChange={(next: any, details: ChangeDetails) => {
                   onValueChange(next, details);
                   value.value = next;
@@ -1037,7 +1037,7 @@ describe('<Select.Root />', () => {
           <div>
             <Select.Root
               multiple={multiple.value}
-              value={value.value as any}
+              modelValue={value.value as any}
               onValueChange={onValueChange}
               open
               modal={false}
@@ -1096,7 +1096,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               isItemEqualToValue={
                 compareById.value
                   ? (item: { id: string }, selected: { id: string }) => item.id === selected.id
@@ -1143,7 +1143,7 @@ describe('<Select.Root />', () => {
     it('should not update the internal value if the controlled value prop does not change', async () => {
       const onValueChange = vi.fn();
       const { user } = await render(
-        <Select.Root value="a" onValueChange={onValueChange}>
+        <Select.Root modelValue="a" onValueChange={onValueChange}>
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -1181,7 +1181,7 @@ describe('<Select.Root />', () => {
 
     it('updates <Select.Value /> label when the value prop changes before the popup opens', async () => {
       const { setProps } = await render(
-        <Select.Root value="b">
+        <Select.Root modelValue="b">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -1200,7 +1200,7 @@ describe('<Select.Root />', () => {
 
       expect(trigger).toHaveTextContent('b');
 
-      await setProps({ value: 'a' });
+      await setProps({ modelValue: 'a' });
       await flushMicrotasks();
 
       expect(trigger).toHaveTextContent('a');
@@ -1405,7 +1405,7 @@ describe('<Select.Root />', () => {
 
         return () => (
           <Select.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
               handleValueChange(newValue);
@@ -1489,7 +1489,7 @@ describe('<Select.Root />', () => {
           {...props}
           onValueChange={onValueChange}
           onOpenChange={onOpenChange}
-          {...{ 'onUpdate:value': onUpdateValue }}
+          {...{ 'onUpdate:modelValue': onUpdateValue }}
         >
           <Select.Trigger data-testid="trigger">
             <Select.Value data-testid="value" />
@@ -3971,7 +3971,7 @@ describe('<Select.Root />', () => {
             null
           </button>
           <Select.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
             }}
@@ -4039,7 +4039,7 @@ describe('<Select.Root />', () => {
           </button>
           <Select.Root
             items={{ a: 'Apple', b: 'Banana' }}
-            value={withItems.value}
+            modelValue={withItems.value}
             onValueChange={(newValue: string | null) => {
               withItems.value = newValue;
             }}
@@ -4057,7 +4057,7 @@ describe('<Select.Root />', () => {
             </Select.Portal>
           </Select.Root>
           <Select.Root
-            value={withoutItems.value}
+            modelValue={withoutItems.value}
             onValueChange={(newValue: string | null) => {
               withoutItems.value = newValue;
             }}
@@ -4182,7 +4182,7 @@ describe('<Select.Root />', () => {
             <form id="external-form" onSubmit={submitSpy}>
               <button type="submit">Submit</button>
             </form>
-            <Select.Root multiple name="countries" form="external-form" value={['US', 'CA']}>
+            <Select.Root multiple name="countries" form="external-form" modelValue={['US', 'CA']}>
               <Select.Trigger>
                 <Select.Value />
               </Select.Trigger>
@@ -4467,7 +4467,7 @@ describe('<Select.Root />', () => {
       it('does not add [data-filled] attribute when single value serializes to empty string', async () => {
         await render(
           <Field.Root>
-            <Select.Root value="">
+            <Select.Root modelValue="">
               <Select.Trigger data-testid="trigger" />
               <Select.Portal>
                 <Select.Positioner>
@@ -4490,7 +4490,7 @@ describe('<Select.Root />', () => {
         await render(
           <Field.Root>
             <Select.Root
-              value={emptyValue}
+              modelValue={emptyValue}
               itemToStringLabel={(item) => item.label}
               itemToStringValue={() => ''}
             >
@@ -4918,7 +4918,7 @@ describe('<Select.Root />', () => {
           <>
             <Field.Root validationMode="onChange" validate={validateSpy} name="flavor">
               <Select.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next: string | null) => {
                   value.value = next as string;
                 }}
@@ -5416,7 +5416,7 @@ describe('<Select.Root />', () => {
             <div data-testid="value">{selectedItem.value}</div>
 
             <Select.Root
-              value={selectedItem.value}
+              modelValue={selectedItem.value}
               onValueChange={(newValue: string | null) => {
                 selectedItem.value = newValue;
               }}
@@ -5467,7 +5467,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
                 onValueChange(next);
@@ -5532,7 +5532,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
                 onValueChange(next);
@@ -5592,7 +5592,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
                 onValueChange(next);
@@ -5706,7 +5706,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
               }}
@@ -5782,7 +5782,7 @@ describe('<Select.Root />', () => {
                   Replace options
                 </button>
                 <Select.Root
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -5855,7 +5855,7 @@ describe('<Select.Root />', () => {
                   Replace options and open
                 </button>
                 <Select.Root
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -5930,7 +5930,7 @@ describe('<Select.Root />', () => {
                   Replace options and open
                 </button>
                 <Select.Root
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -6054,7 +6054,7 @@ describe('<Select.Root />', () => {
         return () => (
           <div>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
               }}
@@ -6233,7 +6233,7 @@ describe('<Select.Root />', () => {
         const value = shallowRef<string | null>(null);
         return () => (
           <Select.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next;
             }}
@@ -6273,7 +6273,7 @@ describe('<Select.Root />', () => {
         return () => (
           <Select.Root
             items={{ apple: 'Apple', cherry: 'Cherry' }}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next;
             }}
@@ -6310,7 +6310,7 @@ describe('<Select.Root />', () => {
         const value = shallowRef<string | null>(null);
         return () => (
           <Select.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next;
             }}
@@ -6347,7 +6347,7 @@ describe('<Select.Root />', () => {
         const value = shallowRef<string | null>(null);
         return () => (
           <Select.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next;
             }}
@@ -6436,7 +6436,7 @@ describe('<Select.Root />', () => {
               Reset
             </button>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
               }}
@@ -6488,7 +6488,7 @@ describe('<Select.Root />', () => {
               Set car
             </button>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
               }}
@@ -6616,7 +6616,7 @@ describe('<Select.Root />', () => {
             <Select.Root
               multiple
               defaultOpen
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue: unknown) => {
                 value.value = nextValue as string[];
                 onValueChange(nextValue);
@@ -6672,7 +6672,7 @@ describe('<Select.Root />', () => {
         return () => (
           <Select.Root
             multiple
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue: unknown) => {
               value.value = newValue as any[];
               handleValueChange(newValue);
@@ -6780,7 +6780,7 @@ describe('<Select.Root />', () => {
         return () => (
           <Select.Root
             multiple
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue: unknown) => {
               value.value = newValue as string[];
               handleValueChange(newValue);
@@ -6826,7 +6826,7 @@ describe('<Select.Root />', () => {
 
     it('should update selected items when the controlled value prop changes while open', async () => {
       const { setProps } = await render(
-        <Select.Root multiple value={['a', 'b']}>
+        <Select.Root multiple modelValue={['a', 'b']}>
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -6850,7 +6850,7 @@ describe('<Select.Root />', () => {
       expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
 
-      await setProps({ value: ['b'] });
+      await setProps({ modelValue: ['b'] });
 
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
       expect(screen.getByRole('option', { name: 'a' })).not.toHaveAttribute('data-selected');
@@ -6858,7 +6858,7 @@ describe('<Select.Root />', () => {
 
     it('keeps the active index on a deselected item in multiple mode', async () => {
       const { user } = await render(
-        <Select.Root multiple value={['a']}>
+        <Select.Root multiple modelValue={['a']}>
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -7014,7 +7014,7 @@ describe('<Select.Root />', () => {
       const App = (props: { value: Option[] }) => (
         <Select.Root
           multiple
-          value={props.value}
+          modelValue={props.value}
           isItemEqualToValue={(a: Option, b: Option) => a.id === b.id}
         >
           <Select.Trigger data-testid="trigger">
@@ -7327,7 +7327,7 @@ describe('<Select.Root />', () => {
 
     it('should serialize multiple values correctly for form submission', async () => {
       const { container } = await render(
-        <Select.Root multiple name="select" value={['a', 'c']}>
+        <Select.Root multiple name="select" modelValue={['a', 'c']}>
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -7358,7 +7358,7 @@ describe('<Select.Root />', () => {
 
       const { user } = await render(
         <form onSubmit={submitSpy}>
-          <Select.Root multiple disabled name="select" value={['a', 'c']}>
+          <Select.Root multiple disabled name="select" modelValue={['a', 'c']}>
             <Select.Trigger>
               <Select.Value />
             </Select.Trigger>
@@ -7412,7 +7412,7 @@ describe('<Select.Root />', () => {
 
     it('does not mark the hidden input as required when selection exists', async () => {
       await render(
-        <Select.Root multiple required name="select" value={['a']}>
+        <Select.Root multiple required name="select" modelValue={['a']}>
           <Select.Trigger>
             <Select.Value />
           </Select.Trigger>
@@ -7426,7 +7426,7 @@ describe('<Select.Root />', () => {
 
     it('keeps the hidden input required when no selection exists', async () => {
       await render(
-        <Select.Root multiple required name="select" value={[]}>
+        <Select.Root multiple required name="select" modelValue={[]}>
           <Select.Trigger>
             <Select.Value />
           </Select.Trigger>
@@ -7514,7 +7514,7 @@ describe('<Select.Root />', () => {
 
     it('should update selected items when value prop changes', async () => {
       const { setProps } = await render(
-        <Select.Root multiple value={['a']}>
+        <Select.Root multiple modelValue={['a']}>
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
@@ -7538,7 +7538,7 @@ describe('<Select.Root />', () => {
       expect(await screen.findByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
       expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-selected');
 
-      await setProps({ value: ['a', 'b', 'c'] });
+      await setProps({ modelValue: ['a', 'b', 'c'] });
 
       expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
@@ -7552,9 +7552,9 @@ describe('<Select.Root />', () => {
         <Field.Root validationMode="onBlur" validate={validate}>
           <Select.Root
             multiple
-            value={value.value}
+            modelValue={value.value}
             {...{
-              'onUpdate:value': (next: string[]) => {
+              'onUpdate:modelValue': (next: string[]) => {
                 value.value = next;
               },
             }}
@@ -7606,7 +7606,7 @@ describe('<Select.Root />', () => {
 
       await render(
         <Select.Root
-          value={{ id: 2, name: 'Bob' }}
+          modelValue={{ id: 2, name: 'Bob' }}
           itemToStringLabel={(item) => item.name}
           itemToStringValue={(item) => String(item.id)}
           isItemEqualToValue={(item, value) => item.id === value.id}
@@ -7647,7 +7647,7 @@ describe('<Select.Root />', () => {
       await render(
         <Select.Root
           defaultOpen
-          value={{ id: 2, name: 'Bob' }}
+          modelValue={{ id: 2, name: 'Bob' }}
           itemToStringLabel={(item) => item.name}
           itemToStringValue={(item) => String(item.id)}
           isItemEqualToValue={(item, value) => item.id === value.id}
@@ -8043,7 +8043,7 @@ describe('<Select.Root />', () => {
               Clear
             </button>
             <Select.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue: unknown) => {
                 value.value = nextValue as string | null;
               }}
@@ -8342,7 +8342,7 @@ describe('<Select.Root />', () => {
   });
 
   describe('value', () => {
-    it('emits valueChange and then update:value for a change that no listener cancels', async () => {
+    it('emits valueChange and then update:modelValue for a change that no listener cancels', async () => {
       const events: unknown[][] = [];
       await render(
         <Select.Root
@@ -8350,7 +8350,9 @@ describe('<Select.Root />', () => {
           onValueChange={(value: unknown, details: ChangeDetails) =>
             events.push(['valueChange', value, details.reason])
           }
-          {...{ 'onUpdate:value': (value: unknown) => events.push(['update:value', value]) }}
+          {...{
+            'onUpdate:modelValue': (value: unknown) => events.push(['update:modelValue', value]),
+          }}
         >
           <StoreProbe />
           <Select.Trigger>
@@ -8363,7 +8365,7 @@ describe('<Select.Root />', () => {
 
       expect(events).toEqual([
         ['valueChange', 'serif', 'item-press'],
-        ['update:value', 'serif'],
+        ['update:modelValue', 'serif'],
       ]);
       expect(screen.getByTestId('value')).toHaveTextContent('serif');
     });
@@ -8374,7 +8376,7 @@ describe('<Select.Root />', () => {
         <Select.Root
           defaultValue="sans"
           onValueChange={(_value: unknown, details: ChangeDetails) => details.cancel()}
-          {...{ 'onUpdate:value': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         >
           <StoreProbe />
           <Select.Trigger>
@@ -8392,7 +8394,7 @@ describe('<Select.Root />', () => {
     it('follows the value prop of a controlled root', async () => {
       const value = shallowRef('sans');
       await render(() => (
-        <Select.Root value={value.value}>
+        <Select.Root modelValue={value.value}>
           <Select.Trigger>
             <Select.Value data-testid="value" />
           </Select.Trigger>
@@ -8851,7 +8853,7 @@ describe('<Select.Root />', () => {
     it('follows the value while the popup is closed', async () => {
       const value = shallowRef('a');
       await render(() => (
-        <Select.Root value={value.value}>
+        <Select.Root modelValue={value.value}>
           <StoreProbe />
           <Select.Trigger />
           <Select.Portal>
@@ -8881,7 +8883,7 @@ describe('<Select.Root />', () => {
       const handleOpenChangeComplete = vi.fn();
       await render(() => (
         <Select.Root
-          value={value.value}
+          modelValue={value.value}
           open={open.value}
           onOpenChangeComplete={handleOpenChangeComplete}
         >
@@ -9003,7 +9005,7 @@ describe('<Select.Root />', () => {
       const handleValueChange = vi.fn();
       await render(
         <form data-testid="form">
-          <Select.Root name="font" value="serif" onValueChange={handleValueChange}>
+          <Select.Root name="font" modelValue="serif" onValueChange={handleValueChange}>
             <Select.Trigger />
           </Select.Root>
         </form>,

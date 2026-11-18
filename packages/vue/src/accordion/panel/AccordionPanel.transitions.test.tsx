@@ -100,7 +100,7 @@ describe('<Accordion.Panel /> transitions', () => {
           <>
             <style>{STYLE}</style>
             <Accordion.Root
-              value={value.value}
+              modelValue={value.value}
               keepMounted={row.keepMounted}
               hiddenUntilFound={row.hiddenUntilFound}
             >
@@ -178,7 +178,7 @@ describe('<Accordion.Panel /> transitions', () => {
         const { container } = await render(() => (
           <>
             <style>{STYLE}</style>
-            <Accordion.Root value={value.value} keepMounted={row.keepMounted}>
+            <Accordion.Root modelValue={value.value} keepMounted={row.keepMounted}>
               <Accordion.Item value="a">
                 <Accordion.Panel class={ANIMATION} data-testid="panel">
                   {PANEL_CONTENT}

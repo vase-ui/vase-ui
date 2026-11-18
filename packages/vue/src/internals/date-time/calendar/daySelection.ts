@@ -43,7 +43,7 @@ export interface CalendarSelection<Details = CalendarBaseChangeEventDetails> {
 type DayValueInput = CalendarValue | readonly CalendarValue[] | null | undefined;
 
 export interface DaySelectionProps {
-  value?: DayValueInput;
+  modelValue?: DayValueInput;
   defaultValue?: DayValueInput;
   multiple?: boolean | undefined;
   minDays?: number | undefined;
@@ -52,7 +52,7 @@ export interface DaySelectionProps {
 
 export interface DaySelectionEmit {
   (event: 'valueChange', value: any, details: CalendarChangeEventDetails): void;
-  (event: 'update:value', value: any): void;
+  (event: 'update:modelValue', value: any): void;
 }
 
 function isList(
@@ -86,7 +86,7 @@ export function useDaySelection(
   emit: DaySelectionEmit,
 ): CalendarSelection<CalendarChangeEventDetails> {
   const value = useControlled<DayValueInput>({
-    controlled: () => props.value,
+    controlled: () => props.modelValue,
     default: () => props.defaultValue ?? (props.multiple ? EMPTY_ARRAY : null),
     name: 'Calendar',
     state: 'value',
@@ -124,7 +124,7 @@ export function useDaySelection(
     if (details.isCanceled) {
       return;
     }
-    emit('update:value', next);
+    emit('update:modelValue', next);
     value.value = next;
   }
 

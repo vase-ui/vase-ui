@@ -174,11 +174,11 @@ describe('<OTPField.Root />', () => {
     });
 
     it('updates the rendered value in controlled mode', async () => {
-      const { rerender } = await render(<OTPField value="123456" />);
+      const { rerender } = await render(<OTPField modelValue="123456" />);
 
       expect(getValues()).toBe('123456');
 
-      await rerender(<OTPField value="654321" />);
+      await rerender(<OTPField modelValue="654321" />);
 
       expect(getValues()).toBe('654321');
     });
@@ -589,7 +589,7 @@ describe('<OTPField.Root />', () => {
             return () => (
               <>
                 <OTPField
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={() => {}}
                   onValueComplete={onValueComplete}
                 />
@@ -630,7 +630,7 @@ describe('<OTPField.Root />', () => {
 
             return () => (
               <OTPField
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(nextValue) => {
                   setTimeout(() => {
                     setValue(nextValue);
@@ -669,7 +669,7 @@ describe('<OTPField.Root />', () => {
           return () => (
             <>
               <OTPField
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={() => {}}
                 onValueComplete={onValueComplete}
               />
@@ -688,7 +688,7 @@ describe('<OTPField.Root />', () => {
       });
     });
 
-    it('emits `update:value` after `valueChange`, and not after a cancel', async () => {
+    it('emits `update:modelValue` after `valueChange`, and not after a cancel', async () => {
       const calls: string[] = [];
       let cancel = false;
       const { container } = await render(
@@ -700,7 +700,7 @@ describe('<OTPField.Root />', () => {
               details.cancel();
             }
           }}
-          {...{ 'onUpdate:value': (value: string) => calls.push(`update:${value}`) }}
+          {...{ 'onUpdate:modelValue': (value: string) => calls.push(`update:${value}`) }}
         />,
       );
       const hiddenInput = getHiddenInput(container);
@@ -716,13 +716,13 @@ describe('<OTPField.Root />', () => {
       expect(hiddenInput.value).toBe('1');
     });
 
-    it('follows `v-model:value` in both directions', async () => {
+    it('follows `v-model` in both directions', async () => {
       const value = shallowRef('12');
       const { container } = await render(() => (
         <OTPFieldBase.Root
           length={OTP_LENGTH}
-          value={value.value}
-          {...{ 'onUpdate:value': (next: string) => (value.value = next) }}
+          modelValue={value.value}
+          {...{ 'onUpdate:modelValue': (next: string) => (value.value = next) }}
         />
       ));
       const hiddenInput = getHiddenInput(container);
@@ -741,7 +741,7 @@ describe('<OTPField.Root />', () => {
     it('writes the controlled value to the hidden input when the parent keeps its value', async () => {
       const handleValueChange = vi.fn();
       const { container } = await render(
-        <OTPFieldBase.Root length={OTP_LENGTH} value="12" onValueChange={handleValueChange} />,
+        <OTPFieldBase.Root length={OTP_LENGTH} modelValue="12" onValueChange={handleValueChange} />,
       );
       const hiddenInput = getHiddenInput(container);
 
@@ -754,7 +754,7 @@ describe('<OTPField.Root />', () => {
 
     it.each([
       { name: 'the default value', props: { defaultValue: '12a34b56c7' } },
-      { name: 'the controlled value', props: { value: '12a34b56c7' } },
+      { name: 'the controlled value', props: { modelValue: '12a34b56c7' } },
     ])('applies the validation type and the length to $name', async ({ props }) => {
       const { container } = await render(<OTPFieldBase.Root length={OTP_LENGTH} {...props} />);
 
@@ -1194,7 +1194,7 @@ describe('<OTPField.Root />', () => {
         async ({ nextValue, expectedIndex }) => {
           const onValueChange = vi.fn();
           const { setProps } = await render(
-            <OTPField value="111111" onValueChange={onValueChange} />,
+            <OTPField modelValue="111111" onValueChange={onValueChange} />,
           );
 
           const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
@@ -1204,7 +1204,7 @@ describe('<OTPField.Root />', () => {
 
           expect(inputs[5]).toHaveFocus();
 
-          await setProps({ value: nextValue, onValueChange });
+          await setProps({ modelValue: nextValue, onValueChange });
 
           expect(inputs[expectedIndex]).toHaveFocus();
           expect(inputs[expectedIndex]).toHaveAttribute('tabindex', '0');
@@ -1219,7 +1219,7 @@ describe('<OTPField.Root />', () => {
           return (
             <OTPFieldBase.Root
               length={props.length}
-              value={props.value}
+              modelValue={props.value}
               onValueChange={onValueChange}
             >
               {Array.from({ length: props.length }, (_, index) => (
@@ -1257,7 +1257,7 @@ describe('<OTPField.Root />', () => {
       it('keeps focus on a slot that is still reachable after a controlled value shrinks', async () => {
         const onValueChange = vi.fn();
         const { setProps } = await render(
-          <OTPField value="111111" onValueChange={onValueChange} />,
+          <OTPField modelValue="111111" onValueChange={onValueChange} />,
         );
 
         const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
@@ -1265,7 +1265,7 @@ describe('<OTPField.Root />', () => {
         inputs[1].focus();
         await flushMicrotasks();
 
-        await setProps({ value: '111', onValueChange });
+        await setProps({ modelValue: '111', onValueChange });
 
         expect(inputs[1]).toHaveFocus();
       });
@@ -1279,7 +1279,7 @@ describe('<OTPField.Root />', () => {
 
           return () => (
             <>
-              <OTPField value={value.value} onValueChange={setValue} />
+              <OTPField modelValue={value.value} onValueChange={setValue} />
               <button type="button" onClick={() => setValue('')}>
                 Clear
               </button>
@@ -1312,7 +1312,7 @@ describe('<OTPField.Root />', () => {
 
             return () => (
               <OTPField
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={setValue}
                 onValueComplete={() => {
                   setTimeout(() => {
@@ -1428,7 +1428,7 @@ describe('<OTPField.Root />', () => {
 
             return () => (
               <>
-                <OTPField value={value.value} onValueChange={() => {}} />
+                <OTPField modelValue={value.value} onValueChange={() => {}} />
                 <button type="button" onClick={() => setValue('9')}>
                   Apply value
                 </button>
@@ -1468,7 +1468,7 @@ describe('<OTPField.Root />', () => {
 
             return () => (
               <OTPField
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(nextValue) => {
                   setTimeout(() => {
                     setValue(nextValue);
@@ -1882,7 +1882,7 @@ describe('<OTPField.Root />', () => {
             <OTPFieldBase.Root
               length={OTP_LENGTH}
               name="otp"
-              value="1234"
+              modelValue="1234"
               onValueChange={handleValueChange}
             />
           </form>,
@@ -1949,7 +1949,7 @@ describe('<OTPField.Root />', () => {
           const { container } = await render(
             <Form data-testid="form" errors={{ otp: 'Server error' }}>
               <Field.Root name="otp">
-                <OTPFieldBase.Root length={OTP_LENGTH} value="1234" />
+                <OTPFieldBase.Root length={OTP_LENGTH} modelValue="1234" />
                 <Field.Error data-testid="error" />
               </Field.Root>
             </Form>,
@@ -2021,7 +2021,7 @@ describe('<OTPField.Root />', () => {
           <OTPFieldBase.Root
             length={OTP_LENGTH}
             name="otp"
-            value={value.value}
+            modelValue={value.value}
             onValueChange={handleValueChange}
           />
         ));

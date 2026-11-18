@@ -74,7 +74,7 @@ describe('<Switch.Root />', () => {
 
   describe('VUE-141: ownership of checked', () => {
     it('refuses a click with only the checked prop', async () => {
-      await render(<Switch.Root checked />);
+      await render(<Switch.Root modelValue />);
       const control = screen.getByRole('switch');
       expect(control).toHaveAttribute('aria-checked', 'true');
       await fireEvent.click(control);
@@ -83,8 +83,8 @@ describe('<Switch.Root />', () => {
     });
 
     it('warns about a new default after release and keeps the checked value', async () => {
-      const { setProps } = await render(<Switch.Root checked defaultChecked />);
-      await setProps({ checked: undefined, defaultChecked: false });
+      const { setProps } = await render(<Switch.Root modelValue defaultChecked />);
+      await setProps({ modelValue: undefined, defaultChecked: false });
 
       expect(getInput()).toBeChecked();
       expect(takeReportedMessages()).toEqual([
@@ -97,14 +97,14 @@ describe('<Switch.Root />', () => {
         (props: { checked?: boolean | undefined }, { emit }) =>
           () => (
             <Switch.Root
-              checked={props.checked}
-              onUpdate:checked={(value) => emit('update:checked', value)}
+              modelValue={props.checked}
+              onUpdate:modelValue={(value) => emit('update:modelValue', value)}
             />
           ),
-        { props: ['checked'], emits: ['update:checked'] },
+        { props: ['checked'], emits: ['update:modelValue'] },
       );
       const onUpdate = vi.fn();
-      const { setProps } = await render(<Wrapper onUpdate:checked={onUpdate} />);
+      const { setProps } = await render(<Wrapper onUpdate:modelValue={onUpdate} />);
       const control = screen.getByRole('switch');
       await fireEvent.click(control);
       expect(control).toHaveAttribute('aria-checked', 'true');
@@ -223,7 +223,7 @@ describe('<Switch.Root />', () => {
             >
               Toggle
             </button>
-            <Switch.Root checked={checked.value} />;
+            <Switch.Root modelValue={checked.value} />;
           </div>
         );
       });
@@ -1148,7 +1148,7 @@ describe('<Switch.Root />', () => {
             <Field.Root data-testid="root">
               <Switch.Root
                 key={String(unchecked.value)}
-                checked={!unchecked.value}
+                modelValue={!unchecked.value}
                 onCheckedChange={() => {}}
               />
               <button
@@ -1339,7 +1339,7 @@ describe('<Switch.Root />', () => {
             <Field.Root validationMode="onChange" validate={validateSpy} name="newsletters">
               <Switch.Root
                 data-testid="button"
-                checked={checked.value}
+                modelValue={checked.value}
                 onCheckedChange={(next: boolean) => {
                   checked.value = next;
                 }}
@@ -1527,30 +1527,32 @@ describe('<Switch.Root />', () => {
     expect(switchEl).toHaveAttribute('aria-checked', 'true');
   });
 
-  describe('v-model:checked', () => {
-    it('emits `checkedChange` and then `update:checked`, before the click handler returns', async () => {
+  describe('v-model', () => {
+    it('emits `checkedChange` and then `update:modelValue`, before the click handler returns', async () => {
       const order: string[] = [];
       await render(
         <Switch.Root
           onCheckedChange={(checked: boolean) => order.push(`checkedChange ${checked}`)}
-          {...{ 'onUpdate:checked': (checked: boolean) => order.push(`update:checked ${checked}`) }}
+          {...{
+            'onUpdate:modelValue': (checked: boolean) => order.push(`update:modelValue ${checked}`),
+          }}
         />,
       );
 
       screen.getByRole('switch').click();
       order.push('end of the click');
 
-      expect(order).toEqual(['checkedChange true', 'update:checked true', 'end of the click']);
+      expect(order).toEqual(['checkedChange true', 'update:modelValue true', 'end of the click']);
     });
 
-    it('does not emit `update:checked` for a change that a listener cancels', async () => {
+    it('does not emit `update:modelValue` for a change that a listener cancels', async () => {
       const handleUpdate = vi.fn();
       await render(
         <Switch.Root
           onCheckedChange={(_checked: boolean, details: Switch.Root.ChangeEventDetails) =>
             details.cancel()
           }
-          {...{ 'onUpdate:checked': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         />,
       );
 
@@ -1613,7 +1615,7 @@ describe('<Switch.Root />', () => {
 
     it('after a click that the parent of a controlled switch does not accept', async () => {
       const handleUpdate = vi.fn();
-      await render(<Switch.Root checked={false} {...{ 'onUpdate:checked': handleUpdate }} />);
+      await render(<Switch.Root modelValue={false} {...{ 'onUpdate:modelValue': handleUpdate }} />);
 
       await fireEvent.click(screen.getByRole('switch'));
       await fireEvent.click(screen.getByRole('switch'));
@@ -1893,8 +1895,8 @@ describe('<Switch.Root />', () => {
               <form data-testid="form">
                 <Switch.Root
                   name="notifications"
-                  checked={checked.value}
-                  {...{ 'onUpdate:checked': (next: boolean) => (checked.value = next) }}
+                  modelValue={checked.value}
+                  {...{ 'onUpdate:modelValue': (next: boolean) => (checked.value = next) }}
                 />
               </form>
             );
@@ -2137,8 +2139,8 @@ describe('<Switch.Root />', () => {
                 >
                   <Switch.Root
                     aria-label="Notifications"
-                    checked={checked.value}
-                    {...{ 'onUpdate:checked': (next: boolean) => (checked.value = next) }}
+                    modelValue={checked.value}
+                    {...{ 'onUpdate:modelValue': (next: boolean) => (checked.value = next) }}
                   />
                   <Field.Error data-testid="error" />
                 </Field.Root>

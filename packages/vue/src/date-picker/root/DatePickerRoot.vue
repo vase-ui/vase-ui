@@ -40,11 +40,11 @@ export interface DatePickerRootProps<
    *
    * To render an uncontrolled picker, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The uncontrolled value of the picker when it is initially rendered.
    *
-   * To render a controlled picker, use the `value` prop instead.
+   * To render a controlled picker, use the `modelValue` prop instead.
    */
   defaultValue?: Value | null | undefined;
   /**
@@ -159,7 +159,7 @@ const props = withDefaults(defineProps<DatePickerRootProps<Value>>(), {
   open: undefined,
   defaultOpen: false,
   modal: false,
-  value: undefined,
+  modelValue: undefined,
   closeOnSelect: undefined,
   forceLeadingZeros: false,
   hideTimeZone: false,
@@ -189,9 +189,9 @@ const emit = defineEmits<{
   valueChange: [value: Value | null, eventDetails: DatePickerRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value | null];
+  'update:modelValue': [value: Value | null];
   /**
    * Event handler called when the popup is opened or closed.
    *
@@ -226,14 +226,14 @@ const fallback = computed(
 
 const picker = useDateTimePickerRoot<DatePickerRootValue, DatePickerRootChangeEventDetails>({
   part: 'DatePicker',
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
   fallback,
   closeOnSelect: () => props.closeOnSelect,
   disabled: () => props.disabled,
   hasTime,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
-  updateValue: (value) => emit('update:value', value as Value | null),
+  updateValue: (value) => emit('update:modelValue', value as Value | null),
 });
 
 provide(DatePickerRootContext, { ...picker, props });

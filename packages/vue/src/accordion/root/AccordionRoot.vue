@@ -38,12 +38,12 @@ export interface AccordionRootProps<Value = any>
    *
    * To render an uncontrolled accordion, use the `defaultValue` prop instead.
    */
-  value?: AccordionValue<Value> | null | undefined;
+  modelValue?: AccordionValue<Value> | null | undefined;
   /**
    * The uncontrolled value of the item(s) that should be initially expanded.
    * `null` is an empty value.
    *
-   * To render a controlled accordion, use the `value` prop instead.
+   * To render a controlled accordion, use the `modelValue` prop instead.
    */
   defaultValue?: AccordionValue<Value> | null | undefined;
   /**
@@ -99,7 +99,7 @@ defineOptions({ inheritAttrs: false });
 // explicit `keepMounted={false}` gets the warning below.
 const props = withDefaults(defineProps<AccordionRootProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   disabled: false,
   hiddenUntilFound: false,
@@ -115,9 +115,9 @@ const emit = defineEmits<{
   valueChange: [value: AccordionValue<Value>, eventDetails: AccordionRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: AccordionValue<Value>];
+  'update:modelValue': [value: AccordionValue<Value>];
 }>();
 
 defineSlots<{
@@ -144,7 +144,7 @@ const itemList = useCompositeList({ elementsRef: shallowRef([]), provide: false 
 
 const openValues = useControlled<AccordionValue<Value>>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
-  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
+  controlled: () => (props.modelValue === null ? EMPTY_ARRAY : props.modelValue),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'Accordion',
   state: 'value',
@@ -169,7 +169,7 @@ function handleValueChange(
   if (eventDetails.isCanceled) {
     return;
   }
-  emit('update:value', nextValue);
+  emit('update:modelValue', nextValue);
   openValues.value = nextValue;
 }
 

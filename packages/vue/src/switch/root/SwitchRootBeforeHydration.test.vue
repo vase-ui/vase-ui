@@ -6,7 +6,7 @@ import type { SwitchRootChangeEventDetails } from '@vase-ui/vue/switch';
 
 const props = withDefaults(
   defineProps<{
-    // `model` binds `v-model:checked`. `keeps` gives `checked` and keeps it for each change.
+    // `model` binds `v-model`. `keeps` gives `checked` and keeps it for each change.
     // `field` is an uncontrolled switch in a `Field.Root`.
     mode?: 'uncontrolled' | 'model' | 'keeps' | 'field';
     defaultChecked?: boolean;
@@ -24,13 +24,13 @@ function switchProps() {
   switch (props.mode) {
     case 'model':
       return {
-        checked: model.value,
-        'onUpdate:checked': (checked: boolean) => {
+        modelValue: model.value,
+        'onUpdate:modelValue': (checked: boolean) => {
           model.value = checked;
         },
       };
     case 'keeps':
-      return { checked: model.value };
+      return { modelValue: model.value };
     default:
       return {
         defaultChecked: props.defaultChecked,

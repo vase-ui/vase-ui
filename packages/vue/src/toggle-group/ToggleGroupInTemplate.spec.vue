@@ -20,9 +20,9 @@ function onWrongEventDetails(value: Alignment[], eventDetails: string) {
 
 <template>
   <ToggleGroup @value-change="onAlignments" />
-  <ToggleGroup v-model:value="alignments" />
+  <ToggleGroup v-model="alignments" />
   <ToggleGroup @value-change.once="onAlignments" />
-  <ToggleGroup @update:value="(value: Alignment[]) => value" />
+  <ToggleGroup @update:model-value="(value: Alignment[]) => value" />
   <ToggleGroup @value-change="(value: string[]) => value" />
   <ToggleGroup @value-change="(value) => expectType<any[], typeof value>(value)" />
   <!-- @vue-expect-error `eventDetails` is an object -->

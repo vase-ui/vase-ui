@@ -28,7 +28,7 @@ describe('<NavigationMenu.Popup />', () => {
     refInstanceof: window.HTMLElement,
     async render(node) {
       const result = await render(
-        <NavigationMenu.Root value="test">
+        <NavigationMenu.Root modelValue="test">
           <NavigationMenu.Portal>
             <NavigationMenu.Positioner>{node}</NavigationMenu.Positioner>
           </NavigationMenu.Portal>

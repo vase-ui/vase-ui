@@ -8,11 +8,11 @@ import type { RadioGroupChangeEventDetails } from '@vase-ui/vue/radio-group';
 
 const props = withDefaults(
   defineProps<{
-    // `model` binds `v-model:value`. `keeps` gives `value` and keeps it for each change. `field`
+    // `model` binds `v-model`. `keeps` gives `value` and keeps it for each change. `field`
     // is an uncontrolled group in a `Field.Root`.
     mode?: 'uncontrolled' | 'model' | 'keeps' | 'field';
     named?: boolean;
-    // An `Input` with `v-model:value` between the first radio and the other radios.
+    // An `Input` with `v-model` between the first radio and the other radios.
     textBetween?: boolean;
     // The first value of the model, or the default value.
     value?: string;
@@ -30,13 +30,13 @@ function groupProps() {
   switch (props.mode) {
     case 'model':
       return {
-        value: model.value,
-        'onUpdate:value': (value: string) => {
+        modelValue: model.value,
+        'onUpdate:modelValue': (value: string) => {
           model.value = value;
         },
       };
     case 'keeps':
-      return { value: model.value };
+      return { modelValue: model.value };
     default:
       return { defaultValue: props.value };
   }
@@ -59,7 +59,7 @@ function handleValueChange(value: unknown, details: RadioGroupChangeEventDetails
         @value-change="handleValueChange"
       >
         <label data-testid="label-a"><Radio.Root value="a" data-testid="a" />A</label>
-        <Input v-if="textBetween" v-model:value="text" data-testid="text" />
+        <Input v-if="textBetween" v-model="text" data-testid="text" />
         <label data-testid="label-b"><Radio.Root value="b" data-testid="b" />B</label>
         <label data-testid="label-c"><Radio.Root value="c" data-testid="c" />C</label>
       </RadioGroup>

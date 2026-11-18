@@ -582,14 +582,14 @@ describe('<DatePicker.Root />', () => {
 
     it('follows a new value of a controlled picker in the field, the calendar and the trigger', async () => {
       const { setProps, container } = await renderPicker({
-        value: day('2026-11-18'),
+        modelValue: day('2026-11-18'),
         defaultOpen: true,
       });
       await waitFor(() => {
         expect(dayButton('2026-11-18')).not.toBe(null);
       });
 
-      await setProps({ value: day('2026-11-20') });
+      await setProps({ modelValue: day('2026-11-20') });
 
       expect(segmentOf(container, 'day').value).toBe('20');
       expect(dayButton('2026-11-20').closest('[data-date]')).toHaveAttribute(
@@ -602,9 +602,9 @@ describe('<DatePicker.Root />', () => {
     it('does not change a controlled picker until the parent gives the new value', async () => {
       const onUpdateValue = vi.fn();
       const { user, container } = await renderPicker({
-        value: day('2026-11-18'),
+        modelValue: day('2026-11-18'),
         defaultOpen: true,
-        'onUpdate:value': onUpdateValue,
+        'onUpdate:modelValue': onUpdateValue,
       });
       await waitFor(() => {
         expect(dayButton('2026-11-20')).not.toBe(null);

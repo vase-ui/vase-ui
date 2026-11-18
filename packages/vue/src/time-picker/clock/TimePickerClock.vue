@@ -14,7 +14,7 @@ export interface TimePickerClockState extends TimeClockRootState {}
  */
 export interface TimePickerClockProps extends Omit<
   TimeClockRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'defaultView'
   | 'granularity'
@@ -163,7 +163,7 @@ function handleViewUpdate(next: TimeClockView) {
 function clockProps() {
   const root = picker.props;
   const valueProps: Record<string, any> = {
-    value: picker.value.value,
+    modelValue: picker.value.value,
     referenceDate: withTime(picker.template.value, picker.referenceTime.value),
   };
   return {

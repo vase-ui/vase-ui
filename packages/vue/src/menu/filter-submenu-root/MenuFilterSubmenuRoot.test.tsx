@@ -81,7 +81,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
                     <Menu.Input aria-label="Filter actions" />
                     <Menu.List>
                       <Menu.FilterProvider
-                        value={inputValue.value}
+                        modelValue={inputValue.value}
                         onValueChange={(nextValue, eventDetails) => {
                           onValueChange(nextValue, eventDetails.reason);
                           inputValue.value = nextValue;
@@ -181,7 +181,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
                 <Menu.Popup data-testid="parent-popup">
                   <Menu.Item>Rename</Menu.Item>
                   <Menu.FilterProvider
-                    value={inputValue.value}
+                    modelValue={inputValue.value}
                     onValueChange={(nextValue, eventDetails) => {
                       onValueChange(nextValue, eventDetails.reason);
                       inputValue.value = nextValue;
@@ -266,7 +266,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
                         <Menu.Item>Rename</Menu.Item>
                         <Menu.FilterProvider
                           filter={null}
-                          value={query.value}
+                          modelValue={query.value}
                           onValueChange={(value, eventDetails) => {
                             onValueChange(value, eventDetails.reason);
                             query.value = value;

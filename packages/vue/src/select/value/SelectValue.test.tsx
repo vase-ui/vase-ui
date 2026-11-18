@@ -28,7 +28,7 @@ describe('<Select.Value />', () => {
   describe('prop: children', () => {
     it('overrides the text when children is a string', async () => {
       await render(
-        <Select.Root value="1">
+        <Select.Root modelValue="1">
           <Select.Value>one</Select.Value>
         </Select.Root>,
       );
@@ -39,7 +39,7 @@ describe('<Select.Value />', () => {
     it('accepts a function with a value parameter', async () => {
       const children = vi.fn();
       await render(
-        <Select.Root value="1">
+        <Select.Root modelValue="1">
           <Select.Trigger>
             <Select.Value
               v-slots={{
@@ -76,7 +76,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value="unknown" items={items}>
+        <Select.Root modelValue="unknown" items={items}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -91,7 +91,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value="sans" items={items}>
+        <Select.Root modelValue="sans" items={items}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -107,7 +107,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value={null} items={items}>
+        <Select.Root modelValue={null} items={items}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -123,7 +123,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value="sans" items={items}>
+        <Select.Root modelValue="sans" items={items}>
           <Select.Trigger>
             <Select.Value data-testid="value" />
           </Select.Trigger>
@@ -155,7 +155,7 @@ describe('<Select.Value />', () => {
           <div>
             <button onClick={() => (value.value = 'serif')}>serif</button>
             <button onClick={() => (value.value = 'mono')}>mono</button>
-            <Select.Root v-model:value={value.value} items={items}>
+            <Select.Root v-model={value.value} items={items}>
               <Select.Trigger>
                 <Select.Value data-testid="value" />
               </Select.Trigger>
@@ -193,7 +193,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value="unknown" items={items}>
+        <Select.Root modelValue="unknown" items={items}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -208,7 +208,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value="bold" items={items}>
+        <Select.Root modelValue="bold" items={items}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -224,7 +224,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value="serif" items={items}>
+        <Select.Root modelValue="serif" items={items}>
           <Select.Trigger>
             <Select.Value data-testid="value" />
           </Select.Trigger>
@@ -256,7 +256,7 @@ describe('<Select.Value />', () => {
           <div>
             <button onClick={() => (value.value = 'serif')}>serif</button>
             <button onClick={() => (value.value = 'mono')}>mono</button>
-            <Select.Root v-model:value={value.value} items={items}>
+            <Select.Root v-model={value.value} items={items}>
               <Select.Trigger>
                 <Select.Value data-testid="value" />
               </Select.Trigger>
@@ -305,7 +305,7 @@ describe('<Select.Value />', () => {
           <div>
             <button onClick={updateItems}>update</button>
             <button onClick={() => (value.value = 'c')}>select c</button>
-            <Select.Root v-model:value={value.value} items={items.value}>
+            <Select.Root v-model={value.value} items={items.value}>
               <Select.Trigger>
                 <Select.Value data-testid="value" />
               </Select.Trigger>
@@ -348,7 +348,7 @@ describe('<Select.Value />', () => {
 
       await render(
         <Select.Root
-          value={items[1]}
+          modelValue={items[1]}
           itemToStringLabel={(i: any) => i.country}
           itemToStringValue={(i: any) => i.code}
         >
@@ -379,7 +379,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root name="country" value={items[1]}>
+        <Select.Root name="country" modelValue={items[1]}>
           <Select.Trigger>
             <Select.Value data-testid="value" />
           </Select.Trigger>
@@ -414,7 +414,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value="sans" items={items}>
+        <Select.Root modelValue="sans" items={items}>
           <Select.Value data-testid="value">Custom Text</Select.Value>
         </Select.Root>,
       );
@@ -429,7 +429,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value="sans" items={items}>
+        <Select.Root modelValue="sans" items={items}>
           <Select.Value
             data-testid="value"
             v-slots={{ default: ({ value }: ValueSlotProps) => `Custom: ${value}` }}
@@ -449,7 +449,7 @@ describe('<Select.Value />', () => {
           <button onClick={() => (value.value = '1')}>1</button>
           <button onClick={() => (value.value = '2')}>2</button>
           <button onClick={() => (value.value = null)}>null</button>
-          <Select.Root v-model:value={value.value}>
+          <Select.Root v-model={value.value}>
             <Select.Trigger>
               <Select.Value
                 data-testid="value"
@@ -493,7 +493,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value={['sans', 'serif']} items={items} multiple>
+        <Select.Root modelValue={['sans', 'serif']} items={items} multiple>
           <Select.Trigger>
             <span data-testid="value">
               <Select.Value />
@@ -512,7 +512,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value={['serif', 'mono']} items={items} multiple>
+        <Select.Root modelValue={['serif', 'mono']} items={items} multiple>
           <Select.Trigger>
             <span data-testid="value">
               <Select.Value />
@@ -531,7 +531,7 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root value={['bold', 'italic']} items={items} multiple>
+        <Select.Root modelValue={['bold', 'italic']} items={items} multiple>
           <Select.Trigger>
             <span data-testid="value">
               <Select.Value />
@@ -548,7 +548,7 @@ describe('<Select.Value />', () => {
 
     it('falls back to raw values when no items are provided', async () => {
       await render(
-        <Select.Root value={['serif', 'mono']} multiple>
+        <Select.Root modelValue={['serif', 'mono']} multiple>
           <Select.Trigger>
             <span data-testid="value">
               <Select.Value />
@@ -562,7 +562,7 @@ describe('<Select.Value />', () => {
 
     it('displays single value when only one value is selected in multiple mode', async () => {
       await render(
-        <Select.Root value={['sans']} multiple>
+        <Select.Root modelValue={['sans']} multiple>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -572,7 +572,7 @@ describe('<Select.Value />', () => {
 
     it('displays empty when no values are selected in multiple mode', async () => {
       await render(
-        <Select.Root value={[]} multiple>
+        <Select.Root modelValue={[]} multiple>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );
@@ -588,7 +588,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value={['sans', 'serif']} items={items} multiple>
+        <Select.Root modelValue={['sans', 'serif']} items={items} multiple>
           <Select.Value
             v-slots={{
               default: ({ value: values }: ValueSlotProps) => {
@@ -611,7 +611,7 @@ describe('<Select.Value />', () => {
       };
 
       await render(
-        <Select.Root value={['sans', 'serif']} items={items} multiple>
+        <Select.Root modelValue={['sans', 'serif']} items={items} multiple>
           <Select.Value data-testid="value">Custom Multiple Text</Select.Value>
         </Select.Root>,
       );
@@ -635,17 +635,17 @@ describe('<Select.Value />', () => {
       const renderValue = vi.fn();
 
       const { setProps } = await render(
-        <Select.Root multiple value={null} defaultValue={['sans']}>
+        <Select.Root multiple modelValue={null} defaultValue={['sans']}>
           <Select.Value v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }} />
         </Select.Root>,
       );
 
       expect(renderValue.mock.lastCall?.[0]).toEqual([]);
 
-      await setProps({ value: ['serif'] });
+      await setProps({ modelValue: ['serif'] });
       expect(renderValue.mock.lastCall?.[0]).toEqual(['serif']);
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       expect(renderValue.mock.lastCall?.[0]).toEqual([]);
     });
   });
@@ -663,7 +663,7 @@ describe('<Select.Value />', () => {
 
     it('displays placeholder when value is null', async () => {
       await render(
-        <Select.Root value={null}>
+        <Select.Root modelValue={null}>
           <Select.Value data-testid="value" placeholder="Select an option" />
         </Select.Root>,
       );
@@ -742,7 +742,7 @@ describe('<Select.Value />', () => {
 
     it('does not display placeholder when value is selected', async () => {
       await render(
-        <Select.Root value="option1">
+        <Select.Root modelValue="option1">
           <Select.Value data-testid="value" placeholder="Select an option" />
           <Select.Portal>
             <Select.Positioner>
@@ -807,7 +807,7 @@ describe('<Select.Value />', () => {
   describe('#render slot', () => {
     it('shows the label of the value in the `children` component', async () => {
       await render(
-        <Select.Root value="sans" items={{ sans: 'Sans-serif' }}>
+        <Select.Root modelValue="sans" items={{ sans: 'Sans-serif' }}>
           <Select.Value
             v-slots={{
               render: ({ props, children }: { props: HTMLProps; children: Component }) => (

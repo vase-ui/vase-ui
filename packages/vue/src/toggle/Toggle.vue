@@ -24,10 +24,10 @@ export interface ToggleProps<Value extends string = string>
    * Whether the toggle button is currently pressed.
    * This is the controlled counterpart of `defaultPressed`.
    */
-  pressed?: boolean | undefined;
+  modelValue?: boolean | undefined;
   /**
    * Whether the toggle button is currently pressed.
-   * This is the uncontrolled counterpart of `pressed`.
+   * This is the uncontrolled counterpart of `modelValue`.
    * @default false
    */
   defaultPressed?: boolean | undefined;
@@ -67,7 +67,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ToggleProps>(), {
   as: 'button',
-  pressed: undefined,
+  modelValue: undefined,
   defaultPressed: false,
   disabled: false,
   nativeButton: true,
@@ -84,9 +84,9 @@ const emit = defineEmits<{
   pressedChange: [pressed: boolean, eventDetails: ToggleChangeEventDetails];
   /**
    * Event handler called after `pressedChange` with the new value, unless a listener cancels the
-   * change. `v-model:pressed` uses it.
+   * change. `v-model` uses it.
    */
-  'update:pressed': [pressed: boolean];
+  'update:modelValue': [pressed: boolean];
 }>();
 
 defineSlots<{
@@ -122,7 +122,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
 
 const isPressed = useControlled({
   controlled: () =>
-    groupContext ? groupContext.value.value.includes(groupItemValue.value) : props.pressed,
+    groupContext ? groupContext.value.value.includes(groupItemValue.value) : props.modelValue,
   default: () => props.defaultPressed,
   name: 'Toggle',
   state: 'pressed',
@@ -156,7 +156,7 @@ function onClick(event: MouseEvent) {
     return;
   }
 
-  emit('update:pressed', nextPressed);
+  emit('update:modelValue', nextPressed);
   isPressed.value = nextPressed;
 }
 

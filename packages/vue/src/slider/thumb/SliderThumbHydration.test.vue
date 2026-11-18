@@ -6,7 +6,7 @@ import type { SliderRootChangeEventDetails } from '@vase-ui/vue/slider';
 const props = withDefaults(
   defineProps<{
     defaultValue: number | number[];
-    // `defaultValue` is then the first value of `v-model:value`.
+    // `defaultValue` is then the first value of `v-model`.
     controlled?: boolean | undefined;
     min?: number | undefined;
     max?: number | undefined;
@@ -28,8 +28,8 @@ const changes = shallowRef<string[]>([]);
 function rootProps() {
   return props.controlled
     ? {
-        value: model.value,
-        'onUpdate:value': (value: number | number[]) => {
+        modelValue: model.value,
+        'onUpdate:modelValue': (value: number | number[]) => {
           model.value = value;
         },
       }

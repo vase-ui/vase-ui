@@ -30,11 +30,11 @@ export interface RangeCalendarRootProps<Value extends DateValue = Temporal.Plain
    * replaces.
    * This is the controlled counterpart of `defaultValue`.
    */
-  value?: readonly [Value | null, Value | null] | undefined;
+  modelValue?: readonly [Value | null, Value | null] | undefined;
   /**
    * The first and the last day of the range when the calendar first renders. With no value, it
    * also gives the kind of a new end.
-   * This is the uncontrolled counterpart of `value`.
+   * This is the uncontrolled counterpart of `modelValue`.
    */
   defaultValue?: readonly [Value | null, Value | null] | undefined;
   /**
@@ -79,7 +79,7 @@ assertTemporal('RangeCalendar.Root');
 
 const props = withDefaults(defineProps<RangeCalendarRootProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   disabled: false,
   readOnly: false,
@@ -100,9 +100,9 @@ const emit = defineEmits<{
   valueChange: [value: RangeValue<Value>, eventDetails: RangeCalendarRootChangeEventDetails];
   /**
    * Callback fired with the new range after `valueChange`, unless a listener cancels the change.
-   * It is the event of `v-model:value`.
+   * It is the event of `v-model`.
    */
-  'update:value': [value: RangeValue<Value>];
+  'update:modelValue': [value: RangeValue<Value>];
   /**
    * Callback fired when the month that the grid shows changes.
    */

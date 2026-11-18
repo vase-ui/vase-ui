@@ -120,7 +120,7 @@ describe('<DateRangePicker.Trigger />', () => {
 
     it('follows the range, and the locale', async () => {
       const { setProps } = await render(
-        <DateRangePicker.Root value={range('2026-11-18', '2026-11-20')} locale="de-DE">
+        <DateRangePicker.Root modelValue={range('2026-11-18', '2026-11-20')} locale="de-DE">
           <DateRangePicker.Trigger />
         </DateRangePicker.Root>,
       );
@@ -131,7 +131,7 @@ describe('<DateRangePicker.Trigger />', () => {
         }),
       ).not.toBe(null);
 
-      await setProps({ value: range('2026-12-24', '2026-12-26') });
+      await setProps({ modelValue: range('2026-12-24', '2026-12-26') });
 
       expect(
         screen.getByRole('button', {
@@ -142,12 +142,12 @@ describe('<DateRangePicker.Trigger />', () => {
 
     it('gives the name back to the default when the range goes', async () => {
       const { setProps } = await render(
-        <DateRangePicker.Root value={range('2026-11-18', '2026-11-20')} locale="en-US">
+        <DateRangePicker.Root modelValue={range('2026-11-18', '2026-11-20')} locale="en-US">
           <DateRangePicker.Trigger />
         </DateRangePicker.Root>,
       );
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(screen.getByRole('button', { name: 'Choose dates' })).not.toBe(null);
     });

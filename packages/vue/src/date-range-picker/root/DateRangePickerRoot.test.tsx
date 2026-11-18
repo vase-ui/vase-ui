@@ -648,14 +648,14 @@ describe('<DateRangePicker.Root />', () => {
 
     it('follows a new range of a controlled picker in the fields, the calendar and the trigger', async () => {
       const { setProps, container } = await renderPicker({
-        value: range('2026-11-18', '2026-11-20'),
+        modelValue: range('2026-11-18', '2026-11-20'),
         defaultOpen: true,
       });
       await waitFor(() => {
         expect(dayButton('2026-11-18')).not.toBe(null);
       });
 
-      await setProps({ value: range('2026-11-22', '2026-11-24') });
+      await setProps({ modelValue: range('2026-11-22', '2026-11-24') });
 
       expect(hiddenInputsOf(container)).toEqual(['2026-11-22', '2026-11-24']);
       expect(rangeAttributes().start).toEqual(['2026-11-22']);
@@ -665,9 +665,9 @@ describe('<DateRangePicker.Root />', () => {
     it('does not change a controlled picker until the parent gives the new range', async () => {
       const onUpdateValue = vi.fn();
       const { user, container } = await renderPicker({
-        value: range('2026-11-18', '2026-11-20'),
+        modelValue: range('2026-11-18', '2026-11-20'),
         defaultOpen: true,
-        'onUpdate:value': onUpdateValue,
+        'onUpdate:modelValue': onUpdateValue,
       });
       await waitFor(() => {
         expect(dayButton('2026-11-22')).not.toBe(null);
@@ -682,9 +682,9 @@ describe('<DateRangePicker.Root />', () => {
     it('is a controlled empty range for `null`', async () => {
       const onUpdateValue = vi.fn();
       const { user, container, setProps } = await renderPicker({
-        value: null,
+        modelValue: null,
         defaultOpen: true,
-        'onUpdate:value': onUpdateValue,
+        'onUpdate:modelValue': onUpdateValue,
       });
       await waitFor(() => {
         expect(dayButton('2026-11-16')).not.toBe(null);
@@ -695,7 +695,7 @@ describe('<DateRangePicker.Root />', () => {
       expect(endsOf(onUpdateValue.mock.lastCall)).toEqual(['2026-11-16', null]);
       expect(hiddenInputsOf(container)).toEqual(['', '']);
 
-      await setProps({ value: range('2026-11-16', '2026-11-18') });
+      await setProps({ modelValue: range('2026-11-16', '2026-11-18') });
 
       expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
     });
@@ -728,7 +728,7 @@ describe('<DateRangePicker.Root />', () => {
     it('makes a range of the kind of the last range after the picker becomes empty', async () => {
       const onValueChange = vi.fn();
       const { user, setProps } = await renderPicker({
-        value: [
+        modelValue: [
           Temporal.ZonedDateTime.from('2026-11-18T09:30[Asia/Tokyo]'),
           Temporal.ZonedDateTime.from('2026-11-20T17:45[Asia/Tokyo]'),
         ],
@@ -738,7 +738,7 @@ describe('<DateRangePicker.Root />', () => {
       await waitFor(() => {
         expect(dayButton('2026-11-16')).not.toBe(null);
       });
-      await setProps({ value: [null, null] });
+      await setProps({ modelValue: [null, null] });
 
       await user.click(dayButton('2026-11-16'));
 
@@ -1260,7 +1260,7 @@ describe('<DateRangePicker.Root />', () => {
           <DateRangePickerAnatomy
             {...{
               locale: 'en-US',
-              value: range('2026-11-22', '2026-11-24'),
+              modelValue: range('2026-11-22', '2026-11-24'),
               defaultValue: range('2026-11-18', '2026-11-20'),
               onValueChange,
             }}

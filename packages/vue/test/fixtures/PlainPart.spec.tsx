@@ -33,7 +33,7 @@ export const renderSlotWithRef = (
 export const genericPart = (
   <GenericPart
     option={1}
-    value={2}
+    modelValue={2}
     onValueChange={(value, details) => [value satisfies number, details.reason]}
   />
 );
@@ -48,7 +48,7 @@ export const unknownProp = <PlainPart notAProp={1} />;
 export const wrongHandlerParameter = <PlainPart onClick={(event: string) => event} />;
 
 // @ts-expect-error `value` has the type of `option`
-export const wrongValueType = <GenericPart option={1} value="two" />;
+export const wrongValueType = <GenericPart option={1} modelValue="two" />;
 
 // @ts-expect-error the first argument of the listener is a number
 export const wrongListener = <GenericPart option={1} onValueChange={(value: string) => value} />;

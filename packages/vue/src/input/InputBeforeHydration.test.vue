@@ -6,6 +6,6 @@ const value = shallowRef('foo');
 </script>
 
 <template>
-  <Input v-model:value="value" data-testid="input" />
+  <Input v-model="value" data-testid="input" />
   <output data-testid="value">{{ value }}</output>
 </template>

@@ -24,7 +24,7 @@ export interface DateRangePickerRootContext {
   /**
    * Applies a change that a part reports. The root emits `valueChange` with the details of the
    * part, so a `details.cancel()` of a listener also stops the change of the part. Then the root
-   * emits `update:value` and takes the range.
+   * emits `update:modelValue` and takes the range.
    */
   commit: (range: DateRangePickerRange, details: DateRangePickerRootChangeEventDetails) => void;
   /**

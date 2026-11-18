@@ -106,7 +106,7 @@ describe('<Menu.CheckboxItem />', () => {
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
-                  <Menu.CheckboxItem checked={checked}>Item</Menu.CheckboxItem>
+                  <Menu.CheckboxItem modelValue={checked}>Item</Menu.CheckboxItem>
                 </Menu.Popup>
               </Menu.Positioner>
             </Menu.Portal>
@@ -503,15 +503,15 @@ describe('<Menu.CheckboxItem />', () => {
       expect(item).toHaveAttribute('aria-disabled', 'true');
     });
 
-    it('toggles on a click, and emits checkedChange and then update:checked', async () => {
+    it('toggles on a click, and emits checkedChange and then update:modelValue', async () => {
       const events: string[] = [];
       const onCheckedChange = vi.fn(() => events.push('checkedChange'));
-      const onUpdateChecked = vi.fn(() => events.push('update:checked'));
+      const onUpdateChecked = vi.fn(() => events.push('update:modelValue'));
       const { user } = await render(
         <Menu.Root open>
           <Menu.CheckboxItem
             onCheckedChange={onCheckedChange}
-            {...{ 'onUpdate:checked': onUpdateChecked }}
+            {...{ 'onUpdate:modelValue': onUpdateChecked }}
           >
             Item
           </Menu.CheckboxItem>
@@ -523,7 +523,7 @@ describe('<Menu.CheckboxItem />', () => {
 
       expect(item).toHaveAttribute('aria-checked', 'true');
       expect(item).toHaveAttribute('data-checked', '');
-      expect(events).toEqual(['checkedChange', 'update:checked']);
+      expect(events).toEqual(['checkedChange', 'update:modelValue']);
       expect(onCheckedChange.mock.lastCall).toEqual([true, expect.anything()]);
       const details = (
         onCheckedChange.mock.lastCall as unknown[]
@@ -547,7 +547,7 @@ describe('<Menu.CheckboxItem />', () => {
             onCheckedChange={(_: boolean, details: Menu.CheckboxItem.ChangeEventDetails) =>
               details.cancel()
             }
-            {...{ 'onUpdate:checked': onUpdateChecked }}
+            {...{ 'onUpdate:modelValue': onUpdateChecked }}
           >
             Item
           </Menu.CheckboxItem>
@@ -562,14 +562,14 @@ describe('<Menu.CheckboxItem />', () => {
       expect(onUpdateChecked).not.toHaveBeenCalled();
     });
 
-    it('follows v-model:checked', async () => {
+    it('follows v-model', async () => {
       const checked = shallowRef(false);
       const Test = defineComponent(() => () => (
         <Menu.Root open>
           <Menu.CheckboxItem
-            checked={checked.value}
+            modelValue={checked.value}
             {...{
-              'onUpdate:checked': (value: boolean) => {
+              'onUpdate:modelValue': (value: boolean) => {
                 checked.value = value;
               },
             }}
@@ -594,7 +594,7 @@ describe('<Menu.CheckboxItem />', () => {
     it('stays unchecked when a controlled parent keeps the value', async () => {
       const { user } = await render(
         <Menu.Root open>
-          <Menu.CheckboxItem checked={false}>Item</Menu.CheckboxItem>
+          <Menu.CheckboxItem modelValue={false}>Item</Menu.CheckboxItem>
         </Menu.Root>,
       );
 

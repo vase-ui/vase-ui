@@ -43,7 +43,7 @@ function rootProps() {
   return {
     length: 4,
     defaultValue: props.defaultValue,
-    value: props.value,
+    modelValue: props.value,
     disabled: props.disabled,
     readOnly: props.readOnly,
     mask: props.mask,

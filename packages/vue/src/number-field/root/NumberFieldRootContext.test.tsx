@@ -84,11 +84,11 @@ describe('the context of the root of Number Field', () => {
       },
       {
         name: 'a new controlled value',
-        props: { value: 2000 },
+        props: { modelValue: 2000 },
         text: new Intl.NumberFormat().format(2000),
       },
     ])('is formatted again for $name', async ({ props, text }) => {
-      const { setProps } = await renderRoot({ value: 1234.5 });
+      const { setProps } = await renderRoot({ modelValue: 1234.5 });
 
       await setProps(props);
 
@@ -174,8 +174,8 @@ describe('the context of the root of Number Field', () => {
     });
 
     it('steps from the value that the parent gave last', async () => {
-      const { getContext, handleChange, setProps } = await renderRoot({ value: 10 });
-      await setProps({ value: 20 });
+      const { getContext, handleChange, setProps } = await renderRoot({ modelValue: 10 });
+      await setProps({ modelValue: 20 });
 
       getContext().incrementValue(1, { direction: 1, reason: REASONS.incrementPress });
 

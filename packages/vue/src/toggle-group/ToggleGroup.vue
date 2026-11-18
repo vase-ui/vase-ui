@@ -32,11 +32,11 @@ export interface ToggleGroupProps<Value extends string = string>
    * This is the controlled counterpart of `defaultValue`.
    * `null` is an empty value, and the group stays controlled.
    */
-  value?: readonly Value[] | null | undefined;
+  modelValue?: readonly Value[] | null | undefined;
   /**
    * The pressed state of the toggle group represented by an array of
    * the values of all pressed toggle buttons.
-   * This is the uncontrolled counterpart of `value`.
+   * This is the uncontrolled counterpart of `modelValue`.
    * `null` is an empty value.
    */
   defaultValue?: readonly Value[] | null | undefined;
@@ -87,7 +87,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ToggleGroupProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   disabled: false,
   orientation: 'horizontal',
@@ -106,9 +106,9 @@ const emit = defineEmits<{
   valueChange: [groupValue: Value[], eventDetails: ToggleGroupChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [groupValue: Value[]];
+  'update:modelValue': [groupValue: Value[]];
 }>();
 
 defineSlots<{
@@ -128,7 +128,7 @@ const groupDisabled = computed(
 
 const groupValue = useControlled<readonly Value[]>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
-  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
+  controlled: () => (props.modelValue === null ? EMPTY_ARRAY : props.modelValue),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'ToggleGroup',
   state: 'value',
@@ -157,7 +157,7 @@ function setGroupValue(
     return;
   }
 
-  emit('update:value', newGroupValue);
+  emit('update:modelValue', newGroupValue);
   groupValue.value = newGroupValue;
 }
 
@@ -172,7 +172,9 @@ provide(ToggleGroupContext, {
   setGroupValue,
   value: groupValue,
   // The raw props tell an absent value from the empty default.
-  isValueInitialized: computed(() => props.value !== undefined || props.defaultValue !== undefined),
+  isValueInitialized: computed(
+    () => props.modelValue !== undefined || props.defaultValue !== undefined,
+  ),
 });
 
 // In a toolbar, the root of the toolbar is the composite root, and the toggles are its items.

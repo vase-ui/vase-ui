@@ -439,7 +439,7 @@ describe('useDateTimeFieldRoot', () => {
       },
     );
 
-    it('emits valueChange, then update:value, and gives the reason of the key', async () => {
+    it('emits valueChange, then update:modelValue, and gives the reason of the key', async () => {
       const calls: string[] = [];
       const { container, user } = await render(
         <DateTimeFieldProbe
@@ -448,7 +448,7 @@ describe('useDateTimeFieldRoot', () => {
           onValueChange={(_value: unknown, details: { reason: string }) =>
             calls.push(`valueChange ${details.reason}`)
           }
-          {...{ 'onUpdate:value': () => calls.push('update:value') }}
+          {...{ 'onUpdate:modelValue': () => calls.push('update:modelValue') }}
         />,
       );
 
@@ -458,9 +458,9 @@ describe('useDateTimeFieldRoot', () => {
 
       expect(calls).toEqual([
         'valueChange keyboard',
-        'update:value',
+        'update:modelValue',
         'valueChange input-change',
-        'update:value',
+        'update:modelValue',
       ]);
     });
 
@@ -471,7 +471,7 @@ describe('useDateTimeFieldRoot', () => {
           defaultValue="2026-11-14"
           name="when"
           onValueChange={(_value: unknown, details: { cancel: () => void }) => details.cancel()}
-          {...{ 'onUpdate:value': onUpdate }}
+          {...{ 'onUpdate:modelValue': onUpdate }}
         />,
       );
 
@@ -488,7 +488,7 @@ describe('useDateTimeFieldRoot', () => {
         const value = shallowRef(Temporal.PlainDate.from('2026-11-14'));
         return () => (
           <>
-            <DateTimeFieldProbe value={value.value} onValueChange={() => {}} />
+            <DateTimeFieldProbe modelValue={value.value} onValueChange={() => {}} />
             <button
               type="button"
               onClick={() => (value.value = Temporal.PlainDate.from('2027-01-02'))}
@@ -994,7 +994,7 @@ describe('useDateTimeFieldRoot', () => {
       const onValueChange = vi.fn();
       const { container } = await render(
         <DateTimeFieldProbe
-          value={Temporal.PlainDate.from('2026-11-14')}
+          modelValue={Temporal.PlainDate.from('2026-11-14')}
           locale="en-US"
           onValueChange={onValueChange}
         />,
@@ -1137,7 +1137,7 @@ describe('useDateTimeFieldRoot', () => {
         const { container } = await render(
           <form data-testid="form">
             <DateTimeFieldProbe
-              value={Temporal.PlainDate.from('2026-11-14')}
+              modelValue={Temporal.PlainDate.from('2026-11-14')}
               name="when"
               onValueChange={onValueChange}
             />

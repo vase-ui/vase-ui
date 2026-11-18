@@ -37,7 +37,7 @@ export interface DayRange {
 }
 
 export interface RangeSelectionProps {
-  value?: RangeInput | undefined;
+  modelValue?: RangeInput | undefined;
   defaultValue?: RangeInput | undefined;
   minDays?: number | undefined;
   maxDays?: number | undefined;
@@ -52,7 +52,7 @@ export interface RangeSelectionProps {
 
 export interface RangeSelectionEmit {
   (event: 'valueChange', value: any, details: RangeChangeEventDetails): void;
-  (event: 'update:value', value: any): void;
+  (event: 'update:modelValue', value: any): void;
 }
 
 /** The range states of a day. A day of the range has `selected` only when the user can select it. */
@@ -173,7 +173,7 @@ export function useRangeSelection(
   host?: RangeCalendarHost,
 ): RangeSelection {
   const value = useControlled<RangeInput>({
-    controlled: () => props.value,
+    controlled: () => props.modelValue,
     default: () => props.defaultValue ?? EMPTY_RANGE,
     name: 'RangeCalendar',
     state: 'value',
@@ -318,7 +318,7 @@ export function useRangeSelection(
     if (details.isCanceled) {
       return false;
     }
-    emit('update:value', next);
+    emit('update:modelValue', next);
     value.value = next;
     previewDate.value = null;
     return true;

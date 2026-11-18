@@ -22,7 +22,7 @@ export interface GenericPartProps<Value>
     VaseUIComponentProps<GenericPartState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /** The value when the part is controlled. */
-  value?: Value | undefined;
+  modelValue?: Value | undefined;
   /** The value when the part is uncontrolled. */
   defaultValue?: Value | undefined;
   /** The value that a click gives to the part. */
@@ -40,13 +40,13 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<GenericPartProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
 });
 
 const emit = defineEmits<{
   valueChange: [value: Value, details: GenericPartChangeEventDetails];
-  'update:value': [value: Value];
+  'update:modelValue': [value: Value];
 }>();
 
 defineSlots<{
@@ -55,7 +55,7 @@ defineSlots<{
 }>();
 
 const value = useControlled({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue,
   name: 'GenericPart',
   state: 'value',
@@ -69,7 +69,7 @@ function handleClick(event: MouseEvent) {
   if (details.isCanceled) {
     return;
   }
-  emit('update:value', props.option);
+  emit('update:modelValue', props.option);
   value.value = props.option;
 }
 

@@ -15,7 +15,7 @@ function onWrongEventDetails(value: Temporal.PlainDate, eventDetails: string) {
 <template>
   <Calendar.Root @value-change="onDate" />
   <Calendar.Root @value-change.once="onDate" />
-  <Calendar.Root @update:value="(value: Temporal.PlainDate) => value" />
+  <Calendar.Root @update:model-value="(value: Temporal.PlainDate) => value" />
   <Calendar.Root multiple @value-change="(value: Temporal.PlainDate[]) => value" />
   <Calendar.Root @value-change="(value) => expectType<Temporal.PlainDate, typeof value>(value)" />
   <Calendar.Root

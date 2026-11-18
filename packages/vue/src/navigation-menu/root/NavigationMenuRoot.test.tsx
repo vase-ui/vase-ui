@@ -1027,7 +1027,7 @@ describe('<NavigationMenu.Root />', () => {
     held: {
       createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
         <NavigationMenu.Root
-          value={open ? 'item-1' : null}
+          modelValue={open ? 'item-1' : null}
           onOpenChangeComplete={onOpenChangeComplete}
         >
           <NavigationMenu.List>
@@ -1049,7 +1049,7 @@ describe('<NavigationMenu.Root />', () => {
     },
     createComponent: ({ open, onOpenChangeComplete }) => (
       <NavigationMenu.Root
-        value={open ? 'item-1' : null}
+        modelValue={open ? 'item-1' : null}
         onOpenChangeComplete={onOpenChangeComplete}
       >
         <NavigationMenu.List>
@@ -1067,7 +1067,7 @@ describe('<NavigationMenu.Root />', () => {
     ),
     createBackdropComponent: ({ open, onOpenChangeComplete }) => (
       <NavigationMenu.Root
-        value={open ? 'item-1' : null}
+        modelValue={open ? 'item-1' : null}
         onOpenChangeComplete={onOpenChangeComplete}
       >
         <NavigationMenu.List>
@@ -1083,7 +1083,7 @@ describe('<NavigationMenu.Root />', () => {
     ),
     createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
       <NavigationMenu.Root
-        value={open ? 'item-1' : null}
+        modelValue={open ? 'item-1' : null}
         onOpenChangeComplete={onOpenChangeComplete}
       >
         <NavigationMenu.List>
@@ -1655,7 +1655,7 @@ describe('<NavigationMenu.Root />', () => {
       const value = shallowRef<string | null>(null);
       const { user } = await render(() => (
         <NavigationMenu.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue: string | null) => {
             value.value = nextValue;
           }}
@@ -1966,7 +1966,7 @@ describe('<NavigationMenu.Root />', () => {
     );
 
     it('should be controlled by value prop', async () => {
-      const { setProps } = await render(<TestNavigationMenu value="item-1" />);
+      const { setProps } = await render(<TestNavigationMenu modelValue="item-1" />);
 
       let trigger1 = screen.getByTestId('trigger-1');
       await fireEvent.mouseEnter(trigger1);
@@ -1975,7 +1975,7 @@ describe('<NavigationMenu.Root />', () => {
       await flushMicrotasks();
       expect(trigger1).toHaveAttribute('aria-expanded', 'true');
 
-      await setProps({ value: 'item-2' });
+      await setProps({ modelValue: 'item-2' });
 
       const trigger2 = screen.getByTestId('trigger-2');
       await fireEvent.mouseLeave(trigger1);
@@ -2029,7 +2029,9 @@ describe('<NavigationMenu.Root />', () => {
         });
 
         function ControlledNavigationMenu(props: { value: string | null }) {
-          return <TestNavigationMenu value={props.value} keepMountedPortal={keepMountedPortal} />;
+          return (
+            <TestNavigationMenu modelValue={props.value} keepMountedPortal={keepMountedPortal} />
+          );
         }
 
         const { rerender } = await render(<ControlledNavigationMenu value="item-1" />);
@@ -2079,7 +2081,7 @@ describe('<NavigationMenu.Root />', () => {
 
       try {
         function ControlledNavigationMenu(props: { value: string | null }) {
-          return <TestNavigationMenu value={props.value} />;
+          return <TestNavigationMenu modelValue={props.value} />;
         }
 
         const { rerender } = await render(<ControlledNavigationMenu value="item-1" />);
@@ -2231,7 +2233,7 @@ describe('<NavigationMenu.Root />', () => {
       function ControlledNavigationMenu(props: { value: string | null }) {
         return (
           <TestNavigationMenu
-            value={props.value}
+            modelValue={props.value}
             rootRef={(instance) => {
               actionsRef.value = instance;
             }}
@@ -2262,7 +2264,7 @@ describe('<NavigationMenu.Root />', () => {
       function ControlledNavigationMenu(props: { value: string | null }) {
         return (
           <TestNavigationMenu
-            value={props.value}
+            modelValue={props.value}
             rootRef={(instance) => {
               actionsRef.value = instance;
             }}
@@ -2428,7 +2430,7 @@ describe('<NavigationMenu.Root />', () => {
       function ControlledNavigationMenu(props: { value: string | null }) {
         return (
           <TestNavigationMenu
-            value={props.value}
+            modelValue={props.value}
             rootRef={(instance) => {
               actionsRef.value = instance;
             }}
@@ -2459,7 +2461,7 @@ describe('<NavigationMenu.Root />', () => {
         function ControlledNavigationMenu(props: { value: string | null }) {
           return (
             <TestNavigationMenu
-              value={props.value}
+              modelValue={props.value}
               rootRef={(instance) => {
                 actionsRef.value = instance;
               }}
@@ -4370,8 +4372,8 @@ describe('<NavigationMenu.Root />', () => {
           log.push(`valueChange ${value} ${details.reason}`);
           onValueChange?.(value, details);
         }}
-        onUpdate:value={(value) => {
-          log.push(`update:value ${value}`);
+        onUpdate:modelValue={(value) => {
+          log.push(`update:modelValue ${value}`);
         }}
         onOpenChangeComplete={handleOpenChangeComplete}
       >
@@ -4585,21 +4587,21 @@ describe('<NavigationMenu.Root />', () => {
 
     it('opens the item of the value prop, and follows a change of it', async () => {
       const { setProps } = await render(
-        <NavigationMenu.Root value="item-1">{renderIcons()}</NavigationMenu.Root>,
+        <NavigationMenu.Root modelValue="item-1">{renderIcons()}</NavigationMenu.Root>,
       );
       expect(screen.getByTestId('icon-1')).toHaveAttribute('data-popup-open');
 
-      await setProps({ value: 'item-2' });
+      await setProps({ modelValue: 'item-2' });
 
       expect(screen.getByTestId('icon-1')).not.toHaveAttribute('data-popup-open');
       expect(screen.getByTestId('icon-2')).toHaveAttribute('data-popup-open');
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(screen.getByTestId('icon-2')).not.toHaveAttribute('data-popup-open');
     });
 
-    it('follows v-model:value, and writes it when the menu closes', async () => {
+    it('follows v-model, and writes it when the menu closes', async () => {
       const model = shallowRef<string | null>('item-1');
       const handle: { root: RootInstance | null } = { root: null };
       const App = defineComponent(() => () => (
@@ -4607,7 +4609,7 @@ describe('<NavigationMenu.Root />', () => {
           ref={(instance) => {
             handle.root = instance as unknown as RootInstance | null;
           }}
-          v-model:value={model.value}
+          v-model={model.value}
         >
           {renderIcons()}
         </NavigationMenu.Root>
@@ -4634,7 +4636,7 @@ describe('<NavigationMenu.Root />', () => {
       { name: 'value an empty string', controlled: true, itemValue: '' },
       { name: 'value false', controlled: true, itemValue: false },
     ])('treats $name as an open value', async ({ controlled, itemValue }) => {
-      const rootProps = controlled ? { value: itemValue } : { defaultValue: itemValue };
+      const rootProps = controlled ? { modelValue: itemValue } : { defaultValue: itemValue };
 
       await render(
         <NavigationMenu.Root data-testid="root" {...rootProps}>
@@ -4662,15 +4664,15 @@ describe('<NavigationMenu.Root />', () => {
   });
 
   describe('exposed close', () => {
-    it('emits valueChange with the reason imperative-action, and then update:value', async () => {
+    it('emits valueChange with the reason imperative-action, and then update:modelValue', async () => {
       const { root, log } = await renderMenu();
 
       root.close();
 
-      expect(log).toEqual(['valueChange null imperative-action', 'update:value null']);
+      expect(log).toEqual(['valueChange null imperative-action', 'update:modelValue null']);
     });
 
-    it('keeps the menu open, and emits no update:value, when valueChange cancels the close', async () => {
+    it('keeps the menu open, and emits no update:modelValue, when valueChange cancels the close', async () => {
       const { root, log, handleOpenChangeComplete } = await renderMenu((_value, details) => {
         details.cancel();
       });
@@ -4689,7 +4691,7 @@ describe('<NavigationMenu.Root />', () => {
       root.close();
       root.close();
 
-      expect(log).toEqual(['valueChange null imperative-action', 'update:value null']);
+      expect(log).toEqual(['valueChange null imperative-action', 'update:modelValue null']);
     });
 
     it('closes a nested root and keeps the root above it open', async () => {

@@ -387,7 +387,7 @@ describe('<Accordion.Root />', () => {
   describe('controlled', () => {
     it.skipIf(isJSDOM)('open state', async () => {
       const { setProps } = await render(
-        <Accordion.Root value={[]}>
+        <Accordion.Root modelValue={[]}>
           <Accordion.Item value={0}>
             <Accordion.Header>
               <Accordion.Trigger>Trigger 1</Accordion.Trigger>
@@ -402,7 +402,7 @@ describe('<Accordion.Root />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText(PANEL_CONTENT_1)).toBe(null);
 
-      await setProps({ value: [0] });
+      await setProps({ modelValue: [0] });
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).toHaveAttribute('data-panel-open');
@@ -410,7 +410,7 @@ describe('<Accordion.Root />', () => {
       expect(screen.queryByText(PANEL_CONTENT_1)).toBeVisible();
       expect(screen.queryByText(PANEL_CONTENT_1)).toHaveAttribute('data-open');
 
-      await setProps({ value: [] });
+      await setProps({ modelValue: [] });
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText(PANEL_CONTENT_1)).toBe(null);
@@ -419,7 +419,7 @@ describe('<Accordion.Root />', () => {
     describe('prop: value', () => {
       it('custom item value', async () => {
         await render(
-          <Accordion.Root value={['one']}>
+          <Accordion.Root modelValue={['one']}>
             <Accordion.Item value="one">
               <Accordion.Header>
                 <Accordion.Trigger>Trigger 1</Accordion.Trigger>
@@ -445,7 +445,7 @@ describe('<Accordion.Root />', () => {
       it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
         const handleValueChange = vi.fn();
         await render(
-          <Accordion.Root value={null} defaultValue={['b']} onValueChange={handleValueChange}>
+          <Accordion.Root modelValue={null} defaultValue={['b']} onValueChange={handleValueChange}>
             <Accordion.Item value="a">
               <Accordion.Header>
                 <Accordion.Trigger>Trigger 1</Accordion.Trigger>
@@ -474,7 +474,7 @@ describe('<Accordion.Root />', () => {
 
       it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
         const { setProps } = await render(
-          <Accordion.Root value={['a']} defaultValue={['b']}>
+          <Accordion.Root modelValue={['a']} defaultValue={['b']}>
             <Accordion.Item value="a">
               <Accordion.Header>
                 <Accordion.Trigger>Trigger 1</Accordion.Trigger>
@@ -493,7 +493,7 @@ describe('<Accordion.Root />', () => {
         expect(trigger1).toHaveAttribute('aria-expanded', 'true');
         expect(trigger2).toHaveAttribute('aria-expanded', 'false');
 
-        await setProps({ value: null });
+        await setProps({ modelValue: null });
 
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
         expect(trigger2).toHaveAttribute('aria-expanded', 'false');
@@ -814,7 +814,7 @@ describe('<Accordion.Root />', () => {
       const onValueChange = vi.fn();
 
       await render(
-        <Accordion.Root value={[]} onValueChange={onValueChange}>
+        <Accordion.Root modelValue={[]} onValueChange={onValueChange}>
           <Accordion.Item
             value={0}
             onOpenChange={(nextOpen, eventDetails) => {
@@ -848,7 +848,7 @@ describe('<Accordion.Root />', () => {
 
         return () => (
           <Accordion.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue, eventDetails) => {
               onValueChange(nextValue, eventDetails);
               eventDetails.cancel();
@@ -1146,7 +1146,7 @@ describe('<Accordion.Root />', () => {
     });
   });
 
-  describe('v-model:value', () => {
+  describe('v-model', () => {
     /**
      * An accordion with the items `a` and `b` and a parent that holds the value. `log` gets one
      * line for each emit.
@@ -1162,15 +1162,15 @@ describe('<Accordion.Root />', () => {
         return () => (
           <Accordion.Root
             multiple={options.multiple}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue, eventDetails) => {
               log.push(`valueChange ${nextValue.join()}`);
               if (options.cancel === 'valueChange') {
                 eventDetails.cancel();
               }
             }}
-            onUpdate:value={(nextValue) => {
-              log.push(`update:value ${nextValue.join()}`);
+            onUpdate:modelValue={(nextValue) => {
+              log.push(`update:modelValue ${nextValue.join()}`);
               value.value = nextValue;
             }}
           >
@@ -1200,17 +1200,17 @@ describe('<Accordion.Root />', () => {
       return { log, triggerA, triggerB };
     }
 
-    it('emits openChange, then valueChange, then update:value', async () => {
+    it('emits openChange, then valueChange, then update:modelValue', async () => {
       const { log, triggerA } = await renderModel({});
 
       await fireEvent.click(triggerA);
 
-      expect(log).toEqual(['openChange a true', 'valueChange a', 'update:value a']);
+      expect(log).toEqual(['openChange a true', 'valueChange a', 'update:modelValue a']);
       expect(triggerA).toHaveAttribute('aria-expanded', 'true');
       expect(triggerA).toHaveAttribute('data-panel-open');
     });
 
-    it('does not emit update:value when a listener cancels valueChange', async () => {
+    it('does not emit update:modelValue when a listener cancels valueChange', async () => {
       const { log, triggerA } = await renderModel({ cancel: 'valueChange' });
 
       await fireEvent.click(triggerA);
@@ -1234,13 +1234,13 @@ describe('<Accordion.Root />', () => {
       await fireEvent.click(triggerA);
       await fireEvent.click(triggerB);
 
-      expect(log.at(-1)).toBe('update:value b');
+      expect(log.at(-1)).toBe('update:modelValue b');
       expect(triggerA).toHaveAttribute('aria-expanded', 'false');
       expect(triggerB).toHaveAttribute('aria-expanded', 'true');
 
       await fireEvent.click(triggerB);
 
-      expect(log.at(-1)).toBe('update:value ');
+      expect(log.at(-1)).toBe('update:modelValue ');
       expect(triggerB).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -1250,11 +1250,11 @@ describe('<Accordion.Root />', () => {
       await fireEvent.click(triggerA);
       await fireEvent.click(triggerB);
 
-      expect(log.at(-1)).toBe('update:value a,b');
+      expect(log.at(-1)).toBe('update:modelValue a,b');
 
       await fireEvent.click(triggerA);
 
-      expect(log.at(-1)).toBe('update:value b');
+      expect(log.at(-1)).toBe('update:modelValue b');
       expect(triggerA).toHaveAttribute('aria-expanded', 'false');
       expect(triggerB).toHaveAttribute('aria-expanded', 'true');
     });
@@ -1263,7 +1263,7 @@ describe('<Accordion.Root />', () => {
       const onValueChange = vi.fn();
 
       await render(
-        <Accordion.Root value={[]} onValueChange={onValueChange}>
+        <Accordion.Root modelValue={[]} onValueChange={onValueChange}>
           <Accordion.Item value="a">
             <Accordion.Header>
               <Accordion.Trigger>a</Accordion.Trigger>

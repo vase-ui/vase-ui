@@ -307,7 +307,7 @@ describe('<Combobox.Value />', () => {
             <button onClick={() => (value.value = items[1])}>serif</button>
             <button onClick={() => (value.value = items[2])}>mono</button>
             <button onClick={() => (value.value = null)}>clear</button>
-            <Combobox.Root v-model:value={value.value} items={items}>
+            <Combobox.Root v-model={value.value} items={items}>
               <Combobox.Trigger data-testid="value">
                 <Combobox.Value />
               </Combobox.Trigger>
@@ -419,7 +419,7 @@ describe('<Combobox.Value />', () => {
           <div>
             <button onClick={updateItems}>update</button>
             <button onClick={() => c && (value.value = c)}>select c</button>
-            <Combobox.Root v-model:value={value.value} items={items.value}>
+            <Combobox.Root v-model={value.value} items={items.value}>
               <Combobox.Trigger data-testid="value">
                 <Combobox.Value />
               </Combobox.Trigger>
@@ -636,7 +636,7 @@ describe('<Combobox.Value />', () => {
       const renderValue = vi.fn();
 
       const { setProps } = await render(
-        <Combobox.Root multiple value={null} defaultValue={['serif']}>
+        <Combobox.Root multiple modelValue={null} defaultValue={['serif']}>
           <Combobox.Value
             v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }}
           />
@@ -645,10 +645,10 @@ describe('<Combobox.Value />', () => {
 
       expect(renderValue.mock.lastCall?.[0]).toEqual([]);
 
-      await setProps({ value: ['mono'] });
+      await setProps({ modelValue: ['mono'] });
       expect(renderValue.mock.lastCall?.[0]).toEqual(['mono']);
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       expect(renderValue.mock.lastCall?.[0]).toEqual([]);
     });
   });

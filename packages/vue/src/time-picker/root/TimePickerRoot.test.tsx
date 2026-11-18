@@ -758,14 +758,14 @@ describe('<TimePicker.Root />', () => {
     it('follows a new value of a controlled picker in the field, the list and the trigger', async () => {
       const { setProps, container } = await renderPicker({
         list: true,
-        value: time('14:30'),
+        modelValue: time('14:30'),
         defaultOpen: true,
       });
       await waitFor(() => {
         expect(listItem('14:30')).not.toBe(null);
       });
 
-      await setProps({ value: time('16:00') });
+      await setProps({ modelValue: time('16:00') });
 
       expect(hiddenInputOf(container).value).toBe('16:00');
       expect(listItem('16:00')).toHaveAttribute('aria-selected', 'true');
@@ -776,9 +776,9 @@ describe('<TimePicker.Root />', () => {
       const onUpdateValue = vi.fn();
       const { user, container } = await renderPicker({
         list: true,
-        value: time('14:30'),
+        modelValue: time('14:30'),
         defaultOpen: true,
-        'onUpdate:value': onUpdateValue,
+        'onUpdate:modelValue': onUpdateValue,
       });
       await waitFor(() => {
         expect(listItem('16:00')).not.toBe(null);

@@ -51,7 +51,7 @@ interface MenuProps {
 // The content of an item fades in and out while the transitions are on.
 const Menu = defineComponent<MenuProps>(
   (props) => () => (
-    <NavigationMenu.Root value={props.value}>
+    <NavigationMenu.Root modelValue={props.value}>
       <style>
         {`[data-testid^="content"] { transition: opacity ${props.duration ?? 50}ms; }
           [data-starting-style], [data-ending-style] { opacity: 0; }`}
@@ -129,7 +129,7 @@ describe('<NavigationMenu.Content />', () => {
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(
-        <NavigationMenu.Root value="test">
+        <NavigationMenu.Root modelValue="test">
           <NavigationMenu.Item>{node}</NavigationMenu.Item>
           <NavigationMenu.Viewport />
         </NavigationMenu.Root>,

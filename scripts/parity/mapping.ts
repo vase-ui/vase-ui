@@ -87,16 +87,31 @@ function actionMembers(part: SurfacePart, file: SurfaceFile): string[] {
   return actions.members;
 }
 
+function changeState(row: PropRow): string | undefined {
+  if (
+    /^on[A-Z].*Change$/.test(row.name) &&
+    row.type.includes('eventDetails') &&
+    !REACT_EVENT_HANDLER.test(row.type)
+  ) {
+    return lowerFirst(row.name.slice(2, -'Change'.length));
+  }
+  return undefined;
+}
+
+function modelName(state: string): string {
+  return state === 'value' || state === 'checked' || state === 'pressed' ? 'modelValue' : state;
+}
+
 function addEvent(expected: ExpectedSurface, row: PropRow, rowNames: Set<string>): void {
   const base = row.name.slice(2);
   const emit = lowerFirst(base);
+  const state = changeState(row);
   if (REACT_EVENT_HANDLER.test(row.type)) {
     expected.nativeListeners.push({ row: row.name, prop: row.name, emit: lowerFirst(base) });
-  } else if (base.endsWith('Change') && row.type.includes('eventDetails')) {
+  } else if (state !== undefined) {
     expected.emits.set(emit, row.name);
-    const state = emit.slice(0, -'Change'.length);
     if (rowNames.has(state)) {
-      expected.emits.set(`update:${state}`, row.name);
+      expected.emits.set(`update:${modelName(state)}`, row.name);
     }
   } else if (/=>\s*void\)?$/.test(row.type.replace(/\s*\|\s*undefined$/, ''))) {
     expected.emits.set(emit, row.name);
@@ -121,6 +136,7 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
   };
   const rows = part.props ?? [];
   const rowNames = new Set(rows.map(({ name }) => name));
+  const models = new Set(rows.map(changeState));
   const controlled = new Set(
     rows.flatMap(({ name }) => {
       const match = /^default([A-Z]\w*)$/.exec(name);
@@ -156,7 +172,7 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
     } else if (/^on[A-Z]/.test(row.name)) {
       addEvent(expected, row, rowNames);
     } else {
-      expected.props.set(row.name, {
+      expected.props.set(models.has(row.name) ? modelName(row.name) : row.name, {
         required: row.required,
         default: row.default,
         compareDefault: !controlled.has(row.name) && row.default !== null,

@@ -43,11 +43,11 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
    *
    * To render an uncontrolled picker, use the `defaultValue` prop instead.
    */
-  value?: readonly [Value | null, Value | null] | null | undefined;
+  modelValue?: readonly [Value | null, Value | null] | null | undefined;
   /**
    * The uncontrolled value of the picker when it is initially rendered.
    *
-   * To render a controlled picker, use the `value` prop instead.
+   * To render a controlled picker, use the `modelValue` prop instead.
    */
   defaultValue?: readonly [Value | null, Value | null] | null | undefined;
   /**
@@ -168,7 +168,7 @@ const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
   open: undefined,
   defaultOpen: false,
   modal: false,
-  value: undefined,
+  modelValue: undefined,
   closeOnSelect: undefined,
   forceLeadingZeros: false,
   hideTimeZone: false,
@@ -200,9 +200,9 @@ const emit = defineEmits<{
   ];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: DateRangePickerRootValue<Value>];
+  'update:modelValue': [value: DateRangePickerRootValue<Value>];
   /**
    * Event handler called when the popup is opened or closed.
    *
@@ -238,7 +238,7 @@ const fallbackEnd = computed(
 
 const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootChangeEventDetails>({
   part: 'DateRangePicker',
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue ?? EMPTY_RANGE,
   fallback: () => [fallbackEnd.value, fallbackEnd.value],
   closeOnSelect: () => props.closeOnSelect,
@@ -248,7 +248,7 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
   isEmpty: (range) => range[0] === null && range[1] === null,
   valueChange: (range, details) =>
     emit('valueChange', range as DateRangePickerRootValue<Value>, details),
-  updateValue: (range) => emit('update:value', range as DateRangePickerRootValue<Value>),
+  updateValue: (range) => emit('update:modelValue', range as DateRangePickerRootValue<Value>),
 });
 
 // The two fields of one form hear the same `reset` event, and the picker has one value.

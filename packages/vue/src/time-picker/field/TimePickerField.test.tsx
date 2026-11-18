@@ -54,14 +54,14 @@ describe('<TimePicker.Field />', () => {
 
   it('follows a new value of a controlled picker', async () => {
     const { container, setProps } = await render(
-      <TimePicker.Root value={time} locale="en-US" hourCycle={24}>
+      <TimePicker.Root modelValue={time} locale="en-US" hourCycle={24}>
         <TimePicker.Field>
           <TimeField.Input />
         </TimePicker.Field>
       </TimePicker.Root>,
     );
 
-    await setProps({ value: Temporal.PlainTime.from('09:05') });
+    await setProps({ modelValue: Temporal.PlainTime.from('09:05') });
 
     expect(segmentOf(container, 'hour').value).toBe('09');
     expect(segmentOf(container, 'minute').value).toBe('05');
@@ -122,7 +122,7 @@ describe('<TimePicker.Field />', () => {
           locale="en-US"
           hourCycle={24}
           onValueChange={onValueChange}
-          {...{ 'onUpdate:value': onUpdateValue }}
+          {...{ 'onUpdate:modelValue': onUpdateValue }}
         >
           <TimePicker.Field>
             <TimeField.Input />
@@ -150,7 +150,7 @@ describe('<TimePicker.Field />', () => {
           onValueChange={(_value: unknown, details: { cancel: () => void }) => {
             details.cancel();
           }}
-          {...{ 'onUpdate:value': onUpdateValue }}
+          {...{ 'onUpdate:modelValue': onUpdateValue }}
         >
           <TimePicker.Field>
             <TimeField.Input />
@@ -389,7 +389,7 @@ describe('<TimePicker.Field />', () => {
       const { container } = await render(
         <form>
           <TimePicker.Root
-            value={Temporal.PlainTime.from('09:05')}
+            modelValue={Temporal.PlainTime.from('09:05')}
             defaultValue={time}
             name="when"
             locale="en-US"

@@ -286,7 +286,7 @@ describe('<Tabs.Tab />', () => {
       const tabRenderMock = vi.fn();
 
       const { setProps } = await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab
               value={0}
@@ -312,7 +312,7 @@ describe('<Tabs.Tab />', () => {
 
       tabRenderMock.mockClear();
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(
         tabRenderMock.mock.calls.some(

@@ -105,7 +105,7 @@ describe('<Slider.Control />', () => {
 
     await render(
       <Slider.Root
-        value={[20, 40]}
+        modelValue={[20, 40]}
         thumbCollisionBehavior="none"
         minStepsBetweenValues={50}
         onValueChange={onValueChange}
@@ -540,7 +540,7 @@ describe('<Slider.Control />', () => {
               shrink
             </button>
             <Slider.Root
-              value={value.value}
+              modelValue={value.value}
               min={0}
               max={100}
               onValueChange={onValueChange}
@@ -610,7 +610,7 @@ describe('<Slider.Control />', () => {
               shrink
             </button>
             <Slider.Root
-              value={value.value}
+              modelValue={value.value}
               min={0}
               max={100}
               onValueChange={onValueChange}
@@ -676,7 +676,7 @@ describe('<Slider.Control />', () => {
               grow
             </button>
             <Slider.Root
-              value={value.value}
+              modelValue={value.value}
               min={0}
               max={100}
               onValueChange={(nextValue: number[], details: Slider.Root.ChangeEventDetails) => {

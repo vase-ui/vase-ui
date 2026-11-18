@@ -18,12 +18,7 @@ function handleValueChange(nextValue: string, details: AutocompleteRootChangeEve
 </script>
 
 <template>
-  <Autocomplete.Root
-    v-model:value="value"
-    :name="name"
-    :items="cities"
-    @value-change="handleValueChange"
-  >
+  <Autocomplete.Root v-model="value" :name="name" :items="cities" @value-change="handleValueChange">
     <Autocomplete.Input data-testid="input" />
   </Autocomplete.Root>
   <output data-testid="value">{{ value }}</output>

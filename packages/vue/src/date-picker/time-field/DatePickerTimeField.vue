@@ -13,7 +13,7 @@ export interface DatePickerTimeFieldState extends TimeFieldRootState {}
  */
 export interface DatePickerTimeFieldProps extends Omit<
   TimeFieldRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
   | 'granularity'
@@ -101,7 +101,7 @@ function timeFieldProps() {
   const granularity = root.granularity;
   return {
     ...props,
-    value: value.value,
+    modelValue: value.value,
     defaultValue: template.value,
     referenceDate: referenceDate.value,
     granularity:

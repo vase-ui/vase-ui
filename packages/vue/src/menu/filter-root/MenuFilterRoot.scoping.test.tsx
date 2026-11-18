@@ -118,7 +118,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
   it('supports a controlled query', async () => {
     const onValueChange = vi.fn();
-    const { user } = await render(<FilterableMenu filterProps={{ value: 'dup', onValueChange }} />);
+    const { user } = await render(
+      <FilterableMenu filterProps={{ modelValue: 'dup', onValueChange }} />,
+    );
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
 
     expect(input).toHaveValue('dup');

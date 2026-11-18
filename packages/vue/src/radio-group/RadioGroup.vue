@@ -53,11 +53,11 @@ export interface RadioGroupProps<Value = any>
    *
    * To render an uncontrolled radio group, use the `defaultValue` prop instead.
    */
-  value?: Value | undefined;
+  modelValue?: Value | undefined;
   /**
    * The uncontrolled value of the radio button that should be initially selected.
    *
-   * To render a controlled radio group, use the `value` prop instead.
+   * To render a controlled radio group, use the `modelValue` prop instead.
    */
   defaultValue?: Value | undefined;
 }
@@ -99,7 +99,7 @@ const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
   disabled: false,
   readOnly: false,
   required: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -111,9 +111,9 @@ const emit = defineEmits<{
   valueChange: [value: Value, eventDetails: RadioGroupChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value];
+  'update:modelValue': [value: Value];
 }>();
 
 defineSlots<{
@@ -147,7 +147,7 @@ const controlId = useVaseUiId(() => props.id);
 const clearFieldError = useClearFieldError(inputName);
 
 const checkedValue = useControlled<Value>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue,
   name: 'RadioGroup',
   state: 'value',
@@ -194,7 +194,7 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
     return;
   }
 
-  emit('update:value', value);
+  emit('update:modelValue', value);
   checkedValue.value = value;
   inputSyncRequest.value += 1;
 }
@@ -308,7 +308,7 @@ function reset(event: Event) {
   }
   handledReset = event;
 
-  if (props.value === undefined && checkedValue.value !== props.defaultValue) {
+  if (props.modelValue === undefined && checkedValue.value !== props.defaultValue) {
     const details = createChangeEventDetails(REASONS.none, event);
     // `Value` cannot name the value of a group that has no default.
     setCheckedValue(props.defaultValue as Value, details);
