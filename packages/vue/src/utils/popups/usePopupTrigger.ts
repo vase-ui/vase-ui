@@ -5,7 +5,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { triggerBindings } from './popupBindings';
 import { readTriggerStore } from './popupHandle';
 import type { PopupHandleStoreProvider } from './popupHandle';
-import { canClaimOpenPopup, popupStoreSelectors } from './usePopupRoot';
+import { canClaimOpenPopup, popupStoreSelectors, registeredTrigger } from './usePopupRoot';
 import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 import { getTarget, activeElement, contains } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
@@ -89,10 +89,13 @@ export function useTriggerOwner<Store>(
   missingRoot: string,
 ) {
   const attached = usePopupHandleStore(handle);
-  if (root === undefined && handle() === undefined) {
-    throw new Error(missingRoot);
-  }
-  return computed(() => attached.value ?? (root as Store));
+  return computed(() => {
+    const current = attached.value ?? root;
+    if (current === undefined) {
+      throw new Error(missingRoot);
+    }
+    return current;
+  });
 }
 
 function syncTriggerCount(store: PopupTriggerDataStore<PopupStoreState<unknown>>) {
@@ -155,10 +158,14 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
         return;
       }
 
-      registration.store.context.triggerElements.setActive(registration.id, !held);
-      syncTriggerCount(registration.store);
+      const { store, id, element } = registration;
+      if (registeredTrigger(store.context.triggerElements, id) !== element) {
+        return;
+      }
+      store.context.triggerElements.setActive(id, !held);
+      syncTriggerCount(store);
       if (!held) {
-        onRegister?.(registration.element, registration.store, registration.id, true);
+        onRegister?.(element, store, id, true);
       }
     },
     { flush: 'post' },
@@ -221,8 +228,13 @@ export function usePopupTrigger<
   );
 
   function forward() {
-    if (isMountedByThisTrigger.value) {
-      toValue(store).update({
+    if (!isMountedByThisTrigger.value) {
+      return;
+    }
+    const current = toValue(store);
+    const registered = registeredTrigger(current.context.triggerElements, id());
+    if (!registered || registered === element.value) {
+      current.update({
         activeTriggerElement: element.value,
         ...stateUpdates(),
       } as Pick<Readonly<State>, Key | 'activeTriggerElement'>);
@@ -558,16 +570,13 @@ export function useTriggerFocus(
   const { isHeld } = useKeepAliveState();
   let disposed = false;
 
-  // As in Base UI, one timer serves the open request of a focus and the check of a focus out. The
-  // flag tells which of the two started the timer last.
+  // A change of owner cancels a delayed open. A focus-out check still belongs to the old owner.
   const timeout = useTimeout();
   let timerStartedForOpen = false;
   onScopeDispose(() => {
     disposed = true;
   });
 
-  // A change of `enabled` or of the store ends an open request. It does not end the check of a focus
-  // out: as in Base UI, the check closes the store that the focus left.
   watch([enabled, currentStore], () => {
     if (timerStartedForOpen) {
       timeout.clear();
@@ -584,9 +593,7 @@ export function useTriggerFocus(
 
   function listenToWindow() {
     const win = ownerWindow(currentStore().select('anchorElement'));
-    // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
-    // enabled only while a menu of the menubar is open, so it would miss the press that opened the
-    // menu.
+    // A menubar trigger gets enabled after the press that opens the menu. Record that press too.
     const trackModality = isMacSafari();
     const stopTrackingModality = mergeCleanups(
       trackModality && addEventListener(win, 'keydown', onWindowKeydown, true),

@@ -198,10 +198,7 @@ interface DelayGroupMember {
   setIsInstantPhase: (value: boolean) => void;
 }
 
-/**
- * The state of a group. No field is reactive, as the refs of the context of Base UI are not. A
- * change of a field thus renders no part.
- */
+// Members read the delay at the next interaction. A change of delay needs no render.
 interface DelayGroup {
   hasProvider: boolean;
   timeoutMs: () => number;
@@ -212,11 +209,7 @@ interface DelayGroup {
   currentContext: DelayGroupMember | null;
 }
 
-/**
- * The parts that have no provider share this group, as they share the default context of Base UI.
- * The group holds state, and all server requests share it. A server render thus must not join it.
- * A server runs no `onMounted` hook and no `watch` of a member.
- */
+// Only mounted triggers can join the default group. Server requests share this object.
 const DEFAULT_DELAY_GROUP: DelayGroup = {
   hasProvider: false,
   timeoutMs: () => 0,
@@ -246,7 +239,6 @@ export interface FloatingDelayGroupOptions {
  * Provides a group of floating elements that share a `delay`. Once one of them opens, the others
  * open instantly until `timeoutMs` passes after it closes. Call it in `setup`. The members read
  * the group when they need it, so a change of the delay renders no member.
- * Based on `NextFloatingDelayGroup` from `@floating-ui/react`.
  * @see https://floating-ui.com/docs/FloatingDelayGroup
  * @internal
  */
@@ -408,15 +400,13 @@ export function useDelayGroup(options: UseDelayGroupOptions): UseDelayGroupRetur
     }
   }
 
-  // A popup that is open at the mount joins the group, as in Base UI. A server runs neither this
-  // hook nor the watcher, so it never writes the group.
+  // A popup that starts open joins after mount so server renders leave the group alone.
   onMounted(update);
   // The default flush runs the watcher before the render of the caller. A popup that the caller
   // renders is then inserted with its instant phase. With `flush: 'post'`, the phase comes after
   // the insert.
   watch([isOpen, getPopupId], update);
-  // As in Base UI, a closed popup applies a new `timeoutMs` at once. A second run of `onOpen` ends
-  // the instant phase of an open popup, so this watcher calls only `onClose`.
+  // Restart the close timer without ending the instant phase of an open popup.
   watch(group.timeoutMs, () => {
     if (!isOpen()) {
       onClose(getPopupId());

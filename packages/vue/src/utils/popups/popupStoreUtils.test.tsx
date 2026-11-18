@@ -466,6 +466,41 @@ describe('useTriggerRegistration', () => {
       expect(registeredIds(store)).toEqual(['s1', 'inner', 'outer', 's2']);
     });
 
+    it('VUE-22: leaves the replacement trigger active when its predecessor is held', async () => {
+      const store = createTestPopupStore();
+      const first = document.createElement('button');
+      const second = document.createElement('button');
+      const shown = shallowRef(true);
+      const replaced = shallowRef(false);
+      const payload = shallowRef('first');
+      store.update({ open: true, mounted: true, activeTriggerId: 'trigger' });
+      const Branch = defineComponent(() => () => (
+        <TestForwardedTrigger id="trigger" store={store} element={first} payload={payload.value} />
+      ));
+      await render(() => (
+        <>
+          <KeepAlive>{shown.value ? <Branch /> : <Other />}</KeepAlive>
+          {replaced.value && (
+            <TestForwardedTrigger id="trigger" store={store} element={second} payload="second" />
+          )}
+        </>
+      ));
+
+      replaced.value = true;
+      await nextTick();
+      expect(store.context.triggerElements.getById('trigger')).toBe(second);
+
+      shown.value = false;
+      await nextTick();
+      expect(store.context.triggerElements.getById('trigger')).toBe(second);
+      payload.value = 'stale';
+      await nextTick();
+      shown.value = true;
+      await nextTick();
+      expect(store.state.activeTriggerElement).toBe(second);
+      expect(store.state.payload).toBe('second');
+    });
+
     it('follows the number of triggers of an open popup while KeepAlive deactivates them', async () => {
       const store = createTestPopupStore();
       const Branch = createBranch(store);

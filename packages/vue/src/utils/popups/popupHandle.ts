@@ -7,11 +7,16 @@ import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEvent
 import { REASONS } from '../../internals/reasons';
 import type { PopupTriggerMap } from './usePopupRoot';
 
-const triggerStores = new WeakMap<object, () => unknown>();
+let readingTrigger: object | undefined;
 
 export function readTriggerStore<Store>(handle: PopupHandleStoreProvider<Store>): Store {
-  const read = triggerStores.get(handle);
-  return read ? (read() as Store) : handle.store;
+  const previous = readingTrigger;
+  readingTrigger = handle;
+  try {
+    return handle.store;
+  } finally {
+    readingTrigger = previous;
+  }
 }
 
 /**
@@ -133,7 +138,6 @@ export class BasePopupHandle<
     // A consumer can put the handle in `ref()`, `reactive()`, `readonly()` or the `data` option. A
     // method that reads a private member throws a `TypeError` on a proxy of the handle.
     markRaw(this);
-    triggerStores.set(this, () => this.#attachedStoreRef.value ?? this.fallbackStore);
   }
 
   /**
@@ -161,7 +165,10 @@ export class BasePopupHandle<
    */
   get store(): HandleStore {
     const store = this.#attachedStoreRef.value ?? this.fallbackStore;
-    exposePopupBindings(store);
+    // A trigger reads the same getter as a consumer but takes its bindings directly from the root.
+    if (readingTrigger !== this) {
+      exposePopupBindings(store);
+    }
     return store;
   }
 

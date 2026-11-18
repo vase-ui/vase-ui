@@ -1032,6 +1032,24 @@ describe('BasePopupStore', () => {
       expect(store.state.open).toBe(true);
     });
 
+    it.each(['open', 'openProp'] as const)(
+      'keeps a synchronous write to %s during a write to another field',
+      (key) => {
+        const store = new TestPopupStore(() => {});
+        onTestFinished(
+          watch(
+            () => store.state.activeTriggerId,
+            () => store.set(key, true),
+            { flush: 'sync' },
+          ),
+        );
+
+        store.set('activeTriggerId', 'trigger');
+
+        expect(store.state[key]).toBe(true);
+      },
+    );
+
     it('adds no dependency to the render of a part when its ref callback sets a key', async () => {
       const store = new TestPopupStore(() => {});
       let renders = 0;

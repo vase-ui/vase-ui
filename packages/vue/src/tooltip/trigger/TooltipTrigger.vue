@@ -145,8 +145,7 @@ const delayGroup = useDelayGroup({
 function writeIsInstantPhase() {
   store.value.update({ isInstantPhase: delayGroup.isInstantPhase.value });
 }
-// A trigger that unmounts in its instant phase leaves the value `true` in the store. The write at
-// the mount of the next trigger ends that phase, as `useSyncedValue` of Base UI does.
+// A new trigger clears the instant phase left by a trigger that unmounted.
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 

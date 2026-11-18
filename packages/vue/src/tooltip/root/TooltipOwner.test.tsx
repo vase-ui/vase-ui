@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, nextTick, watch } from 'vue';
+import { defineComponent, nextTick, shallowRef, watch } from 'vue';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { createRenderer, fireEvent, screen } from '#test-utils';
 import { useTooltipRootContext } from './TooltipRootContext';
@@ -46,20 +46,21 @@ describe('Tooltip popup owner', () => {
   it('keeps a detached trigger closed when the parent refuses its request', async () => {
     const handle = Tooltip.createHandle();
     const change = vi.fn();
-    await render(
+    const open = shallowRef(false);
+    await render(() => (
       <>
         <Tooltip.Trigger handle={handle} id="refused">
           Trigger
         </Tooltip.Trigger>
-        <Tooltip.Root handle={handle} open={false} onOpenChange={change}>
+        <Tooltip.Root handle={handle} open={open.value} onOpenChange={change}>
           <Tooltip.Portal>
             <Tooltip.Positioner>
               <Tooltip.Popup>Hint</Tooltip.Popup>
             </Tooltip.Positioner>
           </Tooltip.Portal>
         </Tooltip.Root>
-      </>,
-    );
+      </>
+    ));
     handle.open('refused');
     await nextTick();
     expect(change).toHaveBeenCalledWith(
@@ -68,7 +69,48 @@ describe('Tooltip popup owner', () => {
     );
     expect(handle.isOpen).toBe(false);
     expect(screen.getByRole('button')).not.toHaveAttribute('data-popup-open');
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(screen.queryByText('Hint')).toBeNull();
+
+    open.value = true;
+    expect(await screen.findByText('Hint')).toBeInTheDocument();
+  });
+
+  it('registers a detached trigger with the store its handle supplies', async () => {
+    const rootHandle = Tooltip.createHandle();
+    class TriggerHandle extends Tooltip.Handle<unknown> {
+      override get store() {
+        return rootHandle.store;
+      }
+    }
+
+    const triggerHandle = new TriggerHandle();
+    await render(
+      <>
+        <Tooltip.Trigger handle={triggerHandle} id="detached">
+          Trigger
+        </Tooltip.Trigger>
+        <Tooltip.Root handle={rootHandle} />
+      </>,
+    );
+
+    rootHandle.open('detached');
+    await nextTick();
+    expect(screen.getByRole('button')).toHaveAttribute('data-popup-open');
+  });
+
+  it('mounts and removes the portal when a handle writes the mounted state', async () => {
+    const handle = Tooltip.createHandle();
+    await render(
+      <Tooltip.Root handle={handle}>
+        <Tooltip.Portal>Hint</Tooltip.Portal>
+      </Tooltip.Root>,
+    );
+
+    handle.store.set('mounted', true);
+    expect(await screen.findByText('Hint')).toBeInTheDocument();
+    handle.store.set('mounted', false);
+    await nextTick();
+    expect(screen.queryByText('Hint')).toBeNull();
   });
 
   it('exposes writable actions on the first public handle read', async () => {
@@ -87,7 +129,7 @@ describe('Tooltip popup owner', () => {
       );
       return () => null;
     });
-    const { user } = await render(
+    const { user, unmount } = await render(
       <>
         <Tooltip.Trigger handle={handle}>Trigger</Tooltip.Trigger>
         <Tooltip.Root handle={handle} trackCursorAxis="both">
@@ -107,10 +149,18 @@ describe('Tooltip popup owner', () => {
     expect(trigger).not.toHaveAttribute('data-popup-open');
     expect(trigger).toHaveFocus();
     expect(keys).toEqual([[]]);
-    expect(handle.store.select('triggerProps', true).onClick).toBeTypeOf('function');
-    handle.store.update({ activeTriggerProps: { onClick: click } });
+    const store = handle.store;
+    expect(store.select('triggerProps', true).onClick).toBeTypeOf('function');
+    expect(store.select('triggerProps', false).onClick).toBeTypeOf('function');
+    expect(store.select('popupProps').onKeydown).toBeTypeOf('function');
+    store.update({ activeTriggerProps: { onClick: click } });
     await nextTick();
     await fireEvent.click(trigger);
     expect(click).toHaveBeenCalledOnce();
+
+    unmount();
+    expect(store.state.activeTriggerProps).toEqual({});
+    expect(store.state.inactiveTriggerProps).toEqual({});
+    expect(store.state.popupProps).toEqual({});
   });
 });

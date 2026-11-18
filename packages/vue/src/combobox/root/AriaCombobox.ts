@@ -1,4 +1,3 @@
-import { selectors as comboboxSelectors, ComboboxStore, selectors } from '../store';
 import {
   computed,
   inject,
@@ -82,6 +81,7 @@ import { isScrollableY } from '../../utils/scrollable';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { findCollectionItem } from '../items/itemCollection';
 import type { ComboboxItemCollection, ItemCollection } from '../items/itemCollection';
+import { ComboboxStore, selectors } from '../store';
 import type { State as StoreState } from '../store';
 import {
   ComboboxDerivedItemsContext,
@@ -1574,7 +1574,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         inline.value,
         open.value,
         // The resolved popup of an inline list is the dialog around its positioner.
-        inline.value ? comboboxSelectors.positionerElement(store.state) : null,
+        inline.value ? selectors.positionerElement(store.state) : null,
         // Reruns the effect when the query changes without affecting the deps above, such as
         // clearing the input when no items are filtered out (individually rendered items).
         inputValue.value,
@@ -1780,7 +1780,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const listNavigation = useListNavigation(store.interactions, {
     enabled: () => !disabled.value,
-    activeItemId: () => comboboxSelectors.highlightedItemId(store.state),
+    activeItemId: () => selectors.highlightedItemId(store.state),
     listRef,
     activeIndex,
     selectedIndex,

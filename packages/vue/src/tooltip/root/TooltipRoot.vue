@@ -8,6 +8,10 @@ import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { PopupInteractionContext, ReferenceType } from '../../utils/popups/types';
 import { isMouseLikePointerType } from '../../utils/popups/event';
 
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import type { TooltipHandle } from '../store/TooltipHandle';
+
 function createVirtualElement(
   domElement: Element | null | undefined,
   data: {
@@ -252,10 +256,6 @@ export function useTooltipCursor(owner: MaybeRefOrGetter<CursorOwner>, props: Cu
     onMouseenter: handleReferenceEnterOrMove,
   };
 }
-
-import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
-import type { TooltipHandle } from '../store/TooltipHandle';
 
 export interface TooltipRootState {}
 

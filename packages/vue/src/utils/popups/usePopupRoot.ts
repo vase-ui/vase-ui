@@ -46,11 +46,18 @@ function getDevElementIds(map: PopupTriggerMap) {
   return elementIds;
 }
 
+// A registration must recognize its own element even while the public map hides it.
+export let registeredTrigger: (map: PopupTriggerMap, id: string | undefined) => Element | undefined;
+
 /** Held triggers keep their place in registration order until activation. */
 export class PopupTriggerMap {
   #idMap = new Map<string, Element>();
 
   #inactiveIds = new Set<string>();
+
+  static {
+    registeredTrigger = (map, id) => (id === undefined ? undefined : map.#idMap.get(id));
+  }
 
   /**
    * Hides the entry with the given ID from each reader while `active` is `false`. The entry keeps
@@ -211,7 +218,7 @@ export function dispatchOpenChange(
   context.events.emit('openchange', details);
 }
 
-/** Handles share frozen state on the server. Their trigger maps remain local to each handle. */
+/** An inert handle keeps its trigger map but ignores state writes. */
 export class NullStore<
   State extends object,
   Context = Record<string, never>,
@@ -624,11 +631,6 @@ export abstract class BasePopupStore<
     this.set('popupElementId', toRaw(this.state).popupElement?.id);
   });
 
-  /**
-   * Writes the state in two passes. The first pass writes each key except `open` and `openProp`.
-   * The second pass writes those two keys. A sync watcher of the open state then reads the trigger
-   * and the reason of the change that it reports.
-   */
   override setState(newState: Readonly<State>): void {
     const current = toRaw(this.state);
     // A request or an `open` prop that opens the popup starts a new open session. An open request
@@ -642,10 +644,9 @@ export abstract class BasePopupStore<
       next = { ...next, popupElementId: this.#observePopupId(next.popupElement) };
     }
 
-    super.setState({ ...next, open: current.open, openProp: current.openProp });
-    // A sync watcher can write the store in the first pass. This pass starts from the state of now,
-    // so that it keeps that write.
-    super.setState({ ...toRaw(this.state), open: next.open, openProp: next.openProp });
+    // An open watcher needs the new trigger and reason. Snapshot all changed keys before the first write.
+    const { open, openProp, ...fields } = next;
+    super.setState({ ...fields, open, openProp } as Readonly<State>);
   }
 
   /**
@@ -1213,7 +1214,7 @@ function usePopupRootTransitions(
     close: () => store.setOpen(false, createChangeEventDetails(REASONS.imperativeAction)),
   };
 
-  return { mounted, transitionStatus, actions };
+  return { mounted: computed(() => store.state.mounted), transitionStatus, actions };
 }
 
 /**
