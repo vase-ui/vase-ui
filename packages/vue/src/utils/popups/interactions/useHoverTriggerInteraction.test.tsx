@@ -713,6 +713,28 @@ describe('useHoverTriggerInteraction', () => {
       expect(calls).toEqual([]);
     });
 
+    it('keeps a pending open when a disabled trigger moves to the same store', async () => {
+      const enabled = shallowRef(true);
+      const moved = shallowRef(false);
+      const opened = vi.fn();
+      const App = defineComponent(() => {
+        const first = useFloating().context.rootStore;
+        const second = useFloating({ onOpenChange: opened }).context.rootStore;
+        useHoverTriggerInteraction(() => (moved.value ? second : first), { enabled });
+        const hover = useHoverTriggerInteraction(second, { delay: 500 });
+        return () => <button {...hover}>Other trigger</button>;
+      });
+      await render(<App />);
+      await enter(screen.getByRole('button'));
+      expect(opened).not.toHaveBeenCalled();
+
+      enabled.value = false;
+      moved.value = true;
+      await flushMicrotasks();
+      await tick(500);
+      expect(opened).toHaveBeenCalledOnce();
+    });
+
     it.each([
       { name: 'with move', move: true },
       { name: 'without move', move: false },

@@ -108,9 +108,11 @@ export function useHoverTriggerInteraction(
   onMounted(applyHandleCloseOptions);
   watch([intent, isActiveTrigger, handleClose], applyHandleCloseOptions);
 
-  function stop(current: HoverIntent) {
-    current.cancelPendingOpen();
-    current.stopSafePolygon();
+  // A disable or a hold can precede the watcher that takes the next store's intent.
+  let ownedIntent: HoverIntent | undefined;
+  function stop(current = ownedIntent) {
+    current?.cancelPendingOpen();
+    current?.stopSafePolygon();
   }
 
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no
@@ -119,7 +121,11 @@ export function useHoverTriggerInteraction(
     watch(
       intent,
       (current, _previous, onCleanup) => {
-        onCleanup(() => stop(current));
+        ownedIntent = current;
+        onCleanup(() => {
+          stop(current);
+          ownedIntent = undefined;
+        });
       },
       { immediate: true },
     );
@@ -127,7 +133,7 @@ export function useHoverTriggerInteraction(
 
   watch(enabled, (isEnabled) => {
     if (!isEnabled) {
-      stop(intent.value);
+      stop();
     }
   });
 
@@ -138,7 +144,7 @@ export function useHoverTriggerInteraction(
     isHeld,
     (held) => {
       if (held) {
-        stop(intent.value);
+        stop();
         const current = toValue(store);
         if (
           current.select('open') &&
