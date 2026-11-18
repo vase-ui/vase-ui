@@ -33,7 +33,7 @@ export interface ScrollAreaRootContext {
   handlePointerMove(event: PointerEvent): void;
   handlePointerUp(event: PointerEvent): void;
   handleScroll(scrollPosition: Coords): void;
-  press: Readonly<Ref<{ viewport: HTMLElement } | null>>;
+  press: Readonly<ShallowRef<{ viewport: HTMLElement } | null>>;
   rootId: ComputedRef<string>;
   hiddenState: Readonly<Ref<HiddenState>>;
   setHiddenState(hiddenState: HiddenState): void;

@@ -117,7 +117,7 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, watch, watchPostEffect } from 'vue';
+import { computed, onMounted, provide, watch } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
@@ -443,20 +443,23 @@ function viewportProps() {
   return { ...base, style: { ...otherStyles, scrollSnapType: value } };
 }
 
-// A press can start and end before Vue patches the viewport. Read the press itself so its
-// release runs even when the rendered Boolean stays false.
-watchPostEffect(() => {
-  if (press.value?.viewport === element.value || !savedSnap?.inline) {
-    return;
-  }
-  const { value, priority } = savedSnap.inline;
-  if ((priority ? `${value} !important` : value) === (declaredSnap ?? '')) {
-    savedSnap = undefined;
-  } else {
-    // After the release patch, a script can change its inline declaration again.
-    savedSnap.inline = null;
-  }
-});
+// The shallow ref reports a press that starts and ends before the same patch.
+watch(
+  press,
+  (active) => {
+    if (active?.viewport === element.value || !savedSnap?.inline) {
+      return;
+    }
+    const { value, priority } = savedSnap.inline;
+    if ((priority ? `${value} !important` : value) === (declaredSnap ?? '')) {
+      savedSnap = undefined;
+    } else {
+      // After the release patch, a script can change its inline declaration again.
+      savedSnap.inline = null;
+    }
+  },
+  { flush: 'post' },
+);
 
 watch(
   element,
