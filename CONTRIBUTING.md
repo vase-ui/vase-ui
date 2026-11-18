@@ -126,7 +126,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - A ported file keeps the "Modified" or `@see` comment of its upstream file.
 - A ported file also keeps the "License:" comment of its upstream file. `THIRD_PARTY_NOTICES.md` has an entry for each project that such a comment names, with the copyright notice and the license of that project.
 
-Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm parity:check` refuses a file that lacks one:
+Each family has a file `parity/families/<family>.json`. `pnpm parity:check` requires the six keys in this table.
 
 | Key | Content |
 | --- | --- |
@@ -137,6 +137,7 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 | `returnTypeDifferences` | The functions that return a different type from the type that Base UI documents, each with the Vase UI type and the reason. |
 | `notApplicableCommits` | The Base UI commits that touch these paths and do not apply to Vue, each with its reason. |
 
+- For each file that moves, add one row to the owning family's optional `relocations` list. Give its exact `upstream` path, `relation` (`merged-into`, `inlined-into` or `moved-test`), `destination`, retained `member` or `behavior`, and `witness` test path. For a split, list the other `destination` and `member` pairs in `additional`.
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A row can name one change reason instead: `{ "entry": "Root", "changeEventReason": "none", "reason": "…" }`. It accepts a reason that the `ChangeEventReason` type of the part has and Base UI lacks. `pnpm parity:check` reports the row as stale when Base UI has that reason, or when the type does not have it.
@@ -185,8 +186,8 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 | `packages/utils/src`          | `packages/vue/src/common`   |
 | `packages/react/test`         | `packages/vue/test`         |
 
-- Use the upstream folder, file and part names with the Vase UI form of the library name.
-- The counterpart of an upstream file is the file at the mapped path. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
+- Use the Vase UI form of upstream names for parts and for folders and files at the default path.
+- A file's mapped paths come from its relocation row or, by default, from the table above. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
 - The counterpart of an upstream folder is the folder at the mapped path.
 - `pnpm parity:check` maps `useBaseUiId.ts` to `useVaseUiId.ts` and `createBaseUIEventDetails.ts` to `createVaseUIEventDetails.ts`. The rule also applies to paths under `docs/demos`.
 - The vocabulary is that of upstream's `GLOSSARY.md`: Popup, Root, Trigger, Anchor, Positioner.
