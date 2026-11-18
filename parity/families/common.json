@@ -268,5 +268,14 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "useEnhancedClickHandler",
+      "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+    }
+  ]
 }

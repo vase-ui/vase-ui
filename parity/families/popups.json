@@ -39,5 +39,62 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/utils/popups/popupRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
+      "member": "usePopupRoot",
+      "witness": "packages/vue/src/utils/popups/popupRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
+      "member": "BasePopupStore",
+      "witness": "packages/vue/src/utils/popups/store.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupTriggerMap.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
+      "member": "PopupTriggerMap",
+      "witness": "packages/vue/src/utils/popups/popupTriggerMap.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/NullStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
+      "member": "NullStore",
+      "witness": "packages/vue/src/utils/popups/ReactiveStore.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/dispatchOpenChange.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
+      "member": "dispatchOpenChange",
+      "witness": "packages/vue/src/utils/popups/floating-root/FloatingRootStore.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "usePopupTrigger",
+      "witness": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "additional": [
+        {
+          "destination": "packages/vue/src/utils/popups/popupBindings.ts",
+          "member": "bindPopupParts"
+        }
+      ]
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/usePopupHandleStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "usePopupHandleStore",
+      "witness": "packages/vue/src/utils/popups/usePopupHandleStore.test.tsx"
+    }
+  ]
 }

@@ -52,5 +52,42 @@
       "reason": "`Tooltip.Handle` is the class `TooltipHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/tooltip/portal/TooltipPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "TooltipPortalContext",
+      "witness": "packages/vue/src/tooltip/portal/TooltipPortal.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "TooltipPositionerContext",
+      "witness": "packages/vue/src/tooltip/positioner/TooltipPositioner.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/tooltip/provider/TooltipProviderContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "TooltipProviderContext",
+      "witness": "packages/vue/src/tooltip/provider/TooltipProvider.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/tooltip/store/TooltipStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "TooltipStore",
+      "witness": "packages/vue/src/tooltip/root/TooltipOwner.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/tooltip/utils/constants.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "OPEN_DELAY",
+      "witness": "packages/vue/src/tooltip/trigger/TooltipTrigger.test.tsx"
+    }
+  ]
 }
