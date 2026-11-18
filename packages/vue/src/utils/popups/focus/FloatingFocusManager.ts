@@ -103,9 +103,10 @@ export interface FloatingFocusManagerProps {
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus. When the element is in the closed floating element of a disabled
-   * focus manager above, the return element of that focus manager replaces it, because that focus
-   * manager returns no focus at its unmount. The same rule applies to the new element.
+   * it, cannot take the focus. The return also skips elements in this popup when it closes and
+   * elements in closed popups below it. When the element is in the closed floating element of a
+   * disabled focus manager above, the return element of that focus manager replaces it, because
+   * that focus manager returns no focus at its unmount. The same rule applies to the new element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -277,20 +278,22 @@ function addPreviouslyFocusedElement(element: Element | null | undefined) {
   }
 }
 
-function getPreviouslyFocusedElement(skipHidden?: boolean) {
+function getPreviouslyFocusedElement(skip?: (element: Element) => boolean) {
   clearDisconnectedPreviouslyFocusedElements();
   for (let i = previouslyFocusedElements.length - 1; i >= 0; i -= 1) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
     const element = previouslyFocusedElements[i]!.deref();
-    // The marker skips elements outside an open popup, such as behind a modal.
-    if (!skipHidden || !closest(element, `[hidden],[${createAttribute('inert')}]`)) {
+    if (element && !skip?.(element)) {
       return element;
     }
   }
   return undefined;
 }
 
-function getFirstTabbableElement(container: Element | null) {
+function getFirstTabbableElement(
+  container: Element | null | undefined,
+  isInClosedPopup: (element: Element) => boolean,
+) {
   if (!container) {
     return null;
   }
@@ -299,23 +302,25 @@ function getFirstTabbableElement(container: Element | null) {
     return container;
   }
 
-  return tabbable(container)[0] ?? container;
+  return tabbable(container).find((element) => !isInClosedPopup(element)) ?? container;
 }
 
-// The first candidate that can take the focus. A candidate that is not in the document, or that is
-// hidden, can't take it. A hidden element is, for example, an item in a closed Select or in a
-// `keepMounted` Menu. `skippedHidden` tells the caller that the search passed such an element.
-function findReturnElement(candidates: (Element | null | undefined)[]) {
-  let skippedHidden = false;
+// A detached element, a hidden element, or an element in a closed popup cannot take the focus.
+// A substitute for a connected target must respect a focus change in the same update.
+function findReturnElement(
+  candidates: (Element | null | undefined)[],
+  isInClosedPopup: (element: Element) => boolean,
+) {
+  let skippedConnected = false;
   for (const candidate of candidates) {
     if (candidate?.isConnected) {
-      if (!closest(candidate, '[hidden]')) {
-        return { element: candidate, skippedHidden };
+      if (!closest(candidate, '[hidden]') && !isInClosedPopup(candidate)) {
+        return { element: candidate, skippedConnected };
       }
-      skippedHidden = true;
+      skippedConnected = true;
     }
   }
-  return { element: null, skippedHidden };
+  return { element: null, skippedConnected };
 }
 
 function handleTabIndex(floatingFocusElement: HTMLElement) {
@@ -744,23 +749,30 @@ export function useFloatingFocusManager(
       recordedBeforeOpen && getNodeName(recordedBeforeOpen) !== 'body' ? recordedBeforeOpen : null;
     const referenceElement = targets ? targets.domReference?.deref() : domReference.value;
     const preferPreviousFocus = targets?.preferPreviousFocus ?? false;
-    const { element, skippedHidden } = findReturnElement([
-      value === true ? null : value,
-      ...(preferPreviousFocus
-        ? [previousElement, referenceElement]
-        : [referenceElement, previousElement]),
-      parentFocusManager?.getPopupElement(),
-    ]);
+    const { element, skippedConnected } = findReturnElement(
+      [
+        value === true ? null : value,
+        ...(preferPreviousFocus
+          ? [previousElement, referenceElement]
+          : [referenceElement, previousElement]),
+        parentFocusManager?.getPopupElement(),
+      ],
+      isInClosedPopup,
+    );
 
-    // Use the next element instead of a hidden one, unless the closing update already moved the
-    // focus (e.g. `autofocus`).
-    if (skippedHidden && ![activeEl, doc.body].includes(activeElement(doc))) {
+    if (skippedConnected && ![activeEl, doc.body].includes(activeElement(doc))) {
       return null;
     }
 
-    // `element` if it is tabbable, otherwise its first tabbable child, otherwise `element`
-    // itself (which may not be tabbable at all).
-    return getFirstTabbableElement(element ?? getPreviouslyFocusedElement(true) ?? null);
+    // The marker skips elements outside an open popup, such as behind a modal.
+    const target =
+      element ??
+      getPreviouslyFocusedElement(
+        (previous) =>
+          isInClosedPopup(previous) ||
+          closest(previous, `[hidden],[${createAttribute('inert')}]`) !== null,
+      );
+    return getFirstTabbableElement(target, isInClosedPopup);
   }
 
   // An open with a disabled focus manager records no targets, so it clears the record of an earlier

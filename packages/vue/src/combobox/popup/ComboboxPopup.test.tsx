@@ -364,15 +364,28 @@ describe('<Combobox.Popup />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const open = shallowRef(false);
       const onOpenChangeComplete = vi.fn();
+      // The trigger can read typeahead labels from items after the list unmounts.
+      const items = ['one'];
+      let focusAtExitStart: Element | null = null;
       await render(() => (
         <div>
           <style>{POPUP_EXIT_CSS}</style>
           <button>Before</button>
-          <Combobox.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Combobox.Root
+            items={items}
+            open={open.value}
+            onOpenChangeComplete={onOpenChangeComplete}
+          >
             <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
             <Combobox.Portal>
               <Combobox.Positioner>
-                <Combobox.Popup class="popup" data-testid="popup">
+                <Combobox.Popup
+                  class="popup"
+                  data-testid="popup"
+                  onAnimationstart={() => {
+                    focusAtExitStart = document.activeElement;
+                  }}
+                >
                   <Combobox.Input />
                   <FocusAtMount data-testid="field" />
                   <Combobox.List>
@@ -391,14 +404,6 @@ describe('<Combobox.Popup />', () => {
       expect(screen.getByTestId('field')).toHaveFocus();
 
       const popup = screen.getByTestId('popup');
-      let focusAtExitStart: Element | null = null;
-      popup.addEventListener(
-        'animationstart',
-        () => {
-          focusAtExitStart = document.activeElement;
-        },
-        { once: true },
-      );
       await nextEvent(popup, 'animationstart', {
         action: () => {
           open.value = false;
