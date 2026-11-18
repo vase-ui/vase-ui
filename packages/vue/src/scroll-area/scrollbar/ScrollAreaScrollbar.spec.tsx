@@ -11,7 +11,6 @@ export const props: ScrollArea.Scrollbar.Props = {
   as: 'section',
   orientation: 'horizontal',
   keepMounted: true,
-  stateClass: (state) => (state.hovering ? 'hovered' : ''),
 } satisfies ScrollAreaScrollbarProps;
 export const state: ScrollArea.Scrollbar.State = {
   scrolling: false,
@@ -39,7 +38,9 @@ export const nativeAttributes = (
 export const renderSlot = (
   <ScrollArea.Scrollbar
     v-slots={{
-      render: ({ props }: { props: HTMLProps }) => <div {...props} />,
+      render: ({ props, state }: { props: HTMLProps; state: ScrollArea.Scrollbar.State }) => (
+        <div {...props} class={{ hovered: state.hovering }} />
+      ),
     }}
   />
 );

@@ -104,7 +104,7 @@ A part sets data attributes for its state, such as `data-disabled` on Button and
 
 A selector can use these attributes, as the two examples above do.
 
-The `stateClass` and `stateStyle` props give a class or a style that depends on the state.
+To calculate a class or style from state, bind `:class` or `:style` on your element in the `#render` slot.
 
 The [styling guide](/handbook/styling) has more on styling.
 

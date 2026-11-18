@@ -6,7 +6,7 @@ import { Switch } from '@vase-ui/vue/switch';
   <Switch.Root>
     <Switch.Thumb>
       <template #render="{ props, state }">
-        <span v-bind="props">
+        <span v-bind="props" :ref="props.ref">
           <template v-if="state.checked">On</template>
           <template v-else>Off</template>
         </span>

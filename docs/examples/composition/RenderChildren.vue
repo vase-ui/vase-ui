@@ -8,7 +8,7 @@ import { Slider } from '@vase-ui/vue/slider';
       <Slider.Track>
         <Slider.Thumb aria-label="Volume">
           <template #render="{ props, children }">
-            <span v-bind="props"><component :is="children" /></span>
+            <span v-bind="props" :ref="props.ref"><component :is="children" /></span>
           </template>
         </Slider.Thumb>
       </Slider.Track>

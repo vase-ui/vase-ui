@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Combobox } from '@vase-ui/vue/combobox';
 
-// A compiled template, as in an app. `stateClass` runs in each render of its part.
 defineProps<{
   items: string[];
   sideOffset: number;
-  onPositionerRender: () => undefined;
-  onPopupRender: () => undefined;
-  onListRender: () => undefined;
-  onItemRender: () => undefined;
+  onPositionerRender: () => void;
+  onPopupRender: () => void;
+  onListRender: () => void;
+  onItemRender: () => void;
 }>();
 </script>
 
@@ -19,12 +18,18 @@ defineProps<{
       <Combobox.Positioner
         data-testid="positioner"
         :side-offset="sideOffset"
-        :state-class="onPositionerRender"
+        @vue:mounted="onPositionerRender"
+        @vue:updated="onPositionerRender"
       >
-        <Combobox.Popup :state-class="onPopupRender">
-          <Combobox.List :state-class="onListRender">
+        <Combobox.Popup @vue:mounted="onPopupRender" @vue:updated="onPopupRender">
+          <Combobox.List @vue:mounted="onListRender" @vue:updated="onListRender">
             <template #item="{ item }">
-              <Combobox.Item :key="item" :value="item" :state-class="onItemRender">
+              <Combobox.Item
+                :key="item"
+                :value="item"
+                @vue:mounted="onItemRender"
+                @vue:updated="onItemRender"
+              >
                 {{ item }}
               </Combobox.Item>
             </template>

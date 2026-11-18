@@ -30,7 +30,7 @@ export interface UseFloatingPortalNodeProps {
    */
   container: MaybeRefOrGetter<MaybeRefOrGetter<FloatingPortalContainer>>;
   /**
-   * The props of the part. The composable reads `as`, `stateClass` and `stateStyle`.
+   * The props of the part. The composable reads `as`.
    */
   componentProps: UseRenderElementComponentProps<any>;
   /**
@@ -66,8 +66,7 @@ function resolveContainer(
   parentPortalNode: Readonly<Ref<HTMLElement | null>> | undefined,
 ): HTMLElement | ShadowRoot | null {
   const prop = toValue(container);
-  // A `null` prop waits for the consumer to give the container. A ref or a getter that gives
-  // `null` uses the fallback, as an empty ref object of Base UI does.
+  // A null prop delays the portal. A ref or getter that gives null uses the fallback container.
   if (prop === null) {
     return null;
   }
@@ -80,7 +79,6 @@ function resolveContainer(
 /**
  * Makes the portal element of a portal and finds its container. The part renders one `Teleport`
  * to `containerElement`, unless `inPlace` is true. In place, the portal element is the root node.
- * Base UI makes two `createPortal` calls for this.
  *
  * With the `#render` slot, the child of the `Teleport` is the fragment of the slot. Vue then warns
  * that it cannot animate the part with the `<Transition>` of a consumer. When the slot renders one
@@ -95,13 +93,8 @@ export function useFloatingPortalNode(
 
   const mounted = useIsHydrated();
   const containerElement = shallowRef<HTMLElement | ShadowRoot | null>(null);
-  // The getter reads nothing before the mount, because a server has no DOM and a getter of the
-  // consumer can read the DOM. An ancestor or a later sibling can fill a ref container in the flush
-  // of the mount. The ref has its element when this `watch` runs.
-  // Base UI retries the check of a ref that is empty at first, and this portal needs no retry.
-  // Updates in the flush of the mount can replace the container. The `onMounted` hooks of the
-  // children then run in the first container, which is out of the document. Base UI mounts the
-  // children one time, in the new container.
+  // A container getter can read the DOM. Wait for mount before calling it.
+  // A parent or sibling can set the container ref during the patch, so resolve it after the patch.
   watch(
     () =>
       mounted.value && !toValue(params.inPlace)

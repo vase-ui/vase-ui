@@ -105,28 +105,44 @@ export const wrongHourCycle = <TimeClock.Root hourCycle={36} />;
 // @ts-expect-error the view is an hour, a minute or a second
 export const wrongView = <TimeClock.Root view="day" />;
 
-// The parts have the props of their element, and `as`, `stateClass` and `stateStyle`.
+// The parts accept native attributes and give their state to the slots.
 export const face = (
   <TimeClock.Face
     as="section"
     lang="fr"
-    stateClass={(state) => (state.dragging ? 'dragging' : '')}
+    v-slots={
+      {
+        default: ({ state }) => <span class={{ dragging: state.dragging }} />,
+      } satisfies Pick<InstanceType<typeof TimeClock.Face>['$slots'], 'default'>
+    }
     onKeydown={(event) => event.preventVaseUIHandler()}
   />
 );
 export const hand = (
   <TimeClock.Hand
-    stateClass={(state: TimeClockHandState) => {
-      expectType<boolean, typeof state.inner>(state.inner);
-      expectType<boolean, typeof state.betweenNumbers>(state.betweenNumbers);
-      return '';
-    }}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockHandState, typeof state>(state);
+          expectType<boolean, typeof state.inner>(state.inner);
+          expectType<boolean, typeof state.betweenNumbers>(state.betweenNumbers);
+          return <div {...props} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.Hand>['$slots'], 'render'>
+    }
   />
 );
 export const number = (
   <TimeClock.Number
     number={{ value: 3, inner: false } satisfies TimeClockFaceNumber}
-    stateClass={(state: TimeClockNumberState) => (state.selected ? 'selected' : '')}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockNumberState, typeof state>(state);
+          return <div {...props} class={{ selected: state.selected }} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.Number>['$slots'], 'render'>
+    }
   />
 );
 export const dayPeriod = (
@@ -135,7 +151,14 @@ export const dayPeriod = (
 export const viewTrigger = (
   <TimeClock.ViewTrigger
     view="minute"
-    stateClass={(state: TimeClockViewTriggerState) => (state.active ? 'active' : '')}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockViewTriggerState, typeof state>(state);
+          return <button {...props} class={{ active: state.active }} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.ViewTrigger>['$slots'], 'render'>
+    }
   />
 );
 export const dayPeriodProps: TimeClockDayPeriodProps = { value: 'am' };

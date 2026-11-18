@@ -5,7 +5,6 @@ import { expectType } from '#test-utils';
 
 export const props: ScrollArea.Content.Props = {
   as: 'section',
-  stateClass: (state) => (state.hasOverflowY ? 'scrolls' : ''),
 } satisfies ScrollAreaContentProps;
 export const state: ScrollArea.Content.State = {
   scrolling: false,
@@ -26,7 +25,9 @@ export const nativeAttributes = (
 export const renderSlot = (
   <ScrollArea.Content
     v-slots={{
-      render: ({ props }: { props: HTMLProps }) => <div {...props} />,
+      render: ({ props, state }: { props: HTMLProps; state: ScrollArea.Content.State }) => (
+        <div {...props} class={{ scrolls: state.hasOverflowY }} />
+      ),
     }}
   />
 );

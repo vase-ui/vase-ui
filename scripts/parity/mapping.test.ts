@@ -91,9 +91,9 @@ const rules: {
     },
   },
   {
-    name: 'className and style need the props stateClass and stateStyle with no default',
+    name: 'className and style map to native attributes',
     part: makePart([row('className'), row('style')]),
-    expected: { props: ['stateClass<-className', 'stateStyle<-style'] },
+    expected: { props: [] },
   },
   {
     name: 'x with defaultX is controlled, and defaultX keeps its default',

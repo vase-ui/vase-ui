@@ -17,7 +17,7 @@ defineProps<{
     | 'lengthMixed'
     | 'nested'
     | 'removedLast'
-    | 'stateFunctions'
+    | 'slotStyles'
     | 'stored'
     | 'style'
     | 'vertical';
@@ -156,24 +156,31 @@ const WrappedPanel = defineComponent({
     </Resizable.Handle>
     <Resizable.Panel id="c" data-testid="c" collapsible :min-size="20" :default-size="0" />
   </Resizable.Root>
-  <Resizable.Root v-else-if="composition === 'stateFunctions'" data-testid="root">
-    <Resizable.Panel
-      id="a"
-      data-testid="a"
-      collapsible
-      :min-size="20"
-      :default-size="0"
-      :state-class="(state) => (state.collapsed ? 'collapsed' : 'expanded')"
-    >
+  <Resizable.Root v-else-if="composition === 'slotStyles'" data-testid="root">
+    <Resizable.Panel id="a" data-testid="a" collapsible :min-size="20" :default-size="0">
+      <template #render="{ props, state }">
+        <div v-bind="props" :ref="props.ref" :class="state.collapsed ? 'collapsed' : 'expanded'">
+          {{ state.collapsed ? 'Closed' : 'Open' }}
+        </div>
+      </template>
+    </Resizable.Panel>
+    <Resizable.Handle data-testid="handle-a" aria-label="First">
+      <template #render="{ props, state, children }">
+        <div
+          v-bind="props"
+          :ref="props.ref"
+          :class="state.atMin ? 'at-min' : 'free'"
+          :style="{ opacity: state.atMin ? 0.5 : 1 }"
+        >
+          <component :is="children" />
+        </div>
+      </template>
+    </Resizable.Handle>
+    <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Handle aria-label="Second" />
+    <Resizable.Panel id="c" data-testid="c" collapsible :min-size="20" :default-size="0">
       <template #default="{ state }">{{ state.collapsed ? 'Closed' : 'Open' }}</template>
     </Resizable.Panel>
-    <Resizable.Handle
-      data-testid="handle-a"
-      aria-label="First"
-      :state-class="(state) => (state.atMin ? 'at-min' : 'free')"
-      :state-style="(state) => ({ opacity: state.atMin ? 0.5 : 1 })"
-    />
-    <Resizable.Panel id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'vertical'" data-testid="root" orientation="vertical">
     <Resizable.Panel id="a" data-testid="a" :default-size="40" />

@@ -57,7 +57,6 @@ provide(
   computed(() => props.keepMounted),
 );
 
-// As in Base UI, this part renders `FloatingPortal` and makes no element of its own.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
 // makes the slots of the portal dynamic. Each part below the portal that has slot content then
 // renders again with its parent.
@@ -71,7 +70,7 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -80,7 +79,7 @@ defineExpose({ element });
   <FloatingPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
   >
     <slot :state="state" />
   </FloatingPortal>

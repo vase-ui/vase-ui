@@ -30,9 +30,9 @@ See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that 
 
 The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.
 
-The sample gives a function with a typed `state` parameter to `stateClass`. It also uses the same state in the `#render` slot.
+The render slot passes its state to a typed function that selects the class of the positioner.
 
-<<< ../examples/typescript/PositionerState.vue{4-6,13,17-20}
+<<< ../examples/typescript/PositionerState.vue{4-6,14-15,17-20}
 
 ### Events
 
@@ -53,7 +53,7 @@ A part or a utility can also export other types. The list below is not complete.
   <<< ../examples/typescript/Actions.vue{5-10,15}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `Toast.Root.ToastObject` gives access to this interface.
-- A part that renders an element has the props `as`, `stateClass` and `stateStyle`. `useRender.ComponentProps` gives a component that you build the same props. See [useRender](/utils/use-render#typescript).
+- A part that renders an element accepts `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).
 
 ## Generic components
 

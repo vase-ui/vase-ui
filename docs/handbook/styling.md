@@ -17,11 +17,9 @@ A part that renders an HTML element accepts a `class` attribute. Use it to style
 
 <<< ../examples/styling/ClassAttribute.vue{7}
 
-A part also accepts a `stateClass` prop. It is a function that gets the state of the part and returns a class.
+The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
 
-<<< ../examples/styling/StateClass.vue{7}
-
-The element gets the classes in this order: `class`, the result of `stateClass`, then the class of the part. Vue removes a function that you give to `class`, so use `stateClass` for a class that depends on the state.
+<<< ../examples/styling/SlotClass.vue{8-9}
 
 ### Data attributes
 
@@ -45,17 +43,18 @@ A part exposes CSS variables to help you style it. They often hold dynamic numer
 
 See the API reference of each component for a complete list of its data attributes and CSS variables.
 
-### Style prop
+### Inline styles
 
 A part that renders an HTML element accepts a `style` attribute. Use it to style the element with an object of CSS properties.
 
 <<< ../examples/styling/StyleAttribute.vue{7}
 
-A part also accepts a `stateStyle` prop. It is a function that gets the state of the part and returns a style.
+For a style that depends on state, bind `:style` on the element in the render slot.
 
-<<< ../examples/styling/StateStyle.vue{7}
+<<< ../examples/styling/SlotStyle.vue{8-9}
 
-For one property, `stateStyle` wins over `style`, and `style` wins over the style of the part.
+If the part controls the same property, put your style before `v-bind="props"` to give the part priority.
+For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.
 
 ## Scoped styles
 

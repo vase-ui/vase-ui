@@ -1,3 +1,4 @@
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { describe, expect, it } from 'vitest';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { createRenderer, describeConformance, screen } from '#test-utils';
@@ -51,12 +52,18 @@ describe('<TimeField.Literal />', () => {
     expect(zone).not.toHaveAttribute('aria-hidden');
   });
 
-  it('gives its state to stateClass', async () => {
+  it('gives its segment type to the render slot', async () => {
     await render(
       <TimeField.Root>
         <TimeField.Literal
           data-testid="literal"
-          stateClass={(state) => `is-${state.type}`}
+          v-slots={{
+            render: ({ props, state }: { props: HTMLProps; state: TimeField.Literal.State }) => (
+              <span {...props} class={`is-${state.type}`}>
+                :
+              </span>
+            ),
+          }}
           segment={{ type: 'literal', index: 1, editable: false, text: ':' }}
         />
       </TimeField.Root>,

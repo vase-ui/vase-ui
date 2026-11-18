@@ -70,8 +70,6 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, FloatingPortal),
       as,
-      stateClass,
-      stateStyle,
       container,
       portalOwnerRole,
     }"
@@ -86,8 +84,6 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, FloatingPortal),
       as,
-      stateClass,
-      stateStyle,
       container,
       portalOwnerRole,
     }"

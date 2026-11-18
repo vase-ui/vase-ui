@@ -1,3 +1,4 @@
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   createApp,
@@ -1239,14 +1240,18 @@ describe('<ScrollArea.Root />', () => {
     it.each([
       { name: 'style, thumb drag', source: 'style', gesture: 'thumb drag' },
       { name: 'style, track press', source: 'style', gesture: 'track press' },
-      { name: 'stateStyle, thumb drag', source: 'stateStyle', gesture: 'thumb drag' },
-      { name: 'stateStyle, track press', source: 'stateStyle', gesture: 'track press' },
+      { name: 'slot style, thumb drag', source: 'slot style', gesture: 'thumb drag' },
+      { name: 'slot style, track press', source: 'slot style', gesture: 'track press' },
       { name: 'style sheet, thumb drag', source: 'style sheet', gesture: 'thumb drag' },
       { name: 'style sheet, track press', source: 'style sheet', gesture: 'track press' },
       { name: 'script write, thumb drag', source: 'script write', gesture: 'thumb drag' },
       { name: 'script write, track press', source: 'script write', gesture: 'track press' },
     ])('restores the scroll snap that the consumer wrote: $name', async ({ source, gesture }) => {
       const renderCount = shallowRef(0);
+      const items = () =>
+        Array.from({ length: 5 }, (_, index) => (
+          <div key={index} style={{ height: '200px', scrollSnapAlign: 'start' }} />
+        ));
       const App = defineComponent(() => () => (
         <>
           <style>{'.snap-viewport { scroll-snap-type: y mandatory; }'}</style>
@@ -1260,12 +1265,18 @@ describe('<ScrollArea.Root />', () => {
                 height: '100%',
                 ...(source === 'style' ? snap : undefined),
               }}
-              stateStyle={source === 'stateStyle' ? () => snap : undefined}
-            >
-              {Array.from({ length: 5 }, (_, index) => (
-                <div key={index} style={{ height: '200px', scrollSnapAlign: 'start' }} />
-              ))}
-            </ScrollArea.Viewport>
+              v-slots={
+                source === 'slot style'
+                  ? {
+                      render: ({ props }: { props: HTMLProps }) => (
+                        <div style={snap} {...props}>
+                          {items()}
+                        </div>
+                      ),
+                    }
+                  : { default: items }
+              }
+            />
             <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted style={{ width: '10px' }}>
               <ScrollArea.Thumb data-testid="thumb" />
             </ScrollArea.Scrollbar>

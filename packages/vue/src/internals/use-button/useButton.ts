@@ -91,9 +91,6 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
   }
 
   function getButtonProps(externalProps: Record<string, any> = {}): Record<string, any> {
-    const disabled = isDisabled();
-    const isNativeButton = isNative();
-    const isCompositeItem = isComposite();
     const {
       onClick: externalOnClick,
       onMousedown: externalOnMousedown,
@@ -107,19 +104,19 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
       {
         onClick(event: MouseEvent) {
           // An element with `aria-disabled` and no `disabled` attribute still gets this event.
-          if (disabled) {
+          if (isDisabled()) {
             event.preventDefault();
             return;
           }
           callHandler(externalOnClick, event);
         },
         onMousedown(event: MouseEvent) {
-          if (!disabled) {
+          if (!isDisabled()) {
             callHandler(externalOnMousedown, event);
           }
         },
         onKeydown(event: VaseUIEvent<KeyboardEvent>) {
-          if (disabled) {
+          if (isDisabled()) {
             return;
           }
 
@@ -132,6 +129,7 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
           const isCurrentTarget = event.target === event.currentTarget;
           const currentTarget = event.currentTarget as Element;
           const isButton = isButtonElement(currentTarget);
+          const isNativeButton = isNative();
           const isLink = !isNativeButton && isValidLinkElement(currentTarget);
           const shouldClick = isCurrentTarget && (isNativeButton ? isButton : !isLink);
           const isEnterKey = event.key === 'Enter';
@@ -140,7 +138,7 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
           const isTextNavigationRole =
             role?.startsWith('menuitem') || role === 'option' || role === 'gridcell';
 
-          if (isCurrentTarget && isCompositeItem && isSpaceKey) {
+          if (isCurrentTarget && isComposite() && isSpaceKey) {
             // In a list with typeahead, a prevented Space is text and not an activation.
             if (event.defaultPrevented && isTextNavigationRole) {
               return;
@@ -181,12 +179,14 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
           }
         },
         onKeyup(event: VaseUIEvent<KeyboardEvent>) {
-          if (disabled) {
+          if (isDisabled()) {
             return;
           }
 
           makeEventPreventable(event);
           callHandler(externalOnKeyup, event);
+          const isNativeButton = isNative();
+          const isCompositeItem = isComposite();
 
           // A <button> clicks on the Space keyup. The keydown already dispatched the click, and a
           // prevented keyup stops the second click.
@@ -223,14 +223,14 @@ export function useButton(parameters: UseButtonParameters = {}): UseButtonReturn
         },
         onPointerdown(event: PointerEvent) {
           // An element with `aria-disabled` and no `disabled` attribute still gets this event.
-          if (disabled) {
+          if (isDisabled()) {
             event.preventDefault();
             return;
           }
           callHandler(externalOnPointerdown, event);
         },
       },
-      isNativeButton ? { type: 'button' } : { role: 'button' },
+      isNative() ? { type: 'button' } : { role: 'button' },
       focusableWhenDisabledProps.value,
       otherExternalProps,
     );

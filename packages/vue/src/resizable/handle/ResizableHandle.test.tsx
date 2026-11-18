@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { nextTick, shallowRef } from 'vue';
+import { h, nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -22,6 +22,7 @@ describe('<Resizable.Handle />', () => {
     root?: Record<string, unknown>;
     panels?: Record<string, unknown>[];
     handle?: Record<string, unknown>;
+    renderHandle?: InstanceType<typeof Resizable.Handle>['$slots']['render'];
     direction?: 'ltr' | 'rtl';
   }
 
@@ -31,6 +32,7 @@ describe('<Resizable.Handle />', () => {
     root,
     panels = [{ id: 'a' }, { id: 'b' }],
     handle,
+    renderHandle,
     direction = 'ltr',
   }: PanelsOptions = {}) {
     return render(
@@ -44,6 +46,7 @@ describe('<Resizable.Handle />', () => {
                     key={`handle-${index}`}
                     data-testid={`handle-${index}`}
                     {...handle}
+                    v-slots={renderHandle ? { render: renderHandle } : undefined}
                   />
                 ) : null,
                 <Resizable.Panel
@@ -1256,13 +1259,14 @@ describe('<Resizable.Handle />', () => {
       expect(changes).toEqual([]);
     });
 
-    it('follows a drag and gives the state to stateClass', async () => {
+    it('gives the current drag limits to the render slot', async () => {
       await renderPanels({
         panels: bounded,
-        handle: {
-          stateClass: (state: { atMin: boolean; atMax: boolean }) =>
-            `${String(state.atMin)}-${String(state.atMax)}`,
-        },
+        renderHandle: ({ props, state, children }) => (
+          <div {...props} class={`${String(state.atMin)}-${String(state.atMax)}`}>
+            {h(children)}
+          </div>
+        ),
       });
       const handle = screen.getByTestId('handle-1');
       expect(ends(handle)).toEqual([]);
@@ -1506,6 +1510,7 @@ describe('<Resizable.Handle />', () => {
         showInnerHandle?: { value: boolean };
         outerDisabled?: { value: boolean };
         outerHandle?: Record<string, unknown>;
+        renderOuterHandle?: InstanceType<typeof Resizable.Handle>['$slots']['render'];
         bottomPanel?: boolean;
       } = {},
     ) {
@@ -1518,6 +1523,9 @@ describe('<Resizable.Handle />', () => {
               style={{ flex: 'none', width: '8px' }}
               disabled={options.outerDisabled?.value}
               {...options.outerHandle}
+              v-slots={
+                options.renderOuterHandle ? { render: options.renderOuterHandle } : undefined
+              }
             />
             <Resizable.Panel id="right">
               <Resizable.Root
@@ -1610,9 +1618,11 @@ describe('<Resizable.Handle />', () => {
 
     it('gives data-crossing to the state of the handle', async () => {
       const { outer, at } = await renderCrossing({
-        outerHandle: {
-          stateClass: (state: { crossing: boolean }) => `crossing-${String(state.crossing)}`,
-        },
+        renderOuterHandle: ({ props, state, children }) => (
+          <div {...props} class={`crossing-${String(state.crossing)}`}>
+            {h(children)}
+          </div>
+        ),
       });
       expect(outer).toHaveClass('crossing-false');
 
@@ -2025,17 +2035,18 @@ describe('<Resizable.Handle />', () => {
   });
 
   describe('state', () => {
-    it('gives the state to the slot and to stateClass', async () => {
+    it('gives the orientation, disabled state and drag state to the default slot', async () => {
       await render(
         <Resizable.Root orientation="vertical">
           <Resizable.Panel />
-          <Resizable.Handle
-            data-testid="handle"
-            stateClass={(state) =>
-              `${state.orientation}-${String(state.disabled)}-${String(state.dragging)}`
-            }
-          >
-            {{ default: ({ state }: { state: { orientation: string } }) => state.orientation }}
+          <Resizable.Handle data-testid="handle">
+            {{
+              default: ({ state }: { state: Resizable.Handle.State }) => (
+                <span class={`${state.orientation}-${state.disabled}-${state.dragging}`}>
+                  {state.orientation}
+                </span>
+              ),
+            }}
           </Resizable.Handle>
           <Resizable.Panel />
         </Resizable.Root>,
@@ -2043,7 +2054,7 @@ describe('<Resizable.Handle />', () => {
       const handle = screen.getByTestId('handle');
 
       expect(handle).toHaveTextContent('vertical');
-      expect(handle).toHaveClass('vertical-false-false');
+      expect(handle.querySelector('span')).toHaveClass('vertical-false-false');
     });
   });
 
@@ -2119,8 +2130,8 @@ describe('<Resizable.Handle />', () => {
       ],
     });
 
-    it('gives the state of the server HTML to stateClass and stateStyle while it hydrates', async () => {
-      const props = { composition: 'stateFunctions' };
+    it('gives the drag limit of the server HTML to the render slot while it hydrates', async () => {
+      const props = { composition: 'slotStyles' };
       const serverHtml = await renderOnServer(
         'src/resizable/root/ResizableRootHydration.test.vue',
         props,
