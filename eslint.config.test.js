@@ -67,6 +67,7 @@ const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 const REF_HINT = 'before the element is in the document';
 const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
+const MODEL_PART = docsSfc("const open = defineModel<boolean>('open');", '<div>{{ open }}</div>');
 
 const INPUT_SYNC_SAMPLES = [
   ['a native input write', '(event.target as HTMLInputElement).value = text;', 'Vue value binding'],
@@ -862,11 +863,6 @@ const reported = [
       'usePopupPositioner',
     ],
     [
-      'watchPostEffect',
-      "import { watchPostEffect } from 'vue';\n\nexport const effect = watchPostEffect;\n",
-      "flush: 'post'",
-    ],
-    [
       'onActivated',
       "import { onActivated } from 'vue';\n\nexport const hook = onActivated;\n",
       'useKeepAliveState',
@@ -933,10 +929,35 @@ const reported = [
   {
     name: 'defineModel',
     file: `${SRC}/DialogRoot.vue`,
-    code: `<script setup lang="ts">\nconst open = defineModel<boolean>('open');\n</script>\n\n<template>\n  <div>{{ open }}</div>\n</template>\n`,
+    code: MODEL_PART,
     ruleId: 'no-restricted-syntax',
-    hint: 'useControlled',
+    hint: 'with only the prop',
   },
+  ...[
+    ['an empty template', '<template />'],
+    ['a template with only a comment', '<template>\n  <!-- No content -->\n</template>'],
+  ].map(([name, code]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code,
+    ruleId: 'vase-ui/no-empty-part',
+    hint: 'composable',
+  })),
+  ...[
+    ['a null render method', 'export default defineComponent({ render() { return null; } });'],
+    ['a null render from setup', 'export default defineComponent({ setup: () => () => null });'],
+    [
+      'a render with two null returns',
+      'export default defineComponent(() => () => { if (ready()) return null; record(); return null; });',
+    ],
+    ['a null functional component', 'export const Content: FunctionalComponent = () => null;'],
+  ].map(([name, code]) => ({
+    name,
+    file: `${SRC}/DialogContent.ts`,
+    code,
+    ruleId: 'vase-ui/no-empty-part',
+    hint: 'composable',
+  })),
   ...[
     [
       'Map.groupBy',
@@ -1157,6 +1178,60 @@ const reported = [
 ];
 
 const passed = [
+  {
+    name: 'a post effect that owns an observer',
+    file: `${SRC}/useSize.ts`,
+    code: `import { watchPostEffect } from 'vue';
+import type { Ref } from 'vue';
+export function useSize(element: Readonly<Ref<Element | null>>, resize: ResizeObserverCallback) {
+  watchPostEffect((onCleanup) => {
+    if (!element.value) return;
+    const observer = new ResizeObserver(resize);
+    observer.observe(element.value);
+    onCleanup(() => observer.disconnect());
+  });
+}`,
+  },
+  {
+    name: 'defineModel in a demo',
+    file: 'docs/demos/dialog/basic/tailwind/Demo.vue',
+    code: MODEL_PART,
+  },
+  {
+    name: 'a template with a conditional node',
+    file: `${SRC}/DialogContent.vue`,
+    code: docsSfc('const { open } = defineProps<{ open: boolean }>();', '<div v-if="open" />'),
+  },
+  {
+    name: 'an external template',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<template src="./content.html" />',
+  },
+  {
+    name: 'a render that can return a node',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export const Content = defineComponent({
+  setup() {
+    return () => {
+      if (ready()) return null;
+      return h('span', { onClick: () => null });
+    };
+  },
+});`,
+  },
+  {
+    name: 'a setup that can return a visible renderer',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export default defineComponent(() => {
+  if (ready()) return () => null;
+  return () => h('span');
+});`,
+  },
+  {
+    name: 'a getter that always returns null',
+    file: `${SRC}/useContent.ts`,
+    code: 'export function useContent() { return () => null; }',
+  },
   ...INPUT_SYNC_SAMPLES.map(([name, code]) => ({
     name: `${name} in a test`,
     file: `${SRC}/DialogRoot.test.tsx`,

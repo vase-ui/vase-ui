@@ -69,8 +69,6 @@ const MESSAGES = {
     'The build writes this subpath import. A test job has no `dist`, and Vite cannot resolve the import. Write `./prehydrationScript.min`.',
   useFloating:
     '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
-  watchPostEffect:
-    "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
   popupElementWrite:
     'A part that writes this key itself does not follow `KeepAlive`, and it can clear the element of a part that replaced it. Give `popupElementTarget(store)` or `stateElementTarget(store, key)` to `createElementSetter`.',
   keepAliveHook:
@@ -81,7 +79,7 @@ const MESSAGES = {
   inputValueWrite: 'Restore the input through its Vue value binding.',
   handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
-    '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
+    'A defined model prop controls the part. An undefined prop lets the part own the value. Vue permits a local write through `useModel` with only the prop.',
   groupBy:
     'No browser that the build supports has `groupBy`, and the build adds no polyfill. Group the items in a loop.',
   withResolvers:
@@ -111,7 +109,6 @@ const RESTRICTED_IMPORTS = [
     message: MESSAGES.customDirective,
   },
   { name: 'vue', importNames: ['defineComponent'], message: MESSAGES.defineComponent },
-  { name: 'vue', importNames: ['watchPostEffect'], message: MESSAGES.watchPostEffect },
   { name: 'vue', importNames: ['onActivated', 'onDeactivated'], message: MESSAGES.keepAliveHook },
   { name: 'vue', importNames: ['Transition', 'TransitionGroup'], message: MESSAGES.transition },
   { name: '@floating-ui/vue', importNames: ['useFloating'], message: MESSAGES.useFloating },
@@ -620,6 +617,66 @@ const pageProcessor = {
   },
 };
 
+const noEmptyPart = {
+  meta: {
+    type: 'problem',
+    schema: [],
+    messages: { empty: 'A part must render a node. Move logic with no node to a composable.' },
+  },
+  create(context) {
+    const returns = new WeakMap();
+    const componentCall = "CallExpression[callee.name='defineComponent']";
+    const options = context.filename.endsWith('.vue')
+      ? `:matches(${componentCall}, ExportDefaultDeclaration) > ObjectExpression`
+      : `${componentCall} > ObjectExpression`;
+
+    function returnValues(fn) {
+      return fn.body.type === 'BlockStatement' ? (returns.get(fn) ?? []) : [fn.body];
+    }
+
+    function returnsOnlyNull(fn) {
+      if (fn?.type !== 'ArrowFunctionExpression' && fn?.type !== 'FunctionExpression') return false;
+      const values = returnValues(fn);
+      return (
+        values.length > 0 &&
+        values.every((value) => value?.type === 'Literal' && value.value === null)
+      );
+    }
+
+    function checkRender(fn) {
+      if (returnsOnlyNull(fn)) context.report({ node: fn, messageId: 'empty' });
+    }
+
+    return {
+      Program({ templateBody }) {
+        if (
+          templateBody &&
+          templateBody.children.every((child) => child.type === 'VText' && !child.value.trim()) &&
+          !templateBody.startTag.attributes.some(
+            (attr) => attr.key.name === 'src' && attr.value?.value,
+          )
+        ) {
+          context.report({ node: templateBody, messageId: 'empty' });
+        }
+      },
+      ReturnStatement(node) {
+        const fn = context.sourceCode.getScope(node).variableScope.block;
+        if (!returns.has(fn)) returns.set(fn, []);
+        returns.get(fn).push(node.argument);
+      },
+      [`${options} > Property[key.name='render'] > :function:exit`]: checkRender,
+      ["VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='FunctionalComponent'] > :function:exit"]:
+        checkRender,
+      [`:matches(${options} > Property[key.name='setup'], ${componentCall}) > :function:exit`](fn) {
+        const renderers = returnValues(fn);
+        if (renderers.length && renderers.every(returnsOnlyNull)) {
+          context.report({ node: fn, messageId: 'empty' });
+        }
+      },
+    };
+  },
+};
+
 export default defineConfig([
   globalIgnores([
     '**/dist/',
@@ -753,7 +810,9 @@ export default defineConfig([
   {
     files: SOURCE_FILES,
     ignores: TEST_FILES,
+    plugins: { 'vase-ui': { rules: { 'no-empty-part': noEmptyPart } } },
     rules: {
+      'vase-ui/no-empty-part': 'error',
       'no-restricted-imports': [
         'error',
         { paths: RESTRICTED_IMPORTS, patterns: RESTRICTED_IMPORT_PATTERNS },
