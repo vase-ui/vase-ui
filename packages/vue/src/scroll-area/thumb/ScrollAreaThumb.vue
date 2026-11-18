@@ -20,10 +20,9 @@ export interface ScrollAreaThumbProps
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import {
   useScrollAreaRootContext,
   useScrollAreaScrollbarContext,
@@ -40,8 +39,7 @@ defineSlots<{
 }>();
 
 const {
-  thumbYElement,
-  thumbXElement,
+  registerElement,
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
@@ -81,22 +79,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-const { isHeld } = useKeepAliveState();
-watch(
-  [element, orientation, isHeld],
-  ([thumb, axis, held], _, onCleanup) => {
-    if (!thumb || held) {
-      return;
-    }
-    const holder = axis === 'vertical' ? thumbYElement : thumbXElement;
-    holder.value = thumb;
-    onCleanup(() => {
-      if (holder.value === thumb) {
-        holder.value = null;
-      }
-    });
-  },
-  { flush: 'post' },
+registerElement(
+  () => (orientation.value === 'vertical' ? 'thumbYElement' : 'thumbXElement'),
+  element,
 );
 
 defineExpose({ element });
