@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { KeepAlive, Transition, defineComponent, shallowRef } from 'vue';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { KeepAlive, Teleport, Transition, defineComponent, nextTick, shallowRef } from 'vue';
 import { Switch } from '@vase-ui/vue/switch';
 import {
   createHeldBranch,
@@ -7,6 +7,7 @@ import {
   fireEvent,
   flushMicrotasks,
   screen,
+  wait,
   waitFor,
 } from '#test-utils';
 import { useFormReset } from './useFormReset';
@@ -61,6 +62,39 @@ describe('useFormReset', () => {
     vi.advanceTimersByTime(0);
     expect(onReset).toHaveBeenCalledTimes(1);
   });
+
+  it.each([
+    { name: 'after the microtasks', afterMove: flushMicrotasks },
+    { name: 'at the next Vue tick', afterMove: nextTick },
+  ])(
+    'follows a reset after `Teleport` moves the form into a shadow root: $name',
+    async ({ afterMove }) => {
+      const host = document.createElement('div');
+      const container = document.createElement('div');
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      shadowRoot.append(container);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const moved = shallowRef(false);
+      await render(() => (
+        <Teleport to={container} disabled={!moved.value}>
+          {renderSwitchForm()}
+        </Teleport>
+      ));
+      const form = screen.getByTestId<HTMLFormElement>('form');
+      const control = screen.getByRole('switch');
+      await fireEvent.click(control);
+      expect(control).toHaveAttribute('aria-checked', 'false');
+
+      moved.value = true;
+      await afterMove();
+      expect(form.getRootNode()).toBe(shadowRoot);
+      form.reset();
+      await wait(0);
+
+      expect(control).toHaveAttribute('aria-checked', 'true');
+    },
+  );
 
   describe('BUG-6206: a native reset under KeepAlive', () => {
     it('keeps a reset that waits while KeepAlive hides and shows the branch', async () => {

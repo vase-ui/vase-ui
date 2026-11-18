@@ -1,10 +1,12 @@
-import { isElement } from '@floating-ui/utils/dom';
 import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { given } from '../givenAttributes';
+import { observeRootNode } from '../observeRootNode';
 import { useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
+
+const LABEL_ATTRIBUTES = ['for', 'id'] as const;
 
 /**
  * A control calls it in `setup` when its element is not a labelable element of HTML, such as a
@@ -66,78 +68,17 @@ export function useAriaLabelledBy(
         return;
       }
 
-      let observedRoot: Node | undefined;
-      let stopObserver: (() => void) | undefined;
-
-      // `Teleport` can move the input to another document or shadow root with no change of a
-      // source. The observer of the old root node sees that move.
       const update = () => {
         fallbackAriaLabelledBy.value = getAriaLabelledBy(labelSource, generatedLabelId.value);
-        const root = labelSource.getRootNode();
-        // A root node that is an element is the top of a tree in no document and no shadow root.
-        // An observer of it gets no record when the consumer attaches that tree, so the observer
-        // stays on the previous root node.
-        if (root !== observedRoot && (!observedRoot || !isElement(root))) {
-          stopObserver?.();
-          observedRoot = root;
-          stopObserver = observeLabels(root, update);
-        }
       };
 
       update();
-      onCleanup(() => stopObserver?.());
+      onCleanup(observeRootNode(labelSource, update, LABEL_ATTRIBUTES));
     },
     { flush: 'post' },
   );
 
   return ariaLabelledBy;
-}
-
-interface LabelObserver {
-  observer: MutationObserver;
-  callbacks: Set<() => void>;
-}
-
-// The map is in the module, so each copy of the library has its own observers.
-const labelObservers = new WeakMap<Node, LabelObserver>();
-
-/**
- * Calls `callback` after a change in the tree of `root` that can change a label. It returns the
- * function that removes the callback.
- *
- * All callbacks of one root node share one observer, because a form has many controls and each
- * observer of a root gets each record. The caller gives the root node of the control, and not the
- * document: an observer of a document does not see a shadow tree.
- */
-function observeLabels(root: Node, callback: () => void): () => void {
-  let labelObserver = labelObservers.get(root);
-
-  if (!labelObserver) {
-    const callbacks = new Set<() => void>();
-    // The callbacks ignore the records. A lookup is cheap, and it writes only a different id.
-    const observer = new MutationObserver(() => {
-      callbacks.forEach((run) => run());
-    });
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['for', 'id'],
-    });
-    labelObserver = { observer, callbacks };
-    labelObservers.set(root, labelObserver);
-  }
-
-  const { observer, callbacks } = labelObserver;
-  callbacks.add(callback);
-
-  return () => {
-    callbacks.delete(callback);
-    if (callbacks.size === 0) {
-      observer.disconnect();
-      labelObservers.delete(root);
-    }
-  };
 }
 
 function getAriaLabelledBy(labelSource?: LabelSource | null, generatedLabelId?: string) {
