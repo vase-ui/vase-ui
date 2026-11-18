@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import type { Dirent } from 'node:fs';
 import { join, relative } from 'node:path';
 import {
   FAMILY_NAME,
@@ -15,7 +16,7 @@ import type {
   OwnComponent,
   UpstreamFile,
 } from './parityFiles.ts';
-import { VASE_ROOTS } from './paths.ts';
+import { toVaseName, VASE_ROOTS } from './paths.ts';
 
 export const REPOSITORY_ROOT = join(import.meta.dirname, '..', '..');
 
@@ -164,17 +165,31 @@ export function readParityFiles(root: string, options: { readExtracts: boolean }
   return { upstream, families: [...names.values()], ownComponents, better, problems };
 }
 
-export function listVaseFiles(root: string, folders = VASE_ROOTS): string[] {
+function listPaths(root: string, folders: string[], include: (entry: Dirent) => boolean): string[] {
   return folders.flatMap((folder) => {
     const path = join(root, folder);
     if (!existsSync(path)) {
       return [];
     }
     return readdirSync(path, { recursive: true, withFileTypes: true })
-      .filter((item) => item.isFile())
+      .filter(include)
       .map((item) => relative(root, join(item.parentPath, item.name)))
       .filter((file) => !file.split('/').includes('node_modules'));
   });
+}
+
+export function listVaseFiles(root: string): string[] {
+  return listPaths(root, VASE_ROOTS, (entry) => entry.isFile());
+}
+
+export function checkPathNames(root: string): string[] {
+  return listPaths(
+    root,
+    [...VASE_ROOTS, 'docs/demos'],
+    (entry) => entry.name !== toVaseName(entry.name),
+  )
+    .sort()
+    .map((path) => `${path}: rename to ${toVaseName(path)}.`);
 }
 
 export function readRepositoryFile(root: string, path: string): string {

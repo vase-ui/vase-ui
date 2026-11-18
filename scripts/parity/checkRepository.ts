@@ -7,13 +7,13 @@ import { checkOwnComponent } from './checkOwn.ts';
 import { checkSurface } from './checkSurface.ts';
 import type { SurfaceSummary, Tally } from './checkSurface.ts';
 import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
-import { hasCounterpart, isTestFile, matchesAny, toVaseName, VASE_SOURCE_ROOT } from './paths.ts';
+import { hasCounterpart, isTestFile, matchesAny, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import {
+  checkPathNames,
   extractCommand,
   extractFile,
   familyFile,
-  listVaseFiles,
   readRepositoryFile,
   TRACK_COMMAND,
   UPSTREAM_FILE,
@@ -147,14 +147,8 @@ function checkHiddenProps(files: VaseFiles, root: string): string[] {
 
 export function checkRepository(input: CheckInput): CheckResult {
   const { parity, files, root } = input;
-  const problems = [...parity.problems];
+  const problems = [...parity.problems, ...checkPathNames(root)];
   const families: FamilyReport[] = [];
-  for (const path of [...files.paths, ...listVaseFiles(root, ['docs/demos'])].sort()) {
-    const name = toVaseName(path);
-    if (name !== path) {
-      problems.push(`${path}: rename the file to ${name}.`);
-    }
-  }
 
   // One refused file must not hide the other problems. It gives one problem and has no rows.
   const refused = new Set<string>();

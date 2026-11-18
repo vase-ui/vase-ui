@@ -1689,10 +1689,10 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `<React.Activity>` with `mode` | `<KeepAlive>` around a child that the test renders only while it is visible. The title of the block stays. |
 | `<React.StrictMode>` around the tree | No wrapper. Vue has no Strict Mode. |
 | `createRenderer({ strict })` and `render(element, { strict })` | No option. Vue has no Strict Mode. The case runs one time. |
-| `describe.each([false, true])('… (strict: %s)', …)` | `describe` with the same title. The block runs one time. |
-| `it.each([false, true])('… (strict: %s)', …)` | `it` with the same title. The case runs one time. |
+| `describe.each([false, true])('… (strict: %s)', …)` | `describe` with the mapped title. The block runs one time. |
+| `it.each([false, true])('… (strict: %s)', …)` | `it` with the mapped title. The case runs one time. |
 | A row of `it.each` that runs the case in Strict Mode | The row with no Strict Mode. Its label loses the words about Strict Mode. |
-| A row of `it.each` that mocks `useId` to give `undefined`, as in React 17 | No counterpart. Remove the row of `it.each`. The case keeps its title, so it needs no exception row. `useVaseUiId` gives an id in `setup`. |
+| A row of `it.each` that mocks `useId` to give `undefined`, as in React 17 | No counterpart. Remove the row of `it.each`. The case still matches, so it needs no exception row. `useVaseUiId` gives an id in `setup`. |
 | `React.lazy(loader)` | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions |
 | `act(fn)` | `fn()`, then `await flushMicrotasks()`. Where `fn` makes the part start a 0 ms timer, see [Test rules](#test-rules). |
 | `ignoreActWarnings()` | No call. Vue gives no warning about `act`. |
@@ -1731,7 +1731,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | A `beforeEach` hook that gives `HTMLElement.prototype` the property `inert` | No counterpart. jsdom has no `inert`, and a browser has it. |
 | A read directly after a `fireEvent` call, before the effects of the part run | Keep the promise of `fireEvent`, make the read, then `await` the promise. An `await` before the read lets the effects run first. |
 | `renderToString` of the renderer, with no `hydrate()` | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row. |
-| `renderToString` of the renderer, then `hydrate()` | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts on the server HTML before `hydrate()` calls `hydrateAfter`. See [Test helpers](#test-helpers). |
+| `renderToString` of the renderer, then `hydrate()` | The case stays in the ported test file with its mapped title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts on the server HTML before `hydrate()` calls `hydrateAfter`. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers). |
 | `expect(fn).toErrorDev(message)` or `.toWarnDev(message)` | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert that the spy got that one call: `toHaveBeenCalledExactlyOnceWith(message)`. The message starts with `Vase UI:`. |
 | `toErrorDev` for a warning that React DOM gives, such as the warning for a `NaN` value | No counterpart, because Vue gives no such warning. The case runs with no wrapper and keeps its other assertions. State the removal in the body of the pull request. |
@@ -1799,7 +1799,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
 - `createRenderer()` has no `renderToString`. A server render runs in Node with no DOM.
-- The row for `renderToString` with no `hydrate()` has one exception. A case that reads the layout of the server HTML needs a browser. It stays in the ported test file with the same title, so it needs no row. Each other case of its `describe` block stays with it. Each case inserts the HTML of `renderOnServer` with a fragment of a range. See `server-side rendering` in `slider/thumb/SliderThumb.test.tsx`.
+- The row for `renderToString` with no `hydrate()` has one exception. A case that reads the layout of the server HTML needs a browser. It stays in the ported test file with its mapped title, so it needs no row. Each other case of its `describe` block stays with it. Each case inserts the HTML of `renderOnServer` with a fragment of a range. See `server-side rendering` in `slider/thumb/SliderThumb.test.tsx`.
 - A row for a `describe` block also covers each case of the block that has no counterpart. Give the block a `replaced` row only when each case of the block moves to the `.node.test.tsx` file. `useButton` does this for `server-side rendering`.
 - Vue renders an async component after its loader resolves. `flushMicrotasks` waits for that render.
 - A spy as a slot gets one object with the slot props. Assert the fields of the first argument of the last call: `spy.mock.lastCall?.[0].value`.
@@ -2037,7 +2037,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 | --- | --- |
 | A source file or a type test | The file at the mapped path. See [Layout and names](#layout-and-names). |
 | A test case | A case at the mapped path with the titles from [How to port a test](#how-to-port-a-test). |
-| A call of a shared suite, such as `describeConformance(…)` | The same call in the same `describe` block. |
+| A call of a shared suite, such as `describeConformance(…)` | The same call under the mapped `describe` titles. |
 | An entry of a `types.md`, and each row of its props table | The export of the family, and the prop, emit, slot or exposed member that [API convention](#api-convention) gives. |
 
 The rows of a family are in the `exceptions` list of its family file. A row names one upstream thing. The family files write the fields in this order:
@@ -2163,7 +2163,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
-- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
+- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<upstream-demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
 - A demo can have two attributes that the Base UI file lacks, because axe reports their absence in the open state. A popup that has the role `dialog` and no title part has `aria-label`. A scroll container that holds no control has `tabindex="0"`, because WebKit gives a scroll container no keyboard focus. Both variants of a demo get the attribute.
 - In a Tailwind demo, write `class` in the place of `className`. A constant that holds class names keeps its name and its text in `<script setup>`, and the template binds it with `:class="name"`. Write an array in `:class` in the place of `clsx` or a template literal. Keep each part of a string that Base UI makes with `+`. Do not write the object form of `:class`.
 - The name of a constant that holds class names ends with `Class`, `ClassName` or `Classes`.

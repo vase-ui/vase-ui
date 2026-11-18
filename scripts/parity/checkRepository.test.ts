@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
@@ -159,11 +159,16 @@ test('a family with no problem gives a summary line and makes no project', () =>
 test('the check names the Vase UI path of a file or demo and the Vase UI title of a test', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'parity-names-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const demo = 'docs/demos/sample/base-ui-handler/index.vue';
-  mkdirSync(dirname(join(root, demo)), { recursive: true });
-  writeFileSync(join(root, demo), '');
+  const demo = 'docs/demos/sample/base-ui-handler';
   const source = 'packages/vue/src/common/useBaseUiId.ts';
   const file = 'packages/vue/test/handler.test.ts';
+  const link = 'packages/vue/test/baseUiHandler.ts';
+  mkdirSync(join(root, demo), { recursive: true });
+  for (const path of [source, file]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), '');
+  }
+  symlinkSync('handler.test.ts', join(root, link), 'file');
   const result = checkRepository({
     parity: makeParity(),
     files: vaseFiles([source, file]),
@@ -174,8 +179,9 @@ test('the check names the Vase UI path of a file or demo and the Vase UI title o
     },
   });
   assert.deepEqual(result.problems, [
-    `${demo}: rename the file to docs/demos/sample/vase-ui-handler/index.vue.`,
-    `${source}: rename the file to packages/vue/src/common/useVaseUiId.ts.`,
+    `${demo}: rename to docs/demos/sample/vase-ui-handler.`,
+    `${source}: rename to packages/vue/src/common/useVaseUiId.ts.`,
+    `${link}: rename to packages/vue/test/vaseUiHandler.ts.`,
     `${file}: use "calls preventVaseUIHandler" for the test title "calls preventBaseUIHandler".`,
   ]);
 });

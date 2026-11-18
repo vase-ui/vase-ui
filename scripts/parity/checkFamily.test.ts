@@ -109,6 +109,26 @@ test('a second copy of a ported block with the upstream name gives the Vase UI t
   ]);
 });
 
+test('a Vue-only title can cite Base UI when a ported case or block uses the same words', () => {
+  const title = 'calls the Base UI handler';
+  const describe = ['Base UI form'];
+  const result = run([], {
+    extract: makeExtract({ cases: [{ file: UPSTREAM_FILE, rows: [{ describe, title }] }] }),
+    paths: [VASE_FILE],
+    rows: {
+      [VASE_FILE]: [
+        { describe: ['Vase UI form'], title: 'calls the Vase UI handler' },
+        { describe: ['upstream example', ...describe], title },
+        { describe: [], title: 'Base UI form' },
+        { describe: ['Vase UI form', title], title: 'uses the upstream example' },
+      ],
+    },
+  });
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.cases.matched, 1);
+  assert.equal(result.summary.rowsWithoutUpstream, 3);
+});
+
 test('a row with no match and no exception is a problem for each kind of row', () => {
   const result = run([], { paths: [VASE_FILE], rows: { [VASE_FILE]: [first] } });
   assert.deepEqual(result.problems, [
