@@ -17,6 +17,11 @@ export namespace ToggleGroup {
   export type ChangeEventDetails = ToggleGroupChangeEventDetails;
 }
 
-export type * from './ToggleGroup.vue';
+export type {
+  ToggleGroupChangeEventDetails,
+  ToggleGroupChangeEventReason,
+  ToggleGroupProps,
+  ToggleGroupState,
+};
 
 export * as ToggleGroupDataAttributes from './ToggleGroupDataAttributes';
