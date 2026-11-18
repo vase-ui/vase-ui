@@ -503,6 +503,17 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     return null;
   }
 
+  function canStartAt(position: Point, event: SwipeDismissEvent) {
+    const { canStart } = options;
+    return (
+      !canStart ||
+      canStart(position, {
+        nativeEvent: event,
+        direction: directionState.value.primaryDirection,
+      })
+    );
+  }
+
   function handleStart(event: SwipeDismissEvent) {
     if (!isEnabled()) {
       return;
@@ -526,12 +537,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     swipeFromScrollable = false;
     sawPrimaryButtonsOnMove = !('touches' in event);
 
-    const allowedToStart =
-      options.canStart?.(startPos, {
-        nativeEvent: event,
-        direction: directionState.value.primaryDirection,
-      }) ?? true;
-    if (!allowedToStart) {
+    if (!canStartAt(startPos, event)) {
       return;
     }
 
@@ -805,13 +811,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
         return;
       }
 
-      const allowedToStart =
-        options.canStart?.(currentPos, {
-          nativeEvent: event,
-          direction: directionState.value.primaryDirection,
-        }) ?? true;
-
-      if (allowedToStart) {
+      if (canStartAt(currentPos, event)) {
         const pendingStartPos = pendingSwipeStartPos;
         let ignoreScrollableOnStart = false;
         if (isTouchLikeEvent(event)) {

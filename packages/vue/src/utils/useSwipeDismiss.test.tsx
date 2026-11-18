@@ -12,6 +12,8 @@ import {
   isJSDOM,
   screen,
 } from '#test-utils';
+import { TestElement } from '../../test/testElement';
+import type { SetupElement } from '../../test/testElement';
 import {
   applyDirectionalDamping,
   getDismissDirection,
@@ -2615,8 +2617,7 @@ describe('useSwipeDismiss: refs and options', () => {
   it('uses the current release callback for a swipe already in progress', async () => {
     const onDismiss = vi.fn();
     const onRelease = shallowRef<() => boolean>(() => true);
-    const Box = defineComponent(() => {
-      const element = shallowRef<HTMLDivElement | null>(null);
+    const setupElement: SetupElement = (element) => {
       const swipe = useSwipeDismiss({
         enabled: true,
         directions: ['down'],
@@ -2627,9 +2628,9 @@ describe('useSwipeDismiss: refs and options', () => {
         },
         onDismiss,
       });
-      return () => <div ref={element} data-testid="el" {...swipe.pointerProps} />;
-    });
-    await render(<Box />);
+      return swipe.pointerProps;
+    };
+    await render(<TestElement data-testid="el" setupElement={setupElement} />);
     const element = screen.getByTestId('el');
     await dragWithPointer(element, 'down', 60);
     onRelease.value = () => false;
@@ -2788,6 +2789,25 @@ describe('useSwipeDismiss: refs and options', () => {
 
     expect(canStart).toHaveBeenCalledTimes(1);
     expect(onSwipingChange).not.toHaveBeenCalled();
+  });
+
+  it('waits for the start callback to approve a pending press', async () => {
+    const canStart = vi.fn<() => boolean>();
+    const onSwipingChange = vi.fn();
+    const { OptionsBox } = createSwipeBox({ canStart, onSwipingChange });
+    await render(<OptionsBox />);
+    const element = screen.getByTestId('el');
+    const pointer = { buttons: 1, pointerId: 1, clientX: 100, clientY: 100 };
+
+    await fireEvent.pointerDown(element, { ...pointer, button: 0 });
+    await fireEvent.pointerMove(element, pointer);
+    expect(canStart).toHaveBeenCalledTimes(2);
+    expect(onSwipingChange).not.toHaveBeenCalled();
+
+    canStart.mockReturnValue(true);
+    await fireEvent.pointerMove(element, pointer);
+    expect(onSwipingChange).toHaveBeenCalledExactlyOnceWith(true);
+    await releasePointer(element, 'down', 0);
   });
 
   it('keeps the drag styles in a render during the swipe', async () => {

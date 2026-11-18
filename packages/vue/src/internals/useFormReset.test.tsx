@@ -10,6 +10,7 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import { useFormReset } from './useFormReset';
 
 // `Switch.Root` calls the composable.
@@ -45,11 +46,10 @@ describe('useFormReset', () => {
       throw new Error('Both inputs need a form.');
     }
     const input = shallowRef(first);
-    const Owner = defineComponent(() => {
+    const setupElement = () => {
       useFormReset(() => input.value, onReset);
-      return () => <span />;
-    });
-    const { unmount } = await render(<Owner />);
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
     vi.useFakeTimers();
     first.form.reset();
     vi.advanceTimersByTime(0);

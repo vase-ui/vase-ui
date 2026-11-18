@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, onMounted, onScopeDispose, watchEffect } from 'vue';
 import { createRenderer, flushMicrotasks } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import { useItemRegistry } from './useItemRegistry';
 
 describe('useItemRegistry', () => {
@@ -63,14 +64,13 @@ describe('useItemRegistry', () => {
   it('keeps a registration independent of later changes to the live map', async () => {
     const { items, liveItems, registerItem } = useItemRegistry<string, string>();
     const sizes: number[] = [];
-    const Owner = defineComponent(() => {
+    const setupElement = () => {
       watchEffect((onCleanup) => {
         onCleanup(registerItem('first', 'First'));
         sizes.push(liveItems.size);
       });
-      return () => <div />;
-    });
-    const { unmount } = await render(<Owner />);
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
     const before = items.value;
     const remove = registerItem('second', 'Second');
     expect(liveItems.get('second')).toBe('Second');

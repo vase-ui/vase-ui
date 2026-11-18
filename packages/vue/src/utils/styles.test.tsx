@@ -1,7 +1,8 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { defineComponent, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { createRenderer } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from './styles';
 
 describe('useStyleDisableScrollbar', () => {
@@ -21,14 +22,13 @@ describe('useStyleDisableScrollbar', () => {
     const second = document.createElement('div');
     root.append(first, second);
     const target = shallowRef(first);
-    const Owner = defineComponent(() => {
+    const setupElement = () => {
       useStyleDisableScrollbar(target);
-      return () => <span />;
-    });
+    };
     const nonce = shallowRef('first');
     const { unmount } = await render(() => (
       <CSPProvider nonce={nonce.value}>
-        <Owner />
+        <TestElement setupElement={setupElement} />
       </CSPProvider>
     ));
     const style = root.querySelector('style');

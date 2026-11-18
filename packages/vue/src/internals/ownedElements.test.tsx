@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
+import { KeepAlive, shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
@@ -17,6 +17,7 @@ import {
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import VaporConsumer from '../../test/conformanceTests/VaporConsumer.vue';
 import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
@@ -33,15 +34,14 @@ describe('owned parts', () => {
     const first = document.createElement('button');
     const second = document.createElement('button');
     const target = shallowRef<Element | null>(first);
-    const Owner = defineComponent(() => {
+    const setupElement = () => {
       useElementRegistration(
         registry,
         () => target.value,
         () => 'owner',
       );
-      return () => <span />;
-    });
-    const { unmount } = await render(<Owner />);
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
 
     expect(registry.get(first)?.()).toBe('owner');
     target.value = null;
@@ -57,16 +57,15 @@ describe('owned parts', () => {
     const node = document.createElement('button');
     const first = shallowRef<{ element: Element | null }>({ element: node });
     const second = shallowRef<Element | null>(null);
-    const Owner = defineComponent(() => {
+    const setupElement = () => {
       useElementRegistration(
         registry,
         () => first.value.element,
         () => 'first',
       );
       useElementRegistration(registry, second, () => 'second');
-      return () => <span />;
-    });
-    const { unmount } = await render(<Owner />);
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
     expect(registry.get(node)?.()).toBe('first');
     second.value = node;
     expect(registry.get(node)?.()).toBe('second');
