@@ -52,7 +52,7 @@ export type AccordionItemChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, provide } from 'vue';
+import { computed, provide, shallowRef, type ShallowRef } from 'vue';
 import { CollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
@@ -129,7 +129,7 @@ provide(CollapsibleRootContext, {
   })),
 });
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: itemList });
 
 const state = computed<AccordionItemState>(() => ({

@@ -85,7 +85,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import { computed, onScopeDispose, provide, shallowRef, watch, type ShallowRef } from 'vue';
 import type { Component, CSSProperties } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -142,7 +142,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 

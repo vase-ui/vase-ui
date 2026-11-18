@@ -43,7 +43,7 @@ export interface TabsPanelProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed } from 'vue';
+import { computed, shallowRef, type ShallowRef } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
@@ -107,7 +107,7 @@ useRegisteredId(
   () => element.value,
 );
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: panelList });
 
 const state = computed<TabsPanelState>(() => ({

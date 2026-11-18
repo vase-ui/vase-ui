@@ -84,6 +84,7 @@ import {
   onScopeDispose,
   shallowRef,
   watch,
+  type ShallowRef,
 } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -448,7 +449,7 @@ const state = computed<NavigationMenuTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem(element);
 
 const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {

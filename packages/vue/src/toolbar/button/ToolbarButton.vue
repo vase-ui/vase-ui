@@ -42,7 +42,7 @@ const FORWARDED_DISABLED = { disabled: '' };
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, useSlots } from 'vue';
+import { computed, shallowRef, useSlots, type ShallowRef } from 'vue';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
@@ -90,7 +90,7 @@ const state = computed<ToolbarButtonState>(() => ({
   focusable: props.focusableWhenDisabled,
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem(element, {
   metadata: itemMetadata,
   disabled: () => itemDisabled.value && !props.focusableWhenDisabled,

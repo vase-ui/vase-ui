@@ -54,7 +54,7 @@ export interface MenuRadioItemProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, provide } from 'vue';
+import { computed, provide, shallowRef, type ShallowRef } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -95,7 +95,7 @@ const {
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const listIndex = useCompositeListItem(element, { label: () => props.label });
 
 const highlighted = computed(() => store.select('isActive', listIndex.value));

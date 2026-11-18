@@ -23,7 +23,7 @@ const TOOLBAR_LINK_METADATA: ToolbarRootItemMetadata = {
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed } from 'vue';
+import { computed, shallowRef, type ShallowRef } from 'vue';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -42,7 +42,7 @@ const { orientation } = useToolbarRootContext();
 
 const state = computed<ToolbarLinkState>(() => ({ orientation: orientation.value }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem(element, { metadata: TOOLBAR_LINK_METADATA });
 
 const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {

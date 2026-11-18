@@ -46,7 +46,7 @@ export interface MenuItemProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed } from 'vue';
+import { computed, shallowRef, type ShallowRef } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
@@ -81,7 +81,7 @@ const { store } = useMenuRootContext();
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const listIndex = useCompositeListItem(element, { label: () => props.label });
 
 const highlighted = computed(() => store.select('isActive', listIndex.value));

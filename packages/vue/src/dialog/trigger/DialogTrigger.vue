@@ -123,7 +123,10 @@ const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
 );
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  DialogTriggerState,
+  HTMLElement
+>('button', props, {
   button: (element) =>
     useButton(element, {
       disabled: isDisabled,

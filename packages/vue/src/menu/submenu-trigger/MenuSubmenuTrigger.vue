@@ -66,7 +66,7 @@ export interface MenuSubmenuTriggerProps
 <script setup lang="ts">
 import { submenuTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
-import { computed, onMounted, onUpdated, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUpdated, shallowRef, watch, type ShallowRef } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
@@ -181,7 +181,7 @@ if (process.env.NODE_ENV !== 'production') {
   onUpdated(warnForDisabledElement);
 }
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const listIndex = useCompositeListItem(element, { label: () => props.label });
 
 const highlighted = computed(() => parentMenuStore.select('isActive', listIndex.value));

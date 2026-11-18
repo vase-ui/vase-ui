@@ -180,7 +180,7 @@ export function useRenderElement<
     /** An element ref that another composable needs during setup. */
     elementRef?: ShallowRef<RenderedElementType | null>;
     /** Supplies button actions for the final element and its render slot. */
-    button?: (element: ShallowRef<RenderedElementType | null>) => ButtonBehavior;
+    button?: (element: ShallowRef<NoInfer<RenderedElementType> | null>) => ButtonBehavior;
   } = {},
 ): UseRenderElementReturnValue<RenderedElementType> {
   const attrs = useAttrs();

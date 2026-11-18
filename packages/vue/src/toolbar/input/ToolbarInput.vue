@@ -40,7 +40,7 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, useAttrs, watch } from 'vue';
+import { computed, shallowRef, useAttrs, watch, type ShallowRef } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -119,7 +119,7 @@ const attrs = useAttrs();
 // An uncontrolled input has no model to compare with a silent browser restore at pageshow.
 let lastInputText: string | undefined;
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem(element, {
   metadata: itemMetadata,
   disabled: () => itemDisabled.value && !props.focusableWhenDisabled,

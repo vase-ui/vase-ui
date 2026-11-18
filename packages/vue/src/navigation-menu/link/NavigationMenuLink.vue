@@ -27,7 +27,7 @@ export interface NavigationMenuLinkProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed } from 'vue';
+import { computed, shallowRef, type ShallowRef } from 'vue';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -59,7 +59,7 @@ const tree = useFloatingTree();
 
 const state = computed<NavigationMenuLinkState>(() => ({ active: props.active }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem(element);
 
 const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {

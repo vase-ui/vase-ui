@@ -63,7 +63,16 @@ export interface SliderThumbProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, useAttrs, watch } from 'vue';
+import {
+  computed,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  useAttrs,
+  watch,
+  type ShallowRef,
+} from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
@@ -241,7 +250,7 @@ const thumbMetadata = computed<ThumbMetadata>(() => ({
   getInput: () => (inputElement.value?.isConnected ? inputElement.value : null),
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeIndex = useCompositeListItem<ThumbMetadata>(element, {
   list: thumbList,
   index: () => (range.value ? props.index : undefined),

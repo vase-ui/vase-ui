@@ -63,7 +63,7 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -371,7 +371,7 @@ const state = computed<MenuTriggerState>(() => ({
   open: isOpenedByThisTrigger.value,
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = isInMenubar ? useCompositeItem(element) : undefined;
 
 const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {

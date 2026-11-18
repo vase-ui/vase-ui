@@ -44,7 +44,7 @@ export interface ComboboxItemProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, toRaw, watch, type ShallowRef } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import {
   compareItemEquality,
@@ -80,7 +80,7 @@ defineSlots<{
 }>();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const listIndex = useCompositeListItem(element, { index: () => props.index, textRef });
 
 const store = useComboboxRootContext();

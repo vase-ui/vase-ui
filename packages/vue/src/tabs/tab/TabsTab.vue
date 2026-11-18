@@ -76,7 +76,7 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, onMounted, watch } from 'vue';
+import { computed, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
@@ -144,7 +144,7 @@ const tabMetadata = computed<TabsTabMetadata>(() => ({
   value: props.value,
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = useCompositeItem<TabsTabMetadata>(element, {
   metadata: tabMetadata,
   active,

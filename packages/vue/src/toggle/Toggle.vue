@@ -49,7 +49,7 @@ export type ToggleChangeEventDetails = VaseUIChangeEventDetails<ToggleChangeEven
 </script>
 
 <script setup lang="ts">
-import { shallowRef, computed, watchPostEffect } from 'vue';
+import { computed, shallowRef, watchPostEffect, type ShallowRef } from 'vue';
 import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
@@ -161,7 +161,7 @@ const itemMetadata = computed<ToolbarRootItemMetadata>(() => ({
   focusableWhenDisabled: false,
 }));
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = groupContext
   ? useCompositeItem(element, { metadata: itemMetadata, disabled: toggleDisabled })
   : undefined;

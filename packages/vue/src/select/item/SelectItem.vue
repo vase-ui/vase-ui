@@ -46,7 +46,7 @@ export interface SelectItemProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, toRaw, watch, type ShallowRef } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import {
@@ -80,7 +80,7 @@ defineSlots<{
 const store = useSelectRootContext();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { label: () => props.label, textRef });
 
 const itemRoot = computed(() => store.select('itemRoot'));

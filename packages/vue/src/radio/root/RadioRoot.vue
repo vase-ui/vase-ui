@@ -88,7 +88,7 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch, type ShallowRef } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -311,7 +311,7 @@ const state = computed<RadioRootState>(() => ({
 
 provide(RadioRootContext, state);
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = group
   ? useCompositeItem(element, { active: checked, disabled: isDisabled })
   : undefined;
