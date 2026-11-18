@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  defineComponent,
-  h,
-  nextTick,
-  onMounted,
-  shallowRef,
-  Transition,
-  vShow,
-  withDirectives,
-} from 'vue';
+import { h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
 import type { Component, Directive, VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
@@ -20,6 +11,7 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { Select } from '@vase-ui/vue/select';
+import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
 import type { HTMLProps } from '../../../internals/types';
 import { createAttribute } from '../createAttribute';
 import PopupRootNodeScoped from './PopupRootNodeScoped.test.vue';
@@ -213,24 +205,6 @@ describe('VUE-60: each popup part has one root node', () => {
   });
 });
 
-// A target that sets its exposed element in `onMounted`, through a getter with no reactive source.
-const MountedElementTarget = defineComponent({
-  inheritAttrs: false,
-  setup(_, { attrs, expose }) {
-    const host = shallowRef<HTMLElement | null>(null);
-    let widgetElement: HTMLElement | null = null;
-    onMounted(() => {
-      widgetElement = host.value;
-    });
-    expose({
-      get element() {
-        return widgetElement;
-      },
-    });
-    return () => <div {...attrs} ref={host} data-testid="late-target" />;
-  },
-});
-
 describe('each popup part follows a late target of the #render slot', () => {
   const { render } = createRenderer();
 
@@ -262,7 +236,7 @@ describe('each popup part follows a late target of the #render slot', () => {
     expect(partInstance.value?.element).toBe(initial);
 
     useLateTarget.value = true;
-    const late = await screen.findByTestId('late-target');
+    const late = await screen.findByTestId('widget');
     await nextTick();
 
     expect(partInstance.value?.element).toBe(late);

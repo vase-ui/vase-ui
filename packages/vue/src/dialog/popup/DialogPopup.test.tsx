@@ -905,7 +905,7 @@ describe('<Dialog.Popup />', () => {
     expect(screen.queryByTestId('popup')).toBe(null);
   });
 
-  describe('BUG-5519: a popup in the popup that closes with it', () => {
+  describe('BUG-5519: the close of a popup that has a popup in it', () => {
     nestedPopupCloseTests({ parts: Dialog, wrapPopup: (popup) => popup, render });
   });
 

@@ -28,6 +28,7 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import { MountedElementTarget } from '../../test/fixtures/MountedElementTarget';
 import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -84,25 +85,6 @@ const InnerElementTarget = defineComponent({
         <span {...attrs} ref={inner} data-testid="inner" />
       </div>
     );
-  },
-});
-
-// A wrapper of a widget that makes its element in `onMounted`. A getter with no reactive source
-// exposes the element, so the part does not render again when the element comes.
-const MountedElementTarget = defineComponent({
-  inheritAttrs: false,
-  setup(_, { attrs, expose }) {
-    const host = shallowRef<HTMLElement | null>(null);
-    let widgetElement: HTMLElement | null = null;
-    onMounted(() => {
-      widgetElement = host.value;
-    });
-    expose({
-      get element() {
-        return widgetElement;
-      },
-    });
-    return () => <div {...attrs} ref={host} data-testid="widget" />;
   },
 });
 
