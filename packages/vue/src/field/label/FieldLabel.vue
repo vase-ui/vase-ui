@@ -26,7 +26,7 @@ export interface FieldLabelProps
 </script>
 
 <script setup lang="ts">
-import { computed, watchPostEffect } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { error } from '../../common/error';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -67,7 +67,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('labe
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Field.Label');
-  watchPostEffect(() => {
+  const checkElement = (native: boolean) => {
     const label = element.value;
     if (!label) {
       return;
@@ -75,20 +75,21 @@ if (process.env.NODE_ENV !== 'production') {
 
     const isLabelTag = label.tagName === 'LABEL';
 
-    if (props.nativeLabel && !isLabelTag) {
+    if (native && !isLabelTag) {
       error(
         '<Field.Label> expected a <label> element because the `nativeLabel` prop is true.',
         'A non-<label> element has no native label association, so `for` has no effect.',
         'Use a real <label> with the `as` prop or the `#render` slot, or set `nativeLabel` to `false`.',
       );
-    } else if (!props.nativeLabel && isLabelTag) {
+    } else if (!native && isLabelTag) {
       error(
         '<Field.Label> expected a non-<label> element because the `nativeLabel` prop is false.',
         'A <label> element has native label behavior, but Vase UI treats the label as non-native. This can cause unexpected pointer behavior.',
         'Use a non-<label> element with the `as` prop or the `#render` slot, or set `nativeLabel` to `true`.',
       );
     }
-  });
+  };
+  onMounted(() => watch(() => props.nativeLabel, checkElement, { immediate: true, flush: 'post' }));
 }
 
 defineExpose({ element });

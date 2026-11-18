@@ -194,20 +194,21 @@ describe('<Field.Label />', () => {
       );
     });
 
-    it('reports a replacement element that loses its native label association', async () => {
+    it('checks the replacement element when its tag and nativeLabel change together', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const tag = shallowRef('label');
+      const native = shallowRef(true);
       await render(() => (
         <Field.Root>
           <Field.Control />
-          <Field.Label as={tag.value}>Name</Field.Label>
+          <Field.Label as={native.value ? 'label' : 'span'} nativeLabel={native.value}>
+            Name
+          </Field.Label>
         </Field.Root>
       ));
-      expect(error).not.toHaveBeenCalled();
-      tag.value = 'span';
+      native.value = false;
       await flushMicrotasks();
-      expect(error).toHaveBeenCalledTimes(1);
-      expect(error.mock.calls[0]?.[0]).toContain('expected a <label> element');
+      expect(screen.getByText('Name').tagName).toBe('SPAN');
+      expect(error).not.toHaveBeenCalled();
     });
 
     it('reports a nativeLabel value that stops matching the element', async () => {
