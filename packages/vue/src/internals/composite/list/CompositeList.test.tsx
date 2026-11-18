@@ -611,9 +611,7 @@ describe('<CompositeList />', () => {
       const a = screen.getByTestId('a');
       const c = screen.getByTestId('c');
 
-      // One batch that both detaches a registered item and moves another. The move makes the
-      // observer verify order, and the verification walks the detached item, which no longer
-      // has a meaningful document position.
+      // The detached item has no document position when the observer receives the move.
       screen.getByTestId('b').remove();
       list.insertBefore(c, a);
 
@@ -701,6 +699,35 @@ describe('<CompositeList />', () => {
         screen.getByTestId('c'),
         screen.getByTestId('a'),
       ]);
+    });
+
+    it('updates indexes when a Teleport moves an item past another group', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const target = shallowRef('#before');
+      await render(() => (
+        <CompositeList elementsRef={elementsRef}>
+          <div>
+            <div id="before" />
+            <div>
+              <Item label="fixed" />
+            </div>
+            <div id="after" />
+            <Teleport defer to={target.value}>
+              <Item label="moving" />
+            </Teleport>
+          </div>
+        </CompositeList>
+      ));
+      const moving = screen.getByTestId('moving');
+      const fixed = screen.getByTestId('fixed');
+      expect(elementsRef.value).toEqual([moving, fixed]);
+
+      target.value = '#after';
+      await flushMicrotasks();
+      expect(moving.parentElement).toHaveAttribute('id', 'after');
+      expect(elementsRef.value).toEqual([fixed, moving]);
+      expect(fixed).toHaveAttribute('data-index', '0');
+      expect(moving).toHaveAttribute('data-index', '1');
     });
 
     it('observes each shared mutation root once', async () => {

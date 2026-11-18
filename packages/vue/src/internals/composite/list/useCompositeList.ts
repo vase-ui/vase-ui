@@ -105,36 +105,20 @@ export function useCompositeList<Metadata>(
     }
 
     const observer = new MutationObserver((entries) => {
-      // Check the order only after a move. A move is a node that the DOM removed and added again
-      // in the same batch. An addition or a removal alone does not change the order of the other
-      // items. An item that mounts or unmounts sorts the list through `register` or `unregister`.
-      if (!hasMovedNode(entries)) {
-        return;
-      }
-
-      let previousConnectedNode: Element | null = null;
-
-      // If a connected node is now before the previous connected node, an item or one of its
-      // wrappers moved, and the list must sort again.
-      for (const node of sortedNodes) {
-        if (!node.isConnected) {
-          continue;
+      // An item or its wrapper can move outside the observed root without a new ref callback.
+      for (const entry of entries) {
+        for (const node of entry.removedNodes) {
+          if (node.isConnected && sortedNodes.some((item) => node.contains(item))) {
+            triggerRef(registry);
+            return;
+          }
         }
-
-        if (previousConnectedNode && sortByDocumentPosition(previousConnectedNode, node) > 0) {
-          triggerRef(registry);
-          return;
-        }
-
-        previousConnectedNode = node;
       }
     });
 
     onWatcherCleanup(() => observer.disconnect());
 
-    // A reorder that changes an index must invert at least one adjacent pair of the last sorted
-    // order. The common ancestor of each pair sees the move of an item and the move of a wrapper
-    // at the boundary. A pair with no common ancestor has no observer, and its items still register.
+    // A Teleport can move an item between descendants of the same common ancestor.
     const roots = new Set<Element>();
     for (let i = 1; i < sortedNodes.length; i += 1) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from 1 to the last index, so `i - 1` and `i` are indexes of `sortedNodes`.
@@ -144,7 +128,7 @@ export function useCompositeList<Metadata>(
       }
     }
 
-    roots.forEach((root) => observer.observe(root, { childList: true }));
+    roots.forEach((root) => observer.observe(root, { childList: true, subtree: true }));
   }
 
   onMounted(() => {
@@ -260,18 +244,6 @@ function getCommonAncestor(firstNode: Element, lastNode: Element) {
   }
 
   return ancestor;
-}
-
-function hasMovedNode(entries: MutationRecord[]) {
-  for (const entry of entries) {
-    for (const node of entry.removedNodes) {
-      if (node.isConnected) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 function sortByDocumentPosition(a: Element, b: Element) {

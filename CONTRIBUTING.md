@@ -1411,7 +1411,7 @@ The item registry:
 
 - An item registers its element in its ref callback, and it removes the element there.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
-- At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder.
+- At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder. Changing the target of a `Teleport` updates the automatic indexes in document order.
 - `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element and registers it again in a `watch` of `isHeld` of `useKeepAliveState` with `flush: 'sync'`.
 - An item that mounts in a held branch can miss `onDeactivated`. `useKeepAliveState` checks the branch in `setup`. The list also skips disconnected elements when it sorts.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
