@@ -44,5 +44,28 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/root/otpField.ts",
+      "member": "OTPFieldRootContext",
+      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/otp-field/utils/otp.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/root/otpField.ts",
+      "member": "normalizeOTPValue",
+      "witness": "packages/vue/src/otp-field/utils/otp.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/otp-field/utils/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/root/otpField.ts",
+      "member": "inputStateAttributesMapping",
+      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx"
+    }
+  ]
 }

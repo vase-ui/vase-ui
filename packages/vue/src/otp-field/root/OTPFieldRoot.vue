@@ -7,8 +7,7 @@ import type {
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { OTPValidationType } from '../utils/otp';
-import type { OTPFieldInputMode } from './OTPFieldRootContext';
+import type { OTPValidationType, OTPFieldInputMode } from './otpField';
 
 export interface OTPFieldRootState extends FieldRootState {
   /**
@@ -156,7 +155,7 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch, watchPostEffect } from 'vue';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -191,9 +190,9 @@ import {
   getOTPValidationConfig,
   normalizeOTPValue,
   normalizeOTPValueWithDetails,
-} from '../utils/otp';
-import { rootStateAttributesMapping } from '../utils/stateAttributesMapping';
-import { OTPFieldRootContext } from './OTPFieldRootContext';
+  rootStateAttributesMapping,
+  OTPFieldRootContext,
+} from './otpField';
 
 defineOptions({ inheritAttrs: false });
 
@@ -282,7 +281,6 @@ const valueUnwrapped = useControlled<string>({
 
 const inputElements = shallowRef<(HTMLElement | null)[]>([]);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
-const inputCount = shallowRef(0);
 
 let pendingFocus: { index: number; value: string } | null = null;
 let pendingCompleteValue: {
@@ -292,8 +290,7 @@ let pendingCompleteValue: {
 
 const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined) ?? null;
 
-// The list sorts its elements after the callback of `useValueChanged` when one render changes the
-// value and removes slots. An element that left the document is then still in the list.
+// The list can still contain a slot that this patch removed.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
 const controlId = useLabelableId({ id: () => props.id, element: firstInput });
@@ -309,8 +306,6 @@ const inputAriaLabelledBy = computed(() =>
 );
 
 const validationConfig = computed(() => getOTPValidationConfig(props.validationType));
-const pattern = computed(() => validationConfig.value?.slotPattern);
-const hiddenInputPattern = computed(() => validationConfig.value?.getRootPattern(props.length));
 const resolvedInputMode = computed(() => props.inputMode ?? validationConfig.value?.inputMode);
 const hasValidLength = computed(() => Number.isInteger(props.length) && props.length > 0);
 
@@ -328,22 +323,18 @@ const activeIndex = computed(() =>
     : Math.min(otpValue.value.length, props.length - 1),
 );
 
-setFilled(filled.value);
-watch(filled, setFilled);
+watch(filled, setFilled, { immediate: true });
 
 const inputList = useCompositeList({
   elementsRef: inputElements,
-  onMapChange(newMap) {
-    inputCount.value = newMap.size;
-  },
   provide: false,
 });
 
 if (process.env.NODE_ENV !== 'production') {
   watch(
-    [inputCount, () => props.length],
+    [() => inputList.map.value.size, () => props.length],
     ([count, length]) => {
-      if (!Number.isInteger(length) || length <= 0 || count === 0 || count === length) {
+      if (!hasValidLength.value || count === 0 || count === length) {
         return;
       }
 
@@ -356,19 +347,15 @@ if (process.env.NODE_ENV !== 'production') {
     { flush: 'post' },
   );
 
-  const checkLength = () => {
-    const { length } = props;
-    if (Number.isInteger(length) && length > 0) {
+  watchPostEffect(() => {
+    if (hasValidLength.value) {
       return;
     }
 
     warn(
-      `<OTPField.Root> \`length\` must be a positive integer. Received \`length={${String(length)}}\`.`,
+      `<OTPField.Root> \`length\` must be a positive integer. Received \`length={${String(props.length)}}\`.`,
     );
-  };
-
-  onMounted(checkLength);
-  watch(() => props.length, checkLength, { flush: 'post' });
+  });
 }
 
 useRegisterFieldControl(
@@ -418,9 +405,7 @@ function completeValue(completedValue: string, eventDetails: OTPFieldRootComplet
   }
 }
 
-// The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
-// would come before `validation.change`, and the validation could show a new error. The timeout sets
-// this flag, and the callback clears the field and starts no validation.
+// A reset clears the error after the value patch.
 let isResetChangePending = false;
 
 useValueChanged(otpValue, () => {
@@ -435,13 +420,9 @@ useValueChanged(otpValue, () => {
   }
 
   const queuedFocus = pendingFocus;
-
-  if (queuedFocus != null) {
-    pendingFocus = null;
-
-    if (queuedFocus.value === otpValue.value) {
-      focusInput(queuedFocus.index);
-    }
+  pendingFocus = null;
+  if (queuedFocus?.value === otpValue.value) {
+    focusInput(queuedFocus.index);
   }
 
   // When the value shrinks externally, move focus off slots past the first empty one so typing
@@ -458,14 +439,10 @@ useValueChanged(otpValue, () => {
     focusedIndex.value = otpValue.value.length;
   }
 
-  const queuedCompleteValue = pendingCompleteValue;
-
-  if (queuedCompleteValue != null) {
-    pendingCompleteValue = null;
-
-    if (queuedCompleteValue.value === otpValue.value) {
-      completeValue(otpValue.value, queuedCompleteValue.eventDetails);
-    }
+  const queuedComplete = pendingCompleteValue;
+  pendingCompleteValue = null;
+  if (queuedComplete?.value === otpValue.value) {
+    completeValue(otpValue.value, queuedComplete.eventDetails);
   }
 });
 
@@ -543,15 +520,6 @@ function handleInputBlur(event: FocusEvent) {
   }
 }
 
-function getInputId(index: number) {
-  const id = controlId.value;
-  if (id == null) {
-    return undefined;
-  }
-
-  return index === 0 ? id : `${id}-${index + 1}`;
-}
-
 const state = computed<OTPFieldRootState>(() => ({
   ...fieldState.value,
   complete: otpValue.value.length === props.length,
@@ -569,32 +537,23 @@ const inputRender = useInputRender();
 provide(OTPFieldRootContext, {
   inputRender,
   activeIndex,
-  autoComplete: computed(() => props.autoComplete),
-  disabled: isDisabled,
-  form: computed(() => props.form),
+  options: props,
   focusInput,
   queueFocusInput,
-  getInputId,
+  controlId,
   handleInputBlur,
   handleInputFocus,
   inputList,
   inputMode: resolvedInputMode,
   inputAriaLabelledBy,
   invalid,
-  length: computed(() => props.length),
-  mask: computed(() => props.mask),
-  pattern,
+  pattern: computed(() => validationConfig.value?.slotPattern),
   reportValueInvalid,
-  readOnly: computed(() => props.readOnly),
-  required: computed(() => props.required),
-  normalizeValue: computed(() => props.normalizeValue),
   setFocused(nextFocused: boolean) {
     focused.value = nextFocused;
   },
   setValue,
   state,
-  validationType: computed(() => props.validationType),
-  value: otpValue,
 });
 
 function mergeAriaIds(...values: (string | undefined)[]) {
@@ -674,53 +633,19 @@ useFormReset(hiddenInputElement, (event) => {
   }
 });
 
-// The render of the root calls `setHiddenInput`. A plain variable gives that render no dependency
-// on the element.
-let ownHiddenInput: HTMLInputElement | null = null;
 const giveFieldInput = useFieldInput();
-
-function setHiddenInput(input: unknown) {
-  const next = input as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (next === ownHiddenInput) {
-    return;
-  }
-
-  giveFieldInput(next);
-  ownHiddenInput = next;
-  hiddenInputElement.value = next;
+function setHiddenInput(node: unknown) {
+  const input = node as HTMLInputElement | null;
+  giveFieldInput(input);
+  hiddenInputElement.value = input;
 }
 
 useFormRestore(hiddenInputElement, inputRender.renderValue);
 
-function hiddenInputProps() {
-  const validationProps = validation.getValidationProps(isDisabled.value);
-  return {
-    ...validationProps,
-    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    type: 'text',
-    id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
-    form: props.form,
-    name: inputName.value,
-    ...(writesHiddenValue.value ? inputRender.valueProps(otpValue.value) : undefined),
-    autocomplete: props.autoComplete,
-    inputmode: resolvedInputMode.value,
-    minlength: props.length,
-    maxlength: props.length,
-    pattern: hiddenInputPattern.value,
-    disabled: isDisabled.value,
-    readonly: props.readOnly,
-    required: props.required,
-    'aria-hidden': true,
-    tabindex: -1,
-    style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
-    onInvalid: handleHiddenInputInvalid,
-    onFocusin() {
-      focusInput(0);
-    },
-    onInput: handleHiddenInput,
-  };
-}
+const hiddenValidation = computed(() => {
+  const attributes = validation.getValidationProps(isDisabled.value);
+  return { ...attributes, 'aria-describedby': ariaAfterHydration(attributes['aria-describedby']) };
+});
 
 defineExpose({ element });
 </script>
@@ -730,5 +655,27 @@ defineExpose({ element });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-if="hasValidLength" v-bind="hiddenInputProps()" :ref="setHiddenInput" />
+  <input
+    v-if="hasValidLength"
+    :ref="setHiddenInput"
+    v-bind="{ ...hiddenValidation, ...(writesHiddenValue && inputRender.valueProps(otpValue)) }"
+    type="text"
+    :id="controlId && inputName == null ? `${controlId}-hidden-input` : undefined"
+    :form="props.form"
+    :name="inputName"
+    :autocomplete="props.autoComplete"
+    :inputmode="resolvedInputMode"
+    :minlength="props.length"
+    :maxlength="props.length"
+    :pattern="validationConfig?.getRootPattern(props.length)"
+    :disabled="isDisabled"
+    :readonly="props.readOnly"
+    :required="props.required"
+    aria-hidden="true"
+    tabindex="-1"
+    :style="inputName ? visuallyHiddenInput : visuallyHiddenInputPinned"
+    @invalid="handleHiddenInputInvalid"
+    @focusin="focusInput(0)"
+    @input="handleHiddenInput"
+  />
 </template>

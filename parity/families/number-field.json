@@ -41,5 +41,56 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
+      "member": "useNumberFieldStepperButton",
+      "witness": "packages/vue/src/number-field/root/useNumberFieldStepperButton.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
+      "member": "NumberFieldScrubAreaContext",
+      "witness": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/constants.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/usePressAndHold.ts",
+      "member": "DEFAULT_TICK_DELAY",
+      "witness": "packages/vue/src/number-field/increment/NumberFieldIncrement.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/number-field/scrub-area/NumberFieldScrubArea.vue",
+      "member": "getViewportRect",
+      "witness": "packages/vue/src/number-field/utils/getViewportRect.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
+      "member": "stateAttributesMapping",
+      "witness": "packages/vue/src/number-field/root/NumberFieldRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/types.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/utils/parse.ts",
+      "member": "IncrementValueParameters",
+      "witness": "packages/vue/src/number-field/root/NumberFieldRootContext.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/validate.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/utils/parse.ts",
+      "member": "toValidatedNumber",
+      "witness": "packages/vue/src/number-field/utils/validate.test.ts"
+    }
+  ]
 }

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { normalizeOTPValue, removeOTPCharacter, replaceOTPValue, stripOTPWhitespace } from './otp';
+import {
+  normalizeOTPValue,
+  removeOTPCharacter,
+  replaceOTPValue,
+  stripOTPWhitespace,
+} from '../root/otpField';
 
 describe('otp utils', () => {
   it('removes whitespace from pasted values', () => {

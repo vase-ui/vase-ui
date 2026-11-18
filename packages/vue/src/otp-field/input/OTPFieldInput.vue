@@ -32,15 +32,7 @@ export interface OTPFieldInputProps
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onMounted,
-  onUpdated,
-  shallowRef,
-  useAttrs,
-  type ShallowRef,
-} from 'vue';
+import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
@@ -58,9 +50,13 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
-import { getOTPFieldInputState, useOTPFieldRootContext } from '../root/OTPFieldRootContext';
-import { normalizeOTPValueWithDetails, removeOTPCharacter, replaceOTPValue } from '../utils/otp';
-import { inputStateAttributesMapping } from '../utils/stateAttributesMapping';
+import {
+  useOTPFieldRootContext,
+  normalizeOTPValueWithDetails,
+  removeOTPCharacter,
+  replaceOTPValue,
+  inputStateAttributesMapping,
+} from '../root/otpField';
 
 defineOptions({ inheritAttrs: false });
 
@@ -74,34 +70,29 @@ defineSlots<{
 
 const {
   activeIndex,
-  autoComplete,
-  disabled,
-  form,
   focusInput,
   queueFocusInput,
-  getInputId,
+  controlId,
+  options,
   handleInputBlur,
   handleInputFocus,
   inputList,
   inputMode,
   inputAriaLabelledBy,
   invalid,
-  length,
-  mask,
   pattern,
   reportValueInvalid,
   inputRender,
-  readOnly,
-  required,
-  normalizeValue,
   setFocused: setRootFocused,
   setValue,
   state,
-  validationType,
-  value,
 } = useOTPFieldRootContext();
 
-const setFocused = useSetFieldFocused(disabled, () => element.value, setRootFocused);
+const setFocused = useSetFieldFocused(
+  () => state.value.disabled,
+  () => element.value,
+  setRootFocused,
+);
 const direction = useDirection();
 
 // During an IME composition, Safari gives the text through `input` events as a string that grows:
@@ -113,11 +104,16 @@ const composingValue = shallowRef<string | null>(null);
 // the first slot. The slot takes nothing, so the root does not complete and submit an old code.
 const writesValue = useValueBeforeHydration(props, () => element.value, { restorable: false });
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const element = shallowRef<HTMLElement | null>(null);
 const index = useCompositeListItem(element, { list: inputList });
 
-const slotValue = computed(() => value.value[index.value] ?? '');
-const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
+const slotValue = computed(() => state.value.value[index.value] ?? '');
+const inputState = computed<OTPFieldInputState>(() => ({
+  ...state.value,
+  value: slotValue.value,
+  index: index.value,
+  filled: slotValue.value !== '',
+}));
 
 const { valueProps, renderValue } = inputRender;
 
@@ -159,9 +155,9 @@ function commitValue(
   const input = event.currentTarget as HTMLInputElement;
   const [nextDigits, didRejectCharacters] = normalizeOTPValueWithDetails(
     rawValue,
-    length.value,
-    validationType.value,
-    normalizeValue.value,
+    state.value.length,
+    options.validationType,
+    options.normalizeValue,
   );
 
   if (didRejectCharacters) {
@@ -175,15 +171,13 @@ function commitValue(
     if (reason === REASONS.inputChange) {
       if (rawValue === '') {
         setValue(
-          removeOTPCharacter(value.value, index.value),
+          removeOTPCharacter(state.value.value, index.value),
           createChangeEventDetails(REASONS.inputClear, event),
         );
       } else if (slotValue.value !== '') {
         // Vue writes the character back at the render, and that write clears the selection.
         renderValue();
-        void nextTick(() => {
-          input.select();
-        });
+        void nextTick(() => input.select());
       }
     }
     return;
@@ -191,12 +185,12 @@ function commitValue(
 
   const committedValue = setValue(
     replaceOTPValue(
-      value.value,
+      state.value.value,
       index.value,
       nextDigits,
-      length.value,
-      validationType.value,
-      normalizeValue.value,
+      state.value.length,
+      options.validationType,
+      options.normalizeValue,
     ),
     createChangeEventDetails(reason, event as never),
   );
@@ -207,14 +201,17 @@ function commitValue(
     committedValue != null &&
     (writesValue.value || activeElement(ownerDocument(input)) === input)
   ) {
-    queueFocusInput(Math.min(index.value + nextDigits.length, length.value - 1), committedValue);
+    queueFocusInput(
+      Math.min(index.value + nextDigits.length, state.value.length - 1),
+      committedValue,
+    );
   }
 }
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
 
-  if (!disabled.value && !readOnly.value) {
+  if (!state.value.disabled && !state.value.readOnly) {
     if (composingValue.value != null) {
       composingValue.value = input.value;
     } else {
@@ -230,14 +227,14 @@ function handleInput(event: Event) {
 function handleKeydown(event: KeyboardEvent) {
   // A browser gives real key names, such as `Backspace`, for keydown events in a composition. The
   // IME owns the edit until `compositionend`, so the OTP commands must not run for them.
-  if (event.defaultPrevented || disabled.value || composingValue.value != null) {
+  if (event.defaultPrevented || state.value.disabled || composingValue.value != null) {
     return;
   }
 
   const input = event.currentTarget as HTMLInputElement;
   const firstIndex = 0;
-  const lastIndex = Math.max(length.value - 1, firstIndex);
-  const endTargetIndex = Math.min(value.value.length, lastIndex);
+  const lastIndex = Math.max(state.value.length - 1, firstIndex);
+  const endTargetIndex = Math.min(state.value.value.length, lastIndex);
   const hasBoundaryModifier = (event.ctrlKey || event.metaKey) && !event.altKey;
   const isRtl = direction.value === 'rtl';
   const previousKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
@@ -267,7 +264,7 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (readOnly.value) {
+  if (state.value.readOnly) {
     return;
   }
 
@@ -287,7 +284,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (event.key === 'Delete') {
     stopEvent(event);
-    setKeyboardValue(removeOTPCharacter(value.value, index.value), index.value);
+    setKeyboardValue(removeOTPCharacter(state.value.value, index.value), index.value);
     return;
   }
 
@@ -296,7 +293,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (event.key.length === 1 && fullSelection && slotValue.value === event.key) {
     stopEvent(event);
-    if (index.value < length.value - 1) {
+    if (index.value < state.value.length - 1) {
       focusInput(index.value + 1);
     }
     return;
@@ -306,12 +303,12 @@ function handleKeydown(event: KeyboardEvent) {
     stopEvent(event);
     const targetIndex = Math.max(firstIndex, index.value - 1);
     const deleteIndex = slotValue.value === '' ? targetIndex : index.value;
-    setKeyboardValue(removeOTPCharacter(value.value, deleteIndex), targetIndex);
+    setKeyboardValue(removeOTPCharacter(state.value.value, deleteIndex), targetIndex);
   }
 }
 
 function handlePaste(event: ClipboardEvent) {
-  if (event.defaultPrevented || disabled.value || readOnly.value) {
+  if (event.defaultPrevented || state.value.disabled || state.value.readOnly) {
     return;
   }
 
@@ -356,28 +353,31 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props
 
     return [
       {
-        id: getInputId(slotIndex),
+        id:
+          slotIndex === 0 || controlId.value == null
+            ? controlId.value
+            : `${controlId.value}-${slotIndex + 1}`,
         ...(writesValue.value ? valueProps(composingValue.value ?? slotValue.value) : undefined),
-        type: mask.value ? 'password' : 'text',
+        type: options.mask ? 'password' : 'text',
         inputmode: inputMode.value,
-        autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
+        autocomplete: slotIndex === 0 ? options.autoComplete : 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
         spellcheck: 'false',
-        enterkeyhint: slotIndex === length.value - 1 ? 'done' : 'next',
+        enterkeyhint: slotIndex === state.value.length - 1 ? 'done' : 'next',
         // Only the first slot has a maximum length, so that a password manager shows no bubble at a
         // later input.
-        maxlength: slotIndex === 0 ? length.value : undefined,
+        maxlength: slotIndex === 0 ? state.value.length : undefined,
         tabindex: activeIndex.value === slotIndex ? 0 : -1,
-        disabled: disabled.value ? '' : undefined,
-        form: form.value,
+        disabled: state.value.disabled ? '' : undefined,
+        form: options.form,
         pattern: pattern.value,
-        readonly: readOnly.value || undefined,
-        required: required.value || undefined,
+        readonly: state.value.readOnly || undefined,
+        required: state.value.required || undefined,
         'aria-labelledby': ariaLabel == null ? inheritedLabel : undefined,
-        'aria-invalid': !disabled.value && invalid.value ? true : undefined,
+        'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
         'aria-label': ariaLabel,
         onMousedown(event: MouseEvent) {
-          if (event.defaultPrevented || disabled.value) {
+          if (event.defaultPrevented || state.value.disabled) {
             return;
           }
 
@@ -385,18 +385,14 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props
           focusInput(slotIndex);
         },
         onFocusin(event: FocusEvent) {
-          if (disabled.value) {
+          if (state.value.disabled) {
             return;
           }
 
           setFocused(true);
           handleInputFocus(slotIndex, event);
         },
-        onFocusout(event: FocusEvent) {
-          // Focus that moves to a sibling slot stays inside the root. `handleInputBlur` clears the
-          // focused state only when focus leaves the root, so a move between slots does not change it.
-          handleInputBlur(event);
-        },
+        onFocusout: handleInputBlur,
         onCompositionstart() {
           // Some Android keyboards report all text as a composition, so Android commits each
           // `input` event.
@@ -411,7 +407,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props
 
           composingValue.value = null;
 
-          if (!disabled.value && !readOnly.value) {
+          if (!state.value.disabled && !state.value.readOnly) {
             commitValue(
               (event.currentTarget as HTMLInputElement).value,
               REASONS.inputChange,

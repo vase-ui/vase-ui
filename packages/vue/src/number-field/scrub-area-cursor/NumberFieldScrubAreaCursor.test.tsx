@@ -12,7 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { platform } from '../../common/platform';
-import { NumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
+import { NumberFieldScrubAreaContext } from '../root/NumberFieldRootContext';
 import NumberFieldScrubAreaCursorReplace from './NumberFieldScrubAreaCursorReplace.test.vue';
 
 const isWebKit = platform.engine.webkit;

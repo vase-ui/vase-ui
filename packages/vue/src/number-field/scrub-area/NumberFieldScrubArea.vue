@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
+import { ownerWindow } from '../../common/owner';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { NumberFieldRootState } from '../root/NumberFieldRoot.vue';
 
@@ -26,6 +27,38 @@ export interface NumberFieldScrubAreaProps
    */
   teleportDistance?: number | undefined;
 }
+
+export function getViewportRect(teleportDistance: number | undefined, scrubAreaEl: HTMLElement) {
+  const win = ownerWindow(scrubAreaEl);
+
+  if (teleportDistance != null) {
+    const rect = scrubAreaEl.getBoundingClientRect();
+    return {
+      left: rect.left - teleportDistance / 2,
+      top: rect.top - teleportDistance / 2,
+      right: rect.right + teleportDistance / 2,
+      bottom: rect.bottom + teleportDistance / 2,
+    };
+  }
+
+  const viewport = win.visualViewport;
+
+  if (viewport) {
+    return {
+      left: viewport.offsetLeft,
+      top: viewport.offsetTop,
+      right: viewport.offsetLeft + viewport.width,
+      bottom: viewport.offsetTop + viewport.height,
+    };
+  }
+
+  return {
+    left: 0,
+    top: 0,
+    right: win.document.documentElement.clientWidth,
+    bottom: win.document.documentElement.clientHeight,
+  };
+}
 </script>
 
 <script setup lang="ts">
@@ -33,7 +66,7 @@ import { nextTick, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -42,11 +75,12 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
-import { getViewportRect } from '../utils/getViewportRect';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
-import type { ScrubCursor } from './NumberFieldScrubAreaContext';
-import { NumberFieldScrubAreaContext } from './NumberFieldScrubAreaContext';
+import {
+  useNumberFieldRootContext,
+  stateAttributesMapping,
+  NumberFieldScrubAreaContext,
+} from '../root/NumberFieldRootContext';
+import type { ScrubCursor } from '../root/NumberFieldRootContext';
 
 const SCRUB_AREA_STYLE: CSSProperties = {
   'touch-action': 'none',
@@ -73,11 +107,10 @@ const {
   inputRef,
   focusInput,
   incrementValue,
-  allowInputSyncRef,
+  setEditing,
   getStepAmount,
   onValueCommitted,
-  lastChangedValueRef,
-  valueRef,
+  getStepCommitValue,
 } = useNumberFieldRootContext();
 
 let didMove = false;
@@ -216,10 +249,7 @@ watch(
           // Ignore errors.
         } finally {
           onScrubbingChange(false, event);
-          onValueCommitted(
-            lastChangedValueRef.value ?? valueRef.value,
-            createGenericEventDetails(REASONS.scrub, event),
-          );
+          onValueCommitted(getStepCommitValue(), createGenericEventDetails(REASONS.scrub, event));
 
           // Dispatch a click if no movement happened. While the pointer is locked, the
           // browser targets its click at the lock element instead of the scrub area.
@@ -275,7 +305,7 @@ watch(
         const rawAmount = dValue * stepAmount;
 
         if (rawAmount !== 0) {
-          allowInputSyncRef.value = true;
+          setEditing(false);
           incrementValue(Math.abs(rawAmount), {
             direction: rawAmount >= 0 ? 1 : -1,
             event,

@@ -218,6 +218,26 @@ describe('<OTPField.Input />', () => {
     expect(document.activeElement).toBe(inputs[3]);
   });
 
+  it('uses the current validation type when a composition ends', async () => {
+    const onValueChange = vi.fn();
+    const { setProps } = await render(
+      <OTPFieldTest validationType="alpha" onValueChange={onValueChange} />,
+    );
+    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+    inputs[0].focus();
+    await fireEvent.compositionStart(inputs[0]);
+    await fireEvent.input(inputs[0], { target: { value: 'a2' } });
+    await setProps({ validationType: 'numeric' });
+
+    expect(inputs[0]).toHaveValue('a2');
+    expect(onValueChange).not.toHaveBeenCalled();
+    await fireEvent.compositionEnd(inputs[0]);
+
+    expect(onValueChange.mock.calls.map(([value]) => value)).toEqual(['2']);
+    expect(inputs[0]).toHaveValue('2');
+    expect(inputs[1]).toHaveFocus();
+  });
+
   it('reports characters rejected from a committed IME composition', async () => {
     const onValueChange = vi.fn();
     const onValueInvalid = vi.fn();

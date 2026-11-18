@@ -1,3 +1,75 @@
+import { inject } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
+import { fieldValidityMapping } from '../../internals/field-constants/constants';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
+import type { useInputRender } from '../../internals/useInputRender';
+import type { OTPFieldInputState } from '../input/OTPFieldInput.vue';
+import type {
+  OTPFieldRootChangeEventDetails,
+  OTPFieldRootInvalidEventDetails,
+  OTPFieldRootState,
+  OTPFieldRootProps,
+} from './OTPFieldRoot.vue';
+
+export interface OTPFieldRootContext {
+  inputRender: ReturnType<typeof useInputRender>;
+  activeIndex: ComputedRef<number>;
+  focusInput: (index: number) => void;
+  queueFocusInput: (index: number, value: string) => void;
+  controlId: ComputedRef<string | undefined>;
+  options: Readonly<
+    Pick<OTPFieldRootProps, 'autoComplete' | 'form' | 'mask' | 'normalizeValue'>
+  > & {
+    readonly validationType: OTPValidationType;
+  };
+  handleInputBlur: (event: FocusEvent) => void;
+  handleInputFocus: (index: number, event: FocusEvent) => void;
+  /**
+   * The list of the inputs. The inputs register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  inputList: CompositeListContextValue<unknown>;
+  inputMode: ComputedRef<OTPFieldInputMode | undefined>;
+  inputAriaLabelledBy: ComputedRef<string | undefined>;
+  invalid: ComputedRef<boolean | undefined>;
+  pattern: ComputedRef<string | undefined>;
+  reportValueInvalid: (value: string, details: OTPFieldRootInvalidEventDetails) => void;
+  setFocused: (focused: boolean) => void;
+  setValue: (value: string, details: OTPFieldRootChangeEventDetails) => string | null;
+  state: ComputedRef<OTPFieldRootState>;
+}
+
+export type OTPFieldInputMode =
+  'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
+
+export const OTPFieldRootContext: InjectionKey<OTPFieldRootContext> = Symbol();
+
+export function useOTPFieldRootContext(): OTPFieldRootContext {
+  // With one argument, Vue shows a warning when there is no provider. The error below says more.
+  const context = inject(OTPFieldRootContext, undefined);
+
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: A part of OTP Field must be inside <OTPField.Root>. Without a root the part has no value to show. Put the part inside <OTPField.Root>.',
+    );
+  }
+
+  return context;
+}
+
+export const rootStateAttributesMapping: StateAttributesMapping<OTPFieldRootState> = {
+  value: () => null,
+  length: () => null,
+  ...fieldValidityMapping,
+};
+
+export const inputStateAttributesMapping: StateAttributesMapping<OTPFieldInputState> = {
+  value: () => null,
+  index: () => null,
+  ...fieldValidityMapping,
+};
+
 interface OTPValidationConfig {
   slotPattern: string;
   getRootPattern: (length: number) => string;

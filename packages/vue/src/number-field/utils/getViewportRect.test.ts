@@ -1,6 +1,6 @@
 import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest';
 import { isJSDOM } from '#test-utils';
-import { getViewportRect } from './getViewportRect';
+import { getViewportRect } from '../scrub-area/NumberFieldScrubArea.vue';
 
 describe('getViewportRect', () => {
   let element: HTMLElement;

@@ -22,9 +22,11 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { usePortalRegistration } from '../../utils/popups/portal/portalElements';
 import { createAttribute } from '../../utils/popups/createAttribute';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
-import { useNumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
+import {
+  useNumberFieldRootContext,
+  useNumberFieldScrubAreaContext,
+  stateAttributesMapping,
+} from '../root/NumberFieldRootContext';
 
 const CURSOR_STYLE: CSSProperties = {
   position: 'fixed',

@@ -11,7 +11,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import { CHANGE_VALUE_TICK_DELAY, START_AUTO_CHANGE_DELAY } from '../utils/constants';
+import { DEFAULT_TICK_DELAY, DEFAULT_START_DELAY } from '../../internals/usePressAndHold';
 
 // Mirrors the touch settle delay in `usePressAndHold`.
 const TOUCH_TIMEOUT = 50;
@@ -51,6 +51,25 @@ describe('<NumberField.Increment />', () => {
       );
     }
 
+    it('repeats after 460 ms and then every 60 ms until release', async () => {
+      await render(<TestNumberField />);
+      const button = screen.getByRole('button');
+      const input = screen.getByRole('textbox');
+      await fireEvent.pointerDown(button, { pointerType: 'mouse' });
+      await tick(459);
+      expect(input).toHaveValue('1');
+      await tick(1);
+      expect(input).toHaveValue('2');
+      await tick(59);
+      expect(input).toHaveValue('2');
+      await tick(1);
+      expect(input).toHaveValue('3');
+
+      await fireEvent.pointerUp(button, { pointerType: 'mouse' });
+      await tick(120);
+      expect(input).toHaveValue('3');
+    });
+
     it('stops the hold on release when an ancestor stops pointerup propagation', async () => {
       await render(
         <div onPointerup={(event: PointerEvent) => event.stopPropagation()}>
@@ -71,9 +90,9 @@ describe('<NumberField.Increment />', () => {
       await fireEvent.pointerUp(button, { pointerType: 'mouse' });
       await fireEvent.mouseUp(button);
 
-      await tick(START_AUTO_CHANGE_DELAY);
-      await tick(CHANGE_VALUE_TICK_DELAY);
-      await tick(CHANGE_VALUE_TICK_DELAY);
+      await tick(DEFAULT_START_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
 
       expect(input).toHaveValue('1');
     });
@@ -93,9 +112,9 @@ describe('<NumberField.Increment />', () => {
 
       expect(input).toHaveValue('1');
 
-      await tick(START_AUTO_CHANGE_DELAY);
-      await tick(CHANGE_VALUE_TICK_DELAY);
-      await tick(CHANGE_VALUE_TICK_DELAY);
+      await tick(DEFAULT_START_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
 
       expect(input).toHaveValue('3');
 
@@ -103,7 +122,7 @@ describe('<NumberField.Increment />', () => {
       await fireEvent.touchEnd(increment);
       await fireEvent.click(increment, { detail: 1 });
 
-      await tick(CHANGE_VALUE_TICK_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
 
       expect(input).toHaveValue('3');
     });
@@ -119,8 +138,8 @@ describe('<NumberField.Increment />', () => {
       await fireEvent.pointerMove(increment, { pointerType: 'touch', clientX: 0, clientY: 20 });
 
       await tick(TOUCH_TIMEOUT);
-      await tick(START_AUTO_CHANGE_DELAY);
-      await tick(CHANGE_VALUE_TICK_DELAY);
+      await tick(DEFAULT_START_DELAY);
+      await tick(DEFAULT_TICK_DELAY);
 
       expect(input).toHaveValue('0');
     });
@@ -138,7 +157,7 @@ describe('<NumberField.Increment />', () => {
       await fireEvent.pointerMove(increment, { pointerType: 'touch', clientX: 3, clientY: 0 });
 
       await tick(TOUCH_TIMEOUT);
-      await tick(START_AUTO_CHANGE_DELAY);
+      await tick(DEFAULT_START_DELAY);
 
       expect(input).toHaveValue('0');
 
@@ -201,7 +220,7 @@ describe('<NumberField.Increment />', () => {
       expect(onValueCommitted.mock.lastCall?.[0]).toBe(Number(valueAtRelease));
 
       // The wait is longer than two ticks of the hold.
-      await new Promise((resolve) => setTimeout(resolve, CHANGE_VALUE_TICK_DELAY * 3));
+      await new Promise((resolve) => setTimeout(resolve, DEFAULT_TICK_DELAY * 3));
       expect(input).toHaveValue(valueAtRelease);
     });
   });

@@ -2419,6 +2419,29 @@ describe('<NumberField.Input />', () => {
   });
 
   describe('a composition', () => {
+    it('keeps refused composition text until the final input', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <NumberField.Root defaultValue={1} onValueChange={onValueChange}>
+          <NumberField.Input />
+        </NumberField.Root>,
+      );
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      input.focus();
+      await fireEvent.compositionStart(input);
+      input.value = 'あ';
+      await fireEvent(input, new InputEvent('input', { bubbles: true, isComposing: true }));
+      expect(input).toHaveValue('あ');
+      expect(getHiddenInput()).toHaveValue(1);
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      await fireEvent.compositionEnd(input);
+      await fireEvent.input(input, { target: { value: '１２' } });
+      expect(input).toHaveValue('１２');
+      expect(getHiddenInput()).toHaveValue(12);
+      expect(onValueChange.mock.calls.map(([value]) => value)).toEqual([12]);
+    });
+
     // Playwright has a command for the input method editor only for Chromium.
     const compose = async (session: CDPSession, text: string) => {
       await session.send('Input.imeSetComposition', {
