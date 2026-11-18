@@ -42,7 +42,7 @@ const { ref, index: itemIndex } = useCompositeListItem({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [ref],
+  ref,
   props: (attrs) => [{ 'data-index': itemIndex.value }, attrs],
 });
 

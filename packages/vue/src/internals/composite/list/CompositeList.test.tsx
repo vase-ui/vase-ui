@@ -1139,6 +1139,34 @@ describe('<CompositeList />', () => {
   });
 
   describe('KeepAlive', () => {
+    it('keeps the visible labels until a held item returns', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
+      const label = shallowRef('before');
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <CompositeListItemPart label={label.value} />,
+        { mounted: true },
+      );
+      await render(
+        <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
+          <CompositeListItemPart label="first" />
+          <HeldBranch />
+        </CompositeList>,
+      );
+
+      expect(labelsRef.value).toEqual(['first', 'before']);
+      await hide();
+      const visibleLabels = labelsRef.value;
+      expect(visibleLabels).toEqual(['first']);
+
+      label.value = 'after';
+      await flushMicrotasks();
+      expect(labelsRef.value).toBe(visibleLabels);
+
+      await show();
+      expect(labelsRef.value).toEqual(['first', 'after']);
+    });
+
     it('removes a deactivated item and registers it again when it is active', async () => {
       const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 

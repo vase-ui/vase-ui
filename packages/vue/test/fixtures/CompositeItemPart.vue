@@ -44,9 +44,7 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  // The composite ref is first. When two items share one element, the outer item registers last
-  // and owns the entry.
-  ref: [compositeRef],
+  ref: compositeRef,
   props: (attrs) => [compositeProps.value, attrs],
 });
 

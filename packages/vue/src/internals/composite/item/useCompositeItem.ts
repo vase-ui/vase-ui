@@ -25,7 +25,11 @@ export function useCompositeItem<Metadata>(
     onHighlightedIndexChange,
     takeInitialTabStop,
   } = useCompositeRootContext();
-  const { ref, index } = useCompositeListItem({
+  const {
+    ref: compositeRef,
+    element,
+    index,
+  } = useCompositeListItem({
     metadata: params.metadata,
     index: params.index,
     itemState: params,
@@ -38,23 +42,12 @@ export function useCompositeItem<Metadata>(
     toValue(params.disabled) ?? false,
   );
 
-  // Until the item is mounted, it keeps the tab stop that `takeInitialTabStop` gave. This is also
-  // true for an item that renders after its root is mounted, such as an item below a `<Suspense>`.
-  // After the mount, the tab stop is the item at the highlighted index, as in Base UI. The
-  // exception: while an item that is not mounted holds the tab stop, a mounted item does not take it.
+  // An async item can still hold the server tab stop after its siblings mount.
   const isTabStop = computed(() =>
     isHydrating.value
       ? initialTabStop
       : !hasUnmountedTabStop.value && highlightedIndex.value === index.value,
   );
-
-  // Only a listener reads the element, so it is a plain variable.
-  let element: HTMLElement | null = null;
-
-  function compositeRef(node: HTMLElement | null) {
-    element = node;
-    ref(node);
-  }
 
   function onFocusin(event: FocusEvent) {
     onHighlightedIndexChange(index.value);
@@ -62,12 +55,13 @@ export function useCompositeItem<Metadata>(
   }
 
   function onMousemove() {
-    if (!highlightItemOnHover.value || !element) {
+    const node = element.value;
+    if (!highlightItemOnHover.value || !node) {
       return;
     }
 
-    if (highlightedIndex.value !== index.value && !isElementDisabled(element)) {
-      element.focus();
+    if (highlightedIndex.value !== index.value && !isElementDisabled(node)) {
+      node.focus();
     }
   }
 

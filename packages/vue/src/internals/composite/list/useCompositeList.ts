@@ -1,5 +1,16 @@
-import { computed, onMounted, onScopeDispose, provide, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  onMounted,
+  onScopeDispose,
+  onWatcherCleanup,
+  provide,
+  shallowRef,
+  toValue,
+  triggerRef,
+  watch,
+} from 'vue';
 import type { ShallowRef } from 'vue';
+import { areArraysEqual } from '../../../common/areArraysEqual';
 import { CompositeListContext } from './CompositeListContext';
 import type {
   CompositeItemState,
@@ -32,30 +43,14 @@ export function useCompositeList<Metadata>(
   const { elementsRef, labelsRef, onMapChange } = params;
 
   const registrations = new Map<Element, CompositeListRegistration<Metadata>>();
+  // A ref callback can write to the map without a subscription to other items.
+  const registry = shallowRef(registrations);
   const publishedMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<Metadata>>>(new Map());
-  // Vue calls a ref callback during a render, and a read of reactive state in that callback makes
-  // the render depend on that state. The code that a ref callback reaches reads no reactive state.
-  // So the trigger is only written, from a plain counter.
-  const trigger = shallowRef(0);
-  let tick = 0;
   let nextIndex = 0;
-  // The first sort runs in `onMounted`, so the registrations before it write no trigger.
-  let isDirty = true;
-  let previousItems: readonly CompositeListItem<Metadata>[] | null = null;
-  let mutationObserver: MutationObserver | null = null;
-
-  function scheduleMapUpdate() {
-    if (isDirty) {
-      return;
-    }
-
-    isDirty = true;
-    trigger.value = ++tick;
-  }
 
   function register(node: Element, registration: CompositeListRegistration<Metadata>) {
     registrations.set(node, registration);
-    scheduleMapUpdate();
+    triggerRef(registry);
   }
 
   function unregister(node: Element, registration: CompositeListRegistration<Metadata>) {
@@ -63,7 +58,7 @@ export function useCompositeList<Metadata>(
       return;
     }
     registrations.delete(node);
-    scheduleMapUpdate();
+    triggerRef(registry);
   }
 
   function takeIndexGuess() {
@@ -104,9 +99,6 @@ export function useCompositeList<Metadata>(
   }
 
   function observe(sortedNodes: HTMLElement[]) {
-    mutationObserver?.disconnect();
-    mutationObserver = null;
-
     // A single item cannot change its order. Some environments have no `MutationObserver`.
     if (typeof MutationObserver !== 'function' || sortedNodes.length < 2) {
       return;
@@ -130,8 +122,7 @@ export function useCompositeList<Metadata>(
         }
 
         if (previousConnectedNode && sortByDocumentPosition(previousConnectedNode, node) > 0) {
-          observer.disconnect();
-          scheduleMapUpdate();
+          triggerRef(registry);
           return;
         }
 
@@ -139,7 +130,7 @@ export function useCompositeList<Metadata>(
       }
     });
 
-    mutationObserver = observer;
+    onWatcherCleanup(() => observer.disconnect());
 
     // A reorder that changes an index must invert at least one adjacent pair of the last sorted
     // order. The common ancestor of each pair sees the move of an item and the move of a wrapper
@@ -156,54 +147,38 @@ export function useCompositeList<Metadata>(
     roots.forEach((root) => observer.observe(root, { childList: true }));
   }
 
-  function flush() {
-    isDirty = false;
+  onMounted(() => {
+    watch(
+      () => getCompositeListSnapshot(registry.value),
+      ({ items, automaticNodes }, previous) => {
+        const nextMap = syncRefs(items);
+        observe(automaticNodes);
 
-    const [items, automaticNodes] = getCompositeListSnapshot(registrations);
-    const nextMap = syncRefs(items);
+        // A label change updates the labels but preserves the published map.
+        if (
+          previous &&
+          areArraysEqual(
+            previous.items,
+            items,
+            (a, b) =>
+              a.element === b.element &&
+              a.index === b.index &&
+              a.explicitIndex === b.explicitIndex &&
+              a.itemState === b.itemState &&
+              a.metadata === b.metadata,
+          )
+        ) {
+          return;
+        }
 
-    // Both snapshots hold the same registration objects, so the test compares the values that the
-    // snapshots resolved from them.
-    const previous = previousItems;
-    const changed =
-      previous?.length !== items.length ||
-      items.some((item, index) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The length check above proves the index.
-        const previousItem = previous[index]!;
-        return (
-          item.index !== previousItem.index ||
-          item.element !== previousItem.element ||
-          item.explicitIndex !== previousItem.explicitIndex ||
-          item.itemState !== previousItem.itemState ||
-          item.metadata !== previousItem.metadata
-        );
-      });
-
-    observe(automaticNodes);
-    previousItems = items;
-
-    if (!changed) {
-      return;
-    }
-
-    // A watcher of the map with `flush: 'sync'` runs here, before `onMapChange`, as the subscribers
-    // of Base UI do.
-    publishedMap.value = nextMap;
-    onMapChange?.(nextMap);
-  }
-
-  function run() {
-    if (isDirty) {
-      flush();
-    }
-  }
-
-  onMounted(run);
-  watch(trigger, run, { flush: 'post' });
+        publishedMap.value = nextMap;
+        onMapChange?.(nextMap);
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
 
   onScopeDispose(() => {
-    mutationObserver?.disconnect();
-    mutationObserver = null;
     elementsRef.value = [];
     if (labelsRef) {
       labelsRef.value = [];
@@ -213,7 +188,6 @@ export function useCompositeList<Metadata>(
   const context: CompositeListContextValue<Metadata> = {
     register,
     unregister,
-    scheduleMapUpdate,
     takeIndexGuess,
     map: computed(() => publishedMap.value),
   };
@@ -276,7 +250,7 @@ function getCompositeListSnapshot<Metadata>(
     items.sort((a, b) => a.index - b.index);
   }
 
-  return [items, automaticItems.map((item) => item.element)] as const;
+  return { items, automaticNodes: automaticItems.map((item) => item.element) };
 }
 
 function getCommonAncestor(firstNode: Element, lastNode: Element) {

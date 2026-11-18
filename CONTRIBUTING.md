@@ -1411,11 +1411,11 @@ The item registry:
 
 - An item registers its element in its ref callback, and it removes the element there.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
-- The list sorts the elements by their position in the document. It does this at mount and in a `watch` with `flush: 'post'`, after the DOM update that follows a registration.
+- At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder.
 - `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element and registers it again in a `watch` of `isHeld` of `useKeepAliveState` with `flush: 'sync'`.
 - An item that mounts while `KeepAlive` holds its branch gets no `onDeactivated` call. The list skips its element, because the element is not in a document. `isHeld` of the item thus starts `true`, and the activation registers the element again.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
-- The metadata, the label, the explicit index and the text element of an item are values, refs or getters. When one of them changes, the item tells the list to sort again. It does not register again.
+- Each registration supplies live metadata, label, explicit index and text element values. The list reads them from its current registrations. A held item supplies its latest values on activation.
 - Give an object as metadata through a `computed` or a ref. A getter that makes a new object on each call makes the list publish a new map on each sort.
 - A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
 - A part that uses the registry only for its own parts gives `provide: false` to `useCompositeList`. It gives the list to its own parts through its context. Each of those parts gives that list to `useCompositeListItem` as `list`. `Tabs.Root`, `Accordion.Root`, `Resizable.Root`, `Slider.Root`, `OTPField.Root` and `Combobox.Chips` do this.
