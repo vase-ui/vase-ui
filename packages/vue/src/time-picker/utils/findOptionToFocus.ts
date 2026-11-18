@@ -1,18 +1,22 @@
-/**
- * The option of a list or of a column that takes the focus: the selected option, or else the first
- * option that is not disabled.
- * @param options The elements that the composite root of the list or of the column holds, in the
- * order of their indexes. An empty slot does not count.
- */
+import { toValue } from 'vue';
+import { isElementDisabled } from '../../common/isElementDisabled';
+import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
+
+/** The selected enabled option, or the first enabled option in index order. */
 export function findOptionToFocus(
-  options: readonly (HTMLElement | null | undefined)[],
-): HTMLElement | undefined {
-  let firstEnabled: HTMLElement | undefined;
-  for (const option of options) {
-    if (!option || option.getAttribute('aria-disabled') === 'true') {
+  options: ReadonlyMap<Element, CompositeMetadata<unknown>>,
+): Element | undefined {
+  let firstEnabled: Element | undefined;
+  for (const [option, { itemState }] of options) {
+    if (
+      !option.isConnected ||
+      toValue(itemState?.disabled) ||
+      isElementDisabled(option) ||
+      option.matches(':disabled')
+    ) {
       continue;
     }
-    if (option.getAttribute('aria-selected') === 'true') {
+    if (toValue(itemState?.selected)) {
       return option;
     }
     firstEnabled ??= option;

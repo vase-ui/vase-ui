@@ -33,19 +33,15 @@ export interface DatePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { isElement } from '@floating-ui/utils/dom';
 import { computed, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
-import { closest, getTarget } from '../../common/shadowDom';
 import {
-  getCalendarTabStop,
-  usePickerFocusTarget,
-  usePickerPopup,
-} from '../../internals/date-time/picker/usePickerPopup';
-import { isKind } from '../../internals/date-time/temporal';
+  PickerCalendarOwner,
+  providePickerControl,
+} from '../../internals/date-time/picker/PickerControlContext';
+import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { givenAttributes } from '../../internals/givenAttributes';
-import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
@@ -116,57 +112,20 @@ const calendar = useTemplateRef<{
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
 
-// The focus manager of the popup puts the focus on the first tabbable element, which is a
-// navigation button. The day that has the tab stop, or the month of a month picker, is the element
-// that the date picker pattern names. The popup part gives it as its `initialFocus`.
-usePickerFocusTarget(() => getCalendarTabStop(element.value));
+providePickerControl(PickerCalendarOwner, (event) => {
+  if (picker.closeOnSelect.value && popup.open.value) {
+    popup.closeAfterSelection(event);
+  }
+});
 
 function handleValueChange(
   value: DatePickerRootValue | null,
   details: DatePickerRootChangeEventDetails,
 ) {
   picker.commit(value, details);
-  if (
-    !details.isCanceled &&
-    picker.closeOnSelect.value &&
-    (details.reason === REASONS.dayPress || details.reason === REASONS.monthPress)
-  ) {
-    popup.closeAfterSelection(details.event);
-  }
-}
-
-// A press on the selected day changes no value, so the calendar emits no change for it. The press
-// still picks that day, and the popup closes as it does for a new day. The attributes of the cell
-// say if the press picked the day: the grid of days selects for a date, and the grid of months for
-// a year and month.
-function handleClick(event: MouseEvent) {
-  const root = event.currentTarget;
-  const target = getTarget(event);
-  if (
-    !isElement(root) ||
-    !isElement(target) ||
-    !picker.closeOnSelect.value ||
-    !popup.open.value ||
-    picker.disabled.value ||
-    picker.props.readOnly ||
-    root.getAttribute('data-view') !==
-      (isKind(picker.template.value, 'yearMonth') ? 'month' : 'day')
-  ) {
-    return;
-  }
-  const button = closest(target, 'button');
-  const cell = closest(button, '[role="gridcell"]');
-  if (
-    cell?.getAttribute('aria-selected') === 'true' &&
-    cell.getAttribute('aria-disabled') !== 'true' &&
-    button?.getAttribute('aria-disabled') !== 'true'
-  ) {
-    popup.closeAfterSelection(event);
-  }
 }
 
 const calendarHandlers = {
-  onClick: handleClick,
   onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => {
     emit('monthChange', month, details);
   },

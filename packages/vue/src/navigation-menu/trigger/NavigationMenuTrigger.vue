@@ -75,6 +75,7 @@ function createHoverEvent(type: 'mouseenter' | 'mousemove', currentTarget: HTMLE
 </script>
 
 <script setup lang="ts">
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import {
   computed,
   nextTick,
@@ -124,7 +125,7 @@ import {
   useNavigationMenuTreeContext,
 } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootChangeEventDetails } from '../root/NavigationMenuRoot.vue';
-import { NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
+import { navigationTriggers, NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
 import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent';
 import { useNavigationMenuPopupSize } from './useNavigationMenuPopupSize';
 
@@ -646,6 +647,8 @@ function exitForward(event: FocusEvent, next: FocusableElement | null) {
     setValue(null, createChangeEventDetails(REASONS.focusOut, event));
   }
 }
+
+useElementRegistration(navigationTriggers, element, () => true);
 
 defineExpose({ element });
 </script>

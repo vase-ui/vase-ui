@@ -18,7 +18,6 @@ function renderItem(testId: string, active: string | null, disabled: string[] = 
       key={testId}
       data-testid={testId}
       active={testId === active}
-      data-composite-item-active={testId === active ? '' : undefined}
       disabled={disabled.includes(testId)}
       aria-disabled={disabled.includes(testId) ? 'true' : undefined}
     />
@@ -171,12 +170,7 @@ describe('VUE-54: the tab stop follows the active item', () => {
       <CompositeRoot>
         {renderItem('a', active.value)}
         {renderItem('b', active.value)}
-        <CompositeItem
-          data-testid="c"
-          style={{ display: 'none' }}
-          active={active.value === 'c'}
-          data-composite-item-active={active.value === 'c' ? '' : undefined}
-        />
+        <CompositeItem data-testid="c" style={{ display: 'none' }} active={active.value === 'c'} />
       </CompositeRoot>
     ));
     await render(<List />);

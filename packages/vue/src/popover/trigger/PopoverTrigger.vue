@@ -65,6 +65,8 @@ export interface PopoverTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { clickTriggers } from '../../utils/popups/registeredParts';
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, shallowRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
@@ -219,6 +221,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
 });
 
 useTriggerFocusGuards(store, triggerElement, hasFocusGuards);
+
+useElementRegistration(clickTriggers, element, () => true);
 
 defineExpose({ element });
 </script>

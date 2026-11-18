@@ -11,7 +11,7 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { ScrollAxis } from '../../utils/scrollable';
 import type { SwipeDirection } from '../../utils/useSwipeDismiss';
-import { DRAWER_CONTENT_ATTRIBUTE } from '../content/drawerContentAttribute';
+import { drawerContents } from '../content/drawerContentAttribute';
 
 export interface DrawerViewportState {
   /**
@@ -50,7 +50,6 @@ const MIN_SWIPE_RELEASE_SCALAR = 0.1;
 const MAX_SWIPE_RELEASE_SCALAR = 1;
 const AXIS_LOCK_SLOP = 6;
 const AXIS_LOCK_BIAS = 2;
-const DRAWER_CONTENT_SELECTOR = `[${DRAWER_CONTENT_ATTRIBUTE}]`;
 const AXIS_SWIPE_IGNORE_SELECTORS: Record<ScrollAxis, string> = {
   horizontal: `[${VASE_UI_SWIPE_IGNORE_ATTRIBUTE}="x"]`,
   vertical: `[${VASE_UI_SWIPE_IGNORE_ATTRIBUTE}="y"]`,
@@ -71,10 +70,6 @@ interface TouchScrollState {
 
 function isSwipeIgnoredTarget(target: Element | null): boolean {
   return Boolean(closest(target, VASE_UI_SWIPE_IGNORE_SELECTOR));
-}
-
-function isDrawerContentTarget(target: Element | null): boolean {
-  return Boolean(closest(target, DRAWER_CONTENT_SELECTOR));
 }
 
 function getBaseSwipeSize(element: HTMLElement, direction: SwipeDirection): number {
@@ -1082,7 +1077,11 @@ const viewportHandlers = {
     );
     // Pointer drags capture the pointer on press, so they can't wait to see which axis the
     // gesture takes; any `data-vase-ui-swipe-ignore` value ignores them.
-    if (isSwipeIgnoredTarget(elementAtPoint) || isDrawerContentTarget(elementAtPoint)) {
+    const content = closest(elementAtPoint, (node) => drawerContents.has(node));
+    if (
+      isSwipeIgnoredTarget(elementAtPoint) ||
+      (content && drawerContents.get(content)?.() === store)
+    ) {
       return;
     }
 

@@ -13,12 +13,14 @@ export interface NumberFieldScrubAreaCursorProps
 
 <script setup lang="ts">
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { computed } from 'vue';
+import { computed, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { usePortalRegistration } from '../../utils/popups/portal/portalElements';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import { useNumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
@@ -101,12 +103,16 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   stateAttributesMapping,
 });
 
+const portal = shallowRef<HTMLElement | null>(null);
+const { isHeld } = useKeepAliveState();
+usePortalRegistration(portal, isHeld);
+
 defineExpose({ element });
 </script>
 
 <template>
   <Teleport v-if="shouldRender" :to="getContainer()">
-    <div v-bind="PORTAL_PROPS">
+    <div v-bind="PORTAL_PROPS" :ref="(node) => (portal = node as HTMLElement | null)">
       <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
       <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
         <slot :state="state" />

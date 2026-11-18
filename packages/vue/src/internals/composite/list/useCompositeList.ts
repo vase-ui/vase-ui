@@ -1,15 +1,21 @@
 import { computed, onMounted, onScopeDispose, provide, shallowRef, toValue, watch } from 'vue';
 import type { ShallowRef } from 'vue';
 import { CompositeListContext } from './CompositeListContext';
-import type { CompositeListContextValue, CompositeListRegistration } from './CompositeListContext';
+import type {
+  CompositeItemState,
+  CompositeListContextValue,
+  CompositeListRegistration,
+} from './CompositeListContext';
 
 export type CompositeMetadata<CustomMetadata> = {
   index: number;
+  itemState?: CompositeItemState;
 } & CustomMetadata;
 
 interface CompositeListItem<Metadata> {
   index: number;
   element: HTMLElement;
+  itemState: CompositeItemState | undefined;
   explicitIndex: number | undefined;
   metadata: Metadata | undefined;
   label: string | null | undefined;
@@ -52,7 +58,10 @@ export function useCompositeList<Metadata>(
     scheduleMapUpdate();
   }
 
-  function unregister(node: Element) {
+  function unregister(node: Element, registration: CompositeListRegistration<Metadata>) {
+    if (registrations.get(node) !== registration) {
+      return;
+    }
     registrations.delete(node);
     scheduleMapUpdate();
   }
@@ -71,6 +80,7 @@ export function useCompositeList<Metadata>(
       nextMap.set(item.element, {
         ...(item.metadata ?? ({} as Metadata)),
         index: item.index,
+        ...(item.itemState && { itemState: item.itemState }),
       });
 
       elements[item.index] = item.element;
@@ -164,6 +174,7 @@ export function useCompositeList<Metadata>(
           item.index !== previousItem.index ||
           item.element !== previousItem.element ||
           item.explicitIndex !== previousItem.explicitIndex ||
+          item.itemState !== previousItem.itemState ||
           item.metadata !== previousItem.metadata
         );
       });
@@ -235,6 +246,7 @@ function getCompositeListSnapshot<Metadata>(
       element: node as HTMLElement,
       explicitIndex,
       metadata: toValue(registration.metadata),
+      itemState: registration.itemState,
       label: toValue(registration.label),
       textElement: toValue(registration.textRef),
     };

@@ -1,7 +1,7 @@
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { platform } from '../../common/platform';
 import { closest, contains } from '../../common/shadowDom';
-import * as TooltipTriggerDataAttributes from '../../tooltip/trigger/TooltipTriggerDataAttributes';
+import { tooltipTriggers } from './registeredParts';
 import { FOCUSABLE_ATTRIBUTE, TYPEABLE_SELECTOR } from './constants';
 import type { PopupTriggerMap } from './popupTriggerMap';
 
@@ -13,19 +13,8 @@ export function isTargetInsideEnabledTrigger(
     return false;
   }
 
-  // An inner trigger can register after its outer trigger. The first trigger of the map that
-  // contains the target is then the outer one. The innermost trigger decides.
-  let innermostTrigger: Element | undefined;
-  for (const trigger of triggerElements.elements()) {
-    if (contains(trigger, target) && (!innermostTrigger || contains(innermostTrigger, trigger))) {
-      innermostTrigger = trigger;
-    }
-  }
-
-  return (
-    innermostTrigger !== undefined &&
-    !innermostTrigger.hasAttribute(TooltipTriggerDataAttributes.triggerDisabled)
-  );
+  const trigger = closest(target, (element) => triggerElements.hasElement(element));
+  return trigger !== null && !tooltipTriggers.get(trigger)?.();
 }
 
 export function isEventTargetWithin(event: Event, node: Node | null | undefined) {
@@ -83,13 +72,17 @@ export function matchesFocusVisible(element: Element | null) {
 
 export function getFloatingFocusElement(
   positionerElement: HTMLElement | null | undefined,
+  popupElement: HTMLElement | null | undefined,
 ): HTMLElement | null {
   if (!positionerElement) {
     return null;
   }
-  // The positioner can be a wrapper. The focus then goes to the child that has the focusable
-  // attribute, because that child has the event handlers and the aria attributes of the popup.
+  if (popupElement !== undefined) {
+    return popupElement?.isConnected ? popupElement : positionerElement;
+  }
+  // A raw floating wrapper can mark an arbitrary child as its focus target.
   return positionerElement.hasAttribute(FOCUSABLE_ATTRIBUTE)
     ? positionerElement
-    : (positionerElement.querySelector(`[${FOCUSABLE_ATTRIBUTE}]`) ?? positionerElement);
+    : (positionerElement.querySelector<HTMLElement>(`[${FOCUSABLE_ATTRIBUTE}]`) ??
+        positionerElement);
 }

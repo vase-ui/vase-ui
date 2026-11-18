@@ -352,7 +352,6 @@ describe('<DatePicker.Root />', () => {
       });
     });
 
-    // The calendar emits no change for the selected day, so a rule on its events would miss it.
     it('closes the popup after a press on the selected day, and the value stays', async () => {
       const onValueChange = vi.fn();
       const onOpenChange = vi.fn();

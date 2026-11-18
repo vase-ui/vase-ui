@@ -194,7 +194,6 @@ import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
-import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -360,13 +359,8 @@ function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
   indicatorPosition.value = edge === 0 ? [position, end] : [start, position];
 }
 
-const thumbMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>(new Map());
-
 const thumbList = useCompositeList<ThumbMetadata>({
   elementsRef: thumbRefs,
-  onMapChange(map) {
-    thumbMap.value = map;
-  },
   provide: false,
 });
 
@@ -546,11 +540,17 @@ watch(
 
     const root = element.value;
     const activeEl = root ? activeElement(ownerDocument(root)) : null;
+    // Firefox and Safari can keep focus on a disabled control.
     if (contains(root, activeEl)) {
-      // This is necessary because Firefox and Safari will keep focus
-      // on a disabled element:
-      // https://codesandbox.io/p/sandbox/mui-pr-22247-forked-h151h?file=/src/App.js
       (activeEl as HTMLElement).blur();
+    } else {
+      for (const { getInput } of thumbList.map.value.values()) {
+        const input = getInput();
+        if (input?.matches(':focus')) {
+          input.blur();
+          break;
+        }
+      }
     }
 
     if (active.value !== -1) {
@@ -629,7 +629,7 @@ provide(SliderRootContext, {
   rootLabelId,
   registerLabelId,
   reset,
-  thumbMap,
+  thumbMap: thumbList.map,
   thumbList,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,

@@ -1,5 +1,5 @@
-import { computed, inject, onBeforeUnmount, provide, unref } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import { computed, inject, provide, unref } from 'vue';
+import type { ComputedRef } from 'vue';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { REASONS } from '../../reasons';
 import { ownerWindow } from '../../../common/owner';
@@ -7,6 +7,8 @@ import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { usePopoverRootContext } from '../../../popover/root/PopoverRootContext';
 import type { FocusOption } from '../../../utils/popups/focus/FloatingFocusManager';
 import { createDefaultInitialFocus } from '../../../utils/popups/popupStoreUtils';
+import { PickerFocusTargets, registerPickerFocusTarget } from './PickerControlContext';
+import type { PickerFocusTarget } from './PickerControlContext';
 
 export interface PickerPopup {
   /** Whether the popup is open. */
@@ -44,28 +46,10 @@ export function usePickerPopup(): PickerPopup {
   return { open, openByKey, closeAfterSelection };
 }
 
-/** Gives the element that takes the focus when the popup opens, such as the day that has the tab stop. */
-export type PickerFocusTarget = () => Element | null | undefined;
-
-const PickerFocusTargetContext: InjectionKey<Set<PickerFocusTarget>> = Symbol();
-
-// The cell of a month or a year has the tab stop itself, and the cell of a day has it in its button.
-const CALENDAR_TAB_STOP = '[role="gridcell"][tabindex="0"], [role="gridcell"] [tabindex="0"]';
-
-/**
- * Gives the day, the month or the year of `calendar` that has the tab stop. It is the element that
- * the date picker pattern names for the focus at the open. A calendar part gives it to
- * `usePickerFocusTarget`.
- */
-export function getCalendarTabStop(calendar: Element | null | undefined): HTMLElement | null {
-  return calendar?.querySelector<HTMLElement>(CALENDAR_TAB_STOP) ?? null;
-}
-
 /**
  * Gives the first of `elements` in the order of the document. A part that mounts later still has
  * its place in the document, so the order of the registrations does not decide. An element that
- * is not in the document does not count: `KeepAlive` keeps a focus target that it holds
- * registered, and such an element cannot take the focus.
+ * is not in the document cannot take focus.
  */
 export function getFirstInDocument<T extends Element>(
   elements: (T | null | undefined)[],
@@ -85,12 +69,8 @@ export function getFirstInDocument<T extends Element>(
 }
 
 /**
- * The popup part of a picker calls it in `setup`, and gives the result to `Popover.Popup` as
- * `initialFocus`. The focus manager asks for the element at each open, also of a popup that stays
- * mounted. The default is the first element, in the order of the document, that a target gives. A
- * part of the popup registers its target with `usePickerFocusTarget`. Without that default, the
- * focus manager would take the first tabbable element, which is a navigation button. A popup with
- * no element from a target keeps the default of `Popover.Popup`.
+ * Gives `Popover.Popup` the initial focus for a picker. By default it uses the first connected
+ * target in document order. Without a target it keeps the default of `Popover.Popup`.
  * @param initialFocus The `initialFocus` prop of the part. A value of the consumer replaces the
  * default, also `false`. `true`, `null`, an empty ref and no value ask for the default.
  */
@@ -99,7 +79,7 @@ export function usePickerInitialFocus(
 ): ComputedRef<FocusOption> {
   const store = usePopoverRootContext();
   const targets = new Set<PickerFocusTarget>();
-  provide(PickerFocusTargetContext, targets);
+  provide(PickerFocusTargets, targets);
 
   const popupDefault = createDefaultInitialFocus(store.context.popupRef);
   const pickerDefault = (interactionType: InteractionType) =>
@@ -121,19 +101,9 @@ export function usePickerInitialFocus(
 }
 
 /**
- * A part of the popup that shows the choices of a picker, such as the calendar, calls it in
- * `setup`. `target` gives the element that the pattern names, such as the day that has the tab
- * stop. It gives `null` while the part has no such element. A popup can have more than one such
- * part, such as the list, the columns and the clock of a time picker. The focus goes to the first
- * element in the document that a target gives.
+ * A time picker list or column registers its focus target in `setup`. The getter returns the
+ * selected enabled option or the first enabled option. A held part gives no target.
  */
 export function usePickerFocusTarget(target: PickerFocusTarget): void {
-  const targets = inject(PickerFocusTargetContext, null);
-  if (!targets) {
-    return;
-  }
-  targets.add(target);
-  onBeforeUnmount(() => {
-    targets.delete(target);
-  });
+  registerPickerFocusTarget(inject(PickerFocusTargets, null), target);
 }

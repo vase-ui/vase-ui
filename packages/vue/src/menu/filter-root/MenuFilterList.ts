@@ -1,7 +1,7 @@
 import { watch } from 'vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../common/owner';
-import { activeElement, contains, getTarget } from '../../common/shadowDom';
+import { activeElement, closestInEventPath, contains, getTarget } from '../../common/shadowDom';
 import { useFilterDropdownList } from '../../filter-dropdown/list/FilterDropdownList';
 import {
   useFilterDropdownItemContext,
@@ -43,7 +43,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
 
   // The key of a popup below the list comes through the popup tree, because Vue does not give the
   // event of a teleported popup to the list. `fromNestedPopup` is then `true`.
-  function handleKeydown(event: KeyboardEvent, fromTree = false) {
+  function handleKeydown(event: KeyboardEvent, fromTree = false, trigger?: HTMLElement) {
     const owner = focusOwnerRef.value;
     const target = getTarget(event) as Element;
     const ownerFocused = owner != null && activeElement(ownerDocument(owner)) === owner;
@@ -56,8 +56,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
         // place while the nested popup held focus. A plain submenu that closes on the key hands
         // focus back and lets it through, so move on from its trigger as a plain parent would.
         event.stopPropagation();
-        const trigger = fromNestedPopup && ownerFocused ? getNestedPopupTrigger(target) : undefined;
-        if (trigger) {
+        if (ownerFocused && trigger) {
           moveHighlightFrom(store, trigger, event, {
             orientation: orientation.value,
             rtl: direction.value === 'rtl',
@@ -82,19 +81,21 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
     handleInputKeydown(event);
   }
 
-  // The item whose `aria-controls` popup holds `target`. The popup shares the target's root,
-  // which is a shadow root when it's portaled into one.
-  function getNestedPopupTrigger(target: Element) {
-    const root = target.getRootNode() as Document | ShadowRoot;
-    return listRef.value.find((item): item is HTMLElement => {
-      const popupId = item?.getAttribute('aria-controls');
-      return (
-        popupId != null && isHTMLElement(item) && contains(root.getElementById(popupId), target)
-      );
-    });
-  }
-
-  useNestedPopupEventListener<KeyboardEvent>(NESTED_KEYDOWN, (event) => handleKeydown(event, true));
+  useNestedPopupEventListener<KeyboardEvent>(NESTED_KEYDOWN, (event, child) => {
+    const trigger = child.trigger;
+    handleKeydown(
+      event,
+      true,
+      child.parent === store &&
+        child.popup &&
+        closestInEventPath(event, (node) => node === child.popup) &&
+        isHTMLElement(trigger) &&
+        trigger.isConnected &&
+        listRef.value.includes(trigger)
+        ? trigger
+        : undefined,
+    );
+  });
 
   // `null` distinguishes the initial registration from a list emptied by filtering.
   let previousItems: readonly (HTMLElement | null)[] | null = null;

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../popupTriggerMap';
+import { menuPopups } from '../registeredParts';
 import { hoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';
 import type { HoverIntent } from './hoverIntent';
 
-function createIntent() {
+function createIntent(openEvent?: Event) {
   const store = new FloatingRootStore({
     open: true,
     anchorElement: null,
@@ -15,6 +16,7 @@ function createIntent() {
     nested: false,
     onOpenChange: undefined,
   });
+  store.context.openEvent = openEvent;
   return getHoverIntent(store);
 }
 
@@ -36,6 +38,33 @@ function readPointerEvents(elements: ReturnType<typeof createElements>) {
 
 describe('HoverIntent', () => {
   describe('pointer events', () => {
+    it('VUE-138: blocks the nearest menu popup after its slotted trigger moves', () => {
+      const { triggerElement, positionerElement, scopeElement: outer } = createElements();
+      const inner = document.createElement('div');
+      const host = document.createElement('div');
+      host.attachShadow({ mode: 'open' }).append(inner);
+      inner.append(document.createElement('slot'));
+      host.append(triggerElement);
+      outer.append(host, positionerElement);
+      document.body.append(outer);
+      menuPopups.set(outer, () => 'outer');
+      menuPopups.set(inner, () => 'inner');
+      const intent = createIntent(new MouseEvent('mouseenter'));
+      intent.handleCloseOptions = { blockPointerEvents: true };
+      try {
+        intent.blockOutsidePointerEventsForPopup(triggerElement, positionerElement, null, null);
+        expect(inner.style.pointerEvents).toBe('none');
+        expect(outer.style.pointerEvents).toBe('');
+        outer.append(triggerElement);
+        intent.blockOutsidePointerEventsForPopup(triggerElement, positionerElement, null, null);
+        expect(inner.style.pointerEvents).toBe('');
+        expect(outer.style.pointerEvents).toBe('none');
+      } finally {
+        intent.restoreOutsidePointerEvents();
+        outer.remove();
+      }
+    });
+
     it('blocks the scope element, and not the trigger and the positioner', () => {
       const elements = createElements();
 
@@ -82,6 +111,7 @@ describe('HoverIntent', () => {
 
     it('VUE-94: restores the value and priority of an external scope after a handoff', () => {
       const first = createElements();
+      first.scopeElement.setAttribute('data-rootownerid', 'external');
       const second = { ...createElements(), scopeElement: first.scopeElement };
       const { style } = first.scopeElement;
       style.setProperty('pointer-events', 'all', 'important');

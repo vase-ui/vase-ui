@@ -1,4 +1,4 @@
-import { isElement, isShadowRoot } from '@floating-ui/utils/dom';
+import { isElement, isNode, isShadowRoot } from '@floating-ui/utils/dom';
 
 // Goes down through open shadow roots. For a closed shadow root, `shadowRoot` is `null`.
 export function activeElement(doc: Document) {
@@ -54,13 +54,19 @@ export function closest<K extends keyof SVGElementTagNameMap>(
 ): SVGElementTagNameMap[K] | null;
 export function closest<E extends Element = Element>(
   node: Node | null | undefined,
-  selector: string,
+  selector: string | ((element: Element) => boolean),
 ): E | null;
-export function closest(node: Node | null | undefined, selector: string): Element | null {
+export function closest(
+  node: Node | null | undefined,
+  selector: string | ((element: Element) => boolean),
+): Element | null {
   let current = node;
 
   while (current) {
-    if (isElement(current) && current.matches(selector)) {
+    if (
+      isElement(current) &&
+      (typeof selector === 'string' ? current.matches(selector) : selector(current))
+    ) {
       return current;
     }
 
@@ -68,6 +74,18 @@ export function closest(node: Node | null | undefined, selector: string): Elemen
   }
 
   return null;
+}
+
+export function closestInEventPath(
+  event: Event,
+  matches: (element: Element) => boolean,
+): Element | null {
+  const path = event.composedPath?.();
+  if (path?.length) {
+    return path.find((node): node is Element => isElement(node) && matches(node)) ?? null;
+  }
+  // The browser clears the path after dispatch. The target still has its composed ancestors.
+  return isNode(event.target) ? closest(event.target, matches) : null;
 }
 
 export function getTarget(event: Event) {

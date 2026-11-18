@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderLabelState>;
 }>();
 
-const { state, registerLabelId, controlElement, rootLabelId } = useSliderRootContext();
+const { state, registerLabelId, thumbMap, rootLabelId } = useSliderRootContext();
 
 function focusControl(event: MouseEvent, controlId: string | undefined) {
   if (controlId) {
@@ -43,10 +43,18 @@ function focusControl(event: MouseEvent, controlId: string | undefined) {
     }
   }
 
-  const fallbackInputs = controlElement.value?.querySelectorAll('input[type="range"]');
-  const fallbackInput = fallbackInputs?.length === 1 ? fallbackInputs[0] : null;
-  if (isHTMLElement(fallbackInput)) {
-    focusElementWithVisible(fallbackInput);
+  let singleInput: HTMLInputElement | null = null;
+  for (const [thumb, entry] of thumbMap.value) {
+    const input = thumb.isConnected && entry.getInput();
+    if (input) {
+      if (singleInput) {
+        return;
+      }
+      singleInput = input;
+    }
+  }
+  if (singleInput) {
+    focusElementWithVisible(singleInput);
   }
 }
 

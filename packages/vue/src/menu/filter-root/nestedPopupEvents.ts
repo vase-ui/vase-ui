@@ -1,3 +1,4 @@
+import type { MenuStore } from '../store/MenuStore';
 import { watch } from 'vue';
 import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { getNodeAncestors } from '../../utils/popups/tree/nodes';
@@ -14,6 +15,9 @@ interface NestedPopupEventDetails {
   /** The node of the popup that got the event. */
   nodeId: string | null;
   event: Event;
+  popup: Element | null;
+  trigger: Element | null;
+  parent: MenuStore<unknown> | null;
 }
 
 /**
@@ -21,12 +25,21 @@ interface NestedPopupEventDetails {
  *
  * @returns The function that gives an event to the tree.
  */
-export function useNestedPopupEventSender() {
+export function useNestedPopupEventSender(
+  store: MenuStore<unknown>,
+  parent: MenuStore<unknown> | null,
+) {
   const tree = useFloatingTree();
   const nodeId = useFloatingParentNodeId();
 
   return function sendToParents(name: string, event: Event) {
-    const details: NestedPopupEventDetails = { nodeId: nodeId.value, event };
+    const details: NestedPopupEventDetails = {
+      nodeId: nodeId.value,
+      event,
+      popup: store.context.popupRef.value,
+      trigger: store.state.activeTriggerElement,
+      parent,
+    };
     tree.value?.events.emit(name, details);
   };
 }
@@ -38,7 +51,7 @@ export function useNestedPopupEventSender() {
  */
 export function useNestedPopupEventListener<E extends Event>(
   name: string,
-  listener: (event: E) => void,
+  listener: (event: E, details: NestedPopupEventDetails) => void,
 ) {
   const tree = useFloatingTree();
   const nodeId = useFloatingParentNodeId();
@@ -56,7 +69,7 @@ export function useNestedPopupEventListener<E extends Event>(
           details.nodeId ?? undefined,
         );
         if (nodeId.value !== null && ancestors.some((node) => node.id === nodeId.value)) {
-          listener(details.event as E);
+          listener(details.event as E, details);
         }
       }
 

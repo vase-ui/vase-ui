@@ -1,3 +1,4 @@
+import { tooltipTriggers } from '../registeredParts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType, ShallowRef } from 'vue';
@@ -204,11 +205,7 @@ describe('useHoverTriggerInteraction', () => {
           <>
             <button data-testid="active-trigger" ref={setActiveTrigger} />
             <div data-testid="inactive-wrapper" {...hoverProps}>
-              <button
-                data-testid="disabled-trigger"
-                data-trigger-disabled
-                ref={register('disabled-trigger')}
-              />
+              <button data-testid="disabled-trigger" ref={register('disabled-trigger')} />
             </div>
             {open.value && <div role="tooltip" ref={refs.setFloating} />}
           </>
@@ -220,6 +217,7 @@ describe('useHoverTriggerInteraction', () => {
 
     const wrapper = screen.getByTestId('inactive-wrapper');
     const disabledTrigger = screen.getByTestId('disabled-trigger');
+    tooltipTriggers.set(disabledTrigger, () => true);
 
     await fireEvent.pointerEnter(wrapper, { pointerType: 'mouse' });
     await fireEvent.mouseEnter(wrapper);

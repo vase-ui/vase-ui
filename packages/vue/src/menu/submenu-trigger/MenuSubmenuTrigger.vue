@@ -64,6 +64,8 @@ export interface MenuSubmenuTriggerProps
 </script>
 
 <script setup lang="ts">
+import { submenuTriggers } from '../../utils/popups/registeredParts';
+import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, onUpdated, shallowRef, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
@@ -311,6 +313,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     getItemProps,
   ],
 });
+
+useElementRegistration(submenuTriggers, element, () => true);
 
 defineExpose({ element });
 </script>

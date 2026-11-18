@@ -103,6 +103,7 @@ const {
   step,
   thumbCollisionBehavior,
   thumbRefs,
+  thumbMap,
   values,
 } = useSliderRootContext();
 
@@ -157,7 +158,7 @@ function getFingerCoords(event: TouchEvent | PointerEvent): Coords | null {
 }
 
 function getThumbInput(el: Element | null | undefined) {
-  return el?.querySelector<HTMLInputElement>('input[type="range"]');
+  return el?.isConnected ? thumbMap.value.get(el)?.getInput() : null;
 }
 
 function updatePressedThumb(nextIndex: number) {
@@ -178,11 +179,10 @@ function isTargetDisabledThumb(target: EventTarget | null) {
   }
 
   return thumbRefs.value.some((thumbEl) => {
-    if (!isElement(thumbEl) || !contains(thumbEl, target)) {
-      return false;
-    }
-
-    return getThumbInput(thumbEl)?.disabled === true;
+    const input = getThumbInput(thumbEl);
+    return (
+      (target === input || contains(thumbEl, target)) && (!input || input.matches(':disabled'))
+    );
   });
 }
 
@@ -267,8 +267,9 @@ function startPressing(fingerCoords: Coords) {
 
     for (let i = 0; i < thumbRefs.value.length; i += 1) {
       const thumbEl = thumbRefs.value[i];
-      if (isElement(thumbEl) && !getThumbInput(thumbEl)?.disabled) {
-        const midpoint = getMidpoint(thumbEl as HTMLElement, vertical);
+      const input = getThumbInput(thumbEl);
+      if (thumbEl && input && !input.matches(':disabled')) {
+        const midpoint = getMidpoint(thumbEl, vertical);
         const distance = Math.abs(fingerCoords[axis] - midpoint);
 
         if (minDistance === undefined || distance <= minDistance) {
@@ -508,10 +509,9 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
 
-  const pressedOnFocusedThumb = contains(
-    thumbRefs.value[finger.thumbIndex],
-    activeElement(ownerDocument(control)),
-  );
+  const focused = activeElement(ownerDocument(control));
+  const thumb = thumbRefs.value[finger.thumbIndex];
+  const pressedOnFocusedThumb = getThumbInput(thumb)?.matches(':focus') || contains(thumb, focused);
 
   if (pressedOnFocusedThumb) {
     event.preventDefault();

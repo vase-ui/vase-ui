@@ -29,6 +29,8 @@ import {
 import { FocusAtMount } from '../../../../test/fixtures/FocusAtMount';
 import { Main as Navigation } from '../../../../test/floating-ui-tests/Navigation';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
+import { useElementRegistration } from '../../../internals/useElementRegistration';
+import { clickTriggers } from '../registeredParts';
 import { platform } from '../../../common/platform';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
@@ -2656,7 +2658,7 @@ describe('FloatingFocusManager', () => {
       async ({ manager, pressed, clickTrigger, calls }) => {
         const handleOpenChange = await renderPopup(manager);
         if (clickTrigger) {
-          screen.getByTestId(pressed).setAttribute('data-vase-ui-click-trigger', '');
+          clickTriggers.set(screen.getByTestId(pressed), () => true);
         }
 
         // The browser moves the focus in the task of the press.
@@ -3897,6 +3899,8 @@ describe('FloatingFocusManager', () => {
         const Test = defineComponent({
           setup() {
             const open = shallowRef(false);
+            const trigger = shallowRef<HTMLElement | null>(null);
+            useElementRegistration(clickTriggers, trigger, () => true);
             const { refs, context } = useFloating({
               open,
               onOpenChange: setOpenOf(open),
@@ -3914,7 +3918,7 @@ describe('FloatingFocusManager', () => {
                 {open.value && (
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div role="dialog" ref={refs.setFloating} data-testid="floating">
-                      <button data-vase-ui-click-trigger="" data-testid="nested-trigger" />
+                      <button ref={trigger} data-testid="nested-trigger" />
                     </div>
                   </FloatingFocusManager>
                 )}

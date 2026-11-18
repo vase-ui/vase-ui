@@ -1,3 +1,4 @@
+import { menuPopups } from '../registeredParts';
 import { addEventListener } from '../../../common/addEventListener';
 import { ownerDocument } from '../../../common/owner';
 import { Timeout } from '../../../common/useTimeout';
@@ -174,10 +175,7 @@ export class HoverIntent {
 
     if (hasHoverBinding(scopeElement)) {
       setHoverPointerEvents(scopeElement, this, 'none');
-    } else if (
-      !scopeElement.hasAttribute('data-rootownerid') ||
-      !scopeElement.style.pointerEvents
-    ) {
+    } else if (!menuPopups.has(scopeElement) || !scopeElement.style.pointerEvents) {
       // A submenu must release its parent scope between mouseleave and pointerenter in one input.
       this.#nativeScopeStyle = {
         value: scopeElement.style.getPropertyValue('pointer-events'),
@@ -531,9 +529,12 @@ export class HoverIntent {
     const parentScopeElement = parentFloating !== positionerElement ? parentFloating : null;
     const scopeElement =
       this.handleCloseOptions?.getScope?.() ??
+      closest<HTMLElement>(
+        triggerElement,
+        (element) => element.isConnected && menuPopups.has(element),
+      ) ??
       cachedScopeElement ??
       parentScopeElement ??
-      closest<PointerEventsScopeElement>(triggerElement, '[data-rootownerid]') ??
       doc.body;
 
     this.blockOutsidePointerEvents({ scopeElement, triggerElement, positionerElement });

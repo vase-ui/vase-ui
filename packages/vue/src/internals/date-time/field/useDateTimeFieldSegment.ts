@@ -7,6 +7,7 @@ import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useInputRender } from '../../useInputRender';
+import { useKeepAliveState } from '../../useKeepAliveState';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { fieldValidityMapping } from '../../field-constants';
 import { useSetFieldFocused } from '../../field-root-context/useSetFieldFocused';
@@ -92,27 +93,24 @@ export function useDateTimeFieldSegment(
     index: toValue(segment).index,
   }));
 
-  let ownElement: HTMLInputElement | null = null;
-
   function setElement(element: unknown) {
-    const next = element as HTMLInputElement | null;
-    // Vue calls a function ref again on each patch, with the same element.
-    if (next === ownElement) {
-      return;
-    }
-    if (ownElement) {
-      context.unregisterSegment(ownElement);
-    }
-    if (next) {
-      context.registerSegment(next);
-    }
-    ownElement = next;
-    elementRef.value = next;
+    elementRef.value = element as HTMLInputElement | null;
   }
 
+  const { isHeld } = useKeepAliveState();
+  watch(
+    [elementRef, isHeld],
+    ([element, held], _previous, onCleanup) => {
+      if (element && !held) {
+        onCleanup(context.registerSegment(element, () => type.value));
+      }
+    },
+    { flush: 'sync' },
+  );
+
   function moveFocus(delta: 1 | -1) {
-    if (ownElement) {
-      context.moveFocus(ownElement, delta);
+    if (elementRef.value) {
+      context.moveFocus(elementRef.value, delta);
     }
   }
 
@@ -154,8 +152,8 @@ export function useDateTimeFieldSegment(
     // ready. The focus then moves only from the segment that has it.
     if (
       isFull &&
-      ownElement &&
-      (writesValue.value || activeElement(ownerDocument(ownElement)) === ownElement)
+      elementRef.value &&
+      (writesValue.value || activeElement(ownerDocument(elementRef.value)) === elementRef.value)
     ) {
       moveFocus(1);
     }
@@ -338,8 +336,8 @@ export function useDateTimeFieldSegment(
         }
         // The browser would put the caret in the text. A segment selects its whole text.
         event.preventDefault();
-        ownElement?.focus();
-        ownElement?.select();
+        elementRef.value?.focus();
+        elementRef.value?.select();
       },
       onFocusin(event: FocusEvent) {
         if (context.disabled.value) {

@@ -1,8 +1,9 @@
+import { menuPopups, submenuTriggers } from '../../utils/popups/registeredParts';
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { onMounted, toValue, watch } from 'vue';
 import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
 import { ownerDocument } from '../../common/owner';
-import { activeElement, contains, getTarget } from '../../common/shadowDom';
+import { activeElement, closestInEventPath, contains, getTarget } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
 import { useFilterDropdownRootContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
 import { isRefocusingOwner, refocusOwner } from '../../filter-dropdown/utils/refocusOwner';
@@ -87,14 +88,15 @@ export function useMenuFilterPopup(
     // contains this popup as the nearest one when the pointer is really over it, and a closing
     // popup must not re-capture focus during its exit transition.
     let submenuTrigger: HTMLElement | null = null;
-    const nearestPopup = event.composedPath().find((node) => {
+    const nearestPopup = closestInEventPath(event, (node) => {
       if (!isHTMLElement(node)) {
         return false;
       }
-      if (node.getAttribute('role') === 'dialog' || node.hasAttribute('data-rootownerid')) {
+      // A consumer can nest a dialog from outside the menu in this slot.
+      if (menuPopups.has(node) || node.getAttribute('role') === 'dialog') {
         return true;
       }
-      if (node.hasAttribute('aria-haspopup')) {
+      if (submenuTrigger === null && submenuTriggers.has(node)) {
         submenuTrigger = node;
       }
       return false;

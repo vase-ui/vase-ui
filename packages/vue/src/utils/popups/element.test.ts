@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createSlotHost } from '../../../test/fixtures/slotHost';
-import * as TooltipTriggerDataAttributes from '../../tooltip/trigger/TooltipTriggerDataAttributes';
+import { tooltipTriggers } from './registeredParts';
 import { isEventTargetWithin, isTargetInsideEnabledTrigger } from './element';
 import { PopupTriggerMap } from './popupTriggerMap';
 
@@ -50,7 +50,7 @@ describe('isEventTargetWithin', () => {
 });
 
 function disable(trigger: Element) {
-  trigger.setAttribute(TooltipTriggerDataAttributes.triggerDisabled, '');
+  tooltipTriggers.set(trigger, () => true);
 }
 
 describe('isTargetInsideEnabledTrigger', () => {

@@ -17,7 +17,7 @@ export interface NavigationMenuListProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
-import { closest, getTarget } from '../../common/shadowDom';
+import { closestInEventPath } from '../../common/shadowDom';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
@@ -29,7 +29,7 @@ import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
 } from '../root/NavigationMenuRootContext';
-import { NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
+import { navigationTriggers } from '../utils/constants';
 import { NavigationMenuDismissContext } from './NavigationMenuDismissContext';
 
 defineOptions({ inheritAttrs: false });
@@ -71,8 +71,7 @@ const dismiss = useDismiss(store, {
   enabled: () => positionerElement.value != null || value.value == null,
   outsidePressEvent: 'intentional',
   outsidePress(event) {
-    const target = getTarget(event) as HTMLElement | null;
-    return closest(target, `[${NAVIGATION_MENU_TRIGGER_IDENTIFIER}]`) === null;
+    return !closestInEventPath(event, (node) => navigationTriggers.has(node));
   },
 });
 

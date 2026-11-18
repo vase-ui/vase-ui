@@ -7,6 +7,8 @@ import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 
 const testCompositeContext: CompositeRootContext = {
+  hasFocus: () => false,
+  detachedItemHandlers: { onFocusin: NOOP, onFocusout: NOOP, onKeydown: NOOP },
   highlightedIndex: computed(() => 0),
   onHighlightedIndexChange: NOOP,
   highlightItemOnHover: computed(() => false),

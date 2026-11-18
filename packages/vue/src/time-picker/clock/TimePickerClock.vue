@@ -39,9 +39,10 @@ export interface TimePickerClockProps extends Omit<
 <script setup lang="ts">
 import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import {
-  usePickerFocusTarget,
-  usePickerPopup,
-} from '../../internals/date-time/picker/usePickerPopup';
+  PickerClockOwner,
+  providePickerControl,
+} from '../../internals/date-time/picker/PickerControlContext';
+import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
@@ -105,9 +106,7 @@ const popup = usePickerPopup();
 const clock = useTemplateRef<{ element: HTMLElement | null }>('clock');
 const element = computed(() => clock.value?.element ?? null);
 
-// The first tabbable element of the clock can be a view trigger or a day period. The face is the
-// element that a person sets the time with, so it takes the focus at the open.
-usePickerFocusTarget(() => element.value?.querySelector<HTMLInputElement>('input[type="range"]'));
+providePickerControl(PickerClockOwner);
 
 // The clock commits a view and shows the next view, so the picker follows the view to know the
 // last commit.

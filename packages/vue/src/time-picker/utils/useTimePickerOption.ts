@@ -1,6 +1,5 @@
 import type { ComputedRef } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
-import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
@@ -29,7 +28,11 @@ export function useTimePickerOption(parameters: UseTimePickerOptionParameters) {
   const { picker, selected, disabled } = parameters;
   const popup = usePickerPopup();
   const isHydrating = useIsHydrating();
-  const { compositeProps, compositeRef } = useCompositeItem({ active: selected, disabled });
+  const { compositeProps, compositeRef } = useCompositeItem({
+    active: selected,
+    selected,
+    disabled,
+  });
 
   // A press on the selected option changes no value, and it still closes the popup when a
   // selection does.
@@ -63,7 +66,6 @@ export function useTimePickerOption(parameters: UseTimePickerOptionParameters) {
         role: 'option',
         'aria-selected': selected.value,
         'aria-disabled': disabled.value || undefined,
-        [ACTIVE_COMPOSITE_ITEM]: selected.value ? '' : undefined,
         // The text comes from the data of `Intl` in the engine, and a server and a browser can
         // differ.
         'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,

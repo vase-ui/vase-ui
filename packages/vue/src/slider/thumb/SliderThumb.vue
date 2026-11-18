@@ -236,14 +236,18 @@ const defaultInputId = useVaseUiId();
 const labelableId = useLabelableId();
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
-const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
+const thumbMetadata = computed<ThumbMetadata>(() => ({
+  inputId: inputId.value,
+  getInput: () => (inputElement.value?.isConnected ? inputElement.value : null),
+}));
 
 const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
   list: thumbList,
+  index: () => (range.value ? props.index : undefined),
   metadata: thumbMetadata,
 });
 
-const thumbIndex = computed(() => (!range.value ? 0 : (props.index ?? compositeIndex.value)));
+const thumbIndex = computed(() => (range.value ? compositeIndex.value : 0));
 const last = computed(() => thumbIndex.value === sliderValues.value.length - 1);
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A thumb that has no index yet has no value, and `valueToPercent` then gives `NaN`, as in Base UI.
 const thumbValue = computed(() => sliderValues.value[thumbIndex.value]!);

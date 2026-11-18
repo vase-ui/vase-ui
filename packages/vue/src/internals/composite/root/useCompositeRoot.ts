@@ -11,8 +11,7 @@ import {
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { isElementDisabled } from '../../../common/isElementDisabled';
-import { ownerDocument } from '../../../common/owner';
-import { activeElement, contains, getTarget } from '../../../common/shadowDom';
+import { contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { useDirection } from '../../direction-context/DirectionContext';
 import type { HTMLProps } from '../../types';
@@ -33,8 +32,10 @@ import {
   isNativeInput,
   scrollIntoViewIfNeeded,
 } from '../composite';
+import type { DisabledIndices } from '../listIndex';
 import type { ModifierKey } from '../composite';
-import { ACTIVE_COMPOSITE_ITEM, HYDRATING_COMPOSITE_ITEM } from '../constants';
+import { observeRootNode } from '../../observeRootNode';
+import { HYDRATING_COMPOSITE_ITEM } from '../constants';
 import { useCompositeList } from '../list/useCompositeList';
 import type { CompositeMetadata } from '../list/useCompositeList';
 import { CompositeRootContext } from './CompositeRootContext';
@@ -61,7 +62,6 @@ export function useCompositeRoot<Metadata>(
   let tabStopObserver: MutationObserver | null = null;
   let canHaveUnmountedTabStop = true;
   let lastActiveItem: HTMLElement | null = null;
-  let activeItemObserver: MutationObserver | null = null;
 
   const id = useId();
   const hasUnmountedTabStop = shallowRef(false);
@@ -96,7 +96,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    const disabledIndices = toValue(params.disabledIndices);
+    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
 
     if (hasSetDefaultIndex) {
       const elements = elementsRef.value;
@@ -113,7 +113,7 @@ export function useCompositeRoot<Metadata>(
           !replacement ||
           isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)
         ) {
-          onHighlightedIndexChange(getFallbackIndex(elements, disabledIndices));
+          onHighlightedIndexChange(getFallbackIndex(elements, isActive, disabledIndices));
         } else {
           highlightedElement = replacement;
         }
@@ -129,25 +129,18 @@ export function useCompositeRoot<Metadata>(
 
     hasSetDefaultIndex = true;
 
-    const sortedElements = Array.from(map.keys()) as (HTMLElement | null)[];
-    const activeItem =
-      sortedElements.find((compositeElement) =>
-        compositeElement?.hasAttribute(ACTIVE_COMPOSITE_ITEM),
-      ) ?? null;
-    // The default index is the index that the map holds for the active item. It is not the
-    // position of the item among the keys, because a list can have explicit and automatic indexes
-    // and gaps.
-    const activeIndex = activeItem ? (map.get(activeItem)?.index ?? -1) : -1;
+    const elements = elementsRef.value;
+    const { item: activeItem, index: activeIndex } = readActiveItem(elements);
 
     if (activeIndex !== -1) {
       onHighlightedIndexChange(activeIndex);
-    } else if (isListIndexDisabled(sortedElements, highlightedIndex.value, disabledIndices)) {
+    } else if (isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)) {
       // The default item is disabled, so it must not hold the tab stop. The browser removes a
       // native disabled element from the tab order, and an `aria-disabled` element must not be the
       // entry point. The tab stop moves to the first enabled item. If each item is disabled, the
       // index stays.
-      const firstEnabledIndex = findNonDisabledListIndex(sortedElements, { disabledIndices });
-      if (!isIndexOutOfListBounds(sortedElements, firstEnabledIndex)) {
+      const firstEnabledIndex = findNonDisabledListIndex(elements, { disabledIndices });
+      if (!isIndexOutOfListBounds(elements, firstEnabledIndex)) {
         onHighlightedIndexChange(firstEnabledIndex);
       }
     }
@@ -161,19 +154,28 @@ export function useCompositeRoot<Metadata>(
     scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
   }
 
-  // An item that is disabled or hidden must not be the entry point, as in `Tabs.Tab` of Base UI.
-  // `isListIndexDisabled` reads `aria-disabled` only when the root has no `disabledIndices`.
-  function canHoldTabStop(elements: readonly (HTMLElement | null)[], index: number) {
-    const element = elements[index];
+  function itemDisabled(index: number) {
+    const element = elementsRef.value[index];
+    // A render slot can supply its own native or ARIA disabled state.
     return (
-      element != null &&
-      !isElementDisabled(element) &&
-      !isListIndexDisabled(elements, index, toValue(params.disabledIndices))
+      !element ||
+      toValue(list.map.value.get(element)?.itemState?.disabled) ||
+      isElementDisabled(element)
     );
   }
 
+  function canHoldTabStop(elements: readonly (HTMLElement | null)[], index: number) {
+    return (
+      !itemDisabled(index) && !isListIndexDisabled(elements, index, toValue(params.disabledIndices))
+    );
+  }
+
+  function isActive(element: HTMLElement | null) {
+    return element != null && toValue(list.map.value.get(element)?.itemState?.active) === true;
+  }
+
   function readActiveItem(elements: readonly (HTMLElement | null)[]) {
-    const index = elements.findIndex((element) => element?.hasAttribute(ACTIVE_COMPOSITE_ITEM));
+    const index = elements.findIndex(isActive);
     return {
       item: elements[index] ?? null,
       index,
@@ -187,6 +189,13 @@ export function useCompositeRoot<Metadata>(
     }
   }
 
+  function hasFocus() {
+    return (
+      rootElement?.matches(':focus-within') === true ||
+      elementsRef.value.some((item) => item?.matches(':focus-within'))
+    );
+  }
+
   // A reset of a form and a controlled value change the active item while the composite does not
   // have the focus. The tab stop then moves to the active item, so the Tab key enters the
   // composite on that item, as it does for a native radio group. If the change leaves no active
@@ -194,8 +203,6 @@ export function useCompositeRoot<Metadata>(
   // APG radio pattern says for a group with no checked radio. While the composite has the focus,
   // the highlight stays on the item that the user chose, and the keys continue from it.
   // Base UI moves the tab stop to the active item only in `Tabs.Tab`.
-  // Limit: the observer and the focus test cover the element of the root only, as the search for
-  // the tab stop of the server HTML does.
   function moveTabStopToActiveItem() {
     const elements = elementsRef.value;
     // `KeepAlive` empties the list. The map of the next activation starts the move again.
@@ -212,7 +219,7 @@ export function useCompositeRoot<Metadata>(
     const isRemoval = lastActiveItem !== null && !elements.includes(lastActiveItem);
     lastActiveItem = activeItem.item;
 
-    if (contains(rootElement, activeElement(ownerDocument(rootElement)))) {
+    if (hasFocus()) {
       return;
     }
 
@@ -238,7 +245,7 @@ export function useCompositeRoot<Metadata>(
     activeIndex: number,
   ) {
     const index = highlightedIndex.value;
-    const disabledIndices = toValue(params.disabledIndices);
+    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
     // With an empty `disabledIndices`, the test finds only an item that cannot get focus.
     const canKeepTabStop = !isListIndexDisabled(
       elements,
@@ -249,7 +256,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    const fallbackIndex = getFallbackIndex(elements, disabledIndices);
+    const fallbackIndex = getFallbackIndex(elements, isActive, disabledIndices);
     if (elements[fallbackIndex] && !isListIndexDisabled(elements, fallbackIndex, disabledIndices)) {
       highlightIndex(fallbackIndex);
     }
@@ -259,7 +266,8 @@ export function useCompositeRoot<Metadata>(
   // composite. A composite with no active item keeps the item that had the focus last, unless the
   // keys skip that item.
   function onFocusout(event: FocusEvent) {
-    if (contains(rootElement, event.relatedTarget as Element | null)) {
+    const next = event.relatedTarget as Element | null;
+    if (contains(rootElement, next) || elementsRef.value.some((item) => contains(item, next))) {
       return;
     }
 
@@ -273,7 +281,7 @@ export function useCompositeRoot<Metadata>(
     moveTabStopOffSkippedItem(elements, activeItem.index);
   }
 
-  useCompositeList<Metadata>({
+  const list = useCompositeList<Metadata>({
     elementsRef,
     onMapChange: (newMap) => {
       params.onMapChange?.(newMap);
@@ -287,7 +295,7 @@ export function useCompositeRoot<Metadata>(
     // the metadata in the map. The tab stop at index 0 can then be on a disabled item, and the
     // composite has no tab stop. The check moves the tab stop to the first enabled item.
     // It runs only when `disabledIndices` has a value, the root is uncontrolled and the first map
-    // is done. A composite with no `disabledIndices` relies on the disabled state of the DOM.
+    // is done. The item registrations supply the default when the root gives no indexes.
     if (
       disabledIndices == null ||
       toValue(params.highlightedIndex) != null ||
@@ -343,7 +351,7 @@ export function useCompositeRoot<Metadata>(
 
     const orientation = getOrientation();
     const loopFocus = toValue(params.loopFocus) ?? true;
-    const disabledIndices = toValue(params.disabledIndices);
+    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
     const prevIndex = highlightedIndex.value;
     const isRtl = direction.value === 'rtl';
 
@@ -537,19 +545,68 @@ export function useCompositeRoot<Metadata>(
   }
 
   watch(elementsRef, updateUnmountedTabStop, { flush: 'post' });
+  onScopeDispose(() => tabStopObserver?.disconnect());
 
-  onScopeDispose(() => {
-    tabStopObserver?.disconnect();
-    tabStopObserver = null;
-    activeItemObserver?.disconnect();
-    activeItemObserver = null;
-  });
+  watch(
+    () =>
+      Array.from(list.map.value.values(), ({ itemState }) => [
+        toValue(itemState?.active),
+        toValue(itemState?.disabled),
+      ]),
+    moveTabStopToActiveItem,
+    { flush: 'post' },
+  );
+
+  watch(
+    list.map,
+    (map, _previous, onCleanup) => {
+      if (!map.size || typeof MutationObserver !== 'function') {
+        return;
+      }
+      // A consumer can change these attributes on the actual item in a render slot.
+      const observer = new MutationObserver(moveTabStopToActiveItem);
+      for (const element of map.keys()) {
+        observer.observe(element, { attributeFilter: ['disabled', 'aria-disabled'] });
+        if (element.matches(':enabled, :disabled')) {
+          // A move into another fieldset or its first legend can change the native state
+          // without changing any attribute on the control.
+          let nativeDisabled = element.matches(':disabled');
+          onCleanup(
+            observeRootNode(element, () => {
+              const disabled = element.matches(':disabled');
+              if (disabled !== nativeDisabled) {
+                nativeDisabled = disabled;
+                moveTabStopToActiveItem();
+              }
+            }, ['disabled']),
+          );
+        }
+      }
+      onCleanup(() => observer.disconnect());
+    },
+    { flush: 'post' },
+  );
+
+  // A teleported item belongs to the composite, but its native events can miss the root.
+  function fromDetachedItem<E extends Event>(handle: (event: E) => void) {
+    return (event: E) => {
+      if (rootElement && !event.composedPath().includes(rootElement)) {
+        handle(event);
+      }
+    };
+  }
 
   provide(CompositeRootContext, {
+    hasFocus,
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
+    detachedItemHandlers: {
+      onFocusin: fromDetachedItem(onFocusin),
+      onFocusout: fromDetachedItem(onFocusout),
+      onKeydown: fromDetachedItem(onKeydown),
+    },
     takeInitialTabStop,
     id,
     hasUnmountedTabStop: computed(() => hasUnmountedTabStop.value),
@@ -558,26 +615,9 @@ export function useCompositeRoot<Metadata>(
   return {
     props: { onFocusin, onFocusout, onKeydown },
     elementsRef,
+    itemMap: list.map,
     rootRef(element) {
-      // Vue calls a function ref again on each patch. A new observer for the same element would
-      // drop the records of that patch.
-      if (element === rootElement) {
-        return;
-      }
       rootElement = element;
-
-      // A part writes the active state and the disabled state of its item as attributes, and the
-      // root reads them from the DOM. The observer tells the root when one of them changes.
-      activeItemObserver?.disconnect();
-      activeItemObserver = null;
-      if (element && typeof MutationObserver === 'function') {
-        activeItemObserver = new MutationObserver(moveTabStopToActiveItem);
-        activeItemObserver.observe(element, {
-          attributes: true,
-          attributeFilter: [ACTIVE_COMPOSITE_ITEM, 'disabled', 'aria-disabled'],
-          subtree: true,
-        });
-      }
     },
     highlightedIndex,
   };
@@ -588,7 +628,8 @@ export function useCompositeRoot<Metadata>(
 // composite gets a tab stop when an item can get focus.
 function getFallbackIndex(
   elements: readonly (HTMLElement | null)[],
-  disabledIndices?: readonly number[],
+  isActive: (element: HTMLElement) => boolean,
+  disabledIndices: DisabledIndices,
 ) {
   let fallbackIndex = -1;
 
@@ -599,7 +640,7 @@ function getFallbackIndex(
       continue;
     }
 
-    if (element.hasAttribute(ACTIVE_COMPOSITE_ITEM)) {
+    if (isActive(element)) {
       return index;
     }
 
@@ -707,6 +748,7 @@ export interface UseCompositeRootParameters<Metadata> {
 }
 
 export interface UseCompositeRootReturnValue {
+  itemMap: ComputedRef<ReadonlyMap<Element, CompositeMetadata<unknown>>>;
   /**
    * The listeners of the composite: `onFocusin`, `onFocusout` and `onKeydown`.
    * The part puts this object first in the `props` of `useRenderElement`.

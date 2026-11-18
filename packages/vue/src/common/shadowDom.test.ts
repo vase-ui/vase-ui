@@ -1,6 +1,6 @@
 import { expect, describe, it, afterEach, vi } from 'vitest';
 import { createSlotHost } from '../../test/fixtures/slotHost';
-import { closest, contains, getTarget } from './shadowDom';
+import { closest, closestInEventPath, contains, getTarget } from './shadowDom';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -90,6 +90,24 @@ describe('shadow DOM utilities', () => {
       expect(listener).toHaveBeenCalledOnce();
       expect(matchedElement).toBe(button);
     });
+  });
+
+  it('uses the path during dispatch and the target ancestors after dispatch', () => {
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    const target = document.createElement('button');
+    document.body.append(first, second);
+    first.append(target);
+    const isOwner = (element: Element) => element === first || element === second;
+    const event = new Event('click', { bubbles: true });
+    let during: Element | null = null;
+    target.addEventListener('click', () => {
+      second.append(target);
+      during = closestInEventPath(event, isOwner);
+    });
+    target.dispatchEvent(event);
+    expect(during).toBe(first);
+    expect(closestInEventPath(event, isOwner)).toBe(second);
   });
 
   describe('getTarget', () => {

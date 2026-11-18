@@ -11,6 +11,7 @@ import type {
 } from '../../../internals/useRenderElement';
 import { createAttribute } from '../createAttribute';
 import { useDismissPortal } from '../interactions/useDismiss';
+import { usePortalRegistration } from './portalElements';
 import { usePortalContext } from './FloatingPortalContext';
 
 const attr = createAttribute('portal');
@@ -126,6 +127,7 @@ export function useFloatingPortalNode(
     },
   );
 
+  usePortalRegistration(element, isHeld, containerElement);
   useDismissPortal(element);
 
   return { element, elementProps, setRef, usesRenderSlot, containerElement, isHeld };

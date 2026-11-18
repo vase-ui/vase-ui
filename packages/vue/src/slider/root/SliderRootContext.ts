@@ -15,6 +15,7 @@ import type {
 
 export interface ThumbMetadata {
   inputId: string | undefined;
+  getInput: () => HTMLInputElement | null;
 }
 
 /** The range input of a thumb, for a change that takes the inputs of several thumbs. */

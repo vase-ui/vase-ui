@@ -1,3 +1,4 @@
+import { submenuTriggers } from '../../utils/popups/registeredParts';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
@@ -171,7 +172,7 @@ export function useMenuFilterKeyDown(
       orientation: orientation.value,
       rtl: direction.value === 'rtl',
       hasActiveItem: activeItem != null,
-      activeItemOpensSubmenu: activeItem?.hasAttribute('aria-haspopup') ?? false,
+      activeItemOpensSubmenu: activeItem != null && submenuTriggers.has(activeItem),
       hasValue: hasValue(),
       caretAtStart: caretCollapsed && input.selectionStart === 0,
       caretAtEnd: caretCollapsed && input.selectionEnd === input.value.length,
