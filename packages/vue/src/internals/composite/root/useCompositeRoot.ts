@@ -5,6 +5,7 @@ import { useIsHydrated } from '../../../common/hydration';
 import { isElementDisabled } from '../../../common/isElementDisabled';
 import { contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
+import { useMutationObserver } from '../../../common/useMutationObserver';
 import { useDirection } from '../../direction-context/DirectionContext';
 import type { HTMLProps } from '../../types';
 import {
@@ -471,16 +472,20 @@ export function useCompositeRoot<Metadata>(
     { flush: 'post' },
   );
 
+  // A consumer can change these attributes on the actual item in a render slot.
+  useMutationObserver(
+    () => Array.from(list.map.value.keys()),
+    { attributeFilter: ['disabled', 'aria-disabled'] },
+    moveTabStopToActiveItem,
+  );
+
   watch(
     list.map,
     (map, _previous, onCleanup) => {
       if (!map.size || typeof MutationObserver !== 'function') {
         return;
       }
-      // A consumer can change these attributes on the actual item in a render slot.
-      const observer = new MutationObserver(moveTabStopToActiveItem);
       for (const element of map.keys()) {
-        observer.observe(element, { attributeFilter: ['disabled', 'aria-disabled'] });
         if (element.matches(':enabled, :disabled')) {
           // A move into another fieldset or its first legend can change the native state
           // without changing any attribute on the control.
@@ -496,7 +501,6 @@ export function useCompositeRoot<Metadata>(
           );
         }
       }
-      onCleanup(() => observer.disconnect());
     },
     { flush: 'post' },
   );
