@@ -1,0 +1,11 @@
+{
+  "id": "VUE-131",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/useRegisteredLabelId.ts#L12-L17",
+    "https://www.w3.org/TR/wai-aria-1.2/#progressbar",
+    "https://www.w3.org/TR/wai-aria-1.2/#meter",
+    "https://dom.spec.whatwg.org/#dom-node-comparedocumentposition"
+  ],
+  "behavior": "`Progress.Root`, `Meter.Root`, `Fieldset.Root` and `Calendar.Grid` name the last label in the document that has an id. A `RadioGroup` that takes the legend of its fieldset gets the same id. When that label unmounts, `KeepAlive` holds it, or its element gets an empty `id`, the root names the last label that stays. Two labels with no `id` prop share the id that the root makes, and the root keeps that name when one unmounts. The name does not depend on mount or show order, so an earlier label that mounts later or that `KeepAlive` shows does not win. Base UI names the label whose effect ran last, and it removes `aria-labelledby` after that label unmounts while another label stays in the document.",
+  "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts"
+}

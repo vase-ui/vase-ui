@@ -1,4 +1,4 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, KeepAlive, onDeactivated, shallowRef } from 'vue';
 import type { VNodeChild } from 'vue';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -9,7 +9,7 @@ describe('useRegisteredLabelId', () => {
   const { render } = createRenderer();
 
   const Label = defineComponent(
-    (props: { id: string; root: LabelIdRoot }, { slots }) => {
+    (props: { id?: string; root: LabelIdRoot }, { slots }) => {
       const element = shallowRef<HTMLElement | null>(null);
       const registeredId = useRegisteredLabelId(() => props.id, props.root, element);
 
@@ -20,6 +20,16 @@ describe('useRegisteredLabelId', () => {
       );
     },
     { props: ['id', 'root'] },
+  );
+
+  const SlotLabel = defineComponent(
+    (props: { id?: string; elementId: string; root: LabelIdRoot }) => {
+      const element = shallowRef<HTMLElement | null>(null);
+      useRegisteredLabelId(() => props.id ?? 'bound', props.root, element);
+
+      return () => <span ref={element} id={props.elementId} />;
+    },
+    { props: ['id', 'elementId', 'root'] },
   );
 
   const Test = defineComponent(
@@ -82,16 +92,6 @@ describe('useRegisteredLabelId', () => {
   });
 
   describe('the id of the element', () => {
-    const SlotLabel = defineComponent(
-      (props: { id?: string; elementId: string; root: LabelIdRoot }) => {
-        const element = shallowRef<HTMLElement | null>(null);
-        useRegisteredLabelId(() => props.id ?? 'bound', props.root, element);
-
-        return () => <span ref={element} id={props.elementId} />;
-      },
-      { props: ['id', 'elementId', 'root'] },
-    );
-
     function setup(other?: 'before' | 'after') {
       const elementId = shallowRef('first');
       const shown = shallowRef(true);
@@ -371,8 +371,6 @@ describe('useRegisteredLabelId', () => {
       const labelId = shallowRef('label-a');
       const Branch = defineComponent(
         (props: { root: LabelIdRoot }) => {
-          // `KeepAlive` runs the hook of the label before this hook. The watcher of the label then
-          // gets the new id and the flag in one run.
           onDeactivated(() => {
             labelId.value = 'label-c';
           });
@@ -408,7 +406,7 @@ describe('useRegisteredLabelId', () => {
       expect(target).toHaveAttribute('aria-labelledby', 'label-c');
     });
 
-    it('names the label of the last show and not a label that an earlier show named', async () => {
+    it('names the last label in the document after KeepAlive shows an earlier label', async () => {
       const visibleA = shallowRef(true);
       const visibleB = shallowRef(true);
       const App = defineComponent(() => {
@@ -450,7 +448,15 @@ describe('useRegisteredLabelId', () => {
 
       visibleA.value = true;
       await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-b');
+
+      visibleB.value = false;
+      await flushMicrotasks();
       expect(target).toHaveAttribute('aria-labelledby', 'label-a');
+
+      visibleB.value = true;
+      await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-b');
     });
   });
 
@@ -547,7 +553,7 @@ describe('useRegisteredLabelId', () => {
         name: 'C outside the branch',
         options: { before: false, outside: true, rootInBranch: false },
         showFlush: false,
-        expected: ['label-c', 'label-c', 'label-c', 'label-b', 'none', 'label-b'],
+        expected: ['label-c', 'label-c', 'label-c', 'label-c', 'label-c', 'label-c'],
       },
       {
         name: 'root in the branch, B after A',
@@ -626,6 +632,221 @@ describe('useRegisteredLabelId', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('target')).toHaveAttribute('aria-labelledby', 'label-c');
+    });
+  });
+
+  describe('VUE-131: the last label in the document that has an id', () => {
+    type Step = 'mountB' | 'unmountB' | 'unmountA' | 'hideB' | 'showB' | 'emptyIdB' | 'secondIdB';
+
+    it.each([
+      {
+        name: 'the last label unmounts',
+        position: 'after' as const,
+        kind: 'plain' as const,
+        initialB: true,
+        steps: ['unmountB'] satisfies Step[],
+        expected: ['label-b', 'label-a'],
+      },
+      {
+        name: 'a later label unmounts',
+        position: 'after' as const,
+        kind: 'plain' as const,
+        initialB: false,
+        steps: ['mountB', 'unmountB'] satisfies Step[],
+        expected: ['label-a', 'label-b', 'label-a'],
+      },
+      {
+        name: 'KeepAlive holds the last label',
+        position: 'after' as const,
+        kind: 'keepAlive' as const,
+        initialB: true,
+        steps: ['hideB', 'showB'] satisfies Step[],
+        expected: ['label-b', 'label-a', 'label-b'],
+      },
+      {
+        name: 'the last label gets an empty id',
+        position: 'after' as const,
+        kind: 'slot' as const,
+        initialB: true,
+        steps: ['emptyIdB', 'secondIdB'] satisfies Step[],
+        expected: ['first', 'label-a', 'second'],
+      },
+      {
+        name: 'a label mounts before the last label',
+        position: 'before' as const,
+        kind: 'plain' as const,
+        initialB: false,
+        steps: ['mountB', 'unmountA'] satisfies Step[],
+        expected: ['label-a', 'label-a', 'label-b'],
+      },
+    ])('$name', async ({ position, kind, initialB, steps, expected }) => {
+      const mountedA = shallowRef(true);
+      const mountedB = shallowRef(initialB);
+      const visibleB = shallowRef(true);
+      const elementIdB = shallowRef('first');
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        function renderB() {
+          if (kind === 'keepAlive') {
+            return (
+              <KeepAlive>
+                {visibleB.value ? (
+                  <Label key="b" id="label-b" root={labelRoot}>
+                    B
+                  </Label>
+                ) : null}
+              </KeepAlive>
+            );
+          }
+          if (kind === 'slot') {
+            return <SlotLabel elementId={elementIdB.value} root={labelRoot} />;
+          }
+          return mountedB.value ? (
+            <Label key="b" id="label-b" root={labelRoot}>
+              B
+            </Label>
+          ) : null;
+        }
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            {position === 'before' ? renderB() : null}
+            {mountedA.value ? (
+              <Label key="a" id="label-a" root={labelRoot}>
+                A
+              </Label>
+            ) : null}
+            {position === 'after' ? renderB() : null}
+          </>
+        );
+      });
+
+      const actions: Record<Step, () => void> = {
+        mountB: () => {
+          mountedB.value = true;
+        },
+        unmountB: () => {
+          mountedB.value = false;
+        },
+        unmountA: () => {
+          mountedA.value = false;
+        },
+        hideB: () => {
+          visibleB.value = false;
+        },
+        showB: () => {
+          visibleB.value = true;
+        },
+        emptyIdB: () => {
+          elementIdB.value = '';
+        },
+        secondIdB: () => {
+          elementIdB.value = 'second';
+        },
+      };
+
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      const seen = [target.getAttribute('aria-labelledby')];
+      for (const step of steps) {
+        actions[step]();
+        await flushMicrotasks();
+        seen.push(target.getAttribute('aria-labelledby'));
+      }
+
+      expect(seen).toEqual(expected);
+    });
+
+    it.each([
+      ['the first of two labels with no id leaves', 'first'],
+      ['the last of two labels with no id leaves', 'last'],
+    ] as const)('%s', async (_title, removed) => {
+      const mountedFirst = shallowRef(true);
+      const mountedLast = shallowRef(true);
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            {mountedFirst.value ? (
+              <Label key="first" root={labelRoot}>
+                First
+              </Label>
+            ) : null}
+            {mountedLast.value ? (
+              <Label key="last" root={labelRoot}>
+                Last
+              </Label>
+            ) : null}
+          </>
+        );
+      });
+
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      const remaining = screen.getByText(removed === 'first' ? 'Last' : 'First');
+      expect(remaining.id).not.toBe('');
+      const before = target.getAttribute('aria-labelledby');
+
+      (removed === 'first' ? mountedFirst : mountedLast).value = false;
+      await flushMicrotasks();
+
+      expect([before, target.getAttribute('aria-labelledby')]).toEqual([
+        remaining.id,
+        remaining.id,
+      ]);
+    });
+
+    it('does not name a label before its mount', async () => {
+      const mountedB = shallowRef(false);
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            {mountedB.value ? (
+              <Label key="b" id="label-b" root={labelRoot}>
+                B
+              </Label>
+            ) : null}
+            <Label key="a" id="label-a" root={labelRoot}>
+              A
+            </Label>
+          </>
+        );
+      });
+
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      expect(target).toHaveAttribute('aria-labelledby', 'label-a');
+
+      const records: (string | null)[] = [];
+      const observer = new MutationObserver((batch) => {
+        for (const record of batch) {
+          records.push(record.oldValue);
+        }
+      });
+      observer.observe(target, {
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: ['aria-labelledby'],
+      });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+
+      mountedB.value = true;
+      await flushMicrotasks();
+      for (const record of observer.takeRecords()) {
+        records.push(record.oldValue);
+      }
+
+      expect(records).toEqual([]);
+      expect(target).toHaveAttribute('aria-labelledby', 'label-a');
     });
   });
 });
