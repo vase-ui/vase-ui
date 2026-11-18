@@ -744,7 +744,7 @@ function handleHiddenInputChange(event: Event) {
   const isNewValue = hiddenValueSync.isNew(event);
 
   if (!isNewValue || event.defaultPrevented || isDisabled.value || props.readOnly) {
-    void nextTick(hiddenValueSync.write);
+    hiddenValueSync.restore();
     return;
   }
 
@@ -753,7 +753,7 @@ function handleHiddenInputChange(event: Event) {
   store.set('forceMounted', true);
   void nextTick(() => {
     selectAutofilledItem(input, autofilledValue, eventDetails);
-    void nextTick(hiddenValueSync.write);
+    hiddenValueSync.restore();
   });
 }
 
@@ -802,7 +802,7 @@ function inputProps() {
       props.required,
     ),
     autocomplete: props.autoComplete,
-    ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
+    ...hiddenValueSync.valueProps(),
     disabled: isDisabled.value,
     required: props.required && !(isMultiple.value && hasSelectedValue.value),
     readonly: props.readOnly,

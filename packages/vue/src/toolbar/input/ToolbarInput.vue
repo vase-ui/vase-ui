@@ -120,10 +120,7 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-const valueSync = useInputValueSync(
-  () => element.value,
-  () => undefined,
-);
+const valueSync = useInputValueSync(() => element.value);
 
 const attrs = useAttrs();
 onMounted(valueSync.record);

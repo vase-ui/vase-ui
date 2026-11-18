@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { platform } from '../../common/platform';
@@ -75,16 +75,14 @@ export function useFilterDropdownInput(
     context.setInputFocusVisible(false);
   }
 
-  const valueSync = useInputValueSync(
-    () => inputElement,
-    () => value.value,
-  );
+  const valueSync = useInputValueSync(() => inputElement);
   onMounted(valueSync.record);
   watch(() => composingValue.value ?? value.value, valueSync.record, { flush: 'post' });
 
-  function writeValueToInput() {
+  // A write to the input while a composition runs stops the composition.
+  function restoreText() {
     if (!isComposing) {
-      valueSync.write();
+      valueSync.restore();
     }
   }
 
@@ -118,9 +116,9 @@ export function useFilterDropdownInput(
     const nextValue = (event.currentTarget as HTMLInputElement).value;
     valueSync.record();
     commitValue(nextValue, event);
-    // WebKit sends the last `input` event of a composition after `compositionend`, so the write
+    // WebKit sends the last `input` event of a composition after `compositionend`, so the render
     // waits for the next task.
-    compositionTimeout.start(0, writeValueToInput);
+    compositionTimeout.start(0, restoreText);
   }
 
   // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
@@ -136,7 +134,7 @@ export function useFilterDropdownInput(
       return;
     }
     commitValue(nextValue, event);
-    void nextTick(writeValueToInput);
+    restoreText();
   }
 
   const listeners = {
@@ -192,7 +190,7 @@ export function useFilterDropdownInput(
           // https://w3c.github.io/aria/#aria-autocomplete
           'aria-autocomplete': undefined,
           'aria-controls': context.listId.value,
-          value: composingValue.value ?? value.value,
+          ...valueSync.bind(composingValue.value ?? value.value),
           ...listeners,
         },
         autocorrect === undefined ? undefined : { autoCorrect: autocorrect },

@@ -676,7 +676,7 @@ function onHiddenInputChange(event: Event) {
 
   // The input keeps the value of the field, as a controlled input of React does. A listener that
   // cancels the change, a parent that keeps its value and a locked field leave the field as it was.
-  void nextTick(hiddenValueSync.write);
+  hiddenValueSync.restore();
 }
 
 useFormReset(hiddenInputElement, (event) => {
@@ -708,7 +708,7 @@ function inputProps() {
     type: 'number',
     form: props.form,
     name: inputName.value,
-    ...(writesHiddenValue.value ? { value: hiddenInputText.value } : undefined),
+    ...hiddenValueSync.valueProps(),
     min: props.min,
     max: props.max,
     // stepMismatch validation is broken unless an explicit `min` is added.

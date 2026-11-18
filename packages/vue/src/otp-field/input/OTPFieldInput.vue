@@ -109,10 +109,7 @@ const writesValue = useValueBeforeHydration(props, () => element.value, { restor
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
 
-const valueSync = useInputValueSync(
-  () => element.value,
-  () => composingValue.value ?? slotValue.value,
-);
+const valueSync = useInputValueSync(() => element.value);
 
 if (process.env.NODE_ENV !== 'production') {
   const attrs = useAttrs();
@@ -172,8 +169,11 @@ function commitValue(
           createChangeEventDetails(REASONS.inputClear, event),
         );
       } else if (slotValue.value !== '') {
-        input.value = slotValue.value;
-        input.select();
+        // Vue writes the character back at the render, and that write clears the selection.
+        valueSync.restore();
+        void nextTick(() => {
+          input.select();
+        });
       }
     }
     return;
@@ -213,9 +213,9 @@ function handleInput(event: Event) {
     }
   }
 
-  // The wait starts after the change, so that it ends after the flush of a parent that takes the
-  // character. A write before that flush would put the old character in the input.
-  void nextTick(valueSync.write);
+  // The root can refuse the text, a listener can cancel the change and the parent can keep its
+  // value. The character of the slot then stays, and no render follows.
+  valueSync.restore();
 }
 
 // Some programs that fill a form send only `change`.
@@ -355,7 +355,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     return [
       {
         id: getInputId(slotIndex),
-        ...(writesValue.value ? { value: composingValue.value ?? slotValue.value } : undefined),
+        ...(writesValue.value
+          ? valueSync.bind(composingValue.value ?? slotValue.value)
+          : undefined),
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',

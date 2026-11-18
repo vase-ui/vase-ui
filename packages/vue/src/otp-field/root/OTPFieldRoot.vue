@@ -638,7 +638,7 @@ const hiddenValueSync = useHiddenInputValueSync(
 
 // A browser can restore the code to the hidden input and the slots without an event.
 function writeValueToInputs() {
-  hiddenValueSync.write();
+  hiddenValueSync.restore();
 
   const characters = otpValue.value;
   inputElements.value.forEach((input, index) => {
@@ -724,7 +724,7 @@ function hiddenInputProps() {
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
     name: inputName.value,
-    ...(writesHiddenValue.value ? { value: otpValue.value } : undefined),
+    ...hiddenValueSync.valueProps(),
     autocomplete: props.autoComplete,
     inputmode: resolvedInputMode.value,
     minlength: props.length,

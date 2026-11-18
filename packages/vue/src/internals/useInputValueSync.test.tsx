@@ -3,6 +3,7 @@ import { h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import {
   createRenderer,
+  flushMicrotasks,
   hydrate,
   hydrateAfter,
   isVaporApp,
@@ -35,36 +36,48 @@ describe('useInputValueSync', () => {
     };
   }
 
-  it('writes only when the input has other text', async () => {
-    const { input, sync } = await mount('kept');
+  async function checkRestore(Part: Component) {
+    const { input, sync } = await mount('kept', false, Part);
     input.value = 'refused';
     const assignments = recordInputWrites(input, 'value');
 
-    sync.write();
-    sync.write();
+    sync.restore();
+    await flushMicrotasks();
+    sync.restore();
+    await flushMicrotasks();
 
     expect(input.value).toBe('kept');
     expect(assignments).toEqual(['kept']);
-  });
+  }
 
-  it('records the input when the state gives no text', async () => {
+  it('restores the text in one render and assigns no equal text', () =>
+    checkRestore(InputValueSyncPart));
+
+  it.runIf(isVaporApp)('restores the text in a Vapor part', () =>
+    checkRestore(InputValueSyncPartVapor),
+  );
+
+  it('records the input when the part binds no value', async () => {
     const { input, sync, change } = await mount();
     input.value = 'typed';
     const assignments = recordInputWrites(input, 'value');
 
-    sync.write();
+    sync.restore();
+    await flushMicrotasks();
 
     expect(assignments).toEqual([]);
     expect(change()).toBe(false);
   });
 
-  it('recognizes each value from the last event, write or record', async () => {
+  it('recognizes each value from the last event, restore or record', async () => {
     const { input, sync, change } = await mount('state');
     input.value = 'typed';
     expect(change()).toBe(true);
     expect(change()).toBe(false);
 
-    sync.write();
+    sync.restore();
+    await flushMicrotasks();
+    expect(input.value).toBe('state');
     expect(change()).toBe(false);
 
     input.value = 'reset';
@@ -76,9 +89,10 @@ describe('useInputValueSync', () => {
     expect(change()).toBe(false);
   });
 
-  it('records the text that the browser kept after a write', async () => {
+  it('records the text that the browser kept after a restore', async () => {
     const { sync } = await mount('two\nlines');
-    sync.write();
+    sync.restore();
+    await flushMicrotasks();
     expect(sync.handledValue()).toBe('twolines');
   });
 

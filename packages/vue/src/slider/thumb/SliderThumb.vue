@@ -63,16 +63,7 @@ export interface SliderThumbProps
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  useAttrs,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, useAttrs, watch } from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
@@ -386,15 +377,7 @@ const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
 // A range input moves its value to the step and into the range. Its text can differ from the
 // value of the thumb.
-const valueSync = useInputValueSync(
-  () => inputElement.value,
-  () => {
-    const value = thumbValue.value;
-    return value === undefined || inputElement.value?.valueAsNumber === value
-      ? undefined
-      : String(value);
-  },
-);
+const valueSync = useInputValueSync(() => inputElement.value);
 watch([inputElement, thumbValue, min, max, step], valueSync.record, { flush: 'post' });
 
 // The thumb follows the reset with its own input. The composite list of the root has no thumb
@@ -413,7 +396,7 @@ function onNativeChange(event: Event) {
   handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  void nextTick(valueSync.write);
+  valueSync.restore();
 }
 
 onScopeDispose(
@@ -427,7 +410,7 @@ onScopeDispose(
       valueSync.record();
       return { index: thumbIndex.value, value: input.valueAsNumber };
     },
-    writeValue: valueSync.write,
+    restoreValue: valueSync.restore,
   }),
 );
 
@@ -608,7 +591,7 @@ function inputProps() {
       },
       tabindex: props.tabindex,
       type: 'range',
-      ...(writesValue.value ? { value: value ?? '' } : undefined),
+      ...(writesValue.value ? valueSync.bind(value ?? '') : undefined),
     },
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     {

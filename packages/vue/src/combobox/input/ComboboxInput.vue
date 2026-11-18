@@ -43,7 +43,7 @@ export interface ComboboxInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import { isTextControl, useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
@@ -215,10 +215,7 @@ function displayText(value: unknown) {
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-const valueSync = useInputValueSync(
-  () => element.value,
-  () => displayText(inputValue.value),
-);
+const valueSync = useInputValueSync(() => element.value);
 
 // At the mount the input can hold text that the user typed before the hydration, also in a
 // component in `as`. The last write of Vue, and the server HTML, have the text of the state. The
@@ -230,9 +227,10 @@ onMounted(() => {
 });
 watch(() => composingValue.value ?? inputValue.value, valueSync.record, { flush: 'post' });
 
-function writeStateToInput() {
+// A write to the input while a composition runs stops the composition.
+function restoreText() {
   if (!isComposing) {
-    valueSync.write();
+    valueSync.restore();
   }
 }
 
@@ -252,9 +250,9 @@ function handleCompositionend(event: CompositionEvent) {
   composingValue.value = null;
   valueSync.record();
   store.context.setInputValue(next, createChangeEventDetails(REASONS.inputChange, event));
-  // WebKit sends the last `input` event of a composition after `compositionend`, so the write
+  // WebKit sends the last `input` event of a composition after `compositionend`, so the render
   // waits for the next task.
-  compositionTimeout.start(0, writeStateToInput);
+  compositionTimeout.start(0, restoreText);
 }
 
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
@@ -316,7 +314,8 @@ function handleInput(event: Event) {
 
   const inputChangeDetails = createChangeEventDetails(REASONS.inputChange, event);
   store.context.setInputValue(value, inputChangeDetails);
-  void nextTick(writeStateToInput);
+  // A listener can cancel the change, and the consumer can keep its value.
+  restoreText();
 
   if (inputChangeDetails.isCanceled) {
     return;
@@ -557,7 +556,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       store.select('inputProps'),
       store.select('triggerProps', true),
       {
-        ...(writesValue.value ? { value: composingValue.value ?? inputValue.value } : undefined),
+        ...(writesValue.value
+          ? valueSync.bind(composingValue.value ?? inputValue.value)
+          : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
         'aria-labelledby': fieldLabelId.value,

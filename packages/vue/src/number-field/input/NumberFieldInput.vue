@@ -19,7 +19,7 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
+import { nextTick, onMounted, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
@@ -111,7 +111,6 @@ useDeferredServerRender();
 const setFocused = useSetFieldFocused(() => state.value.disabled, inputRef);
 
 let blockRevalidation = false;
-let pendingCaret: number | null = null;
 
 useRegisterFieldControl(
   inputRef,
@@ -122,32 +121,14 @@ useRegisterFieldControl(
   nameProp,
 );
 
-const valueSync = useInputValueSync(
-  () => inputRef.value,
-  () => state.value.inputValue,
-);
-
-// After a paste, the part moves the caret behind the pasted text. The write of the text puts the
-// caret at the end of the input.
-function writeTextToInput() {
-  const input = inputRef.value;
-  if (!input) {
-    return;
-  }
-  valueSync.write();
-  if (pendingCaret !== null) {
-    const caret = pendingCaret;
-    pendingCaret = null;
-    input.setSelectionRange(caret, caret);
-  }
-}
+const valueSync = useInputValueSync(() => inputRef.value);
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
 onMounted(valueSync.record);
 // At the mount the root formats its text again in the runtime locale. Until the hydration ends,
 // the input keeps the text that the user typed, and the `input` event parses it.
-watch(() => (writesValue.value ? state.value.inputValue : undefined), writeTextToInput, {
+watch(() => (writesValue.value ? state.value.inputValue : undefined), valueSync.record, {
   flush: 'post',
 });
 
@@ -269,11 +250,11 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-// A write to the input while a composition runs stops the composition. The write then waits for
+// A write to the input while a composition runs stops the composition. The render then waits for
 // `compositionend`.
 function refuseChange(event: Event) {
   if (!(event as InputEvent).isComposing) {
-    writeTextToInput();
+    valueSync.restore();
   }
 }
 
@@ -327,10 +308,10 @@ function handleInput(event: Event) {
 
 const compositionTimeout = useTimeout();
 
-// WebKit sends the last `input` event of a composition after `compositionend`, so the write waits
+// WebKit sends the last `input` event of a composition after `compositionend`, so the render waits
 // for the next task.
 function handleCompositionend() {
-  compositionTimeout.start(0, writeTextToInput);
+  compositionTimeout.start(0, valueSync.restore);
 }
 
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
@@ -524,10 +505,15 @@ function handlePaste(event: ClipboardEvent) {
 
   if (parsedValue !== null) {
     allowInputSyncRef.value = false;
-    pendingCaret = selectionStart + pastedData.length;
     setValue(parsedValue, createChangeEventDetails(REASONS.inputPaste, event));
     setInputValue(nextText);
-    writeTextToInput();
+    valueSync.restore();
+    // Vue's write of the text puts the caret at the end of the input. The part moves the caret
+    // behind the pasted text.
+    const caret = selectionStart + pastedData.length;
+    void nextTick(() => {
+      input.setSelectionRange(caret, caret);
+    });
   }
 }
 
@@ -560,7 +546,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        ...(writesValue.value ? { value: state.value.inputValue } : undefined),
+        ...(writesValue.value ? valueSync.bind(state.value.inputValue) : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,

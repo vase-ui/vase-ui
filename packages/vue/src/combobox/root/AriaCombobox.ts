@@ -1950,7 +1950,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (!hiddenValueSync.isNew(event)) {
       return;
     }
-    void nextTick(hiddenValueSync.write);
+    hiddenValueSync.restore();
     if (event.defaultPrevented || disabled.value || readOnly.value) {
       return;
     }
@@ -2085,7 +2085,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       disabled: disabled.value,
       required: required.value && !hasMultipleSelection.value,
       readonly: readOnly.value,
-      ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
+      ...hiddenValueSync.valueProps(),
       style: hiddenInputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
       tabindex: -1,
       'aria-hidden': true,

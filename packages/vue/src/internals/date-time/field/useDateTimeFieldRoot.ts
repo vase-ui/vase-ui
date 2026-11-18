@@ -1,7 +1,6 @@
 import {
   computed,
   inject,
-  nextTick,
   onMounted,
   provide,
   shallowReactive,
@@ -818,7 +817,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
     // The browser reset the inputs before this call. The text of the input is not the text of the
     // model when the reset left the model as it was.
-    hiddenValueSync.write();
+    hiddenValueSync.restore();
     resetCount.value += 1;
   });
 
@@ -855,7 +854,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         setValue(null, details);
       }
     }
-    void nextTick(hiddenValueSync.write);
+    hiddenValueSync.restore();
   }
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
@@ -893,7 +892,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
       form: toValue(parameters.form),
       name: inputName.value,
-      ...(writesHiddenValue.value ? { value: hiddenText.value } : undefined),
+      ...hiddenValueSync.valueProps(),
       autocomplete: toValue(parameters.autoComplete),
       min: inputLimits.value.min,
       max: inputLimits.value.max,

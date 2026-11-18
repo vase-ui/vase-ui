@@ -24,8 +24,8 @@ export interface ThumbInput {
    * that the slider handled. The thumb then counts that value as handled.
    */
   take: () => { index: number; value: number } | undefined;
-  /** Writes the value of the thumb to its input. */
-  writeValue: () => void;
+  /** Starts a render of the input, in which Vue writes the value of the thumb to it. */
+  restoreValue: () => void;
 }
 
 export interface SliderRootContext {

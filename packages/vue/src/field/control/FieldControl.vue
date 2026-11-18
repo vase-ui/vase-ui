@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
+import { computed, onBeforeUpdate, onMounted, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -160,10 +160,7 @@ if (valueOfProps !== undefined) {
   setFilled(valueOfProps !== '');
 }
 
-const valueSync = useInputValueSync(
-  () => element.value,
-  () => serializedValue.value,
-);
+const valueSync = useInputValueSync(() => element.value);
 
 function syncFilled() {
   const currentValue = serializedValue.value ?? (element.value as HTMLInputElement | null)?.value;
@@ -217,7 +214,7 @@ const enterValidationTimeout = useTimeout();
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps() {
   if (props.value !== undefined) {
-    return writesValue.value ? { value: props.value } : undefined;
+    return writesValue.value ? valueSync.bind(props.value) : undefined;
   }
   if (props.defaultValue === undefined) {
     return undefined;
@@ -240,7 +237,7 @@ function handleInput(event: Event) {
   // A controlled value comes from the `value` prop, so a value that the consumer refuses or
   // changes does not reach the state of the field.
   if (props.value !== undefined) {
-    void nextTick(valueSync.write);
+    valueSync.restore();
     return;
   }
 

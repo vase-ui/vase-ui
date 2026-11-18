@@ -13,13 +13,18 @@ const props = defineProps<{
 
 const input = shallowRef<HTMLInputElement | null>(null);
 const writes = useHiddenValueBeforeHydration(() => input.value);
-const sync = props.hidden
+const hiddenSync = props.hidden
   ? useHiddenInputValueSync(input, () => props.value ?? '', writes)
-  : useInputValueSync(
-      () => input.value,
-      () => props.value,
-    );
+  : undefined;
+const sync = hiddenSync ?? useInputValueSync(() => input.value);
 onMounted(() => props.report?.(sync));
+
+function valueProps() {
+  if (hiddenSync) {
+    return hiddenSync.valueProps();
+  }
+  return props.value === undefined ? undefined : sync.bind(props.value);
+}
 
 function setInput(element: unknown) {
   input.value = element as HTMLInputElement | null;
@@ -31,10 +36,5 @@ function checkEvent(event: Event) {
 </script>
 
 <template>
-  <input
-    v-bind="hidden && writes ? { value } : {}"
-    :ref="setInput"
-    @input="checkEvent"
-    @change="checkEvent"
-  />
+  <input v-bind="valueProps()" :ref="setInput" @input="checkEvent" @change="checkEvent" />
 </template>

@@ -2121,6 +2121,7 @@ describe('<OTPField.Root />', () => {
         hiddenInput.value = '97';
 
         window.dispatchEvent(new Event('pageshow'));
+        await flushMicrotasks();
 
         expect(hiddenInput.value).toBe('12');
       });
