@@ -3,6 +3,7 @@ import { createRenderer, screen, waitFor } from '#test-utils';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Button } from '@vase-ui/vue/button';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Collapsible } from '@vase-ui/vue/collapsible';
@@ -38,16 +39,20 @@ interface BlankId {
   id: string;
 }
 
-// `blankId` goes on the part under test. A row with `twice` renders two copies, and `k` tells them
-// apart in the test ids and the texts.
 const blankIdIf = (when: boolean, blankId: BlankId) => (when ? blankId : {});
 
 interface Row {
   name: string;
   tree: (k: string, blankId: BlankId) => unknown;
+  // Two copies reveal ids that both parts derive from the same blank override.
   twice?: boolean;
   // The element whose name and description each copy must keep.
-  named?: (k: string) => { testId: string; name: string; description?: string };
+  named?: (k: string) => {
+    testId: string;
+    name: string;
+    description?: string;
+    nativeLabel?: boolean;
+  };
   // The test id of a part that mounts after the first render. The row waits for it first.
   ready?: string;
 }
@@ -469,6 +474,7 @@ const rows: Row[] = [
       testId: `control${k}`,
       name: `Name ${k}`,
       description: `Hint ${k} Wrong ${k}`,
+      nativeLabel: true,
     }),
   })),
   {
@@ -681,10 +687,22 @@ describe.each([
       if (expected.description !== undefined) {
         expect(element).toHaveAccessibleDescription(expected.description);
       }
+      if (expected.nativeLabel) {
+        const label = screen.getByText<HTMLLabelElement>(expected.name, { selector: 'label' });
+        expect(label.control).toBe(element);
+      }
     }
 
     expect(blankIds()).toEqual([]);
     expect(duplicateIds()).toEqual([]);
     expect(unresolvedReferences()).toEqual([]);
+  });
+
+  it('removes the id from a Button that had a nonblank id attribute', async () => {
+    const { setProps } = await render(<Button id=" a b ">Save</Button>);
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('id', ' a b ');
+
+    await setProps({ id });
+    expect(screen.getByRole('button', { name: 'Save' })).not.toHaveAttribute('id');
   });
 });
