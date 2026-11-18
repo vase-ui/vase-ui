@@ -226,7 +226,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
         );
       }
     }
-    // An invalid first render must throw from setup before Vue starts the watcher.
+    // Vue reports a second warning if the first check throws inside the watcher.
     assertBroadcastCalendar();
     watchEffect(assertBroadcastCalendar);
   }
@@ -1030,8 +1030,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     );
   });
 
-  // The last page ends at `maxDate` even if the first page must start before `minDate`.
-  // The month and year views use one month to select the year.
+  // When too few months fit between the limits, the last page must include `maxDate`.
   function clampMonth(
     month: Temporal.PlainYearMonth,
     pageMonths = duration.value ? 1 : monthCount.value,

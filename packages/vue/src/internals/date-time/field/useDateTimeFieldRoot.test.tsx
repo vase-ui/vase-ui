@@ -34,8 +34,6 @@ const typesOf = (container: Element) =>
   Array.from(container.querySelectorAll('input[data-type]'), (input) =>
     input.getAttribute('data-type'),
   );
-// The text that the field shows: the numbers of its segments, its literals and its era.
-// The text that `Intl` gives for a value, with the options of the layout.
 const textOf = (value: TemporalValue, options: Intl.DateTimeFormatOptions, locale: string) => {
   const [format, epoch] = formatter(value, options, locale);
   return format.format(epoch);
