@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KeepAlive, shallowRef, Teleport } from 'vue';
+import { defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
@@ -23,9 +23,34 @@ import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalE
 import CompositeItem from '../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../test/fixtures/CompositeRootPart.vue';
 import SliderInputPortal from '../../test/fixtures/SliderInputPortal.vue';
+import { useElementRegistration } from './useElementRegistration';
 
 describe('owned parts', () => {
   const { render } = createRenderer();
+
+  it('updates the element registry in the same task as the ref', async () => {
+    const registry = new WeakMap<Element, () => string>();
+    const first = document.createElement('button');
+    const second = document.createElement('button');
+    const target = shallowRef<Element | null>(first);
+    const Owner = defineComponent(() => {
+      useElementRegistration(
+        registry,
+        () => target.value,
+        () => 'owner',
+      );
+      return () => <span />;
+    });
+    const { unmount } = await render(<Owner />);
+
+    expect(registry.get(first)?.()).toBe('owner');
+    target.value = null;
+    expect(registry.has(first)).toBe(false);
+    target.value = second;
+    expect(registry.get(second)?.()).toBe('owner');
+    unmount();
+    expect(registry.has(second)).toBe(false);
+  });
 
   it('VUE-54: keeps one tab stop when the active item moves and another item takes its index', async () => {
     const names = shallowRef(['First', 'Active', 'Last']);

@@ -28,6 +28,48 @@ describe('useFormReset', () => {
     vi.useRealTimers();
   });
 
+  it('follows a getter from an existing input to a different form', async () => {
+    const onReset = vi.fn();
+    const { container } = await render(
+      <div>
+        <form>
+          <input name="first" />
+        </form>
+        <form>
+          <input name="second" />
+        </form>
+      </div>,
+    );
+    const [first, second] = container.querySelectorAll('input');
+    if (!first?.form || !second?.form) {
+      throw new Error('Both inputs need a form.');
+    }
+    const input = shallowRef(first);
+    const Owner = defineComponent(() => {
+      useFormReset(() => input.value, onReset);
+      return () => <span />;
+    });
+    const { unmount } = await render(<Owner />);
+    vi.useFakeTimers();
+    first.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(1);
+
+    input.value = second;
+    await flushMicrotasks();
+    first.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(1);
+    second.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
+
+    unmount();
+    second.form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
+  });
+
   it('drops a reset that waits when its input changes', async () => {
     const onReset = vi.fn();
     const inputKey = shallowRef('first');

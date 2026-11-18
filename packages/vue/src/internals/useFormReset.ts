@@ -1,5 +1,5 @@
-import { watch } from 'vue';
-import type { Ref } from 'vue';
+import { toValue, watch, watchPostEffect } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { useTimeout } from '../common/useTimeout';
 import { followRootNode } from './observeRootNode';
@@ -12,58 +12,52 @@ import { useKeepAliveState } from './useKeepAliveState';
  * runs later can still prevent the event. `onReset` thus runs in a timeout of 0 ms, and only when
  * no listener prevented the event. It does not run when the event is for another form. The
  * listener of a shown part follows the input to another root node.
- * @param input The element of a control that has a `form`, such as a hidden `<input>`. A ref that a
- * `ref` setter writes.
+ * @param input A control with a `form`, or a ref or getter for that control.
  * @param onReset Gets the `reset` event.
  */
 export function useFormReset(
-  input: Readonly<Ref<HTMLElement | null>>,
+  input: MaybeRefOrGetter<HTMLElement | null>,
   onReset: (event: Event) => void,
 ): void {
   const resetTimeout = useTimeout();
   const { isHeld } = useKeepAliveState();
 
-  watch(input, () => {
-    resetTimeout.clear();
-  });
+  watch(() => toValue(input), resetTimeout.clear);
 
-  watch(
-    [input, isHeld] as const,
-    ([element, held], _previous, onCleanup) => {
-      if (!element) {
+  watchPostEffect((onCleanup) => {
+    const element = toValue(input);
+    if (!element) {
+      return;
+    }
+
+    function handleReset(event: Event) {
+      // The form of the input can change, so the form is read when the event arrives.
+      if (event.target !== (element as HTMLInputElement).form) {
         return;
       }
 
-      function handleReset(event: Event) {
-        // The form of the input can change, so the form is read when the event arrives.
-        if (event.target !== (element as HTMLInputElement).form) {
-          return;
+      resetTimeout.start(0, () => {
+        if (!event.defaultPrevented) {
+          onReset(event);
         }
+      });
+    }
 
-        resetTimeout.start(0, () => {
-          if (!event.defaultPrevented) {
-            onReset(event);
-          }
-        });
-      }
+    function listen(target: Node) {
+      return addEventListener(target, 'reset', handleReset);
+    }
 
-      function listen(target: Node) {
-        return addEventListener(target, 'reset', handleReset);
+    // A `reset` event does not leave a shadow root, so a shown part listens on the root node.
+    // The change of `isHeld` starts this listener at activation. A leave transition keeps a
+    // held input in the document until it ends, and no hook runs at that end. A form in the
+    // held branch moves with the input, so a held part listens on the form of the input.
+    if (isHeld.value) {
+      const form = (element as HTMLInputElement).form;
+      if (form) {
+        onCleanup(listen(form));
       }
-
-      // A `reset` event does not leave a shadow root, so a shown part listens on the root node.
-      // The change of `isHeld` starts this listener at activation. A leave transition keeps a
-      // held input in the document until it ends, and no hook runs at that end. A form in the
-      // held branch moves with the input, so a held part listens on the form of the input.
-      if (held) {
-        const form = (element as HTMLInputElement).form;
-        if (form) {
-          onCleanup(listen(form));
-        }
-      } else {
-        onCleanup(followRootNode(element, listen));
-      }
-    },
-    { flush: 'post' },
-  );
+    } else {
+      onCleanup(followRootNode(element, listen));
+    }
+  });
 }
