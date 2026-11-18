@@ -352,7 +352,6 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - name: Install Vue from the pinned core commit
         id: vue
         shell: bash
@@ -360,13 +359,16 @@ jobs:
           VUE_REVISION: e9310d601
         run: |
           # Local tarballs also pin the peers. pnpm rejects URLs in transitive dependencies.
-          mkdir -p "$RUNNER_TEMP/vue-core"
+          tarballs="$RUNNER_TEMP/vue-core"
+          checksums="$GITHUB_WORKSPACE/.github/workflows/vue-$VUE_REVISION.sha256"
+          mkdir -p "$tarballs/@vue"
           echo 'overrides:' >> pnpm-workspace.yaml
-          for package in vue @vue/{compiler-core,compiler-dom,compiler-sfc,compiler-ssr,compiler-vapor,reactivity,runtime-core,runtime-dom,runtime-vapor,server-renderer,shared}; do
-            tarball="$RUNNER_TEMP/vue-core/${package##*/}.tgz"
-            curl -fsSL --retry 3 "https://pkg.pr.new/$package@$VUE_REVISION" -o "$tarball"
-            echo "  '$package': 'file:$tarball'" >> pnpm-workspace.yaml
-          done
+          while read -r _ file; do
+            package=${file%.tgz}
+            curl -fsSL --retry 3 "https://pkg.pr.new/$package@$VUE_REVISION" -o "$tarballs/$file"
+            echo "  '$package': 'file:$tarballs/$file'" >> pnpm-workspace.yaml
+          done < "$checksums"
+          (cd "$tarballs" && sha256sum --check --strict "$checksums")
           pnpm install --no-frozen-lockfile
       - uses: ./.github/actions/vitest
         with:
