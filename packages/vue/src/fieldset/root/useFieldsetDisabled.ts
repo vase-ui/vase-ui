@@ -1,47 +1,10 @@
 import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { observeRootNode } from '../../internals/observeRootNode';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useFieldsetRootContext } from './FieldsetRootContext';
 
-interface FieldsetObserver {
-  observer: MutationObserver;
-  callbacks: Set<() => void>;
-}
-
-// The map is in the module, so each copy of the library has its own observers.
-const fieldsetObservers = new WeakMap<Node, FieldsetObserver>();
-
-// HTML has no event for a change of the disabled state of a fieldset. All callbacks of one root
-// node share one observer. A new first `<legend>` and a move of the element also change the state.
-function observeFieldsets(root: Node, callback: () => void): () => void {
-  let fieldsetObserver = fieldsetObservers.get(root);
-
-  if (!fieldsetObserver) {
-    const callbacks = new Set<() => void>();
-    const observer = new MutationObserver(() => {
-      callbacks.forEach((run) => run());
-    });
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['disabled'],
-    });
-    fieldsetObserver = { observer, callbacks };
-    fieldsetObservers.set(root, fieldsetObserver);
-  }
-
-  const { observer, callbacks } = fieldsetObserver;
-  callbacks.add(callback);
-
-  return () => {
-    callbacks.delete(callback);
-    if (callbacks.size === 0) {
-      observer.disconnect();
-      fieldsetObservers.delete(root);
-    }
-  };
-}
+const FIELDSET_ATTRIBUTES = ['disabled'] as const;
 
 /**
  * Whether HTML disables a form control at the place of `element`. A `<fieldset disabled>` disables
@@ -65,7 +28,7 @@ function isInDisabledFieldset(element: Element): boolean {
  * Whether a fieldset disables the part of `element`: `Fieldset.Root` with `disabled`, or a native
  * `<fieldset disabled>` as HTML says. Call it in `setup`. The part knows a native fieldset only
  * after its mount, so the server HTML follows `Fieldset.Root` only. While `element` gives `null`,
- * no native fieldset disables the part.
+ * no native fieldset disables the part. The state follows the element to another root node.
  */
 export function useFieldsetDisabled(
   element: MaybeRefOrGetter<Element | null | undefined>,
@@ -96,24 +59,12 @@ export function useFieldsetDisabled(
           return;
         }
 
-        let observedRoot: Node | undefined;
-        let stopObserver: (() => void) | undefined;
-
-        // `Teleport` can move the element into another document or shadow root. A part that mounts
-        // in a held branch is in a detached element until its first activation. The observer of the
-        // old root node sees each such move, and the new root node then gets the observer.
         const update = () => {
           isNativeFieldsetDisabled.value = isInDisabledFieldset(partElement);
-          const root = partElement.getRootNode();
-          if (root !== observedRoot) {
-            stopObserver?.();
-            observedRoot = root;
-            stopObserver = observeFieldsets(root, update);
-          }
         };
 
         update();
-        onCleanup(() => stopObserver?.());
+        onCleanup(observeRootNode(partElement, update, FIELDSET_ATTRIBUTES));
       },
       { flush: 'post', immediate: true },
     );

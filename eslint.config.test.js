@@ -1110,6 +1110,11 @@ const passed = [
     code: "store.set('listElementId', id); map.set('listElement', element);",
   },
   {
+    name: 'a root node read at the event',
+    file: `${SRC}/useRoot.ts`,
+    code: "declare const element: Element;\n\nelement.addEventListener('click', () => element.getRootNode());\n",
+  },
+  {
     name: 'filtered attributes on a portal part',
     file: PORTAL_PART,
     code: docsSfc(
@@ -1536,6 +1541,26 @@ for (const { name, file, code, ruleId, hint } of reported) {
 for (const { name, file, code } of passed) {
   test(`accepts ${name}`, async () => {
     assert.deepEqual(await lint(file, code), []);
+  });
+}
+
+for (const { name, code } of [
+  {
+    name: 'a `watch` callback',
+    code: "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
+  },
+  {
+    name: 'a `useDomEffect` effect',
+    code: "import { useDomEffect } from '../utils/popups/useDomEffect';\n\ndeclare const element: Element;\nuseDomEffect([], () => {\n  element.getRootNode();\n});\n",
+  },
+]) {
+  test(`reports a root node read in ${name} one time`, async () => {
+    const messages = await lint(`${SRC}/useRoot.ts`, code);
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['no-restricted-syntax'],
+    );
+    assert.match(messages[0].message, /followRootNode/);
   });
 }
 
