@@ -80,6 +80,22 @@ describe('HoverIntent', () => {
       expect(readPointerEvents(second)).toEqual(['', '', '']);
     });
 
+    it('restores the value and priority of an external scope after a handoff', () => {
+      const first = createElements();
+      const second = { ...createElements(), scopeElement: first.scopeElement };
+      const { style } = first.scopeElement;
+      style.setProperty('pointer-events', 'all', 'important');
+      const previous = createIntent();
+      const current = createIntent();
+      previous.blockOutsidePointerEvents(first);
+      current.blockOutsidePointerEvents(second);
+      previous.restoreOutsidePointerEvents();
+      expect(style.pointerEvents).toBe('none');
+      current.restoreOutsidePointerEvents();
+      expect(style.pointerEvents).toBe('all');
+      expect(style.getPropertyPriority('pointer-events')).toBe('important');
+    });
+
     describe('VUE-94: the hover triggers of the popup', () => {
       it('keep their pointer events while the popup blocks the scope element', () => {
         const elements = createElements();

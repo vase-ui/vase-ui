@@ -682,10 +682,7 @@ export function useAnchorPositioning(
       base = { ...floatingStyles.value, position };
     }
 
-    if (!isPositioned.value) {
-      base.opacity = 0;
-    }
-    return { ...base, ...positionerCssVars.value };
+    return { ...base, ...positionerCssVars.value, ...(!isPositioned.value && { opacity: 0 }) };
   });
 
   const renderedSide = computed(() => getSide(renderedPlacement.value));

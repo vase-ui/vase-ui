@@ -6,6 +6,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/navigation-menu/utils/setSharedFixedSize.ts",
+      "kind": "not-applicable",
+      "reason": "The popup and positioner bind the dimensions from their root. Vue applies both styles."
+    },
+    {
       "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
       "describe": ["<NavigationMenu.Content />", "server-side rendering"],
       "kind": "replaced",
