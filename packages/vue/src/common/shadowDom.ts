@@ -11,26 +11,27 @@ export function activeElement(doc: Document) {
   return element;
 }
 
+function getComposedParent(node: Node): Node | null {
+  return (
+    (node as Element | Text).assignedSlot ??
+    node.parentNode ??
+    (isShadowRoot(node) ? node.host : null)
+  );
+}
+
 export function contains(parent?: Element | null, child?: Element | null) {
   if (!parent || !child) {
     return false;
   }
 
-  const rootNode = child.getRootNode?.();
-
-  // The native method is faster, so try it first.
-  if (parent.contains(child)) {
-    return true;
+  // A slot adds ancestors in another root. Within one root, the native check suffices.
+  if (parent.getRootNode() === child.getRootNode()) {
+    return parent.contains(child);
   }
 
-  // Then walk out of the shadow roots.
-  if (rootNode && isShadowRoot(rootNode)) {
-    let next = child;
-    while (next) {
-      if (parent === next) {
-        return true;
-      }
-      next = (next.parentNode as Element) || (next as unknown as ShadowRoot).host;
+  for (let node: Node | null = child; node; node = getComposedParent(node)) {
+    if (node === parent) {
+      return true;
     }
   }
 
@@ -61,10 +62,7 @@ export function closest(node: Node | null | undefined, selector: string): Elemen
       return current;
     }
 
-    current =
-      (current as Element).assignedSlot ??
-      current.parentNode ??
-      (isShadowRoot(current) ? current.host : null);
+    current = getComposedParent(current);
   }
 
   return null;

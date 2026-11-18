@@ -104,7 +104,7 @@ export interface FloatingFocusManagerProps {
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
    * it, cannot take the focus. The return skips targets in this popup while it is closed and in
-   * closed popups below it. It follows DOM parents and shadow hosts to check containment. For a
+   * closed popups below it. It follows assigned slots, DOM parents and shadow hosts. For a
    * non-tabbable target, it uses the first eligible tabbable descendant, or the target itself if
    * it has none. When the element is in the closed floating element of a disabled focus manager
    * above, the return element of that focus manager replaces it, because that focus manager returns
