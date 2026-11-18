@@ -22,7 +22,7 @@ export interface FieldsetRootProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, resolveDynamicComponent } from 'vue';
+import { computed, onBeforeUpdate, provide, resolveDynamicComponent, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
@@ -43,7 +43,13 @@ const outerDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => outerDisabled.value || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
 
-const target = computed(() => resolveDynamicComponent(props.as));
+// A Vapor prop binding can run outside the component context that resolves a registered name.
+const rendersTag = () => typeof resolveDynamicComponent(props.as) === 'string';
+const isTag = shallowRef(rendersTag());
+onBeforeUpdate(() => {
+  isTag.value = rendersTag();
+});
+
 const { labelId, labelRoot, getAriaLabelledBy } = useLabelId();
 
 provide(FieldsetRootContext, {
@@ -55,7 +61,7 @@ provide(FieldsetRootContext, {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fieldset', props, {
   state,
   props: (attrs) => {
-    const disabled = slots.render !== undefined || typeof target.value !== 'string' ? true : '';
+    const disabled = slots.render !== undefined || !isTag.value ? true : '';
     return [
       {
         'aria-labelledby': getAriaLabelledBy(attrs),
@@ -71,7 +77,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="target" v-else v-bind="elementProps()" :ref="setRef">
+  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
 </template>
