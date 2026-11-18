@@ -272,16 +272,30 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     { flush: 'sync' },
   );
 
-  // The first position pass needs these bindings before the viewport mounts.
-  onBeforeMount(() => {
-    store.context.viewportStyles.value = viewportStyles;
-    store.set('adaptiveOrigin', adaptiveOrigin);
-  });
-  onScopeDispose(() => {
+  function releaseViewport() {
     if (store.context.viewportStyles.value === viewportStyles) {
       store.context.viewportStyles.value = null;
       store.set('adaptiveOrigin', undefined);
     }
+  }
+
+  // Descendants need the middleware before they mount. A detached popup keeps its last size.
+  onBeforeMount(() => {
+    watch(
+      [isHeld, () => isHeld.value && popupElement.value?.isConnected],
+      ([held, hasLivePopup]) => {
+        if (!held) {
+          store.context.viewportStyles.value = viewportStyles;
+          store.set('adaptiveOrigin', adaptiveOrigin);
+        } else if (hasLivePopup) {
+          releaseViewport();
+        }
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
+  onScopeDispose(() => {
+    releaseViewport();
     cleanupController?.abort();
   });
 

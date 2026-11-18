@@ -1113,7 +1113,7 @@ The viewport of a popup, in `src/utils/popups/viewport`, shows the old content w
 - A viewport part calls `usePopupViewport({ store, side })` in `setup` and gets `state`.
 - The template of `PopupViewportChildren.vue` gives the two containers. The comments of `usePopupViewport.ts` and `usePopupAutoResize.ts` give the clone of the old content and the resize (`VUE-88`).
 - The viewport publishes the measured dimensions for the popup and positioner to bind. Temporary styles expose both intrinsic sizes in one layout read.
-- While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends. The resize of a part that mounts in a held branch measures first at the activation.
+- While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends. A live popup releases the size bindings of its held viewport. A detached popup keeps its last dimensions. The active viewport publishes its bindings again when it returns. The resize of a part that mounts in a held branch measures first at the activation.
 
 ### Focus helpers
 

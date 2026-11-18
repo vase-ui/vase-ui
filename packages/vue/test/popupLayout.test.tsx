@@ -1,5 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest';
-import { nextTick, shallowRef } from 'vue';
+import { KeepAlive, nextTick, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -10,6 +10,7 @@ import {
 } from '#test-utils';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import { Popover } from '@vase-ui/vue/popover';
 import SelectLayout from './fixtures/SelectLayout.vue';
 import VaporPopupLayout from './fixtures/VaporPopupLayout.vue';
 
@@ -140,6 +141,45 @@ it('VUE-94: keeps the author pointer style on the parent menu of an open submenu
   expect(screen.getByTestId('submenu-positioner').style.pointerEvents).toBe('auto');
   expect(previousStyles.join(' ')).not.toMatch(/pointer-events:\s*none/);
   expect(parent.style.pointerEvents).toBe('all');
+});
+
+it('measures the active viewport after switching back to a cached viewport', async () => {
+  const page = shallowRef('first');
+  await render(() => (
+    <Popover.Root defaultOpen defaultTriggerId="anchor">
+      <Popover.Trigger id="anchor">Open</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner data-testid="positioner">
+          <Popover.Popup>
+            <KeepAlive>
+              {page.value === 'plain' ? (
+                <div>Plain content</div>
+              ) : (
+                <Popover.Viewport key={page.value}>
+                  <div style={{ width: page.value === 'first' ? '120px' : '180px' }} />
+                </Popover.Viewport>
+              )}
+            </KeepAlive>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  ));
+  const { style } = screen.getByTestId('positioner');
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
+
+  page.value = 'second';
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('180px');
+
+  page.value = 'first';
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
+
+  page.value = 'plain';
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('');
 });
 
 it.runIf(isVaporApp)(
