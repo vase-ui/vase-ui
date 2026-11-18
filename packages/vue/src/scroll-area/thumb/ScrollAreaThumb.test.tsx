@@ -131,6 +131,38 @@ describe('<ScrollArea.Thumb />', () => {
     expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('');
   });
 
+  it('ignores capture loss from a replaced thumb during the next drag', async () => {
+    const replace = shallowRef(false);
+    await render(() => (
+      <ScrollArea.Root>
+        <ScrollArea.Viewport data-testid="viewport" style={{ scrollSnapType: 'y mandatory' }} />
+        <ScrollArea.Scrollbar keepMounted>
+          <ScrollArea.Thumb data-testid="previous" />
+          {replace.value && <ScrollArea.Thumb data-testid="current" />}
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    ));
+    const press = { button: 0, pointerId: 1 };
+    const previous = screen.getByTestId('previous');
+    vi.spyOn(previous, 'setPointerCapture').mockImplementation(() => {});
+    await fireEvent.pointerDown(previous, press);
+    replace.value = true;
+    await nextTick();
+    const viewport = screen.getByTestId('viewport');
+    expect(viewport.style.scrollSnapType).toBe('y mandatory');
+
+    const current = screen.getByTestId('current');
+    vi.spyOn(current, 'setPointerCapture').mockImplementation(() => {});
+    await fireEvent.pointerDown(current, press);
+    await fireEvent(
+      previous,
+      new PointerEvent('lostpointercapture', { bubbles: true, pointerId: 1 }),
+    );
+    expect(viewport.style.scrollSnapType).toBe('none');
+    await fireEvent.pointerUp(current, press);
+    expect(viewport.style.scrollSnapType).toBe('y mandatory');
+  });
+
   it('VUE-140: saves a fresh snap value after a press ends before the patch', async () => {
     const label = shallowRef('first');
     await render(() => (

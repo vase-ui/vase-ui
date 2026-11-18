@@ -245,7 +245,11 @@ function handlePointerDown(event: PointerEvent, orientation: Orientation, trackP
 }
 
 function handlePointerUp(event: PointerEvent) {
-  if (press.value?.id === event.pointerId) session.stop();
+  const active = press.value;
+  if (!active || active.id !== event.pointerId) return;
+  // A previous thumb can lose capture after the pointer starts a new drag.
+  if (event.type === 'lostpointercapture' && event.currentTarget !== active.thumb) return;
+  session.stop();
 }
 
 function handlePointerMove(event: PointerEvent) {
@@ -344,7 +348,9 @@ provide(ScrollAreaRootContext, {
         const holder = elements[key];
         holder.value = node;
         onCleanup(() => {
-          if (holder.value === node) holder.value = null;
+          if (holder.value !== node) return;
+          holder.value = null;
+          if (key === 'cornerElement') Object.assign(cornerSize, DEFAULT_SIZE);
         });
       },
       { flush: 'post' },

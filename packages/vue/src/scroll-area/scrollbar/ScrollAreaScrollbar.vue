@@ -198,15 +198,11 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       'data-id': `${rootId.value}-scrollbar`,
       'aria-hidden': true,
       onPointerdown: handleTrackPointerDown,
-      // A native scrollbar does not move focus when the user presses it, with any button.
-      // The track handles this and not the thumb, so that the press that bubbles from the thumb is
-      // covered too.
+      // A native scrollbar keeps focus on the active element for every mouse button.
       onMousedown(event: MouseEvent) {
         event.preventDefault();
       },
       onPointerup: handlePointerUp,
-      // When the browser cancels a gesture on the track, no thumb has the pointer capture.
-      // The track clears the drag state then, as `pointerup` does.
       onPointercancel: handlePointerUp,
       // A browser makes a `wheel` listener passive by default only on the window, the document, the
       // root element and the body. A listener on this element can call `preventDefault`.

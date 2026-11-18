@@ -289,6 +289,7 @@ describe('<ScrollArea.Root />', () => {
     it('keeps the new scrollbar width when the previous scrollbar leaves', async () => {
       const previous = shallowRef(true);
       const replacement = shallowRef(false);
+      const showCorner = shallowRef(true);
       await render(() => (
         <ScrollArea.Root style={{ width: '100px', height: '100px' }}>
           <ScrollArea.Viewport data-testid="viewport" style={{ width: '100px', height: '100px' }}>
@@ -299,7 +300,7 @@ describe('<ScrollArea.Root />', () => {
           <ScrollArea.Scrollbar orientation="horizontal" style={{ height: '10px' }}>
             <ScrollArea.Thumb data-testid="thumb" />
           </ScrollArea.Scrollbar>
-          <ScrollArea.Corner data-testid="corner" />
+          {showCorner.value && <ScrollArea.Corner data-testid="corner" />}
         </ScrollArea.Root>
       ));
       const corner = await screen.findByTestId('corner');
@@ -312,6 +313,10 @@ describe('<ScrollArea.Root />', () => {
       await nextTick();
       await fireEvent.scroll(screen.getByTestId('viewport'));
       expect(corner.style.width).toBe('20px');
+
+      showCorner.value = false;
+      await nextTick();
+      expect(screen.getByTestId('thumb').parentElement!.offsetWidth).toBe(100);
     });
 
     it('shows scrollbars after mount compute before the first ResizeObserver measurement', async () => {

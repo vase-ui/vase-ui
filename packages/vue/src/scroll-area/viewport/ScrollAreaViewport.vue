@@ -498,8 +498,14 @@ watch(
     if (viewport.matches(':hover')) markHovered();
 
     let active = true;
+    onCleanup(() => {
+      active = false;
+      waitForAnimationsTimeout.clear();
+      scrollEndTimeout.clear();
+      programmaticScroll = true;
+    });
+    if (!viewport.ownerDocument.defaultView?.ResizeObserver) return;
     waitForAnimationsTimeout.start(0, () => {
-      if (!viewport.ownerDocument.defaultView?.ResizeObserver) return;
       const animations = getFiniteAnimations(viewport, { subtree: true });
       if (!animations.length) return;
       // A paused animation must not retain the targets of finished animations.
@@ -508,12 +514,6 @@ watch(
           if (active) computeThumbPosition();
         })
         .catch(NOOP);
-    });
-    onCleanup(() => {
-      active = false;
-      waitForAnimationsTimeout.clear();
-      scrollEndTimeout.clear();
-      programmaticScroll = true;
     });
   },
   { flush: 'post' },

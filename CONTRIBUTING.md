@@ -464,8 +464,8 @@ Rules:
 - `givenAttributes` does not get a declared prop, a value that a part reads with `useAttrs()` or a parameter of a composable. A part reads such a value through `given(attribute, value)` of the same file. `OTPFieldInput.vue` does this for the `aria-label` of its warning.
 - A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `Field.Control` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
-- Register the viewport, corner, scrollbar and thumb with the root after the patch. Track the axis of each scrollbar and thumb.
-- Release a registration on replacement, hold and unmount. Clear only the element that the part registered.
+- Register each scroll area viewport, corner, scrollbar and thumb with the root after the patch. Track the axis of each scrollbar and thumb.
+- Release a scroll area registration on replacement, hold and unmount. Clear only the element that the part registered.
 - While Vue hydrates an element, it writes no attribute that a `v-bind` object gives, except a listener and the `value` of an input. It compares only `class`, `style` and the attributes of its lists of known attributes. `aria-*`, `role`, `abbr` and `data-*` are not in those lists.
 - An element thus keeps the server value of such an attribute until a render gives another value for the same key. A render after the mount that gives the value of the first client render writes nothing.
 - In a render before the mount of a part that Vue hydrates, `elementProps()` compares the props with the server element, as text, for each key that is `role`, `abbr`, `data-*` or `aria-*` except `aria-hidden`. When a value differs, the props get the server value, or `undefined` when the server element has no such attribute. The `#render` slot thus can get the server value of such a key, as a string, in that render.
@@ -998,7 +998,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
-- Provide a single computed ref for the scrollbar orientation. The thumb reads it from the nearest scrollbar.
+- Use one `ComputedRef` for a context that holds one changing value. `ScrollAreaScrollbarContext` gives each thumb the orientation of its nearest scrollbar.
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
