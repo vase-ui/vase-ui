@@ -15,6 +15,7 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import { isVueMinor } from '../../../test/vaporParts/isVueMinor';
 import { REASONS } from '../../internals/reasons';
 import { Resizable } from '@vase-ui/vue/resizable';
 import ResizableRootHydration from '../root/ResizableRootHydration.test.vue';
@@ -1964,9 +1965,9 @@ describe('<Resizable.Panel />', () => {
       ),
     ).rejects.toThrow(/^Vase UI: The size "12ch" is not valid\./);
 
-    // The size check throws in render. A Vapor parent reports the same error in its own render.
+    // On Vue 3.6.0-rc.15, a Vapor parent reports the child's render error a second time.
     expect(takeReportedMessages()).toEqual(
-      Array.from({ length: isVaporParts ? 2 : 1 }, () =>
+      Array.from({ length: isVaporParts && !isVueMinor ? 2 : 1 }, () =>
         expect.stringContaining('Unhandled error during execution of render function'),
       ),
     );

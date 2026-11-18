@@ -2,6 +2,13 @@ import { afterAll, beforeAll } from 'vitest';
 import type { RunnerTask, RunnerTestCase } from 'vitest';
 import { checkFragmentChildren } from './checkFragmentChildren';
 import expectations from './expectedFailures.json' with { type: 'json' };
+import { isVueMinor } from './isVueMinor';
+
+declare module 'vitest' {
+  interface TaskMeta {
+    vaporExpectation?: { name: string; fails: boolean };
+  }
+}
 
 const files: Record<string, { fails: Record<string, string> }> = expectations.files;
 
@@ -38,9 +45,12 @@ beforeAll(({}, file) => {
       `expectedFailures.json lists cases that ${file.file.name} does not have:\n${missing.join('\n')}`,
     );
   }
-  for (const name of Object.keys(fails)) {
+  for (const [name, cause] of Object.entries(fails)) {
     for (const task of cases.get(name) ?? []) {
-      task.fails = true;
+      task.fails = !isVueMinor || cause !== 'vue-16301';
+      if (isVueMinor) {
+        task.meta.vaporExpectation = { name, fails: task.fails };
+      }
     }
   }
 });

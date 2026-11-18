@@ -12,6 +12,7 @@ import {
   isVaporApp,
   isVaporParts,
 } from '#test-utils';
+import { isVueMinor } from '../../../test/vaporParts/isVueMinor';
 import { REASONS } from '../../internals/reasons';
 import PreviewCardPopupReplace from './PreviewCardPopupReplace.test.vue';
 
@@ -174,11 +175,11 @@ describe('<PreviewCard.Popup />', () => {
 
   // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case of the
   // file can then get a warning about a slot. The case that renders no slot thus comes last.
-  // With virtual DOM parts in a Vapor app, the earlier setup error leaves the current instance set.
-  // A Vapor app takes that instance as the parent of its root, so the part finds the earlier context.
+  // On Vue 3.6.0-rc.15, a Vapor app takes the instance left by the earlier setup error as
+  // its root's parent. The virtual DOM part then finds the earlier root.
   it(
     'throws a descriptive error when rendered outside <PreviewCard.Root>',
-    { fails: isVaporApp && !isVaporParts },
+    { fails: isVaporApp && !isVaporParts && !isVueMinor },
     async () => {
       await expect(render(<PreviewCard.Popup />)).rejects.toThrow(
         'Vase UI: A part of PreviewCard must be inside <PreviewCard.Root>.',
