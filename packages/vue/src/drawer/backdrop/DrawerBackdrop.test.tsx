@@ -5,6 +5,7 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  firePointer,
   flushMicrotasks,
   hydrate,
   renderOnServer,
@@ -94,24 +95,34 @@ describe('<Drawer.Backdrop />', () => {
     expect(backdrop).toHaveStyle({ userSelect: 'none' });
   });
 
-  it('keeps the swipe progress that code wrote when it renders again', async () => {
-    const open = shallowRef(false);
+  it('keeps the progress of the current swipe when the backdrop renders again', async () => {
+    const label = shallowRef('first');
     await render(() => (
-      <Drawer.Root open={open.value}>
-        <Drawer.Backdrop data-testid="backdrop" />
+      <Drawer.Root open modal={false}>
+        <Drawer.Backdrop data-testid="backdrop" data-label={label.value} />
         <Drawer.Portal>
           <Drawer.Viewport>
-            <Drawer.Popup>Drawer</Drawer.Popup>
+            <Drawer.Popup
+              data-testid="popup"
+              style={{ position: 'fixed', inset: 0, height: '100px' }}
+            >
+              Drawer
+            </Drawer.Popup>
           </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>
     ));
     const backdrop = screen.getByTestId('backdrop');
+    const popup = screen.getByTestId('popup');
+    const pointer = { pointerType: 'mouse', pointerId: 1, buttons: 1, clientX: 5 };
+    await firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 });
+    await firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 });
+    await firePointer.move(popup, { ...pointer, clientY: 56, timeStamp: 100 });
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
 
-    backdrop.style.setProperty('--drawer-swipe-progress', '0.5');
-    open.value = true;
+    label.value = 'second';
     await flushMicrotasks();
-    expect(backdrop).toHaveAttribute('data-open');
+    expect(backdrop).toHaveAttribute('data-label', 'second');
     expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
   });
 

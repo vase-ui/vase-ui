@@ -498,6 +498,7 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
   getOpenKeyboardViewport = getKeyboardViewport;
 
   const setDrawerKeyboardInset = (inset: number) => {
+    // The next geometry read needs the inset in this frame.
     resolvedRootElement.style.setProperty(
       DrawerViewportCssVars.keyboardInset,
       `${Math.max(0, Math.ceil(inset))}px`,

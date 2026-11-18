@@ -655,8 +655,7 @@ function createProvider() {
     removeDrawer: (drawer) => calls.push(`${name(drawer)} removed`),
     active: shallowRef(false),
     visualStateStore: {
-      getSnapshot: () => ({ swipeProgress: 0, frontmostHeight: 0 }),
-      subscribe: () => () => {},
+      state: { swipeProgress: 0, frontmostHeight: 0 },
       set: () => {},
     },
   };

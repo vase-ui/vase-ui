@@ -159,6 +159,7 @@ type DragStyles = Record<string, string | undefined>;
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
+import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import { error } from '../../common/error';
 import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
@@ -199,7 +200,7 @@ const {
   onPopupHeightChange,
   notifyParentFrontmostHeight,
   notifyParentHasNestedDrawer,
-  swipeAreaActiveRef,
+  openingSwipe,
 } = useDrawerRootContext();
 
 const open = computed(() => store.select('open'));
@@ -306,7 +307,7 @@ const state = computed<DrawerPopupState>(() => ({
   nestedDrawerOpen: nestedDrawerOpen.value,
   nestedDrawerSwiping: nestedSwiping.value,
   swipeDirection: swipeDirection.value,
-  swiping: swiping.value,
+  swiping: swiping.value || openingSwipe.value !== null,
 }));
 
 const shouldApplySnapPoints = computed(
@@ -316,15 +317,13 @@ const shouldApplySnapPoints = computed(
     (swipeDirection.value === 'down' || swipeDirection.value === 'up'),
 );
 
-// The swipe writes the drag styles to the element in each frame, and the offset of the drag is not
-// reactive. A render during a swipe thus reads the drag styles at the time of the render.
 function getPopupDragStyles(): DragStyles {
   let dragStyles = (swipe ? swipe.getDragStyles() : EMPTY_OBJECT) as DragStyles;
   if (shouldApplySnapPoints.value && swipeDirection.value === 'down') {
     const baseOffset = activeSnapPointOffset.value ?? 0;
     const movementValue = Number.parseFloat(String(dragStyles[DrawerPopupCssVars.swipeMovementY]));
 
-    if (swiping.value && Number.isFinite(movementValue)) {
+    if ((swiping.value || swipe?.release.value) && Number.isFinite(movementValue)) {
       dragStyles = {
         ...dragStyles,
         transform: undefined,
@@ -344,28 +343,9 @@ function getPopupDragStyles(): DragStyles {
   return dragStyles;
 }
 
-let ownPopup: HTMLElement | null = null;
-
-// `Drawer.SwipeArea` writes the movement of an opening gesture to the popup, and the viewport has
-// no drag then. A render during that gesture thus keeps the movement that the popup holds.
-function keepSwipeAreaMovement(movementStyles: DragStyles): DragStyles {
-  if (!swipeAreaActiveRef.value || !ownPopup) {
-    return movementStyles;
-  }
-
-  const kept = { ...movementStyles };
-  for (const name of [DrawerPopupCssVars.swipeMovementX, DrawerPopupCssVars.swipeMovementY]) {
-    const value = ownPopup.style.getPropertyValue(name);
-    if (value !== '') {
-      kept[name] = value;
-    }
-  }
-  return kept;
-}
-
 function popupStyle(): CSSProperties {
   const { transition, transform, ...dragMovementStyles } = getPopupDragStyles();
-  const movementStyles = keepSwipeAreaMovement(dragMovementStyles);
+  const opening = openingSwipe.value;
 
   let popupHeightCssVarValue: string | undefined;
   const shouldUseAutoHeight = !hasNestedDrawer.value && transitionStatus.value !== 'ending';
@@ -379,12 +359,15 @@ function popupStyle(): CSSProperties {
       swipeDirection.value === 'up' ? -activeSnapPointOffset.value : activeSnapPointOffset.value;
   }
 
-  const swipeStrength = swipe?.swipeStrength.value ?? null;
-  const nestedSwipeProgress = nestedSwipeProgressStore.getSnapshot();
+  const swipeStrength = swipe?.release.value?.strength;
 
   return {
-    ...movementStyles,
-    [DrawerBackdropCssVars.swipeProgress]: nestedSwipeProgress > 0 ? `${nestedSwipeProgress}` : '0',
+    ...dragMovementStyles,
+    ...(opening && {
+      [DrawerPopupCssVars.swipeMovementX]: `${opening.movementX}px`,
+      [DrawerPopupCssVars.swipeMovementY]: `${opening.movementY}px`,
+    }),
+    [DrawerBackdropCssVars.swipeProgress]: Math.max(0, nestedSwipeProgressStore.getSnapshot()),
     [DrawerPopupCssVars.nestedDrawers]: nestedOpenDrawerCount.value,
     [DrawerPopupCssVars.height]: popupHeightCssVarValue,
     [DrawerPopupCssVars.snapPointOffset]:
@@ -404,16 +387,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   HTMLElement
 >('div', props, {
   state,
-  ref: [
-    createElementSetter(popupElementTarget(store)),
-    (popup) => {
-      ownPopup = popup;
-    },
-  ],
+  ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),
     {
+      ...(swipe?.release.value && {
+        [DrawerPopupDataAttributes.swipeDismiss]: '',
+        [TransitionStatusDataAttributes.endingStyle]: '',
+      }),
       id: store.select('defaultPopupId'),
       'aria-labelledby': store.select('titleElementId'),
       'aria-describedby': store.select('descriptionElementId'),
@@ -433,7 +415,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   // `transition` of the consumer. During an opening gesture, `Drawer.SwipeArea` stops the
   // transition of the popup, and a render must not start it again.
   overridingStyle: () => {
-    if (swipeAreaActiveRef.value) {
+    if (openingSwipe.value) {
       return { transition: 'none' };
     }
 
@@ -480,6 +462,7 @@ watch(
   { flush: 'post' },
 );
 
+// A nested drag can update the progress without a render of the parent popup.
 watch(
   element,
   (popup, _previous, onCleanup) => {

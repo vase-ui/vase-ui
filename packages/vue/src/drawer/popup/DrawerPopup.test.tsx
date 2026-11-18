@@ -963,6 +963,49 @@ describe('<Drawer.Popup />', () => {
       });
     });
 
+    it('VUE-139: drops a release sample when the popup changes before the next frame', async () => {
+      const key = shallowRef(0);
+      await render(() => (
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal keepMounted>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport>
+              <Drawer.Popup
+                key={key.value}
+                data-testid="popup"
+                style={{ position: 'fixed', inset: 0, height: '100px' }}
+              >
+                Drawer
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ));
+
+      const popup = screen.getByTestId('popup');
+      const backdrop = screen.getByTestId('backdrop');
+      const pointer = { pointerType: 'mouse', pointerId: 1, buttons: 1, clientX: 5 };
+      await firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 });
+      await firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 });
+      await firePointer.move(popup, { ...pointer, clientY: 66, timeStamp: 120 });
+      await firePointer.up(popup, { ...pointer, buttons: 0, clientY: 66, timeStamp: 130 });
+      expect(backdrop).toHaveAttribute('data-swipe-dismiss', '');
+      expect(popup).toHaveAttribute('data-swipe-dismiss', '');
+      const strength = popup.style.getPropertyValue('--drawer-swipe-strength');
+      expect(Number(strength)).toBeGreaterThan(0);
+      expect(Number(strength)).toBeLessThan(1);
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe(strength);
+
+      key.value += 1;
+      await flushMicrotasks();
+      const replacement = screen.getByTestId('popup');
+      expect(replacement).not.toBe(popup);
+      expect(replacement.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+      expect(replacement).not.toHaveAttribute('data-swipe-dismiss');
+      expect(backdrop).not.toHaveAttribute('data-swipe-dismiss');
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe('1');
+    });
+
     it('keeps the movement and the stopped transition of an opening gesture when the popup renders during the gesture', async () => {
       const label = shallowRef('first');
       await render(() => (

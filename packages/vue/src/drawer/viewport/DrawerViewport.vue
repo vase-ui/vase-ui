@@ -12,7 +12,6 @@ import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { ScrollAxis } from '../../utils/scrollable';
 import type { SwipeDirection } from '../../utils/useSwipeDismiss';
 import { DRAWER_CONTENT_ATTRIBUTE } from '../content/drawerContentAttribute';
-import * as DrawerPopupDataAttributes from '../popup/DrawerPopupDataAttributes';
 
 export interface DrawerViewportState {
   /**
@@ -68,10 +67,6 @@ interface TouchScrollState {
   allowSwipe: boolean | null;
   preserveNativeCrossAxisScroll: boolean;
   drawerAxisAttributed: boolean;
-}
-
-function setBackdropSwipingAttribute(backdropElement: HTMLElement | null, swiping: boolean) {
-  backdropElement?.toggleAttribute(DrawerPopupDataAttributes.swiping, swiping);
 }
 
 function isSwipeIgnoredTarget(target: Element | null): boolean {
@@ -255,27 +250,19 @@ function canSwipeFromScrollEdgeOnMove(
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  useTemplateRef,
-  watch,
-} from 'vue';
+import { computed, provide, shallowRef, useTemplateRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import DialogViewport from '../../dialog/viewport/DialogViewport.vue';
 import * as DialogViewportDataAttributes from '../../dialog/viewport/DialogViewportDataAttributes';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
-import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
@@ -309,7 +296,7 @@ defineSlots<{
 
 const store = useDialogRootContext();
 const popupRef = store.context.popupRef;
-const backdropRef = store.context.backdropRef;
+const { isHeld } = useKeepAliveState();
 
 const {
   setOpen,
@@ -318,7 +305,8 @@ const {
   notifyParentSwipeProgressChange,
   frontmostHeight,
   snapToSequentialPoints,
-  swipeAreaActiveRef,
+  viewportGesture,
+  openingSwipe,
 } = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
 const {
@@ -344,12 +332,14 @@ const crossScrollAxis = computed<ScrollAxis>(() =>
   isVerticalScrollAxis.value ? 'horizontal' : 'vertical',
 );
 
-const swipeRelease = shallowRef<number | null>(null);
+const swipeRelease = shallowRef<{ strength: number | null } | null>(null);
+let backdropProgress = 0;
+const backdropHeight = shallowRef(0);
+let gesturePopup: HTMLElement | null = null;
 
 let pendingSwipeCloseSnapPoint: DrawerSnapPoint | null | undefined;
 const controlledDismissFrame = useAnimationFrame();
 
-let swiping = false;
 let nestedSwipeActive = false;
 let lastPointerType = '';
 let ignoreNextTouchStartFromPen = false;
@@ -406,14 +396,9 @@ function hasSnapPoints() {
   return Boolean(snapPoints.value && snapPoints.value.length > 0);
 }
 
-function setSwipeDismissed(dismissed: boolean) {
-  popupRef.value?.toggleAttribute(DrawerPopupDataAttributes.swipeDismiss, dismissed);
-  backdropRef.value?.toggleAttribute(DrawerPopupDataAttributes.swipeDismiss, dismissed);
-}
-
 function clearSwipeRelease() {
-  setSwipeDismissed(false);
-  popupRef.value?.removeAttribute(TransitionStatusDataAttributes.endingStyle);
+  controlledDismissFrame.cancel();
+  gesturePopup = null;
   swipeRelease.value = null;
 }
 
@@ -431,6 +416,9 @@ function applySwipeProgress(
   shouldTrackProgress: boolean,
   notifyParent: boolean,
 ) {
+  if (isHeld.value || (viewportGesture.value && viewportGesture.value !== gesture)) {
+    return;
+  }
   const isActive = open.value && !nested.value && shouldTrackProgress;
   const swipeProgress = isActive ? resolvedProgress : 0;
   const nestedSwipeProgress = open.value && shouldTrackProgress ? resolvedProgress : 0;
@@ -443,26 +431,23 @@ function applySwipeProgress(
     }
   }
 
-  visualStateStore?.set({
-    swipeProgress,
-    frontmostHeight: swipeProgress > 0 ? frontmostHeight.value : 0,
-  });
-
-  const backdropElement = backdropRef.value;
-  if (!backdropElement) {
+  backdropProgress = swipeProgress;
+  backdropHeight.value = swipeProgress > 0 ? frontmostHeight.value : 0;
+  if (openingSwipe.value) {
     return;
   }
-
-  const showProgress = isActive && swipeProgress > 0;
-  backdropElement.style.setProperty(
+  // A native progress sample keeps the backdrop within its frame budget.
+  store.context.backdropRef.value?.style.setProperty(
     DrawerBackdropCssVars.swipeProgress,
-    showProgress ? `${swipeProgress}` : '0',
+    String(swipeProgress),
   );
-  if (showProgress && frontmostHeight.value > 0) {
-    backdropElement.style.setProperty(DrawerPopupCssVars.height, `${frontmostHeight.value}px`);
-  } else {
-    backdropElement.style.removeProperty(DrawerPopupCssVars.height);
-  }
+  visualStateStore?.set(
+    {
+      swipeProgress,
+      frontmostHeight: swipeProgress > 0 ? frontmostHeight.value : 0,
+    },
+    gesture,
+  );
 }
 
 function resolveSwipeRelease(
@@ -550,6 +535,8 @@ const swipe = useSwipeDismiss({
     y: DrawerPopupCssVars.swipeMovementY,
   },
   onSwipeStart(event) {
+    clearSwipeRelease();
+    gesturePopup = popupRef.value;
     if ('touches' in event || event.pointerType === 'touch') {
       return;
     }
@@ -576,9 +563,6 @@ const swipe = useSwipeDismiss({
     selection.removeAllRanges();
   },
   onSwipingChange(nextSwiping) {
-    swiping = nextSwiping;
-    setBackdropSwipingAttribute(backdropRef.value, nextSwiping);
-
     if (!nextSwiping && !notifyParentSwipeProgressChange) {
       finishNestedSwipe();
     }
@@ -619,6 +603,7 @@ const swipe = useSwipeDismiss({
     return true;
   },
   onProgress(progress, details) {
+    const swiping = swipe.swiping.value;
     if (swiping) {
       updateNestedSwipeActive(details);
     }
@@ -679,23 +664,19 @@ const swipe = useSwipeDismiss({
     const releasePopupElement = popupElement;
 
     function startSwipeRelease(resolvedDirection: SwipeDirection) {
-      // Start ending transition styles earlier and synchronously to prevent a period where
-      // the popup appears stuck on release before the actual closing animation starts.
       finishNestedSwipe();
-      setSwipeDismissed(true);
-
-      releasePopupElement.style.removeProperty('transition');
-      releasePopupElement.setAttribute(TransitionStatusDataAttributes.endingStyle, '');
-      swipeRelease.value = resolveSwipeRelease(
-        releasePopupElement,
-        resolvedDirection,
-        deltaX,
-        deltaY,
-        velocityX,
-        velocityY,
-        releaseVelocityX,
-        releaseVelocityY,
-      );
+      swipeRelease.value = {
+        strength: resolveSwipeRelease(
+          releasePopupElement,
+          resolvedDirection,
+          deltaX,
+          deltaY,
+          velocityX,
+          velocityY,
+          releaseVelocityX,
+          releaseVelocityY,
+        ),
+      };
     }
 
     if (!hasSnapPoints()) {
@@ -860,13 +841,7 @@ const swipe = useSwipeDismiss({
     return settleOnSnapPoint(closestSnapPoint);
   },
   onDismiss(event) {
-    visualStateStore?.set({ swipeProgress: 0, frontmostHeight: 0 });
-
-    const backdropElement = backdropRef.value;
-    if (backdropElement) {
-      backdropElement.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');
-      backdropElement.style.removeProperty(DrawerPopupCssVars.height);
-    }
+    applySwipeProgress(0, false, false);
 
     const dismissEventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
       REASONS.swipe,
@@ -917,7 +892,6 @@ const swipe = useSwipeDismiss({
     }
 
     pendingSwipeCloseSnapPoint = undefined;
-    setSwipeDismissed(true);
   },
 });
 
@@ -1037,65 +1011,51 @@ useDomEffect(
 );
 
 function applyRestingSnapPointProgress() {
-  if (!snapPointRange.value || swipe.swiping.value) {
+  if (isHeld.value || !snapPointRange.value || swipe.swiping.value) {
     return;
   }
 
   applySwipeProgress(!open.value || nested.value ? 0 : (snapPointProgress.value ?? 0), true, false);
 }
 
-onMounted(applyRestingSnapPointProgress);
 watch(
   [frontmostHeight, nested, open, snapPointProgress, snapPointRange, swipe.swiping],
   applyRestingSnapPointProgress,
-  { flush: 'post' },
 );
 
 if (notifyParentSwipeProgressChange) {
-  watch(open, () => notifyParentSwipeProgressChange(0), { flush: 'post' });
+  watch(open, () => notifyParentSwipeProgressChange(0), { flush: 'sync' });
 }
 
-function resetOnOpen() {
-  if (!open.value) {
+function resetGesture() {
+  if (!open.value && swipeRelease.value) {
     return;
   }
 
-  // Skip `reset` while `Drawer.SwipeArea` is driving the open: it zeroes the popup's
-  // `--swipe-movement-*` (via `syncDragStyles(false)`), flashing it fully open for a frame.
-  // `clearSwipeRelease` doesn't touch those vars, so always run it to clear any leftover
-  // release state from a prior dismiss (e.g. when the popup is kept mounted).
-  if (!swipeAreaActiveRef.value) {
-    swipe.reset();
-  }
+  swipe.reset();
   clearSwipeRelease();
 }
 
-onMounted(resetOnOpen);
-watch(open, resetOnOpen, { flush: 'post' });
+watch(open, resetGesture, { flush: 'sync' });
+watch(
+  popupRef,
+  (popup) => {
+    if (popup && gesturePopup && popup !== gesturePopup && viewportGesture.value === gesture) {
+      clearSwipeRelease();
+      swipe.reset();
+    }
+  },
+  { flush: 'sync' },
+);
 
-let mountedBackdrop: HTMLElement | null = null;
-onMounted(() => {
-  mountedBackdrop = backdropRef.value;
-});
-
-onScopeDispose(() => {
-  notifyParentSwipeProgressChange?.(0);
-  visualStateStore?.set({ swipeProgress: 0, frontmostHeight: 0 });
-  setBackdropSwipingAttribute(mountedBackdrop, false);
-  // `data-swiping` is set on whichever backdrop is current when a swipe starts, which can
-  // differ from the captured element if the backdrop mounted late or changed identity.
-  // Reading the live ref here is intentional so the current backdrop is cleared too.
-  if (backdropRef.value !== mountedBackdrop) {
-    setBackdropSwipingAttribute(backdropRef.value, false);
-  }
-  finishNestedSwipe();
-});
-
-provide(DrawerViewportContext, {
+const gesture: DrawerViewportContext = {
   swiping: swipe.swiping,
   getDragStyles: swipe.getDragStyles,
-  swipeStrength: swipeRelease,
-});
+  release: swipeRelease,
+  getProgress: () => backdropProgress,
+  height: backdropHeight,
+};
+provide(DrawerViewportContext, gesture);
 
 function resetTouchSwipeState(ignoreSwipe: boolean) {
   ignoreTouchSwipe = ignoreSwipe;
@@ -1266,6 +1226,30 @@ function viewportProps(attributes: Record<string, unknown>) {
 // this part renders. It also renders again each part in that slot that has slot content.
 const viewport = useTemplateRef('viewport');
 const element = computed(() => viewport.value?.element ?? null);
+
+watch(
+  [element, isHeld],
+  ([viewport, held], _, onCleanup) => {
+    if (!viewport || held) {
+      return;
+    }
+    viewportGesture.value = gesture;
+    applyRestingSnapPointProgress();
+    onCleanup(() => {
+      if (viewportGesture.value === gesture) {
+        swipe.reset();
+        viewportGesture.value = undefined;
+        notifyParentSwipeProgressChange?.(0);
+        finishNestedSwipe();
+      }
+      visualStateStore?.set({ swipeProgress: 0, frontmostHeight: 0 }, gesture);
+      backdropProgress = 0;
+      backdropHeight.value = 0;
+      clearSwipeRelease();
+    });
+  },
+  { flush: 'post' },
+);
 
 defineExpose({ element });
 </script>

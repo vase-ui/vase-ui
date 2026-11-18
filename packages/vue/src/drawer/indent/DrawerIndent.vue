@@ -26,7 +26,7 @@ const stateAttributesMapping: StateAttributesMapping<DrawerIndentState> = {
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, toRaw, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
@@ -49,48 +49,45 @@ const state = computed<DrawerIndentState>(() => ({
   active: providerContext?.active.value ?? false,
 }));
 
-function swipeProgressValue() {
-  const swipeProgress = visualStateStore?.getSnapshot().swipeProgress ?? 0;
-  return swipeProgress <= 0 ? '0' : `${swipeProgress}`;
+function swipeProgress() {
+  return Math.max(0, visualStateStore ? toRaw(visualStateStore.state).swipeProgress : 0);
 }
+
+const height = computed(() => visualStateStore?.state.frontmostHeight ?? 0);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping,
-  // Vue writes each key of the style again when the part renders. The store is not reactive, so
-  // the render gives the progress of the gesture and does not run again for each of its frames.
   props: (attrs) => [
-    { style: { [DrawerBackdropCssVars.swipeProgress]: swipeProgressValue() } },
+    {
+      style: {
+        [DrawerBackdropCssVars.swipeProgress]: swipeProgress(),
+        [DrawerPopupCssVars.height]: height.value > 0 ? `${height.value}px` : undefined,
+      },
+    },
     attrs,
   ],
 });
 
+// The native progress sample avoids a render of the indent for each move.
+watch(
+  () => visualStateStore?.state.swipeProgress,
+  () => {
+    element.value?.style.setProperty(DrawerBackdropCssVars.swipeProgress, String(swipeProgress()));
+  },
+  { flush: 'sync' },
+);
+
 watch(
   element,
-  (indent, _previous, onCleanup) => {
-    if (!indent || !visualStateStore) {
-      return;
-    }
-
-    const syncVisualState = () => {
-      const { frontmostHeight } = visualStateStore.getSnapshot();
-      indent.style.setProperty(DrawerBackdropCssVars.swipeProgress, swipeProgressValue());
-
-      if (frontmostHeight <= 0) {
+  (indent, _, onCleanup) => {
+    if (indent && visualStateStore) {
+      onCleanup(() => {
+        // Vue has no further patch for the retired element.
+        indent.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');
         indent.style.removeProperty(DrawerPopupCssVars.height);
-      } else {
-        indent.style.setProperty(DrawerPopupCssVars.height, `${frontmostHeight}px`);
-      }
-    };
-
-    syncVisualState();
-
-    const unsubscribe = visualStateStore.subscribe(syncVisualState);
-    onCleanup(() => {
-      unsubscribe();
-      indent.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');
-      indent.style.removeProperty(DrawerPopupCssVars.height);
-    });
+      });
+    }
   },
   { flush: 'post' },
 );

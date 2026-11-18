@@ -16,9 +16,8 @@ export interface DrawerVisualState {
 }
 
 export interface DrawerVisualStateStore {
-  getSnapshot: () => DrawerVisualState;
-  subscribe: (listener: () => void) => () => void;
-  set: (state: Partial<DrawerVisualState>) => void;
+  state: Readonly<DrawerVisualState>;
+  set: (state: Partial<DrawerVisualState>, owner?: object) => void;
 }
 
 export function useDrawerProviderContext(): DrawerProviderContext | undefined {
