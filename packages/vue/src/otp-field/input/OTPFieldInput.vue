@@ -33,6 +33,7 @@ export interface OTPFieldInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
+import type { ShallowRef } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
@@ -104,7 +105,7 @@ const composingValue = shallowRef<string | null>(null);
 // the first slot. The slot takes nothing, so the root does not complete and submit an old code.
 const writesValue = useValueBeforeHydration(props, () => element.value, { restorable: false });
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: inputList });
 
 const slotValue = computed(() => state.value.value[index.value] ?? '');

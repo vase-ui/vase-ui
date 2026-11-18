@@ -21,18 +21,11 @@ export interface NumberFieldRootContext {
   minWithDefault: ComputedRef<number>;
   maxWithDefault: ComputedRef<number>;
   id: ComputedRef<string>;
-  /**
-   * The id that a stepper names in `aria-controls`: `id` before the mount, and the `id` of the
-   * input element from the mount on. It is `undefined` after the mount while there is no input
-   * element, and while its `id` is empty.
-   */
+  /** A stepper names the server ID until mount, then the ID of the current input. */
   inputId: ComputedRef<string | undefined>;
   setValue: (value: number | null, details: NumberFieldRootChangeEventDetails) => boolean;
   getStepAmount: (event?: EventWithOptionalKeyState) => number;
   incrementValue: (amount: number, params: IncrementValueParameters) => boolean;
-  /**
-   * The element of the text input. `NumberField.Input` writes it.
-   */
   inputRef: Readonly<ShallowRef<HTMLInputElement | null>>;
   registerInput: (input: HTMLInputElement) => () => void;
   options: Readonly<
@@ -99,7 +92,7 @@ export interface NumberFieldScrubAreaContext {
   isScrubbing: Readonly<Ref<boolean>>;
   isTouchInput: Readonly<Ref<boolean>>;
   isPointerLockDenied: Readonly<Ref<boolean>>;
-  registerCursor: (cursor: ScrubCursor) => () => void;
+  setCursor: (element: HTMLSpanElement | null, place: ScrubCursor['place']) => void;
   /**
    * The element of the scrub area. `NumberField.ScrubAreaCursor` renders in its root node.
    */
@@ -129,10 +122,6 @@ interface StepperButtonProps extends VaseUIComponentProps<NumberFieldRootState> 
   nativeButton: boolean;
 }
 
-/**
- * Shared implementation for the increment and decrement stepper buttons. They differ only in the
- * direction they step and the boundary (`max` vs `min`) at which they become disabled.
- */
 export function useNumberFieldStepperButton(props: StepperButtonProps, isIncrement: boolean) {
   const {
     prepareStepper,
@@ -214,9 +203,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
     button: (element) =>
       useButton(element, {
-        // Read-only steppers are exposed as unavailable through button disabled semantics, while
-        // `data-readonly` (from `state`) is preserved for styling. `aria-readonly` isn't valid on the
-        // `button` role, so it's intentionally not set.
+        // The button role has no read-only state.
         disabled: isDisabledOrReadOnly,
         native: () => props.nativeButton,
         focusableWhenDisabled: true,
@@ -227,9 +214,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
         disabled: disabled.value ? '' : undefined,
         'aria-label': isIncrement ? 'Increase' : 'Decrease',
         'aria-controls': inputId.value,
-        // Keyboard users shouldn't have access to the buttons, since they can use the input
-        // element to change the value. On the other hand, `aria-hidden` is not applied because
-        // touch screen readers should be able to use the buttons.
+        // Keyboard users step in the input. Touch screen readers need both buttons.
         tabindex: -1,
         style: SELECT_NONE_STYLE,
         ...pointerHandlers,

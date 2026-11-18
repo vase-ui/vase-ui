@@ -21,7 +21,7 @@ const defaultScrubAreaContext: NumberFieldScrubAreaContext = {
   isScrubbing: shallowRef(true),
   isTouchInput: shallowRef(false),
   isPointerLockDenied: shallowRef(false),
-  registerCursor: () => () => {},
+  setCursor() {},
   scrubAreaElement: shallowRef<HTMLElement | null>(null),
 };
 
@@ -433,11 +433,12 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       expect(getCenter(cursor).y).toBeCloseTo(160, 1);
     });
 
-    it('uses one measurement box in the render slot until release', async () => {
+    it('keeps the cursor as the only child of its render slot during a scrub', async () => {
       const lock = vi.spyOn(document.body, 'requestPointerLock').mockResolvedValue();
       onTestFinished(() => lock.mockRestore());
       await render(() => (
         <NumberField.Root>
+          <style>{'[data-testid="wrapper"] > span:only-child { width: 20px; height: 10px }'}</style>
           <NumberField.Input />
           <NumberField.ScrubArea data-testid="area">
             <NumberField.ScrubAreaCursor
@@ -463,7 +464,8 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       await flushMicrotasks();
       const cursor = screen.getByTestId('cursor');
       const wrapper = screen.getByTestId('wrapper');
-      const box = wrapper.querySelector<HTMLElement>('[inert]');
+      expect(getComputedStyle(cursor).width).toBe('20px');
+      const box = document.body.querySelector<HTMLElement>(':scope > [inert]');
       expect(box).toHaveAttribute('aria-hidden', 'true');
       expect(getComputedStyle(box!)).toMatchObject({ visibility: 'hidden', pointerEvents: 'none' });
       expect(getCenter(cursor)).toEqual({ x: 120, y: 80 });
@@ -471,7 +473,8 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       wrapper.style.transform = 'translate(60px, 10px) scale(2)';
       window.dispatchEvent(new PointerEvent('pointermove', { movementX: 5, movementY: 8 }));
       expect(getCenter(cursor)).toEqual({ x: 125, y: 88 });
-      expect(wrapper.querySelector('[inert]')).toBe(box);
+      expect(wrapper.children).toHaveLength(1);
+      expect(document.body.querySelector(':scope > [inert]')).toBe(box);
 
       window.dispatchEvent(new PointerEvent('pointerup'));
       await waitFor(() =>

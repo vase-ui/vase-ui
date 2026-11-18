@@ -54,7 +54,7 @@ defineSlots<{
 }>();
 
 const { state } = useNumberFieldRootContext();
-const { isScrubbing, isTouchInput, isPointerLockDenied, registerCursor, scrubAreaElement } =
+const { isScrubbing, isTouchInput, isPointerLockDenied, setCursor, scrubAreaElement } =
   useNumberFieldScrubAreaContext();
 
 // The styles of a shadow root apply only in that root. The coordinates of the pointer are those of
@@ -77,22 +77,32 @@ const shouldRender = computed(
 const portal = useTemplateRef<HTMLElement>('portal');
 const probe = useTemplateRef<HTMLDivElement>('probe');
 let transform: string | undefined;
-let releaseCursor: (() => void) | undefined;
 
-function setCursorElement(node: HTMLSpanElement | null) {
-  transform = undefined;
-  releaseCursor?.();
-  releaseCursor = node ? registerCursor({ element: node, place }) : undefined;
+function measureBlock(node: HTMLSpanElement, box: HTMLDivElement) {
+  const home = box.parentNode;
+  if (!home || (node.parentNode === portal.value && portal.value?.parentNode === home)) {
+    return box.getBoundingClientRect();
+  }
+
+  // A permanent sibling changes :only-child styles in a custom slot.
+  const next = box.nextSibling;
+  node.before(box);
+  try {
+    return box.getBoundingClientRect();
+  } finally {
+    home.insertBefore(box, next);
+  }
 }
 
 function place(x: number, y: number) {
   const node = element.value;
-  const bounds = probe.value?.getBoundingClientRect();
-  if (!node || !bounds) return;
+  const box = probe.value;
+  if (!node || !box) return;
 
   // The page can move or scale the containing block between pointer events.
   const halfWidth = node.offsetWidth / 2;
   const halfHeight = node.offsetHeight / 2;
+  const bounds = measureBlock(node, box);
   const blockX = ((x + halfWidth - bounds.left) * 100) / bounds.width - halfWidth;
   const blockY = ((y + halfHeight - bounds.top) * 100) / bounds.height - halfHeight;
   const scale = ownerWindow(node).visualViewport?.scale ?? 1;
@@ -105,18 +115,16 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   NumberFieldScrubAreaCursorState,
   HTMLSpanElement
 >('span', props, {
-  ref: setCursorElement,
+  ref(node) {
+    transform = undefined;
+    setCursor(node, place);
+  },
   state,
   props: (attrs) => [{ role: 'presentation', style: CURSOR_STYLE }, attrs],
   overridingStyle: () => (transform ? { transform } : undefined),
   stateAttributesMapping,
 });
 
-// The portal has no box. A render slot can supply its own containing block.
-const probeTarget = computed(() => {
-  const parent = element.value?.parentNode;
-  return parent === portal.value ? getContainer() : (parent as Element | ShadowRoot | undefined);
-});
 const { isHeld } = useKeepAliveState();
 usePortalRegistration(portal, isHeld);
 
@@ -130,7 +138,7 @@ defineExpose({ element });
       <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
         <slot :state="state" />
       </component>
-      <Teleport v-if="probeTarget" :to="probeTarget">
+      <Teleport :to="getContainer()">
         <div
           ref="probe"
           aria-hidden="true"

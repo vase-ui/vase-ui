@@ -389,11 +389,9 @@ provide(NumberFieldScrubAreaContext, {
   isScrubbing,
   isTouchInput,
   isPointerLockDenied,
-  registerCursor(next) {
-    cursor = next;
-    return () => {
-      if (cursor === next) cursor = null;
-    };
+  setCursor(element, place) {
+    if (element) cursor = { element, place };
+    else if (cursor?.place === place) cursor = null;
   },
   scrubAreaElement: element,
 });
