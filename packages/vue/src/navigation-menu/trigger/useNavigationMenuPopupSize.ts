@@ -9,6 +9,7 @@ import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import type { NavigationMenuSizes } from '../root/NavigationMenuRootContext';
 
 const DEFAULT_SIZE = { width: 0, height: 0 };
 
@@ -19,10 +20,7 @@ const DEFAULT_SIZE = { width: 0, height: 0 };
  *
  * Call it in the `setup` of the trigger.
  */
-export function useNavigationMenuPopupSize(
-  itemValue: ComputedRef,
-  isActiveItem: ComputedRef<boolean>,
-) {
+export function useNavigationMenuPopupSize(isActiveItem: ComputedRef<boolean>) {
   const {
     open,
     mounted,
@@ -40,10 +38,12 @@ export function useNavigationMenuPopupSize(
   const runOnceAnimationsFinish = useAnimationsFinished(popupElement);
 
   let prevSize = DEFAULT_SIZE;
-  let skipAutoSizeSync = false;
+  let switchFrom: Dimensions | undefined;
+  let pendingMeasurement: NavigationMenuSizes | undefined;
+  const owner = Symbol();
 
   function cancelAutoSizeReset(force = false) {
-    if (!force && popupAutoSizeResetRef.owner !== itemValue.value) {
+    if (!force && popupAutoSizeResetRef.owner !== owner) {
       return;
     }
 
@@ -53,6 +53,11 @@ export function useNavigationMenuPopupSize(
   }
 
   function releaseSize() {
+    if (pendingMeasurement && sizes.value === pendingMeasurement) {
+      sizes.value = { popup: pendingMeasurement.popup, positioner: pendingMeasurement.positioner };
+    }
+    pendingMeasurement = undefined;
+    switchFrom = undefined;
     mutationFrame.cancel();
     resizeFrame.cancel();
     sizeFrame.cancel();
@@ -62,7 +67,13 @@ export function useNavigationMenuPopupSize(
   watch(
     isActiveItem,
     (active) => {
-      if (!active) {
+      if (active) {
+        // The current box still shows the previous item until Vue patches the content.
+        const popup = popupElement.value;
+        if (popup?.isConnected) {
+          switchFrom = getCssDimensions(popup);
+        }
+      } else {
         releaseSize();
       }
     },
@@ -92,10 +103,12 @@ export function useNavigationMenuPopupSize(
     const previous = sizes.value;
     const measurement = { ...previous, measuring: true };
     sizes.value = measurement;
+    pendingMeasurement = measurement;
     void nextTick(() => {
       if (sizes.value !== measurement) {
         return;
       }
+      pendingMeasurement = undefined;
       sizes.value = { popup: previous.popup, positioner: previous.positioner };
       if (ownsPopup(popup, positioner)) {
         commit(getCssDimensions(popup));
@@ -111,7 +124,7 @@ export function useNavigationMenuPopupSize(
     sizes.value = { popup: target, positioner: target };
     const abortController = new AbortController();
     popupAutoSizeResetRef.abortController = abortController;
-    popupAutoSizeResetRef.owner = itemValue.value;
+    popupAutoSizeResetRef.owner = owner;
 
     void nextTick(() => {
       if (abortController.signal.aborted) {
@@ -188,7 +201,6 @@ export function useNavigationMenuPopupSize(
     resizeFrame.cancel();
     sizeFrame.cancel();
     cancelAutoSizeReset(true);
-    skipAutoSizeSync = false;
   });
 
   watch(mounted, (isMounted) => {
@@ -287,31 +299,16 @@ export function useNavigationMenuPopupSize(
     },
   );
 
-  useDomEffect([open, popupElement, positionerElement, transitionStatus], () => {
+  useDomEffect([isActiveItem, open, popupElement, positionerElement, transitionStatus], () => {
     const popup = popupElement.value;
     const positioner = positionerElement.value;
     if (!isActiveItem.value || !open.value || !popup || !positioner) {
       return undefined;
     }
 
-    if (skipAutoSizeSync) {
-      skipAutoSizeSync = false;
-      return undefined;
-    }
-
-    const { width, height } = getCssDimensions(popup);
+    const { width, height } = switchFrom ?? getCssDimensions(popup);
+    switchFrom = undefined;
     handleValueChange(popup, positioner, width, height);
     return undefined;
   });
-
-  return {
-    handleValueChange,
-    /**
-     * Makes the next run of the size effect do nothing. A switch of the active item calls
-     * `handleValueChange` itself.
-     */
-    skipNextAutoSizeSync() {
-      skipAutoSizeSync = true;
-    },
-  };
 }

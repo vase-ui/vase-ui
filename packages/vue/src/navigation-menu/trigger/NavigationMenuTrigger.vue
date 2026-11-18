@@ -98,7 +98,6 @@ import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
 import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
@@ -208,10 +207,7 @@ watch([mounted, isActiveItem, value], ([isMounted, isActive, currentValue]) => {
 });
 
 const { isHeld } = useKeepAliveState();
-const popupSize = useNavigationMenuPopupSize(
-  itemValue,
-  computed(() => isActiveItem.value && !isHeld.value),
-);
+useNavigationMenuPopupSize(computed(() => isActiveItem.value && !isHeld.value));
 
 function handleOpenChange(
   nextOpen: boolean,
@@ -330,6 +326,9 @@ watch(
 );
 
 function handleActivation(event: MouseEvent | KeyboardEvent) {
+  if (isDisabled.value) {
+    return;
+  }
   const currentTarget = event.currentTarget as HTMLElement;
   // The `keydown` handler writes the value before this function runs.
   const previousValue = renderedValue;
@@ -396,36 +395,6 @@ function handleActivation(event: MouseEvent | KeyboardEvent) {
   }
 }
 
-async function handleOpenEvent(event: MouseEvent | KeyboardEvent) {
-  if (isDisabled.value) {
-    return;
-  }
-
-  const popup = popupElement.value;
-  const positioner = positionerElement.value;
-  if (!popup || !positioner) {
-    handleActivation(event);
-    return;
-  }
-
-  const { width, height } = getCssDimensions(popup);
-  const shouldSkipAutoSizeSync =
-    renderedValue != null &&
-    renderedValue !== itemValue.value &&
-    (event.type === 'click' || pointerType.value !== 'touch');
-
-  handleActivation(event);
-
-  // The popup gets the size of the new content, so the DOM must show that content first.
-  await nextTick();
-
-  if (shouldSkipAutoSizeSync) {
-    popupSize.skipNextAutoSizeSync();
-  }
-
-  popupSize.handleValueChange(popup, positioner, width, height);
-}
-
 function handleSetPointerType(event: PointerEvent) {
   pointerType.value = event.pointerType;
 }
@@ -447,7 +416,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (openHorizontal || openVertical) {
     setValue(itemValue.value, createChangeEventDetails(REASONS.listNavigation, event));
-    handleOpenEvent(event);
+    handleActivation(event);
     stopEvent(event);
   }
 }
@@ -506,8 +475,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       id: triggerId.value,
       // The key wins over the roving `tabindex` of the composite, so each trigger is a tab stop.
       tabindex: 0,
-      onMouseenter: handleOpenEvent,
-      onClick: handleOpenEvent,
+      onMouseenter: handleActivation,
+      onClick: handleActivation,
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,

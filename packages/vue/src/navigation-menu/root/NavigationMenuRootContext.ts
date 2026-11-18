@@ -8,10 +8,7 @@ import type { NavigationMenuRootChangeEventDetails } from './NavigationMenuRoot.
 
 export type NavigationMenuPopupAutoSizeResetState = {
   abortController: AbortController | null;
-  /**
-   * The value of the item whose trigger scheduled the reset.
-   */
-  owner: any;
+  owner: symbol | null;
 };
 
 export type NavigationMenuActivationDirection = 'left' | 'right' | 'up' | 'down' | null;

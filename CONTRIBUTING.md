@@ -1100,7 +1100,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - Bind `positionerStyles` on the positioner. For item alignment, `Select.Positioner` binds `positionerCssVars` with its own coordinates. The size middleware waits for Vue to apply the variables before it measures the box again. When the switch from fixed to absolute positioning changes the offset parent, Floating UI computes the coordinates again before paint.
 - `Select.Popup` records the pinned edge when it aligns an item. It reads the new scroll range after the positioner applies its height.
-- The Navigation Menu root holds the popup size and the target size of the positioner. Each part binds its own dimensions.
+- The Navigation Menu root holds the popup size and the target size of the positioner. Each part binds its own dimensions. When the active item changes, its trigger measures the previous content before Vue patches it.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
 - The positioning context is `store.context.positioning`. The JSDoc of `PopupPositioningContext` in `utils/popups/types.ts` gives its members, and the comments of `useVaseUIFloating` say when the composable writes it.
 - `useVaseUIFloating` writes the context in `onBeforeMount`, unless `KeepAlive` holds the part. A server render thus writes nothing, and each part below a positioner that is not held finds the context in `setup`.

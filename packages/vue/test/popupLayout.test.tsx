@@ -6,11 +6,13 @@ import {
   flushMicrotasks,
   isVaporApp,
   screen,
+  waitFor,
   waitSingleFrame,
 } from '#test-utils';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
+import { recordStyleProperty } from './recordStyleProperty';
 import SelectLayout from './fixtures/SelectLayout.vue';
 import VaporPopupLayout from './fixtures/VaporPopupLayout.vue';
 
@@ -157,6 +159,46 @@ it('VUE-94: keeps the author pointer style on the parent menu of an open submenu
   expect(screen.getByTestId('submenu-positioner').style.pointerEvents).toBe('auto');
   expect(previousStyles.join(' ')).not.toMatch(/pointer-events:\s*none/);
   expect(parent.style.pointerEvents).toBe('all');
+});
+
+it('updates the positioner when the controlled Navigation Menu value changes', async () => {
+  const active = shallowRef('one');
+  await render(() => (
+    <NavigationMenu.Root value={active.value}>
+      <NavigationMenu.List>
+        {['one', 'two'].map((value) => (
+          <NavigationMenu.Item key={value} value={value}>
+            <NavigationMenu.Trigger>{value}</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <div style={{ width: value === 'one' ? '120px' : '180px', height: '40px' }} />
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        ))}
+      </NavigationMenu.List>
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner data-testid="positioner">
+          <NavigationMenu.Popup data-testid="popup" style={{ width: 'var(--popup-width)' }}>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  ));
+  const { style } = screen.getByTestId('positioner');
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
+
+  const popup = screen.getByTestId('popup');
+  await waitFor(() => expect(popup.style.getPropertyValue('--popup-width')).toBe('auto'));
+  const widths = recordStyleProperty(popup, '--popup-width');
+  active.value = 'two';
+  await waitSingleFrame();
+  expect(widths).toContain('120px');
+  expect(style.getPropertyValue('--positioner-width')).toBe('180px');
+
+  active.value = 'one';
+  await waitSingleFrame();
+  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
 });
 
 it('measures the active viewport after switching back to a cached viewport', async () => {
