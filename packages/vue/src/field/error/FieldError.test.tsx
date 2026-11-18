@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, ref, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Field } from '@vase-ui/vue/field';
@@ -464,6 +464,7 @@ describe('<Field.Error />', () => {
     it('triggers enter animation via data-starting-style when mounting', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
+      const onTransitionEnd = vi.fn();
       const style = `
         .animation-test-error {
           transition: opacity 1ms;
@@ -491,7 +492,12 @@ describe('<Field.Error />', () => {
             </button>
             <Field.Root>
               <Field.Control required />
-              <Field.Error class="animation-test-error" data-testid="error" match={showError.value}>
+              <Field.Error
+                class="animation-test-error"
+                data-testid="error"
+                match={showError.value}
+                onTransitionend={onTransitionEnd}
+              >
                 Message
               </Field.Error>
             </Field.Root>
@@ -503,12 +509,13 @@ describe('<Field.Error />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
 
       // The error mounts with the click, so the wait is on its container.
-      await nextEvent(container, 'transitionend', {
+      const end = await nextEvent(container, 'transitionend', {
         after: 'transitionrun',
         action: () => user.click(screen.getByText('Show')),
       });
 
-      expect(screen.getByTestId('error')).not.toBe(null);
+      expect(onTransitionEnd).toHaveBeenCalledExactlyOnceWith(end);
+      expect(end.target).toBe(screen.getByTestId('error'));
     });
 
     it('shows the last field message when the default slot leaves during the exit', async () => {
