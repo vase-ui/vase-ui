@@ -34,14 +34,17 @@ import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
 import * as Resizable from '../resizable/index.parts';
 
-// `id=""` goes on the part under test. A row with `twice` renders two copies, and `k` tells them
+interface BlankId {
+  id: string;
+}
+
+// `blankId` goes on the part under test. A row with `twice` renders two copies, and `k` tells them
 // apart in the test ids and the texts.
-const emptyId = { id: '' };
-const emptyIdIf = (when: boolean) => (when ? emptyId : {});
+const blankIdIf = (when: boolean, blankId: BlankId) => (when ? blankId : {});
 
 interface Row {
   name: string;
-  tree: (k: string) => unknown;
+  tree: (k: string, blankId: BlankId) => unknown;
   twice?: boolean;
   // The element whose name and description each copy must keep.
   named?: (k: string) => { testId: string; name: string; description?: string };
@@ -58,8 +61,10 @@ const REFERENCE_ATTRIBUTES = [
   'for',
 ];
 
-function emptyIds() {
-  return [...document.querySelectorAll('[id=""]')].map((element) => element.outerHTML.slice(0, 80));
+function blankIds() {
+  return [...document.querySelectorAll('[id]')]
+    .filter((element) => element.id.trim() === '')
+    .map((element) => element.outerHTML.slice(0, 80));
 }
 
 function duplicateIds() {
@@ -88,13 +93,13 @@ function unresolvedReferences() {
   return unresolved;
 }
 
-const dialogParts = (part: string) => (k: string) => (
+const dialogParts = (part: string) => (k: string, blankId: BlankId) => (
   <Dialog.Root defaultOpen modal={false}>
-    <Dialog.Trigger {...emptyIdIf(part === 'Trigger')}>Open {k}</Dialog.Trigger>
+    <Dialog.Trigger {...blankIdIf(part === 'Trigger', blankId)}>Open {k}</Dialog.Trigger>
     <Dialog.Portal>
-      <Dialog.Popup {...emptyIdIf(part === 'Popup')} data-testid={`popup${k}`}>
-        <Dialog.Title {...emptyIdIf(part === 'Title')}>Title {k}</Dialog.Title>
-        <Dialog.Description {...emptyIdIf(part === 'Description')}>
+      <Dialog.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
+        <Dialog.Title {...blankIdIf(part === 'Title', blankId)}>Title {k}</Dialog.Title>
+        <Dialog.Description {...blankIdIf(part === 'Description', blankId)}>
           Description {k}
         </Dialog.Description>
       </Dialog.Popup>
@@ -102,14 +107,14 @@ const dialogParts = (part: string) => (k: string) => (
   </Dialog.Root>
 );
 
-const popoverParts = (part: string) => (k: string) => (
+const popoverParts = (part: string) => (k: string, blankId: BlankId) => (
   <Popover.Root defaultOpen>
-    <Popover.Trigger {...emptyIdIf(part === 'Trigger')}>Open {k}</Popover.Trigger>
+    <Popover.Trigger {...blankIdIf(part === 'Trigger', blankId)}>Open {k}</Popover.Trigger>
     <Popover.Portal>
       <Popover.Positioner>
-        <Popover.Popup {...emptyIdIf(part === 'Popup')} data-testid={`popup${k}`}>
-          <Popover.Title {...emptyIdIf(part === 'Title')}>Title {k}</Popover.Title>
-          <Popover.Description {...emptyIdIf(part === 'Description')}>
+        <Popover.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
+          <Popover.Title {...blankIdIf(part === 'Title', blankId)}>Title {k}</Popover.Title>
+          <Popover.Description {...blankIdIf(part === 'Description', blankId)}>
             Description {k}
           </Popover.Description>
         </Popover.Popup>
@@ -118,24 +123,28 @@ const popoverParts = (part: string) => (k: string) => (
   </Popover.Root>
 );
 
-const menuParts = (part: string) => (k: string) => (
+const menuParts = (part: string) => (k: string, blankId: BlankId) => (
   <Menu.Root defaultOpen>
-    <Menu.Trigger {...emptyIdIf(part === 'Trigger')}>Actions {k}</Menu.Trigger>
+    <Menu.Trigger {...blankIdIf(part === 'Trigger', blankId)}>Actions {k}</Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner>
-        <Menu.Popup {...emptyIdIf(part === 'Popup')} data-testid={`popup${k}`}>
-          <Menu.Item {...emptyIdIf(part === 'Item')}>Rename</Menu.Item>
-          <Menu.CheckboxItem {...emptyIdIf(part === 'CheckboxItem')}>Bold</Menu.CheckboxItem>
+        <Menu.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
+          <Menu.Item {...blankIdIf(part === 'Item', blankId)}>Rename</Menu.Item>
+          <Menu.CheckboxItem {...blankIdIf(part === 'CheckboxItem', blankId)}>
+            Bold
+          </Menu.CheckboxItem>
           <Menu.RadioGroup defaultValue="a">
-            <Menu.RadioItem value="a" {...emptyIdIf(part === 'RadioItem')}>
+            <Menu.RadioItem value="a" {...blankIdIf(part === 'RadioItem', blankId)}>
               A
             </Menu.RadioItem>
           </Menu.RadioGroup>
-          <Menu.LinkItem href="#" {...emptyIdIf(part === 'LinkItem')}>
+          <Menu.LinkItem href="#" {...blankIdIf(part === 'LinkItem', blankId)}>
             Link
           </Menu.LinkItem>
           <Menu.Group data-testid={`group${k}`}>
-            <Menu.GroupLabel {...emptyIdIf(part === 'GroupLabel')}>Group {k}</Menu.GroupLabel>
+            <Menu.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
+              Group {k}
+            </Menu.GroupLabel>
             <Menu.Item>In group</Menu.Item>
           </Menu.Group>
         </Menu.Popup>
@@ -144,15 +153,15 @@ const menuParts = (part: string) => (k: string) => (
   </Menu.Root>
 );
 
-const menuFilterParts = (part: string) => (k: string) => (
+const menuFilterParts = (part: string) => (k: string, blankId: BlankId) => (
   <Menu.FilterProvider>
     <Menu.Root defaultOpen>
       <Menu.Trigger>Actions {k}</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner>
           <Menu.Popup>
-            <Menu.Input aria-label="Filter actions" {...emptyIdIf(part === 'Input')} />
-            <Menu.List {...emptyIdIf(part === 'List')} data-testid={`list${k}`}>
+            <Menu.Input aria-label="Filter actions" {...blankIdIf(part === 'Input', blankId)} />
+            <Menu.List {...blankIdIf(part === 'List', blankId)} data-testid={`list${k}`}>
               <Menu.Item>Rename</Menu.Item>
             </Menu.List>
           </Menu.Popup>
@@ -162,37 +171,42 @@ const menuFilterParts = (part: string) => (k: string) => (
   </Menu.FilterProvider>
 );
 
-const navigationMenuParts = (part: string) => (k: string) => (
+const navigationMenuParts = (part: string) => (k: string, blankId: BlankId) => (
   <NavigationMenu.Root defaultValue="one">
     <NavigationMenu.List>
       <NavigationMenu.Item value="one">
-        <NavigationMenu.Trigger {...emptyIdIf(part === 'Trigger')}>One {k}</NavigationMenu.Trigger>
+        <NavigationMenu.Trigger {...blankIdIf(part === 'Trigger', blankId)}>
+          One {k}
+        </NavigationMenu.Trigger>
         <NavigationMenu.Content>Content</NavigationMenu.Content>
       </NavigationMenu.Item>
     </NavigationMenu.List>
     <NavigationMenu.Portal>
       <NavigationMenu.Positioner>
-        <NavigationMenu.Popup {...emptyIdIf(part === 'Popup')} data-testid={`popup${k}`}>
-          <NavigationMenu.Viewport {...emptyIdIf(part === 'Viewport')} data-testid="ready" />
+        <NavigationMenu.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
+          <NavigationMenu.Viewport
+            {...blankIdIf(part === 'Viewport', blankId)}
+            data-testid="ready"
+          />
         </NavigationMenu.Popup>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>
 );
 
-const selectParts = (part: string) => (k: string) => (
+const selectParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root>
     <Field.Label>Fruit {k}</Field.Label>
-    <Select.Root defaultOpen {...emptyIdIf(part === 'Root')}>
-      <Select.Trigger {...emptyIdIf(part === 'Trigger')} data-testid={`trigger${k}`}>
+    <Select.Root defaultOpen {...blankIdIf(part === 'Root', blankId)}>
+      <Select.Trigger {...blankIdIf(part === 'Trigger', blankId)} data-testid={`trigger${k}`}>
         <Select.Value placeholder="Pick" />
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner>
-          <Select.Popup {...emptyIdIf(part === 'Popup')}>
-            <Select.List {...emptyIdIf(part === 'List')}>
+          <Select.Popup {...blankIdIf(part === 'Popup', blankId)}>
+            <Select.List {...blankIdIf(part === 'List', blankId)}>
               <Select.Group data-testid={`group${k}`}>
-                <Select.GroupLabel {...emptyIdIf(part === 'GroupLabel')}>
+                <Select.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
                   Group {k}
                 </Select.GroupLabel>
                 <Select.Item value="a">A</Select.Item>
@@ -205,18 +219,18 @@ const selectParts = (part: string) => (k: string) => (
   </Field.Root>
 );
 
-const comboboxParts = (part: string) => (k: string) => (
+const comboboxParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root>
     <Field.Label>Fruit {k}</Field.Label>
-    <Combobox.Root defaultOpen items={['a', 'b']} {...emptyIdIf(part === 'Root')}>
-      <Combobox.Input {...emptyIdIf(part === 'Input')} data-testid={`input${k}`} />
-      <Combobox.Trigger {...emptyIdIf(part === 'Trigger')} />
+    <Combobox.Root defaultOpen items={['a', 'b']} {...blankIdIf(part === 'Root', blankId)}>
+      <Combobox.Input {...blankIdIf(part === 'Input', blankId)} data-testid={`input${k}`} />
+      <Combobox.Trigger {...blankIdIf(part === 'Trigger', blankId)} />
       <Combobox.Portal>
         <Combobox.Positioner>
-          <Combobox.Popup {...emptyIdIf(part === 'Popup')}>
-            <Combobox.List {...emptyIdIf(part === 'List')}>
+          <Combobox.Popup {...blankIdIf(part === 'Popup', blankId)}>
+            <Combobox.List {...blankIdIf(part === 'List', blankId)}>
               <Combobox.Group data-testid={`group${k}`}>
-                <Combobox.GroupLabel {...emptyIdIf(part === 'GroupLabel')}>
+                <Combobox.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
                   Group {k}
                 </Combobox.GroupLabel>
                 <Combobox.Item value="a">A</Combobox.Item>
@@ -229,39 +243,39 @@ const comboboxParts = (part: string) => (k: string) => (
   </Field.Root>
 );
 
-const fieldParts = (part: string) => (k: string) => (
+const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root invalid>
-    <Field.Label {...emptyIdIf(part === 'Label')}>Name {k}</Field.Label>
-    <Field.Control {...emptyIdIf(part === 'Control')} data-testid={`control${k}`} />
-    <Field.Description {...emptyIdIf(part === 'Description')}>Hint {k}</Field.Description>
-    <Field.Error {...emptyIdIf(part === 'Error')} match>
+    <Field.Label {...blankIdIf(part === 'Label', blankId)}>Name {k}</Field.Label>
+    <Field.Control {...blankIdIf(part === 'Control', blankId)} data-testid={`control${k}`} />
+    <Field.Description {...blankIdIf(part === 'Description', blankId)}>Hint {k}</Field.Description>
+    <Field.Error {...blankIdIf(part === 'Error', blankId)} match>
       Wrong {k}
     </Field.Error>
   </Field.Root>
 );
 
-const tabsParts = (part: string) => (k: string) => (
+const tabsParts = (part: string) => (k: string, blankId: BlankId) => (
   <Tabs.Root defaultValue="a">
     <Tabs.List>
-      <Tabs.Tab value="a" {...emptyIdIf(part === 'Tab')}>
+      <Tabs.Tab value="a" {...blankIdIf(part === 'Tab', blankId)}>
         Tab {k}
       </Tabs.Tab>
     </Tabs.List>
-    <Tabs.Panel value="a" {...emptyIdIf(part === 'Panel')} data-testid={`panel${k}`}>
+    <Tabs.Panel value="a" {...blankIdIf(part === 'Panel', blankId)} data-testid={`panel${k}`}>
       Panel
     </Tabs.Panel>
   </Tabs.Root>
 );
 
-const toastParts = (part: string) => (k: string) => (
+const toastParts = (part: string) => (k: string, blankId: BlankId) => (
   <Toast.Provider>
     <Toast.Viewport>
       <Toast.Root
         toast={{ id: `toast${k}`, title: `Saved ${k}`, description: `Copied ${k}` }}
         data-testid={`toast${k}`}
       >
-        <Toast.Title {...emptyIdIf(part === 'Title')} />
-        <Toast.Description {...emptyIdIf(part === 'Description')} />
+        <Toast.Title {...blankIdIf(part === 'Title', blankId)} />
+        <Toast.Description {...blankIdIf(part === 'Description', blankId)} />
       </Toast.Root>
     </Toast.Viewport>
   </Toast.Provider>
@@ -276,22 +290,24 @@ const labelled = (testId: string, label: string) => (k: string) => ({
 const rows: Row[] = [
   {
     name: 'Collapsible.Panel',
-    tree: () => (
+    tree: (_k, blankId) => (
       <Collapsible.Root defaultOpen>
         <Collapsible.Trigger>Toggle</Collapsible.Trigger>
-        <Collapsible.Panel {...emptyId}>Content</Collapsible.Panel>
+        <Collapsible.Panel {...blankId}>Content</Collapsible.Panel>
       </Collapsible.Root>
     ),
   },
   ...(['Trigger', 'Panel'] as const).map((part): Row => ({
     name: `Accordion.${part}`,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Accordion.Root defaultValue={['a']}>
         <Accordion.Item value="a">
           <Accordion.Header>
-            <Accordion.Trigger {...emptyIdIf(part === 'Trigger')}>Trigger {k}</Accordion.Trigger>
+            <Accordion.Trigger {...blankIdIf(part === 'Trigger', blankId)}>
+              Trigger {k}
+            </Accordion.Trigger>
           </Accordion.Header>
-          <Accordion.Panel {...emptyIdIf(part === 'Panel')} data-testid={`panel${k}`}>
+          <Accordion.Panel {...blankIdIf(part === 'Panel', blankId)} data-testid={`panel${k}`}>
             Content
           </Accordion.Panel>
         </Accordion.Item>
@@ -306,11 +322,11 @@ const rows: Row[] = [
   })),
   {
     name: 'AlertDialog.Title',
-    tree: (k) => (
+    tree: (k, blankId) => (
       <AlertDialog.Root defaultOpen>
         <AlertDialog.Portal>
           <AlertDialog.Popup data-testid={`popup${k}`}>
-            <AlertDialog.Title {...emptyId}>Title {k}</AlertDialog.Title>
+            <AlertDialog.Title {...blankId}>Title {k}</AlertDialog.Title>
           </AlertDialog.Popup>
         </AlertDialog.Portal>
       </AlertDialog.Root>
@@ -319,9 +335,9 @@ const rows: Row[] = [
   },
   {
     name: 'Drawer.SwipeArea',
-    tree: () => (
+    tree: (_k, blankId) => (
       <Drawer.Root>
-        <Drawer.SwipeArea {...emptyId} />
+        <Drawer.SwipeArea {...blankId} />
       </Drawer.Root>
     ),
   },
@@ -333,9 +349,9 @@ const rows: Row[] = [
   {
     name: 'PreviewCard.Trigger',
     ready: 'ready',
-    tree: () => (
+    tree: (_k, blankId) => (
       <PreviewCard.Root defaultOpen>
-        <PreviewCard.Trigger href="#" {...emptyId}>
+        <PreviewCard.Trigger href="#" {...blankId}>
           Link
         </PreviewCard.Trigger>
         <PreviewCard.Portal>
@@ -349,9 +365,9 @@ const rows: Row[] = [
   {
     name: 'Tooltip.Trigger',
     ready: 'ready',
-    tree: () => (
+    tree: (_k, blankId) => (
       <Tooltip.Root defaultOpen>
-        <Tooltip.Trigger {...emptyId}>Hover</Tooltip.Trigger>
+        <Tooltip.Trigger {...blankId}>Hover</Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner>
             <Tooltip.Popup data-testid="ready">Tip</Tooltip.Popup>
@@ -380,8 +396,8 @@ const rows: Row[] = [
   {
     name: 'Menubar',
     ready: 'ready',
-    tree: () => (
-      <Menubar {...emptyId}>
+    tree: (_k, blankId) => (
+      <Menubar {...blankId}>
         <Menu.Root defaultOpen>
           <Menu.Trigger>File</Menu.Trigger>
           <Menu.Portal>
@@ -426,10 +442,10 @@ const rows: Row[] = [
   {
     name: 'Autocomplete.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Search {k}</Field.Label>
-        <Autocomplete.Root defaultOpen items={['a', 'b']} {...emptyId}>
+        <Autocomplete.Root defaultOpen items={['a', 'b']} {...blankId}>
           <Autocomplete.Input data-testid={`input${k}`} />
           <Autocomplete.Portal>
             <Autocomplete.Positioner>
@@ -457,9 +473,9 @@ const rows: Row[] = [
   })),
   {
     name: 'Fieldset.Legend',
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Fieldset.Root data-testid={`fieldset${k}`}>
-        <Fieldset.Legend {...emptyId}>Address {k}</Fieldset.Legend>
+        <Fieldset.Legend {...blankId}>Address {k}</Fieldset.Legend>
       </Fieldset.Root>
     ),
     named: (k) => ({ testId: `fieldset${k}`, name: `Address ${k}` }),
@@ -467,10 +483,10 @@ const rows: Row[] = [
   {
     name: 'Checkbox.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Terms {k}</Field.Label>
-        <Checkbox.Root {...emptyId} data-testid={`control${k}`} />
+        <Checkbox.Root {...blankId} data-testid={`control${k}`} />
       </Field.Root>
     ),
     named: labelled('control', 'Terms'),
@@ -478,10 +494,10 @@ const rows: Row[] = [
   {
     name: 'CheckboxGroup',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Fruits {k}</Field.Label>
-        <CheckboxGroup {...emptyId} data-testid={`control${k}`}>
+        <CheckboxGroup {...blankId} data-testid={`control${k}`}>
           <Checkbox.Root value="a" />
         </CheckboxGroup>
       </Field.Root>
@@ -491,10 +507,10 @@ const rows: Row[] = [
   {
     name: 'Radio.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Small {k}</Field.Label>
-        <Radio.Root value="a" {...emptyId} data-testid={`control${k}`} />
+        <Radio.Root value="a" {...blankId} data-testid={`control${k}`} />
       </Field.Root>
     ),
     named: labelled('control', 'Small'),
@@ -502,10 +518,10 @@ const rows: Row[] = [
   {
     name: 'RadioGroup',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Size {k}</Field.Label>
-        <RadioGroup {...emptyId} data-testid={`control${k}`}>
+        <RadioGroup {...blankId} data-testid={`control${k}`}>
           <Radio.Root value="a" />
         </RadioGroup>
       </Field.Root>
@@ -515,10 +531,10 @@ const rows: Row[] = [
   {
     name: 'Switch.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Wifi {k}</Field.Label>
-        <Switch.Root {...emptyId} data-testid={`control${k}`} />
+        <Switch.Root {...blankId} data-testid={`control${k}`} />
       </Field.Root>
     ),
     named: labelled('control', 'Wifi'),
@@ -526,10 +542,10 @@ const rows: Row[] = [
   {
     name: 'NumberField.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Amount {k}</Field.Label>
-        <NumberField.Root {...emptyId}>
+        <NumberField.Root {...blankId}>
           <NumberField.Input data-testid={`control${k}`} />
         </NumberField.Root>
       </Field.Root>
@@ -539,10 +555,10 @@ const rows: Row[] = [
   {
     name: 'OTPField.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Code {k}</Field.Label>
-        <OTPField.Root length={2} {...emptyId}>
+        <OTPField.Root length={2} {...blankId}>
           <OTPField.Input data-testid={`control${k}`} />
           <OTPField.Input />
         </OTPField.Root>
@@ -553,10 +569,10 @@ const rows: Row[] = [
   {
     name: 'DateField.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Arrival {k}</Field.Label>
-        <DateField.Root {...emptyId} data-testid={`control${k}`}>
+        <DateField.Root {...blankId} data-testid={`control${k}`}>
           <DateField.Input />
         </DateField.Root>
       </Field.Root>
@@ -566,10 +582,10 @@ const rows: Row[] = [
   {
     name: 'TimeField.Root',
     twice: true,
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Field.Root>
         <Field.Label>Start {k}</Field.Label>
-        <TimeField.Root {...emptyId} data-testid={`control${k}`}>
+        <TimeField.Root {...blankId} data-testid={`control${k}`}>
           <TimeField.Input />
         </TimeField.Root>
       </Field.Root>
@@ -579,8 +595,8 @@ const rows: Row[] = [
   {
     name: 'Slider.Root',
     twice: true,
-    tree: (k) => (
-      <Slider.Root defaultValue={50} {...emptyId} data-testid={`slider${k}`}>
+    tree: (k, blankId) => (
+      <Slider.Root defaultValue={50} {...blankId} data-testid={`slider${k}`}>
         <Slider.Label>Volume {k}</Slider.Label>
         <Slider.Control>
           <Slider.Thumb />
@@ -591,18 +607,18 @@ const rows: Row[] = [
   },
   {
     name: 'Meter.Label',
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Meter.Root value={50} data-testid={`meter${k}`}>
-        <Meter.Label {...emptyId}>Storage {k}</Meter.Label>
+        <Meter.Label {...blankId}>Storage {k}</Meter.Label>
       </Meter.Root>
     ),
     named: labelled('meter', 'Storage'),
   },
   {
     name: 'Progress.Label',
-    tree: (k) => (
+    tree: (k, blankId) => (
       <Progress.Root value={50} data-testid={`progress${k}`}>
-        <Progress.Label {...emptyId}>Upload {k}</Progress.Label>
+        <Progress.Label {...blankId}>Upload {k}</Progress.Label>
       </Progress.Root>
     ),
     named: labelled('progress', 'Upload'),
@@ -619,9 +635,9 @@ const rows: Row[] = [
   })),
   {
     name: 'Calendar.Caption',
-    tree: () => (
+    tree: (_k, blankId) => (
       <CalendarAncestors level="month">
-        <Calendar.Caption {...emptyId} />
+        <Calendar.Caption {...blankId} />
         <Calendar.Grid data-testid="grid" />
       </CalendarAncestors>
     ),
@@ -630,24 +646,27 @@ const rows: Row[] = [
   {
     // Two panels with one id would share one size of the layout.
     name: 'Resizable.Panel',
-    tree: () => (
+    tree: (_k, blankId) => (
       <div style={{ width: '600px', height: '100px' }}>
         <Resizable.Root style={{ height: '100%' }}>
-          <Resizable.Panel {...emptyId} />
+          <Resizable.Panel {...blankId} />
           <Resizable.Handle />
-          <Resizable.Panel {...emptyId} />
+          <Resizable.Panel {...blankId} />
         </Resizable.Root>
       </div>
     ),
   },
 ];
 
-describe('VUE-93: an empty id counts as no id', () => {
+describe.each([
+  { blank: 'an empty id', id: '' },
+  { blank: 'an id of white space only', id: '\n\t ' },
+])('VUE-93: $blank counts as no id', ({ id }) => {
   const { render } = createRenderer();
 
   it.each(rows)('$name', async ({ tree, twice, named, ready }) => {
     const copies = twice ? ['1', '2'] : ['1'];
-    await render(() => <div>{copies.map((k) => tree(k))}</div>);
+    await render(() => <div>{copies.map((k) => tree(k, { id }))}</div>);
     if (ready) {
       await screen.findByTestId(ready);
     }
@@ -664,7 +683,7 @@ describe('VUE-93: an empty id counts as no id', () => {
       }
     }
 
-    expect(emptyIds()).toEqual([]);
+    expect(blankIds()).toEqual([]);
     expect(duplicateIds()).toEqual([]);
     expect(unresolvedReferences()).toEqual([]);
   });
