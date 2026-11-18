@@ -14,6 +14,7 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+import { FocusAtMount } from '../../../test/fixtures/FocusAtMount';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 
@@ -358,6 +359,62 @@ describe('<Combobox.Popup />', () => {
         </Combobox.Root>,
       );
     }
+
+    it('BUG-6037: returns focus to the trigger after a field takes focus at mount', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const open = shallowRef(false);
+      const onOpenChangeComplete = vi.fn();
+      await render(() => (
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <button>Before</button>
+          <Combobox.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+            <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup class="popup" data-testid="popup">
+                  <Combobox.Input />
+                  <FocusAtMount data-testid="field" />
+                  <Combobox.List>
+                    <Combobox.Item value="one">One</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </div>
+      ));
+      const trigger = screen.getByTestId('trigger');
+      screen.getByRole('button', { name: 'Before' }).focus();
+      open.value = true;
+      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenCalledWith(true));
+      expect(screen.getByTestId('field')).toHaveFocus();
+
+      const popup = screen.getByTestId('popup');
+      let focusAtExitStart: Element | null = null;
+      popup.addEventListener(
+        'animationstart',
+        () => {
+          focusAtExitStart = document.activeElement;
+        },
+        { once: true },
+      );
+      await nextEvent(popup, 'animationstart', {
+        action: () => {
+          open.value = false;
+        },
+      });
+      const animations = popup.getAnimations();
+      const finished = animations.map((animation) => animation.finished);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await Promise.all(finished);
+      await flushMicrotasks();
+      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(focusAtExitStart).toBe(trigger);
+      expect(trigger).toHaveFocus();
+    });
 
     it('moves to the input in the popup when the popup opens', async () => {
       const { user } = await renderWithInputInPopup();
