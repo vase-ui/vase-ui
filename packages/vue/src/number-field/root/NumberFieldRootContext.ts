@@ -29,7 +29,10 @@ export interface NumberFieldRootContext {
   inputRef: Readonly<ShallowRef<HTMLInputElement | null>>;
   registerInput: (input: HTMLInputElement) => () => void;
   options: Readonly<
-    Pick<NumberFieldRootProps, 'allowOutOfRange' | 'format' | 'form' | 'name' | 'min' | 'max'>
+    Pick<
+      NumberFieldRootProps,
+      'allowOutOfRange' | 'format' | 'form' | 'name' | 'min' | 'max' | 'readOnly'
+    >
   >;
   setEditing: (editing: boolean) => boolean;
   prepareStep: () => boolean;
