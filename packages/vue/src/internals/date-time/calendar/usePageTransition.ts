@@ -1,5 +1,5 @@
 import { computed, shallowRef, watch } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { Ref } from 'vue';
 import { compareDates } from '../temporal';
 import { getPageKey } from './monthGrid';
 import type { CalendarPage } from './monthGrid';
@@ -24,21 +24,21 @@ export type NavigationDirection = 'previous' | 'next' | 'none';
  * `pages`.
  */
 export function usePageTransition(
-  pages: ComputedRef<CalendarPage[]>,
-  layoutKey: ComputedRef<string>,
-  isEnabled: ComputedRef<boolean>,
+  pages: Readonly<Ref<CalendarPage[]>>,
+  layoutKey: Readonly<Ref<string>>,
+  isEnabled: Readonly<Ref<boolean>>,
 ) {
   const navigationDirection = shallowRef<NavigationDirection>('none');
   const leaving = shallowRef<CalendarPage[]>([]);
-  let lastLayoutKey = layoutKey.value;
 
   watch(
-    pages,
-    (next, previous) => {
-      const isSameLayout = layoutKey.value === lastLayoutKey;
-      lastLayoutKey = layoutKey.value;
-      if (!isSameLayout || !isEnabled.value) {
+    [pages, layoutKey, isEnabled],
+    ([next, layout, enabled], [previous, previousLayout]) => {
+      if (!enabled || layout !== previousLayout) {
         leaving.value = [];
+        if (!enabled) {
+          navigationDirection.value = 'none';
+        }
         return;
       }
 
@@ -52,17 +52,6 @@ export function usePageTransition(
       leaving.value = [...leaving.value, ...previous].filter(
         (page) => !shown.has(getPageKey(page)),
       );
-    },
-    { flush: 'sync' },
-  );
-
-  watch(
-    isEnabled,
-    (enabled) => {
-      if (!enabled) {
-        leaving.value = [];
-        navigationDirection.value = 'none';
-      }
     },
     { flush: 'sync' },
   );

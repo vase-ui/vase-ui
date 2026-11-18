@@ -1,4 +1,4 @@
-import { computed, shallowRef, watch } from 'vue';
+import { computed, shallowRef, watchSyncEffect } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useControlled } from '../../../common/useControlled';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
@@ -181,15 +181,12 @@ export function useRangeSelection(
 
   const values = computed(() => value.value.filter((end): end is DateValue => end !== null));
   const lastValue = shallowRef<DateValue>();
-  watch(
-    () => values.value[0],
-    (first) => {
-      if (first) {
-        lastValue.value = first;
-      }
-    },
-    { immediate: true, flush: 'sync' },
-  );
+  watchSyncEffect(() => {
+    const first = values.value[0];
+    if (first) {
+      lastValue.value = first;
+    }
+  });
   // The start, else the end, else an end of `defaultValue`, else the last value.
   const template = computed(
     () => values.value[0] ?? props.defaultValue?.[0] ?? props.defaultValue?.[1] ?? lastValue.value,
