@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPart.vue';
 import { useCompositeList } from './useCompositeList';
 
-const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
-
-useCompositeList({ elementsRef });
+const props = defineProps<{ elementsRef?: ShallowRef<(HTMLElement | null)[]> }>();
+useCompositeList({ elementsRef: props.elementsRef ?? shallowRef([]) });
 </script>
 
 <template>
-  <div :data-elements="elementsRef.map((element) => element?.dataset.testid).join(',')">
+  <div>
     <CompositeListItemPart data-testid="a" />
     <CompositeListItemPart data-testid="b" />
   </div>

@@ -1147,11 +1147,18 @@ describe('<CompositeList />', () => {
         '1',
       );
 
-      const { container } = await hydrate(CompositeListHydration, { serverHtml });
-
-      expect(within(container).getByTestId('a')).toHaveAttribute('data-index', '0');
-      expect(within(container).getByTestId('b')).toHaveAttribute('data-index', '1');
-      expect(container.firstElementChild).toHaveAttribute('data-elements', 'a,b');
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const { container } = await hydrate(CompositeListHydration, {
+        serverHtml,
+        props: { elementsRef },
+      });
+      const a = within(container).getByTestId('a');
+      const b = within(container).getByTestId('b');
+      expect(a).toHaveAttribute('data-index', '0');
+      expect(b).toHaveAttribute('data-index', '1');
+      expect(elementsRef.value).toHaveLength(2);
+      expect(elementsRef.value[0]).toBe(a);
+      expect(elementsRef.value[1]).toBe(b);
     });
   });
 
