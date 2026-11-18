@@ -145,10 +145,8 @@ describe('real pointer between tests', () => {
   });
 });
 
+// A probe for the popup would skip the first case if Firefox stopped opening it.
 describe.runIf(server.browser === 'firefox')('validation popup of Firefox between tests', () => {
-  // Vitest runs the tests of a file in order. In each pair, the first test reports an invalid form,
-  // and Firefox opens its validation popup below the input. The element of the second test is at
-  // the place of the popup.
   const { render } = createRenderer();
   const SPOT: CSSProperties = {
     position: 'fixed',
@@ -157,6 +155,7 @@ describe.runIf(server.browser === 'firefox')('validation popup of Firefox betwee
     width: '200px',
     height: '100px',
   };
+  // The next test presses below the input, where Firefox shows the popup.
   const PLACE_OF_POPUP = { position: { x: 50, y: 45 } };
 
   async function reportInvalidForm(onPointerdown?: () => void) {
@@ -210,14 +209,31 @@ describe.runIf(server.browser === 'firefox')('validation popup of Firefox betwee
     expect(await countLostPresses(1)).toBe(0);
   });
 
-  it('reports an invalid form and ends before the popup opens', async () => {
+  it('ends as soon as it reports an invalid form', async () => {
     await reportInvalidForm();
   });
 
-  // Firefox opens the first popup of a window about 200 ms after the report. The presses take
-  // longer.
+  // A pending popup can let the first press through and take a later one.
   it('gets each real press at the place of the popup that the last test started', async () => {
     expect(await countLostPresses(40)).toBe(0);
+  });
+
+  describe('a synthetic invalid event', () => {
+    const events: Event[] = [];
+    function recordInvalid(event: Event) {
+      events.push(event);
+    }
+    afterAll(() => window.removeEventListener('invalid', recordInvalid, true));
+
+    it('dispatches the event', async () => {
+      await render(<input data-testid="input" />);
+      window.addEventListener('invalid', recordInvalid, true);
+      screen.getByTestId('input').dispatchEvent(new Event('invalid'));
+    });
+
+    it('starts without a validation report from the synthetic event', () => {
+      expect(events.map((event) => event.isTrusted)).toEqual([false]);
+    });
   });
 });
 

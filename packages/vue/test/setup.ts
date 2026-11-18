@@ -47,13 +47,10 @@ if (typeof document !== 'undefined') {
     { capture: true },
   );
 
-  // Firefox shows the validation message of an invalid form in a popup of the browser, at the first
-  // control that the form reports. The popup is above the page, and it takes each real pointer
-  // event at its place. Firefox focuses the control, and it closes the popup when the control gets
-  // a `blur` event. The control gets no such event when it has the focus at the unmount, or when
-  // its `focus` listener moves the focus, as the hidden input of a part does. The popup then stays
-  // for each later test of the file. An `invalid` event of a control in a shadow root does not
-  // reach this listener.
+  // A Firefox validation popup can take real presses in the next test. Firefox listens for blur
+  // after it focuses the invalid control. It misses the blur if the control redirects focus, as a
+  // radio's hidden input does. Removing a focused control can also leave the popup open.
+  // A native invalid event in a shadow root or a nested frame does not reach this window.
   let hadInvalidEvent = false;
   if (server.browser === 'firefox') {
     window.addEventListener(
@@ -67,8 +64,7 @@ if (typeof document !== 'undefined') {
     );
   }
 
-  // After the report of another control, Firefox closes the popup at the blur of that control. The
-  // report gives an `invalid` event to this control.
+  // Firefox follows the new control, so its blur closes even a popup that has yet to appear.
   function closeValidationPopup() {
     const input = document.createElement('input');
     input.required = true;
@@ -76,6 +72,7 @@ if (typeof document !== 'undefined') {
     input.reportValidity();
     input.blur();
     input.remove();
+    // reportValidity() fired another trusted invalid event.
     hadInvalidEvent = false;
   }
 
