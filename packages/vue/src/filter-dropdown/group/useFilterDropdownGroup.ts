@@ -1,4 +1,4 @@
-import { computed, onMounted, onScopeDispose, provide, watch } from 'vue';
+import { computed, onMounted, provide, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useItemRegistry } from '../../internals/useItemRegistry';
 import { useFilterDropdownItemContext } from '../root/FilterDropdownRootContext';
@@ -45,16 +45,17 @@ export function useFilterDropdownGroup(): UseFilterDropdownGroupReturnValue {
   // A nested container collects its own items, so the enclosing one only ever sees this
   // registration. Report visibility upward or a group of groups would look empty.
   const groupId = Symbol('filter-dropdown-group');
-  let unregisterInParent: (() => void) | undefined;
-
-  function registerInParent() {
-    unregisterInParent?.();
-    unregisterInParent = parentContext?.registerItem(groupId, !hidden.value);
-  }
-
-  onMounted(registerInParent);
-  watch(hidden, registerInParent);
-  onScopeDispose(() => unregisterInParent?.());
+  onMounted(() => {
+    if (parentContext) {
+      watch(
+        hidden,
+        (isHidden, _previous, onCleanup) => {
+          onCleanup(parentContext.registerItem(groupId, !isHidden));
+        },
+        { immediate: true },
+      );
+    }
+  });
 
   provide(FilterDropdownGroupContext, { registerItem });
 

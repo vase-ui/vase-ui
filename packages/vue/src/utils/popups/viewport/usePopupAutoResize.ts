@@ -58,6 +58,7 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
         }
       };
     },
+    isHeld,
   );
   const popupSize = shallowRef<Dimensions | 'auto' | null>(null);
   const positionerSize = shallowRef<Dimensions | null>(null);

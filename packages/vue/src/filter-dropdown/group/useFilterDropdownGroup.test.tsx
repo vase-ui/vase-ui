@@ -9,6 +9,35 @@ import { NOOP } from '../../common/empty';
 describe('useFilterDropdownGroup', () => {
   const { render } = createRenderer();
 
+  it('hides the parent when its only matching group unmounts', async () => {
+    const shown = shallowRef(true);
+    const listRef = shallowRef<HTMLElement[]>([]);
+    await render(() => (
+      <FilterDropdown.Root
+        open
+        value="can"
+        listRef={listRef}
+        getActiveIndex={() => null}
+        setActiveIndex={NOOP}
+      >
+        <Group data-testid="parent">
+          {shown.value && (
+            <Group>
+              <Item>Canada</Item>
+            </Group>
+          )}
+          <Item>Panama</Item>
+        </Group>
+      </FilterDropdown.Root>
+    ));
+    const parent = screen.getByTestId('parent');
+    expect(parent).not.toHaveAttribute('hidden');
+
+    shown.value = false;
+    await flushMicrotasks();
+    expect(parent).toHaveAttribute('hidden');
+  });
+
   it('hides a group of groups only when the query hides each group in it', async () => {
     const App = defineComponent(
       (props: { value: string }) => {

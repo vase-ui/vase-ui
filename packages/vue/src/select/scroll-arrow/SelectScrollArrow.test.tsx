@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { h } from 'vue';
+import { h, nextTick, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
@@ -69,6 +69,29 @@ async function advanceTimers(ms: number) {
 
 describe('<Select.ScrollArrow />', () => {
   const { render } = createRenderer();
+
+  it('restores the scrollbar when the last scroll arrow unmounts', async () => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <Select.Root open>
+        <Select.Trigger>Open</Select.Trigger>
+        <Select.Positioner alignItemWithTrigger={false}>
+          <Select.Popup>
+            {shown.value && <Select.ScrollDownArrow keepMounted />}
+            <Select.List data-testid="list">
+              <Select.Item value="one">One</Select.Item>
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Root>
+    ));
+    const list = screen.getByTestId('list');
+    expect(list).toHaveClass('vase-ui-disable-scrollbar');
+
+    shown.value = false;
+    await nextTick();
+    expect(list).not.toHaveClass('vase-ui-disable-scrollbar');
+  });
 
   beforeEach(() => {
     vi.useFakeTimers();

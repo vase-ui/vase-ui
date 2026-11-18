@@ -25,7 +25,10 @@ export interface FilterDropdownRootContext {
   listId: ComputedRef<string | undefined>;
   /** The list element. The list writes it. */
   listElement: ShallowRef<HTMLElement | null>;
-  /** The input, which owns real focus while the host uses virtual list navigation. */
+  /**
+   * The input, which owns real focus while the host uses virtual list navigation.
+   * `useMenuFilterPopup` checks for a missing input even when `KeepAlive` holds the menu.
+   */
   focusOwnerRef: Ref<HTMLElement | null>;
   /** Moves the host's highlight. */
   setActiveIndex: (index: number | null) => void;

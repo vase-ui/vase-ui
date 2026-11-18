@@ -556,6 +556,38 @@ const RemovedReferenceApp = defineComponent({
 describe('FloatingFocusManager', () => {
   const { render } = createRenderer();
 
+  it('keeps focus in a former child popup when the parent closes', async () => {
+    const field = shallowRef<HTMLInputElement | null>(null);
+    const active = shallowRef(true);
+    const parent = captureStore();
+    const Child = defineComponent(() => {
+      const store = useFloatingRootStore({ elements: { positionerElement: field } });
+      return () => (
+        <FloatingFocusManager store={store} disabled>
+          <span />
+        </FloatingFocusManager>
+      );
+    });
+    await render(() => (
+      <>
+        <input ref={field} data-testid="field" />
+        <Popup manager={{ modal: false, closeOnFocusOut: false }} onStore={parent.onStore}>
+          <button>Parent</button>
+          {active.value && <Child />}
+        </Popup>
+      </>
+    ));
+    await openPopup();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Parent' })).toHaveFocus());
+    active.value = false;
+    await nextTick();
+    screen.getByTestId('field').focus();
+
+    parent.close();
+    await flushMicrotasks();
+    expect(screen.getByTestId('field')).toHaveFocus();
+  });
+
   describe('initial focus', () => {
     it('focuses the popup with no scroll when the popup has no tabbable element', async () => {
       const runFrames = holdAnimationFrames();

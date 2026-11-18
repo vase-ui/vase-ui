@@ -162,18 +162,10 @@ const inputOwnsFormValue = computed(() => selectionMode.value === 'none' && !has
 
 // A template can mount the input that replaces this input before it unmounts this input. The
 // input then clears the element of the root only when the root holds its own element.
+// A reactive read of the old element in this ref setter would subscribe the Vapor render to it.
 let ownInput: HTMLInputElement | null = null;
-let removeFocusListeners: (() => void) | undefined;
 function setInputElement(element: HTMLElement | null) {
   const input = element as HTMLInputElement | null;
-  // Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
-  // Vue listener stays on the removed input. The function ref thus adds the focus listeners, and
-  // it removes them before Vue removes the input.
-  removeFocusListeners?.();
-  removeFocusListeners =
-    input === null
-      ? undefined
-      : addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout });
   const state = toRaw(store.state);
   const isOwnInput = state.inputElement === ownInput;
   ownInput = input;
@@ -592,6 +584,21 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   },
   stateAttributesMapping: triggerStateAttributesMapping,
 });
+
+// Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
+// Vue listener stays on the removed input. The sync watcher removes the native listeners before
+// Vue removes the input.
+watch(
+  element,
+  (input, _previous, onCleanup) => {
+    if (input) {
+      onCleanup(
+        addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
+      );
+    }
+  },
+  { flush: 'sync' },
+);
 
 useFormEntryValue(element, () => displayText(inputValue.value));
 

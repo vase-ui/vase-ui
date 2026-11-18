@@ -99,7 +99,6 @@ import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { NOOP } from '../../internals/noop';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -148,7 +147,7 @@ let closedOffset: number | null = null;
 let swipePopupElement: HTMLElement | null = null;
 let swipeBackdropElement: HTMLElement | null = null;
 let popupTransition: string | null = null;
-let releaseGuardCleanup: () => void = NOOP;
+const releaseDocument = shallowRef<Document | null>(null);
 
 const swipeAreaId = useVaseUiId(() => props.id);
 const { registerTrigger } = useTriggerRegistration(swipeAreaId, store);
@@ -167,43 +166,52 @@ const dismissDirection = computed(() => oppositeSwipeDirection[resolvedSwipeDire
 const enabled = computed(() => !props.disabled && (!open.value || swipeActive.value));
 
 function disableDismissForSwipe() {
-  releaseGuardCleanup();
+  releaseDocument.value = null;
   store.context.outsidePressEnabledRef.value = false;
 }
 
 function enableDismissAfterRelease() {
-  releaseGuardCleanup();
+  releaseDocument.value = ownerDocument(swipeAreaElement.value);
+}
 
-  const doc = ownerDocument(swipeAreaElement.value);
-
-  function restore(event?: MouseEvent) {
-    // The gesture's trailing release click is the one physical click with no `pointerdown` of
-    // its own. Ignore it and keep waiting, so it cannot dismiss the drawer it just opened,
-    // while a click-only activation (keyboard or assistive tech) still re-enables in time.
-    if (event?.type === 'click' && event.detail !== 0 && !isVirtualClick(event)) {
+watch(
+  releaseDocument,
+  (doc, _previous, onCleanup) => {
+    if (!doc) {
       return;
     }
 
-    releaseGuardCleanup = NOOP;
-    doc.removeEventListener('pointerdown', restore, true);
-    doc.removeEventListener('click', restore, true);
-    store.context.outsidePressEnabledRef.value = true;
-  }
+    function restore(event: MouseEvent) {
+      // The gesture's trailing release click is the one physical click with no `pointerdown` of
+      // its own. Ignore it and keep waiting, so it cannot dismiss the drawer it just opened,
+      // while a click-only activation (keyboard or assistive tech) still re-enables in time.
+      if (event.type === 'click' && event.detail !== 0 && !isVirtualClick(event)) {
+        return;
+      }
 
-  // The pointerup that ends a swipe-open gesture synthesizes a `click`. When the drag released
-  // outside the popup (e.g. it was dragged past the popup's size), that click would be treated as
-  // an outside press and immediately dismiss the drawer that was just opened. Keep outside-press
-  // dismissal disabled until the next interaction that isn't that release click: a deliberate
-  // outside press starts with a `pointerdown`, and a click-only activation (keyboard or
-  // assistive tech) is distinguishable from a physical release. This is deterministic, unlike
-  // re-enabling on a timer that can race the synthesized click and dismiss at random.
-  //
-  // `restore` runs in document capture, ahead of the outside-press check of `useDismiss` (which
-  // happens on the event target, after capture), so the triggering press still dismisses.
-  releaseGuardCleanup = restore;
-  doc.addEventListener('pointerdown', restore, true);
-  doc.addEventListener('click', restore, true);
-}
+      releaseDocument.value = null;
+      store.context.outsidePressEnabledRef.value = true;
+    }
+
+    // The pointerup that ends a swipe-open gesture synthesizes a `click`. When the drag released
+    // outside the popup (e.g. it was dragged past the popup's size), that click would be treated as
+    // an outside press and immediately dismiss the drawer that was just opened. Keep outside-press
+    // dismissal disabled until the next interaction that isn't that release click: a deliberate
+    // outside press starts with a `pointerdown`, and a click-only activation (keyboard or
+    // assistive tech) is distinguishable from a physical release. This is deterministic, unlike
+    // re-enabling on a timer that can race the synthesized click and dismiss at random.
+    //
+    // `restore` runs in document capture, ahead of the outside-press check of `useDismiss` (which
+    // happens on the event target, after capture), so the triggering press still dismisses.
+    doc.addEventListener('pointerdown', restore, true);
+    doc.addEventListener('click', restore, true);
+    onCleanup(() => {
+      doc.removeEventListener('pointerdown', restore, true);
+      doc.removeEventListener('click', restore, true);
+    });
+  },
+  { flush: 'sync' },
+);
 
 function getPopupSize(popupElement: HTMLElement) {
   const isHorizontal = dismissDirection.value === 'left' || dismissDirection.value === 'right';
@@ -445,7 +453,7 @@ watch(enabled, (isEnabled) => {
 });
 
 function restoreDismiss() {
-  releaseGuardCleanup();
+  releaseDocument.value = null;
   store.context.outsidePressEnabledRef.value = true;
 }
 

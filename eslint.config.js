@@ -41,6 +41,10 @@ const MESSAGES = {
     'A server render has no DOM, and an element can live in an iframe. Use `ownerDocument(element)` and `ownerWindow(element)`.',
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
+  releaseFunction:
+    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`, or return it from `useDomEffect`. See "What differs from the React source" in CONTRIBUTING.md.',
+  heldCopy:
+    'A copy of `isHeld` can differ from its source. Give `isHeld` to the watcher as a source.',
   staleRootNode:
     'A root node that a watcher, a hook, a `computed` or a `useDomEffect` effect reads is stale after `Teleport` moves the element. Use `observeRootNode` or `followRootNode` of `src/internals`, or read the root node at the time of the event.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
@@ -299,7 +303,25 @@ const RESTRICTED_TEST_SYNTAX = [
   },
 ];
 
+const LET_TYPE =
+  "VariableDeclaration[kind='let'] > VariableDeclarator:not([init.name='NOOP']) > Identifier.id > TSTypeAnnotation";
+const VOID_FUNCTION = "TSFunctionType[returnType.typeAnnotation.type='TSVoidKeyword']";
+
 const RESTRICTED_SYNTAX = [
+  {
+    selector: `${LET_TYPE} > ${VOID_FUNCTION}, ${LET_TYPE} > TSUnionType > ${VOID_FUNCTION}`,
+    message: MESSAGES.releaseFunction,
+  },
+  {
+    selector:
+      "VariableDeclaration[kind='let'] > VariableDeclarator[init.type='Identifier'][init.name='NOOP']",
+    message: MESSAGES.releaseFunction,
+  },
+  {
+    selector:
+      "VariableDeclaration[kind='let'] > VariableDeclarator > MemberExpression.init[object.name='isHeld']:matches([computed=false][property.name='value'], [computed=true][property.value='value'])",
+    message: MESSAGES.heldCopy,
+  },
   {
     selector:
       "CallExpression[callee.name=/^(?:watch|watchEffect|watchPostEffect|watchSyncEffect|onBeforeMount|onMounted|onBeforeUpdate|onUpdated|onActivated|computed|useDomEffect)$/] CallExpression[callee.property.name='getRootNode']",

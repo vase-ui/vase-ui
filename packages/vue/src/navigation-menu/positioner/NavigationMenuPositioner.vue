@@ -38,16 +38,15 @@ export interface NavigationMenuPositionerProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
-import { NOOP } from '../../common/empty';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerWindow } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
 import {
   disableFocusInside,
@@ -149,14 +148,8 @@ function handleResize() {
   });
 }
 
-let removeResizeListener = NOOP;
-const { isHeld } = useKeepAliveState();
-
-function listenToResize() {
-  removeResizeListener();
-  removeResizeListener = NOOP;
-
-  if (!open.value || isHeld.value) {
+useDomEffect([open, positionerElement], () => {
+  if (!open.value) {
     return;
   }
 
@@ -170,18 +163,8 @@ function listenToResize() {
     });
   }
 
-  removeResizeListener = addEventListener(
-    ownerWindow(positionerElement.value),
-    'resize',
-    handleResize,
-  );
-}
-
-onMounted(listenToResize);
-watch([open, positionerElement], listenToResize, { flush: 'post' });
-onScopeDispose(() => removeResizeListener());
-
-watch(isHeld, listenToResize, { flush: 'sync' });
+  return addEventListener(ownerWindow(positionerElement.value), 'resize', handleResize);
+});
 
 // https://codesandbox.io/s/tabbable-portal-f4tng?file=/src/TabbablePortal.tsx
 watch(
