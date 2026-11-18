@@ -122,6 +122,30 @@ describe('useControlled', () => {
     expect(model.value).toBe(last);
   });
 
+  it('VUE-141: keeps a ref default intact when the parent releases a ref value', async () => {
+    const initial = shallowRef('initial');
+    const last = shallowRef('last');
+    const prop = shallowRef<typeof initial>();
+    let model!: WritableComputedRef<typeof initial>;
+    const Part = defineComponent(() => {
+      model = useControlled({
+        controlled: () => prop.value,
+        default: () => initial,
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
+
+    expect(model.value).toBe(initial);
+    prop.value = last;
+    prop.value = undefined;
+    expect(model.value).toBe(last);
+    model.value = shallowRef('local');
+    expect(initial.value).toBe('initial');
+    expect(last.value).toBe('last');
+  });
+
   describe('prop: defaultValue', () => {
     it('stores a function default value instead of calling it', async () => {
       const defaultValue = () => 'called';

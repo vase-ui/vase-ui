@@ -30,7 +30,9 @@ export function useControlled<T = unknown>(
 export function useControlled<T = unknown>(
   props: UseControlledProps<T>,
 ): WritableComputedRef<T | undefined> {
-  const local = shallowRef(useControlledDefault(props));
+  // Calling shallowRef with a ref as the default would reuse the caller's ref for local writes.
+  const local = shallowRef<T>();
+  local.value = useControlledDefault(props);
   const parent = computed(props.controlled);
   // A local write can follow the release of the prop in the same task.
   watch(
