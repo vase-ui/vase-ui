@@ -1037,16 +1037,17 @@ function resetGesture() {
 }
 
 watch(open, resetGesture, { flush: 'sync' });
-watch(
-  popupRef,
-  (popup) => {
-    if (popup && gesturePopup && popup !== gesturePopup && viewportGesture.value === gesture) {
-      clearSwipeRelease();
-      swipe.reset();
-    }
-  },
-  { flush: 'sync' },
-);
+watch([popupRef, store.context.keptPopupRef], ([popup, keptPopup]) => {
+  // A held popup keeps its element. An unmounted popup can still release through the viewport.
+  if (
+    viewportGesture.value === gesture &&
+    gesturePopup &&
+    (popup ? popup !== gesturePopup : keptPopup === gesturePopup)
+  ) {
+    clearSwipeRelease();
+    swipe.reset();
+  }
+});
 
 const gesture: DrawerViewportContext = {
   swiping: swipe.swiping,

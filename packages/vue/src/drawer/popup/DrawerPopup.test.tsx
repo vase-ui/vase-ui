@@ -913,6 +913,13 @@ describe('<Drawer.Popup />', () => {
   });
 
   describe('swipe', () => {
+    const pointer = { pointerType: 'mouse', pointerId: 1, buttons: 1, clientX: 5 };
+    async function dragPopup(popup: HTMLElement, distance: number) {
+      await firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 });
+      await firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 });
+      await firePointer.move(popup, { ...pointer, clientY: 6 + distance, timeStamp: 120 });
+    }
+
     it('keeps the drag over the transform of the consumer when the popup renders during a swipe', async () => {
       const label = shallowRef('first');
       await render(() => (
@@ -963,6 +970,40 @@ describe('<Drawer.Popup />', () => {
       });
     });
 
+    it('ends the drag when only the popup enters a hold', async () => {
+      const shown = shallowRef(true);
+      await render(() => (
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal keepMounted>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport>
+              <KeepAlive>
+                {shown.value && (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    style={{ position: 'fixed', inset: 0, height: '100px' }}
+                  />
+                )}
+              </KeepAlive>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ));
+      const popup = screen.getByTestId('popup');
+      const backdrop = screen.getByTestId('backdrop');
+      await dragPopup(popup, 50);
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+
+      shown.value = false;
+      await flushMicrotasks();
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+      expect(backdrop).not.toHaveAttribute('data-swiping');
+      shown.value = true;
+      await flushMicrotasks();
+      expect(screen.getByTestId('popup')).toBe(popup);
+      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    });
+
     it('VUE-139: drops a release sample when the popup changes before the next frame', async () => {
       const key = shallowRef(0);
       await render(() => (
@@ -984,10 +1025,7 @@ describe('<Drawer.Popup />', () => {
 
       const popup = screen.getByTestId('popup');
       const backdrop = screen.getByTestId('backdrop');
-      const pointer = { pointerType: 'mouse', pointerId: 1, buttons: 1, clientX: 5 };
-      await firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 });
-      await firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 });
-      await firePointer.move(popup, { ...pointer, clientY: 66, timeStamp: 120 });
+      await dragPopup(popup, 60);
       await firePointer.up(popup, { ...pointer, buttons: 0, clientY: 66, timeStamp: 130 });
       expect(backdrop).toHaveAttribute('data-swipe-dismiss', '');
       expect(popup).toHaveAttribute('data-swipe-dismiss', '');
