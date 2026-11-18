@@ -5,7 +5,7 @@ import type { UseFieldValidationReturnValue } from '../field-root-context/FieldR
 import { NOOP } from '../noop';
 import { useKeepAliveState } from '../useKeepAliveState';
 
-/** A field validates its most recent input unless a group supplies its own inputs. */
+/** Validation uses this input when `registeredInputs` is empty. */
 export function createFieldInputRegistry(): Pick<
   UseFieldValidationReturnValue,
   'inputRef' | 'setFieldInput'
