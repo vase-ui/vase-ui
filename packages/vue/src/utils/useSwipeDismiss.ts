@@ -253,9 +253,20 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     onProgress?.(nextProgress, details);
   }
 
+  // Until Vue patches the drag styles, one flush can contain the whole gesture.
+  // A native transform in that flush would have no bound transform to clear it.
+  let dragStylesPatched = false;
+  watch(
+    swiping,
+    (active) => {
+      dragStylesPatched = active;
+    },
+    { flush: 'post' },
+  );
+
   function paintDragOffset() {
     const element = getElement();
-    if (!(toValue(options.trackDrag) ?? true) || !element) {
+    if (!dragStylesPatched || !(toValue(options.trackDrag) ?? true) || !element) {
       return;
     }
 
@@ -985,7 +996,7 @@ export interface UseSwipeDismissOptions {
    */
   ignoreSelectorWhenTouch?: MaybeRefOrGetter<boolean | undefined>;
   /**
-   * Whether the element follows the pointer. The first move sets the origin of a tracked drag.
+   * Whether the composable writes the drag transform and movement variables during a swipe.
    * @default true
    */
   trackDrag?: MaybeRefOrGetter<boolean | undefined>;

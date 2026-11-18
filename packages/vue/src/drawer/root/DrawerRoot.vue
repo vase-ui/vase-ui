@@ -352,6 +352,7 @@ const { store, payload, actions } = useRenderDialogRoot<Payload>('drawer', props
 const setOpen = store.setOpen as DrawerRootContext['setOpen'];
 
 provide(DrawerRootContext, {
+  dialogContext: store.context,
   setOpen,
   swipeDirection: computed(() => props.swipeDirection),
   openingSwipe,

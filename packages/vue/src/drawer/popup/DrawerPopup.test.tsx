@@ -996,6 +996,31 @@ describe('<Drawer.Popup />', () => {
       }
     });
 
+    it('clears the native transform when a drag ends before the first patch', async () => {
+      await render(
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup
+                data-testid="popup"
+                style={{ position: 'fixed', inset: 0, height: '100px' }}
+              />
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+      const popup = screen.getByTestId('popup');
+      await Promise.all([
+        firePointer.down(popup, { ...pointer, button: 0, clientY: 5, timeStamp: 1 }),
+        firePointer.move(popup, { ...pointer, clientY: 6, timeStamp: 20 }),
+        firePointer.move(popup, { ...pointer, clientY: 16, timeStamp: 120 }),
+        firePointer.up(popup, { ...pointer, buttons: 0, clientY: 16, timeStamp: 400 }),
+      ]);
+      expect(popup).not.toHaveAttribute('data-swiping');
+      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+      expect(popup.style.transform).toBe('');
+    });
+
     it('keeps the dismiss flags when the swipe uses the fallback threshold', async () => {
       await render(
         <Drawer.Root defaultOpen modal={false} snapPoints={['50%']}>
@@ -1052,6 +1077,40 @@ describe('<Drawer.Popup />', () => {
       await flushMicrotasks();
       expect(screen.getByTestId('popup')).toBe(popup);
       expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    });
+
+    it('restores the snap point if a rejected dismissal replaces the popup', async () => {
+      const key = shallowRef(0);
+      const snap = shallowRef<Drawer.Root.SnapPoint | null>('200px');
+      await render(() => (
+        <Drawer.Root
+          open
+          modal={false}
+          snapPoints={['100px', '200px']}
+          snapPoint={snap.value}
+          onSnapPointChange={(point) => (snap.value = point)}
+        >
+          <Drawer.Portal keepMounted>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport style={{ height: '200px' }}>
+              <Drawer.Popup
+                key={key.value}
+                data-testid="popup"
+                style={{ position: 'fixed', inset: 0, height: '200px' }}
+              />
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ));
+      const popup = screen.getByTestId('popup');
+      await dragPopup(popup, 160);
+      await firePointer.up(popup, { ...pointer, buttons: 0, clientY: 166, timeStamp: 130 });
+      expect(popup).toHaveAttribute('data-swipe-dismiss');
+      key.value += 1;
+      await nextTick();
+      expect(screen.getByTestId('popup')).not.toBe(popup);
+      expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swipe-dismiss');
+      expect(snap.value).toBe('200px');
     });
 
     it('VUE-139: drops a release sample when the popup changes before the next frame', async () => {

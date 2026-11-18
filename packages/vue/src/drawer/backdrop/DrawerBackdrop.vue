@@ -58,9 +58,13 @@ const state = computed<DrawerBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-const { viewportGesture, openingSwipe } = useDrawerRootContext();
+const root = useDrawerRootContext(true);
+// A nested dialog can have a drawer ancestor and its own backdrop.
+const drawer = root?.dialogContext === store.context ? root : undefined;
+const viewportGesture = drawer?.viewportGesture;
+const openingSwipe = drawer?.openingSwipe;
 const height = computed(
-  () => openingSwipe.value?.height.value ?? viewportGesture.value?.height.value ?? 0,
+  () => openingSwipe?.value?.height.value ?? viewportGesture?.value?.height.value ?? 0,
 );
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
@@ -71,8 +75,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     {
       role: 'presentation',
       [DrawerPopupDataAttributes.swiping]:
-        openingSwipe.value || viewportGesture.value?.swiping.value ? '' : undefined,
-      [DrawerPopupDataAttributes.swipeDismiss]: viewportGesture.value?.release.value
+        openingSwipe?.value || viewportGesture?.value?.swiping.value ? '' : undefined,
+      [DrawerPopupDataAttributes.swipeDismiss]: viewportGesture?.value?.release.value
         ? ''
         : undefined,
       hidden: mounted.value ? undefined : true,
@@ -81,9 +85,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         'user-select': 'none',
         '-webkit-user-select': 'none',
         [DrawerBackdropCssVars.swipeProgress]:
-          openingSwipe.value?.progress ?? viewportGesture.value?.getProgress() ?? 0,
+          openingSwipe?.value?.progress ?? viewportGesture?.value?.getProgress() ?? 0,
         [DrawerPopupCssVars.height]: height.value > 0 ? `${height.value}px` : undefined,
-        [DrawerPopupCssVars.swipeStrength]: viewportGesture.value?.release.value?.strength ?? 1,
+        [DrawerPopupCssVars.swipeStrength]: viewportGesture?.value?.release.value?.strength ?? 1,
       },
     },
     attrs,

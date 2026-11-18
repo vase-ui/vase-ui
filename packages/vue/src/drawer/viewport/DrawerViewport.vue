@@ -337,7 +337,8 @@ let backdropProgress = 0;
 const backdropHeight = shallowRef(0);
 let gesturePopup: HTMLElement | null = null;
 
-let pendingSwipeCloseSnapPoint: DrawerSnapPoint | null | undefined;
+let pendingSnapPoint:
+  { value: DrawerSnapPoint | null; event: PointerEvent | TouchEvent } | undefined;
 const controlledDismissFrame = useAnimationFrame();
 
 let nestedSwipeActive = false;
@@ -400,6 +401,11 @@ function clearSwipeRelease() {
   controlledDismissFrame.cancel();
   gesturePopup = null;
   swipeRelease.value = null;
+  const pending = pendingSnapPoint;
+  pendingSnapPoint = undefined;
+  if (pending && open.value) {
+    setActiveSnapPoint(pending.value, createChangeEventDetails(REASONS.swipe, pending.event));
+  }
 }
 
 function finishNestedSwipe() {
@@ -766,12 +772,13 @@ const swipe = useSwipeDismiss({
       if (!direction) {
         return settleOnSnapPoint(fallbackSnapPoint);
       }
+      const previous = activeSnapPoint.value;
       setActiveSnapPoint(null, snapPointEventDetails);
       if (snapPointEventDetails.isCanceled) {
         // A canceled null snap point rejects dismissal before exit styles start.
         return settleInPlace();
       }
-      pendingSwipeCloseSnapPoint = activeSnapPoint.value;
+      pendingSnapPoint = { value: previous, event };
       startSwipeRelease(swipeDirection.value);
       return true;
     };
@@ -853,48 +860,22 @@ const swipe = useSwipeDismiss({
     setOpen(false, dismissEventDetails);
 
     if (dismissEventDetails.isCanceled) {
-      const pendingSnapPoint = pendingSwipeCloseSnapPoint;
-      if (pendingSnapPoint !== undefined) {
-        setActiveSnapPoint(pendingSnapPoint, createChangeEventDetails(REASONS.swipe, event));
-      }
-
-      pendingSwipeCloseSnapPoint = undefined;
       swipe.reset();
       clearSwipeRelease();
       return;
     }
 
-    // In controlled mode, the effective open state may not have changed yet
-    // (openProp takes precedence over state.open). Proceed optimistically with the
-    // dismiss animation — Vue flushes the parent's update before the next animation frame, so we
-    // can reliably check whether the parent accepted or rejected the close.
-    // Note: if openChange is asynchronous (e.g., closes the drawer after a network
-    // call), the frame check will see open === true, revert the animation, and the
-    // drawer will close without animation when the parent eventually sets open to false.
+    // The parent's update reaches the controlled prop before the next frame.
     if (store.select('open')) {
-      const savedEvent = event;
       controlledDismissFrame.request(() => {
         if (store.select('open')) {
-          // Parent rejected: revert animation and restore snap point.
-          const pendingSnapPoint = pendingSwipeCloseSnapPoint;
-          if (pendingSnapPoint !== undefined) {
-            setActiveSnapPoint(
-              pendingSnapPoint,
-              createChangeEventDetails(REASONS.swipe, savedEvent),
-            );
-          }
-          pendingSwipeCloseSnapPoint = undefined;
           clearSwipeRelease();
           swipe.reset();
-        } else {
-          // Parent accepted: clean up the ref.
-          pendingSwipeCloseSnapPoint = undefined;
         }
       });
-      return;
+    } else {
+      pendingSnapPoint = undefined;
     }
-
-    pendingSwipeCloseSnapPoint = undefined;
   },
 });
 
@@ -1032,6 +1013,8 @@ if (notifyParentSwipeProgressChange) {
 
 function resetGesture() {
   if (!open.value && swipeRelease.value) {
+    pendingSnapPoint = undefined;
+    controlledDismissFrame.cancel();
     return;
   }
 
@@ -1040,6 +1023,7 @@ function resetGesture() {
 }
 
 watch(open, resetGesture, { flush: 'sync' });
+
 function cancelPopupGesture() {
   clearSwipeRelease();
   swipe.reset();
