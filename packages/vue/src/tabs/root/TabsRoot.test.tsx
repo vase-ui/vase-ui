@@ -1173,6 +1173,43 @@ describe('<Tabs.Root />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('initial');
     });
 
+    it('keeps a parent selection on release without an initial change event', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root value="b" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+            <Tabs.Tab value="b">B</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+
+      await setProps({ value: undefined });
+      expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('selects an enabled tab after release even if the disabled tab matches the default', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root value="b" defaultValue="b" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+            <Tabs.Tab value="b" disabled>
+              B
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+      expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
+      await setProps({ value: undefined });
+      expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        'a',
+        expect.objectContaining({ reason: 'disabled' }),
+      );
+    });
+
     it('selects a fallback for a missing tab only after the parent releases the value', async () => {
       const onValueChange = vi.fn();
       const { setProps } = await render(

@@ -295,6 +295,8 @@ function commitAutomaticValueChange(
 // A controlled root keeps the exact value of the parent, also when that tab is disabled or missing.
 function run() {
   if (isControlled.value) {
+    shouldNotifyInitialValueChange = false;
+    shouldHonorDisabledDefaultValue = false;
     return;
   }
 
