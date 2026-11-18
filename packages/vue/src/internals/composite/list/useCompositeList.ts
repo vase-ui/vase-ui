@@ -207,13 +207,6 @@ function getCompositeListSnapshot<Metadata>(
   const automaticItems: CompositeListItem<Metadata>[] = [];
 
   registrations.forEach((registration, node) => {
-    // An element that left the document outside Vue stays registered, because no ref callback runs.
-    // `compareDocumentPosition` has no meaning for it, and it would scramble the order of the
-    // other items.
-    if (!node.isConnected) {
-      return;
-    }
-
     const explicitIndex = toValue(registration.index);
     const item: CompositeListItem<Metadata> = {
       index: explicitIndex ?? -1,
@@ -224,6 +217,11 @@ function getCompositeListSnapshot<Metadata>(
       label: toValue(registration.label),
       textElement: toValue(registration.textRef),
     };
+
+    // A DOM removal outside Vue preserves the registration. Its next change can reveal a reattached item.
+    if (!node.isConnected) {
+      return;
+    }
 
     if (explicitIndex == null) {
       automaticItems.push(item);

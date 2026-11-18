@@ -967,6 +967,30 @@ describe('<CompositeList />', () => {
   });
 
   describe('prop: labelsRef', () => {
+    it('reads a new label after an item returns to the document outside Vue', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
+      const label = shallowRef('before');
+      await render(() => (
+        <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
+          <div data-testid="parent">
+            <CompositeListItemPart data-testid="item" label={label.value} />
+          </div>
+        </CompositeList>
+      ));
+      const item = screen.getByTestId('item');
+      item.remove();
+      label.value = 'detached';
+      await flushMicrotasks();
+      expect(labelsRef.value).toEqual([]);
+
+      screen.getByTestId('parent').append(item);
+      label.value = 'after';
+      await flushMicrotasks();
+      expect(elementsRef.value).toEqual([item]);
+      expect(labelsRef.value).toEqual(['after']);
+    });
+
     const LabelledItem = defineComponent(
       (props: { testId: string; label?: string | null; text?: string; useTextRef?: boolean }) => {
         const textRef = shallowRef<HTMLElement | null>(null);
