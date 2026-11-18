@@ -364,14 +364,24 @@ describe('VUE-81: a render before the page show', () => {
   });
 
   it.each([
-    { name: 'Field.Control', Part: Field.Control, Root: Field.Root },
-    { name: 'Toolbar.Input', Part: Toolbar.Input, Root: Toolbar.Root },
-  ])('starts a replacement $name with its own value', async ({ Part, Root }) => {
+    {
+      name: 'Field.Control',
+      Part: Field.Control,
+      Root: Field.Root,
+      valueProps: { modelValue: 'model' },
+    },
+    {
+      name: 'Toolbar.Input',
+      Part: Toolbar.Input,
+      Root: Toolbar.Root,
+      valueProps: { value: 'model' },
+    },
+  ])('starts a replacement $name with its own value', async ({ Part, Root, valueProps }) => {
     mockPageBeforeLoad();
     const tag = shallowRef<'input' | 'textarea'>('input');
     const { container } = await render(() => (
       <Root>
-        <Part as={tag.value} aria-label="controlled" value="model" />
+        <Part as={tag.value} aria-label="controlled" {...valueProps} />
         <Part as={tag.value} aria-label="uncontrolled" defaultValue="default" />
       </Root>
     ));
