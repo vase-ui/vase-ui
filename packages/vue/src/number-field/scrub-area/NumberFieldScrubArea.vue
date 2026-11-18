@@ -117,7 +117,9 @@ const {
 let didMove = false;
 let pointerDownTarget: EventTarget | null = null;
 let nativeClickReceived = false;
-let virtualCursorCoords = { x: 0, y: 0 };
+let pointerX = 0;
+let pointerY = 0;
+let activePress: PointerEvent | null = null;
 
 let cursor: ScrubCursor | null = null;
 
@@ -129,69 +131,26 @@ const isPointerLockDenied = shallowRef(false);
 const isScrubbing = shallowRef(false);
 
 function onScrub({ movementX, movementY }: PointerEvent) {
-  const target = cursor;
-  const scrubAreaEl = element.value;
+  pointerX = Math.round(pointerX + movementX);
+  pointerY = Math.round(pointerY + movementY);
+  const area = element.value;
+  if (!cursor || !area) return;
 
-  if (!target || !scrubAreaEl) {
-    return;
-  }
-
-  const virtualCursor = target.element;
-  const rect = getViewportRect(props.teleportDistance, scrubAreaEl);
-
-  const coords = virtualCursorCoords;
-
-  // Wrap the cursor to the opposite edge when its center crosses a viewport bound.
-  const wrap = (coord: number, halfSize: number, low: number, high: number) => {
-    if (coord + halfSize < low) {
-      return high - halfSize;
-    }
-    if (coord + halfSize > high) {
-      return low - halfSize;
-    }
-    return coord;
+  const rect = getViewportRect(props.teleportDistance, area);
+  const wrap = (position: number, low: number, high: number) => {
+    if (position < low) return high;
+    if (position > high) return low;
+    return position;
   };
-
-  const newCoords = {
-    x: wrap(Math.round(coords.x + movementX), virtualCursor.offsetWidth / 2, rect.left, rect.right),
-    y: wrap(
-      Math.round(coords.y + movementY),
-      virtualCursor.offsetHeight / 2,
-      rect.top,
-      rect.bottom,
-    ),
-  };
-
-  virtualCursorCoords = newCoords;
-
-  target.place(newCoords.x, newCoords.y);
+  pointerX = wrap(pointerX, rect.left, rect.right);
+  pointerY = wrap(pointerY, rect.top, rect.bottom);
+  cursor.place(pointerX, pointerY);
 }
 
-async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: PointerEvent) {
-  isScrubbing.value = scrubbingValue;
-  setRootScrubbing(scrubbingValue);
-
-  if (!scrubbingValue) {
-    return;
-  }
-
-  // The cursor mounts in the flush of the write above.
-  await nextTick();
-
-  const target = cursor;
-  if (!target) {
-    return;
-  }
-
-  const virtualCursor = target.element;
-  const initialCoords = {
-    x: clientX - virtualCursor.offsetWidth / 2,
-    y: clientY - virtualCursor.offsetHeight / 2,
-  };
-
-  virtualCursorCoords = initialCoords;
-
-  target.place(initialCoords.x, initialCoords.y);
+function setScrubbing(value: boolean) {
+  if (!value) activePress = null;
+  isScrubbing.value = value;
+  setRootScrubbing(value);
 }
 
 // A move or release can follow the press in the same task.
@@ -205,8 +164,9 @@ watch(
     () => props.pixelSensitivity,
   ],
   ([scrubbing, disabled, readOnly], _, onCleanup) => {
-    // Only listen while actively scrubbing; avoids unrelated pointerup events committing.
-    if (!inputRef.value || disabled || readOnly || !scrubbing) {
+    if (!scrubbing) return;
+    if (disabled || readOnly) {
+      cancelScrub();
       return;
     }
 
@@ -219,8 +179,10 @@ watch(
         } catch {
           // Ignore errors.
         } finally {
-          onScrubbingChange(false, event);
-          onValueCommitted(getStepCommitValue(), createGenericEventDetails(REASONS.scrub, event));
+          setScrubbing(false);
+          if (inputRef.value) {
+            onValueCommitted(getStepCommitValue(), createGenericEventDetails(REASONS.scrub, event));
+          }
 
           // Dispatch a click if no movement happened. While the pointer is locked, the
           // browser targets its click at the lock element instead of the scrub area.
@@ -263,6 +225,7 @@ watch(
       event.preventDefault();
 
       onScrub(event);
+      if (!inputRef.value) return;
 
       const { movementX, movementY } = event;
 
@@ -286,10 +249,10 @@ watch(
       }
     }
 
-    const win = ownerWindow(inputRef.value);
+    const win = ownerWindow(element.value);
     onCleanup(addEventListener(win, 'pointerup', handleScrubPointerUp, true));
     onCleanup(addEventListener(win, 'pointermove', handleScrubPointerMove, true));
-    onCleanup(() => exitPointerLockTimeout.clear());
+    onCleanup(addEventListener(win, 'pointercancel', cancelScrub, true));
   },
   { flush: 'sync' },
 );
@@ -300,8 +263,8 @@ function cancelScrub() {
   if (!isScrubbing.value) {
     return;
   }
-  isScrubbing.value = false;
-  setRootScrubbing(false);
+  exitPointerLockTimeout.clear();
+  setScrubbing(false);
   try {
     ownerDocument(element.value).exitPointerLock();
   } catch {
@@ -348,25 +311,21 @@ async function onPointerdown(event: PointerEvent) {
 
   didMove = false;
   nativeClickReceived = false;
+  exitPointerLockTimeout.clear();
   syntheticClickTimeout.clear();
   pointerDownTarget = getTarget(event);
-  onScrubbingChange(true, event);
+  pointerX = event.clientX;
+  pointerY = event.clientY;
+  activePress = event;
+  setScrubbing(true);
 
   // WebKit causes significant layout shift with the native message, so we can't use it.
   if (!isTouch && !platform.engine.webkit) {
     try {
-      // Avoid non-deterministic errors in testing environments. This error sometimes
-      // appears:
-      // "The root document of this element is not valid for pointer lock."
       await ownerDocument(element.value).body.requestPointerLock();
-      isPointerLockDenied.value = false;
+      if (activePress === event) isPointerLockDenied.value = false;
     } catch {
-      isPointerLockDenied.value = true;
-    } finally {
-      // Place the cursor again for the result of the pointer lock request.
-      if (isScrubbing.value) {
-        onScrubbingChange(true, event);
-      }
+      if (activePress === event) isPointerLockDenied.value = true;
     }
   }
 }
@@ -393,8 +352,15 @@ provide(NumberFieldScrubAreaContext, {
   isTouchInput,
   isPointerLockDenied,
   setCursor(element, place) {
-    if (element) cursor = { element, place };
-    else if (cursor?.place === place) cursor = null;
+    if (element) {
+      cursor = { element, place };
+      // Vue sets the measurement ref in the same patch as the cursor.
+      void nextTick(() => {
+        if (cursor?.element === element) place(pointerX, pointerY);
+      });
+    } else if (cursor?.place === place) {
+      cursor = null;
+    }
   },
   scrubAreaElement: element,
 });

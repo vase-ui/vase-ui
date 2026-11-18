@@ -75,22 +75,18 @@ const shouldRender = computed(
 );
 
 const portal = useTemplateRef<HTMLElement>('portal');
+// A measurement box in the document changes structural selectors between pointer samples.
+const probeHost = computed(() => ownerDocument(scrubAreaElement.value).createDocumentFragment());
 const probe = useTemplateRef<HTMLDivElement>('probe');
 let transform: string | undefined;
 
 function measureBlock(node: HTMLSpanElement, box: HTMLDivElement) {
-  const home = box.parentNode;
-  if (!home || (node.parentNode === portal.value && portal.value?.parentNode === home)) {
-    return box.getBoundingClientRect();
-  }
-
-  // A permanent sibling changes :only-child styles in a custom slot.
   const next = box.nextSibling;
   node.before(box);
   try {
     return box.getBoundingClientRect();
   } finally {
-    home.insertBefore(box, next);
+    probeHost.value.insertBefore(box, next);
   }
 }
 
@@ -103,8 +99,8 @@ function place(x: number, y: number) {
   const halfWidth = node.offsetWidth / 2;
   const halfHeight = node.offsetHeight / 2;
   const bounds = measureBlock(node, box);
-  const blockX = ((x + halfWidth - bounds.left) * 100) / bounds.width - halfWidth;
-  const blockY = ((y + halfHeight - bounds.top) * 100) / bounds.height - halfHeight;
+  const blockX = ((x - bounds.left) * 100) / bounds.width - halfWidth;
+  const blockY = ((y - bounds.top) * 100) / bounds.height - halfHeight;
   const scale = ownerWindow(node).visualViewport?.scale ?? 1;
   transform = `translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`;
   // A bound transform exceeded the frame budget during a scrub.
@@ -138,7 +134,7 @@ defineExpose({ element });
       <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
         <slot :state="state" />
       </component>
-      <Teleport :to="getContainer()">
+      <Teleport :to="probeHost">
         <div
           ref="probe"
           aria-hidden="true"

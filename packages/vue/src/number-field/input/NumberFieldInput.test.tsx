@@ -2114,6 +2114,24 @@ describe('<NumberField.Input />', () => {
   });
 
   describe('consumer-prevented defaults', () => {
+    it('ignores canceled native focus events', async () => {
+      await render(
+        <Field.Root data-testid="field">
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+      const field = screen.getByTestId('field');
+      for (const type of ['focusin', 'focusout']) {
+        const event = new FocusEvent(type, { bubbles: true, cancelable: true });
+        event.preventDefault();
+        await fireEvent(screen.getByRole('textbox'), event);
+        expect(field).not.toHaveAttribute('data-focused');
+      }
+      expect(field).not.toHaveAttribute('data-touched');
+    });
+
     it('does not mark the field focused when the focus default is prevented', async () => {
       await render(
         <Field.Root data-testid="field">
@@ -2421,16 +2439,20 @@ describe('<NumberField.Input />', () => {
   describe('a composition', () => {
     it('keeps refused composition text until the final input', async () => {
       const onValueChange = vi.fn();
-      await render(
+      const label = shallowRef('Amount');
+      await render(() => (
         <NumberField.Root defaultValue={1} onValueChange={onValueChange}>
-          <NumberField.Input />
-        </NumberField.Root>,
-      );
+          <NumberField.Input aria-label={label.value} />
+        </NumberField.Root>
+      ));
       const input = screen.getByRole<HTMLInputElement>('textbox');
       input.focus();
       await fireEvent.compositionStart(input);
       input.value = 'あ';
       await fireEvent(input, new InputEvent('input', { bubbles: true, isComposing: true }));
+      label.value = 'Total';
+      await flushMicrotasks();
+      expect(input).toHaveAccessibleName('Total');
       expect(input).toHaveValue('あ');
       expect(getHiddenInput()).toHaveValue(1);
       expect(onValueChange).not.toHaveBeenCalled();

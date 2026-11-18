@@ -19,7 +19,7 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, watch } from 'vue';
+import { computed, nextTick, shallowRef, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrated, useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
@@ -214,9 +214,8 @@ useValueChanged(
   },
 );
 
-function handleFocusin() {
-  // Read-only inputs are still focusable; only the value-changing handlers stay gated on it.
-  if (state.value.disabled) {
+function handleFocusin(event: FocusEvent) {
+  if (event.defaultPrevented || state.value.disabled) {
     return;
   }
 
@@ -225,7 +224,7 @@ function handleFocusin() {
 
 function handleFocusout(event: FocusEvent) {
   const { disabled, readOnly, value, inputValue } = state.value;
-  if (disabled) {
+  if (event.defaultPrevented || disabled) {
     return;
   }
 
@@ -307,21 +306,25 @@ function handleFocusout(event: FocusEvent) {
   setInputValue(formatNumber(committedValue, locale.value, formatOptions));
 }
 
-// A write to the input while a composition runs stops the composition. The render then waits for
-// `compositionend`.
-function refuseChange(event: Event) {
-  if (!(event as InputEvent).isComposing) {
-    renderValue();
-  }
+// An unrelated patch must preserve the text that the IME is still editing.
+const composingText = shallowRef<string | null>(null);
+const compositionTimeout = useTimeout();
+
+function handleCompositionstart(event: CompositionEvent) {
+  compositionTimeout.clear();
+  composingText.value = (event.currentTarget as HTMLInputElement).value;
 }
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const targetValue = input.value;
+  if (composingText.value !== null || (event as InputEvent).isComposing) {
+    composingText.value = targetValue;
+  }
 
   // A listener of the consumer can prevent the event before this handler runs.
   if (event.defaultPrevented) {
-    refuseChange(event);
+    renderValue();
     return;
   }
 
@@ -347,7 +350,7 @@ function handleInput(event: Event) {
 
   // A rejected change leaves the synced text in place, so it doesn't count as a manual edit
   if (!isValidCharacterString) {
-    refuseChange(event);
+    renderValue();
     return;
   }
 
@@ -361,12 +364,11 @@ function handleInput(event: Event) {
   }
 }
 
-const compositionTimeout = useTimeout();
-
-// WebKit sends the last `input` event of a composition after `compositionend`, so the render waits
-// for the next task.
+// WebKit sends the final input after compositionend.
 function handleCompositionend() {
-  compositionTimeout.start(0, renderValue);
+  compositionTimeout.start(0, () => {
+    composingText.value = null;
+  });
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -552,7 +554,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        ...(writesValue.value ? valueProps(state.value.inputValue) : undefined),
+        ...(writesValue.value
+          ? valueProps(composingText.value ?? state.value.inputValue)
+          : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
@@ -565,6 +569,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onInput: handleInput,
         onKeydown: handleKeydown,
         onPaste: handlePaste,
+        onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         // Vue adds the listener with no `passive` option, so `preventDefault` stops the scroll of
         // the page.

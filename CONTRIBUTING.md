@@ -1615,7 +1615,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - For the rule of Vue for the millisecond of the attach and the focus listeners of a part, see [`useRenderElement` and `useRender`](#userenderelement-and-userender). `addInputFocusListeners` in `filter-dropdown/input/FilterDropdownInput.ts` adds the focus listeners of an input in the sync flush of its function ref. Its JSDoc gives the two reasons. `useFilterDropdownInput`, `Menu.Input` and `Combobox.Input` call it.
 - Measure frame work and parent and child renders when a gesture changes a style each frame. Compare the binding with a native write for the same slot content.
 - The drawer popup, backdrop and indent read the current gesture sample when they render. For a dismiss gesture, native writes to the popup transform start after Vue patches the drag styles.
-- `NumberField.ScrubAreaCursor` keeps its last transform for a render during a scrub. Vue owns one measurement box for the active cursor. Measure in the fixed containing block of the cursor. A custom slot keeps its child order between samples.
+- `NumberField.ScrubAreaCursor` keeps its last transform for a render during a scrub. Vue owns one measurement box for the active cursor. The box enters the cursor's parent only for a measurement. Slot and portal selectors keep their original matches between samples.
 
 #### Reconcile a native input
 
