@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { KeepAlive, Teleport, defineComponent, nextTick, onDeactivated, shallowRef } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { usePressAndHold } from './usePressAndHold';
 import type { UsePressAndHoldParameters } from './usePressAndHold';
@@ -111,6 +111,80 @@ describe('usePressAndHold', () => {
     expect(tick).toHaveBeenCalledTimes(ticks[1]);
 
     await fireEvent.pointerUp(button, { pointerType: 'touch' });
+  });
+
+  it('ignores a press on a teleported button while its owner is held', async () => {
+    const shown = shallowRef(true);
+    const tick = vi.fn(() => true);
+    const onStop = vi.fn();
+    const Hold = defineHoldButton({ startDelay: 100, tickDelay: 10, onStop }, tick);
+    const Branch = defineComponent(() => {
+      onDeactivated(() => {
+        button.dispatchEvent(
+          new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }),
+        );
+      });
+      return () => (
+        <Teleport to={document.body}>
+          <Hold />
+        </Teleport>
+      );
+    });
+    await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
+    const button = screen.getByRole('button');
+    shown.value = false;
+    await nextTick();
+    window.dispatchEvent(new PointerEvent('pointerup'));
+    await advance(110);
+    expect(tick).not.toHaveBeenCalled();
+    expect(onStop).not.toHaveBeenCalled();
+  });
+
+  it('ends touch tracking before a mouse press on the restored button', async () => {
+    const shown = shallowRef(true);
+    const tick = vi.fn(() => true);
+    const Hold = defineHoldButton({ startDelay: 100, tickDelay: 10 }, tick);
+    await render(() => <KeepAlive>{shown.value ? <Hold /> : null}</KeepAlive>);
+    const button = screen.getByRole('button');
+    await fireEvent.touchStart(button);
+    await fireEvent.pointerDown(button, { pointerType: 'touch' });
+    shown.value = false;
+    await nextTick();
+    shown.value = true;
+    await nextTick();
+    await fireEvent.pointerDown(button, { pointerType: 'mouse' });
+    await fireEvent.mouseLeave(button);
+    await advance(110);
+    expect(tick).toHaveBeenCalledOnce();
+    await fireEvent.pointerUp(button, { pointerType: 'mouse' });
+  });
+
+  it('VUE-143: stops repeating when the first tick releases the press', async () => {
+    const onStop = vi.fn();
+    const tick = vi.fn(() => {
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      return true;
+    });
+    const Hold = defineHoldButton({ startDelay: 100, tickDelay: 10, onStop }, tick);
+    await render(<Hold />);
+    await fireEvent.pointerDown(screen.getByRole('button'), { pointerType: 'mouse' });
+    await advance(110);
+    expect(onStop).toHaveBeenCalledOnce();
+    expect(tick).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the final release after a repeat boundary', async () => {
+    const onStop = vi.fn();
+    const tick = vi.fn(() => false);
+    const Hold = defineHoldButton({ onStop }, tick);
+    await render(<Hold />);
+    const button = screen.getByRole('button');
+    button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }));
+    const up = new PointerEvent('pointerup', { pointerType: 'mouse' });
+    window.dispatchEvent(up);
+    window.dispatchEvent(new PointerEvent('pointerup'));
+    expect(tick).toHaveBeenCalledOnce();
+    expect(onStop.mock.calls).toEqual([[up]]);
   });
 
   it('ignores a release after the pressed button unmounts', async () => {

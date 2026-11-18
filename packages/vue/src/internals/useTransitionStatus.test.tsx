@@ -1,8 +1,10 @@
 import { expect, describe, it, vi, afterEach } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, nextTick, onMounted, shallowRef } from 'vue';
+import type { Ref } from 'vue';
+import { EffectOwner } from '../../test/fixtures/effectOwner';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { AnimationFrame } from '../common/useAnimationFrame';
-import { useTransitionStatus } from './useTransitionStatus';
+import { useTransitionStatus, type TransitionStatus } from './useTransitionStatus';
 
 interface TestProps {
   open: boolean;
@@ -42,6 +44,65 @@ describe('useTransitionStatus', () => {
     });
     return frames;
   }
+
+  it('reads the patched enter style on reopen and keeps only the last frame', async () => {
+    const open = shallowRef(true);
+    const box = shallowRef<HTMLElement | null>(null);
+    let status: Readonly<Ref<TransitionStatus>>;
+    const frames = new Map<number, FrameRequestCallback>();
+    let id = 0;
+    vi.spyOn(AnimationFrame, 'request').mockImplementation((callback) => {
+      frames.set(++id, callback);
+      return id;
+    });
+    vi.spyOn(AnimationFrame, 'cancel').mockImplementation((key) => {
+      frames.delete(key);
+    });
+    const install = () => {
+      status = useTransitionStatus(open, true, false, false, box).transitionStatus;
+    };
+    const { unmount } = await render(() => (
+      <EffectOwner setupEffect={install}>
+        {() => <div ref={box} data-phase={status.value} />}
+      </EffectOwner>
+    ));
+    const element = box.value!;
+    const read = vi.spyOn(element, 'getBoundingClientRect');
+    const phases: (string | undefined)[] = [];
+    read.mockImplementation(() => {
+      phases.push(element.dataset.phase);
+      return new DOMRect();
+    });
+    for (const value of [false, true, false, true]) {
+      open.value = value;
+      await nextTick();
+    }
+    expect(phases).toEqual(['starting', 'starting']);
+    expect(frames.size).toBe(1);
+    unmount();
+    expect(frames.size).toBe(0);
+  });
+
+  it('clears the initial enter phase before the frame of the parent mount', async () => {
+    const frames = mockFrames();
+    let phase: Readonly<Ref<TransitionStatus>>;
+    const seen: TransitionStatus[] = [];
+    const Parent = defineComponent(() => {
+      onMounted(() => {
+        AnimationFrame.request(() => seen.push(phase.value));
+      });
+      return () => (
+        <EffectOwner
+          setupEffect={() => {
+            phase = useTransitionStatus(true, false, false, true).transitionStatus;
+          }}
+        />
+      );
+    });
+    await render(<Parent />);
+    frames.forEach((callback) => callback(0));
+    expect(seen).toEqual([undefined]);
+  });
 
   it('does not request a frame for an element that mounts already open', async () => {
     const requestSpy = vi.spyOn(AnimationFrame, 'request');

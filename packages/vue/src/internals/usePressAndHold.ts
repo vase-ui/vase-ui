@@ -1,9 +1,10 @@
-import { onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { ownerWindow } from '../common/owner';
-import { useInterval } from '../common/useInterval';
-import { useTimeout } from '../common/useTimeout';
+import { Interval } from '../common/useInterval';
+import { useListenerSession } from '../common/useListenerSession';
+import { Timeout, useTimeout } from '../common/useTimeout';
 import { useKeepAliveState } from './useKeepAliveState';
 
 const DEFAULT_TICK_DELAY = 60;
@@ -80,8 +81,6 @@ export interface UsePressAndHoldReturnValue {
 export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePressAndHoldReturnValue {
   const { tick, onStop, elementRef } = parameters;
 
-  const startTickTimeout = useTimeout();
-  const tickInterval = useInterval();
   const intentionalTouchCheckTimeout = useTimeout();
 
   let isPressed = false;
@@ -90,42 +89,9 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
   let isTouchingButton = false;
   let ignoreClick = false;
   let pointerType = '';
-  const autoChangeWindow = shallowRef<Window | null>(null);
-  const pressWindow = shallowRef<Window | null>(null);
-
-  // A touch just outside the element can open the context menu.
-  watch(
-    autoChangeWindow,
-    (win, _previous, onCleanup) => {
-      if (win) {
-        onCleanup(addEventListener(win, 'contextmenu', (event) => event.preventDefault()));
-      }
-    },
-    { flush: 'sync' },
-  );
-
-  // `stopAutoChange` keeps the release listener. A hold at a boundary still calls `onStop`.
-  watch(
-    pressWindow,
-    (win, _previous, onCleanup) => {
-      if (win) {
-        onCleanup(
-          addEventListener(
-            win,
-            'pointerup',
-            (event) => {
-              pressWindow.value = null;
-              isPressed = false;
-              stopAutoChange();
-              onStop?.(event);
-            },
-            { once: true },
-          ),
-        );
-      }
-    },
-    { flush: 'sync' },
-  );
+  const { isHeld } = useKeepAliveState();
+  const press = useListenerSession(isHeld);
+  const repeat = useListenerSession(isHeld);
 
   function isDisabled() {
     return toValue(parameters.disabled);
@@ -133,9 +99,7 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
 
   function stopAutoChange() {
     intentionalTouchCheckTimeout.clear();
-    startTickTimeout.clear();
-    tickInterval.clear();
-    autoChangeWindow.value = null;
+    repeat.stop();
     movesAfterTouch = 0;
   }
 
@@ -149,37 +113,54 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
 
     const win = ownerWindow(element);
 
-    autoChangeWindow.value = win;
-    pressWindow.value = win;
+    // A repeat boundary stops the timer. The final release still calls onStop.
+    press.start((onCleanup, end) => {
+      onCleanup(
+        addEventListener(
+          win,
+          'pointerup',
+          (event) => {
+            end();
+            isPressed = false;
+            stopAutoChange();
+            onStop?.(event);
+          },
+          { once: true },
+        ),
+      );
+    });
 
-    if (!tick(triggerNativeEvent)) {
-      stopAutoChange();
-      return;
-    }
-
-    startTickTimeout.start(toValue(parameters.startDelay) ?? DEFAULT_START_DELAY, () => {
-      tickInterval.start(toValue(parameters.tickDelay) ?? DEFAULT_TICK_DELAY, () => {
-        if (!tick(triggerNativeEvent)) {
-          stopAutoChange();
-        }
+    repeat.start((onCleanup, end) => {
+      const delay = Timeout.create();
+      const interval = Interval.create();
+      let active = true;
+      onCleanup(() => {
+        active = false;
+        delay.clear();
+        interval.clear();
       });
+      // A touch just outside the element can open the context menu.
+      onCleanup(addEventListener(win, 'contextmenu', (event) => event.preventDefault()));
+      const step = () => {
+        if (!tick(triggerNativeEvent)) end();
+      };
+      step();
+      // The first tick can release the press or start another one.
+      if (active) {
+        delay.start(toValue(parameters.startDelay) ?? DEFAULT_START_DELAY, () => {
+          interval.start(toValue(parameters.tickDelay) ?? DEFAULT_TICK_DELAY, step);
+        });
+      }
     });
   }
 
-  function release() {
-    isPressed = false;
-    stopAutoChange();
-    pressWindow.value = null;
-  }
-
-  onScopeDispose(release);
-  // `KeepAlive` takes the button out of the document and sends no `pointerup`.
-  const { isHeld } = useKeepAliveState();
   watch(
     isHeld,
     (held) => {
       if (held) {
-        release();
+        isPressed = false;
+        isTouchingButton = false;
+        stopAutoChange();
       }
     },
     { flush: 'sync' },
@@ -198,13 +179,13 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
     // The handler never calls `preventDefault`, so the listener is passive and does not delay a
     // scroll.
     onTouchstartPassive() {
-      isTouchingButton = true;
+      isTouchingButton = !isHeld.value;
     },
     onTouchend() {
       isTouchingButton = false;
     },
     onPointerdown(event) {
-      if (event.defaultPrevented || event.button || isDisabled()) {
+      if (event.defaultPrevented || event.button || isHeld.value || isDisabled()) {
         return;
       }
 

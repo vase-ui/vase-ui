@@ -80,6 +80,15 @@
     "src/common/shadowDom.test.ts": {
       "fails": {}
     },
+    "src/common/useListenerSession.test.tsx": {
+      "fails": {}
+    },
+    "src/common/useMutationObserver.test.tsx": {
+      "fails": {}
+    },
+    "src/common/useResizeObserver.test.tsx": {
+      "fails": {}
+    },
     "src/drawer/popup/DrawerPopup.test.tsx": {
       "fails": {
         "<Drawer.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -112,7 +121,13 @@
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },
+    "src/internals/useAnimationsFinished.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useFormReset.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useInitialLiveRegionTextMutation.test.tsx": {
       "fails": {}
     },
     "src/internals/useInputRender.test.tsx": {
@@ -121,7 +136,16 @@
     "src/internals/useItemRegistry.test.tsx": {
       "fails": {}
     },
+    "src/internals/useOpenChangeComplete.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/usePressAndHold.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useRenderElement.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useTransitionStatus.test.tsx": {
       "fails": {}
     },
     "src/internals/withoutPropsOf.test.ts": {
@@ -263,6 +287,12 @@
       "fails": {}
     },
     "src/utils/popups/interactions/hoverIntent.test.ts": {
+      "fails": {}
+    },
+    "src/utils/popups/useDomEffect.test.tsx": {
+      "fails": {}
+    },
+    "src/utils/popups/viewport/usePopupViewport.transitions.test.tsx": {
       "fails": {}
     },
     "src/utils/styles.test.tsx": {

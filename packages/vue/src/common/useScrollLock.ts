@@ -300,9 +300,7 @@ function lock(referenceElement: Element | null) {
   const body = doc.body;
   const win = ownerWindow(html);
 
-  // The page is already locked, either by the site author or by a non-Base UI overlay that
-  // hasn't cleaned up yet. Leave it alone and wait for the lock to clear before taking over,
-  // otherwise we'd snapshot the locked state and restore it after our own lock is released.
+  // Wait for the existing lock to clear so our release restores the page's unlocked styles.
   if (isPageScrollLocked(win, html, body)) {
     const observer = new win.MutationObserver(() => {
       if (isPageScrollLocked(win, html, body)) {

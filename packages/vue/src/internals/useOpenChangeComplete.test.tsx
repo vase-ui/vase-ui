@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, onMounted, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, waitFor } from '#test-utils';
+import { EffectOwner } from '../../test/fixtures/effectOwner';
 import { useOpenChangeComplete } from './useOpenChangeComplete';
 
 function createAnimation() {
@@ -86,6 +87,13 @@ describe('useOpenChangeComplete', () => {
       expect(onComplete).toHaveBeenCalledTimes(2);
     });
 
+    it('restarts when enabled changes from its default to true', async () => {
+      const onComplete = vi.fn();
+      const { setProps } = await render(<Test onComplete={onComplete} />);
+      await setProps({ enabled: true });
+      expect(onComplete).toHaveBeenCalledTimes(2);
+    });
+
     it('starts no wait while it is disabled, and starts one when it becomes enabled', async () => {
       const onComplete = vi.fn();
 
@@ -101,6 +109,45 @@ describe('useOpenChangeComplete', () => {
   describe('with animations enabled', () => {
     beforeEach(() => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    });
+
+    it('aborts an owned enter on disable and accepts a new restart key', async () => {
+      const starting = shallowRef(true);
+      const enabled = shallowRef(true);
+      const key = shallowRef(0);
+      const element = document.createElement('div');
+      const animation = createAnimation();
+      const read = vi.spyOn(element, 'getAnimations').mockReturnValue([animation.animation]);
+      const finish = vi.fn();
+      const { unmount } = await render(
+        <EffectOwner
+          setupEffect={() =>
+            useOpenChangeComplete({
+              ref: element,
+              open: true,
+              isStarting: () => starting.value,
+              enabled,
+              restartKey: key,
+              onComplete: finish,
+            })
+          }
+        />,
+      );
+      starting.value = false;
+      await flushMicrotasks();
+      expect(read).toHaveBeenCalledOnce();
+      enabled.value = false;
+      await flushMicrotasks();
+      animation.finish();
+      await flushMicrotasks();
+      expect(finish).not.toHaveBeenCalled();
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+      enabled.value = true;
+      await flushMicrotasks();
+      key.value++;
+      unmount();
+      await flushMicrotasks();
+      expect(finish).toHaveBeenCalledOnce();
     });
 
     it('stops the wait in progress when open changes', async () => {

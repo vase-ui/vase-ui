@@ -124,6 +124,7 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
   const previousContainerRef = shallowRef<HTMLElement | null>(null);
 
   const transitioning = computed(() => previousContent.value !== null);
+  const isStarting = computed(() => transitioning.value && showStartingStyle.value);
   // The key mounts the current container again when the trigger changes, and once more when the
   // payload comes later. The new content then never reuses the DOM of the old content.
   const currentContentKey = computed(
@@ -166,7 +167,6 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     }
 
     previousContent.value = takePicture(container);
-    showStartingStyle.value = true;
     // A trigger that `KeepAlive` holds is not on the page, so the change has no direction.
     triggerOffset.value =
       previousTrigger.isConnected && trigger.isConnected
@@ -198,17 +198,12 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
   );
 
   const cleanupFrame = useAnimationFrame();
-  const runOnceAnimationsFinish = useAnimationsFinished(() => currentContainerRef.value, true);
-
-  function armCleanup() {
-    cleanupController?.abort();
-    const controller = new AbortController();
-    cleanupController = controller;
-    runOnceAnimationsFinish(() => {
-      previousContent.value = null;
-      previousContentDimensions.value = null;
-    }, controller.signal);
-  }
+  const runOnceAnimationsFinish = useAnimationsFinished(
+    currentContainerRef,
+    true,
+    false,
+    () => isStarting.value,
+  );
 
   watch(
     [currentContentKey, previousContent],
@@ -222,10 +217,13 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
       currentContainerRef.value?.getBoundingClientRect();
 
       cleanupFrame.request(() => {
-        // Vue has no `flushSync`. It applies this write in the microtask after the callback, so
-        // the wait still sees the attribute and waits for its removal.
+        const controller = new AbortController();
+        cleanupController = controller;
+        runOnceAnimationsFinish(() => {
+          previousContent.value = null;
+          previousContentDimensions.value = null;
+        }, controller.signal);
         showStartingStyle.value = false;
-        armCleanup();
       });
     },
     { flush: 'post' },
@@ -302,7 +300,7 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
   provide(PopupViewportContext, {
     currentContentKey,
     transitioning,
-    showStartingStyle,
+    showStartingStyle: isStarting,
     previousContainerStyle,
     currentContainerRef,
     previousContainerRef,

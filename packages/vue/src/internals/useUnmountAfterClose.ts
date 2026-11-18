@@ -1,5 +1,5 @@
 import { computed, shallowRef, toValue, watch } from 'vue';
-import type { MaybeRefOrGetter, WatchSource } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { useOpenChangeComplete } from './useOpenChangeComplete';
 import { useTransitionStatus } from './useTransitionStatus';
 
@@ -7,7 +7,7 @@ export interface UseUnmountAfterCloseParameters {
   /**
    * Whether the popup is open.
    */
-  open: WatchSource<boolean>;
+  open: MaybeRefOrGetter<boolean>;
   /**
    * The element whose closing animations the composable awaits before it unmounts the popup, or a
    * ref or a getter for it.
@@ -37,11 +37,6 @@ export interface UseUnmountAfterCloseParameters {
 /**
  * Keeps a popup mounted through its closing animation and unmounts it once the animation
  * finishes, unless the close cycle opted out through `preventUnmountOnClose`.
- * Store-agnostic: hosts sync `mounted` and `transitionStatus` wherever they need them.
- *
- * `mounted` changes in the write, so the composable has no counterpart of `mountedRef` of Base UI.
- * The element is a ref or a getter, so the composable has no counterpart of `subscribeToAttach`
- * either.
  *
  * @returns `forceUnmount` unmounts the popup immediately. It is a no-op once the popup is already
  *   unmounted, so calling it after the automatic unmount doesn't repeat the completion callback.

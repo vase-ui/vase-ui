@@ -28,11 +28,6 @@ import { PopupStyleContext } from './PopupViewportContext';
 export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   const { onMeasureLayout, onMeasureLayoutComplete } = parameters;
 
-  const runOnceAnimationsFinish = useAnimationsFinished(
-    () => toValue(parameters.popupElement),
-    true,
-  );
-
   const animationFrame = useAnimationFrame();
 
   let committedDimensions: Dimensions | null = null;
@@ -43,16 +38,21 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
     ready.value = true;
   });
 
+  const readPopup = () => toValue(parameters.popupElement);
+  const readPositioner = () => toValue(parameters.positionerElement);
+  const readContent = () => toValue(parameters.content);
+  const runOnceAnimationsFinish = useAnimationsFinished(readPopup, true);
+  const readMounted = () => toValue(parameters.mounted);
   const anchoringStyles = computed(() =>
     getPopupAnchoringStyles(toValue(parameters.side), toValue(parameters.direction)),
   );
   const readPopupStyle = inject(PopupStyleContext, undefined);
   // An ancestor's deactivation hook reads the detached popup before Vue can patch its style.
   useDomEffect(
-    [() => toValue(parameters.popupElement), () => toValue(parameters.mounted), anchoringStyles],
+    [readPopup, readMounted, anchoringStyles],
     () => {
-      const popup = toValue(parameters.popupElement);
-      if (!popup || !toValue(parameters.mounted)) {
+      const popup = readPopup();
+      if (!popup || !readMounted()) {
         return undefined;
       }
       const anchors = Object.entries(anchoringStyles.value);
@@ -76,17 +76,11 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   );
   const popupSize = shallowRef<Dimensions | 'auto' | null>(null);
   const positionerSize = shallowRef<Dimensions | null>(null);
-  const active = computed(() => ready.value && !isHeld.value && toValue(parameters.mounted));
+  const active = computed(() => ready.value && !isHeld.value && readMounted());
   watch(
-    [
-      active,
-      () => toValue(parameters.popupElement),
-      () => toValue(parameters.positionerElement),
-      () => toValue(parameters.content),
-      anchoringStyles,
-    ],
+    [active, readPopup, readPositioner, readContent, anchoringStyles],
     ([shown, popup, positioner], _, onCleanup) => {
-      if (!toValue(parameters.mounted)) {
+      if (!readMounted()) {
         committedDimensions = null;
       }
       if (!shown || !popup?.isConnected || !positioner) {
