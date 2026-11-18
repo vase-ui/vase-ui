@@ -164,6 +164,7 @@ const {
   setHovering,
   touchModality,
   handleScroll,
+  finishPressFor,
   press,
   viewportState: state,
 } = useScrollAreaRootContext();
@@ -517,6 +518,7 @@ watch(
   isHeld,
   (held) => {
     if (held) {
+      finishPressFor(element.value);
       scrollEndTimeout.clear();
       // The timer that was cleared would have set the flag.
       programmaticScroll = true;

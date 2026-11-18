@@ -23,6 +23,7 @@ export interface ScrollAreaThumbProps
 import { computed, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import * as ScrollAreaScrollbarCssVars from '../scrollbar/ScrollAreaScrollbarCssVars';
 import { useScrollAreaScrollbarContext } from '../scrollbar/ScrollAreaScrollbarContext';
@@ -42,6 +43,7 @@ const {
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
+  finishPressFor,
   scrollingX,
   scrollingY,
   hasMeasuredScrollbar,
@@ -98,6 +100,17 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     attrs,
   ],
 });
+
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      finishPressFor(element.value);
+    }
+  },
+  { flush: 'sync' },
+);
 
 watch(orientation, (nextOrientation, previousOrientation) => {
   const thumb = element.value;

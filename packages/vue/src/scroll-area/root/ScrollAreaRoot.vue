@@ -135,14 +135,16 @@ const thumbYElement = shallowRef<HTMLElement | null>(null);
 const thumbXElement = shallowRef<HTMLElement | null>(null);
 const cornerElement = shallowRef<HTMLElement | null>(null);
 
-const press = shallowRef<{
+interface ScrollAreaPress {
   id: number;
   orientation: Orientation;
   viewport: HTMLElement | null;
   thumb: HTMLElement | null;
   start: number;
   startScroll: number;
-} | null>(null);
+}
+
+const press = shallowRef<ScrollAreaPress | null>(null);
 let lastScrollPosition = DEFAULT_COORDS;
 
 function startScrolling(vertical: boolean) {
@@ -182,7 +184,9 @@ watch(
       scrollingX.value = false;
       // `KeepAlive` took the element out of the document, so the browser dropped the
       // pointer capture. No release event and no leave event comes.
-      press.value = null;
+      if (press.value) {
+        finishPress(press.value);
+      }
       hovering.value = false;
     }
   },
@@ -190,16 +194,19 @@ watch(
 );
 
 watch(
-  [viewportElement, thumbYElement, thumbXElement],
   () => {
     const active = press.value;
-    if (
-      active &&
-      (active.viewport !== viewportElement.value ||
-        active.thumb !==
-          (active.orientation === 'vertical' ? thumbYElement.value : thumbXElement.value))
-    ) {
-      press.value = null;
+    if (!active) {
+      return null;
+    }
+    const thumb = active.orientation === 'vertical' ? thumbYElement : thumbXElement;
+    return active.viewport !== viewportElement.value || active.thumb !== thumb.value
+      ? active
+      : null;
+  },
+  (retired) => {
+    if (retired) {
+      finishPress(retired);
     }
   },
   { flush: 'sync' },
@@ -236,15 +243,25 @@ function handlePointerDown(event: PointerEvent, orientation: Orientation, trackP
   }
 }
 
-function handlePointerUp(event: PointerEvent) {
-  const active = press.value;
-  if (!active || event.pointerId !== active.id) {
-    return;
-  }
+function finishPress(active: ScrollAreaPress) {
   press.value = null;
   (active.orientation === 'vertical' ? scrollingY : scrollingX).value = false;
-  if (active.thumb?.hasPointerCapture(event.pointerId)) {
-    active.thumb.releasePointerCapture(event.pointerId);
+  if (active.thumb?.hasPointerCapture(active.id)) {
+    active.thumb.releasePointerCapture(active.id);
+  }
+}
+
+function finishPressFor(element: Element | null) {
+  const active = press.value;
+  if (active && element && (active.viewport === element || active.thumb === element)) {
+    finishPress(active);
+  }
+}
+
+function handlePointerUp(event: PointerEvent) {
+  const active = press.value;
+  if (active && event.pointerId === active.id) {
+    finishPress(active);
   }
 }
 
@@ -350,6 +367,7 @@ provide(ScrollAreaRootContext, {
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
+  finishPressFor,
   handleScroll,
   press,
   rootId,

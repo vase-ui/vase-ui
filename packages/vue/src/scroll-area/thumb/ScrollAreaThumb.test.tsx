@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createApp, createSSRApp, defineComponent, nextTick, provide, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  createApp,
+  createSSRApp,
+  defineComponent,
+  nextTick,
+  provide,
+  shallowRef,
+} from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
@@ -118,6 +126,37 @@ describe('<ScrollArea.Thumb />', () => {
     await nextTick();
     expect(viewport.style.scrollSnapType).toBe('y mandatory');
     expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('');
+  });
+
+  it.each(['viewport', 'thumb'])('ends the press when only the %s enters a hold', async (part) => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <ScrollArea.Root>
+        <KeepAlive>
+          {(part !== 'viewport' || shown.value) && <ScrollArea.Viewport data-testid="viewport" />}
+        </KeepAlive>
+        <ScrollArea.Scrollbar keepMounted>
+          <KeepAlive>
+            {(part !== 'thumb' || shown.value) && <ScrollArea.Thumb data-testid="thumb" />}
+          </KeepAlive>
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    ));
+    const viewport = screen.getByTestId('viewport');
+    const thumb = screen.getByTestId('thumb');
+    vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
+    viewport.style.setProperty('scroll-snap-type', 'both mandatory', 'important');
+    await fireEvent.pointerDown(thumb, { button: 0, pointerId: 1 });
+    expect(viewport.style.scrollSnapType).toBe('none');
+
+    shown.value = false;
+    await nextTick();
+    expect(viewport.style.scrollSnapType).toBe('both mandatory');
+    expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('important');
+    shown.value = true;
+    await nextTick();
+    await fireEvent.pointerMove(thumb, { buttons: 1, pointerId: 1, clientY: 40 });
+    expect(thumb).not.toHaveAttribute('data-scrolling');
   });
 
   it('handles the scrollbar unmounting from a user pointer-move callback', async () => {
