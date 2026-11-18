@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
   nextEndingStyle,
   nextEvent,
   renderOnServer,
@@ -929,12 +930,12 @@ describe('<Collapsible.Panel />', () => {
 
             .animation-test-panel[data-open] {
               overflow: hidden;
-              animation: panel-slide-down 100ms linear;
+              animation: panel-slide-down 100s linear;
             }
 
             .animation-test-panel[data-closed] {
               overflow: hidden;
-              animation: panel-slide-up 100ms linear;
+              animation: panel-slide-up 100s linear;
             }
           `}</style>
 
@@ -952,25 +953,24 @@ describe('<Collapsible.Panel />', () => {
 
       expect(panel.getAnimations().length).toBe(0);
 
-      // The state exists only while the animation runs. The listener exists before the click, so
-      // the test reads the state when the animation starts.
-      const closing = nextEvent(panel, 'animationstart').then((event) => ({
-        closed: panel.hasAttribute('data-closed'),
-        animationName: (event as AnimationEvent).animationName,
-      }));
-      const [closingState] = await Promise.all([closing, user.click(trigger)]);
-      expect(closingState).toEqual({ closed: true, animationName: 'panel-slide-up' });
+      await waitSingleFrame();
+      const exit = await nextAnimationsRead(panel, { action: () => user.click(trigger) });
+      expect(panel).toHaveAttribute('data-closed');
+      expect(exit.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+        'panel-slide-up',
+      ]);
+      seekBeforeEnd(exit, 50);
 
       await waitFor(() => {
         expect(panel).toHaveAttribute('hidden');
       });
 
-      const opening = nextEvent(panel, 'animationstart').then((event) => ({
-        open: panel.hasAttribute('data-open'),
-        animationName: (event as AnimationEvent).animationName,
-      }));
-      const [openingState] = await Promise.all([opening, user.click(trigger)]);
-      expect(openingState).toEqual({ open: true, animationName: 'panel-slide-down' });
+      await nextEvent(panel, 'animationstart', { action: () => user.click(trigger) });
+      const enter = panel.getAnimations();
+      expect(panel).toHaveAttribute('data-open');
+      expect(enter.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+        'panel-slide-down',
+      ]);
     });
 
     it('restores measured dimensions before applying a closing keyframe animation', async () => {
@@ -1038,6 +1038,7 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it('still animates on reopen after being initially open when only open keyframes are defined', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <>
           <style>{`
@@ -1053,7 +1054,7 @@ describe('<Collapsible.Panel />', () => {
 
             .animation-test-panel[data-open] {
               overflow: hidden;
-              animation: panel-slide-down 100ms linear;
+              animation: panel-slide-down 100s linear;
             }
           `}</style>
 
@@ -1074,17 +1075,15 @@ describe('<Collapsible.Panel />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(panel).toHaveAttribute('data-closed');
+        expect(panel).toHaveAttribute('hidden');
       });
 
-      // The state exists only while the animation runs. The listener exists before the click, so
-      // the test reads the state when the animation starts.
-      const opening = nextEvent(panel, 'animationstart').then((event) => ({
-        open: panel.hasAttribute('data-open'),
-        animationName: (event as AnimationEvent).animationName,
-      }));
-      const [openingState] = await Promise.all([opening, user.click(trigger)]);
-      expect(openingState).toEqual({ open: true, animationName: 'panel-slide-down' });
+      await nextEvent(panel, 'animationstart', { action: () => user.click(trigger) });
+      const enter = panel.getAnimations();
+      expect(panel).toHaveAttribute('data-open');
+      expect(enter.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+        'panel-slide-down',
+      ]);
     });
   });
 
@@ -1600,6 +1599,7 @@ describe('<Collapsible.Panel />', () => {
   // An engine with no `beforematch` cannot run these cases.
   describe.skipIf(isJSDOM || !('onbeforematch' in window))('interrupted beforematch opens', () => {
     it('keeps the temporary zero animation duration until the panel closes', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       function App() {
         return (
           <>
@@ -1635,6 +1635,7 @@ describe('<Collapsible.Panel />', () => {
 
               .animation-test-panel[data-closed] {
                 animation-name: panel-slide-up;
+                  animation-iteration-count: 1000;
               }
             `}</style>
 
@@ -1670,14 +1671,11 @@ describe('<Collapsible.Panel />', () => {
 
       expect(getComputedStyle(panel).animationDuration).toBe('0s');
 
-      // The state exists only while the animation runs. The listener exists before the click, so
-      // the test reads the state when the animation starts.
-      const closing = nextEvent(panel, 'animationstart').then((event) => ({
-        closed: panel.hasAttribute('data-closed'),
-        animationName: (event as AnimationEvent).animationName,
-      }));
-      const [closingState] = await Promise.all([closing, user.click(trigger)]);
-      expect(closingState).toEqual({ closed: true, animationName: 'panel-slide-up' });
+      const exit = await nextAnimationsRead(panel, { action: () => user.click(trigger) });
+      expect(panel).toHaveAttribute('data-closed');
+      expect(exit.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+        'panel-slide-up',
+      ]);
 
       expect(getComputedStyle(panel).animationDuration).toBe('0.123s');
     });
@@ -1697,6 +1695,10 @@ describe('<Collapsible.Panel />', () => {
                 transition-property: height;
                 transition-duration: 999ms;
                 transition-timing-function: linear;
+              }
+
+              .transition-test-panel[data-ending-style] {
+                transition-delay: 100s;
               }
 
               .transition-test-panel[data-starting-style],
@@ -1738,19 +1740,12 @@ describe('<Collapsible.Panel />', () => {
 
       expect(getComputedStyle(panel).transitionDuration).toBe('0s');
 
-      // The state exists only while the transition runs. The listener exists before the click, so
-      // the test reads the state when the transition runs.
-      const closing = nextEvent(panel, 'transitionrun').then((event) => ({
-        endingStyle: panel.hasAttribute('data-ending-style'),
-        transitionDuration: panel.style.transitionDuration,
-        propertyName: (event as TransitionEvent).propertyName,
-      }));
-      const [closingState] = await Promise.all([closing, user.click(trigger)]);
-      expect(closingState).toEqual({
-        endingStyle: true,
-        transitionDuration: '123ms',
-        propertyName: 'height',
-      });
+      const exit = await nextAnimationsRead(panel, { action: () => user.click(trigger) });
+      expect(panel).toHaveAttribute('data-ending-style');
+      expect(panel.style.transitionDuration).toBe('123ms');
+      expect(exit.map((transition) => (transition as CSSTransition).transitionProperty)).toEqual([
+        'height',
+      ]);
     });
 
     it('does not suppress a later animated open after a no-motion beforematch open', async () => {
