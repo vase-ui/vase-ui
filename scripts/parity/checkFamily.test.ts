@@ -373,12 +373,13 @@ test('a moved suite keeps the original describe path, title, suite calls and eng
   const path = 'packages/vue/src/tooltip/Root.point.test.tsx';
   const upstream = { describe, title };
   const local = { describe: ['Vase UI point', 'click'], title: 'calls the Vase UI handler' };
+  const conditions = ['skipIf(isBlink)'];
   const options = {
     extract: makeExtract({
       cases: [
         {
           file: UPSTREAM_FILE,
-          rows: [upstream, upstream, { describe, suite: 'describeConformance' }],
+          rows: [{ ...upstream, conditions }, upstream, { describe, suite: 'describeConformance' }],
         },
       ],
     }),
@@ -386,7 +387,7 @@ test('a moved suite keeps the original describe path, title, suite calls and eng
     relocations: new Map([[UPSTREAM_FILE, [path]]]),
     rows: {
       [path]: [
-        local,
+        { ...local, conditions },
         { ...local, conditions: ['skipIf(isWebKit)'] },
         { describe: local.describe, suite: 'describeConformance' },
       ],
@@ -399,7 +400,7 @@ test('a moved suite keeps the original describe path, title, suite calls and eng
   assert.equal(covered.summary.cases.engine.webkit, 1);
   assert.equal(covered.summary.suiteCalls.matched, 1);
   assert.match(run([], options).problems.join('\n'), /added condition.*skipIf\(isWebKit\)/);
-  options.rows[path][0] = { ...local, describe: ['Other', 'click'] };
+  options.rows[path][0] = { ...local, conditions, describe: ['Other', 'click'] };
   assert.ok(
     run([engine], options).problems.some((problem) =>
       problem.includes(`uncovered case "Base UI point > click > ${title}" in ${UPSTREAM_FILE}`),
