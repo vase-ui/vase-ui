@@ -6,10 +6,12 @@ import {
   createRenderer,
   describeConformance,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
   waitFor,
+  within,
 } from '#test-utils';
 import SliderIndicatorHydration from './SliderIndicatorHydration.test.vue';
 
@@ -109,26 +111,56 @@ describe('<Slider.Indicator />', () => {
     });
 
     it.each([
-      { name: 'a single thumb', defaultValue: 30, start: '34%', size: '' },
-      { name: 'a range', defaultValue: [25, 75], start: '30%', size: '40%' },
+      { name: 'a single thumb', props: { defaultValue: 30 }, start: '34%', size: '', end: '' },
+      { name: 'a range', props: { defaultValue: [25, 75] }, start: '30%', size: '40%', end: '' },
+      {
+        name: 'a styled range',
+        props: { defaultValue: [25, 75], indicatorStyle: '--end-position: 12px' },
+        start: '30%',
+        size: '40%',
+        end: '12px',
+      },
     ])(
       'places the indicator of $name with the script, before the app starts',
-      async ({ defaultValue, start, size }) => {
-        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, { defaultValue });
+      async ({ props, start, size, end }) => {
+        const client = await render(<SliderIndicatorHydration {...props} />);
+        const clientRect = client.getByTestId('indicator').getBoundingClientRect();
+        client.unmount();
+
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
         const container = document.createElement('div');
         document.body.append(container);
         onTestFinished(() => container.remove());
         // `innerHTML` does not run a script. A fragment of a range does.
         container.append(document.createRange().createContextualFragment(serverHtml));
 
-        const indicator = container.querySelector<HTMLElement>('[data-testid="indicator"]')!;
+        const indicator = within(container).getByTestId('indicator');
+        const rect = indicator.getBoundingClientRect();
 
+        expect(rect.left).toBe(clientRect.left);
+        expect(rect.width).toBe(clientRect.width);
         expect([
           indicator.style.visibility,
           indicator.style.getPropertyValue('--start-position'),
           indicator.style.getPropertyValue('--relative-size'),
         ]).toEqual(['', start, size]);
+        expect(indicator.style.getPropertyValue('--end-position')).toBe(end);
       },
     );
+
+    it('preserves a custom property set on the indicator before hydration', async () => {
+      const props = { defaultValue: [25, 75] };
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(SliderIndicatorHydration, {
+        serverHtml,
+        props,
+        before(root) {
+          within(root).getByTestId('indicator').style.setProperty('--end-position', '12px');
+        },
+      });
+
+      const indicator = within(container).getByTestId('indicator');
+      expect(indicator.style.getPropertyValue('--end-position')).toBe('12px');
+    });
   });
 });

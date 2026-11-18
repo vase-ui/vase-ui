@@ -4,7 +4,7 @@ import type { ComputedRef, LabelHTMLAttributes, MaybeRefOrGetter } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
 import { given } from '../givenAttributes';
-import { useVaseUiId } from '../useBaseUiId';
+import { useVaseUiId } from '../useVaseUiId';
 import { useLabelableContext } from './LabelableContext';
 import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';

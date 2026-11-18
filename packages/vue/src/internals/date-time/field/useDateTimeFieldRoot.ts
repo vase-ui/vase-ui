@@ -17,7 +17,7 @@ import { useControlled } from '../../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/visuallyHidden';
 import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useInputRegistration, useRegisterFieldControl } from '../../field-register-control';
 import { fieldValidityMapping } from '../../field-constants';
 import { useClearFieldError, useFieldRootContext } from '../../field-root-context';

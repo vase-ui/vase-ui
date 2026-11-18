@@ -19,7 +19,7 @@ export interface SelectGroupLabelProps
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useSelectGroupContext } from '../group/SelectGroupContext';
 

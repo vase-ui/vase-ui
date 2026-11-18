@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowReactive } from 'vue';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { REASONS } from '../../reasons';
 import { getRangeDayState, useRangeSelection } from './rangeSelection';
 import type { DateValue } from '../temporal';

@@ -1,6 +1,6 @@
 import { computed, inject, onBeforeUnmount, provide, unref } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { REASONS } from '../../reasons';
 import { ownerWindow } from '../../../common/owner';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';

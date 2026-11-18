@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { defineComponent, watch } from 'vue';
 import type { PropType } from 'vue';
-import type { VaseUIChangeEventDetails } from '../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../src/internals/createVaseUIEventDetails';
 import { ReactiveStore } from '../src/utils/popups/ReactiveStore';
 import {
   useTriggerDataForwarding,

@@ -13,8 +13,8 @@ import {
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
 import { useFloating } from '../../../../test/fixtures/useFloating';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useButton } from '../../../internals/use-button';
 import { useTriggerRegistration } from '../popupStoreUtils';

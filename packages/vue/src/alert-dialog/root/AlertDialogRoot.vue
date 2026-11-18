@@ -3,7 +3,7 @@ import type {
   DialogRootChangeEventReason,
   DialogRootProps,
 } from '../../dialog/root/DialogRoot.vue';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { AlertDialogHandle } from '../handle';
 
 export interface AlertDialogRootState {}

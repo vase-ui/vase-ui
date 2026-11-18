@@ -1,6 +1,6 @@
 import { toRaw } from 'vue';
 import { NOOP } from '../../common/empty';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { dispatchOpenChange } from '../../utils/popups/floating-root/dispatchOpenChange';
 import { NullStore } from '../../utils/popups/NullStore';

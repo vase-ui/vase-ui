@@ -1,9 +1,9 @@
 import { expectType } from '#test-utils';
-import { createChangeEventDetails, createGenericEventDetails } from './createBaseUIEventDetails';
+import { createChangeEventDetails, createGenericEventDetails } from './createVaseUIEventDetails';
 import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from './createBaseUIEventDetails';
+} from './createVaseUIEventDetails';
 import { REASONS } from './reasons';
 
 const incrementDetails = createGenericEventDetails(REASONS.incrementPress);

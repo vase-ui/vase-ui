@@ -3,7 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { given } from '../givenAttributes';
 import { observeRootNode } from '../observeRootNode';
-import { useVaseUiId } from '../useBaseUiId';
+import { useVaseUiId } from '../useVaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 
 const LABEL_ATTRIBUTES = ['for', 'id'] as const;

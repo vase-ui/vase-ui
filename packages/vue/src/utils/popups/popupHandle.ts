@@ -1,8 +1,8 @@
 import { hasInjectionContext, inject, markRaw, shallowRef } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
 import { AnimationFrame } from '../../common/useAnimationFrame';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { PopupTriggerMap } from './popupTriggerMap';
 

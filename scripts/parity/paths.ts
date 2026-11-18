@@ -53,9 +53,14 @@ export function matchesAny(path: string, globs: readonly string[]): boolean {
   return globs.some((glob) => matchesGlob(path, glob));
 }
 
+export function toVaseName(text: string, kind: 'path' | 'title' = 'path'): string {
+  const name = text.replaceAll(/BaseU([Ii])/g, 'VaseU$1').replaceAll(/base(U[Ii]|-ui)/g, 'vase$1');
+  return kind === 'title' ? name.replaceAll('Base UI', 'Vase UI') : name;
+}
+
 function mappedPath(upstreamPath: string): string | undefined {
   const root = MAPPED_ROOTS.find(({ upstream }) => upstreamPath.startsWith(upstream));
-  return root && root.vase + upstreamPath.slice(root.upstream.length);
+  return root && root.vase + toVaseName(upstreamPath.slice(root.upstream.length));
 }
 
 export function counterparts(upstreamPath: string, files: VaseFiles): string[] {

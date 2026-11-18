@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { InjectionKey, Ref, ShallowRef } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 
 /**
  * What the focus manager of a popup tells the portal around it. The portal uses this state for its

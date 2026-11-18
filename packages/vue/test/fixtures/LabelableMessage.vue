@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef, useAttrs } from 'vue';
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import { useRegisteredMessageId } from '../../src/internals/labelable-provider';
 
 defineOptions({ inheritAttrs: false });

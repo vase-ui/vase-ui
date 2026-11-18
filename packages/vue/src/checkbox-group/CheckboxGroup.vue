@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
@@ -59,7 +59,7 @@ import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
-import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { useRegisterFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
@@ -70,7 +70,7 @@ import {
   useLabelableId,
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';

@@ -1,5 +1,5 @@
 import { toRaw } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import type { TransitionStatus } from '../../../internals/useTransitionStatus';
 import { createEventEmitter } from '../createEventEmitter';
 import type { PopupTriggerMap } from '../popupTriggerMap';

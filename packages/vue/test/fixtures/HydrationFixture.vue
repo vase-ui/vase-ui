@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import ChildrenPart from './ChildrenPart.vue';
 import PlainPart from './PlainPart.vue';
 

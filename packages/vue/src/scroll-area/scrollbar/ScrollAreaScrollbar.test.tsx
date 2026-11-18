@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createApp, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
+import { createApp, createSSRApp, defineComponent, h, nextTick, shallowRef, Teleport } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
@@ -16,6 +16,7 @@ import {
   waitFor,
   within,
 } from '#test-utils';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import type { ScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import { SCROLL_TIMEOUT } from '../constants';
@@ -203,6 +204,23 @@ describe('<ScrollArea.Scrollbar />', () => {
       }
     });
 
+    it('VUE-138: shows hover on the scrollbar when the pointer moves over a slotted control', async () => {
+      const button = document.createElement('button');
+      const root = createSlotHost(button);
+      await render(
+        <Teleport to={root}>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>{h('slot')}</ScrollArea.Viewport>
+            <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted />
+          </ScrollArea.Root>
+        </Teleport>,
+      );
+      const scrollbar = root.querySelector('[data-testid="scrollbar"]');
+      expect(scrollbar).not.toHaveAttribute('data-hovering');
+      await fireEvent.pointerMove(button, { pointerType: 'mouse' });
+      expect(scrollbar).toHaveAttribute('data-hovering');
+    });
+
     // The native `pointerenter` and `pointerleave` do not bubble, and the helper dispatches them
     // with `bubbles: false`. React makes them from `pointerover` and `pointerout`, so the upstream
     // case fires them on the viewport. Here they go to the root, which has the listeners.
@@ -273,6 +291,30 @@ describe('<ScrollArea.Scrollbar />', () => {
   }
 
   describe('track pointer down', () => {
+    it('VUE-138: keeps the scroll position on a press inside the thumb slot', async () => {
+      const button = document.createElement('button');
+      button.style.cssText = 'display: block; width: 100%; height: 100%; padding: 0; border: 0';
+      const root = createSlotHost(button);
+      await render(
+        <Teleport to={root}>
+          <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+            <ScrollArea.Viewport data-testid="viewport" style={{ height: '100%' }}>
+              <div style={{ height: '1000px' }} />
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar keepMounted style={{ width: '16px' }}>
+              <ScrollArea.Thumb>{h('slot')}</ScrollArea.Thumb>
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </Teleport>,
+      );
+      const viewport = root.querySelector<HTMLElement>('[data-testid="viewport"]')!;
+      await waitFor(() => expect(button.offsetHeight).toBeGreaterThan(4));
+      expect(viewport.scrollTop).toBe(0);
+
+      await userEvent.click(button, { position: { x: 2, y: button.offsetHeight - 2 } });
+      expect(viewport.scrollTop).toBe(0);
+    });
+
     it('ignores non-primary pointer presses', async () => {
       await render(
         <ScrollArea.Root>

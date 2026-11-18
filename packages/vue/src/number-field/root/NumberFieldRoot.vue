@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
@@ -178,8 +178,8 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
-import type { ReasonToEvent } from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
+import type { ReasonToEvent } from '../../internals/createVaseUIEventDetails';
 import { useFieldInput } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';

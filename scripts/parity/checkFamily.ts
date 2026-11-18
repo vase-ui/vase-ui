@@ -1,8 +1,8 @@
-import { conditionTerms, isSuiteRow } from './cases.ts';
+import { checkTitleNames, conditionTerms, isSuiteRow, titlesOf } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { isSourceFileTarget, labelOf, targetOf } from './parityFiles.ts';
 import type { Engine, FamilyExtract, ExceptionRow, FamilyFile, Target } from './parityFiles.ts';
-import { counterparts, hasCounterpart, isTestFile, isTypeTestFile } from './paths.ts';
+import { counterparts, hasCounterpart, isTestFile, isTypeTestFile, toVaseName } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import { extractCommand } from './repository.ts';
 
@@ -73,10 +73,13 @@ function describesRow(row: TestRow): string {
     : `case "${[...row.describe, row.title].join(' > ')}"`;
 }
 
-const keyOf = (row: TestRow): string =>
-  JSON.stringify(
-    isSuiteRow(row) ? [row.describe, 'suite', row.suite] : [row.describe, 'title', row.title],
-  );
+function keyOf(row: TestRow, side: 'upstream' | 'vase'): string {
+  const titles = titlesOf(row);
+  return JSON.stringify([
+    isSuiteRow(row) ? row.suite : null,
+    side === 'upstream' ? titles.map((title) => toVaseName(title, 'title')) : titles,
+  ]);
+}
 
 function startsWith(list: string[], prefix: string[]): boolean {
   return prefix.length <= list.length && prefix.every((item, index) => item === list[index]);
@@ -138,13 +141,13 @@ function addedConditions(upstreamRow: TestRow, vaseRow: TestRow): string[] {
 function pairRows(upstreamRows: TestRow[], vaseRows: TestRow[]) {
   const pool = new Map<string, TestRow[]>();
   for (const row of vaseRows) {
-    const key = keyOf(row);
+    const key = keyOf(row, 'vase');
     pool.set(key, [...(pool.get(key) ?? []), row]);
   }
   const pairs: [TestRow, TestRow][] = [];
   const unmatched: TestRow[] = [];
   for (const row of upstreamRows) {
-    const found = pool.get(keyOf(row))?.shift();
+    const found = pool.get(keyOf(row, 'upstream'))?.shift();
     if (found) {
       pairs.push([row, found]);
     } else {
@@ -266,7 +269,11 @@ export function checkFamily(
       problem(`${file}: ${candidates.join(' and ')} both match. Delete one of them.`);
       continue;
     }
-    const vaseRows = candidates.length === 1 ? vase.rowsOf(candidates[0]) : [];
+    let vaseRows: TestRow[] = [];
+    if (candidates.length === 1) {
+      vaseRows = vase.rowsOf(candidates[0]);
+      problems.push(...checkTitleNames(candidates[0], vaseRows, upstreamRows));
+    }
     const { pairs, unmatched, unpaired } = pairRows(upstreamRows, vaseRows);
     summary.rowsWithoutUpstream += unpaired;
     for (const [upstreamRow, vaseRow] of pairs) {

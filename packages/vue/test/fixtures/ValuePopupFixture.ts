@@ -1,5 +1,5 @@
 import { shallowRef } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import type { REASONS } from '../../src/internals/reasons';
 import {
   createInitialPopupStoreState,

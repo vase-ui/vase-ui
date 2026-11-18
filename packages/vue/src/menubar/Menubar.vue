@@ -56,7 +56,7 @@ import type { StateAttributesMapping } from '../internals/getStateAttributesProp
 import { MenubarContext } from '../internals/menubar-context/MenubarContext';
 import { REASONS } from '../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { MenuOpenEventDetails } from '../menu/utils/types';

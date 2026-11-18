@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, computed, defineComponent, onMounted, provide, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, h, onMounted, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
@@ -25,6 +25,7 @@ import {
   createContextMenuContext,
   createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
@@ -50,6 +51,29 @@ async function waitForRendersOfOpen() {
 
 describe('<Menu.Popup />', () => {
   const { render } = createRenderer();
+
+  it('VUE-138: closes the menu on Shift+Tab from a button in the popup slot', async () => {
+    const button = document.createElement('button');
+    const root = createSlotHost(button);
+    await render(
+      <Menu.Root defaultOpen defaultTriggerId="trigger" modal={false}>
+        <Menu.Trigger id="trigger">Open</Menu.Trigger>
+        <Menu.Portal container={root}>
+          <Menu.Positioner>
+            <Menu.Popup>{h('slot')}</Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    const popup = root.querySelector('[role="menu"]')!;
+    expect(popup.contains(button.assignedSlot)).toBe(true);
+    button.focus();
+    expect(button).toHaveFocus();
+    expect(await fireEvent.keyDown(button, { key: 'Tab', shiftKey: true })).toBe(false);
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
+    expect(trigger).toHaveFocus();
+  });
 
   describeConformance(<Menu.Popup />, () => ({
     render: (node) => {

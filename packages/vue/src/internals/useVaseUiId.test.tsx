@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, screen } from '#test-utils';
-import { useVaseUiId } from './useBaseUiId';
+import { useVaseUiId } from './useVaseUiId';
 
 describe('useVaseUiId', () => {
   const { render } = createRenderer();

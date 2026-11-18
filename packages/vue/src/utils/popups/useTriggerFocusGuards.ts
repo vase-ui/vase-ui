@@ -1,8 +1,8 @@
 import { computed, nextTick, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { contains } from '../../common/shadowDom';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { createFocusGuardElement } from './focus/createFocusGuardElement';
 import { getTabbableNearElement, isOutsideEvent } from './focus/tabbable';

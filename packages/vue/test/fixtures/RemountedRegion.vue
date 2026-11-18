@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineComponent, getCurrentInstance, h, onMounted, shallowRef } from 'vue';
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 
 defineProps<{
   // After a hydration, the region names the id of the first heading.

@@ -17,7 +17,7 @@ import PopupPositionerPart from '../../../../test/fixtures/PopupPositionerPart.v
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../../test/fixtures/PopupTriggerPart.vue';
 import { useFloating } from '../../../../test/fixtures/useFloating';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../popupTriggerMap';

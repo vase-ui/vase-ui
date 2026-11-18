@@ -247,7 +247,7 @@ describe('<Collapsible.Root />', () => {
     });
   });
 
-  describe('BaseUIChangeEventDetails', () => {
+  describe('VaseUIChangeEventDetails', () => {
     it('calls onOpenChange with eventDetails', async () => {
       const handleOpenChange = vi.fn();
 

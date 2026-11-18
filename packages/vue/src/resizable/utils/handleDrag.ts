@@ -1,6 +1,6 @@
 import { shallowRef } from 'vue';
 import type { Ref } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ResizableRootContext } from '../root/ResizableRootContext';
 import { adjustLayout, areLayoutsEqual, hasSamePanels, snapDelta } from './layout';

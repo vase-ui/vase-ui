@@ -1,7 +1,7 @@
 import { shallowReactive, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { EMPTY_ARRAY } from '../common/empty';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { VaseUIEventReasons } from '../internals/reasons';
 
 type ChangeEventDetails = VaseUIChangeEventDetails<VaseUIEventReasons['none']>;

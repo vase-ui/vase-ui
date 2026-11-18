@@ -28,7 +28,7 @@ import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { reset as resetWarnings } from '../../../common/warn';
 import { useCompositeListItem } from '../../../internals/composite/list/useCompositeListItem';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';

@@ -3,7 +3,7 @@ import type { ContextMenuRootContext } from '../../internals/context-menu-root-c
 import type {
   VaseUIChangeEventDetails,
   VaseUIHighlightEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import type { MenubarContext } from '../../internals/menubar-context/MenubarContext';
 import type { REASONS } from '../../internals/reasons';
 import type { MenuHandle } from '../store/MenuHandle';

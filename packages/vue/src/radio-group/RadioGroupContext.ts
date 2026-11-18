@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { UseFieldValidationReturnValue } from '../internals/field-root-context/FieldRootContext';
 import type { VaseUIEventReasons } from '../internals/reasons';
 

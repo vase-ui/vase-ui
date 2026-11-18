@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, h, shallowRef } from 'vue';
 import type { VNodeChild } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -20,6 +20,7 @@ import {
   isVaporApp,
   isVaporParts,
 } from '#test-utils';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import PopoverPopupReplace from './PopoverPopupReplace.test.vue';
 
 describe('<Popover.Popup />', () => {
@@ -72,6 +73,34 @@ describe('<Popover.Popup />', () => {
         </Popover.Portal>
       </Popover.Root>
     ),
+  });
+
+  it('VUE-138: keeps the popover open when focus moves from its trigger into the popup slot', async () => {
+    const field = document.createElement('input');
+    const root = createSlotHost(field);
+    await render(
+      <>
+        <Popover.Root defaultOpen defaultTriggerId="trigger" modal={false}>
+          <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
+          <Popover.Portal container={root}>
+            <Popover.Positioner>
+              <Popover.Popup initialFocus={false}>{h('slot')}</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <button>Outside</button>
+      </>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Toggle' });
+    trigger.focus();
+    field.focus();
+    await flushMicrotasks();
+    expect(field).toHaveFocus();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    trigger.focus();
+    screen.getByRole('button', { name: 'Outside' }).focus();
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
   });
 
   it('focuses the popup when the active element becomes display:none', async () => {

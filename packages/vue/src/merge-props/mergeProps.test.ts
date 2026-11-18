@@ -234,7 +234,7 @@ describe('mergeProps', () => {
     expect(mergedProps.class).toBe(undefined);
   });
 
-  it('does not prevent internal handler if event.preventBaseUIHandler() is not called', () => {
+  it('does not prevent internal handler if event.preventVaseUIHandler() is not called', () => {
     let ran = false;
 
     const mergedProps = mergeProps<'button'>(
@@ -253,7 +253,7 @@ describe('mergeProps', () => {
     expect(ran).toBe(true);
   });
 
-  it('prevents internal handler if event.preventBaseUIHandler() is called', () => {
+  it('prevents internal handler if event.preventVaseUIHandler() is called', () => {
     let ran = false;
 
     const mergedProps = mergeProps<'button'>(
@@ -280,7 +280,7 @@ describe('mergeProps', () => {
     expect(ran).toBe(false);
   });
 
-  it('prevents handlers merged after event.preventBaseUIHandler() is called', () => {
+  it('prevents handlers merged after event.preventVaseUIHandler() is called', () => {
     const log: string[] = [];
 
     const mergedProps = mergeProps<any>(
@@ -416,7 +416,7 @@ describe('mergeProps', () => {
     expect(mergedProps.title).toBe('internal title 1');
   });
 
-  it('sets baseUIHandlerPrevented to true after calling preventBaseUIHandler()', () => {
+  it('sets vaseUIHandlerPrevented to true after calling preventVaseUIHandler()', () => {
     let observedFlag: boolean | undefined;
 
     const mergedProps = mergeProps<'button'>(
@@ -567,7 +567,7 @@ describe('mergeProps', () => {
       expect(log).toEqual(['last-handler', 'getter-handler', 'first-handler']);
     });
 
-    it('allows props getter handlers to check baseUIHandlerPrevented manually', () => {
+    it('allows props getter handlers to check vaseUIHandlerPrevented manually', () => {
       const log: string[] = [];
 
       const mergedProps = mergeProps<'button'>(
