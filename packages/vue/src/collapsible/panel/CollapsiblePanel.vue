@@ -56,6 +56,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CollapsiblePanelProps>(), {
   as: 'div',
   hiddenUntilFound: false,
+  // Only an explicit false conflicts with hiddenUntilFound.
   keepMounted: undefined,
 });
 
@@ -66,7 +67,6 @@ defineSlots<{
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Collapsible.Panel');
-  // Only an explicit `keepMounted={false}` gets the warning, so the prop has no default.
   onMounted(() => {
     watchEffect(() => {
       if (props.hiddenUntilFound && props.keepMounted === false) {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, onActivated, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onActivated, onDeactivated, shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { createRenderer, screen, waitFor } from '#test-utils';
@@ -72,6 +72,85 @@ describe('searchable disclosure panels', () => {
     await nextTick();
     expect(panel.style.transitionDuration).toBe('0s');
     unmount();
+    expect(panel.style.transitionDuration).toBe('123ms');
+    expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
+  });
+
+  it('restores the inline duration before the parent reads a cached panel', async () => {
+    const shown = shallowRef(true);
+    let panel: HTMLElement;
+    let durationAtDeactivation: string | undefined;
+    const Content = defineComponent(() => {
+      onDeactivated(() => {
+        durationAtDeactivation = panel.style.transitionDuration;
+      });
+      return () => (
+        <Collapsible.Root>
+          <Collapsible.Panel hiddenUntilFound>Details</Collapsible.Panel>
+        </Collapsible.Root>
+      );
+    });
+    await render(() => <KeepAlive>{shown.value ? <Content /> : null}</KeepAlive>);
+    panel = screen.getByText('Details');
+    panel.style.setProperty('transition-duration', '123ms', 'important');
+    panel.dispatchEvent(new Event('beforematch'));
+    await nextTick();
+    expect(panel.style.transitionDuration).toBe('0s');
+
+    shown.value = false;
+    await nextTick();
+    expect(durationAtDeactivation).toBe('123ms');
+    expect(panel.style.transitionDuration).toBe('123ms');
+    expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
+    shown.value = true;
+    await nextTick();
+    expect(screen.getByText('Details')).toBe(panel);
+    expect(panel.style.transitionDuration).toBe('123ms');
+  });
+
+  it('restores the inline duration when the panel element changes', async () => {
+    const tag = shallowRef<'div' | 'section'>('div');
+    const { unmount } = await render(() => (
+      <Collapsible.Root>
+        <Collapsible.Panel
+          as={tag.value}
+          hiddenUntilFound
+          style={{ transitionDuration: '123ms !important' }}
+        >
+          Details
+        </Collapsible.Panel>
+      </Collapsible.Root>
+    ));
+    const previous = screen.getByText('Details');
+    previous.dispatchEvent(new Event('beforematch'));
+    await nextTick();
+    expect(previous.style.transitionDuration).toBe('0s');
+
+    tag.value = 'section';
+    await nextTick();
+    const current = screen.getByText('Details');
+    expect(current).not.toBe(previous);
+    expect(previous.style.transitionDuration).toBe('123ms');
+    expect(previous.style.getPropertyPriority('transition-duration')).toBe('important');
+    expect(current.style.transitionDuration).toBe('123ms');
+    unmount();
+    expect(current.style.getPropertyPriority('transition-duration')).toBe('important');
+  });
+
+  it('restores a duration set on the element before the first close', async () => {
+    const open = shallowRef(false);
+    await render(() => (
+      <Collapsible.Root v-model:open={open.value}>
+        <Collapsible.Panel hiddenUntilFound>Details</Collapsible.Panel>
+      </Collapsible.Root>
+    ));
+    const panel = screen.getByText('Details');
+    panel.style.setProperty('transition-duration', '123ms', 'important');
+    panel.dispatchEvent(new Event('beforematch'));
+    await nextTick();
+    expect(panel.style.transitionDuration).toBe('0s');
+    open.value = false;
+    await nextTick();
     expect(panel.style.transitionDuration).toBe('123ms');
     expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
   });

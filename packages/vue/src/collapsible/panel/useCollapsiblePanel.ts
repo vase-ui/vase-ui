@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, nextTick, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -24,6 +24,13 @@ interface Dimensions {
 }
 
 type TemporaryStyle = Record<string, string>;
+
+const measuringStyle = {
+  'justify-content': 'initial !important',
+  'align-items': 'initial !important',
+  'align-content': 'initial !important',
+  'justify-items': 'initial !important',
+};
 
 interface PendingReveal {
   panel: HTMLElement;
@@ -63,7 +70,11 @@ export function useCollapsiblePanel(
   // Some open paths skip the motion, but the status of the root changes in a later frame. The
   // panel stays idle until then, so its data attributes and its size match the open state.
   const forcePanelIdle = shallowRef(false);
-  const instantOpenDuration = shallowRef<'transition-duration' | 'animation-duration'>();
+  const instantOpenDuration = shallowRef<{
+    panel: HTMLElement;
+    property: 'transition-duration' | 'animation-duration';
+    restore: () => void;
+  }>();
   const layoutStyle = shallowRef<TemporaryStyle>();
   const pendingReveal = shallowRef<PendingReveal>();
 
@@ -90,17 +101,31 @@ export function useCollapsiblePanel(
 
   const { isHeld } = useKeepAliveState();
 
-  // Vue does not patch the style of a node it removes. Save the inline value before the override.
+  function suppressDuration(
+    panel: HTMLElement,
+    property: 'transition-duration' | 'animation-duration',
+  ) {
+    instantOpenDuration.value = {
+      panel,
+      property,
+      restore: saveInlineStyle(panel.style, property),
+    };
+  }
+
+  function restoreDuration() {
+    instantOpenDuration.value?.restore();
+    instantOpenDuration.value = undefined;
+  }
+
+  // Vue leaves the last bound style on a removed element.
   watch(
-    () => isOpen() && !isHeld.value && instantOpenDuration.value,
-    (property, _, onCleanup) => {
-      const panel = element.value;
-      if (!property || !panel) return;
-      const value = panel.style.getPropertyValue(property);
-      const priority = panel.style.getPropertyPriority(property);
-      onCleanup(() => panel.style.setProperty(property, value, priority));
+    [element, isHeld],
+    ([panel, held]) => {
+      if (held || instantOpenDuration.value?.panel !== panel) restoreDuration();
     },
+    { flush: 'post' },
   );
+  onScopeDispose(restoreDuration);
 
   watch(getTransitionStatus, (status) => {
     if (status !== 'starting') forcePanelIdle.value = false;
@@ -114,7 +139,7 @@ export function useCollapsiblePanel(
     // A render function can remove the element when the panel closes. The suppression of the open
     // animation is for one open, so clear it also when there is no element.
     if (!open) {
-      instantOpenDuration.value = undefined;
+      restoreDuration();
       shouldPreventMountAnimation.value = false;
       shouldPreventActivityResumeAnimation.value = false;
     }
@@ -158,7 +183,7 @@ export function useCollapsiblePanel(
           return restoreLayoutStyles;
         }
 
-        instantOpenDuration.value = 'transition-duration';
+        suppressDuration(panel, 'transition-duration');
         forcePanelIdle.value = true;
         return restoreLayoutStyles;
       }
@@ -168,7 +193,7 @@ export function useCollapsiblePanel(
       resetAnimationName(panel);
       if (!skipNextOpen) return;
 
-      instantOpenDuration.value = 'animation-duration';
+      suppressDuration(panel, 'animation-duration');
       forcePanelIdle.value = true;
 
       return;
@@ -367,7 +392,8 @@ export function useCollapsiblePanel(
         if (isOpen() && mounted.value && animationType.value === 'css-animation') {
           shouldPreventActivityResumeAnimation.value = true;
         }
-        instantOpenDuration.value = undefined;
+        // The parent can read the duration in its deactivation hook, before Vue drops the bound style.
+        instantOpenDuration.value?.restore();
       } else if (pendingReveal.value) {
         // The parent activation hook can read the panel before Vue patches its attributes.
         finishReveal();
@@ -415,7 +441,7 @@ export function useCollapsiblePanel(
       () => toValue(options.keepMounted) || isHiddenUntilFound() || !hidden.value,
     ),
     overridingStyle() {
-      const duration = isOpen() && instantOpenDuration.value;
+      const duration = isOpen() && !isHeld.value && instantOpenDuration.value?.property;
       return {
         ...(shouldPreventOpenAnimation.value && { animationName: 'none' }),
         ...(duration && { [duration]: '0s' }),
@@ -482,10 +508,15 @@ function hasNonZeroDuration(value: string) {
 }
 
 function resetAnimationName(element: HTMLElement) {
-  const { animationName } = element.style;
-  const priority = element.style.getPropertyPriority('animation-name');
+  const restore = saveInlineStyle(element.style, 'animation-name');
   element.style.animationName = 'none';
-  element.style.setProperty('animation-name', animationName, priority);
+  restore();
+}
+
+function saveInlineStyle(style: CSSStyleDeclaration, property: string) {
+  const value = style.getPropertyValue(property);
+  const priority = style.getPropertyPriority(property);
+  return () => style.setProperty(property, value, priority);
 }
 
 // The browser needs the reset for the size read in this task. Vue keeps it through the next patch.
@@ -493,31 +524,17 @@ function resetLayoutStyles(
   element: HTMLElement,
   layoutStyle: ShallowRef<TemporaryStyle | undefined>,
 ) {
-  const originalLayoutStyles = {
-    'justify-content': element.style.justifyContent,
-    'align-items': element.style.alignItems,
-    'align-content': element.style.alignContent,
-    'justify-items': element.style.justifyItems,
-  };
-
-  const resets: TemporaryStyle = {};
-  Object.keys(originalLayoutStyles).forEach((key) => {
-    element.style.setProperty(key, 'initial', 'important');
-    resets[key] = 'initial !important';
+  const restore = Object.keys(measuringStyle).map((property) => {
+    const undo = saveInlineStyle(element.style, property);
+    element.style.setProperty(property, 'initial', 'important');
+    return undo;
   });
-  layoutStyle.value = resets;
+  layoutStyle.value = measuringStyle;
 
   function restoreLayoutStyles() {
+    if (!layoutStyle.value) return;
     layoutStyle.value = undefined;
-
-    Object.entries(originalLayoutStyles).forEach(([key, value]) => {
-      if (value === '') {
-        element.style.removeProperty(key);
-        return;
-      }
-
-      element.style.setProperty(key, value);
-    });
+    for (const undo of restore) undo();
   }
 
   const frame = AnimationFrame.request(restoreLayoutStyles);

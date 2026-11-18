@@ -124,13 +124,13 @@ describe('<Collapsible.Panel />', () => {
     },
   }));
 
-  it('restores the layout styles when the panel unmounts before its first open frame', async () => {
+  it('VUE-144: restores the layout styles when the panel unmounts before its first open frame', async () => {
     const open = shallowRef(false);
     const { unmount } = await render(() => (
       <Collapsible.Root open={open.value}>
         <Collapsible.Panel
           data-testid="panel"
-          style={{ justifyContent: 'center', transition: 'height 1s' }}
+          style={{ justifyContent: 'center !important', transition: 'height 1s' }}
         >
           Content
         </Collapsible.Panel>
@@ -145,6 +145,7 @@ describe('<Collapsible.Panel />', () => {
 
       unmount();
       expect(panel.style.justifyContent).toBe('center');
+      expect(panel.style.getPropertyPriority('justify-content')).toBe('important');
     } finally {
       vi.useRealTimers();
     }
