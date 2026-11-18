@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   createSSRApp,
   defineComponent,
@@ -13,6 +13,7 @@ import type { Component } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
+  installPartsInterop,
   nextEndingStyle,
   nextEvent,
   renderOnServer,
@@ -257,6 +258,31 @@ describe('usePopupViewport', () => {
       });
       expect(viewport).not.toHaveAttribute('data-transitioning');
       expect(screen.getByText('Content 1')).toBeVisible();
+    });
+
+    it('samples the current container in the flush that removes its enter style', async () => {
+      const { user } = await renderPositioned([10, 10], [100, 200], '10s');
+      await user.click(screen.getByTestId('trigger1'));
+      const reads = vi.spyOn(Element.prototype, 'getAnimations');
+      const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+      const sampled: boolean[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const { target, oldValue } of records) {
+          if (target === getCurrentContainer() && oldValue !== null) {
+            queueMicrotask(() => sampled.push(reads.mock.contexts.includes(target as Element)));
+          }
+        }
+      });
+      observer.observe(screen.getByTestId('viewport'), {
+        subtree: true,
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: ['data-starting-style'],
+      });
+      onTestFinished(() => observer.disconnect());
+      await user.click(screen.getByTestId('trigger2'));
+      await waitFor(() => expect(sampled).toEqual([true]));
+      expect(observe.mock.calls.filter(([node]) => node === getCurrentContainer())).toHaveLength(0);
     });
 
     it('gives the starting style to the new content, and the ending style to the old content one frame later', async () => {
@@ -1006,7 +1032,7 @@ describe('usePopupViewport', () => {
       expect(current).toHaveAttribute('data-current', 'true');
       expect(current.textContent).toBe('content');
 
-      const app = createSSRApp(PopupViewportHydration);
+      const app = installPartsInterop(createSSRApp(PopupViewportHydration));
       onTestFinished(() => {
         app.unmount();
         container.remove();

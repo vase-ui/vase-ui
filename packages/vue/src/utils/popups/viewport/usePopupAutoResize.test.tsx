@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, onDeactivated, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  defineComponent,
+  h,
+  mergeProps,
+  nextTick,
+  onDeactivated,
+  shallowRef,
+} from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createHeldBranch,
@@ -426,19 +434,38 @@ describe('usePopupAutoResize', () => {
   describe('KeepAlive', () => {
     it('takes its anchoring styles off the popup before the deactivation hook of a component above it', async () => {
       let popup: HTMLElement | null = null;
-      let positionAtDeactivation: string | undefined;
+      let stylesAtDeactivation: string[] = [];
       const ownPosition = shallowRef(false);
+      // Keep the consumer's priority through any popup patch before deactivation.
+      const ConsumerPopup = defineComponent({
+        inheritAttrs: false,
+        setup(_, { attrs, slots }) {
+          return () =>
+            h('div', mergeProps(attrs, { style: { left: '0px !important' } }), slots.default?.());
+        },
+      });
       const Scene = defineComponent({
         setup() {
           onDeactivated(() => {
-            positionAtDeactivation = popup?.style.position;
+            if (popup) {
+              const { style } = popup;
+              stylesAtDeactivation = [
+                style.position,
+                style.bottom,
+                style.left,
+                style.getPropertyPriority('left'),
+              ];
+            }
           });
           return () =>
             scene({
               root: openRoot,
               triggers: [{ id: 'trigger' }],
               positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
-              popup: { style: ownPosition.value ? { position: 'absolute' } : {} },
+              popup: {
+                as: ConsumerPopup,
+                style: ownPosition.value ? { position: 'absolute' } : {},
+              },
               content: () => 'Content',
             });
         },
@@ -447,18 +474,19 @@ describe('usePopupAutoResize', () => {
       await render(() => <KeepAlive>{visible.value ? <Scene /> : null}</KeepAlive>);
       popup = screen.getByTestId('popup');
       expect(popup.style.position).toBe('absolute');
+      expect(popup.style.getPropertyPriority('left')).toBe('important');
 
       visible.value = false;
       await nextTick();
 
-      expect(positionAtDeactivation).toBe('');
+      expect(stylesAtDeactivation).toEqual(['', '', '0px', 'important']);
 
       visible.value = true;
       ownPosition.value = true;
       await nextTick();
       visible.value = false;
       await nextTick();
-      expect(positionAtDeactivation).toBe('absolute');
+      expect(stylesAtDeactivation).toEqual(['absolute', '', '0px', 'important']);
     });
 
     it('measures the popup when it comes back after a change of the payload', async () => {

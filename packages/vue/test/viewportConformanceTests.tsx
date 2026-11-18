@@ -472,6 +472,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         );
         // Allow `useAnimationsFinished` to begin waiting before replacing the current container.
         await waitSingleFrame();
+        const secondContainer = screen.getByText('Content 2').closest('[data-current]');
+        expect(secondContainer?.getAnimations()).toHaveLength(1);
 
         // The viewport keeps one container for the previous content, and that container has the
         // ending style of the first switch. A frame after the switch, the containers move from

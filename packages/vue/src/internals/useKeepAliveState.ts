@@ -29,8 +29,8 @@ function isInHeldBranch(): boolean {
 
 export interface KeepAliveState {
   /**
-   * Whether `KeepAlive` holds the part. A part that mounts in a branch that `KeepAlive` holds is held
-   * from its `setup`.
+   * Whether `KeepAlive` holds the part. A compiled Vapor part on Vue 3.6.0-rc.15 cannot detect
+   * an existing hold at mount.
    */
   isHeld: Readonly<Ref<boolean>>;
   /**

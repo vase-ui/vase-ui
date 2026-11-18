@@ -19,8 +19,6 @@ markChildrenMounted();
 
 // The previous container has no vnode child. The composable fills it with `replaceChildren`, and
 // Vue does not patch its children.
-// React writes `"true"` for a bare `data-*` attribute, so `data-current` and `data-previous` have
-// that value. A selector on the value then matches as in Base UI.
 </script>
 
 <template>
@@ -37,7 +35,7 @@ markChildrenMounted();
     :key="currentContentKey"
     ref="currentContainerRef"
     data-current="true"
-    :data-starting-style="transitioning && showStartingStyle ? '' : undefined"
+    :data-starting-style="showStartingStyle ? '' : undefined"
   >
     <slot />
   </div>

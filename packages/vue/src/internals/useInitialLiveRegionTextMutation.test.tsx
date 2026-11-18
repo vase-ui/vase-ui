@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, onMounted } from 'vue';
+import {
+  KeepAlive,
+  defineComponent,
+  nextTick,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  shallowRef,
+} from 'vue';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import {
   INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY,
@@ -49,8 +57,7 @@ describe('useInitialLiveRegionTextMutation', () => {
 
     const Status = defineComponent(() => {
       let element: HTMLDivElement | null = null;
-      // A layout effect of React runs before a passive effect, so this hook comes before the
-      // hook of the composable.
+      // Insert both nodes before the live region reads its text.
       onMounted(() => {
         element?.append(text, empty);
       });
@@ -71,6 +78,39 @@ describe('useInitialLiveRegionTextMutation', () => {
 
     expect(text.data).toBe('Status\u2060');
     expect(empty.data).toBe('');
+  });
+
+  it('removes the live region marker before an ancestor observes the hold', async () => {
+    const shown = shallowRef(true);
+    const values: string[] = [];
+    let region: HTMLElement | null = null;
+    const Status = defineComponent(() => {
+      const setRegion = useInitialLiveRegionTextMutation<HTMLElement>();
+      return () => (
+        <p
+          ref={(node) => {
+            region = node as HTMLElement | null;
+            setRegion(region);
+          }}
+        >
+          Ready
+        </p>
+      );
+    });
+    const Branch = defineComponent(() => {
+      onDeactivated(() => {
+        if (region) values.push(region.textContent!);
+      });
+      onActivated(() => values.push(region!.textContent!));
+      return () => <Status />;
+    });
+    await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
+    values.length = 0;
+    shown.value = false;
+    await nextTick();
+    shown.value = true;
+    await nextTick();
+    expect(values).toEqual(['Ready', 'Ready\u2060']);
   });
 
   describe('with fake timers', () => {
