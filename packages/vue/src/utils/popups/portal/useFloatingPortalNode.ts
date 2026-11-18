@@ -30,7 +30,7 @@ export interface UseFloatingPortalNodeProps {
    */
   container: MaybeRefOrGetter<MaybeRefOrGetter<FloatingPortalContainer>>;
   /**
-   * The props of the part. The composable reads `as`, `stateClass` and `stateStyle`.
+   * The props of the part. The composable reads `as`.
    */
   componentProps: UseRenderElementComponentProps<any>;
   /**

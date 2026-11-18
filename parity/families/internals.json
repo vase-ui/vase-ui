@@ -253,6 +253,34 @@
       "upstream": "packages/react/test/types.d.ts",
       "kind": "not-applicable",
       "reason": "The file declares the type of a CSS module. No Vase UI test imports a CSS module. A test component sets its styles as style objects."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement"],
+      "title": "accepts className as function",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement"],
+      "title": "accepts className as function that returns undefined",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement"],
+      "title": "accepts style as function",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement"],
+      "title": "accepts style as function that returns undefined",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
     }
   ],
   "surfaceAdditions": [],

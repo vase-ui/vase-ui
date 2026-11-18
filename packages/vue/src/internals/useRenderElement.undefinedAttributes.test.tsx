@@ -62,7 +62,7 @@ const Note = defineComponent(
     });
     return () => h(tag.value, elementProps());
   },
-  { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+  { props: ['as'], inheritAttrs: false },
 );
 
 interface Row {
@@ -565,7 +565,7 @@ const Part = defineComponent(
     });
     return () => h('div', elementProps());
   },
-  { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+  { props: ['as'], inheritAttrs: false },
 );
 
 function createTagComponent<Attributes extends object>(tag: string) {
@@ -574,7 +574,7 @@ function createTagComponent<Attributes extends object>(tag: string) {
       const { elementProps } = useRenderElement(tag, props);
       return () => h(tag, elementProps());
     },
-    { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+    { props: ['as'], inheritAttrs: false },
   );
 }
 

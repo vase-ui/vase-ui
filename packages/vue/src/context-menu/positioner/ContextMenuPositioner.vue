@@ -14,8 +14,6 @@ export interface ContextMenuPositionerProps
     Omit<
       MenuPositionerProps,
       | 'as'
-      | 'stateClass'
-      | 'stateStyle'
       | 'anchor'
       | 'positionMethod'
       | 'side'

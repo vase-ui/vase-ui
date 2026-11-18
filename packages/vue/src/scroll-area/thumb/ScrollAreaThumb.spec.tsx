@@ -5,7 +5,6 @@ import { expectType } from '#test-utils';
 
 export const props: ScrollArea.Thumb.Props = {
   as: 'section',
-  stateClass: (state) => (state.scrolling ? 'scrolling' : ''),
 } satisfies ScrollAreaThumbProps;
 export const state: ScrollArea.Thumb.State = {
   scrolling: false,
@@ -21,7 +20,9 @@ export const nativeAttributes = (
 export const renderSlot = (
   <ScrollArea.Thumb
     v-slots={{
-      render: ({ props }: { props: HTMLProps }) => <div {...props} />,
+      render: ({ props, state }: { props: HTMLProps; state: ScrollArea.Thumb.State }) => (
+        <div {...props} class={{ scrolling: state.scrolling }} />
+      ),
     }}
   />
 );

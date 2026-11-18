@@ -128,20 +128,20 @@ describe('<Resizable.Root />', () => {
       expect(root).not.toHaveAttribute('data-dragging');
     });
 
-    it('gives the state to the slot and to stateClass', async () => {
+    it('gives the orientation, disabled state and drag state to the default slot', async () => {
       await render(
-        <Resizable.Root
-          data-testid="root"
-          orientation="vertical"
-          stateClass={(state) => `${state.orientation}-${String(state.disabled)}`}
-        >
+        <Resizable.Root data-testid="root" orientation="vertical">
           {{
-            default: ({ state }: { state: { dragging: boolean } }) => `dragging ${state.dragging}`,
+            default: ({ state }: { state: Resizable.Root.State }) => (
+              <span class={`${state.orientation}-${state.disabled}`}>
+                dragging {String(state.dragging)}
+              </span>
+            ),
           }}
         </Resizable.Root>,
       );
 
-      expect(screen.getByTestId('root')).toHaveClass('vertical-false');
+      expect(screen.getByTestId('root').firstElementChild).toHaveClass('vertical-false');
       expect(screen.getByTestId('root')).toHaveTextContent('dragging false');
     });
   });

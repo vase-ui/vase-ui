@@ -85,16 +85,15 @@ expectType<ComponentRenderFn<HTMLProps, UseRenderPartState>, typeof renderProp>(
 
 <Button as={UseRenderPart} />;
 
-<UseRenderPart
-  aria-label="x"
-  lang="fr"
-  onClick={(event) => event.preventVaseUIHandler()}
-  stateClass={(state) => {
-    expectType<UseRenderPartState, typeof state>(state);
-    return 'x';
-  }}
-/>;
+<UseRenderPart aria-label="x" lang="fr" onClick={(event) => event.preventVaseUIHandler()} />;
 
-const render: useRender.RenderProp<UseRenderPartState> = ({ props }) => <span {...props} />;
+const render: useRender.RenderProp<UseRenderPartState> = ({ props, state }) => {
+  expectType<UseRenderPartState, typeof state>(state);
+  return <span {...props} class={{ active: state.active }} />;
+};
 
 <UseRenderPart v-slots={{ render }} />;
+
+type StyleCallbacks = 'stateClass' | 'stateStyle';
+expectType<never, Extract<StyleCallbacks, keyof useRender.ComponentProps>>(null as never);
+expectType<never, Extract<StyleCallbacks, keyof Button.Props>>(null as never);

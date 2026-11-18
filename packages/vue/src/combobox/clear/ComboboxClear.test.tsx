@@ -236,7 +236,21 @@ describe('<Combobox.Clear />', () => {
               <Combobox.Clear
                 keepMounted
                 data-testid="clear"
-                stateClass={(state) => (state.visible ? 'visible' : 'hidden')}
+                v-slots={{
+                  render: ({
+                    props,
+                    state,
+                    children,
+                  }: {
+                    props: HTMLProps;
+                    state: Combobox.Clear.State;
+                    children: Component;
+                  }) => (
+                    <button {...props} class={state.visible ? 'visible' : 'hidden'}>
+                      {h(children)}
+                    </button>
+                  ),
+                }}
               />
               <Combobox.List>
                 <Combobox.Item value="a">a</Combobox.Item>

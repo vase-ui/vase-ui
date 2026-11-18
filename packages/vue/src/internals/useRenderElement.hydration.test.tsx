@@ -144,13 +144,15 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
         serverControls,
       );
       let renders = 0;
-      // The part calls `stateClass` one time in each render.
-      const stateClass = () => {
+      const countRender = () => {
         renders += 1;
-        return undefined;
       };
 
-      await hydrateByHand(ServerAttributesPart, serverHtml, { ...props, stateClass });
+      await hydrateByHand(ServerAttributesPart, serverHtml, {
+        ...props,
+        onVnodeMounted: countRender,
+        onVnodeUpdated: countRender,
+      });
 
       return renders;
     }

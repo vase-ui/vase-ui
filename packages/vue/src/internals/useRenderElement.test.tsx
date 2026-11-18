@@ -117,7 +117,7 @@ describe('useRenderElement', () => {
       expose({ element });
       return () => renderPart(props, slots, elementProps, { active: props.active });
     },
-    { props: ['as', 'active', 'stateClass', 'stateStyle'], inheritAttrs: false },
+    { props: ['as', 'active'], inheritAttrs: false },
   );
 
   const DirectPropsTestComponent = defineComponent(
@@ -129,7 +129,7 @@ describe('useRenderElement', () => {
       expose({ element });
       return () => renderPart(props, slots, elementProps, { active: props.active });
     },
-    { props: ['as', 'active', 'stateClass', 'stateStyle'], inheritAttrs: false },
+    { props: ['as', 'active'], inheritAttrs: false },
   );
 
   const ArrayPropsTestComponent = defineComponent(
@@ -141,7 +141,7 @@ describe('useRenderElement', () => {
       expose({ element });
       return () => renderPart(props, slots, elementProps, { active: props.active });
     },
-    { props: ['as', 'active', 'stateClass', 'stateStyle'], inheritAttrs: false },
+    { props: ['as', 'active'], inheritAttrs: false },
   );
 
   const DisabledPropsTestComponent = defineComponent(
@@ -181,56 +181,8 @@ describe('useRenderElement', () => {
       });
       return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
     },
-    { props: ['as', 'stateClass', 'stateStyle', 'overridingStyle'], inheritAttrs: false },
+    { props: ['as', 'overridingStyle'], inheritAttrs: false },
   );
-
-  it('accepts className as function', async () => {
-    const { container } = await render(
-      <TestComponent
-        active
-        stateClass={(state) => (state.active ? 'active-class' : 'inactive-class')}
-      />,
-    );
-
-    const element = container.firstElementChild;
-
-    expect(element).toHaveAttribute('class', 'active-class test-component');
-  });
-
-  it('accepts className as function that returns undefined', async () => {
-    const { container } = await render(
-      <TestComponent stateClass={(state) => (state.active ? 'active-class' : undefined)} />,
-    );
-
-    const element = container.firstElementChild;
-
-    expect(element).toHaveAttribute('class', 'test-component');
-  });
-
-  it('accepts style as function', async () => {
-    const { container } = await render(
-      <TestComponent
-        active
-        stateStyle={(state) => ({ color: state.active ? 'rgb(255,0,0)' : 'rgb(0,255,0)' })}
-      />,
-    );
-
-    const element = container.firstElementChild;
-
-    expect(element?.getAttribute('style')).toBe('padding: 10px; color: rgb(255, 0, 0);');
-  });
-
-  it('accepts style as function that returns undefined', async () => {
-    const { container } = await render(
-      <TestComponent
-        stateStyle={(state) => (state.active ? { color: 'rgb(255,0,0)' } : undefined)}
-      />,
-    );
-
-    const element = container.firstElementChild;
-
-    expect(element?.getAttribute('style')).toBe('padding: 10px;');
-  });
 
   it('makes single prop objects preventable', async () => {
     const handleMouseDown = vi.fn((event) => {
@@ -416,9 +368,10 @@ describe('useRenderElement', () => {
       const { container } = await render(
         <TestComponent
           active
-          stateClass={(state) => (state.active ? 'active-class' : '')}
           v-slots={{
-            render: ({ props }: { props: HTMLProps }) => <div {...props} class="render-class" />,
+            render: ({ props, state }: { props: HTMLProps; state: ActiveState }) => (
+              <div {...props} class={['render-class', { 'active-class': state.active }]} />
+            ),
           }}
         />,
       );
@@ -453,10 +406,15 @@ describe('useRenderElement', () => {
       const { container } = await render(
         <TestComponent
           active
-          stateStyle={(state) => ({ color: state.active ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 0)' })}
           v-slots={{
-            render: ({ props }: { props: HTMLProps }) => (
-              <div {...props} style={{ fontSize: '16px' }} />
+            render: ({ props, state }: { props: HTMLProps; state: ActiveState }) => (
+              <div
+                {...props}
+                style={{
+                  fontSize: '16px',
+                  color: state.active ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 0)',
+                }}
+              />
             ),
           }}
         />,
@@ -540,7 +498,7 @@ describe('useRenderElement', () => {
         expose({ element });
         return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
       },
-      { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+      { props: ['as'], inheritAttrs: false },
     );
 
     it('does not throw when className is provided with minimal props', async () => {
@@ -558,20 +516,34 @@ describe('useRenderElement', () => {
   });
 
   describe('class', () => {
-    it('puts the class of the consumer, then the state class, then the class of the part', async () => {
-      const { container } = await render(<TestComponent class="a" stateClass={() => 'b'} />);
+    it('omits an empty class binding from the render slot props', async () => {
+      let received: HTMLProps | undefined;
+      await render(
+        <DirectPropsTestComponent
+          class={{ active: false }}
+          v-slots={{
+            render: ({ props }: { props: HTMLProps }) => {
+              received = props;
+              return <div {...props} />;
+            },
+          }}
+        />,
+      );
+      expect(received).toBeDefined();
+      expect(received).not.toHaveProperty('class');
+    });
+
+    it('puts the class of the consumer, then the class of the part', async () => {
+      const { container } = await render(<TestComponent class={['a', { b: true }]} />);
 
       expect(container.firstElementChild).toHaveAttribute('class', 'a b test-component');
     });
   });
 
   describe('style', () => {
-    it('lets the style attribute win over the part, and the state style win over both', async () => {
+    it('lets the style attribute win over the part', async () => {
       const { container } = await render(
-        <TestComponent
-          style={{ padding: '20px', margin: '1px' }}
-          stateStyle={() => ({ margin: '2px' })}
-        />,
+        <TestComponent style={[{ padding: '20px', margin: '1px' }, { margin: '2px' }]} />,
       );
 
       const element = container.firstElementChild as HTMLElement;
@@ -580,16 +552,15 @@ describe('useRenderElement', () => {
     });
 
     it.each([
-      { name: 'an object', style: { padding: '20px', margin: '1px' } },
-      { name: 'a string', style: 'padding: 20px; margin: 1px' },
+      { name: 'an object', style: { padding: '20px', margin: '1px', color: 'red' } },
+      { name: 'a string', style: 'padding: 20px; margin: 1px; color: red' },
     ])(
-      'lets the overriding style of the part win over a style attribute that is $name, and over the state style',
+      'lets the overriding style of the part win over a style attribute that is $name',
       async ({ style }) => {
         const { container } = await render(
           <OverridingStyleTestComponent
             overridingStyle={{ padding: '30px', margin: '3px' }}
             style={style}
-            stateStyle={() => ({ margin: '2px', color: 'red' })}
           />,
         );
 
@@ -731,7 +702,7 @@ describe('useRenderElement', () => {
               ? slots.render({ props: elementProps(), state: EMPTY_OBJECT })
               : h((props.as ?? tag) as string, elementProps());
         },
-        { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+        { props: ['as'], inheritAttrs: false },
       );
     }
 

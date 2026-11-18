@@ -68,7 +68,7 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="ComboboxPortalChildren" />
@@ -77,7 +77,7 @@ defineExpose({ element });
   <FloatingPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
   >
     <ComboboxPortalChildren><slot :state="state" /></ComboboxPortalChildren>
   </FloatingPortal>

@@ -15,16 +15,18 @@ const LateTrigger = defineAsyncComponent(async () => {
   // The loader type does not accept a generic SFC.
   return Menu.Trigger as unknown as Component;
 });
-
-function stateClass(state: Menu.Trigger.State) {
-  return state.disabled ? 'off' : 'on';
-}
 </script>
 
 <template>
   <Menu.Root :handle="menuHandle" disabled />
   <Suspense>
-    <LateTrigger id="trigger" :handle="menuHandle" :state-class="stateClass">Trigger</LateTrigger>
+    <LateTrigger id="trigger" :handle="menuHandle">
+      <template #render="{ props: trigger, state }">
+        <button v-bind="trigger" :ref="trigger.ref" :class="state.disabled ? 'off' : 'on'">
+          Trigger
+        </button>
+      </template>
+    </LateTrigger>
     <template #fallback>Loading</template>
   </Suspense>
 </template>

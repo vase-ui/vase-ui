@@ -3460,13 +3460,13 @@ describe('<Popover.Root />', () => {
             <Popover.Positioner>
               <Popover.Popup
                 data-testid="popup"
-                stateClass={(state: Popover.Popup.State) => {
-                  renders.push({ open: state.open, instant: state.instant });
-                  return undefined;
+                v-slots={{
+                  default: ({ state }: { state: Popover.Popup.State }) => {
+                    renders.push({ open: state.open, instant: state.instant });
+                    return 'Content';
+                  },
                 }}
-              >
-                Content
-              </Popover.Popup>
+              />
             </Popover.Positioner>
           </Popover.Portal>
         </Popover.Root>,

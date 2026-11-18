@@ -19,8 +19,7 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
 
 /**
  * Gives the API of a Vase UI part to a component.
- * The component gets the `as` prop, the `#render` slot, `stateClass`, `stateStyle`,
- * the state data attributes and the exposed `element`.
+ * The component gets the `as` prop, the `#render` slot, state data attributes and an exposed `element`.
  *
  * Call it in `setup`.
  * Set `inheritAttrs: false`. The composable reads the attributes with `useAttrs()`
@@ -41,8 +40,7 @@ import type { UseRenderElementParameters } from '../internals/useRenderElement';
  * A slot of a Vapor component reads `props` only when it uses `props`.
  *
  * @param componentProps The reactive props object of the component. Do not destructure it.
- * The composable reads `as`, `stateClass` and `stateStyle` from it.
- * A component with none of the three passes `{}`.
+ * The composable reads `as`. A component without this prop passes `{}`.
  * @param params The state and the other parameters for the element.
  * @public
  */
@@ -88,7 +86,7 @@ export type UseRenderElementProps<TagName extends keyof IntrinsicElementAttribut
   WithVaseUIEventHandlers<IntrinsicElementAttributes[TagName]>;
 
 /**
- * The props that a component declares for `useRender`: `as`, `stateClass` and `stateStyle`.
+ * The `as` prop that a component declares for `useRender`.
  * The props interface of the component extends it.
  */
 export interface UseRenderComponentProps<State = {}> extends VaseUIComponentProps<State> {}
@@ -97,7 +95,6 @@ export interface UseRenderParameters<State, RenderedElementType extends Element 
   /**
    * The state of the component.
    * It becomes the `data-*` attributes of the element.
-   * `stateClass` and `stateStyle` get it as their argument.
    * It takes a value, a ref or a getter.
    */
   state?: MaybeRefOrGetter<State> | undefined;

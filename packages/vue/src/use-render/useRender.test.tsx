@@ -1,5 +1,5 @@
 import { expect, describe, it, vi } from 'vitest';
-import { defineAsyncComponent, defineComponent, h } from 'vue';
+import { defineAsyncComponent, defineComponent, h, nextTick, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { HTMLProps } from '@vase-ui/vue/use-render';
@@ -430,14 +430,51 @@ describe('<UseRenderPart />', () => {
     refInstanceof: window.HTMLDivElement,
   }));
 
-  it('gives the state to the class, the style, the data attribute and the default slot', async () => {
-    const { container } = await render(
+  it('keeps each keyed element through a reorder and clears it on removal', async () => {
+    const keys = shallowRef(['first', 'second']);
+    const first = shallowRef<InstanceType<typeof UseRenderPart> | null>(null);
+    const second = shallowRef<InstanceType<typeof UseRenderPart> | null>(null);
+    const { container } = await render(() => (
+      <section>
+        {keys.value.map((key) => (
+          <UseRenderPart key={key} ref={key === 'first' ? first : second} data-key={key} />
+        ))}
+      </section>
+    ));
+
+    const firstPart = first.value!;
+    const firstElement = firstPart.element;
+    const secondElement = second.value!.element;
+    expect(firstElement).toBe(container.querySelector('[data-key="first"]'));
+    expect(secondElement).toBe(container.querySelector('[data-key="second"]'));
+
+    keys.value = ['second', 'first'];
+    await nextTick();
+    expect([...container.querySelectorAll('[data-key]')]).toEqual([secondElement, firstElement]);
+    expect(firstPart.element).toBe(firstElement);
+    expect(second.value!.element).toBe(secondElement);
+
+    keys.value = ['second'];
+    await nextTick();
+    expect(firstPart.element).toBeNull();
+    expect(first.value).toBeNull();
+    expect(second.value!.element).toBe(secondElement);
+  });
+
+  it('gives the render slot live state for the class, style and content', async () => {
+    const { container, setProps } = await render(
       <UseRenderPart
         active
-        stateClass={(state) => (state.active ? 'active-class' : 'inactive-class')}
-        stateStyle={(state) => ({ color: state.active ? 'red' : 'blue' })}
         v-slots={{
-          default: ({ state }: { state: UseRenderPartState }) => `active: ${state.active}`,
+          render: ({ props, state }: { props: HTMLProps; state: UseRenderPartState }) => (
+            <div
+              {...props}
+              class={state.active ? 'active-class' : 'inactive-class'}
+              style={{ color: state.active ? 'red' : 'blue' }}
+            >
+              active: {String(state.active)}
+            </div>
+          ),
         }}
       />,
     );
@@ -447,5 +484,11 @@ describe('<UseRenderPart />', () => {
     expect(element.style.color).toBe('red');
     expect(element).toHaveAttribute('data-active', '');
     expect(element).toHaveTextContent('active: true');
+
+    await setProps({ active: false });
+    expect(element).toHaveClass('inactive-class');
+    expect(element.style.color).toBe('blue');
+    expect(element).not.toHaveAttribute('data-active');
+    expect(element).toHaveTextContent('active: false');
   });
 });

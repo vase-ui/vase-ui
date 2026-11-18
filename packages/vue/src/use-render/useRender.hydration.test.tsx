@@ -16,12 +16,13 @@ describe('useRender: hydration', () => {
     document.body.append(container);
     container.innerHTML = serverHtml;
     let renders = 0;
-    // The component calls `stateClass` one time in each render.
-    const stateClass = () => {
+    const countRender = () => {
       renders += 1;
-      return undefined;
     };
-    const app = createSSRApp({ render: () => h(UseRenderPart, { ...props, stateClass }) });
+    const app = createSSRApp({
+      render: () =>
+        h(UseRenderPart, { ...props, onVnodeMounted: countRender, onVnodeUpdated: countRender }),
+    });
     onTestFinished(() => {
       app.unmount();
       container.remove();

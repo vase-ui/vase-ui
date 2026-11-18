@@ -40,11 +40,7 @@ type RefCallback<E extends Element> = (element: E | null) => void;
 type PropsSet =
   Record<string, any> | ((props: Record<string, any>) => Record<string, any>) | undefined;
 
-interface ChildrenMarker {
-  mounted: boolean;
-}
-
-const CHILDREN_MARKER: InjectionKey<ChildrenMarker> = Symbol();
+const SET_CHILDREN_MOUNTED: InjectionKey<(mounted: boolean) => void> = Symbol();
 
 /**
  * Tells the part that its `children` component is mounted, until that component unmounts.
@@ -53,12 +49,10 @@ const CHILDREN_MARKER: InjectionKey<ChildrenMarker> = Symbol();
  */
 export function markChildrenMounted(): void {
   if (process.env.NODE_ENV !== 'production') {
-    const marker = inject(CHILDREN_MARKER, null);
-    if (marker) {
-      marker.mounted = true;
-      onBeforeUnmount(() => {
-        marker.mounted = false;
-      });
+    const setMounted = inject(SET_CHILDREN_MOUNTED, null);
+    if (setMounted) {
+      setMounted(true);
+      onBeforeUnmount(() => setMounted(false));
     }
   }
 }
@@ -172,7 +166,7 @@ function takeServerAttributes(
  *
  * @param element The default tag of the part, as a value, a ref or a getter.
  * @param componentProps The reactive props object of the part. Do not destructure it.
- * The composable reads `as`, `stateClass` and `stateStyle`.
+ * The composable reads `as`.
  * @param params Other parameters for the element.
  */
 export function useRenderElement<
@@ -186,7 +180,7 @@ export function useRenderElement<
   const attrs = useAttrs();
   const slots = useSlots();
   const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
-  const refCallbacks = Array.isArray(params.ref) ? params.ref : [params.ref];
+  const callbacks = params.ref;
   let hasRendered = false;
   let setRefWasCalled = false;
   let hasWrittenStyleKey = false;
@@ -255,8 +249,12 @@ export function useRenderElement<
     }
     heldElement = resolved;
     elementRef.value = resolved;
-    for (const callback of refCallbacks) {
-      callback?.(resolved);
+    if (Array.isArray(callbacks)) {
+      for (const callback of callbacks) {
+        callback?.(resolved);
+      }
+    } else {
+      callbacks?.(resolved);
     }
   }
 
@@ -312,7 +310,7 @@ export function useRenderElement<
     // setter by name, so Vue merges the two into one `ref`.
     outProps.ref = setRef;
 
-    const consumerClass = mergeClassNames(componentProps.stateClass?.(state), classAttribute);
+    const consumerClass = mergeClassNames(undefined, classAttribute);
     if (consumerClass) {
       outProps.class = mergeClassNames(outProps.class, consumerClass);
     }
@@ -321,7 +319,6 @@ export function useRenderElement<
     const style = normalizeStyle([
       outProps.style,
       styleAttribute,
-      componentProps.stateStyle?.(state),
       params.overridingStyle?.(),
     ]) as Record<string, unknown>;
     // On a server, Vue writes `style=""` for a `style` key that has no value. On a client, Vue
@@ -369,9 +366,11 @@ export function useRenderElement<
 
   if (process.env.NODE_ENV !== 'production') {
     let slotWasRendered = false;
-    const childrenMarker: ChildrenMarker = { mounted: false };
+    let childrenMounted = false;
     if (params.children) {
-      provide(CHILDREN_MARKER, childrenMarker);
+      provide(SET_CHILDREN_MOUNTED, (mounted) => {
+        childrenMounted = mounted;
+      });
     }
 
     // A consumer can give `as` or `#render` after the mount, so the check runs after each render
@@ -413,7 +412,7 @@ export function useRenderElement<
         );
       }
 
-      if (params.children && !childrenMarker.mounted) {
+      if (params.children && !childrenMounted) {
         warn(
           'The `#render` slot did not mount `children`.',
           'The element then lacks the nodes that the part adds through `children`.',
@@ -506,8 +505,8 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    */
   children?: boolean | undefined;
   /**
-   * A function that returns a style of the part that wins over the `style` attribute and
-   * `stateStyle`. The composable merges it last. `undefined` or an empty object adds no style.
+   * Returns a style of the part that wins over the `style` attribute.
+   * An empty object or `undefined` adds no style.
    */
   overridingStyle?: (() => CSSProperties | undefined) | undefined;
   /**

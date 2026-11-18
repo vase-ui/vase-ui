@@ -60,7 +60,7 @@ defineExpose({ element });
   <ItemIndicator
     v-if="shouldRender && $slots.render"
     ref="indicator"
-    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as }"
     :selected="selected"
   >
     <template #render="slotProps">
@@ -70,7 +70,7 @@ defineExpose({ element });
   <ItemIndicator
     v-else-if="shouldRender"
     ref="indicator"
-    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as }"
     :selected="selected"
   >
     <template #default="slotProps">

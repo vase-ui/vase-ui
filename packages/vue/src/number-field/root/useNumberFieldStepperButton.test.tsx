@@ -1,3 +1,4 @@
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
@@ -846,15 +847,25 @@ describe('useNumberFieldStepperButton', () => {
         ])(
           'passes disabled state to className when $scenario',
           async ({ rootDisabled, buttonDisabled }) => {
-            const classNameSpy = vi.fn();
             await render(
               <NumberField.Root disabled={rootDisabled}>
-                <Stepper disabled={buttonDisabled} stateClass={classNameSpy} />
+                <Stepper
+                  disabled={buttonDisabled}
+                  v-slots={{
+                    render: ({
+                      props,
+                      state,
+                    }: {
+                      props: HTMLProps;
+                      state: { disabled: boolean };
+                    }) => <button {...props} class={{ inactive: state.disabled }} />,
+                  }}
+                />
                 <NumberField.Input />
               </NumberField.Root>,
             );
 
-            expect(classNameSpy.mock.lastCall?.[0]).toHaveProperty('disabled', true);
+            expect(screen.getByRole('button')).toHaveClass('inactive');
           },
         );
       });

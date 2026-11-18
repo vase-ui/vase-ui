@@ -21,7 +21,7 @@
     {
       "upstream": "packages/react/src/utils/resolveStyle.ts",
       "kind": "not-applicable",
-      "reason": "The file resolves the React `style` prop, which is an object or a function of the state. In Vase UI the `style` attribute and the `stateStyle` prop do this, and `useRenderElement` merges them. No Vase UI code needs the function."
+      "reason": "The file resolves the React `style` prop, which is an object or a function of the state. Vase UI accepts the native `style` attribute. A render slot can bind it from state."
     },
     {
       "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",
@@ -41,7 +41,7 @@
     {
       "upstream": "packages/react/src/utils/resolveClassName.ts",
       "kind": "not-applicable",
-      "reason": "The file resolves the React `className` prop, which is a string or a function of the state. In Vase UI the `class` attribute and the `stateClass` prop do this, and `useRenderElement` merges them. No Vase UI code needs the function."
+      "reason": "The file resolves the React `className` prop, which is a string or a function of the state. Vase UI accepts the native `class` attribute. A render slot can bind it from state."
     }
   ],
   "surfaceAdditions": [],

@@ -17,7 +17,7 @@ const TestPart = defineComponent(
     });
     return () => h('div', elementProps());
   },
-  { props: ['as', 'stateClass', 'stateStyle', 'ownStyle'], inheritAttrs: false },
+  { props: ['as', 'ownStyle'], inheritAttrs: false },
 );
 
 describe('useRenderElement on a server', () => {
@@ -37,8 +37,8 @@ describe('useRenderElement on a server', () => {
     { name: 'a style that is undefined', props: { style: undefined }, html: '<div></div>' },
     { name: 'a style that is an empty string', props: { style: '' }, html: '<div></div>' },
     {
-      name: 'a state style that is an empty object',
-      props: { stateStyle: () => ({}) },
+      name: 'an empty style array',
+      props: { style: [] },
       html: '<div></div>',
     },
     {

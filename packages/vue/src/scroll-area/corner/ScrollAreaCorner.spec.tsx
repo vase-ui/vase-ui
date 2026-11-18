@@ -5,7 +5,7 @@ import { expectType } from '#test-utils';
 
 export const props: ScrollArea.Corner.Props = {
   as: 'section',
-  stateClass: () => 'corner',
+  class: 'corner',
 } satisfies ScrollAreaCornerProps;
 export const state: ScrollArea.Corner.State = {} satisfies ScrollAreaCornerState;
 

@@ -71,8 +71,6 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, FloatingPortalLite),
       as,
-      stateClass,
-      stateStyle,
       container,
     }"
   >
@@ -86,8 +84,6 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, FloatingPortalLite),
       as,
-      stateClass,
-      stateStyle,
       container,
     }"
   >
