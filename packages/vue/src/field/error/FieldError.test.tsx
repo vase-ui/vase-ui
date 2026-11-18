@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { defineComponent, h, shallowRef } from 'vue';
+import { defineComponent, h, ref, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -537,6 +537,37 @@ describe('<Field.Error />', () => {
         },
       });
       expect(error.textContent).toBe('Check the address');
+    });
+
+    it('keeps the last list during exit when its messages are cleared in place', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const errors = ref({ email: ['First', 'Second'] });
+      await render(() => (
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Form errors={errors.value}>
+            <Field.Root name="email">
+              <Field.Control />
+              <Field.Error class="popup" data-testid="error" />
+            </Field.Root>
+          </Form>
+        </div>
+      ));
+      const error = screen.getByTestId('error');
+      const messages = () =>
+        within(error)
+          .queryAllByRole('listitem')
+          .map((item) => item.textContent);
+      errors.value.email[0] = 'Updated';
+      await flushMicrotasks();
+      expect(messages()).toEqual(['Updated', 'Second']);
+
+      await nextEndingStyle(error, {
+        action: () => {
+          errors.value.email.length = 0;
+        },
+      });
+      expect(messages()).toEqual(['Updated', 'Second']);
     });
 
     it('keeps its message while it animates out', async () => {

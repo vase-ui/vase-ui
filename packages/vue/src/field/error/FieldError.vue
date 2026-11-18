@@ -114,7 +114,11 @@ watchEffect(() => {
         : errors.length > 1
           ? errors
           : error;
-    message.value = Array.isArray(current) && current.length <= 1 ? current[0] : current;
+    message.value = Array.isArray(current)
+      ? current.length > 1
+        ? [...current]
+        : current[0]
+      : current;
   }
 });
 provide(FieldErrorContext, message);
