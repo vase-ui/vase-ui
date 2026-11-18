@@ -118,7 +118,6 @@ describe('usePressAndHold', () => {
     const tick = vi.fn(() => true);
     const onStop = vi.fn();
     const Hold = defineHoldButton({ startDelay: 100, tickDelay: 10, onStop }, tick);
-    let button: HTMLElement;
     const Branch = defineComponent(() => {
       onDeactivated(() => {
         button.dispatchEvent(
@@ -132,7 +131,7 @@ describe('usePressAndHold', () => {
       );
     });
     await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
-    button = screen.getByRole('button');
+    const button = screen.getByRole('button');
     shown.value = false;
     await nextTick();
     window.dispatchEvent(new PointerEvent('pointerup'));
@@ -160,7 +159,7 @@ describe('usePressAndHold', () => {
     await fireEvent.pointerUp(button, { pointerType: 'mouse' });
   });
 
-  it('stops repeating when the first tick releases the press', async () => {
+  it('VUE-143: stops repeating when the first tick releases the press', async () => {
     const onStop = vi.fn();
     const tick = vi.fn(() => {
       window.dispatchEvent(new PointerEvent('pointerup'));
