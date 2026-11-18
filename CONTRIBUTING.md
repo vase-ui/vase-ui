@@ -306,7 +306,7 @@ The template of each such part has the `#render` slot, then the element, and no 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
 
 - Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper. For example, `Input` declares `id`, `name` and `disabled`.
-- ESLint requires `withoutPropsOf` for `$attrs` on a component tag. `src/internals/withoutPropsOf.coverage.node.test.ts` checks each part tag with an object `v-bind` for the call with that tag. If all template roots are part tags, each must have that binding. Both forms require `inheritAttrs: false`.
+- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
 - Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot, such as `Input`, has no slot template in the second form.
 - Do not write `v-if` on a slot template, as in `<template v-if="$slots.render" #render>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
@@ -320,7 +320,7 @@ A part that Base UI writes as another part renders that part and no element of i
 
 A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
 
-- Set `inheritAttrs: false` on the wrapper root. Bind `withoutPropsOf($attrs, OtherRoot)` on `OtherRoot` before its named props. The other root renders no element, so Vue still warns about an attribute such as `class` in a development build (`VUE-136`). The wrapper root has no `#render` slot.
+- Set `inheritAttrs: false` on the wrapper root. Bind `withoutPropsOf($attrs, OtherRoot)` on `OtherRoot` before its named props. An attribute thus sets no prop that the wrapper root omits (`VUE-136`). The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
 - Its props interface extends an `Omit` of the props interface of the other root. The template binds each prop on the other root by name.
 - The rule above for events applies to the events of the other root.
 - It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.

@@ -47,7 +47,7 @@ const columnItem = (testId: string, name: string) =>
 describe('<TimePicker.Root />', () => {
   const { render } = createRenderer();
 
-  it('keeps a handle attribute closed while the picker is open', async () => {
+  it('keeps the handle of a handle attribute closed while the picker is open', async () => {
     const handle = Popover.createHandle();
     const { user } = await renderPicker({ handle });
 

@@ -27,7 +27,8 @@ export interface DateFieldActions {
  * `setup`. Its template gives the filtered attributes to `fieldProps` for its end of the range.
  * @param end The end that the field shows.
  * @param field The ref of the `DateField.Root` that the part renders.
- * @param props The declared props of the part. The prop `ariaLabelledby` names the elements that label the group.
+ * @param props The declared props of the part. The prop `ariaLabelledby` names the elements that
+ * label the group.
  * @param defaultLabel The name of the field when the consumer gives none.
  */
 export function useDateRangePickerField(
