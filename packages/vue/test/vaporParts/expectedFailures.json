@@ -74,6 +74,9 @@
     "src/combobox/items/createItems.test.tsx": {
       "fails": {}
     },
+    "src/combobox/trigger/ComboboxTrigger.press.test.tsx": {
+      "fails": {}
+    },
     "src/combobox/value/ComboboxValue.test.tsx": {
       "fails": {}
     },
@@ -250,6 +253,9 @@
       "fails": {
         "<Select.ItemText /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
+    },
+    "src/select/trigger/SelectTrigger.press.test.tsx": {
+      "fails": {}
     },
     "src/switch/root/SwitchRoot.test.tsx": {
       "fails": {
