@@ -1544,6 +1544,21 @@ describe('useDateTimeFieldRoot', () => {
       expect(segmentOf(container, 'month')).toHaveFocus();
     });
 
+    it('marks the enclosing field as filled at mount and clears the mark when the parent clears the value', async () => {
+      const value = shallowRef<string | null>('2026-11-14');
+      await render(() => (
+        <Field.Root data-testid="field">
+          <DateTimeFieldProbe modelValue={value.value} />
+        </Field.Root>
+      ));
+      const field = screen.getByTestId('field');
+      expect(field).toHaveAttribute('data-filled');
+
+      value.value = null;
+      await flushMicrotasks();
+      expect(field).not.toHaveAttribute('data-filled');
+    });
+
     it('marks the field as focused, dirty, filled and touched', async () => {
       const { container, user } = await render(
         <Field.Root name="when">
