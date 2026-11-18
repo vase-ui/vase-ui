@@ -398,6 +398,7 @@ let savedSnap:
   | {
       viewport: HTMLElement;
       declared: string | undefined;
+      suppressed: boolean;
       inline: { value: string; priority: string } | null;
     }
   | undefined;
@@ -413,9 +414,20 @@ watch(
   pressed,
   (active) => {
     const viewport = element.value;
-    if (active && viewport && (savedSnap?.viewport !== viewport || !savedSnap.inline)) {
-      savedSnap = { viewport, declared: declaredSnap, inline: readInlineSnap(viewport) };
+    if (!active || !viewport) {
+      return;
     }
+    const inline = readInlineSnap(viewport);
+    // A second press can start while the first press still owns the inline declaration.
+    if (
+      savedSnap?.viewport === viewport &&
+      savedSnap.suppressed &&
+      inline.value === 'none' &&
+      inline.priority === 'important'
+    ) {
+      return;
+    }
+    savedSnap = { viewport, declared: declaredSnap, suppressed: false, inline };
   },
   { flush: 'sync' },
 );
@@ -429,6 +441,7 @@ function viewportProps() {
     return base;
   }
 
+  savedSnap.suppressed = active;
   let value = 'none !important';
   if (!active) {
     if (!savedSnap.inline && declaredSnap !== savedSnap.declared) {

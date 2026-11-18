@@ -129,14 +129,15 @@ describe('<ScrollArea.Thumb />', () => {
   });
 
   it('VUE-140: saves a fresh snap value after a press ends before the patch', async () => {
-    await render(
+    const label = shallowRef('first');
+    await render(() => (
       <ScrollArea.Root>
-        <ScrollArea.Viewport data-testid="viewport" />
+        <ScrollArea.Viewport data-testid="viewport" data-label={label.value} />
         <ScrollArea.Scrollbar keepMounted>
           <ScrollArea.Thumb data-testid="thumb" />
         </ScrollArea.Scrollbar>
-      </ScrollArea.Root>,
-    );
+      </ScrollArea.Root>
+    ));
     const viewport = screen.getByTestId('viewport');
     const thumb = screen.getByTestId('thumb');
     vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
@@ -144,12 +145,51 @@ describe('<ScrollArea.Thumb />', () => {
     viewport.style.setProperty('scroll-snap-type', 'x mandatory');
     await Promise.all([fireEvent.pointerDown(thumb, press), fireEvent.pointerUp(thumb, press)]);
     viewport.style.setProperty('scroll-snap-type', 'y mandatory', 'important');
+    label.value = 'second';
+    await nextTick();
+    expect(viewport.style.scrollSnapType).toBe('y mandatory');
     await fireEvent.pointerDown(thumb, press);
     expect(viewport.style.scrollSnapType).toBe('none');
     await fireEvent.pointerUp(thumb, press);
     expect(viewport.style.scrollSnapType).toBe('y mandatory');
     expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('important');
   });
+
+  it.each(['before', 'after'])(
+    'VUE-140: keeps a script change between two presses %s the first patch',
+    async (when) => {
+      await render(
+        <ScrollArea.Root>
+          <ScrollArea.Viewport data-testid="viewport" />
+          <ScrollArea.Scrollbar keepMounted>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+      const viewport = screen.getByTestId('viewport');
+      const thumb = screen.getByTestId('thumb');
+      vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
+      const pointer = { button: 0, pointerId: 1 };
+      viewport.style.scrollSnapType = 'x mandatory';
+      const firstDown = fireEvent.pointerDown(thumb, pointer);
+      if (when === 'after') {
+        await firstDown;
+        expect(viewport.style.scrollSnapType).toBe('none');
+      }
+      const firstUp = fireEvent.pointerUp(thumb, pointer);
+      const nextSnap = when === 'before' ? 'none' : 'y mandatory';
+      viewport.style.setProperty('scroll-snap-type', nextSnap, 'important');
+      await Promise.all([firstDown, firstUp, fireEvent.pointerDown(thumb, pointer)]);
+      expect(viewport.style.scrollSnapType).toBe('none');
+      await Promise.all([
+        fireEvent.pointerUp(thumb, pointer),
+        fireEvent.pointerDown(thumb, pointer),
+      ]);
+      await fireEvent.pointerUp(thumb, pointer);
+      expect(viewport.style.scrollSnapType).toBe(nextSnap);
+      expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('important');
+    },
+  );
 
   it.each(['viewport', 'thumb'])('ends the press when only the %s enters a hold', async (part) => {
     const shown = shallowRef(true);
