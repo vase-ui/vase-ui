@@ -46,7 +46,10 @@ export interface MenuFilterListParameters {
 }
 
 export interface MenuFilterItem extends UseFilterDropdownItemReturnValue {
-  /** Renders nothing and reads the text of the default slot of an item that the query hides. */
+  /**
+   * Reads the text of the default slot of an item that the query hides. It adds no element to the
+   * document.
+   */
   HiddenItemText: Component | undefined;
   /**
    * The attributes and the listeners that the filter adds to the element. The props of the consumer

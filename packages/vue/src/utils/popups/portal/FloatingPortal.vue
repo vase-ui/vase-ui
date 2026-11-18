@@ -25,8 +25,8 @@ export interface FloatingPortalProps
   portalOwnerRole?: string | undefined;
   /**
    * Whether the portal element renders in the place of the part, with no `Teleport`.
-   * Other portal parts pass attributes to this component.
-   * The internal name keeps their `disabled` attributes separate from this mode.
+   * Only `Dialog.Portal` sets this prop, from its `disabled` prop.
+   * On other portal parts, `disabled` stays an attribute of the portal element.
    * @default false
    */
   inPlace?: boolean | undefined;
@@ -52,8 +52,10 @@ import {
   enableFocusInside,
   getNextTabbable,
   getPreviousTabbable,
+  getTabbableNearElement,
   isOutsideEvent,
 } from '../focus/tabbable';
+import type { FocusableElement } from '../focus/tabbable';
 import FloatingPortalChildren from './FloatingPortalChildren.vue';
 import { PortalContext } from './FloatingPortalContext';
 import type { FocusManagerState } from './FloatingPortalContext';
@@ -242,22 +244,57 @@ provide(PortalContext, {
   afterOutsideRef,
 });
 
+function isPlaceGuard(candidate: Element) {
+  return candidate === placeNodes?.before || candidate === placeNodes?.after;
+}
+
+function focusNearPlaceGuard(
+  guard: HTMLSpanElement | undefined,
+  direction: 1 | -1,
+  domReference: Element | null | undefined,
+) {
+  const target = guard ? getTabbableNearElement(guard, direction, isPlaceGuard) : null;
+  (target && !isPlaceGuard(target)
+    ? target
+    : (domReference as FocusableElement | null | undefined)
+  )?.focus();
+}
+
+// When `KeepAlive` holds only the popup, its inside guards are out of the document while these
+// outside guards stay. Each outside guard then skips the popup. The search starts at the other
+// guard so the two guards do not focus each other.
 function handleBeforeGuardFocusin(event: FocusEvent) {
+  const focusManager = focusManagerState.value;
   if (isOutsideEvent(event, element.value ?? undefined)) {
-    beforeInsideRef.value?.focus();
+    const insideGuard = beforeInsideRef.value;
+    if (insideGuard?.isConnected) {
+      insideGuard.focus();
+      return;
+    }
+
+    focusNearPlaceGuard(placeNodes?.after, 1, focusManager?.domReference);
+    if (focusManager?.closeOnFocusOut) {
+      focusManager.onOpenChange(false, createChangeEventDetails(REASONS.focusOut, event));
+    }
     return;
   }
 
-  getPreviousTabbable(focusManagerState.value?.domReference ?? null)?.focus();
+  getPreviousTabbable(focusManager?.domReference ?? null)?.focus();
 }
 
 function handleAfterGuardFocusin(event: FocusEvent) {
+  const focusManager = focusManagerState.value;
   if (isOutsideEvent(event, element.value ?? undefined)) {
-    afterInsideRef.value?.focus();
+    const insideGuard = afterInsideRef.value;
+    if (insideGuard?.isConnected) {
+      insideGuard.focus();
+      return;
+    }
+
+    focusNearPlaceGuard(placeNodes?.before, -1, focusManager?.domReference);
     return;
   }
 
-  const focusManager = focusManagerState.value;
   getNextTabbable(focusManager?.domReference ?? null)?.focus();
   if (focusManager?.closeOnFocusOut) {
     focusManager.onOpenChange(false, createChangeEventDetails(REASONS.focusOut, event));

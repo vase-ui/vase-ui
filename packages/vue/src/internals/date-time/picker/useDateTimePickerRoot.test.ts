@@ -41,6 +41,7 @@ function createPicker(
   const picker: DateTimePickerContext<string, Details> = runInSetup(() =>
     useDateTimePickerRoot<string, Details>({
       part: 'Picker',
+      disabled: false,
       value: value,
       defaultValue: () => options.defaultValue,
       fallback: 'fallback',
@@ -193,6 +194,7 @@ describe('useDateTimePickerRoot with a value that can be empty', () => {
     const picker = runInSetup(() =>
       useDateTimePickerRoot<Range, Details>({
         part: 'RangePicker',
+        disabled: false,
         value,
         defaultValue: () => options.defaultValue,
         fallback: ['fallback', 'fallback'],

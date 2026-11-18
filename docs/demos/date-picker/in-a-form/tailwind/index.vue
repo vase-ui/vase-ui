@@ -4,7 +4,6 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue = Temporal.PlainDate.from('2026-12-01');
 const minDate = Temporal.PlainDate.from('2026-11-01');
 const maxDate = Temporal.PlainDate.from('2026-11-30');
@@ -29,7 +28,6 @@ const dayButtonClassName =
       :max-date="maxDate"
       :unavailable-dates="unavailableDates"
       locale="en-US"
-      time-zone="UTC"
     >
       <div
         class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
@@ -42,7 +40,7 @@ const dayButtonClassName =
               <DateField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                class="field-sizing-content px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600"
+                class="px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600"
               />
               <DateField.Literal
                 v-else
@@ -75,7 +73,7 @@ const dayButtonClassName =
             aria-label="Choose a check-in date"
             class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <DatePicker.Calendar :today="today" class="relative box-border w-68 text-sm">
+            <DatePicker.Calendar class="relative box-border w-68 text-sm">
               <div class="absolute top-0 right-0 flex gap-1">
                 <Calendar.PreviousButton :class="buttonClassName">&lsaquo;</Calendar.PreviousButton>
                 <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>

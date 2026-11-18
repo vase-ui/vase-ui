@@ -3,7 +3,6 @@ import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const selected = shallowRef<Temporal.PlainDate | null>(null);
 </script>
 
@@ -11,7 +10,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
   <Calendar.Root
     v-model:value="selected"
     iso-week
-    :today="today"
     locale="en-US"
     aria-label="Start of the sprint"
     :class="[styles.Root, styles.WithWeekNumbers]"

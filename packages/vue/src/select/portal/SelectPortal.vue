@@ -21,6 +21,7 @@ import { computed, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import SelectPortalChildren from './SelectPortalChildren.vue';
@@ -54,7 +55,7 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="SelectPortalChildren" />
@@ -63,7 +64,7 @@ defineExpose({ element });
   <FloatingPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <SelectPortalChildren><slot :state="state" /></SelectPortalChildren>
   </FloatingPortal>

@@ -31,10 +31,18 @@ export interface UseFilterDropdownItemReturnValue {
    */
   ref: (element: HTMLElement | null) => void;
   /**
-   * Takes the text of the slot of a filtered-out item, which has no element to read. The part
-   * gives it to `FilterDropdownHiddenItemText`.
+   * Takes the text of the slot of an item that the query hides, which has no element to read. The
+   * part gives this function and the `label` of the item to `FilterDropdownHiddenItemText`.
+   *
+   * The first text after the element goes is a baseline. The text of the element stays the text of
+   * the item until a later text differs from that baseline. An item with a `label` whose slot needs
+   * a mount gives no text while it is hidden. When that `label` becomes `undefined`, the first text
+   * of the mount is the text of the item.
+   *
+   * `mounted` is `true` when the text is the text of a mount of the slot, and `false` when it is
+   * the text of vnodes.
    */
-  setHiddenText: (text: string) => void;
+  setHiddenText: (text: string, mounted: boolean) => void;
 }
 
 /**
@@ -44,8 +52,8 @@ export interface UseFilterDropdownItemReturnValue {
  * popup can open with a query that already excludes the item, and a hidden item has no text left
  * to match against.
  *
- * Call it in `setup`. The part renders its element only while `visible` is `true`, and else
- * renders `FilterDropdownHiddenItemText` with its default slot.
+ * Call it in `setup`. The part renders its element only while `visible` is `true`. Else it renders
+ * `FilterDropdownHiddenItemText` with its `label` and its default slot.
  *
  * @internal
  */
@@ -62,9 +70,15 @@ export function useFilterDropdownItem(
 
   const itemId = Symbol('filter-dropdown-item');
   let element: HTMLElement | null = null;
+  // Kept separate from `registeredText`. When `label` becomes `undefined` on a hidden item,
+  // `resolveText` returns this text and not the old `label`.
+  let renderedText: string | undefined;
   let registeredText: string | undefined;
   // The text of the slot that the hidden item last gave, to tell whether it changed.
   let hiddenText: string | undefined;
+  // `true` after the `label` goes from a hidden item that gave no slot text. The content can have
+  // changed with no read since the element went, so the first text of a mount is not a baseline.
+  let renderedTextIsOld = false;
 
   const matched = computed(() => store.select('isItemVisible', itemId));
 
@@ -74,6 +88,9 @@ export function useFilterDropdownItem(
   const registered = shallowRef(matched.value);
 
   function resolveText() {
+    if (element !== null) {
+      renderedText = element.textContent ?? '';
+    }
     const label = toValue(params.label);
     if (label != null) {
       return label;
@@ -81,7 +98,7 @@ export function useFilterDropdownItem(
     // A filtered-out item has no DOM node left. Its slot is only a stand-in for the text it
     // renders, which can differ (a translation component, for example), so the cached text wins
     // unless the slot text changed.
-    return element === null ? registeredText : (element.textContent ?? '');
+    return renderedText;
   }
 
   function register(resolvedText?: string) {
@@ -94,8 +111,11 @@ export function useFilterDropdownItem(
         // A mounted item reports what it renders now, even nothing, since a descendant can change
         // its text without the item re-rendering. A filtered-out item falls back to the cached
         // text.
-        if (toValue(params.label) == null && element !== null) {
-          registeredText = element.textContent ?? '';
+        if (element !== null) {
+          renderedText = element.textContent ?? '';
+          if (toValue(params.label) == null) {
+            registeredText = renderedText;
+          }
         }
         return registeredText;
       },
@@ -128,18 +148,31 @@ export function useFilterDropdownItem(
   onUpdated(() => registerChangedText(resolveText()));
   watch(
     () => toValue(params.label),
-    () => registerChangedText(resolveText()),
+    (label) => {
+      // This watcher runs before the render. The element of an item that the query hides in the
+      // same flush is thus not `null` here, and the first slot text of that item stays a baseline.
+      if (label == null && element === null && hiddenText === undefined) {
+        renderedTextIsOld = true;
+      }
+      registerChangedText(resolveText());
+    },
   );
 
-  function setHiddenText(text: string) {
+  function setHiddenText(text: string, mounted: boolean) {
     const previousText = hiddenText;
     hiddenText = text;
     // The first text after the element goes away is only a baseline: the cached text of the
-    // element wins until the slot text changes.
-    if (previousText === undefined || text === previousText || toValue(params.label) != null) {
+    // element wins until the slot text changes. The text of vnodes is always such a baseline,
+    // because the vnode of a component has no text.
+    const isBaseline = previousText === undefined && !(renderedTextIsOld && mounted);
+    renderedTextIsOld = false;
+    if (isBaseline || text === previousText) {
       return;
     }
-    registerChangedText(text);
+    renderedText = text;
+    if (toValue(params.label) == null) {
+      registerChangedText(text);
+    }
   }
 
   return {
@@ -148,6 +181,7 @@ export function useFilterDropdownItem(
       element = nextElement;
       if (nextElement !== null) {
         hiddenText = undefined;
+        renderedTextIsOld = false;
       }
     },
     setHiddenText,

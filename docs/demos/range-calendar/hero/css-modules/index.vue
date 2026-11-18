@@ -2,7 +2,6 @@
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   Temporal.PlainDate.from('2026-11-10'),
   Temporal.PlainDate.from('2026-11-14'),
@@ -13,8 +12,6 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   <RangeCalendar.Root
     :class="styles.Root"
     aria-label="Trip dates"
-    :today="today"
-    time-zone="UTC"
     locale="en-US"
     :default-value="defaultValue"
   >

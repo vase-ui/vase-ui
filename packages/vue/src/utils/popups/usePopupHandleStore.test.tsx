@@ -1,12 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import { defineComponent, nextTick, shallowRef } from 'vue';
-import { createRenderer, hydrate, renderOnServer } from '#test-utils';
+import { describe, expect, it, onTestFinished } from 'vitest';
+import { createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
+import { Menu } from '@vase-ui/vue/menu';
+import {
+  createRenderer,
+  flushMicrotasks,
+  hydrate,
+  installPartsInterop,
+  renderOnServer,
+  takeReportedMessages,
+  waitFor,
+  within,
+} from '#test-utils';
 import {
   PopupHandleFixtureStore,
   createPopupHandleFixture,
 } from '../../../test/fixtures/PopupHandleFixture';
 import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
 import PopupHandleHydration from './PopupHandleHydration.test.vue';
+import PopupHandleLateTriggerHydration from './PopupHandleLateTriggerHydration.test.vue';
 import { usePopupHandleStore } from './usePopupHandleStore';
 
 const HYDRATION_FIXTURE = 'src/utils/popups/PopupHandleHydration.test.vue';
@@ -81,9 +92,9 @@ describe('usePopupHandleStore', () => {
     }
 
     // The root of the fixture attaches before the trigger that follows it hydrates, as a mounted
-    // root does for a trigger that hydrates late. Hydration does not patch an attribute of a bound
-    // object, which is how a part binds its attributes. A trigger that read the store of the root
-    // would then keep the server HTML.
+    // root does for a trigger that hydrates late. The fixture binds a plain object without
+    // `useRenderElement`. Its trigger would keep the server value of `aria-expanded` if it read the
+    // root store while it hydrates.
     it('gives the inert store while a trigger with a handle hydrates, and the store of the root after it', async () => {
       const { server, client } = await hydrateWithRoot({
         defaultOpen: true,
@@ -92,6 +103,40 @@ describe('usePopupHandleStore', () => {
 
       expect(server).toEqual({ before: 'false', inside: 'false', after: 'false' });
       expect(client).toEqual({ before: 'false', inside: 'false', after: 'true' });
+    });
+
+    it('hydrates a late trigger of a mounted root from the inert store, then gives it the values of the root', async () => {
+      const handle = Menu.createHandle();
+      const gate = Promise.withResolvers<void>();
+      const container = document.createElement('div');
+      container.innerHTML = await renderOnServer(
+        'src/utils/popups/PopupHandleLateTriggerHydration.test.vue',
+      );
+      document.body.append(container);
+      const trigger = within(container).getByRole('button', { name: 'Trigger' });
+      expect(trigger).toBeEnabled();
+      expect(trigger).toHaveClass('on');
+
+      const app = installPartsInterop(
+        createSSRApp(PopupHandleLateTriggerHydration, { handle, hydrationGate: gate.promise }),
+      );
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      await flushMicrotasks();
+      expect(handle.store).not.toBe(handle.serverStore);
+
+      gate.resolve();
+      await waitFor(() => {
+        expect(trigger).toBeDisabled();
+      });
+      expect(trigger).toHaveClass('off');
+      expect(trigger).not.toHaveClass('on');
+      expect(trigger).toHaveAttribute('data-disabled');
+      expect(within(container).getByRole('button', { name: 'Trigger' })).toBe(trigger);
+      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('gives no store to a trigger with no handle, so it reads the store of its root while it hydrates', async () => {

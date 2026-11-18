@@ -10,11 +10,11 @@ export interface DeclaredProp {
 
 /**
  * The fields of a virtual DOM component instance that these functions read. Vue types `type`,
- * `props`, `slots` and `vnode.props`. It does not type `propsOptions`, `vnode.ctx` and the `_n`
- * flag of a slot.
+ * `props`, `slots` and `vnode.props`. It does not type `propsOptions`, `emitsOptions`, `vnode.ctx`
+ * and the `_n` flag of a slot.
  */
 export interface CallerInstance {
-  type: { emits?: unknown; __name?: string; name?: string };
+  type: { __name?: string; name?: string };
   props: Record<string, unknown>;
   slots: Record<string, unknown>;
   vnode: {
@@ -24,6 +24,8 @@ export interface CallerInstance {
   };
   /** The declared props, with mixins and `extends`. A component with no props has an empty list. */
   propsOptions: [Record<string, DeclaredProp | null>?, unknown?];
+  /** The declared events, with mixins and `extends`. `null` when no `emits` option exists. */
+  emitsOptions: Record<string, unknown> | null;
 }
 
 /** The virtual DOM component whose `setup` runs, or `null`. */
@@ -53,8 +55,7 @@ export function readPropValue(instance: CallerInstance, prop: string): unknown {
 }
 
 export function readDeclaredEvents(instance: CallerInstance): string[] {
-  const events = instance.type.emits;
-  return Array.isArray(events) ? (events as string[]) : Object.keys(events ?? {});
+  return Object.keys(instance.emitsOptions ?? {});
 }
 
 export function readDeclaredProps(instance: CallerInstance): Record<string, DeclaredProp | null> {

@@ -26,6 +26,7 @@ import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxPortalChildren from './ComboboxPortalChildren.vue';
@@ -67,7 +68,7 @@ defineExpose({ element });
   <FloatingPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="ComboboxPortalChildren" />
@@ -76,7 +77,7 @@ defineExpose({ element });
   <FloatingPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, stateClass, stateStyle, container }"
   >
     <ComboboxPortalChildren><slot :state="state" /></ComboboxPortalChildren>
   </FloatingPortal>

@@ -1,11 +1,20 @@
 import { expect, describe, it, vi } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineAsyncComponent, defineComponent, h } from 'vue';
+import type { Component } from 'vue';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { HTMLProps } from '@vase-ui/vue/use-render';
-import { createRenderer, describeConformance, isVaporApp, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  isVaporApp,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import UseRenderPart from './UseRenderPart.test.vue';
 import type { UseRenderPartState } from './UseRenderPart.test.vue';
 import UseRenderVaporPart from './UseRenderVaporPart.test.vue';
+import UseRenderVaporSpreadPart from './UseRenderVaporSpreadPart.test.vue';
 
 // A component that calls `useRender` in `setup` and renders the `#render` slot or the element.
 function defineTestComponent<Props extends Record<string, any> = {}>(
@@ -84,6 +93,59 @@ describe('useRender', () => {
     const report = vi.fn();
     await render(() => <UseRenderVaporPart report={report} data-testid="part" />);
     expect(report).toHaveBeenCalledExactlyOnceWith(screen.getByTestId('part'));
+  });
+
+  describe.runIf(isVaporApp)('a component of a consumer that is a Vapor component', () => {
+    const missingRefMessage =
+      'Vase UI: A Vapor component rendered its element with `elementProps()` and bound no `ref` by name.';
+
+    it('warns when the template binds no ref by name', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await render(<UseRenderVaporSpreadPart shown />);
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(missingRefMessage));
+    });
+
+    it('warns when the element comes after the mount', async () => {
+      const { rerender } = await render(<UseRenderVaporSpreadPart shown={false} />);
+      expect(takeReportedMessages()).toEqual([]);
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await rerender(<UseRenderVaporSpreadPart shown />);
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(missingRefMessage));
+    });
+
+    it('does not warn when the as component gives its element after the mount', async () => {
+      const { promise, resolve } = Promise.withResolvers<Component>();
+      const Lazy = defineAsyncComponent(() => promise);
+      const report = vi.fn();
+      await render(<UseRenderVaporPart as={Lazy} report={report} />);
+      expect(takeReportedMessages()).toEqual([]);
+
+      resolve(defineComponent({ setup: () => () => <div data-testid="lazy" /> }));
+      await flushMicrotasks();
+      expect(report).toHaveBeenCalledExactlyOnceWith(screen.getByTestId('lazy'));
+    });
+
+    it('runs the checks of the #render slot when the slot uses no slot prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const renderEmptySpan = () => <span />;
+      await render(<UseRenderVaporPart report={vi.fn()} v-slots={{ render: renderEmptySpan }} />);
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Vase UI: The `#render` slot gave no element to the part.'),
+      );
+    });
+  });
+
+  it('does not warn for a virtual DOM component whose render function returns no element', async () => {
+    const Empty = defineComponent(() => {
+      const { elementProps } = useRender({});
+      return () => {
+        elementProps();
+        return null;
+      };
+    });
+    await render(<Empty />);
+    expect(takeReportedMessages()).toEqual([]);
   });
 
   describe('param: defaultTagName', () => {

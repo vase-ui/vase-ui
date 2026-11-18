@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { computed, onMounted, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 
-const today = Temporal.PlainDate.from('2026-11-14');
-const booked = [
-  Temporal.PlainDate.from('2026-11-18'),
-  { start: Temporal.PlainDate.from('2026-11-24'), end: Temporal.PlainDate.from('2026-11-27') },
-];
+// A server does not know the day of the reader, so the value comes after the mount.
+const today = shallowRef<Temporal.PlainDate>();
+onMounted(() => {
+  today.value = Temporal.Now.plainDateISO();
+});
+const booked = computed(() =>
+  today.value
+    ? [
+        today.value.add({ days: 4 }),
+        { start: today.value.add({ days: 10 }), end: today.value.add({ days: 13 }) },
+      ]
+    : [],
+);
 const selected = shallowRef<Temporal.PlainDate | null>(null);
 </script>
 
@@ -15,7 +23,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     v-model:value="selected"
     :min-date="today"
     :unavailable-dates="booked"
-    :today="today"
     locale="en-US"
     aria-label="Appointment day"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"

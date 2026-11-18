@@ -132,8 +132,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     compositeProps,
     {
       role: 'listbox',
-      // A server and a browser can have another `Intl` text, and Vue writes no attribute while it
-      // hydrates.
+      // A server and a browser can have another `Intl` text, and Vue writes no attribute of a
+      // `v-bind` object while it hydrates.
       'aria-label': label.value,
       'aria-disabled': state.value.disabled || undefined,
       'aria-readonly': state.value.readOnly || undefined,

@@ -46,8 +46,9 @@ describe('<TimePicker.Root /> hydration', () => {
     expect(screen.getAllByRole('option')).toHaveLength(24);
   });
 
-  // Vue writes no attribute while it hydrates, so the name of a part that `Intl` formats keeps the
-  // text of the server until the render after the mount. The server HTML here gets another text.
+  // While Vue hydrates, it writes no attribute of a `v-bind` object, so the name of a part that
+  // `Intl` formats keeps the text of the server until the render after the mount. The server HTML
+  // here gets another text.
   it.each([
     {
       name: 'the trigger',

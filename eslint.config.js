@@ -31,6 +31,8 @@ const MESSAGES = {
     'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   renderSlotCall:
     'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
+  portalAttrs:
+    'An attribute can set a prop that only the internal portal declares. Bind `withoutPropsOf($attrs, FloatingPortal)` or `withoutPropsOf($attrs, FloatingPortalLite)` before the props of the part.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -39,6 +41,8 @@ const MESSAGES = {
     'A server render has no DOM, and an element can live in an iframe. Use `ownerDocument(element)` and `ownerWindow(element)`.',
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
+  staleRootNode:
+    'A root node that a watcher, a hook, a `computed` or a `useDomEffect` effect reads is stale after `Teleport` moves the element. Use `observeRootNode` or `followRootNode` of `src/internals`, or read the root node at the time of the event.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
@@ -83,6 +87,8 @@ const MESSAGES = {
     'Vue can run a function ref before the element is in the document, so this call can do nothing. Act in `onMounted`, or in `onVnodeMounted` in a slot function.',
   vendorStyleKey:
     "A server render writes this key with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `'-webkit-user-select'`.",
+  vendorStyleWrite:
+    "A server render writes this key of a style object with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `style['-webkit-user-select']`. For the `style` of an element, call `setProperty` with the CSS form.",
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -132,7 +138,7 @@ const RESTRICTED_PROPERTIES = [
 
 // HTML ignores the case of an attribute name, so the pattern ignores the case.
 const BASE_UI_NAME = '/base-ui/i';
-const VENDOR_STYLE_KEY = '/^(?:Webkit|Moz|ms)[A-Z]/';
+const VENDOR_STYLE_KEY = '/^(?:[Ww]ebkit|[Mm]oz|ms)[A-Z]/';
 
 // A template expression has these nodes too, so the script and the template share this list.
 const RESTRICTED_EXPRESSION_SYNTAX = [
@@ -145,8 +151,20 @@ const RESTRICTED_EXPRESSION_SYNTAX = [
     message: MESSAGES.baseUiName,
   },
   {
-    selector: `Property[key.name=${VENDOR_STYLE_KEY}], Property[key.value=${VENDOR_STYLE_KEY}]`,
+    // An object pattern has `Property` nodes too, and it reads the key.
+    selector: [
+      `ObjectExpression > Property[computed=false][key.name=${VENDOR_STYLE_KEY}]`,
+      `ObjectExpression > Property[key.value=${VENDOR_STYLE_KEY}]`,
+    ].join(', '),
     message: MESSAGES.vendorStyleKey,
+  },
+  {
+    // The object can also be the `style` of an element, so this entry has its own message.
+    selector: [
+      `AssignmentExpression > MemberExpression.left[computed=false][property.name=${VENDOR_STYLE_KEY}]`,
+      `AssignmentExpression > MemberExpression.left[property.value=${VENDOR_STYLE_KEY}]`,
+    ].join(', '),
+    message: MESSAGES.vendorStyleWrite,
   },
 ];
 
@@ -280,6 +298,11 @@ const RESTRICTED_TEST_SYNTAX = [
 ];
 
 const RESTRICTED_SYNTAX = [
+  {
+    selector:
+      "CallExpression[callee.name=/^(?:watch|watchEffect|watchPostEffect|watchSyncEffect|onBeforeMount|onMounted|onBeforeUpdate|onUpdated|onActivated|computed|useDomEffect)$/] CallExpression[callee.property.name='getRootNode']",
+    message: MESSAGES.staleRootNode,
+  },
   {
     selector: [
       "CallExpression[callee.type='MemberExpression'][callee.object.name=/^\\$?slots$/]",
@@ -658,7 +681,7 @@ export default defineConfig([
       '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       'prefer-object-has-own': 'error',
-      'logical-assignment-operators': 'error',
+      'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
       // The port keeps the shape of the Base UI code, which has unused `_` names and rest siblings.
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -697,6 +720,21 @@ export default defineConfig([
       'vue/component-api-style': ['error', ['script-setup']],
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
       'vue/no-restricted-syntax': ['error', ...RESTRICTED_TEMPLATE_SYNTAX],
+    },
+  },
+  {
+    files: ['packages/vue/src/*/portal/*.vue'],
+    ignores: TEST_FILES,
+    rules: {
+      'vue/no-restricted-syntax': [
+        'error',
+        ...RESTRICTED_TEMPLATE_SYNTAX,
+        {
+          selector:
+            ":not(CallExpression[callee.name='withoutPropsOf']) > Identifier[name='$attrs']",
+          message: MESSAGES.portalAttrs,
+        },
+      ],
     },
   },
   {

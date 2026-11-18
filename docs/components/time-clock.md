@@ -74,7 +74,7 @@ The root emits `valueCommitted` when a press or a drag that selects a number end
 
 ## Hour cycle
 
-A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press nearer to the center than the middle between the two rings selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
+A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press nearer to the center than the middle between the two rings selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face. When the face changes to 24 hours while a day period has the focus, the range input of the face takes the focus.
 
 The `hourCycle` prop sets the hour cycle. With no prop, the hour cycle of the locale applies.
 

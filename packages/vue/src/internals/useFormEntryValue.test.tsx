@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { KeepAlive, Teleport, Transition, defineComponent, h, shallowRef } from 'vue';
-import { createHeldBranch, createRenderer, screen, waitFor } from '#test-utils';
+import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { useFormEntryValue } from './useFormEntryValue';
 
 const VALUE = 'Main Street 1\nFlat 2';
@@ -201,6 +201,31 @@ describe('useFormEntryValue', () => {
     );
 
     expect(getEntries(shadowRoot.querySelector('form')!)).toEqual([['address', VALUE]]);
+  });
+
+  it('gives the entry the value after `Teleport` moves the form into a shadow root', async () => {
+    const host = document.createElement('div');
+    const container = document.createElement('div');
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.append(container);
+    document.body.append(host);
+    onTestFinished(() => host.remove());
+    const moved = shallowRef(false);
+    await render(() => (
+      <Teleport to={container} disabled={!moved.value}>
+        <form data-testid="form">
+          <EntryInput value={VALUE} />
+        </form>
+      </Teleport>
+    ));
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(getEntries(form)).toEqual([['address', VALUE]]);
+
+    moved.value = true;
+    await flushMicrotasks();
+
+    expect(form.getRootNode()).toBe(shadowRoot);
+    expect(getEntries(form)).toEqual([['address', VALUE]]);
   });
 
   it('gives the entry the value after a mount in a held branch', async () => {

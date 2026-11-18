@@ -7,6 +7,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  mockToday,
   screen,
   waitFor,
   waitForLaterMillisecond,
@@ -280,6 +281,8 @@ describe.each(demos)('%s', (demo) => {
   });
 
   async function mount(variant: Variant, disabled: boolean) {
+    // 2026-11-14 is a Saturday, so `calendar/disabled-dates` has a disabled today.
+    mockToday('2026-11-14');
     const Demo = (await modules[`../../../docs/demos/${demo}/${variant}/index.vue`]()).default;
     // The root of some demos is a `<div>`, so `disabled` on the demo reaches no part. The parts read
     // the field instead, so the demo also goes inside a disabled field. The field has no box, so

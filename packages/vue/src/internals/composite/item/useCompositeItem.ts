@@ -70,8 +70,8 @@ export function useCompositeItem<Metadata>(
     return {
       // A browser can run `setup` in another order than a server, so its first `tabindex` can
       // differ from the server HTML. `data-allow-mismatch` stops the Vue warning for that.
-      // Hydration does not patch an attribute. The string differs from the number that the item
-      // gives after the mount, so Vue then writes the attribute again.
+      // Vue keeps the server `tabindex` from a `v-bind` object while it hydrates. The change
+      // from a string to a number makes Vue write it after the mount.
       tabindex: isHydrating.value ? String(tabindex) : tabindex,
       'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
       // The root finds the items that hydrate by this attribute.

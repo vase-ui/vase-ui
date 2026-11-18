@@ -8,6 +8,7 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  portalOwnPropsTests,
   screen,
   waitFor,
   waitForPositioned,
@@ -25,6 +26,15 @@ describe('<Popover.Portal />', () => {
       return result;
     },
   }));
+
+  portalOwnPropsTests({
+    render,
+    createComponent: (attributes) => (
+      <Popover.Root defaultOpen>
+        <Popover.Portal {...attributes} />
+      </Popover.Root>
+    ),
+  });
 
   it('keeps a closed popup in the document with keepMounted', async () => {
     await render(

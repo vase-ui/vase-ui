@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { onMounted, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 
-const today = Temporal.PlainDate.from('2026-11-14');
+// A server does not know the day of the reader, so the value comes after the mount.
+const today = shallowRef<Temporal.PlainDate>();
+onMounted(() => {
+  today.value = Temporal.Now.plainDateISO();
+});
 const firstDay = Temporal.PlainDate.from('1926-01-01');
 const selected = shallowRef<Temporal.PlainDate | null>(null);
 </script>
@@ -12,7 +16,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     v-model:value="selected"
     :min-date="firstDay"
     :max-date="today"
-    :today="today"
     locale="en-US"
     aria-label="Date of birth"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"

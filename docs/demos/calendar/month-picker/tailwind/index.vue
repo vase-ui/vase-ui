@@ -2,7 +2,6 @@
 import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const selected = shallowRef<Temporal.PlainYearMonth | null>(
   Temporal.PlainYearMonth.from('2026-11'),
 );
@@ -11,7 +10,6 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
 <template>
   <Calendar.Root
     v-model:value="selected"
-    :today="today"
     locale="en-US"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
   >

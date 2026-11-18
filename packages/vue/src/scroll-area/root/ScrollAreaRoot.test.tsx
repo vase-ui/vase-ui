@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createApp, defineComponent, isRef, KeepAlive, nextTick, onUpdated, shallowRef } from 'vue';
+import {
+  createApp,
+  defineComponent,
+  isRef,
+  KeepAlive,
+  nextTick,
+  onUpdated,
+  shallowRef,
+  Teleport,
+} from 'vue';
 import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
@@ -1464,6 +1473,51 @@ describe('<ScrollArea.Root />', () => {
       expect(styles).toHaveLength(1);
       expect(shadowRoot.firstElementChild).toBe(styles[0]);
       expect(queryDisableScrollbarStyles(document)).toHaveLength(0);
+    });
+
+    it('moves the style element when `Teleport` moves the root into a shadow root and back', async () => {
+      const host = document.createElement('div');
+      const container = document.createElement('div');
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      shadowRoot.append(container);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const moved = shallowRef(false);
+      await render(() => (
+        <Teleport to={container} disabled={!moved.value}>
+          <ScrollArea.Root />
+        </Teleport>
+      ));
+      expect(queryDisableScrollbarStyles(document)).toHaveLength(1);
+      expect(queryDisableScrollbarStyles(shadowRoot)).toHaveLength(0);
+
+      moved.value = true;
+      await flushMicrotasks();
+      expect(queryDisableScrollbarStyles(shadowRoot)).toHaveLength(1);
+      expect(queryDisableScrollbarStyles(document)).toHaveLength(0);
+
+      moved.value = false;
+      await flushMicrotasks();
+      expect(queryDisableScrollbarStyles(document)).toHaveLength(1);
+      expect(queryDisableScrollbarStyles(shadowRoot)).toHaveLength(0);
+    });
+
+    it('adds the style element only after the consumer attaches the tree to the document', async () => {
+      const container = document.createElement('div');
+      onTestFinished(() => container.remove());
+      await render(
+        <Teleport to={container}>
+          <ScrollArea.Root />
+        </Teleport>,
+      );
+      expect(queryDisableScrollbarStyles(document)).toHaveLength(0);
+      expect(queryDisableScrollbarStyles(container)).toHaveLength(0);
+
+      document.body.append(container);
+      await flushMicrotasks();
+
+      expect(queryDisableScrollbarStyles(document.head)).toHaveLength(1);
+      expect(queryDisableScrollbarStyles(container)).toHaveLength(0);
     });
 
     it('sets the nonce, so that a policy that needs the nonce accepts the style element', async () => {

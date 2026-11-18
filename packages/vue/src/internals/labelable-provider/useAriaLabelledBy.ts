@@ -2,8 +2,11 @@ import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { given } from '../givenAttributes';
+import { observeRootNode } from '../observeRootNode';
 import { useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
+
+const LABEL_ATTRIBUTES = ['for', 'id'] as const;
 
 /**
  * A control calls it in `setup` when its element is not a labelable element of HTML, such as a
@@ -13,7 +16,8 @@ import { useKeepAliveState } from '../useKeepAliveState';
  * of the native `<label>` that names `labelSourceRef`. A server has no DOM, so the server HTML
  * never has the id of a native `<label>`. The control gets it in the first flush after the mount.
  * The result follows a label that comes or goes, a change of its `for` and a change of its `id`. It
- * also follows a change of the `id` of the control.
+ * also follows a change of the `id` of the control. The result also follows a move of the control
+ * to another document or shadow root.
  * @param labelId The id of the label of the provider. Pass the result of `useControlLabelId()`.
  * @param labelSourceRef The labelable element, such as the hidden input of the control. Pass a ref
  * that a ref callback writes, or a getter of one. The lookup starts when the value changes from
@@ -51,13 +55,13 @@ export function useAriaLabelledBy(
 
   // `KeepAlive` moves the DOM of a held control into a detached element. The input has no label
   // there, and its root node is that element. The lookup and the observer wait for the activation.
-  const { isHeld, shown } = useKeepAliveState();
+  const { isHeld } = useKeepAliveState();
 
   // Base UI runs this lookup after each commit. A Vue component with the same props does not render
   // again when its parent renders, so a native `<label>` that a sibling adds or removes later would
   // not change the result. The lookup thus also runs when the DOM of the root node changes.
   watch(
-    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld, shown],
+    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld],
     ([labelSource, enabled, , held], _previous, onCleanup) => {
       if (!labelSource || !enabled || held) {
         fallbackAriaLabelledBy.value = undefined;
@@ -69,59 +73,12 @@ export function useAriaLabelledBy(
       };
 
       update();
-      onCleanup(observeLabels(labelSource.getRootNode(), update));
+      onCleanup(observeRootNode(labelSource, update, LABEL_ATTRIBUTES));
     },
     { flush: 'post' },
   );
 
   return ariaLabelledBy;
-}
-
-interface LabelObserver {
-  observer: MutationObserver;
-  callbacks: Set<() => void>;
-}
-
-// The map is in the module, so each copy of the library has its own observers.
-const labelObservers = new WeakMap<Node, LabelObserver>();
-
-/**
- * Calls `callback` after a change in the tree of `root` that can change a label. It returns the
- * function that removes the callback.
- *
- * All callbacks of one root node share one observer, because a form has many controls and each
- * observer of a root gets each record. The caller gives the root node of the control, and not the
- * document: an observer of a document does not see a shadow tree.
- */
-function observeLabels(root: Node, callback: () => void): () => void {
-  let labelObserver = labelObservers.get(root);
-
-  if (!labelObserver) {
-    const callbacks = new Set<() => void>();
-    // The callbacks ignore the records. A lookup is cheap, and it writes only a different id.
-    const observer = new MutationObserver(() => {
-      callbacks.forEach((run) => run());
-    });
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['for', 'id'],
-    });
-    labelObserver = { observer, callbacks };
-    labelObservers.set(root, labelObserver);
-  }
-
-  const { observer, callbacks } = labelObserver;
-  callbacks.add(callback);
-
-  return () => {
-    callbacks.delete(callback);
-    if (callbacks.size === 0) {
-      observer.disconnect();
-      labelObservers.delete(root);
-    }
-  };
 }
 
 function getAriaLabelledBy(labelSource?: LabelSource | null, generatedLabelId?: string) {

@@ -32,13 +32,13 @@ defineSlots<{
 
 const state = computed<UseRenderPartState>(() => ({ active: props.active }));
 
-const { element, elementProps, setRef, tag } = useRender(props, { state });
+const { element, elementProps, setRef, tag, usesRenderSlot } = useRender(props, { state });
 
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
   <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>

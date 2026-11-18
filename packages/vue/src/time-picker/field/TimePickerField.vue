@@ -31,8 +31,9 @@ export interface TimePickerFieldProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
+import { computed, useAttrs, useTemplateRef } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
@@ -40,7 +41,6 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
 import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
-import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type {
   TimePickerRootChangeEventDetails,
@@ -73,13 +73,7 @@ const field = useTemplateRef<TimeFieldActions>('field');
 const element = computed(() => field.value?.element ?? null);
 const inputElement = computed(() => field.value?.inputElement ?? null);
 
-const setFieldElement = createElementSetter(picker.fieldElement);
-watch(element, setFieldElement, { immediate: true, flush: 'post' });
-// Vue stops the `watch` before it unmounts `TimeField.Root`, so the `watch` never gets `null`. The
-// positioner and the root then use the trigger.
-onBeforeUnmount(() => {
-  setFieldElement(null);
-});
+usePickerPartElement(picker.fields, element);
 
 // The field holds the input of the form, so it hears about the reset.
 useFormReset(inputElement, (event) => {

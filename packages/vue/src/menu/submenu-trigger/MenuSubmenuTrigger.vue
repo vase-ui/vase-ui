@@ -116,9 +116,9 @@ const parentMenuStore = context.parent.store;
 const submenuRootContext = useMenuSubmenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
-// The trigger is an item of the list of the parent menu. A filterable parent hides its element
-// while the query filters it out, and the template then gives its content to a component that
-// reads the text and renders nothing.
+// The trigger is an item of the list of the parent menu. A filterable parent removes its element
+// while the query hides it. The template then gives its content to a component that reads the text
+// and adds no element to the document.
 const filterItem = useMenuFilterItem({ label: () => props.label }, 'submenu-trigger');
 const thisTriggerId = useVaseUiId(() => props.id);
 
@@ -318,7 +318,7 @@ defineExpose({ element });
   <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText" :label="label">
     <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
     <slot v-else :state="state" />
   </component>

@@ -188,6 +188,7 @@ export function useRenderElement<
   const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
   const refCallbacks = Array.isArray(params.ref) ? params.ref : [params.ref];
   let hasRendered = false;
+  let setRefWasCalled = false;
   let hasWrittenStyleKey = false;
 
   // Vue gives the setter an element, a component or `null`. The part keeps that value and
@@ -260,6 +261,9 @@ export function useRenderElement<
   }
 
   function setRef(value: Element | ComponentPublicInstance | null) {
+    if (process.env.NODE_ENV !== 'production') {
+      setRefWasCalled = true;
+    }
     target = value;
     update();
   }
@@ -418,9 +422,29 @@ export function useRenderElement<
       }
     };
 
+    // A Vapor component gets no instance from `getCurrentInstance`. A virtual DOM component gets
+    // its ref from the spread. A component used as the tag can give its ref after the mount.
+    const checkRefBinding = () => {
+      if (
+        hasRendered &&
+        slots.render === undefined &&
+        !setRefWasCalled &&
+        typeof (componentProps.as ?? toValue(element)) === 'string'
+      ) {
+        warn(
+          'A Vapor component rendered its element with `elementProps()` and bound no `ref` by name.',
+          'Vapor mode ignores the `ref` key of a bound object, so `useRender` gets no element.',
+          'Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
+        );
+      }
+    };
+
     const checkRender = () => {
       checkAsWithRenderSlot();
       checkRenderSlot();
+      if (params.refBindingCheck && instance === null) {
+        checkRefBinding();
+      }
     };
 
     onBeforeUpdate(() => {
@@ -491,6 +515,12 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    * `useRender` passes `false`, because the template of a consumer can start with another element.
    */
   serverAttributes?: boolean | undefined;
+  /**
+   * With `true`, a development build warns when a Vapor component renders a string tag with
+   * `elementProps()` and its setter receives no call.
+   * `useRender` passes `true` because no lint rule checks the template of a consumer.
+   */
+  refBindingCheck?: boolean | undefined;
 };
 
 export type UseRenderElementComponentProps<State> = VaseUIComponentProps<State>;

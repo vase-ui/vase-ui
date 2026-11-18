@@ -43,6 +43,24 @@ describe('<Dialog.Portal />', () => {
     },
   }));
 
+  it('VUE-135: keeps the owner free of a role with a portal-owner-role attribute', async () => {
+    await render(
+      <Dialog.Root defaultOpen modal={false}>
+        <Dialog.Portal {...{ 'portal-owner-role': 'presentation' }} data-testid="portal">
+          <Dialog.Popup />
+        </Dialog.Portal>
+      </Dialog.Root>,
+    );
+
+    const portal = await screen.findByTestId('portal');
+    const owner = await waitFor(() => {
+      const element = document.querySelector(`[aria-owns="${portal.id}"]`);
+      expect(element).toBeInstanceOf(HTMLSpanElement);
+      return element;
+    });
+    expect(owner).not.toHaveAttribute('role');
+  });
+
   it('renders only while the dialog is mounted, or always with keepMounted', async () => {
     const open = shallowRef(false);
     const keepMounted = shallowRef(false);
