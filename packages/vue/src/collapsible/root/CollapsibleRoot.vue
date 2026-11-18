@@ -85,7 +85,7 @@ defineSlots<{
 
 const isOpen = useControlled({
   controlled: () => props.open,
-  default: () => props.defaultOpen,
+  default: () => props.defaultOpen ?? false,
   name: 'Collapsible',
   state: 'open',
 });
