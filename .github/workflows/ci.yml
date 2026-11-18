@@ -225,8 +225,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
+      - run: pnpm --filter @vase-ui/vite-fixture typecheck
       - run: pnpm test:nuxt
       - run: pnpm test:vite
+      - run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.5.12
+      - run: pnpm --filter @vase-ui/vite-fixture test:published:floor
 
   # This job builds the package and the site again, beside `check`, so that `check` does not take
   # longer. Then it runs axe-core on each page of the built site, and it checks the focus of the
@@ -297,12 +300,11 @@ jobs:
   # The project `vapor-parts` compiles each part as a Vapor component, with the Vue of `test-vue-rc`.
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The job has no `continue-on-error`, so a failure shows on the pull request.
-  # The job does not use the selection of `select`. It runs each test file of
-  # `packages/vue/test/vaporParts/expectedFailures.json`, because an entry of that list changes the
-  # result of a test file that does not import the list.
+  # When CI selects package tests, run each file in `expectedFailures.json`. An entry can change
+  # the result of a test file that does not import the list.
   test-vapor-parts:
     needs: select
-    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
+    if: ${{ !cancelled() && needs.select.result != 'failure' && (needs.select.outputs.tests != 'none' || needs.select.outputs.fixtures != 'false') }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.65.0-noble
@@ -320,10 +322,60 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
-      - uses: ./.github/actions/vitest
+      - if: ${{ needs.select.outputs.fixtures != 'false' }}
+        run: pnpm build
+      - id: rc
+        run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.6.0-rc.15
+      - if: ${{ needs.select.outputs.fixtures != 'false' }}
+        run: pnpm --filter @vase-ui/vite-fixture test:published:vapor
+      - if: ${{ !cancelled() && steps.rc.outcome == 'success' && needs.select.outputs.tests != 'none' }}
+        uses: ./.github/actions/vitest
         with:
           project: vapor-parts
+
+  test-vue-minor:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install Vue from the pinned core commit
+        id: vue
+        shell: bash
+        env:
+          VUE_REVISION: e9310d601
+        run: |
+          # Local tarballs also pin the peers. pnpm rejects URLs in transitive dependencies.
+          tarballs="$RUNNER_TEMP/vue-core"
+          checksums="$GITHUB_WORKSPACE/.github/workflows/vue-$VUE_REVISION.sha256"
+          mkdir -p "$tarballs/@vue"
+          echo 'overrides:' >> pnpm-workspace.yaml
+          while read -r _ file; do
+            package=${file%.tgz}
+            curl -fsSL --retry 3 "https://pkg.pr.new/$package@$VUE_REVISION" -o "$tarballs/$file"
+            echo "  '$package': 'file:$tarballs/$file'" >> pnpm-workspace.yaml
+          done < "$checksums"
+          (cd "$tarballs" && sha256sum --check --strict "$checksums")
+          pnpm install --no-frozen-lockfile
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command || 'run' }} --mode vue-minor
+          project: vapor
+      - if: ${{ !cancelled() && steps.vue.outcome == 'success' }}
+        run: pnpm test:vapor-parts --mode vue-minor --reporter default --reporter ./test/vaporParts/reportCauses.ts
 
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner

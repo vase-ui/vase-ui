@@ -115,6 +115,9 @@
     "src/internals/useInputRender.test.tsx": {
       "fails": {}
     },
+    "src/internals/useItemRegistry.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useRenderElement.test.tsx": {
       "fails": {}
     },
@@ -257,6 +260,12 @@
       "fails": {}
     },
     "src/utils/popups/interactions/hoverIntent.test.ts": {
+      "fails": {}
+    },
+    "src/utils/styles.test.tsx": {
+      "fails": {}
+    },
+    "src/utils/useSwipeDismiss.test.tsx": {
       "fails": {}
     },
     "test/modelOwnership.test.tsx": {

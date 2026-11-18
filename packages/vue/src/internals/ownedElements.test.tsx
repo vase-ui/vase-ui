@@ -17,15 +17,66 @@ import {
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
+import { TestElement } from '../../test/testElement';
 import VaporConsumer from '../../test/conformanceTests/VaporConsumer.vue';
 import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
 import CompositeItem from '../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../test/fixtures/CompositeRootPart.vue';
 import SliderInputPortal from '../../test/fixtures/SliderInputPortal.vue';
+import { useElementRegistration } from './useElementRegistration';
 
 describe('owned parts', () => {
   const { render } = createRenderer();
+
+  it('updates the element registry in the same task as the ref', async () => {
+    const registry = new WeakMap<Element, () => string>();
+    const first = document.createElement('button');
+    const second = document.createElement('button');
+    const target = shallowRef<Element | null>(first);
+    const setupElement = () => {
+      useElementRegistration(
+        registry,
+        () => target.value,
+        () => 'owner',
+      );
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
+
+    expect(registry.get(first)?.()).toBe('owner');
+    target.value = null;
+    expect(registry.has(first)).toBe(false);
+    target.value = second;
+    expect(registry.get(second)?.()).toBe('owner');
+    unmount();
+    expect(registry.has(second)).toBe(false);
+  });
+
+  it('keeps the current owner when an earlier getter returns the same element', async () => {
+    const registry = new WeakMap<Element, () => string>();
+    const node = document.createElement('button');
+    const first = shallowRef<{ element: Element | null }>({ element: node });
+    const second = shallowRef<Element | null>(null);
+    const setupElement = () => {
+      useElementRegistration(
+        registry,
+        () => first.value.element,
+        () => 'first',
+      );
+      useElementRegistration(registry, second, () => 'second');
+    };
+    const { unmount } = await render(<TestElement setupElement={setupElement} />);
+    expect(registry.get(node)?.()).toBe('first');
+    second.value = node;
+    expect(registry.get(node)?.()).toBe('second');
+
+    first.value = { element: node };
+    expect(registry.get(node)?.()).toBe('second');
+    first.value = { element: null };
+    expect(registry.get(node)?.()).toBe('second');
+    unmount();
+    expect(registry.has(node)).toBe(false);
+  });
 
   it('VUE-54: keeps one tab stop when the active item moves and another item takes its index', async () => {
     const names = shallowRef(['First', 'Active', 'Last']);

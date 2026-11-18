@@ -1,7 +1,6 @@
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { onScopeDispose, toValue, watch } from 'vue';
+import { shallowRef, toValue, watch, watchPostEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { ownerDocument } from '../common/owner';
 import { useCSPContext } from '../internals/csp-context/CSPContext';
 import { followRootNode, isDocumentOrShadowRoot } from '../internals/observeRootNode';
 
@@ -27,15 +26,12 @@ const sharedStyles = new WeakMap<Document | ShadowRoot, SharedStyle>();
  * Takes one use of the shared style element of `root`.
  * It returns the function that gives the use back.
  */
-function takeSharedStyle(
-  root: Document | ShadowRoot,
-  doc: Document,
-  nonce: string | undefined,
-): () => void {
+function takeSharedStyle(root: Document | ShadowRoot, nonce: string | undefined): () => void {
   let shared = sharedStyles.get(root);
 
   if (!shared) {
-    const element = doc.createElement('style');
+    const container = isShadowRoot(root) ? root : root.head;
+    const element = container.ownerDocument.createElement('style');
     if (nonce) {
       // The `nonce` property does not write the attribute.
       element.setAttribute('nonce', nonce);
@@ -43,7 +39,7 @@ function takeSharedStyle(
     element.textContent = styleDisableScrollbar.css;
     // The element comes first, so a rule of the consumer with the same specificity wins.
     // The browser checks the policy when the element connects, so the nonce and text come first.
-    (isShadowRoot(root) ? root : doc.head).prepend(element);
+    container.prepend(element);
     shared = { element, users: 0 };
     sharedStyles.set(root, shared);
   }
@@ -70,26 +66,29 @@ function takeSharedStyle(
  */
 export function useStyleDisableScrollbar(element: MaybeRefOrGetter<Element | null>): void {
   const csp = useCSPContext();
-  // eslint-disable-next-line no-restricted-syntax -- Take the new use before the previous release so the style count stays above zero.
-  let giveBack: (() => void) | undefined;
-
-  function update() {
+  const root = shallowRef<Document | ShadowRoot | null>(null);
+  watchPostEffect((onCleanup) => {
     const target = toValue(element);
-    const next =
-      target && !csp.value.disableStyleElements
-        ? followRootNode(target, (root) =>
-            isDocumentOrShadowRoot(root)
-              ? takeSharedStyle(root, ownerDocument(target), csp.value.nonce)
-              : undefined,
-          )
-        : undefined;
-    giveBack?.();
-    giveBack = next;
-  }
-
-  watch([() => toValue(element), () => csp.value.disableStyleElements], update, { flush: 'post' });
-  onScopeDispose(() => {
-    giveBack?.();
-    giveBack = undefined;
+    if (!target || csp.value.disableStyleElements) {
+      root.value = null;
+      return;
+    }
+    onCleanup(
+      followRootNode(target, (node) => {
+        root.value = isDocumentOrShadowRoot(node) ? node : null;
+        return undefined;
+      }),
+    );
   });
+
+  // A move needs its style in the observer callback. Two targets in one root share the same use.
+  watch(
+    root,
+    (node, _previous, onCleanup) => {
+      if (node) {
+        onCleanup(takeSharedStyle(node, csp.value.nonce));
+      }
+    },
+    { flush: 'sync' },
+  );
 }

@@ -180,7 +180,7 @@
       "describe": ["useItemRegistry"],
       "title": "publishes every registration under StrictMode double effects",
       "kind": "not-applicable",
-      "reason": "The case runs the effects of the items two times under StrictMode. Vue has no Strict Mode, and a registration runs one time in `onMounted`."
+      "reason": "React StrictMode repeats the mount effect and its cleanup. Vue has no such mount replay."
     },
     {
       "upstream": "packages/react/src/global.d.ts",
