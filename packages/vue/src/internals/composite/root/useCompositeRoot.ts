@@ -713,8 +713,10 @@ export interface UseCompositeRootReturnValue {
    */
   props: Omit<HTMLProps, 'ref'>;
   /**
-   * The item elements in document order, unless an item sets its index.
-   * The list is empty on the server and before the root mounts.
+   * The elements of the items, ordered by their index. An item with no explicit index has the index
+   * of its position in the document. An explicit index can leave an empty slot.
+   * The list is empty on a server and before the mount of the root.
+   * The composable gives the ref a new array on each sort.
    */
   elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   /**
