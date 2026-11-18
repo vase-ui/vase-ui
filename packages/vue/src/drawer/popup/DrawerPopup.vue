@@ -157,8 +157,8 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
-import { EMPTY_OBJECT, NOOP } from '../../common/empty';
+import { computed, onMounted, shallowRef, watch } from 'vue';
+import { EMPTY_OBJECT } from '../../common/empty';
 import { error } from '../../common/error';
 import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
@@ -271,39 +271,27 @@ function measureHeight() {
 // deactivated.
 const { isHeld } = useKeepAliveState();
 
-let clearFrontmostHeight = NOOP;
-function reportFrontmostHeight() {
-  clearFrontmostHeight();
-  clearFrontmostHeight = NOOP;
-  if (!notifyParentFrontmostHeight || !open.value || isHeld.value) {
-    return;
-  }
-
-  notifyParentFrontmostHeight(frontmostHeight.value);
-  clearFrontmostHeight = () => notifyParentFrontmostHeight(0);
-}
-
-let clearNestedPresence = NOOP;
-function reportNestedPresence() {
-  clearNestedPresence();
-  clearNestedPresence = NOOP;
-  if (!notifyParentHasNestedDrawer || isHeld.value) {
-    return;
-  }
-
-  notifyParentHasNestedDrawer(open.value || transitionStatus.value === 'ending');
-  clearNestedPresence = () => notifyParentHasNestedDrawer(false);
-}
-
 onMounted(() => {
-  reportFrontmostHeight();
-  reportNestedPresence();
-});
-watch([open, frontmostHeight, isHeld], reportFrontmostHeight);
-watch([open, transitionStatus, isHeld], reportNestedPresence);
-onScopeDispose(() => {
-  clearFrontmostHeight();
-  clearNestedPresence();
+  watch(
+    [open, frontmostHeight, isHeld],
+    ([isOpen, height, held], _previous, onCleanup) => {
+      if (notifyParentFrontmostHeight && isOpen && !held) {
+        notifyParentFrontmostHeight(height);
+        onCleanup(() => notifyParentFrontmostHeight(0));
+      }
+    },
+    { immediate: true },
+  );
+  watch(
+    [open, transitionStatus, isHeld],
+    ([isOpen, status, held], _previous, onCleanup) => {
+      if (notifyParentHasNestedDrawer && !held) {
+        notifyParentHasNestedDrawer(isOpen || status === 'ending');
+        onCleanup(() => notifyParentHasNestedDrawer(false));
+      }
+    },
+    { immediate: true },
+  );
 });
 
 const resolvedInitialFocus = computed(() =>

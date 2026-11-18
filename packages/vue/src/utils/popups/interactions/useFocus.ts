@@ -126,20 +126,18 @@ export function useFocus(
     }
   }
 
-  let stopListeningToOpenChange: (() => void) | undefined;
-  function listenToOpenChange() {
-    stopListeningToOpenChange?.();
-    stopListeningToOpenChange = undefined;
-    if (!enabled()) {
-      return;
-    }
-    const { events } = currentStore().context;
-    events.on('openchange', onOpenChangeLocal);
-    stopListeningToOpenChange = () => events.off('openchange', onOpenChangeLocal);
-  }
-  onMounted(listenToOpenChange);
-  watch([enabled, () => currentStore().context.events], listenToOpenChange);
-  onScopeDispose(() => stopListeningToOpenChange?.());
+  onMounted(() => {
+    watch(
+      [enabled, () => currentStore().context.events],
+      ([isEnabled, events], _previous, onCleanup) => {
+        if (isEnabled) {
+          events.on('openchange', onOpenChangeLocal);
+          onCleanup(() => events.off('openchange', onOpenChangeLocal));
+        }
+      },
+      { immediate: true },
+    );
+  });
 
   const { isHeld } = useKeepAliveState();
   // `KeepAlive` takes the focused trigger out of the document. Firefox and WebKit send no

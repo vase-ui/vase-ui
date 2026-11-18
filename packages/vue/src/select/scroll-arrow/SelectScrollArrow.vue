@@ -96,13 +96,8 @@ const { mounted, transitionStatus, setMounted } = useTransitionStatus(
   () => element.value,
 );
 
-let unregisterScrollArrow: (() => void) | undefined;
-
 onMounted(() => {
-  unregisterScrollArrow = store.context.registerScrollArrow();
-});
-onScopeDispose(() => {
-  unregisterScrollArrow?.();
+  onScopeDispose(store.context.registerScrollArrow());
 });
 
 const state = computed<SelectScrollArrowState>(() => ({

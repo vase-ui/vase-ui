@@ -1,4 +1,4 @@
-import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { computed, onMounted, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains } from '../../../common/shadowDom';
@@ -115,19 +115,19 @@ export function useHoverTriggerInteraction(
 
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no
   // reactive state, and it stops the intent that the last run found.
-  let stopInFlight: (() => void) | undefined;
-  function holdIntent() {
-    stopInFlight?.();
-    const current = intent.value;
-    stopInFlight = () => stop(current);
-  }
-  onMounted(holdIntent);
-  watch(intent, holdIntent);
-  onScopeDispose(() => stopInFlight?.());
+  onMounted(() => {
+    watch(
+      intent,
+      (current, _previous, onCleanup) => {
+        onCleanup(() => stop(current));
+      },
+      { immediate: true },
+    );
+  });
 
   watch(enabled, (isEnabled) => {
     if (!isEnabled) {
-      stopInFlight?.();
+      stop(intent.value);
     }
   });
 
@@ -138,7 +138,7 @@ export function useHoverTriggerInteraction(
     isHeld,
     (held) => {
       if (held) {
-        stopInFlight?.();
+        stop(intent.value);
         const current = toValue(store);
         if (
           current.select('open') &&
@@ -174,20 +174,18 @@ export function useHoverTriggerInteraction(
       isHoverCloseActive = false;
     }
   }
-  let stopListening: (() => void) | undefined;
-  function listenToOpenChange() {
-    stopListening?.();
-    stopListening = undefined;
-    if (!enabled()) {
-      return;
-    }
-    const { events } = toValue(store).context;
-    events.on('openchange', onOpenChangeLocal);
-    stopListening = () => events.off('openchange', onOpenChangeLocal);
-  }
-  onMounted(listenToOpenChange);
-  watch([enabled, () => toValue(store).context.events], listenToOpenChange);
-  onScopeDispose(() => stopListening?.());
+  onMounted(() => {
+    watch(
+      [enabled, () => toValue(store).context.events],
+      ([isEnabled, events], _previous, onCleanup) => {
+        if (isEnabled) {
+          events.on('openchange', onOpenChangeLocal);
+          onCleanup(() => events.off('openchange', onOpenChangeLocal));
+        }
+      },
+      { immediate: true },
+    );
+  });
 
   watch([enabled, move, mouseOnly, tree, intent], () => {
     moveCountsAsEnter = true;

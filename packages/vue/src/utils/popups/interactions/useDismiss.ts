@@ -1105,13 +1105,16 @@ export function useDismiss(
   }
 
   const getPositionerElement = () => getStore().select('positionerElement');
-  let removePositionerBelow: (() => void) | undefined;
 
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
   onMounted(() => {
-    getPositionerElementGetters().add(getPositionerElement);
-    removePositionerBelow = parent?.addElementBelow(getPositionerElement);
+    const getters = getPositionerElementGetters();
+    getters.add(getPositionerElement);
+    onScopeDispose(() => getters.delete(getPositionerElement));
+    if (parent) {
+      onScopeDispose(parent.addElementBelow(getPositionerElement));
+    }
     watch(
       getStore,
       (store, _previous, onCleanup) => {
@@ -1150,10 +1153,6 @@ export function useDismiss(
     },
     { flush: 'sync' },
   );
-  onScopeDispose(() => {
-    removePositionerBelow?.();
-    getPositionerElementGetters().delete(getPositionerElement);
-  });
 
   const reference: DismissElementProps['reference'] = {
     onKeydown: closeOnEscapeKeyDown,
