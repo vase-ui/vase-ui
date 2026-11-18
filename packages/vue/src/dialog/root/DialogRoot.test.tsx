@@ -235,7 +235,18 @@ const MultipleDetachedTriggersDialog = defineComponent({
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
 
+  const createPopup = () => <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>;
+
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Dialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Portal keepMounted={keepMounted}>{content}</Dialog.Portal>
+        </Dialog.Root>
+      ),
+      createPopup,
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Dialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Dialog.Trigger>Open</Dialog.Trigger>
@@ -245,7 +256,7 @@ describe('<Dialog.Root />', () => {
         </Dialog.Portal>
       </Dialog.Root>
     ),
-    createPopup: () => <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>,
+    createPopup,
     render,
   });
 

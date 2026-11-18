@@ -8,6 +8,7 @@ import { nextAnimationsRead } from './animation';
 import type { createRenderer } from './createRenderer';
 import { isScrollLocked } from './fixtures/scrollDocument';
 import { flushMicrotasks } from './flushMicrotasks';
+import { createHeldBranch } from './heldBranch';
 import { clientCenter, holdPress } from './pointer';
 import { waitFor } from './waitFor';
 import { waitSingleFrame } from './wait';
@@ -37,6 +38,15 @@ export interface PendingPositionerTestProps {
 }
 
 export interface PopupAnatomyTestConfig {
+  /** The parts for an open change while `KeepAlive` holds the popup. */
+  held: {
+    /** Put `content` inside the portal. Give `keepMounted` to the portal and omit the backdrop. */
+    createRoot: (props: PopupAnatomyTestProps & { keepMounted: boolean }) => VNode;
+    /** Give the popup `data-testid="popup"`. Include its positioner if the root has one. */
+    createPopup: () => VNode;
+    /** Whether the closed root keeps its popup even when the portal has no `keepMounted` prop. */
+    keepsPopupAfterClose?: boolean | undefined;
+  };
   /**
    * Returns the root with no popup part. The part that shows has `data-testid="shown"` and the
    * class `shown`.
@@ -117,10 +127,11 @@ async function press(element: Element) {
 /**
  * The cases of a root whose anatomy has no popup part. The positioner, or else the backdrop, is
  * then the part that shows. Its animations end each open change. The Tab key goes past such a root
- * while it is open.
+ * while it is open. A root with a popup part must also end an open change while `KeepAlive` holds it.
  */
 export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
   const {
+    held,
     createComponent,
     createPopup,
     createBackdropComponent,
@@ -238,6 +249,92 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
     await expectTabReaches(after, false);
     await expectTabReaches(before, true);
   }
+
+  describe('VUE-137: an open change while KeepAlive holds the popup', () => {
+    function createHeldRoot(keepMounted = false) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const open = shallowRef(!keepMounted);
+      const onOpenChangeComplete = vi.fn();
+      const expectedCalls: [boolean][] = [];
+
+      function root(content: VNodeChild) {
+        return held.createRoot({ open: open.value, onOpenChangeComplete, keepMounted, content });
+      }
+
+      async function closeAfterOpen() {
+        if (reportsOpen) {
+          expectedCalls.push([true]);
+          await waitFor(() => expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls));
+        } else {
+          await waitSingleFrame();
+          await waitSingleFrame();
+        }
+        open.value = false;
+        expectedCalls.push([false]);
+        await waitFor(() => expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls));
+      }
+
+      async function closeWhileHeld(show: () => Promise<void>) {
+        expect(getPopup()).toBe(null);
+        await closeAfterOpen();
+        expect(getPopup()).toBe(null);
+
+        await show();
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls);
+        const popup = getPopup();
+        if (keepMounted || held.keepsPopupAfterClose) {
+          expect(popup).toBeInTheDocument();
+          expect(popup).not.toBeVisible();
+        } else {
+          expect(popup).toBe(null);
+        }
+      }
+
+      return { open, root, closeAfterOpen, closeWhileHeld };
+    }
+
+    it('ends each open change of a popup that mounts in a held branch below a shown root', async () => {
+      const { root, closeWhileHeld } = createHeldRoot();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(held.createPopup, {
+        renderBranch: (part) => part,
+      });
+      await render(() => root(<HeldBranch />));
+      await mountWhileHeld();
+
+      await closeWhileHeld(show);
+    });
+
+    it('ends each open change of a root that mounts in a held branch', async () => {
+      const { root, closeWhileHeld } = createHeldRoot();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => root(held.createPopup()),
+        {
+          renderBranch: (part) => part,
+        },
+      );
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+
+      await closeWhileHeld(show);
+    });
+
+    it('ends each open change of a kept popup that closed before the hold', async () => {
+      const { open, root, closeAfterOpen, closeWhileHeld } = createHeldRoot(true);
+      const { HeldBranch, hide, show } = createHeldBranch(() => root(held.createPopup()), {
+        mounted: true,
+        renderBranch: (part) => part,
+      });
+      await render(<HeldBranch />);
+      open.value = true;
+      await closeAfterOpen();
+
+      await hide();
+      open.value = true;
+      await closeWhileHeld(show);
+    });
+  });
 
   describe('VUE-132: the Tab key at an open root with no popup part', () => {
     it('goes past the root in both directions', () => passOpenRoot(createComponent));

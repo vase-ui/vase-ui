@@ -293,6 +293,19 @@ describe('<Combobox.Root />', () => {
   }
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Combobox.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Combobox.Input />
+          <Combobox.Portal keepMounted={keepMounted}>{content}</Combobox.Portal>
+        </Combobox.Root>
+      ),
+      createPopup: () => (
+        <Combobox.Positioner>
+          <Combobox.Popup data-testid="popup">Popup</Combobox.Popup>
+        </Combobox.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Combobox.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Combobox.Input />

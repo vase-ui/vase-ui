@@ -112,6 +112,19 @@ describe('<Autocomplete.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Autocomplete.Input />
+          <Autocomplete.Portal keepMounted={keepMounted}>{content}</Autocomplete.Portal>
+        </Autocomplete.Root>
+      ),
+      createPopup: () => (
+        <Autocomplete.Positioner>
+          <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>
+        </Autocomplete.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Autocomplete.Input />
