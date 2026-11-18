@@ -311,8 +311,6 @@ function run() {
     return;
   }
 
-  didRegisterTabs = true;
-
   let selectedTabMetadata: TabsTabMetadata | undefined;
   let firstEnabledTabMetadata: TabsTabMetadata | undefined;
   for (const tabMetadata of map.values()) {
@@ -388,6 +386,7 @@ provide(TabsRootContext, {
   registerTab: (source, registration) => register(tabs, source, registration),
   registerPanel: (source, registration) => register(panels, source, registration),
   setTabMap(map) {
+    didRegisterTabs ||= map.size > 0;
     tabMap.value = map;
   },
   tabActivationDirection,

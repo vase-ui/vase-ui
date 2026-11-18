@@ -1189,6 +1189,33 @@ describe('<Tabs.Root />', () => {
       expect(onValueChange).not.toHaveBeenCalled();
     });
 
+    it('clears the panel on release after the last controlled tab is removed', async () => {
+      const value = shallowRef<string | undefined>('a');
+      const showTab = shallowRef(true);
+      const onValueChange = vi.fn();
+      await render(() => (
+        <Tabs.Root value={value.value} onValueChange={onValueChange}>
+          <Tabs.List>{showTab.value && <Tabs.Tab value="a">A</Tabs.Tab>}</Tabs.List>
+          <Tabs.Panel value="a" keepMounted>
+            Panel A
+          </Tabs.Panel>
+        </Tabs.Root>
+      ));
+      const panel = screen.getByRole('tabpanel');
+      showTab.value = false;
+      await flushMicrotasks();
+      expect(panel).toBeVisible();
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      value.value = undefined;
+      await flushMicrotasks();
+      expect(panel).toHaveAttribute('hidden');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        null,
+        expect.objectContaining({ reason: 'missing' }),
+      );
+    });
+
     it('selects an enabled tab after release even if the disabled tab matches the default', async () => {
       const onValueChange = vi.fn();
       const { setProps } = await render(
