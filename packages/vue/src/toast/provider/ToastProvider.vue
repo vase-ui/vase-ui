@@ -68,9 +68,8 @@ function handleManagerEvent({ action, options }: ToastManagerEvent) {
   }
 }
 
-// The provider listens to its manager only while it holds its timers: after the mount, and not
-// while `KeepAlive` holds it. A server never subscribes, so a manager that all requests share gets
-// no listener of a request.
+// Take the timers before the manager can deliver a toast. A server never subscribes, so a manager
+// that all requests share gets no listener of a request.
 useDomEffect([], store.disposeEffect);
 useDomEffect([() => props.toastManager], () =>
   props.toastManager?.[' subscribe'](handleManagerEvent),

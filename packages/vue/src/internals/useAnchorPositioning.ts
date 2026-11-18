@@ -611,7 +611,8 @@ export function useAnchorPositioning(
     whileElementsMounted(referenceElement, floatingElement, updatePosition) {
       const start = () =>
         autoUpdate(referenceElement, floatingElement, updatePosition, getAutoUpdateOptions());
-      let stop = start();
+      // eslint-disable-next-line no-restricted-syntax -- The same mount callback must stop the latest auto-update after an option change.
+      let stop: () => void = start();
       restartAutoUpdate = () => {
         stop();
         stop = start();
