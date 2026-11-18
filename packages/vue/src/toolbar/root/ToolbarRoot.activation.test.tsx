@@ -104,6 +104,7 @@ describe('toolbar activation', () => {
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
     expect(events).toEqual(['item', 'group']);
   });
+
   it('restores toolbar arrow order after a group mounts while held', async () => {
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
       <Toolbar.Group>
@@ -150,8 +151,12 @@ describe('toolbar activation', () => {
     await user.keyboard('[ArrowRight][Space]');
     await hide();
     await show();
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.filter((button) => button.tabIndex === 0)).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Italic' })).toHaveAttribute('aria-pressed', 'true');
+    const bold = screen.getByRole('button', { name: 'Bold' });
+    const italic = screen.getByRole('button', { name: 'Italic' });
+    expect(bold).toHaveAttribute('tabindex', '-1');
+    expect(italic).toHaveAttribute('tabindex', '0');
+    expect(italic).toHaveAttribute('aria-pressed', 'true');
+    await user.tab();
+    expect(italic).toHaveFocus();
   });
 });

@@ -4,6 +4,7 @@ import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { VNode, VNodeChild } from 'vue';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
+import { enterWithMouse, moveMouse } from './pointer';
 import { screen } from './queries';
 
 export interface FieldsetButtonTestProps {
@@ -238,7 +239,7 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
         const disabled = shallowRef(false);
         await render(() => root(<fieldset disabled={disabled.value}>{target()}</fieldset>));
         const button = screen.getByTestId('target');
-        await userEvent.hover(button);
+        await enterWithMouse(button);
         expect(button).not.toHaveAttribute('data-popup-open');
 
         disabled.value = true;
@@ -247,10 +248,10 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
         await tick();
         expect(button).not.toHaveAttribute('data-popup-open');
 
-        await userEvent.unhover(button);
+        await moveMouse(button, document.body);
         disabled.value = false;
         await flushMicrotasks();
-        await userEvent.hover(button);
+        await enterWithMouse(button);
         await tick();
         expect(button).toHaveAttribute('data-popup-open');
       });
