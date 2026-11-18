@@ -29,7 +29,7 @@ const ProbeSegment = defineComponent({
       {
         state,
         stateAttributesMapping: segmentStateAttributesMapping,
-        ref: [setElement],
+        ref: setElement,
         props: (attrs) => [segmentProps.value, attrs],
       },
     );
@@ -75,6 +75,7 @@ const ProbeInput = defineComponent({
 </script>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
 import type { DateTimeFieldChangeEventDetails } from '../../src/internals/date-time/field/DateTimeFieldContext';
 import {
   rootStateAttributesMapping,
@@ -175,7 +176,9 @@ function toTime(input: Temporal.PlainTime | string | undefined) {
 
 assertTemporal('DateTimeFieldProbe');
 
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 const root = useDateTimeFieldRoot<TemporalValue>({
+  hiddenInputElement: inputElement,
   family: props.family,
   value: () => toTemporal(props.modelValue),
   defaultValue: () => toTemporal(props.defaultValue),
@@ -211,7 +214,7 @@ const { elementProps, setRef } = useRenderElement(
   {
     state: root.state,
     stateAttributesMapping: rootStateAttributesMapping,
-    ref: [root.setRootElement],
+    ref: root.setRootElement,
     props: root.getRootProps,
   },
 );
@@ -231,5 +234,5 @@ defineExpose({ context: root });
       Clear
     </button>
   </div>
-  <input v-bind="root.hiddenInputProps()" :ref="root.setHiddenInput" />
+  <input v-bind="root.hiddenInputProps()" ref="input" />
 </template>

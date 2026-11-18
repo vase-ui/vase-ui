@@ -25,8 +25,8 @@ describe('createPickerPartElements', () => {
   it('gives the first element in the document, and not the one that registered first', () => {
     const { first, second } = mountElements();
     const parts = createPickerPartElements();
-    parts.add(() => second);
-    parts.add(() => first);
+    onTestFinished(parts.add(() => second));
+    onTestFinished(parts.add(() => first));
 
     expect(parts.first.value).toBe(first);
   });
@@ -234,6 +234,30 @@ describe.each([
       await waitFor(() => {
         expect(target).toHaveAttribute(disabledAttribute, disabledValue);
       });
+    });
+
+    it('follows the first trigger after keyed fieldsets change places', async () => {
+      const reversed = shallowRef(false);
+      await renderPicker(() =>
+        (reversed.value ? ['disabled', 'enabled'] : ['enabled', 'disabled']).map((id) => (
+          <fieldset key={id} disabled={id === 'disabled'}>
+            {trigger(id)}
+          </fieldset>
+        )),
+      );
+      const choice = await screen.findByTestId('choice');
+      const disabledTrigger = screen.getByTestId('disabled');
+      expect(choice).not.toHaveAttribute(disabledAttribute);
+
+      reversed.value = true;
+      await waitFor(() => {
+        expect(choice).toHaveAttribute(disabledAttribute, disabledValue);
+      });
+      expect(screen.getByTestId('disabled')).toBe(disabledTrigger);
+
+      reversed.value = false;
+      await flushMicrotasks();
+      expect(choice).not.toHaveAttribute(disabledAttribute);
     });
 
     it('reads the fieldset at the trigger while KeepAlive holds the field', async () => {

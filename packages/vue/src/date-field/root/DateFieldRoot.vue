@@ -141,6 +141,7 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
 </script>
 
 <script setup lang="ts" generic="Value extends DateFieldRootValue = DateFieldRootValue">
+import { shallowRef } from 'vue';
 import {
   rootStateAttributesMapping,
   useDateTimeFieldRoot,
@@ -193,7 +194,9 @@ defineSlots<{
 
 assertTemporal('DateField.Root');
 
+const inputElement = shallowRef<HTMLInputElement | null>(null);
 const context = useDateTimeFieldRoot<Value>({
+  hiddenInputElement: inputElement,
   family: 'date',
   value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
@@ -225,7 +228,7 @@ const { state } = context;
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
-  ref: [context.setRootElement],
+  ref: context.setRootElement,
   props: context.getRootProps,
 });
 
@@ -242,5 +245,8 @@ defineExpose({
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="context.hiddenInputProps()" :ref="context.setHiddenInput" />
+  <input
+    v-bind="context.hiddenInputProps()"
+    :ref="(input) => (inputElement = input as HTMLInputElement | null)"
+  />
 </template>
