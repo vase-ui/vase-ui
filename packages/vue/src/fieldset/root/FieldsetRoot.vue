@@ -33,7 +33,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<FieldsetRootProps>(), { as: 'fieldset', disabled: false });
 
-defineSlots<{
+const slots = defineSlots<{
   default(props: { state: FieldsetRootState }): unknown;
   render: ComponentRenderFn<HTMLProps, FieldsetRootState>;
 }>();
@@ -54,7 +54,7 @@ provide(FieldsetRootContext, {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fieldset', props, {
   state,
   props: (attrs) => {
-    const disabled = usesRenderSlot() || typeof props.as !== 'string' ? true : '';
+    const disabled = slots.render !== undefined || typeof props.as !== 'string' ? true : '';
     return [
       {
         'aria-labelledby': getAriaLabelledBy(attrs),
