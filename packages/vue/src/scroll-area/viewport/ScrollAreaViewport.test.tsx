@@ -55,6 +55,23 @@ describe('<ScrollArea.Viewport />', () => {
     expect(viewport).toHaveAttribute('tabindex', '0');
   });
 
+  it('restores the measured overflow distance and its priority on scroll', async () => {
+    await render(
+      <ScrollArea.Root>
+        <ScrollArea.Viewport data-testid="viewport" style={{ height: '100px' }}>
+          <div style={{ height: '300px' }} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>,
+    );
+    const viewport = screen.getByTestId('viewport');
+    const key = '--scroll-area-overflow-y-end';
+    await waitFor(() => expect(viewport.style.getPropertyValue(key)).toBe('200px'));
+    viewport.style.setProperty(key, '200px', 'important');
+    await fireEvent.scroll(viewport);
+    expect(viewport.style.getPropertyPriority(key)).toBe('');
+    expect(viewport.style.getPropertyValue(key)).toBe('200px');
+  });
+
   it('handles a user scroll callback unmounting the viewport', async () => {
     // `unmount()` unmounts at once. A state write unmounts in the next flush, after the listener
     // of the part. Such a test could not fail when the part reads a viewport that is gone.

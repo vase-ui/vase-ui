@@ -128,7 +128,10 @@ const touchModality = shallowRef(false);
 const hasMeasuredScrollbar = shallowRef(false);
 const cornerSize = shallowReactive({ ...DEFAULT_SIZE });
 const thumbSize = shallowReactive({ ...DEFAULT_SIZE });
-const overflowEdges = shallowReactive({ ...DEFAULT_OVERFLOW_EDGES });
+const overflowXStart = shallowRef(DEFAULT_OVERFLOW_EDGES.xStart);
+const overflowXEnd = shallowRef(DEFAULT_OVERFLOW_EDGES.xEnd);
+const overflowYStart = shallowRef(DEFAULT_OVERFLOW_EDGES.yStart);
+const overflowYEnd = shallowRef(DEFAULT_OVERFLOW_EDGES.yEnd);
 const hiddenX = shallowRef(DEFAULT_HIDDEN_STATE.x);
 const hiddenY = shallowRef(DEFAULT_HIDDEN_STATE.y);
 
@@ -251,9 +254,7 @@ function handlePointerMove(event: PointerEvent) {
     return;
   }
 
-  // The release can go missing. The browser can drop the pointer capture while the scrollbar is
-  // hidden in a drag. A move over the thumb with no button would then scroll the viewport.
-  // A move with the primary button up is the missed release.
+  // A hidden scrollbar can lose capture without a release event.
   if (event.buttons % 2 === 0) {
     handlePointerUp(event);
     return;
@@ -306,10 +307,10 @@ const state = computed<ScrollAreaRootState>(() => ({
   scrolling: scrollingX.value || scrollingY.value,
   hasOverflowX: !hiddenX.value,
   hasOverflowY: !hiddenY.value,
-  overflowXStart: overflowEdges.xStart,
-  overflowXEnd: overflowEdges.xEnd,
-  overflowYStart: overflowEdges.yStart,
-  overflowYEnd: overflowEdges.yEnd,
+  overflowXStart: overflowXStart.value,
+  overflowXEnd: overflowXEnd.value,
+  overflowYStart: overflowYStart.value,
+  overflowYEnd: overflowYEnd.value,
   cornerHidden: hiddenX.value || hiddenY.value,
 }));
 
@@ -360,7 +361,10 @@ provide(ScrollAreaRootContext, {
     hiddenY.value = y;
   },
   setOverflowEdges(edges) {
-    Object.assign(overflowEdges, edges);
+    overflowXStart.value = edges.xStart;
+    overflowXEnd.value = edges.xEnd;
+    overflowYStart.value = edges.yStart;
+    overflowYEnd.value = edges.yEnd;
   },
   viewportState: state,
   overflowEdgeThreshold: edgeThresholds,

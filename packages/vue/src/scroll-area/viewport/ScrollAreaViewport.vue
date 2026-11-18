@@ -24,13 +24,7 @@ const OVERFLOW_EDGE_VARS = [
 // One flag for the module, so that the CSS properties register one time for all scroll areas.
 let scrollAreaOverflowVarsRegistered = false;
 
-/**
- * Stops the inheritance of the overflow CSS variables of the scroll area.
- * This makes a scroll area with a deep subtree faster.
- * A child that needs a variable must set it to `inherit`.
- * See the section "Improving CSS variable performance" of
- * https://motion.dev/blog/web-animation-performance-tier-list
- */
+// Overflow distances change on each scroll. A child can opt in with `inherit`.
 function removeCSSVariableInheritance() {
   if (
     scrollAreaOverflowVarsRegistered ||
@@ -59,14 +53,7 @@ function removeCSSVariableInheritance() {
   scrollAreaOverflowVarsRegistered = true;
 }
 
-/**
- * Sizes the thumb and returns its offset on the axis.
- * On overscroll, the thumb gets smaller and stays against the edge.
- * Only the rubber band of Safari makes an overscroll.
- * The factor `content / (content + overscroll)` gives the feedback of a native scrollbar.
- * The size goes through the thumb size variable. The `var(...)` size of a thumb at rest then still
- * applies.
- */
+// Safari shrinks the thumb against the edge during rubber-band overscroll.
 function applyOverscrollThumb(
   thumbEl: HTMLElement,
   sizeVar: string,
@@ -83,9 +70,7 @@ function applyOverscrollThumb(
   // An empty string removes the override. The `var(...)` size of a thumb at rest then applies again.
   thumbEl.style.setProperty(sizeVar, overscroll ? `${nextSize}px` : '');
 
-  // The offset is proportional to the scroll position.
-  // At the end edge, add the shrink to the offset, so that the thumb stays at the edge.
-  // At the start edge, the offset stays 0.
+  // At the end edge, add the lost thumb length to keep the tip in place.
   const offset = maxScroll ? (clamped / maxScroll) * maxThumbOffset : 0;
   return offset + (overscroll > 0 ? size - nextSize : 0);
 }
@@ -186,8 +171,6 @@ function computeThumbPosition() {
 
   const scrollbarYHidden = viewportHeight >= scrollableContentHeight;
   const scrollbarXHidden = viewportWidth >= scrollableContentWidth;
-  const ratioX = viewportWidth / scrollableContentWidth;
-  const ratioY = viewportHeight / scrollableContentHeight;
   const maxScrollLeft = Math.max(0, scrollableContentWidth - viewportWidth);
   const maxScrollTop = Math.max(0, scrollableContentHeight - viewportHeight);
 
@@ -204,8 +187,6 @@ function computeThumbPosition() {
 
   const scrollTopFromStart = scrollbarYHidden ? 0 : normalizeScrollOffset(scrollTop, maxScrollTop);
   const scrollTopFromEnd = scrollbarYHidden ? 0 : maxScrollTop - scrollTopFromStart;
-  const nextWidth = scrollbarXHidden ? 0 : viewportWidth;
-  const nextHeight = scrollbarYHidden ? 0 : viewportHeight;
 
   let nextCornerWidth = 0;
   let nextCornerHeight = 0;
@@ -215,6 +196,10 @@ function computeThumbPosition() {
   }
 
   if (scrollbarXEl || scrollbarYEl) {
+    const ratioX = viewportWidth / scrollableContentWidth;
+    const ratioY = viewportHeight / scrollableContentHeight;
+    const nextWidth = scrollbarXHidden ? 0 : viewportWidth;
+    const nextHeight = scrollbarYHidden ? 0 : viewportHeight;
     // Subtract the corner size from the size of a scrollbar only while the corner has no size.
     // After that, the layout includes the corner.
     const cornerNotYetSized = cornerSize.width === 0 && cornerSize.height === 0;
@@ -287,8 +272,12 @@ function computeThumbPosition() {
   ];
 
   // Bound overflow distances added more than 10% to frame work.
+  const style = viewportEl.style;
   OVERFLOW_EDGE_VARS.forEach((cssVar, index) => {
-    viewportEl.style.setProperty(cssVar, `${overflowMetricsPx[index]}px`);
+    const value = `${overflowMetricsPx[index]}px`;
+    if (style.getPropertyValue(cssVar) !== value || style.getPropertyPriority(cssVar)) {
+      style.setProperty(cssVar, value);
+    }
   });
 
   if (cornerEl) {
@@ -297,11 +286,12 @@ function computeThumbPosition() {
   }
 
   setHiddenAxes(scrollbarXHidden, scrollbarYHidden);
+  const threshold = overflowEdgeThreshold.value;
   setOverflowEdges({
-    xStart: !scrollbarXHidden && scrollLeftFromStart > overflowEdgeThreshold.value.xStart,
-    xEnd: !scrollbarXHidden && scrollLeftFromEnd > overflowEdgeThreshold.value.xEnd,
-    yStart: !scrollbarYHidden && scrollTopFromStart > overflowEdgeThreshold.value.yStart,
-    yEnd: !scrollbarYHidden && scrollTopFromEnd > overflowEdgeThreshold.value.yEnd,
+    xStart: !scrollbarXHidden && scrollLeftFromStart > threshold.xStart,
+    xEnd: !scrollbarXHidden && scrollLeftFromEnd > threshold.xEnd,
+    yStart: !scrollbarYHidden && scrollTopFromStart > threshold.yStart,
+    yEnd: !scrollbarYHidden && scrollTopFromEnd > threshold.yEnd,
   });
 }
 
