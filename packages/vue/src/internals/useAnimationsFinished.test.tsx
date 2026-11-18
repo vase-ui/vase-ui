@@ -80,6 +80,28 @@ const Test = defineComponent(
 describe('useAnimationsFinished', () => {
   const { render } = createRenderer();
 
+  it('drops a queued animation lookup when its owner unmounts', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const target = document.createElement('div');
+    const read = vi.spyOn(target, 'getAnimations').mockReturnValue([]);
+    const finish = vi.fn();
+    const frame = vi.spyOn(AnimationFrame, 'request').mockReturnValue(1);
+    let wait!: ReturnType<typeof useAnimationsFinished>;
+    const { unmount } = await render(
+      <EffectOwner
+        setupEffect={() => {
+          wait = useAnimationsFinished(target);
+        }}
+      />,
+    );
+    wait(finish);
+    frame.mock.calls[0]![0](0);
+    unmount();
+    await flushMicrotasks();
+    expect(read).not.toHaveBeenCalled();
+    expect(finish).not.toHaveBeenCalled();
+  });
+
   it('samples the owned phase after its patch and cancels earlier waits', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const starting = shallowRef(true);

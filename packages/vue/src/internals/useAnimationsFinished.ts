@@ -38,18 +38,21 @@ function createMicrotaskQueue<T>(flush: (items: T[]) => void) {
  * remaining elements of its tree are served by a single `getAnimations()` call on the tree's root.
  * A root scan for a single remaining element cannot save a sort, so it is skipped.
  */
-const getAnimationsBatched = createMicrotaskQueue<
-  [element: Element, callback: (animations: Animation[]) => void]
->((lookups) => {
+const getAnimationsBatched = createMicrotaskQueue<{
+  element: Element;
+  wait: EffectScope;
+  callback: (animations: Animation[]) => void;
+}>((pending) => {
+  const lookups = pending.filter(({ wait }) => wait.active);
   const animationsByElement = new Map<Element, Animation[] | undefined>();
-  for (const [element] of lookups) {
+  for (const { element } of lookups) {
     animationsByElement.set(element, undefined);
   }
   let remaining = animationsByElement.size;
   let animatedRoot: (Node & Partial<DocumentOrShadowRoot>) | undefined;
   let animationsByTarget: Map<Element | null, Animation[]> | undefined;
 
-  for (const [element, callback] of lookups) {
+  for (const { element, callback } of lookups) {
     let animations = animationsByElement.get(element);
     if (!animations) {
       remaining -= 1;
@@ -114,8 +117,9 @@ export function useAnimationsFinished(
 
   return (onFinish: () => void, signal: AbortSignal | null = null) => {
     current?.stop();
+    if (!owner?.active || signal?.aborted) return;
     const element = toValue(elementOrRef);
-    if (!element || !owner?.active || signal?.aborted) return;
+    if (!element) return;
 
     if (typeof element.getAnimations !== 'function' || globalThis.VASE_UI_ANIMATIONS_DISABLED) {
       onFinish();
@@ -136,23 +140,20 @@ export function useAnimationsFinished(
 
     const sample = () => {
       if (!wait.active) return;
-      getAnimationsBatched([
+      getAnimationsBatched({
         element,
-        (animations) => {
+        wait,
+        callback(animations) {
           if (!wait.active) return;
+          // Discard fulfilled animations so a slower animation cannot retain their targets.
           Promise.all(
             animations.filter(isFiniteAnimation).map((animation) => animation.finished.then(NOOP)),
-          ).then(
-            () => {
-              if (batch) flushBeforePaint(finish);
-              else runAfterEarlierCompletions(finish, wait);
-            },
-            () => {
-              if (wait.active) sample();
-            },
-          );
+          ).then(() => {
+            if (batch) flushBeforePaint(finish);
+            else runAfterEarlierCompletions(finish, wait);
+          }, sample);
         },
-      ]);
+      });
     };
 
     wait.run(() => {
