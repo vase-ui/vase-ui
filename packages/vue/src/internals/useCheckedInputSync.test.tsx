@@ -27,11 +27,13 @@ describe('useCheckedInputSync', () => {
     const { input, write } = await mount(Part);
     expect(input.defaultChecked).toBe(false);
     expect(input.checked).toBe(true);
-    const assignments = recordInputWrites(input, 'checked');
+    const checkedWrites = recordInputWrites(input, 'checked');
+    const mixedWrites = recordInputWrites(input, 'indeterminate');
 
     write();
 
-    expect(assignments).toEqual([]);
+    expect(checkedWrites).toEqual([]);
+    expect(mixedWrites).toEqual([]);
   }
 
   it('writes the state at mount and skips an equal state', () => checkMount(CheckedInputSyncPart));
