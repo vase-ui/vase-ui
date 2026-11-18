@@ -558,8 +558,23 @@ export function useCompositeRoot<Metadata>(
       }
       // A consumer can change these attributes on the actual item in a render slot.
       const observer = new MutationObserver(moveTabStopToActiveItem);
+      const fieldsets = new Set<HTMLFieldSetElement>();
       for (const element of map.keys()) {
         observer.observe(element, { attributeFilter: ['disabled', 'aria-disabled'] });
+        for (
+          let fieldset = element.parentElement?.closest('fieldset');
+          fieldset && !fieldsets.has(fieldset);
+          fieldset = fieldset.parentElement?.closest('fieldset')
+        ) {
+          fieldsets.add(fieldset);
+        }
+      }
+      // A native fieldset exempts controls in its first legend.
+      for (const fieldset of fieldsets) {
+        observer.observe(fieldset, {
+          attributeFilter: ['disabled', 'aria-disabled'],
+          childList: true,
+        });
       }
       onCleanup(() => observer.disconnect());
     },

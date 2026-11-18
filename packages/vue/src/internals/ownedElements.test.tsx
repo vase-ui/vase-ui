@@ -60,6 +60,33 @@ describe('owned parts', () => {
     expect(button('After')).toHaveFocus();
   });
 
+  it('moves the tab stop when a fieldset disables a native item outside its first legend', async () => {
+    const disabled = shallowRef(false);
+    await render(() => (
+      <CompositeRoot>
+        <fieldset disabled={disabled.value}>
+          <legend>
+            <CompositeItem as="button">First</CompositeItem>
+          </legend>
+          <legend data-testid="second">
+            <CompositeItem as="button" active>
+              Active
+            </CompositeItem>
+          </legend>
+        </fieldset>
+      </CompositeRoot>
+    ));
+    const first = screen.getByRole('button', { name: 'First' });
+    const active = screen.getByRole('button', { name: 'Active' });
+    expect(active.tabIndex).toBe(0);
+    disabled.value = true;
+    await flushMicrotasks();
+    expect([first.tabIndex, active.tabIndex]).toEqual([0, -1]);
+    screen.getByRole('group').prepend(screen.getByTestId('second'));
+    await flushMicrotasks();
+    expect([first.tabIndex, active.tabIndex]).toEqual([-1, 0]);
+  });
+
   it('focuses the thumb input across a portal and releases it while the thumb is held', async () => {
     const target = document.createElement('div');
     document.body.append(target);

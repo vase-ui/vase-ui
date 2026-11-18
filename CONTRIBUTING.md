@@ -1294,7 +1294,7 @@ The composite root:
 - `useCompositeRoot` returns `elementsRef` and `itemMap`. The time picker uses the map to find the selected enabled option when its popup opens.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - The comments of `useCompositeRoot.ts` give the rules for the highlighted index while the focus is outside the element of the root (`VUE-113`). A root whose disabled items stay focusable gives `disabledIndices`, as `Tabs.List` and `Toolbar.Root` do.
-- The root watches the active and disabled state in each registration. It observes native and ARIA disabled attributes on the registered elements because a render slot can change them. An async child can hold the only tab stop in server HTML until it hydrates.
+- The root watches the active and disabled state in each registration. A render slot can change the native or ARIA disabled state of a registered element. The root observes those attributes and the fieldsets that contain the element. A native fieldset exempts controls in its first legend. An async child can hold the only tab stop in server HTML until it hydrates.
 - The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
 
 Grid navigation:
