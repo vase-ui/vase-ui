@@ -1929,7 +1929,7 @@ describe('<Resizable.Panel />', () => {
       ],
     });
 
-    it('gives the collapsed state of the server HTML to the render slot while it hydrates', async () => {
+    it('gives the collapsed state of the server HTML to both panel slots while it hydrates', async () => {
       const props = { composition: 'slotStyles' };
       const serverHtml = await renderOnServer(
         'src/resizable/root/ResizableRootHydration.test.vue',
@@ -1941,6 +1941,7 @@ describe('<Resizable.Panel />', () => {
       const panel = container.querySelector('[data-testid="a"]');
       expect(panel).toHaveClass('collapsed');
       expect(panel?.textContent).toBe('Closed');
+      expect(container.querySelector('[data-testid="c"]')).toHaveTextContent('Closed');
     });
   });
 

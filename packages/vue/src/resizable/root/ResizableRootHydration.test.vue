@@ -177,6 +177,10 @@ const WrappedPanel = defineComponent({
       </template>
     </Resizable.Handle>
     <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Handle aria-label="Second" />
+    <Resizable.Panel id="c" data-testid="c" collapsible :min-size="20" :default-size="0">
+      <template #default="{ state }">{{ state.collapsed ? 'Closed' : 'Open' }}</template>
+    </Resizable.Panel>
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'vertical'" data-testid="root" orientation="vertical">
     <Resizable.Panel id="a" data-testid="a" :default-size="40" />
