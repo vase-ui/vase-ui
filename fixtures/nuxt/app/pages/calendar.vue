@@ -11,7 +11,7 @@ const selectedMonth = shallowRef<Temporal.PlainYearMonth | null>(
 
 <template>
   <main>
-    <Calendar.Root v-model:value="selectedDay" :today="today" locale="en-US" data-testid="days">
+    <Calendar.Root v-model="selectedDay" :today="today" locale="en-US" data-testid="days">
       <Calendar.PreviousButton />
       <Calendar.ViewTrigger data-testid="days-year" />
       <Calendar.NextButton />
@@ -48,7 +48,7 @@ const selectedMonth = shallowRef<Temporal.PlainYearMonth | null>(
       </Calendar.YearGrid>
     </Calendar.Root>
     <output data-testid="day-value">{{ selectedDay?.toString() ?? '' }}</output>
-    <Calendar.Root v-model:value="selectedMonth" :today="today" locale="en-US" data-testid="months">
+    <Calendar.Root v-model="selectedMonth" :today="today" locale="en-US" data-testid="months">
       <Calendar.ViewTrigger data-testid="months-year" />
       <Calendar.MonthGrid>
         <template #row="{ months }">

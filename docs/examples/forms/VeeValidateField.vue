@@ -6,9 +6,9 @@ useForm({ initialValues: { username: '' } });
 </script>
 
 <template>
-  <VeeField v-slot="{ field, value, meta, errorMessage, handleChange, handleBlur }" name="username">
+  <VeeField v-slot="{ componentField, meta, errorMessage }" name="username">
     <Field.Root
-      :name="field.name"
+      :name="componentField.name"
       :invalid="!!errorMessage"
       :touched="meta.touched"
       :dirty="meta.dirty"
@@ -17,12 +17,7 @@ useForm({ initialValues: { username: '' } });
       <Field.Description>
         May appear where you contribute or are mentioned. You can remove it at any time.
       </Field.Description>
-      <Field.Control
-        placeholder="e.g. alice132"
-        :value="value"
-        @update:value="handleChange"
-        @blur="handleBlur"
-      />
+      <Field.Control placeholder="e.g. alice132" v-bind="componentField" />
       <Field.Error :match="!!errorMessage">{{ errorMessage }}</Field.Error>
     </Field.Root>
   </VeeField>

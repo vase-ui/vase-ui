@@ -71,7 +71,7 @@ Import the component and assemble its parts:
 
 ## Value
 
-The value is a `Temporal` object, and `v-model:value` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime`, a `Temporal.ZonedDateTime` or a `Temporal.PlainYearMonth`. It is `null` while the field has a segment with no number.
+The value is a `Temporal` object, and `v-model` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime`, a `Temporal.ZonedDateTime` or a `Temporal.PlainYearMonth`. It is `null` while the field has a segment with no number.
 
 The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The calendar and the time field give no value to a form.
 
@@ -186,7 +186,7 @@ Put the picker in a `Field` to show the errors of its validation. The hidden inp
 
 ## Events
 
-The root emits `valueChange` and `update:value` for each change of the value. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for each change of the value. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
 
 | Reason of `valueChange` | When                                          |
 | ----------------------- | --------------------------------------------- |

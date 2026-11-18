@@ -65,9 +65,9 @@ Import the component and assemble its parts:
 
 `Select.Root` renders no element. It renders a hidden input beside its content. A select with a `name` submits its value with the form. A select with `multiple` submits one value for each selected item.
 
-Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
-The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A select with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its input is `type="hidden"`.
+The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A select with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its input is `type="hidden"`.
 
 ## Positioning
 
@@ -85,7 +85,7 @@ To stop the popup from overlapping the trigger, set `alignItemWithTrigger` to `f
 
 ### Typed component
 
-`Select.Root` is a generic component. Its `Value` type follows the `value` and `defaultValue` props. Its `Multiple` type follows `multiple`.
+`Select.Root` is a generic component. Its `Value` type follows the `modelValue` and `defaultValue` props. Its `Multiple` type follows `multiple`.
 
 To fix both types, give the part its type arguments in an instantiation expression. Use the result as a component:
 

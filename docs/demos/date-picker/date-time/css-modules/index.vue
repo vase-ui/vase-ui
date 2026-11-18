@@ -22,7 +22,7 @@ const value = computed(() =>
   <div role="group" :aria-labelledby="labelId" :class="styles.Field">
     <div :id="labelId" :class="styles.Label">Meeting time</div>
     <div :class="styles.Row">
-      <DatePicker.Root v-model:value="meetingDate" locale="en-US">
+      <DatePicker.Root v-model="meetingDate" locale="en-US">
         <div :class="styles.Control">
           <DatePicker.Field aria-label="Date" :class="styles.Group">
             <DateField.Input :class="styles.Input">
@@ -91,7 +91,7 @@ const value = computed(() =>
           </DatePicker.Positioner>
         </DatePicker.Portal>
       </DatePicker.Root>
-      <TimePicker.Root v-model:value="meetingTime" locale="en-US" :hour-cycle="12">
+      <TimePicker.Root v-model="meetingTime" locale="en-US" :hour-cycle="12">
         <div :class="styles.Control">
           <TimePicker.Field aria-label="Time" :class="styles.Group">
             <TimeField.Input :class="styles.Input">

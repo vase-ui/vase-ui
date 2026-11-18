@@ -16,7 +16,7 @@ const text = computed(() => range.value.map((end) => end?.toString() ?? '').join
   <main>
     <form data-testid="form" @submit.prevent>
       <DateRangePicker.Root
-        v-model:value="range"
+        v-model="range"
         start-name="from"
         end-name="to"
         locale="en-US"

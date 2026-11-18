@@ -9,7 +9,7 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     locale="en-US"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
   >

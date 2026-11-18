@@ -85,7 +85,7 @@ const props = withDefaults(defineProps<FieldControlProps>(), {
 
 const emit = defineEmits<{
   /**
-   * Callback fired when the `value` changes. Use when controlled.
+   * The control emits this event when the user edits its value.
    */
   valueChange: [value: string, eventDetails: FieldControlChangeEventDetails];
   /**

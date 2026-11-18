@@ -20,7 +20,7 @@ const message = computed(() => holidayName(selected.value) ?? 'A dot marks a pub
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     :modifiers="modifiers"
     locale="en-US"
     aria-label="Day off"

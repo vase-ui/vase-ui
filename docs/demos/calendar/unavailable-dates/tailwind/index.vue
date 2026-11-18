@@ -20,7 +20,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     :min-date="today"
     :unavailable-dates="booked"
     locale="en-US"

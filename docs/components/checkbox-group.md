@@ -56,11 +56,11 @@ Checkbox Group works with [Checkbox](/components/checkbox). Import the component
 
 <<< ./checkbox-group/Anatomy.vue
 
-Give each `Checkbox.Root` a `value`. The `value` of the group is an array. It lists the values of the checked checkboxes. Bind it with `v-model:value`. The group follows a change that you make in place to a reactive `value`, such as `push` or `splice`.
+Give each `Checkbox.Root` a `value`. The `modelValue` of the group is an array. It lists the values of the checked checkboxes. Bind it with `v-model`. The group follows a change that you make in place to a reactive `modelValue`, such as `push` or `splice`.
 
 A checkbox with no `value`, and with no `name` of its own or of its field, keeps its own state. The group does not list it.
 
-A change of a checkbox emits `checkedChange` on the checkbox, then `valueChange` and `update:value` on the group, and then `update:checked` on the checkbox. `checkedChange` and `valueChange` get the same `eventDetails`. To stop the change, call `eventDetails.cancel()` in one of them. The change then emits no later event, and the checkbox and the group keep their state.
+A change of a checkbox emits `checkedChange` on the checkbox, then `valueChange` and `update:modelValue` on the group, and then `update:modelValue` on the checkbox. `checkedChange` and `valueChange` get the same `eventDetails`. To stop the change, call `eventDetails.cancel()` in one of them. The change then emits no later event, and the checkbox and the group keep their state.
 
 A reset of the form sets an uncontrolled group to its `defaultValue`. When the reset changes the value, the group emits `valueChange`, and `eventDetails.event` is the `reset` event. A checkbox with a `value` emits no `checkedChange` for the reset. To keep the value, call `eventDetails.cancel()` in `valueChange`. A controlled group does not change and emits nothing. In a `Field`, a reset clears the error of the field and starts no validation.
 
@@ -68,7 +68,7 @@ A native form submits one entry for each checked checkbox that has a name and is
 
 In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. The label can come before or after the group.
 
-Each checkbox of the group takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time for each checkbox that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
+Each checkbox of the group takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The group then emits `valueChange` and `update:modelValue` one time for each checkbox that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
 
 ## Examples
 

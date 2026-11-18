@@ -60,9 +60,9 @@ A reset of the form puts an uncontrolled group back to `defaultValue`, or to no 
 
 Because of the hidden input, `Radio.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
-Bind the value with `v-model:value`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:value` and keeps its value.
+Bind the value with `v-model`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:modelValue` and keeps its value.
 
-The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
+The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:modelValue` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
 
 The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input of the group in the document. The input of a disabled radio does not count, so a group with no enabled radio gives `null`. The input of a radio in a disabled `<fieldset>` does not count either, unless the radio is in the first `<legend>` of that fieldset. After the radio of the input in `inputElement` unmounts, `inputElement` is `null`, also when the group has other radios.
 

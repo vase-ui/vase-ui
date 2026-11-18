@@ -8,7 +8,7 @@ const kind = Temporal.PlainYearMonth.from('2026-11');
 
 <template>
   <Calendar.Root
-    v-model:value="month"
+    v-model="month"
     :default-value="kind"
     :disabled-months="(candidate) => candidate.month === 8"
     :disabled-years="(year) => year.year % 2 === 1"

@@ -12,7 +12,7 @@ const value = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('07:
     <label :for="id" :class="styles.Label">Lap time</label>
     <TimeField.Root
       :id="id"
-      v-model:value="value"
+      v-model="value"
       granularity="second"
       locale="en-US"
       :class="styles.Root"

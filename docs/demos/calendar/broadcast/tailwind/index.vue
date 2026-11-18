@@ -7,7 +7,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     broadcast-calendar
     :first-week-contains-date="1"
     locale="en-US"

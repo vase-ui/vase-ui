@@ -69,7 +69,7 @@ const props = withDefaults(defineProps<InputProps>(), {
 
 const emit = defineEmits<{
   /**
-   * Callback fired when the `value` changes. Use when controlled.
+   * The input emits this event when the user edits its value.
    */
   valueChange: [value: string, eventDetails: InputChangeEventDetails];
   /**

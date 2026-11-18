@@ -59,13 +59,13 @@ A part or a utility can also export other types. The list below is not complete.
 
 A part whose types follow a value or a payload is a generic component. Its type parameter comes from its props.
 
-- A part with a value, such as `RadioGroup`, `ToggleGroup`, `Slider.Root` or `Accordion.Root`, takes its type parameter from `value` or `default-value`.
+- A part with a value, such as `RadioGroup`, `ToggleGroup`, `Slider.Root` or `Accordion.Root`, takes its type parameter from `model-value` or `default-value`.
 - A popup root and its trigger, such as `Tooltip.Root` and `Tooltip.Trigger`, take the type of their payload from `handle`. See [Multiple triggers](/components/tooltip#multiple-triggers).
 
 In this sample, the type of the listener follows `default-value`: a number for one thumb, and an array of numbers for a range. The type check refuses a listener with another type.
 
 <<< ../examples/typescript/GenericValue.vue
 
-When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `value` and no `default-value`.
+When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `model-value` and no `default-value`.
 
 A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `#render` slot of the other part, and bind `props` on it.

@@ -183,7 +183,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
-// With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
+// With no `modelValue` and no `defaultValue`, the value is `min`, so the default is `number`.
 import { computed, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';

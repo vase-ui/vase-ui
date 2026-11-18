@@ -12,7 +12,7 @@ const value = shallowRef<Temporal.PlainDateTime | null>(
 <template>
   <div :class="styles.Field">
     <label :for="id" :class="styles.Label">Appointment</label>
-    <DateField.Root :id="id" v-model:value="value" locale="en-US" :class="styles.Root">
+    <DateField.Root :id="id" v-model="value" locale="en-US" :class="styles.Root">
       <DateField.Input :class="styles.Input">
         <template #segment="{ segment }">
           <DateField.Segment v-if="segment.editable" :segment="segment" :class="styles.Segment" />

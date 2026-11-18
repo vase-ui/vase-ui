@@ -60,7 +60,7 @@ function handleFilterInput(event: Event) {
         <Field.Control name="note" data-testid="note" @value-change="count('note')" />
       </Field.Root>
       <Input
-        v-model:value="text"
+        v-model="text"
         name="text"
         aria-label="Text"
         data-testid="text"
@@ -78,7 +78,7 @@ function handleFilterInput(event: Event) {
 
       <label data-testid="agree-label">
         <Checkbox.Root
-          v-model:checked="agree"
+          v-model="agree"
           name="agree"
           data-testid="agree"
           @checked-change="count('agree')"
@@ -91,7 +91,7 @@ function handleFilterInput(event: Event) {
           News
         </label>
       </Field.Root>
-      <CheckboxGroup v-model:value="letters" @value-change="count('letters')">
+      <CheckboxGroup v-model="letters" @value-change="count('letters')">
         <label data-testid="letter-a-label">
           <Checkbox.Root name="letters" value="a" data-testid="letter-a" />A
         </label>
@@ -101,20 +101,20 @@ function handleFilterInput(event: Event) {
       </CheckboxGroup>
       <label data-testid="notify-label">
         <Switch.Root
-          v-model:checked="notify"
+          v-model="notify"
           name="notify"
           data-testid="notify"
           @checked-change="count('notify')"
         />
         Notify
       </label>
-      <RadioGroup v-model:value="size" name="size" @value-change="count('size')">
+      <RadioGroup v-model="size" name="size" @value-change="count('size')">
         <label v-for="item in SIZES" :key="item" :data-testid="`size-${item}-label`">
           <Radio.Root :value="item" :data-testid="`size-${item}`" />{{ item }}
         </label>
       </RadioGroup>
 
-      <Select.Root v-model:value="font" name="font" :items="FONTS" @value-change="count('font')">
+      <Select.Root v-model="font" name="font" :items="FONTS" @value-change="count('font')">
         <Select.Trigger data-testid="font-trigger"><Select.Value /></Select.Trigger>
         <Select.Portal>
           <Select.Positioner>
@@ -126,12 +126,7 @@ function handleFilterInput(event: Event) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
-      <Combobox.Root
-        v-model:value="fruit"
-        name="fruit"
-        :items="FRUITS"
-        @value-change="count('fruit')"
-      >
+      <Combobox.Root v-model="fruit" name="fruit" :items="FRUITS" @value-change="count('fruit')">
         <Combobox.Input aria-label="Fruit" data-testid="fruit-input" />
         <Combobox.Portal>
           <Combobox.Positioner>
@@ -146,7 +141,7 @@ function handleFilterInput(event: Event) {
         </Combobox.Portal>
       </Combobox.Root>
       <NumberField.Root
-        v-model:value="quantity"
+        v-model="quantity"
         name="quantity"
         locale="en-US"
         @value-change="count('quantity')"
@@ -156,7 +151,7 @@ function handleFilterInput(event: Event) {
       <Field.Root>
         <Field.Label>Code</Field.Label>
         <OTPField.Root
-          v-model:value="code"
+          v-model="code"
           name="code"
           :length="4"
           auto-submit
@@ -167,7 +162,7 @@ function handleFilterInput(event: Event) {
         </OTPField.Root>
       </Field.Root>
       <Slider.Root
-        v-model:value="volume"
+        v-model="volume"
         name="volume"
         aria-label="Volume"
         @value-change="count('volume')"
@@ -176,17 +171,17 @@ function handleFilterInput(event: Event) {
           <Slider.Thumb :style="THUMB_STYLE" data-testid="volume-thumb" />
         </Slider.Control>
       </Slider.Root>
-      <Slider.Root v-model:value="range" name="range" @value-change="count('range')">
+      <Slider.Root v-model="range" name="range" @value-change="count('range')">
         <Slider.Control :style="CONTROL_STYLE">
           <Slider.Thumb aria-label="Minimum" :style="THUMB_STYLE" data-testid="range-min" />
           <Slider.Thumb aria-label="Maximum" :style="THUMB_STYLE" data-testid="range-max" />
         </Slider.Control>
       </Slider.Root>
-      <DateField.Root v-model:value="when" name="when" locale="en-US" @value-change="count('when')">
+      <DateField.Root v-model="when" name="when" locale="en-US" @value-change="count('when')">
         <DateField.Input data-testid="when" />
       </DateField.Root>
       <TimeField.Root
-        v-model:value="alarm"
+        v-model="alarm"
         name="alarm"
         locale="en-US"
         :hour-cycle="24"

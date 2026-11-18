@@ -71,7 +71,7 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
 <template>
   <CheckboxGroup
     :aria-labelledby="id"
-    :value="mainValue"
+    :model-value="mainValue"
     :all-values="mainPermissions"
     :class="styles.CheckboxGroup"
     :style="{ marginLeft: '1rem' }"
@@ -118,7 +118,7 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
     <CheckboxGroup
       aria-labelledby="manage-users-caption"
       :class="styles.CheckboxGroup"
-      :value="managementValue"
+      :model-value="managementValue"
       :all-values="userManagementPermissions"
       :style="{ marginLeft: '1rem' }"
       @value-change="changeManagementValue"

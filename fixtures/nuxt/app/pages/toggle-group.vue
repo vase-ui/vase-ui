@@ -9,7 +9,7 @@ const alignment = ref(['center']);
 
 <template>
   <main>
-    <ToggleGroup v-model:value="alignment" data-testid="alone">
+    <ToggleGroup v-model="alignment" data-testid="alone">
       <Toggle data-testid="alone-1" value="left">Left</Toggle>
       <Toggle data-testid="alone-2" value="center">Center</Toggle>
       <Toggle data-testid="alone-3" value="right">Right</Toggle>

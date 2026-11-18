@@ -43,7 +43,7 @@ const CheckIcon: FunctionalComponent = () =>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
         <Menu.Popup :class="styles.Popup">
-          <Menu.RadioGroup v-model:value="value">
+          <Menu.RadioGroup v-model="value">
             <Menu.RadioItem :class="styles.RadioItem" value="date">
               <Menu.RadioItemIndicator :class="styles.RadioItemIndicator">
                 <CheckIcon />

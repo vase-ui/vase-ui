@@ -14,7 +14,7 @@ const wifi = ref(true);
         </Switch.Root>
         Notifications
       </label>
-      <Switch.Root v-model:checked="wifi" data-testid="wifi" name="wifi" aria-label="Wi-Fi">
+      <Switch.Root v-model="wifi" data-testid="wifi" name="wifi" aria-label="Wi-Fi">
         Wi-Fi
       </Switch.Root>
       <output data-testid="wifi-value">{{ wifi }}</output>

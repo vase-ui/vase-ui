@@ -25,23 +25,23 @@ function handleToolbarInput(event: Event) {
 
 <template>
   <main>
-    <Input v-model:value="inputValue" aria-label="Name" data-testid="input" />
+    <Input v-model="inputValue" aria-label="Name" data-testid="input" />
     <output data-testid="input-value">{{ inputValue }}</output>
 
     <Field.Root>
       <Field.Label>Email</Field.Label>
-      <Field.Control v-model:value="fieldValue" data-testid="field-control" />
+      <Field.Control v-model="fieldValue" data-testid="field-control" />
     </Field.Root>
     <output data-testid="field-value">{{ fieldValue }}</output>
 
-    <NumberField.Root v-model:value="amount" locale="en-US">
+    <NumberField.Root v-model="amount" locale="en-US">
       <NumberField.Input aria-label="Amount" data-testid="number-input" />
     </NumberField.Root>
     <output data-testid="number-value">{{ amount }}</output>
 
     <Field.Root>
       <Field.Label>Code</Field.Label>
-      <OTPField.Root v-model:value="code" :length="4">
+      <OTPField.Root v-model="code" :length="4">
         <OTPField.Input v-for="index in 4" :key="index" :data-testid="`otp-input-${index}`" />
       </OTPField.Root>
     </Field.Root>
@@ -52,7 +52,7 @@ function handleToolbarInput(event: Event) {
     </Combobox.Root>
     <output data-testid="combobox-value">{{ fruitText }}</output>
 
-    <Autocomplete.Root v-model:value="search" :items="fruits">
+    <Autocomplete.Root v-model="search" :items="fruits">
       <Autocomplete.Input aria-label="Search" data-testid="autocomplete-input" />
     </Autocomplete.Root>
     <output data-testid="autocomplete-value">{{ search }}</output>

@@ -31,7 +31,7 @@ const summary = computed(() => {
 <template>
   <RangeCalendar.Root
     :class="styles.Root"
-    v-model:value="value"
+    v-model="value"
     aria-label="Rental dates"
     :min-days="3"
     :max-days="7"

@@ -60,9 +60,9 @@ In a [wrapper of `Field.Root`](/handbook/composition#wrap-a-part), give `dirty` 
 
 `Field.Root` exposes `validate()`. Call it through a template ref to validate the field.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Field.Control`. After the hydration, `Field.Control` emits `valueChange` and `update:value` with that text. When the visitor left the control before the page hydrated, the control then also gets `change`, `blur` and `focusout`.
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Field.Control`. After the hydration, `Field.Control` emits `valueChange` and `update:modelValue` with that text. When the visitor left the control before the page hydrated, the control then also gets `change`, `blur` and `focusout`.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Field.Control` takes a restored value as one `input` event, and it emits `valueChange` and `update:value`. A control that does not have the focus then also gets `change`, `blur` and `focusout`. A control that `KeepAlive` holds at that event takes the value when `KeepAlive` shows it again.
+Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Field.Control` takes a restored value as one `input` event, and it emits `valueChange` and `update:modelValue`. A control that does not have the focus then also gets `change`, `blur` and `focusout`. A control that `KeepAlive` holds at that event takes the value when `KeepAlive` shows it again.
 
 ## API reference
 

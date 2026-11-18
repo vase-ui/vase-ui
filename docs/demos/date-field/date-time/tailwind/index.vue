@@ -11,7 +11,7 @@ const value = shallowRef<Temporal.PlainDateTime | null>(
 <template>
   <div class="flex flex-col items-start gap-1">
     <label :for="id" class="text-sm font-bold text-neutral-950 dark:text-white">Appointment</label>
-    <DateField.Root :id="id" v-model:value="value" locale="en-US" class="flex items-center">
+    <DateField.Root :id="id" v-model="value" locale="en-US" class="flex items-center">
       <DateField.Input
         class="flex h-8 items-center border border-neutral-950 bg-white px-2 text-sm font-normal text-neutral-950 tabular-nums any-pointer-coarse:text-base focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
       >

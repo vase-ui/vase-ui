@@ -9,7 +9,7 @@ const holidays = [Temporal.PlainDate.from('2026-12-25'), Temporal.PlainDate.from
 
 <template>
   <Calendar.Root
-    v-model:value="days"
+    v-model="days"
     multiple
     :max-days="3"
     :min-date="minDate"

@@ -49,7 +49,7 @@ export interface SliderThumbProps
     ((formattedValue: string, value: number, index: number) => string) | null | undefined;
   /**
    * The index of the thumb which corresponds to the index of its value in the
-   * `value` or `defaultValue` array.
+   * `modelValue` or `defaultValue` array.
    * A thumb with no `index` takes the index of its place among the thumbs.
    * Set `index` when the thumbs do not render in the order of their values, such as a thumb in an
    * async component.

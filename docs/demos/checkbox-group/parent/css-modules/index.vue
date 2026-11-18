@@ -50,7 +50,7 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
 
 <template>
   <CheckboxGroup
-    v-model:value="value"
+    v-model="value"
     :aria-labelledby="id"
     :all-values="fruits"
     :class="styles.CheckboxGroup"

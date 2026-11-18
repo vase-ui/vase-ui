@@ -8,7 +8,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     iso-week
     locale="en-US"
     aria-label="Start of the sprint"

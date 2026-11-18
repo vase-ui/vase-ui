@@ -10,7 +10,7 @@ const code = ref('12');
   <main>
     <form data-testid="form" @submit.prevent>
       <Field.Root>
-        <OTPField.Root v-model:value="code" name="code" :length="4" data-testid="code">
+        <OTPField.Root v-model="code" name="code" :length="4" data-testid="code">
           <OTPField.Input v-for="index in 4" :key="index" :data-testid="`code-${index}`" />
         </OTPField.Root>
         <Field.Label data-testid="code-label">Code</Field.Label>

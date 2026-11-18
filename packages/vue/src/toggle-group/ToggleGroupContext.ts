@@ -12,7 +12,7 @@ export interface ToggleGroupContext<Value> {
   ) => void;
   disabled: ComputedRef<boolean>;
   /**
-   * Whether the group got `value` or `defaultValue`.
+   * Whether the group got `modelValue` or `defaultValue`.
    * A Toggle with no `value` prop reports an error only then.
    */
   isValueInitialized: ComputedRef<boolean>;

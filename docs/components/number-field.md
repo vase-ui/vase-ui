@@ -58,13 +58,13 @@ Import the component and assemble its parts:
 
 Because of the hidden input, `NumberField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
-Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
 With no `locale` prop, the server HTML has the text in the format of `en-US`. When the root is mounted, the text changes to the format of the locale of the browser. Give the root a `locale` prop to get the same text on the server and in the browser.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `NumberField.Input` when the field accepts its characters. After the hydration, the root emits `valueChange` and `update:value` with the number of that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`, and the root emits `valueCommitted`.
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `NumberField.Input` when the field accepts its characters. After the hydration, the root emits `valueChange` and `update:modelValue` with the number of that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`, and the root emits `valueCommitted`.
 
-The root also takes a number that a program or the browser writes into its hidden input before the page hydrates. It takes a number that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+The root also takes a number that a program or the browser writes into its hidden input before the page hydrates. It takes a number that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
 
 `NumberField.ScrubAreaCursor` renders its element only while the user scrubs. It does not render for a touch, in a WebKit browser such as Safari, or after `requestPointerLock()` throws or rejects.
 

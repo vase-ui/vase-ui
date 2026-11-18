@@ -112,7 +112,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
       error(
         'A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop.',
         'This will cause issues between the Toggle Group and Toggle values.',
-        'Provide the `<Toggle>` with a `value` prop matching the `<ToggleGroup>` values prop type.',
+        'Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
       );
     }
   };

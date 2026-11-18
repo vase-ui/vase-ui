@@ -52,7 +52,7 @@ const itemClass =
         <Menu.Popup
           class="relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
         >
-          <Menu.RadioGroup v-model:value="value">
+          <Menu.RadioGroup v-model="value">
             <Menu.GroupLabel
               class="py-2 pr-8 pl-[2.125rem] text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
               >Sort</Menu.GroupLabel
@@ -84,19 +84,19 @@ const itemClass =
               class="py-2 pr-8 pl-[2.125rem] text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
               >Workspace</Menu.GroupLabel
             >
-            <Menu.CheckboxItem v-model:checked="showMinimap" :class="itemClass">
+            <Menu.CheckboxItem v-model="showMinimap" :class="itemClass">
               <Menu.CheckboxItemIndicator class="col-start-1">
                 <CheckIcon />
               </Menu.CheckboxItemIndicator>
               <span class="col-start-2">Minimap</span>
             </Menu.CheckboxItem>
-            <Menu.CheckboxItem v-model:checked="showSearch" :class="itemClass">
+            <Menu.CheckboxItem v-model="showSearch" :class="itemClass">
               <Menu.CheckboxItemIndicator class="col-start-1">
                 <CheckIcon />
               </Menu.CheckboxItemIndicator>
               <span class="col-start-2">Search</span>
             </Menu.CheckboxItem>
-            <Menu.CheckboxItem v-model:checked="showSidebar" :class="itemClass">
+            <Menu.CheckboxItem v-model="showSidebar" :class="itemClass">
               <Menu.CheckboxItemIndicator class="col-start-1">
                 <CheckIcon />
               </Menu.CheckboxItemIndicator>

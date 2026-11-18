@@ -12,7 +12,7 @@ const summary = computed(() => {
 
 <template>
   <Calendar.Root
-    v-model:value="call"
+    v-model="call"
     locale="en-US"
     aria-label="Day of the call"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"

@@ -153,7 +153,7 @@ describe('<ToggleGroup />', () => {
       );
 
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
-        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Provide the `<Toggle>` with a `value` prop matching the `<ToggleGroup>` values prop type.',
+        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
       );
     });
   });

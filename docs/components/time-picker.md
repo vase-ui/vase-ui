@@ -75,7 +75,7 @@ A popup has one of three ways to pick a time. Use the one that fits, or more tha
 
 ## Value
 
-The value is a `Temporal` object, and `v-model:value` gives back the same kind: a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A new value keeps the date and the time zone of the present value. It is `null` while the field has a segment with no number.
+The value is a `Temporal` object, and `v-model` gives back the same kind: a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A new value keeps the date and the time zone of the present value. It is `null` while the field has a segment with no number.
 
 The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minTime`, `maxTime`, `locale`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The list, the columns and the clock give no value to a form.
 
@@ -159,7 +159,7 @@ In a [wrapper of `TimePicker.Root`](/handbook/composition#wrap-a-part), give `cl
 
 ## Events
 
-The root emits `valueChange` and `update:value` for each change of the value. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for each change of the value. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
 
 | Reason of `valueChange` | When                                                               |
 | ----------------------- | ------------------------------------------------------------------ |

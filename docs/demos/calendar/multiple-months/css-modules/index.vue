@@ -13,7 +13,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     :number-of-months="2"
     paged-navigation
     :min-date="today"

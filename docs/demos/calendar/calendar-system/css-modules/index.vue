@@ -7,7 +7,7 @@ const selected = shallowRef(Temporal.PlainDate.from('2026-11-14'));
 </script>
 
 <template>
-  <Calendar.Root v-model:value="selected" calendar="persian" locale="en-US" :class="styles.Root">
+  <Calendar.Root v-model="selected" calendar="persian" locale="en-US" :class="styles.Root">
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
