@@ -772,6 +772,8 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The project `vapor` of the tests checks the parts in a Vapor app. The project `vapor-parts` compiles the parts as Vapor components and runs the listed test files. See [Where a test runs](#where-a-test-runs).
 
+The fixture in `fixtures/vite/published` imports `Toggle` from the built package. It checks the public declarations on Vue 3.5.12. It hydrates the server button on that version and in a Vapor app on Vue 3.6.0-rc.15 with `vaporInteropPlugin`. The first click must emit one update and change the scoped slot text. A second button must focus the toggle through its exposed `element`.
+
 A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 
 `FilterDropdownHiddenItemText` is a component with a render function, so Vapor mode does not compile it. Only a render function reads the vnodes of a slot without a mount. See [What differs from the React source](#what-differs-from-the-react-source).
@@ -1729,6 +1731,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - In this package, vue-tsc reports no unknown prop on a generic SFC, in a `.spec.vue` file also. The files that are not strict give each generic SFC a type that accepts each unknown prop. For such a part, write a line that must fail: `<!-- @vue-expect-error -->` before an element that gives the prop a value of a wrong type.
 - The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
 - The test of `fixtures/vite` builds a client app that mounts in its entry module, and reads it in Chromium. The job `test-nuxt` runs it with `pnpm test:vite`. Firefox and WebKit restore no input of that page, because the app makes its inputs after the parse. The comments of the fixture give the other reasons.
+- Build the package before you change Vue for the published fixture. Install the same Vue version in `packages/vue` and `fixtures/vite`. The jobs `test-nuxt` and `test-vapor-parts` show the commands for `test:published:floor` and `test:published:vapor`.
 - The job `test-nuxt` also runs `pnpm --filter @vase-ui/nuxt-fixture typecheck`. vue-tsc then checks the templates of the fixture against the built package, as it does in the project of a consumer.
 
 ### How to port a test

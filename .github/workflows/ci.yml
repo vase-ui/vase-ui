@@ -227,6 +227,8 @@ jobs:
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm test:nuxt
       - run: pnpm test:vite
+      - run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.5.12
+      - run: pnpm --filter @vase-ui/vite-fixture test:published:floor
 
   # This job builds the package and the site again, beside `check`, so that `check` does not take
   # longer. Then it runs axe-core on each page of the built site, and it checks the focus of the
@@ -302,7 +304,7 @@ jobs:
   # result of a test file that does not import the list.
   test-vapor-parts:
     needs: select
-    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
+    if: ${{ !cancelled() && needs.select.result != 'failure' && (needs.select.outputs.tests != 'none' || needs.select.outputs.fixtures != 'false') }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.65.0-noble
@@ -320,8 +322,14 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
-      - uses: ./.github/actions/vitest
+      - if: ${{ needs.select.outputs.fixtures != 'false' }}
+        run: pnpm build
+      - id: rc
+        run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.6.0-rc.15
+      - if: ${{ needs.select.outputs.fixtures != 'false' }}
+        run: pnpm --filter @vase-ui/vite-fixture test:published:vapor
+      - if: ${{ !cancelled() && steps.rc.outcome == 'success' && needs.select.outputs.tests != 'none' }}
+        uses: ./.github/actions/vitest
         with:
           project: vapor-parts
 
