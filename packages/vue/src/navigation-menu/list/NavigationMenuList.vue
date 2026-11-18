@@ -20,6 +20,7 @@ import { computed, provide } from 'vue';
 import { closestInEventPath } from '../../common/shadowDom';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -101,12 +102,14 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('ul',
   state,
   ref: composite ? [composite.rootRef] : [],
   props: (attrs) => [
+    { style: hoverStyle.value },
     composite?.props,
     dismissProps.value?.floating,
     nested ? undefined : { onKeydown },
     attrs,
   ],
 });
+const hoverStyle = useHoverPointerStyle(element);
 
 defineExpose({ element });
 </script>

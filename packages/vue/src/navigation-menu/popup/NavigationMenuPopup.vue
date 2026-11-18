@@ -51,6 +51,7 @@ import { popupTransitionStateMapping } from '../../utils/popups/popupStateMappin
 import { useElementId } from '../../utils/popups/useElementId';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { popupSizeStyles } from '../../utils/popups/viewport/popupSizeStyles';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 
 defineOptions({ inheritAttrs: false });
@@ -62,7 +63,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuPopupState>;
 }>();
 
-const { open, transitionStatus, popupElement, prevTriggerElementRef } =
+const { sizes, open, transitionStatus, popupElement, prevTriggerElementRef } =
   useNavigationMenuRootContext();
 const positioning = useNavigationMenuPositionerContext();
 const direction = useDirection();
@@ -107,7 +108,10 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     {
       id: popupId.value,
       tabindex: -1,
-      style: originSideStyle.value,
+      style: {
+        ...originSideStyle.value,
+        ...(!sizes.value.measuring && popupSizeStyles(sizes.value.popup)),
+      },
       // Each navigation landmark of a page needs a name of its own, and a nested menu opens two
       // popups. The root clears `floatingRootStore` at the close, but `prevTriggerElementRef`
       // keeps the trigger until the popup unmounts.

@@ -34,10 +34,11 @@ export interface TooltipPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, provide } from 'vue';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -83,10 +84,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,
     store.select('popupProps'),
+    { style: store.context.viewportStyles.value?.popup.value },
     getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,
   ],
 });
+
+provide(PopupStyleContext, () => elementProps().style);
 
 defineExpose({ element });
 </script>

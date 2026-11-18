@@ -8,6 +8,7 @@ import type {
   UseRenderElementReturnValue,
 } from '../../../internals/useRenderElement';
 import type { TransitionStatus } from '../../../internals/useTransitionStatus';
+import { useHoverPointerStyle } from '../interactions/hoverPointerEvents';
 import { popupStateMapping } from '../popupStateMapping';
 
 export interface UsePositionerOptions<State> {
@@ -45,12 +46,15 @@ export function usePositioner<State extends Record<string, any>>(
   componentProps: UseRenderElementComponentProps<State>,
   options: UsePositionerOptions<State>,
 ): UseRenderElementReturnValue<HTMLDivElement> {
-  return useRenderElement<State, HTMLDivElement>('div', componentProps, {
+  const result: UseRenderElementReturnValue<HTMLDivElement> = useRenderElement<
+    State,
+    HTMLDivElement
+  >('div', componentProps, {
     state: options.state,
     ref: options.ref,
     stateAttributesMapping: popupStateMapping,
     props: (attrs) => {
-      const style: CSSProperties = { ...toValue(options.styles) };
+      const style: CSSProperties = { ...toValue(options.styles), ...hoverStyle.value };
       if (toValue(options.inert)) {
         style.pointerEvents = 'none';
       }
@@ -67,4 +71,6 @@ export function usePositioner<State extends Record<string, any>>(
       ];
     },
   });
+  const hoverStyle = useHoverPointerStyle(result.element);
+  return result;
 }

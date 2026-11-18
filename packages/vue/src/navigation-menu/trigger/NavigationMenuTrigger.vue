@@ -99,7 +99,6 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
 import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
@@ -115,6 +114,7 @@ import type { ElementSiblings } from '../../utils/popups/focus/useElementSibling
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
@@ -207,7 +207,8 @@ watch([mounted, isActiveItem, value], ([isMounted, isActive, currentValue]) => {
   renderedValue = currentValue;
 });
 
-const popupSize = useNavigationMenuPopupSize(itemValue, isActiveItem);
+const { isHeld } = useKeepAliveState();
+useNavigationMenuPopupSize(computed(() => isActiveItem.value && !isHeld.value));
 
 function handleOpenChange(
   nextOpen: boolean,
@@ -295,6 +296,7 @@ const handleClose = computed(() =>
   safePolygon({ blockPointerEvents: shouldBlockSafePolygonPointerEvents.value, getScope }),
 );
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(floatingRootStore, {
   enabled: hoverInteractionsEnabled,
   move: false,
@@ -325,6 +327,9 @@ watch(
 );
 
 function handleActivation(event: MouseEvent | KeyboardEvent) {
+  if (isDisabled.value) {
+    return;
+  }
   const currentTarget = event.currentTarget as HTMLElement;
   // The `keydown` handler writes the value before this function runs.
   const previousValue = renderedValue;
@@ -391,36 +396,6 @@ function handleActivation(event: MouseEvent | KeyboardEvent) {
   }
 }
 
-async function handleOpenEvent(event: MouseEvent | KeyboardEvent) {
-  if (isDisabled.value) {
-    return;
-  }
-
-  const popup = popupElement.value;
-  const positioner = positionerElement.value;
-  if (!popup || !positioner) {
-    handleActivation(event);
-    return;
-  }
-
-  const { width, height } = getCssDimensions(popup);
-  const shouldSkipAutoSizeSync =
-    renderedValue != null &&
-    renderedValue !== itemValue.value &&
-    (event.type === 'click' || pointerType.value !== 'touch');
-
-  handleActivation(event);
-
-  // The popup gets the size of the new content, so the DOM must show that content first.
-  await nextTick();
-
-  if (shouldSkipAutoSizeSync) {
-    popupSize.skipNextAutoSizeSync();
-  }
-
-  popupSize.handleValueChange(popup, positioner, width, height);
-}
-
 function handleSetPointerType(event: PointerEvent) {
   pointerType.value = event.pointerType;
 }
@@ -442,7 +417,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (openHorizontal || openVertical) {
     setValue(itemValue.value, createChangeEventDetails(REASONS.listNavigation, event));
-    handleOpenEvent(event);
+    handleActivation(event);
     stopEvent(event);
   }
 }
@@ -494,14 +469,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     compositeProps.value,
     click.reference,
     hoverProps,
+    { style: hoverStyle.value },
     dismissProps?.value?.reference,
     {
       // The popup reads this id from the element for its name.
       id: triggerId.value,
       // The key wins over the roving `tabindex` of the composite, so each trigger is a tab stop.
       tabindex: 0,
-      onMouseenter: handleOpenEvent,
-      onClick: handleOpenEvent,
+      onMouseenter: handleActivation,
+      onClick: handleActivation,
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,
@@ -537,8 +513,6 @@ function openHoveredTrigger() {
   hoverProps.onMouseenter?.(createHoverEvent('mouseenter', trigger));
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
-
-const { isHeld } = useKeepAliveState();
 
 onMounted(openHoveredTrigger);
 

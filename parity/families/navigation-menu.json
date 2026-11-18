@@ -6,6 +6,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/navigation-menu/utils/setSharedFixedSize.ts",
+      "kind": "not-applicable",
+      "reason": "The popup and positioner bind the dimensions from their root. Vue applies both styles."
+    },
+    {
       "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
       "describe": ["<NavigationMenu.Content />", "server-side rendering"],
       "kind": "replaced",
@@ -34,7 +39,7 @@
       "title": "does not animate popup sizing when kept nested default content first moves into the portal",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "reason": "The case gives the popup a shell height for the first read of `offsetHeight` and the full height for the next reads, after the click. In Vue, the popup measures its open size in the flush of the click, before the case can mock the size, and the kept nested content is in the portal at that measure. The Vase UI case measures the real layout: each fixed height of the popup is its open height."
+      "reason": "The upstream case supplies a shell height on the first read after the click. The kept Vue content moves into the portal before that mock can be installed. The replacement records the fixed popup heights from mount and compares each nonzero height with the open panel."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",

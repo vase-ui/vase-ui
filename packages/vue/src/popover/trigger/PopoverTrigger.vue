@@ -78,6 +78,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
 import {
@@ -151,6 +152,7 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon();
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(store, {
   enabled: () => !isDisabled.value && props.openOnHover && !isTouchPressOpen.value,
   mouseOnly: true,
@@ -203,6 +205,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   props: (attrs) => [
     click.reference,
     hoverProps,
+    { style: hoverStyle.value },
     rootTriggerProps.value,
     interactionTypeProps,
     {

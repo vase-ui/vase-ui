@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../popupTriggerMap';
 import { menuPopups } from '../registeredParts';
+import { hoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';
 import type { HoverIntent } from './hoverIntent';
 
@@ -30,8 +31,8 @@ function createElements() {
 function readPointerEvents(elements: ReturnType<typeof createElements>) {
   return [
     elements.scopeElement.style.pointerEvents,
-    elements.triggerElement.style.pointerEvents,
-    elements.positionerElement.style.pointerEvents,
+    hoverPointerStyle(elements.triggerElement)?.pointerEvents ?? '',
+    hoverPointerStyle(elements.positionerElement)?.pointerEvents ?? '',
   ];
 }
 
@@ -108,6 +109,23 @@ describe('HoverIntent', () => {
       expect(readPointerEvents(second)).toEqual(['', '', '']);
     });
 
+    it('VUE-94: restores the value and priority of an external scope after a handoff', () => {
+      const first = createElements();
+      first.scopeElement.setAttribute('data-rootownerid', 'external');
+      const second = { ...createElements(), scopeElement: first.scopeElement };
+      const { style } = first.scopeElement;
+      style.setProperty('pointer-events', 'all', 'important');
+      const previous = createIntent();
+      const current = createIntent();
+      previous.blockOutsidePointerEvents(first);
+      current.blockOutsidePointerEvents(second);
+      previous.restoreOutsidePointerEvents();
+      expect(style.pointerEvents).toBe('none');
+      current.restoreOutsidePointerEvents();
+      expect(style.pointerEvents).toBe('all');
+      expect(style.getPropertyPriority('pointer-events')).toBe('important');
+    });
+
     describe('VUE-94: the hover triggers of the popup', () => {
       it('keep their pointer events while the popup blocks the scope element', () => {
         const elements = createElements();
@@ -115,29 +133,20 @@ describe('HoverIntent', () => {
         const before = document.createElement('button');
         const after = document.createElement('button');
         intent.addHoverTrigger(before);
-        expect(before.style.pointerEvents).toBe('');
+        expect(hoverPointerStyle(before)).toBeUndefined();
 
         intent.blockOutsidePointerEvents(elements);
         intent.addHoverTrigger(after);
-        expect([before.style.pointerEvents, after.style.pointerEvents]).toEqual(['auto', 'auto']);
+        expect([
+          hoverPointerStyle(before)?.pointerEvents,
+          hoverPointerStyle(after)?.pointerEvents,
+        ]).toEqual(['auto', 'auto']);
 
         intent.removeHoverTrigger(after);
-        expect(after.style.pointerEvents).toBe('');
+        expect(hoverPointerStyle(after)).toBeUndefined();
 
         intent.restoreOutsidePointerEvents();
-        expect(before.style.pointerEvents).toBe('');
-      });
-
-      it('keep a pointer-events value of their own', () => {
-        const intent = createIntent();
-        const trigger = document.createElement('button');
-        trigger.style.pointerEvents = 'none';
-        intent.addHoverTrigger(trigger);
-
-        intent.blockOutsidePointerEvents(createElements());
-        intent.restoreOutsidePointerEvents();
-
-        expect(trigger.style.pointerEvents).toBe('none');
+        expect(hoverPointerStyle(before)).toBeUndefined();
       });
     });
   });

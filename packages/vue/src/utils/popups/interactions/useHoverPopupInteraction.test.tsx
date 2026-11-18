@@ -7,6 +7,7 @@ import { createChangeEventDetails } from '../../../internals/createVaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
+import { hoverPointerStyle, useHoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';
 import { useHoverPopupInteraction } from './useHoverPopupInteraction';
 import type { UseHoverPopupInteractionProps } from './useHoverPopupInteraction';
@@ -141,11 +142,13 @@ describe('useHoverPopupInteraction', () => {
           store = context.rootStore;
           useHoverPopupInteraction(store, options);
 
+          const triggerStyle = useHoverPointerStyle(refs.reference);
+          const positionerStyle = useHoverPointerStyle(refs.floating);
           return () => (
             <>
-              <button data-testid="trigger" ref={refs.setReference} />
+              <button data-testid="trigger" style={triggerStyle.value} ref={refs.setReference} />
               {open.value && (
-                <div data-testid="popup" ref={refs.setFloating}>
+                <div data-testid="popup" style={positionerStyle.value} ref={refs.setFloating}>
                   <button data-testid="menu-button" aria-haspopup="menu" />
                   <button data-testid="button" />
                 </div>
@@ -369,11 +372,16 @@ describe('useHoverPopupInteraction', () => {
           triggerElement: trigger,
           positionerElement: positioner,
         });
+        await flushMicrotasks();
         expect(read()).toEqual(BLOCKED);
 
         unmount();
 
-        expect(read()).toEqual(RELEASED);
+        expect(document.body.style.pointerEvents).toBe('');
+        expect(trigger).not.toBeInTheDocument();
+        expect(positioner).not.toBeInTheDocument();
+        expect(hoverPointerStyle(trigger)).toBeUndefined();
+        expect(hoverPointerStyle(positioner)).toBeUndefined();
       });
     });
 

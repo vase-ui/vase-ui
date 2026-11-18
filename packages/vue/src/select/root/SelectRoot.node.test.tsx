@@ -93,7 +93,7 @@ describe('<Select.Root /> on a server', () => {
 
     expect(readAttributes(html, 'positioner')).toMatchObject({
       'data-side': 'none',
-      style: 'position:fixed;',
+      style: 'position:fixed;--available-width:100vw;--available-height:100vh;',
     });
     expect(readAttributes(html, 'popup')).toHaveProperty('class', 'vase-ui-disable-scrollbar');
     expect(withoutComments(html)).toMatch(
