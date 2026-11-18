@@ -52,7 +52,7 @@ import { computed } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -106,11 +106,6 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const click = useClick(store);
 const interactionTypeProps = useOpenMethodTriggerProps(
   () => store.value.select('open'),
@@ -128,9 +123,17 @@ const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
 );
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  DialogTriggerState,
+  HTMLElement
+>('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [buttonRef, registerTrigger],
+  ref: registerTrigger,
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
     click.reference,
@@ -144,7 +147,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       'aria-controls': popupId.value,
     },
     attrs,
-    getButtonProps,
   ],
 });
 

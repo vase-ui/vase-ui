@@ -44,7 +44,7 @@ import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
@@ -76,11 +76,6 @@ const isDisabled = computed(
   () => props.disabled || contextDisabled.value || (props.nativeButton && fieldsetDisabled.value),
 );
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
 
 const triggerId = computed(() => given('id', props.id) ?? defaultTriggerId.value);
@@ -97,8 +92,12 @@ const state = computed<AccordionTriggerState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => [
     {
       'aria-controls': open.value ? panelId.value : undefined,
@@ -107,7 +106,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onClick: handleTrigger,
     },
     attrs,
-    getButtonProps,
   ],
   stateAttributesMapping,
 });

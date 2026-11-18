@@ -88,11 +88,11 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch, type ShallowRef } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
@@ -109,7 +109,7 @@ import {
 import { REASONS } from '../../internals/reasons';
 import { serializeValue } from '../../internals/serializeValue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
@@ -187,13 +187,6 @@ const ariaLabelledBy = useAriaLabelledBy(
   hiddenInputId,
   () => props.ariaLabel,
 );
-
-// The part sets `composite` to `false`, so the Space key selects a radio on keyup in a group too.
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-  composite: false,
-});
 
 function restoreInput() {
   restoreChecked(inputElement.value, checked.value);
@@ -318,17 +311,25 @@ const state = computed<RadioRootState>(() => ({
 
 provide(RadioRootContext, state);
 
-// Only a radio in a group is an item of a composite, and `useCompositeItem` throws with no
-// composite root. The context of a component does not change, so `setup` makes this choice one
-// time.
-const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const compositeItem = group
+  ? useCompositeItem(element, { active: checked, disabled: isDisabled })
+  : undefined;
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
+  elementRef: element,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+      // Space selects a radio on keyup even within a group.
+      composite: false,
+    }),
   state,
-  ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
   stateAttributesMapping,
   props: (attrs) => [
-    item?.compositeProps.value,
+    compositeItem?.attributes.value,
+    compositeItem?.events,
     {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'radio',
@@ -379,7 +380,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
       },
     },
     attrs,
-    getButtonProps,
     getDescriptionProps,
     group && ((merged) => group.validation.getValidationProps(isDisabled.value, merged)),
   ],

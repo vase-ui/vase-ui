@@ -119,11 +119,6 @@
       "reason": "A server render runs in Node with no DOM. The cases are in the test file that the Node project runs, with the same titles."
     },
     {
-      "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",
-      "kind": "not-applicable",
-      "reason": "The file is a React component that gives the list context to its children. A Vue part calls `useCompositeList` of `list/useCompositeList.ts` in `setup`, which holds the registry of this file, and renders its own element."
-    },
-    {
       "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
       "describe": ["<CompositeList />", "prop: elementsRef"],
       "title": "syncs replacement refs without publishing an unchanged map",
@@ -135,16 +130,6 @@
       "describe": ["<CompositeList />", "Suspense integration"],
       "kind": "not-applicable",
       "reason": "React hides a mounted tree and detaches its refs when a component in it suspends again. A mounted Vue component cannot suspend again."
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "kind": "not-applicable",
-      "reason": "The file is a React component that renders the element of a part and gives it the composite context. A Vue part renders its own element and calls `useCompositeRoot` of `root/useCompositeRoot.ts` in `setup`, which holds the work of this file."
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
-      "kind": "not-applicable",
-      "reason": "The file is a React component that renders the element of an item part and gives it the tab stop. A Vue part renders its own element and calls `useCompositeItem` of `item/useCompositeItem.ts` in `setup`, which holds the work of this file."
     },
     {
       "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
@@ -285,5 +270,84 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/internals/composite/composite.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/listIndex.ts",
+      "member": "scrollIntoViewIfNeeded",
+      "witness": "packages/vue/src/internals/composite/composite.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/constants.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
+      "member": "HYDRATING_COMPOSITE_ITEM",
+      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
+      "member": "useCompositeItem",
+      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/item/useCompositeItem.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
+      "member": "useCompositeItem",
+      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
+      "member": "useCompositeList",
+      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeListContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
+      "member": "CompositeListContext",
+      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/useCompositeListItem.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
+      "member": "useCompositeListItem",
+      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
+      "member": "useCompositeRoot",
+      "witness": "packages/vue/src/internals/composite/root/CompositeRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
+      "member": "CompositeRootContext",
+      "witness": "packages/vue/src/internals/composite/root/useCompositeRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/gridNavigation.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/composite/gridNavigation.ts",
+      "member": "gridNavigation",
+      "witness": "packages/vue/src/internals/composite/root/CompositeRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/use-button/useButton.ts",
+      "member": "useButton",
+      "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
+    }
+  ]
 }

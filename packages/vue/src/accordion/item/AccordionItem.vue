@@ -52,10 +52,10 @@ export type AccordionItemChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, shallowRef, type ShallowRef } from 'vue';
 import { CollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
@@ -91,8 +91,6 @@ const {
   state: rootState,
   value: openValues,
 } = useAccordionRootContext();
-
-const { ref: listItemRef, index } = useCompositeListItem({ list: itemList });
 
 const fallbackValue = useVaseUiId();
 
@@ -131,6 +129,9 @@ provide(CollapsibleRootContext, {
   })),
 });
 
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const index = useCompositeListItem(element, { list: itemList });
+
 const state = computed<AccordionItemState>(() => ({
   ...rootState.value,
   hidden: !isOpen.value && !collapsible.mounted.value,
@@ -149,9 +150,9 @@ provide(AccordionItemContext, {
   triggerId: computed(() => triggerIds.value.at(-1)),
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
-  ref: [listItemRef],
   stateAttributesMapping: accordionStateAttributesMapping,
 });
 

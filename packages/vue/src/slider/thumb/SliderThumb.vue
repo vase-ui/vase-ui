@@ -63,7 +63,16 @@ export interface SliderThumbProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, useAttrs, watch } from 'vue';
+import {
+  computed,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  useAttrs,
+  watch,
+  type ShallowRef,
+} from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
@@ -85,8 +94,8 @@ import {
   HOME,
   PAGE_DOWN,
   PAGE_UP,
-} from '../../internals/composite/composite';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+} from '../../internals/composite/listIndex';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useFieldInput } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -241,7 +250,8 @@ const thumbMetadata = computed<ThumbMetadata>(() => ({
   getInput: () => (inputElement.value?.isConnected ? inputElement.value : null),
 }));
 
-const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const compositeIndex = useCompositeListItem<ThumbMetadata>(element, {
   list: thumbList,
   index: () => (range.value ? props.index : undefined),
   metadata: thumbMetadata,
@@ -632,9 +642,9 @@ const state = computed<SliderThumbState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
-  ref: [listItemRef],
   props: (consumerAttrs) => {
     // The input has these listeners.
     const { onFocusin, onFocusout, onKeydown, ...elementAttrs } = consumerAttrs;

@@ -89,7 +89,12 @@ const text = computed(() =>
   columnText(column.unit.value, hourCycle.value, props.value, locale.value),
 );
 
-const { compositeRef, optionProps } = useTimePickerOption({
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  state,
+  props: (attrs) => [...optionProps(), attrs],
+});
+
+const optionProps = useTimePickerOption(element, {
   picker,
   selected,
   disabled: isDisabled,
@@ -100,12 +105,6 @@ const { compositeRef, optionProps } = useTimePickerOption({
       timeOfColumnValue(column.unit.value, hourCycle.value, picker.time.value, props.value),
       limits.value,
     ),
-});
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: [compositeRef],
-  props: (attrs) => [...optionProps(), attrs],
 });
 
 defineExpose({ element });

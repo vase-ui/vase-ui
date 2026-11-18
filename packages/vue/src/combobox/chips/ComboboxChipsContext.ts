@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
-import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 
 export interface ComboboxChipsContext {
   chipsRef: ShallowRef<(HTMLButtonElement | null)[]>;

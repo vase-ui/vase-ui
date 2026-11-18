@@ -103,11 +103,7 @@ const closeOnSelect = computed(() => picker.props.closeOnSelect ?? false);
 // A 24-hour cycle has no day period.
 const isRendered = computed(() => props.unit !== 'dayPeriod' || hourCycle.value === 12);
 
-const {
-  props: compositeProps,
-  rootRef,
-  itemMap,
-} = useCompositeRoot({
+const { onFocusin, onFocusout, onKeydown, registerRoot, itemMap } = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
   hasActiveItem: () => selectedValue.value !== null && values.value.includes(selectedValue.value),
@@ -131,9 +127,9 @@ provide(TimePickerColumnContext, {
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [rootRef],
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     {
       role: 'listbox',
       // A server and a browser can have another `Intl` text, and Vue writes no attribute of a

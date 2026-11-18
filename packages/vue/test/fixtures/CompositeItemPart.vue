@@ -19,8 +19,9 @@ export interface CompositeItemPartProps
 </script>
 
 <script setup lang="ts">
+import { shallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../src/common/empty';
-import { useCompositeItem } from '../../src/internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../src/internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../src/internals/types';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 
@@ -35,17 +36,18 @@ defineSlots<{
 
 const state: CompositeItemPartState = EMPTY_OBJECT;
 
-const { compositeProps, compositeRef } = useCompositeItem({
+const element = shallowRef<HTMLElement | null>(null);
+const compositeItem = useCompositeItem(element, {
   metadata: () => props.metadata,
   index: () => props.index,
   active: () => props.active,
   disabled: () => props.disabled,
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
-  ref: compositeRef,
-  props: (attrs) => [compositeProps.value, attrs],
+  props: (attrs) => [compositeItem.attributes.value, compositeItem.events, attrs],
 });
 
 defineExpose({ element });

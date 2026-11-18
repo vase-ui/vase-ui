@@ -63,14 +63,16 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
-import { useButton } from '../../internals/use-button';
+import {
+  useCompositeItem,
+  useCompositeRootContext,
+} from '../../internals/composite/root/useCompositeRoot';
+import { useButton } from '../../internals/use-button/useButton';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
 import { REASONS } from '../../internals/reasons';
@@ -150,7 +152,7 @@ const floatingTreeRoot = computed(() => floatingTreeRootFromContext.value ?? own
 const floatingNodeId = useFloatingNodeId(floatingTreeRoot);
 const floatingParentNodeId = useFloatingParentNodeId();
 
-const triggerElement = shallowRef<Element | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
 const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   thisTriggerId,
@@ -180,14 +182,6 @@ const isDisabled = computed(
     (menubarContext?.disabled.value ?? false) ||
     (props.nativeButton && fieldsetDisabled.value),
 );
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
-// In a menubar the trigger is an item of the composite of the menubar.
-const compositeItem = isInMenubar ? useCompositeItem() : undefined;
 
 // A server runs no `onMounted` hook, so a server render writes nothing to the store of a handle.
 function resetMouseUpTrigger() {
@@ -379,19 +373,21 @@ const state = computed<MenuTriggerState>(() => ({
   open: isOpenedByThisTrigger.value,
 }));
 
+const compositeItem = isInMenubar ? useCompositeItem(triggerElement) : undefined;
+
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
-  ref: [
-    compositeItem?.compositeRef,
-    buttonRef,
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   props: (attrs) => [
-    compositeItem?.compositeProps.value,
+    compositeItem?.attributes.value,
+    compositeItem?.events,
     focusProps,
     click.reference,
     hoverProps,
@@ -407,7 +403,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     isInMenubar ? { role: 'menuitem' } : {},
     mixedToggleHandlers,
     attrs,
-    getButtonProps,
   ],
 });
 

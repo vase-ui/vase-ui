@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
-import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type {
   AccordionRootChangeEventDetails,
   AccordionRootState,

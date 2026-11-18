@@ -35,11 +35,7 @@ const separatorOrientation = computed(
   () => props.orientation ?? (context.orientation.value === 'vertical' ? 'horizontal' : 'vertical'),
 );
 
-// As in Base UI, this part renders `Separator` and makes no element of its own. The two parts then
-// share the role, the attributes and the state.
-// The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `Separator` dynamic. Vue then renders `Separator` again each time this part
-// renders. It also renders again each part in that slot that has slot content.
+// Separate slot outlets keep the child slots stable across updates.
 const separatorRef = useTemplateRef('separator');
 const element = computed(() => separatorRef.value?.element ?? null);
 

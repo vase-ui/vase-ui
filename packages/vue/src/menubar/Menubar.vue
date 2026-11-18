@@ -137,7 +137,7 @@ const state = computed<MenubarState>(() => ({
   hasSubmenuOpen: hasSubmenuOpen.value,
 }));
 
-const { props: compositeProps, rootRef } = useCompositeRoot({
+const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
   orientation: () => props.orientation,
   loopFocus: () => props.loopFocus,
   enableHomeAndEndKeys: true,
@@ -145,16 +145,12 @@ const { props: compositeProps, rootRef } = useCompositeRoot({
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: contentElement,
   state,
   stateAttributesMapping: menubarStateAttributesMapping,
-  ref: [
-    rootRef,
-    (menubar) => {
-      contentElement.value = menubar;
-    },
-  ],
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     { role: 'menubar', id: rootId.value, 'aria-orientation': props.orientation },
     attrs,
   ],

@@ -1,271 +1,152 @@
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { toValue, watch } from 'vue';
+import { computed, toValue, watch, watchPostEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { error } from '../../common/error';
-import { makeEventPreventable, mergeProps } from '../../merge-props';
+import { makeEventPreventable } from '../../merge-props';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
-import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
-import { useCompositeRootContext } from '../composite/root/CompositeRootContext';
+import { useCompositeRootContext } from '../composite/root/useCompositeRoot';
 import type { VaseUIEvent } from '../types';
 
-/**
- * Gives a part the attributes and the keyboard activation of a button.
- * Call it in `setup`, because it reads the context of the composite root with `inject`.
- * Each parameter is a value, a ref or a getter, so the attributes follow the props of the part.
- */
-export function useButton(parameters: UseButtonParameters = {}): UseButtonReturnValue {
-  const compositeRootContext = useCompositeRootContext(true);
-
-  // `setup` runs one time, so a read of a parameter here would never see a change.
+/** Gives an element button semantics and keyboard activation. */
+export function useButton(
+  element: MaybeRefOrGetter<Element | null>,
+  parameters: UseButtonParameters = {},
+) {
+  const root = useCompositeRootContext(true);
   const isDisabled = () => toValue(parameters.disabled) ?? false;
   const isNative = () => toValue(parameters.native) ?? true;
-  const isComposite = () => toValue(parameters.composite) ?? compositeRootContext !== undefined;
-
-  const { props: focusableWhenDisabledProps } = useFocusableWhenDisabled({
+  const isComposite = () => toValue(parameters.composite) ?? root !== undefined;
+  const focus = useFocusableWhenDisabled({
     focusableWhenDisabled: parameters.focusableWhenDisabled,
     disabled: isDisabled,
     composite: isComposite,
     tabIndex: parameters.tabIndex,
     isNativeButton: isNative,
   });
+  const attributes = computed(() => ({
+    ...(isNative() ? { type: 'button' as const } : { role: 'button' }),
+    ...focus.attributes.value,
+  }));
 
-  // Vue calls the ref of a part during the render of that part. A reactive read there would make
-  // the render depend on it, so this is a plain variable.
-  let buttonElement: HTMLElement | null = null;
-
-  // A disabled composite button can render another button part, such as a toolbar button that
-  // renders a menu trigger. `disabled` then goes through two `useButton` calls and reaches the DOM.
-  // The item must stay focusable, so the code removes the `disabled` property of the element.
-  function updateDisabled() {
-    const element = buttonElement;
-
-    if (!isButtonElement(element)) {
-      return;
-    }
-
+  function restoreFocusability(node: Element | null) {
+    // A custom button can forward disabled to a native button that must keep its tab stop.
     if (
+      isButtonElement(node) &&
       isComposite() &&
       isDisabled() &&
-      focusableWhenDisabledProps.value.disabled === undefined &&
-      element.disabled
+      focus.attributes.value.disabled === undefined &&
+      node.disabled
     ) {
-      element.disabled = false;
+      node.disabled = false;
     }
   }
-
-  // A post watcher runs after Vue patches the DOM. It does not run in a server render.
+  // The render slot must receive the corrected native disabled state as soon as it sets the ref.
+  watch(() => toValue(element), restoreFocusability, { flush: 'sync' });
   watch(
-    [isDisabled, () => focusableWhenDisabledProps.value.disabled, isComposite],
-    updateDisabled,
+    [isDisabled, isComposite, () => focus.attributes.value.disabled],
+    () => restoreFocusability(toValue(element)),
     { flush: 'post' },
   );
 
-  // A wrapper component gives its element after its render. A mount hook of `useButton` can run
-  // before that, so the check runs when the element arrives and when `native` changes.
-  function checkElement() {
-    if (!buttonElement) {
-      return;
-    }
+  if (process.env.NODE_ENV !== 'production') {
+    watchPostEffect(() => {
+      const node = toValue(element);
+      if (!node) return;
+      const isButtonTag = isButtonElement(node);
 
-    const isButtonTag = isButtonElement(buttonElement);
-
-    if (isNative()) {
-      if (!isButtonTag) {
+      if (isNative()) {
+        if (!isButtonTag) {
+          error(
+            'A component that acts as a button expected a native <button> because the `nativeButton` prop is true.',
+            'Rendering a non-<button> removes native button semantics, which can impact forms and accessibility.',
+            'Use a real <button> with the `as` prop or the `#render` slot, or set `nativeButton` to `false`.',
+          );
+        }
+      } else if (isButtonTag) {
         error(
-          'A component that acts as a button expected a native <button> because the `nativeButton` prop is true.',
-          'Rendering a non-<button> removes native button semantics, which can impact forms and accessibility.',
-          'Use a real <button> with the `as` prop or the `#render` slot, or set `nativeButton` to `false`.',
+          'A component that acts as a button expected a non-<button> because the `nativeButton` prop is false.',
+          'Rendering a <button> keeps native behavior while Vase UI applies non-native attributes and handlers, which can add unintended extra attributes (such as `role` or `aria-disabled`).',
+          'Use a non-<button> with the `as` prop or the `#render` slot, or set `nativeButton` to `true`.',
         );
       }
-    } else if (isButtonTag) {
-      error(
-        'A component that acts as a button expected a non-<button> because the `nativeButton` prop is false.',
-        'Rendering a <button> keeps native behavior while Vase UI applies non-native attributes and handlers, which can add unintended extra attributes (such as `role` or `aria-disabled`).',
-        'Use a non-<button> with the `as` prop or the `#render` slot, or set `nativeButton` to `true`.',
-      );
+    });
+  }
+
+  function press(event: VaseUIEvent<MouseEvent>, listener?: (event: MouseEvent) => void) {
+    makeEventPreventable(event);
+    if (isDisabled()) {
+      event.preventDefault();
+    } else {
+      listener?.(event);
     }
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    watch(isNative, checkElement, { flush: 'post' });
+  function mouseDown(event: VaseUIEvent<MouseEvent>, listener?: (event: MouseEvent) => void) {
+    makeEventPreventable(event);
+    if (!isDisabled()) listener?.(event);
   }
 
-  function getButtonProps(externalProps: Record<string, any> = {}): Record<string, any> {
-    const {
-      onClick: externalOnClick,
-      onMousedown: externalOnMousedown,
-      onKeyup: externalOnKeyup,
-      onKeydown: externalOnKeydown,
-      onPointerdown: externalOnPointerdown,
-      ...otherExternalProps
-    } = externalProps;
+  function keyDown(event: VaseUIEvent<KeyboardEvent>, listener?: (event: KeyboardEvent) => void) {
+    makeEventPreventable(event);
+    focus.onKeydown(event);
+    if (isDisabled()) return;
+    listener?.(event);
+    if (event.vaseUIHandlerPrevented || event.target !== event.currentTarget) return;
 
-    return mergeProps<'button'>(
-      {
-        onClick(event: MouseEvent) {
-          // An element with `aria-disabled` and no `disabled` attribute still gets this event.
-          if (isDisabled()) {
-            event.preventDefault();
-            return;
-          }
-          callHandler(externalOnClick, event);
-        },
-        onMousedown(event: MouseEvent) {
-          if (!isDisabled()) {
-            callHandler(externalOnMousedown, event);
-          }
-        },
-        onKeydown(event: VaseUIEvent<KeyboardEvent>) {
-          if (isDisabled()) {
-            return;
-          }
+    const target = event.currentTarget as Element;
+    const space = event.key === ' ';
+    if (!space && event.key !== 'Enter') return;
 
-          makeEventPreventable(event);
-          callHandler(externalOnKeydown, event);
-          if (event.vaseUIHandlerPrevented) {
-            return;
-          }
-
-          const isCurrentTarget = event.target === event.currentTarget;
-          const currentTarget = event.currentTarget as Element;
-          const isButton = isButtonElement(currentTarget);
-          const isNativeButton = isNative();
-          const isLink = !isNativeButton && isValidLinkElement(currentTarget);
-          const shouldClick = isCurrentTarget && (isNativeButton ? isButton : !isLink);
-          const isEnterKey = event.key === 'Enter';
-          const isSpaceKey = event.key === ' ';
-          const role = currentTarget.getAttribute('role');
-          const isTextNavigationRole =
-            role?.startsWith('menuitem') || role === 'option' || role === 'gridcell';
-
-          if (isCurrentTarget && isComposite() && isSpaceKey) {
-            // In a list with typeahead, a prevented Space is text and not an activation.
-            if (event.defaultPrevented && isTextNavigationRole) {
-              return;
-            }
-
-            // Space scrolls the page.
-            event.preventDefault();
-
-            // Only a native-mode item that is not a real <button> gets no click.
-            if (!isNativeButton || isButton) {
-              event.preventVaseUIHandler();
-              dispatchClickWithModifiers(currentTarget, event);
-            }
-
-            return;
-          }
-
-          if (!shouldClick || isNativeButton || (!isSpaceKey && !isEnterKey)) {
-            // Space activates a link on keyup, as it does for `role="button"`. The keydown must
-            // still stop the page scroll that Space causes.
-            // The browser activates a link on Enter by itself.
-            if (isCurrentTarget && isLink && isSpaceKey) {
-              event.preventDefault();
-            }
-            return;
-          }
-
-          // A native button does the same: a prevented keydown default cancels the activation.
-          if (event.defaultPrevented) {
-            return;
-          }
-
-          event.preventDefault();
-
-          if (isEnterKey) {
-            event.preventVaseUIHandler();
-            dispatchClickWithModifiers(currentTarget, event);
-          }
-        },
-        onKeyup(event: VaseUIEvent<KeyboardEvent>) {
-          if (isDisabled()) {
-            return;
-          }
-
-          makeEventPreventable(event);
-          callHandler(externalOnKeyup, event);
-          const isNativeButton = isNative();
-          const isCompositeItem = isComposite();
-
-          // A <button> clicks on the Space keyup. The keydown already dispatched the click, and a
-          // prevented keyup stops the second click.
-          // https://codesandbox.io/p/sandbox/button-keyup-preventdefault-dn7f0
-          if (
-            event.target === event.currentTarget &&
-            isNativeButton &&
-            isCompositeItem &&
-            isButtonElement(event.currentTarget as HTMLElement) &&
-            event.key === ' '
-          ) {
-            event.preventDefault();
-            return;
-          }
-
-          if (event.vaseUIHandlerPrevented) {
-            return;
-          }
-
-          // A native button does the same: a prevented keyup default cancels the Space activation.
-          // A prevented keydown cannot cancel it, because the code keeps no state between the
-          // keydown and the keyup. The code cannot tell if the keydown was prevented, or if it
-          // happened on this element.
-          if (
-            event.target === event.currentTarget &&
-            !isNativeButton &&
-            !isCompositeItem &&
-            !event.defaultPrevented &&
-            event.key === ' '
-          ) {
-            event.preventVaseUIHandler();
-            dispatchClickWithModifiers(event.currentTarget as Element, event);
-          }
-        },
-        onPointerdown(event: PointerEvent) {
-          // An element with `aria-disabled` and no `disabled` attribute still gets this event.
-          if (isDisabled()) {
-            event.preventDefault();
-            return;
-          }
-          callHandler(externalOnPointerdown, event);
-        },
-      },
-      isNative() ? { type: 'button' } : { role: 'button' },
-      focusableWhenDisabledProps.value,
-      otherExternalProps,
-    );
-  }
-
-  function buttonRef(element: HTMLElement | null) {
-    // Vue calls a function ref again on each patch, with the same element.
-    if (element === buttonElement) {
+    const native = isNative();
+    if (space && isComposite()) {
+      const role = target.getAttribute('role');
+      // Typeahead can use Space as text.
+      if (
+        event.defaultPrevented &&
+        (role?.startsWith('menuitem') || role === 'option' || role === 'gridcell')
+      )
+        return;
+      event.preventDefault();
+      if (!native || isButtonElement(target)) activate(target, event);
       return;
     }
 
-    buttonElement = element;
-    updateDisabled();
+    if (native) return;
+    if (isValidLinkElement(target)) {
+      // The browser follows a link on Enter. Space must not scroll.
+      if (space) event.preventDefault();
+      return;
+    }
+    if (event.defaultPrevented) return;
 
-    if (process.env.NODE_ENV !== 'production') {
-      checkElement();
+    event.preventDefault();
+    if (!space) activate(target, event);
+  }
+
+  function keyUp(event: VaseUIEvent<KeyboardEvent>, listener?: (event: KeyboardEvent) => void) {
+    makeEventPreventable(event);
+    if (isDisabled()) return;
+    listener?.(event);
+    if (event.key !== ' ' || event.target !== event.currentTarget) return;
+
+    const target = event.currentTarget as Element;
+    if (isComposite()) {
+      // Space already activated the native button on keydown.
+      if (isNative() && isButtonElement(target)) event.preventDefault();
+    } else if (!isNative() && !event.vaseUIHandlerPrevented && !event.defaultPrevented) {
+      activate(target, event);
     }
   }
 
-  return {
-    getButtonProps,
-    buttonRef,
-  };
+  return { attributes, press, mouseDown, keyDown, keyUp };
 }
 
-// A handler value can be a function, an array of functions or a falsy value, as in `mergeProps`.
-function callHandler(handler: unknown, event: Event) {
-  if (typeof handler === 'function') {
-    handler(event);
-  } else if (Array.isArray(handler)) {
-    for (const item of handler) {
-      callHandler(item, event);
-    }
-  }
+function activate(target: Element, event: VaseUIEvent<KeyboardEvent>) {
+  event.preventVaseUIHandler();
+  dispatchClickWithModifiers(target, event);
 }
+
+export type ButtonBehavior = ReturnType<typeof useButton>;
 
 function isButtonElement(elem: Element | null): elem is HTMLButtonElement {
   return isHTMLElement(elem) && elem.tagName === 'BUTTON';
@@ -300,18 +181,85 @@ export interface UseButtonParameters {
   composite?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
-export interface UseButtonReturnValue {
+export function useFocusableWhenDisabled(parameters: UseFocusableWhenDisabledParameters) {
+  function onKeydown(event: KeyboardEvent) {
+    // Tab must still move focus away from a disabled button.
+    if (
+      event.key !== 'Tab' &&
+      toValue(parameters.disabled) &&
+      toValue(parameters.focusableWhenDisabled)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  const attributes = computed(() => {
+    const focusableWhenDisabled = toValue(parameters.focusableWhenDisabled);
+    const disabled = toValue(parameters.disabled);
+    const composite = toValue(parameters.composite) ?? false;
+    const tabIndexProp = toValue(parameters.tabIndex) ?? 0;
+    const isNativeButton = toValue(parameters.isNativeButton);
+
+    const isFocusableComposite = composite && focusableWhenDisabled !== false;
+    const isNonFocusableComposite = composite && focusableWhenDisabled === false;
+
+    // The code adds a key only when it has a value. A key with the value `undefined` replaces
+    // the value of an earlier set in `mergeProps`.
+    const additionalProps: FocusableWhenDisabledProps = {};
+
+    if (!composite) {
+      additionalProps.tabindex = tabIndexProp;
+
+      // A `<span>` has no `disabled` attribute that takes it out of the tab order.
+      if (!isNativeButton && disabled) {
+        additionalProps.tabindex = focusableWhenDisabled ? tabIndexProp : -1;
+      }
+    }
+
+    if (
+      (isNativeButton && (focusableWhenDisabled || isFocusableComposite)) ||
+      (!isNativeButton && disabled)
+    ) {
+      additionalProps['aria-disabled'] = disabled;
+    }
+
+    if (isNativeButton && (!focusableWhenDisabled || isNonFocusableComposite)) {
+      additionalProps.disabled = disabled;
+    }
+
+    return additionalProps;
+  });
+
+  return { attributes, onKeydown };
+}
+
+interface FocusableWhenDisabledProps {
+  'aria-disabled'?: boolean | undefined;
+  disabled?: boolean | undefined;
+  tabindex?: number | undefined;
+}
+
+export interface UseFocusableWhenDisabledParameters {
   /**
-   * Makes the props of the button.
-   * A part puts it last in the `props` of `useRenderElement`.
-   * @param externalProps additional props for the button
-   * @returns props that the part binds on the button
+   * Whether the component is focusable when it is disabled.
+   * When `undefined`, composite items are focusable when disabled by default.
    */
-  getButtonProps: (externalProps?: Record<string, any>) => Record<string, any>;
+  focusableWhenDisabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
-   * A callback that gets the button element, and `null` when the element goes away.
-   * A part gives it to `useRenderElement` in `ref`.
-   * It is not a part of the props that `getButtonProps` returns.
+   * The disabled state of the component.
    */
-  buttonRef: (element: HTMLElement | null) => void;
+  disabled: MaybeRefOrGetter<boolean>;
+  /**
+   * Whether this is a composite item.
+   * @default false
+   */
+  composite?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /**
+   * @default 0
+   */
+  tabIndex?: MaybeRefOrGetter<number | undefined> | undefined;
+  /**
+   * Whether the component renders a native `<button>` element.
+   */
+  isNativeButton: MaybeRefOrGetter<boolean>;
 }

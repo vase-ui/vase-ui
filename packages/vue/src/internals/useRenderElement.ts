@@ -33,7 +33,8 @@ import { getStateAttributesProps } from './getStateAttributesProps';
 import type { StateAttributesMapping } from './getStateAttributesProps';
 import { givenAttributes } from './givenAttributes';
 import { resolveElement } from './resolveElement';
-import type { HTMLProps, VaseUIComponentProps } from './types';
+import type { ButtonBehavior } from './use-button/useButton';
+import type { HTMLProps, VaseUIComponentProps, VaseUIEvent } from './types';
 
 type RefCallback<E extends Element> = (element: E | null) => void;
 
@@ -175,11 +176,17 @@ export function useRenderElement<
 >(
   element: MaybeRefOrGetter<string>,
   componentProps: UseRenderElementComponentProps<State>,
-  params: UseRenderElementParameters<State, RenderedElementType> = {},
+  params: UseRenderElementParameters<State, RenderedElementType> & {
+    /** An element ref that another composable needs during setup. */
+    elementRef?: ShallowRef<RenderedElementType | null>;
+    /** Supplies button actions for the final element and its render slot. */
+    button?: (element: ShallowRef<NoInfer<RenderedElementType> | null>) => ButtonBehavior;
+  } = {},
 ): UseRenderElementReturnValue<RenderedElementType> {
   const attrs = useAttrs();
   const slots = useSlots();
-  const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
+  const elementRef: ShallowRef<RenderedElementType | null> = params.elementRef ?? shallowRef(null);
+  const button = params.button?.(elementRef);
   const callbacks = params.ref;
   let hasRendered = false;
   let setRefWasCalled = false;
@@ -286,6 +293,22 @@ export function useRenderElement<
     } else {
       // The call with `undefined` makes the handlers of the set preventable.
       resolvedProps = mergeProps(undefined, consumerAttrs);
+    }
+
+    if (button) {
+      const { onClick, onPointerdown, onMousedown, onKeydown, onKeyup } = resolvedProps;
+      resolvedProps = {
+        ...button.attributes.value,
+        ...resolvedProps,
+        onClick: (event: VaseUIEvent<MouseEvent>) => button.press(event, onClick || undefined),
+        onPointerdown: (event: VaseUIEvent<PointerEvent>) =>
+          button.press(event, onPointerdown || undefined),
+        onMousedown: (event: VaseUIEvent<MouseEvent>) =>
+          button.mouseDown(event, onMousedown || undefined),
+        onKeydown: (event: VaseUIEvent<KeyboardEvent>) =>
+          button.keyDown(event, onKeydown || undefined),
+        onKeyup: (event: VaseUIEvent<KeyboardEvent>) => button.keyUp(event, onKeyup || undefined),
+      };
     }
 
     // The result is always a new object, so the writes below do not change a shared object.

@@ -58,7 +58,7 @@ import { menuPopups } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, inject, provide, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
-import { COMPOSITE_KEYS } from '../../internals/composite/composite';
+import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { given } from '../../internals/givenAttributes';

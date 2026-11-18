@@ -36,7 +36,7 @@ export interface ButtonProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
-import { useButton } from '../internals/use-button';
+import { useButton } from '../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 
@@ -62,16 +62,14 @@ const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 const state = computed<ButtonState>(() => ({ disabled: isDisabled.value }));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: () => props.focusableWhenDisabled,
-  native: () => props.nativeButton,
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: () => props.focusableWhenDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
-  props: (attrs) => [attrs, getButtonProps],
 });
 
 defineExpose({ element });

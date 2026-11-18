@@ -7,9 +7,9 @@ import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
 import { DirectionProvider } from '../../../direction-provider';
 import type { HTMLProps } from '../../types';
 import type { CompositeMetadata } from '../list/useCompositeList';
-import { useCompositeListItem } from '../list/useCompositeListItem';
-import { gridNavigation } from './gridNavigation';
-import type { CompositeGridNavigator } from './gridNavigation';
+import { useCompositeListItem } from '../list/useCompositeList';
+import { gridNavigation } from '../gridNavigation';
+import type { CompositeGridNavigator } from '../gridNavigation';
 import { useCompositeRoot } from './useCompositeRoot';
 
 const threeColsGrid = gridNavigation({ cols: 3 });
@@ -40,17 +40,22 @@ const GridCompositeRoot = defineComponent(
     },
     { slots },
   ) => {
-    const { props: compositeProps, rootRef } = useCompositeRoot({
+    const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
       grid: props.grid,
       orientation: () => props.orientation,
       loopFocus: () => props.loopFocus,
       onLoop: props.onLoop,
       enableHomeAndEndKeys: () => props.enableHomeAndEndKeys,
-      disabledIndices: () => props.disabledIndices,
+      getDisabledIndices: () => props.disabledIndices,
     });
 
     return () => (
-      <div {...compositeProps} ref={bindRef(rootRef)}>
+      <div
+        onFocusin={onFocusin}
+        onFocusout={onFocusout}
+        onKeydown={onKeydown}
+        ref={bindRef(registerRoot)}
+      >
         {slots.default?.()}
       </div>
     );
@@ -73,11 +78,12 @@ describe('Composite', () => {
 
   const IndexedItem = defineComponent(
     (props: { index: number; active?: boolean | undefined; testId: string }) => {
-      const { ref } = useCompositeListItem({
+      const element = shallowRef<HTMLElement | null>(null);
+      useCompositeListItem(element, {
         index: () => props.index,
         itemState: { active: () => props.active },
       });
-      return () => <div ref={bindRef(ref)} data-testid={props.testId} />;
+      return () => <div ref={element} data-testid={props.testId} />;
     },
     { props: ['index', 'active', 'testId'] },
   );

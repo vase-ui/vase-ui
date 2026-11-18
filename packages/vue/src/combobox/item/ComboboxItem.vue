@@ -44,15 +44,15 @@ export interface ComboboxItemProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { computed, nextTick, provide, shallowRef, toRaw, watch, type ShallowRef } from 'vue';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import {
   compareItemEquality,
   findItemIndex,
   resolveSelectedIndex,
 } from '../../internals/itemEquality';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
@@ -80,7 +80,8 @@ defineSlots<{
 }>();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const listItem = useCompositeListItem({ index: () => props.index, textRef });
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const listIndex = useCompositeListItem(element, { index: () => props.index, textRef });
 
 const store = useComboboxRootContext();
 const isRow = useComboboxRowContext();
@@ -101,7 +102,7 @@ const indexFromFilter = computed(() =>
     ? findItemIndex(flatFilteredValues.value, props.value, store.select('isItemEqualToValue'))
     : undefined,
 );
-const itemIndex = computed(() => props.index ?? indexFromFilter.value ?? listItem.index.value);
+const itemIndex = computed(() => props.index ?? indexFromFilter.value ?? listIndex.value);
 const hasRegistered = computed(() => itemIndex.value !== -1);
 
 const highlighted = computed(() => store.select('isActive', itemIndex.value));
@@ -171,13 +172,6 @@ useDomEffect(
   },
 );
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-  composite: true,
-});
-
 const state = computed<ComboboxItemState>(() => ({
   disabled: isDisabled.value,
   selected: selected.value,
@@ -198,9 +192,16 @@ function isInteractive() {
   return !isDisabled.value && !itemRoot.value.readOnly;
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+      composite: true,
+    }),
   state,
-  ref: [buttonRef, listItem.ref],
   props: (attrs) => [
     itemRoot.value.props,
     {
@@ -248,7 +249,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

@@ -18,8 +18,9 @@ export interface CompositeListItemPartProps
 </script>
 
 <script setup lang="ts">
+import { shallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../src/common/empty';
-import { useCompositeListItem } from '../../src/internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../src/internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../src/internals/types';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 
@@ -34,15 +35,16 @@ defineSlots<{
 
 const state: CompositeListItemPartState = EMPTY_OBJECT;
 
-const { ref, index: itemIndex } = useCompositeListItem({
+const element = shallowRef<HTMLElement | null>(null);
+const itemIndex = useCompositeListItem(element, {
   index: () => props.index,
   label: () => props.label,
   metadata: () => props.metadata,
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
   state,
-  ref,
   props: (attrs) => [{ 'data-index': itemIndex.value }, attrs],
 });
 

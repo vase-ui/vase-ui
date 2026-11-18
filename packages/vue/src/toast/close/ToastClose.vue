@@ -29,7 +29,7 @@ export interface ToastCloseProps
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
@@ -57,16 +57,15 @@ const { toast, expanded } = useToastRootContext();
 
 const hasFocus = shallowRef(false);
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
-  native: () => props.nativeButton,
-});
-
 const state = computed<ToastCloseState>(() => ({ type: toast.value.type }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: () => props.disabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => [
     {
       'aria-hidden': !expanded.value && !hasFocus.value,
@@ -81,7 +80,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

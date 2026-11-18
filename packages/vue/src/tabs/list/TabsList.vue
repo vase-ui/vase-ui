@@ -59,7 +59,7 @@ const { hasChosenTab, orientation, setTabMap, tabActivationDirection } = useTabs
 // selected tab that is hidden or natively disabled. `Tabs.Tab` moves it back. The two moves repeat.
 const highlightedTabIndex = shallowRef(0);
 
-const { props: compositeProps, rootRef } = useCompositeRoot<TabsTabMetadata>({
+const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot<TabsTabMetadata>({
   highlightedIndex: highlightedTabIndex,
   enableHomeAndEndKeys: true,
   loopFocus: () => props.loopFocus,
@@ -69,7 +69,7 @@ const { props: compositeProps, rootRef } = useCompositeRoot<TabsTabMetadata>({
   },
   onMapChange: setTabMap,
   // A disabled tab can get focus, so the keys do not skip it.
-  disabledIndices: EMPTY_ARRAY,
+  getDisabledIndices: () => EMPTY_ARRAY,
   hasActiveItem: hasChosenTab,
 });
 
@@ -80,9 +80,9 @@ const state = computed<TabsListState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [rootRef],
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     {
       'aria-orientation': orientation.value === 'vertical' ? 'vertical' : undefined,
       role: 'tablist',

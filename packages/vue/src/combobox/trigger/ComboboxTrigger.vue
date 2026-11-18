@@ -70,7 +70,7 @@ import {
 } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -184,11 +184,6 @@ const click = useClick(store.interactions, {
   stickIfOpen: false,
 });
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 // A compiled template can mount a new trigger before it unmounts the trigger that it replaces.
 // The old trigger then clears only its own element.
 let ownElement: HTMLElement | null = null;
@@ -265,8 +260,13 @@ const state = computed<ComboboxTriggerState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [buttonRef, setTriggerElement],
+  ref: setTriggerElement,
   stateAttributesMapping: triggerStateAttributesMapping,
   props: (attrs) => [
     store.select('triggerProps', true),
@@ -356,7 +356,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    getButtonProps,
   ],
 });
 

@@ -46,8 +46,8 @@ export interface SelectItemProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { computed, onMounted, provide, shallowRef, toRaw, watch, type ShallowRef } from 'vue';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import {
   compareItemEquality,
@@ -56,7 +56,7 @@ import {
 } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isVirtualClick } from '../../utils/popups/event';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
@@ -80,8 +80,8 @@ defineSlots<{
 const store = useSelectRootContext();
 
 const textRef = shallowRef<HTMLElement | null>(null);
-const listItem = useCompositeListItem({ label: () => props.label, textRef });
-const index = listItem.index;
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const index = useCompositeListItem(element, { label: () => props.label, textRef });
 
 const itemRoot = computed(() => store.select('itemRoot'));
 const isDisabled = computed(() => itemRoot.value.disabled || props.disabled);
@@ -90,12 +90,9 @@ const activeWhileOpen = computed(() => store.select('isActiveWhileOpen', index.v
 const selected = computed(() => store.select('isSelected', props.value));
 const selectedByFocus = computed(() => store.select('isSelectedByFocus', index.value));
 
-let itemElement: HTMLElement | null = null;
-
 // The positioner reads the value of each item from its element when the list changes. The list can
 // change before the `onMounted` hook of a new item runs, so the value goes in with the element.
 function setItemElement(node: HTMLElement | null) {
-  itemElement = node;
   if (node) {
     store.context.itemValues.set(node, props.value);
   }
@@ -115,8 +112,8 @@ function syncValue() {
 watch(
   () => props.value,
   (value) => {
-    if (itemElement) {
-      store.context.itemValues.set(itemElement, value);
+    if (element.value) {
+      store.context.itemValues.set(element.value, value);
     }
     syncValue();
   },
@@ -181,13 +178,6 @@ watch(
 let pointerType = 'mouse';
 let allowMouseSelection = false;
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-  composite: true,
-});
-
 const state = computed<SelectItemState>(() => ({
   disabled: isDisabled.value,
   selected: selected.value,
@@ -219,9 +209,17 @@ function resetDragMovement() {
   store.context.selectionRef.value.dragY = 0;
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: element,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+      composite: true,
+    }),
   state,
-  ref: [setItemElement, buttonRef, listItem.ref],
+  ref: setItemElement,
   props: (attrs) => [
     itemRoot.value.props,
     {
@@ -313,7 +311,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       },
     },
     attrs,
-    getButtonProps,
   ],
 });
 

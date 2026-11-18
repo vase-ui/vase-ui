@@ -72,7 +72,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -174,11 +174,6 @@ const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
 );
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-});
-
 const stateAttributesMapping: StateAttributesMapping<PopoverTriggerState> = {
   open(value) {
     return isPressOpenedByThisTrigger.value
@@ -193,14 +188,14 @@ const state = computed<PopoverTriggerState>(() => ({
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: [
-    buttonRef,
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   stateAttributesMapping,
   props: (attrs) => [
     click.reference,
@@ -216,7 +211,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       'aria-controls': popupId.value,
     },
     attrs,
-    getButtonProps,
   ],
 });
 

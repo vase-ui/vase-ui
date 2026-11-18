@@ -225,7 +225,7 @@ describe('VUE-54: the tab stop follows the active item', () => {
   });
 
   it('moves the tab stop in a root that gets its element again on each patch', async () => {
-    // The fixture binds `rootRef` in its template, so Vue calls it after each patch of the root.
+    // The fixture binds `registerRoot` in its template, so Vue calls it after each patch of the root.
     const { setProps } = await render(<CompositeItemTabStop hasActiveItem active={['a']} />);
     expect(readTabindexes()).toEqual(['0', '-1', '-1']);
 

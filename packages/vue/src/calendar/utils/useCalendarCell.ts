@@ -5,7 +5,7 @@ import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { CalendarCellState } from '../../internals/date-time/calendar/viewPages';
 import { isSameDay } from '../../internals/date-time/temporal';
 import type { NativeButtonProps, VaseUIComponentProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { useCalendarViewGridContext } from './CalendarViewGridContext';
@@ -45,14 +45,13 @@ export function useCalendarCell({
   );
   const text = computed(() => formatText(cell(), format(), root.locale.value));
 
-  const { getButtonProps, buttonRef } = useButton({
-    disabled: () => state.value.disabled,
-    native: () => props.nativeButton,
-  });
-
   const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+    button: (element) =>
+      useButton(element, {
+        disabled: () => state.value.disabled,
+        native: () => props.nativeButton,
+      }),
     state,
-    ref: buttonRef,
     props: (attrs) => {
       const tabindex = isTabStop.value ? 0 : -1;
       return [
@@ -79,7 +78,6 @@ export function useCalendarCell({
           },
         },
         attrs,
-        getButtonProps,
       ];
     },
   });

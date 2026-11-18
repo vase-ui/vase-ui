@@ -66,12 +66,12 @@ export interface MenuSubmenuTriggerProps
 <script setup lang="ts">
 import { submenuTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
-import { computed, onMounted, onUpdated, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUpdated, shallowRef, watch, type ShallowRef } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
-import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -87,7 +87,6 @@ import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
-import type { UseMenuItemMetadata } from '../item/useMenuItem';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
@@ -118,7 +117,6 @@ const { store, parentVirtualFocus } = context;
 const parentMenuStore = context.parent.store;
 const submenuRootContext = useMenuSubmenuRootContext();
 
-const listItem = useCompositeListItem({ label: () => props.label });
 // The trigger is an item of the list of the parent menu. A filterable parent removes its element
 // while the query hides it. The template then gives its content to a component that reads the text
 // and adds no element to the document.
@@ -133,7 +131,7 @@ const popupId = computed(() => store.select('triggerPopupId', thisTriggerId.valu
 // `useImplicitActiveTrigger` does this work.
 const { registerTrigger } = useTriggerRegistration(thisTriggerId, store);
 
-const triggerElement = shallowRef<HTMLElement | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
 let focusReturnedThroughGuard = false;
 
@@ -182,18 +180,17 @@ if (process.env.NODE_ENV !== 'production') {
   onUpdated(warnForDisabledElement);
 }
 
-const highlighted = computed(() => parentMenuStore.select('isActive', listItem.index.value));
+const listIndex = useCompositeListItem(triggerElement, { label: () => props.label });
 
-const itemMetadata: UseMenuItemMetadata = {
-  type: 'submenu-trigger',
-  setActive(event: MouseEvent) {
-    if (parentMenuStore.select('highlightItemOnHover')) {
-      parentMenuStore.setActiveIndex(listItem.index.value, REASONS.pointer, event);
-    }
-  },
-};
+const highlighted = computed(() => parentMenuStore.select('isActive', listIndex.value));
 
-const { getItemProps, itemRef } = useMenuItem({
+function onMouseenter(event: MouseEvent) {
+  if (parentMenuStore.select('highlightItemOnHover')) {
+    parentMenuStore.setActiveIndex(listIndex.value, REASONS.pointer, event);
+  }
+}
+
+const { button, commonProps } = useMenuItem(triggerElement, {
   closeOnClick: false,
   disabled: isDisabled,
   highlighted,
@@ -201,7 +198,7 @@ const { getItemProps, itemRef } = useMenuItem({
   store,
   typingRef: parentMenuStore.context.typingRef,
   nativeButton: () => props.nativeButton,
-  itemMetadata,
+  isSubmenuTrigger: true,
 });
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
@@ -272,18 +269,14 @@ const ownProps = {
 };
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: triggerElement,
+  button,
   state,
   stateAttributesMapping: triggerOpenStateMapping,
-  ref: [
-    listItem.ref,
-    itemRef,
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-    filterItem.ref,
-  ],
+  ref: [registerTrigger, filterItem.ref],
   props: (attrs) => [
+    commonProps.value,
+    { onMouseenter },
     click.reference,
     hoverProps,
     { style: hoverStyle.value },
@@ -309,8 +302,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     ownProps,
     filterItem.props,
     attrs,
-    // `getItemProps` stays last so `useButton` keeps gating consumer handlers while disabled.
-    getItemProps,
   ],
 });
 

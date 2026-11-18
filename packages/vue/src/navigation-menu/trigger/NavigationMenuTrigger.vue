@@ -84,17 +84,18 @@ import {
   onScopeDispose,
   shallowRef,
   watch,
+  type ShallowRef,
 } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
+import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { ownerVisuallyHidden, PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -179,7 +180,7 @@ const direction = useDirection();
 const stickIfOpenTimeout = useTimeout();
 
 const triggerId = useVaseUiId();
-const triggerElement = shallowRef<HTMLElement | null>(null);
+const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
@@ -448,25 +449,21 @@ const state = computed<NavigationMenuTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  focusableWhenDisabled: true,
-  native: () => props.nativeButton,
-});
-const { compositeProps, compositeRef } = useCompositeItem();
+const compositeItem = useCompositeItem(triggerElement);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: triggerElement,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      focusableWhenDisabled: true,
+      native: () => props.nativeButton,
+    }),
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
-  ref: [
-    compositeRef,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-    buttonRef,
-  ],
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     click.reference,
     hoverProps,
     { style: hoverStyle.value },
@@ -497,7 +494,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onFocusout: handleFocusout,
     },
     attrs,
-    getButtonProps,
   ],
 });
 

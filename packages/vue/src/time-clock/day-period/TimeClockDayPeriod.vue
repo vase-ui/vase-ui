@@ -43,7 +43,7 @@ import { dayPeriodText } from '../../internals/date-time/format';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
@@ -81,18 +81,17 @@ const state = computed<TimeClockDayPeriodState>(() => ({
 // text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() => dayPeriodText(props.value, formatLocale.value));
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => state.value.disabled,
-  native: () => props.nativeButton,
-});
-
 function onClick(event: MouseEvent) {
   root.selectDayPeriod(props.value, createChangeEventDetails(REASONS.itemPress, event));
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: () => state.value.disabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => {
     // A day period is never a submit button and never a part of a form.
     const { form, type, ...elementAttrs } = attrs;
@@ -104,7 +103,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
         onClick,
       },
       elementAttrs,
-      getButtonProps,
     ];
   },
 });

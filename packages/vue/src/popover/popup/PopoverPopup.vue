@@ -60,7 +60,7 @@ export interface PopoverPopupProps
 <script setup lang="ts">
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { computed, provide, watch } from 'vue';
-import { COMPOSITE_KEYS } from '../../internals/composite/composite';
+import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';

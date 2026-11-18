@@ -53,7 +53,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import { REASONS } from '../../internals/reasons';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -108,11 +108,6 @@ const visible = computed(() => {
 const isDisabled = computed(() =>
   Boolean(fieldDisabled.value || store.select('disabled') || props.disabled),
 );
-
-const { buttonRef, getButtonProps } = useButton({
-  native: () => props.nativeButton,
-  disabled: isDisabled,
-});
 
 // The element is in the DOM until the exit animation ends.
 const { mounted, transitionStatus, setMounted } = useTransitionStatus(
@@ -179,8 +174,13 @@ function handleClick(event: MouseEvent) {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      native: () => props.nativeButton,
+      disabled: isDisabled,
+    }),
   state,
-  ref: [buttonRef, setClearElement],
+  ref: setClearElement,
   props: (attrs) => [
     {
       tabindex: -1,
@@ -191,7 +191,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onClick: handleClick,
     },
     attrs,
-    getButtonProps,
   ],
   stateAttributesMapping,
   children: true,

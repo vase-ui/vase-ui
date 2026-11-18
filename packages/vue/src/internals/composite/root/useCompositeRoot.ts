@@ -1,13 +1,12 @@
-import { computed, provide, shallowRef, toValue, useId, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import { computed, inject, provide, shallowRef, toValue, useId, watch } from 'vue';
+import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
-import { useIsHydrated } from '../../../common/hydration';
+import { useIsHydrated, useIsHydrating } from '../../../common/hydration';
 import { isElementDisabled } from '../../../common/isElementDisabled';
 import { contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { useMutationObserver } from '../../../common/useMutationObserver';
 import { useDirection } from '../../direction-context/DirectionContext';
-import type { HTMLProps } from '../../types';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -24,25 +23,19 @@ import {
   isListIndexDisabled,
   isNativeInput,
   scrollIntoViewIfNeeded,
-} from '../composite';
-import type { DisabledIndices } from '../listIndex';
-import type { ModifierKey } from '../composite';
+} from '../listIndex';
+import type { DisabledIndices, ModifierKey } from '../listIndex';
 import { observeRootNode } from '../../observeRootNode';
-import { HYDRATING_COMPOSITE_ITEM } from '../constants';
-import { useCompositeList } from '../list/useCompositeList';
-import type { CompositeMetadata } from '../list/useCompositeList';
-import { CompositeRootContext } from './CompositeRootContext';
-import type { CompositeGridNavigator } from './gridNavigation';
+import { useCompositeList, useCompositeListItem } from '../list/useCompositeList';
+import type { CompositeMetadata, UseCompositeListItemParameters } from '../list/useCompositeList';
+import type { CompositeGridNavigator } from '../gridNavigation';
 
 /**
  * Gives a root part the highlighted index and the keyboard navigation of a composite.
  * Call it in `setup`. It makes the registry of the items and provides `CompositeRootContext`.
- * The part gives `rootRef` to `useRenderElement` in `ref`, and `props` as the first set of `props`.
- * The listeners of the consumer then run before the listeners of the composite.
+ * The part registers its root element and binds the focus and key actions.
  */
-export function useCompositeRoot<Metadata>(
-  params: UseCompositeRootParameters<Metadata>,
-): UseCompositeRootReturnValue {
+export function useCompositeRoot<Metadata>(params: UseCompositeRootParameters<Metadata>) {
   const direction = useDirection();
   const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
@@ -84,7 +77,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
+    const skipped = disabledIndices.value ?? itemDisabled;
 
     if (hasSetDefaultIndex) {
       const elements = elementsRef.value;
@@ -97,11 +90,8 @@ export function useCompositeRoot<Metadata>(
         // hidden or disabled, the tab stop moves to the fallback index. The composite then stays
         // in the tab order.
         const replacement = elements[highlightedIndex.value];
-        if (
-          !replacement ||
-          isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)
-        ) {
-          onHighlightedIndexChange(getFallbackIndex(elements, isActive, disabledIndices));
+        if (!replacement || isListIndexDisabled(elements, highlightedIndex.value, skipped)) {
+          onHighlightedIndexChange(getFallbackIndex(elements, isActive, skipped));
         } else {
           highlightedElement = replacement;
         }
@@ -143,9 +133,7 @@ export function useCompositeRoot<Metadata>(
   }
 
   function canHoldTabStop(elements: readonly (HTMLElement | null)[], index: number) {
-    return (
-      !itemDisabled(index) && !isListIndexDisabled(elements, index, toValue(params.disabledIndices))
-    );
+    return !itemDisabled(index) && !isListIndexDisabled(elements, index, disabledIndices.value);
   }
 
   function isActive(element: HTMLElement | null) {
@@ -216,19 +204,19 @@ export function useCompositeRoot<Metadata>(
     activeIndex: number,
   ) {
     const index = highlightedIndex.value;
-    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
-    // With an empty `disabledIndices`, the test finds only an item that cannot get focus.
+    const skipped = disabledIndices.value ?? itemDisabled;
+    // With an empty `skipped`, the test finds only an item that cannot get focus.
     const canKeepTabStop = !isListIndexDisabled(
       elements,
       index,
-      index === activeIndex ? EMPTY_ARRAY : disabledIndices,
+      index === activeIndex ? EMPTY_ARRAY : skipped,
     );
     if (canKeepTabStop) {
       return;
     }
 
-    const fallbackIndex = getFallbackIndex(elements, isActive, disabledIndices);
-    if (elements[fallbackIndex] && !isListIndexDisabled(elements, fallbackIndex, disabledIndices)) {
+    const fallbackIndex = getFallbackIndex(elements, isActive, skipped);
+    if (elements[fallbackIndex] && !isListIndexDisabled(elements, fallbackIndex, skipped)) {
       highlightIndex(fallbackIndex);
     }
   }
@@ -263,12 +251,11 @@ export function useCompositeRoot<Metadata>(
     },
   });
 
+  const disabledIndices = computed(() => params.getDisabledIndices?.(list.map.value));
+
   // A parent can derive disabled indexes from the map after the items register.
   watch(
-    [
-      () => toValue(params.highlightedIndex) == null,
-      () => toValue(params.disabledIndices)?.slice(),
-    ],
+    [() => toValue(params.highlightedIndex) == null, () => disabledIndices.value?.slice()],
     ([uncontrolled]) => {
       if (uncontrolled) {
         moveTabStopToActiveItem();
@@ -301,7 +288,7 @@ export function useCompositeRoot<Metadata>(
 
     const orientation = getOrientation();
     const loopFocus = toValue(params.loopFocus) ?? true;
-    const disabledIndices = toValue(params.disabledIndices) ?? itemDisabled;
+    const skipped = disabledIndices.value ?? itemDisabled;
     const prevIndex = highlightedIndex.value;
     const isRtl = direction.value === 'rtl';
 
@@ -332,13 +319,13 @@ export function useCompositeRoot<Metadata>(
     }
 
     let nextIndex = prevIndex;
-    const minIndex = getMinListIndex(elementsRef, disabledIndices);
-    const maxIndex = getMaxListIndex(elementsRef, disabledIndices);
+    const minIndex = getMinListIndex(elementsRef, skipped);
+    const maxIndex = getMaxListIndex(elementsRef, skipped);
 
     const grid = params.grid;
     if (grid != null) {
       nextIndex = grid({
-        disabledIndices,
+        disabledIndices: skipped,
         elementsRef,
         event,
         highlightedIndex: prevIndex,
@@ -381,7 +368,7 @@ export function useCompositeRoot<Metadata>(
         nextIndex = findNonDisabledListIndex(elementsRef.value, {
           startingIndex: nextIndex,
           decrement: isBackwardKey,
-          disabledIndices,
+          disabledIndices: skipped,
         });
       }
     }
@@ -520,21 +507,21 @@ export function useCompositeRoot<Metadata>(
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
-    detachedItemHandlers: {
-      onFocusin: fromDetachedItem(onFocusin),
-      onFocusout: fromDetachedItem(onFocusout),
-      onKeydown: fromDetachedItem(onKeydown),
-    },
+    focusDetachedItem: fromDetachedItem(onFocusin),
+    blurDetachedItem: fromDetachedItem(onFocusout),
+    keydownDetachedItem: fromDetachedItem(onKeydown),
     takeInitialTabStop,
     id,
     hasUnmountedTabStop,
   });
 
   return {
-    props: { onFocusin, onFocusout, onKeydown },
+    onFocusin,
+    onFocusout,
+    onKeydown,
     elementsRef,
     itemMap: list.map,
-    rootRef(element) {
+    registerRoot(element: HTMLElement | null) {
       rootElement.value = element;
     },
     highlightedIndex,
@@ -637,7 +624,9 @@ export interface UseCompositeRootParameters<Metadata> {
    * Use it for items that can get focus when they are disabled. The keys then reach an
    * `aria-disabled` item that is not in it, and such an item can keep the tab stop.
    */
-  disabledIndices?: MaybeRefOrGetter<number[] | undefined> | undefined;
+  getDisabledIndices?: (
+    items: ReadonlyMap<Element, CompositeMetadata<Metadata>>,
+  ) => readonly number[] | undefined;
   /**
    * The [modifier keys](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values#modifier_keys)
    * that can be pressed while the arrow keys still move the highlight.
@@ -662,27 +651,134 @@ export interface UseCompositeRootParameters<Metadata> {
   hasActiveItem?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
-export interface UseCompositeRootReturnValue {
-  itemMap: ComputedRef<ReadonlyMap<Element, CompositeMetadata<unknown>>>;
-  /**
-   * The listeners of the composite: `onFocusin`, `onFocusout` and `onKeydown`.
-   * The part puts this object first in the `props` of `useRenderElement`.
-   */
-  props: Omit<HTMLProps, 'ref'>;
-  /**
-   * The elements of the items, ordered by their index. An item with no explicit index has the index
-   * of its position in the document. An explicit index can leave an empty slot.
-   * The list is empty on a server and before the mount of the root.
-   * The composable gives the ref a new array on each sort.
-   */
-  elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
-  /**
-   * Gives the element of the root to the composite, and `null` when the element goes away.
-   * The part gives it to `useRenderElement` in `ref`.
-   */
-  rootRef: (element: HTMLElement | null) => void;
-  /**
-   * The highlighted index.
-   */
+export const HYDRATING_COMPOSITE_ITEM = 'data-vase-ui-hydrating-composite-item';
+
+export interface CompositeRootContext {
+  hasFocus: () => boolean;
   highlightedIndex: ComputedRef<number>;
+  onHighlightedIndexChange: (index: number, shouldScrollIntoView?: boolean) => void;
+  highlightItemOnHover: ComputedRef<boolean>;
+  /**
+   * Lets a composite component get events that do not come from its children.
+   * For example, a Menubar with detached triggers can define its Menu.Root outside of CompositeRoot.
+   * CompositeRoot does not get the keyboard events inside that menu, so the menu must relay them
+   * with this function.
+   */
+  relayKeyboardEvent: (event: KeyboardEvent) => void;
+  focusDetachedItem: (event: FocusEvent) => void;
+  blurDetachedItem: (event: FocusEvent) => void;
+  keydownDetachedItem: (event: KeyboardEvent) => void;
+  /** Reserve at most one tab stop in setup order before the items mount. */
+  takeInitialTabStop: (index: number, active: boolean, disabled: boolean) => boolean;
+  /** Identifies this root's items in the server HTML. */
+  id: string;
+  /** An async item still holds this root's server tab stop. */
+  hasUnmountedTabStop: Readonly<Ref<boolean>>;
+}
+
+export const CompositeRootContext: InjectionKey<CompositeRootContext> = Symbol();
+
+export function useCompositeRootContext(optional: true): CompositeRootContext | undefined;
+export function useCompositeRootContext(optional?: false): CompositeRootContext;
+export function useCompositeRootContext(optional = false) {
+  // With one argument, Vue shows a warning when there is no provider. The default `undefined`
+  // stops that warning, and the error below says more.
+  const context = inject(CompositeRootContext, undefined);
+  if (context === undefined && !optional) {
+    throw new Error(
+      'Vase UI: A composite item must be inside a composite root. Without a root the item has no highlighted index and no tab stop. Put the item part inside its root part.',
+    );
+  }
+
+  return context;
+}
+
+export function useCompositeItem<Metadata>(
+  element: Readonly<Ref<HTMLElement | null>>,
+  params: UseCompositeItemParameters<Metadata> = {},
+) {
+  const {
+    hasUnmountedTabStop,
+    highlightItemOnHover,
+    highlightedIndex,
+    id,
+    focusDetachedItem,
+    blurDetachedItem,
+    keydownDetachedItem,
+    onHighlightedIndexChange,
+    takeInitialTabStop,
+  } = useCompositeRootContext();
+  const index = useCompositeListItem(element, {
+    metadata: params.metadata,
+    index: params.index,
+    itemState: params,
+  });
+  const isHydrating = useIsHydrating();
+
+  const initialTabStop = takeInitialTabStop(
+    index.value,
+    toValue(params.active) ?? false,
+    toValue(params.disabled) ?? false,
+  );
+
+  // An async item can still hold the server tab stop after its siblings mount.
+  const isTabStop = computed(() =>
+    isHydrating.value
+      ? initialTabStop
+      : !hasUnmountedTabStop.value && highlightedIndex.value === index.value,
+  );
+
+  function onFocusin(event: FocusEvent) {
+    onHighlightedIndexChange(index.value);
+    focusDetachedItem(event);
+  }
+
+  function onMousemove() {
+    const node = element.value;
+    if (!highlightItemOnHover.value || !node) {
+      return;
+    }
+
+    if (highlightedIndex.value !== index.value && !isElementDisabled(node)) {
+      node.focus();
+    }
+  }
+
+  const tabIndex = computed(() => (isTabStop.value ? 0 : -1));
+  const attributes = computed(() => {
+    return {
+      // A browser can run `setup` in another order than a server, so its first `tabindex` can
+      // differ from the server HTML. `data-allow-mismatch` stops the Vue warning for that.
+      // Vue keeps the server `tabindex` from a `v-bind` object while it hydrates. The change
+      // from a string to a number makes Vue write it after the mount.
+      tabindex: isHydrating.value ? String(tabIndex.value) : tabIndex.value,
+      'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
+      // The root finds the items that hydrate by this attribute.
+      [HYDRATING_COMPOSITE_ITEM]: isHydrating.value ? id : undefined,
+    };
+  });
+
+  return {
+    index,
+    tabIndex,
+    attributes,
+    events: {
+      onFocusin,
+      onFocusout: blurDetachedItem,
+      onKeydown: keydownDetachedItem,
+      onMousemove,
+    },
+  };
+}
+
+export interface UseCompositeItemParameters<Metadata> extends Pick<
+  UseCompositeListItemParameters<Metadata>,
+  'metadata' | 'index'
+> {
+  /** Whether the item is active, such as a checked radio. */
+  active?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /** Whether the item is disabled. */
+  disabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /** Whether the picker option is selected. */
+  selected?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }

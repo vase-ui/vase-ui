@@ -12,9 +12,8 @@ import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPa
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
 import { DirectionProvider } from '../../../direction-provider';
 import type { TextDirection } from '../../../direction-provider';
-import { useCompositeRootContext } from './CompositeRootContext';
-import { gridNavigation } from './gridNavigation';
-import { useCompositeRoot } from './useCompositeRoot';
+import { useCompositeRoot, useCompositeRootContext } from './useCompositeRoot';
+import { gridNavigation } from '../gridNavigation';
 
 async function pressKey(item: HTMLElement, key: string) {
   await fireEvent.keyDown(item, { key });
@@ -171,12 +170,17 @@ describe('useCompositeRoot', () => {
     const cols = shallowRef(2);
 
     const App = defineComponent(() => {
-      const { props: compositeProps, rootRef } = useCompositeRoot({
+      const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
         grid: gridNavigation(() => ({ cols: cols.value })),
       });
 
       return () => (
-        <div {...compositeProps} ref={(node: unknown) => rootRef(node as HTMLElement | null)}>
+        <div
+          onFocusin={onFocusin}
+          onFocusout={onFocusout}
+          onKeydown={onKeydown}
+          ref={(node: unknown) => registerRoot(node as HTMLElement | null)}
+        >
           <CompositeItem data-testid="1" />
           <CompositeItem data-testid="2" />
           <CompositeItem data-testid="3" />

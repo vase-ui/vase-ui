@@ -7,5 +7,14 @@
   "exceptions": [],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/toggle-group/ToggleGroupContext.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/toggle-group/ToggleGroup.vue",
+      "member": "ToggleGroupContext",
+      "witness": "packages/vue/src/toggle-group/ToggleGroup.test.tsx"
+    }
+  ]
 }

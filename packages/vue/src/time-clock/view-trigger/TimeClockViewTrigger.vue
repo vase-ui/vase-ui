@@ -35,7 +35,7 @@ import { useIsHydrating } from '../../common/hydration';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
@@ -87,18 +87,17 @@ const label = computed(() => {
   return root.empty.value ? unit : `${unit} ${text.value}`;
 });
 
-const { getButtonProps, buttonRef } = useButton({
-  disabled: root.disabled,
-  native: () => props.nativeButton,
-});
-
 function onClick(event: MouseEvent) {
   root.setView(props.view, createChangeEventDetails(REASONS.triggerPress, event));
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  button: (element) =>
+    useButton(element, {
+      disabled: root.disabled,
+      native: () => props.nativeButton,
+    }),
   state,
-  ref: buttonRef,
   props: (attrs) => {
     // A trigger is never a submit button and never a part of a form.
     const { form, type, ...elementAttrs } = attrs;
@@ -111,7 +110,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
         onClick,
       },
       elementAttrs,
-      getButtonProps,
     ];
   },
 });

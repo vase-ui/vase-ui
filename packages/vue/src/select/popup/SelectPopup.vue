@@ -51,7 +51,7 @@ import { clamp } from '../../common/clamp';
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
-import { COMPOSITE_KEYS } from '../../internals/composite/composite';
+import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';

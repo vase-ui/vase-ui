@@ -76,17 +76,19 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
+import {
+  useCompositeItem,
+  useCompositeRootContext,
+} from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
+import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -144,19 +146,15 @@ const tabMetadata = computed<TabsTabMetadata>(() => ({
   value: props.value,
 }));
 
-const { compositeProps, compositeRef, index } = useCompositeItem<TabsTabMetadata>({
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const compositeItem = useCompositeItem<TabsTabMetadata>(element, {
   metadata: tabMetadata,
   active,
   // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
   // when it is disabled. The server HTML gives it the same tab stop.
   disabled: () => isDisabled.value && activeTabValue.value !== null,
 });
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: isDisabled,
-  native: () => props.nativeButton,
-  focusableWhenDisabled: true,
-});
+const { index } = compositeItem;
 
 let isNavigating = false;
 
@@ -257,11 +255,18 @@ const state = computed<TabsTabState>(() => ({
   tabActivationDirection: tabActivationDirection.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  elementRef: element,
+  button: (element) =>
+    useButton(element, {
+      disabled: isDisabled,
+      native: () => props.nativeButton,
+      focusableWhenDisabled: true,
+    }),
   state,
-  ref: [compositeRef, buttonRef],
   props: (attrs) => [
-    compositeProps.value,
+    compositeItem.attributes.value,
+    compositeItem.events,
     {
       role: 'tab',
       'aria-controls': getTabPanelIdByValue(props.value),
@@ -275,7 +280,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    getButtonProps,
   ],
   stateAttributesMapping: tabsStateAttributesMapping,
 });

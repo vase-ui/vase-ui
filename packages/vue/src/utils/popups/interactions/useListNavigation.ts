@@ -27,7 +27,7 @@ import { enqueueFocus } from '../focus/enqueueFocus';
 import { useFloatingParentNodeId, useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { InteractionProps, ListNavigationElementProps, PopupInteractionStore } from '../types';
-import type { gridNavigation } from './gridNavigation';
+import type { navigateUniformGrid } from '../../../internals/composite/gridNavigation';
 
 type Orientation = 'vertical' | 'horizontal' | 'both';
 
@@ -92,7 +92,7 @@ export function isCrossOrientationCloseKey(
   return doSwitch(orientation, vertical, horizontal);
 }
 
-export type ListGridNavigator = typeof gridNavigation;
+export type ListGridNavigator = typeof navigateUniformGrid;
 
 export interface UseListNavigationProps {
   /**
@@ -226,7 +226,7 @@ export interface UseListNavigationProps {
   nestedReturnFocusRef?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   /**
    * Computes two-dimensional list navigation for grid-capable consumers. The value is a ref or a
-   * getter of the navigator, because `toValue` calls a function: `grid: () => gridNavigation`.
+   * getter of the navigator, because `toValue` calls a function: `grid: () => navigateUniformGrid`.
    */
   grid?:
     | Readonly<Ref<ListGridNavigator | null | undefined>>

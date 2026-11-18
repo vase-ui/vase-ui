@@ -55,7 +55,7 @@ const clear = useFilterDropdownClear({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state: clear.state,
-  ref: clear.ref,
+  button: clear.button,
   props: clear.props,
 });
 

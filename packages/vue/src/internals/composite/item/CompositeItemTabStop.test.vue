@@ -11,7 +11,7 @@ const props = defineProps<{
   late?: boolean;
 }>();
 
-const { props: compositeProps, rootRef } = useCompositeRoot({
+const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
   hasActiveItem: () => props.hasActiveItem,
   highlightedIndex: () => props.highlightedIndex,
 });
@@ -30,7 +30,12 @@ function itemProps(id: string) {
 </script>
 
 <template>
-  <div v-bind="compositeProps" :ref="(element) => rootRef(element as HTMLElement | null)">
+  <div
+    @focusin="onFocusin"
+    @focusout="onFocusout"
+    @keydown="onKeydown"
+    :ref="(element) => registerRoot(element as HTMLElement | null)"
+  >
     <CompositeItemPart v-bind="itemProps('a')" />
     <Suspense v-if="late">
       <CompositeItemAsyncBranch>

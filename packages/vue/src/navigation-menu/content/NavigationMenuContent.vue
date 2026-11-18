@@ -179,19 +179,15 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-const { props: compositeProps, rootRef } = useCompositeRoot({});
+const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({});
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+  elementRef: renderedElement,
   state,
   stateAttributesMapping,
-  ref: [
-    rootRef,
-    (content) => {
-      renderedElement.value = content;
-    },
-  ],
+  ref: registerRoot,
   props: (attrs) => [
-    compositeProps,
+    { onFocusin, onFocusout, onKeydown },
     {
       onFocusin: handleFocusin,
       onFocusout: handleFocusout,
