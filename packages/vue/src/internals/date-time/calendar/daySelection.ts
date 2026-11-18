@@ -1,4 +1,4 @@
-import { computed, shallowRef, watch } from 'vue';
+import { computed, shallowRef, watchSyncEffect } from 'vue';
 import type { ComputedRef } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { useControlled } from '../../../common/useControlled';
@@ -96,15 +96,12 @@ export function useDaySelection(
   const multiselectable = computed(() => props.multiple === true);
 
   const lastValue = shallowRef<CalendarValue>();
-  watch(
-    () => values.value[0],
-    (first) => {
-      if (first) {
-        lastValue.value = first;
-      }
-    },
-    { immediate: true, flush: 'sync' },
-  );
+  watchSyncEffect(() => {
+    const first = values.value[0];
+    if (first) {
+      lastValue.value = first;
+    }
+  });
   const template = computed(
     () => values.value[0] ?? toValues(props.defaultValue)[0] ?? lastValue.value,
   );

@@ -1,4 +1,4 @@
-import { computed, inject, provide, unref } from 'vue';
+import { computed, inject, onScopeDispose, provide, unref } from 'vue';
 import type { ComputedRef } from 'vue';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { REASONS } from '../../reasons';
@@ -7,7 +7,8 @@ import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { usePopoverRootContext } from '../../../popover/root/PopoverRootContext';
 import type { FocusOption } from '../../../utils/popups/focus/FloatingFocusManager';
 import { createDefaultInitialFocus } from '../../../utils/popups/popupStoreUtils';
-import { PickerFocusTargets, registerPickerFocusTarget } from './PickerControlContext';
+import { useKeepAliveState } from '../../useKeepAliveState';
+import { RegisterPickerFocusTarget } from './PickerControlContext';
 import type { PickerFocusTarget } from './PickerControlContext';
 
 export interface PickerPopup {
@@ -79,11 +80,16 @@ export function usePickerInitialFocus(
 ): ComputedRef<FocusOption> {
   const store = usePopoverRootContext();
   const targets = new Set<PickerFocusTarget>();
-  provide(PickerFocusTargets, targets);
+  provide(RegisterPickerFocusTarget, (target) => {
+    const { isHeld } = useKeepAliveState();
+    const getElement = () => (isHeld.value ? null : target());
+    targets.add(getElement);
+    onScopeDispose(() => targets.delete(getElement));
+  });
 
   const popupDefault = createDefaultInitialFocus(store.context.popupRef);
   const pickerDefault = (interactionType: InteractionType) =>
-    getFirstInDocument([...targets].map((target) => target())) ?? popupDefault(interactionType);
+    getFirstInDocument(Array.from(targets, (target) => target())) ?? popupDefault(interactionType);
 
   // `true` and `null` ask for the default behavior, and the default of a picker is its target. The
   // same holds for the result of a function.
@@ -105,5 +111,5 @@ export function usePickerInitialFocus(
  * selected enabled option or the first enabled option. A held part gives no target.
  */
 export function usePickerFocusTarget(target: PickerFocusTarget): void {
-  registerPickerFocusTarget(inject(PickerFocusTargets, null), target);
+  inject(RegisterPickerFocusTarget, null)?.(target);
 }

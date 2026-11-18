@@ -1,5 +1,5 @@
 import { computed, shallowRef, watch } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { Ref } from 'vue';
 import { compareDates } from '../temporal';
 import { getPageKey } from './monthGrid';
 import type { CalendarPage } from './monthGrid';
@@ -14,8 +14,7 @@ export type NavigationDirection = 'previous' | 'next' | 'none';
  * A change of `layoutKey` gives other pages for the same place of the calendar: the runtime locale
  * has another first day of the week, or another calendar, than the locale of a server. After a
  * hydration, the first page also changes when the clock of the browser gives another day than the
- * clock of the server. Such a change is not a move of the page, so it has no side and no page
- * leaves.
+ * clock of the server. A new layout drops outgoing pages and keeps the last navigation direction.
  *
  * Only the pages of days move, so `isEnabled` is `false` while the grid shows months or years. No
  * page leaves then, because no `Calendar.Month` is there to end its animation. The side is `none`.
@@ -24,21 +23,21 @@ export type NavigationDirection = 'previous' | 'next' | 'none';
  * `pages`.
  */
 export function usePageTransition(
-  pages: ComputedRef<CalendarPage[]>,
-  layoutKey: ComputedRef<string>,
-  isEnabled: ComputedRef<boolean>,
+  pages: Readonly<Ref<CalendarPage[]>>,
+  layoutKey: Readonly<Ref<string>>,
+  isEnabled: Readonly<Ref<boolean>>,
 ) {
   const navigationDirection = shallowRef<NavigationDirection>('none');
   const leaving = shallowRef<CalendarPage[]>([]);
-  let lastLayoutKey = layoutKey.value;
 
   watch(
-    pages,
-    (next, previous) => {
-      const isSameLayout = layoutKey.value === lastLayoutKey;
-      lastLayoutKey = layoutKey.value;
-      if (!isSameLayout || !isEnabled.value) {
+    [pages, layoutKey, isEnabled],
+    ([next, layout, enabled], [previous, previousLayout]) => {
+      if (!enabled || layout !== previousLayout) {
         leaving.value = [];
+        if (!enabled) {
+          navigationDirection.value = 'none';
+        }
         return;
       }
 
@@ -52,17 +51,6 @@ export function usePageTransition(
       leaving.value = [...leaving.value, ...previous].filter(
         (page) => !shown.has(getPageKey(page)),
       );
-    },
-    { flush: 'sync' },
-  );
-
-  watch(
-    isEnabled,
-    (enabled) => {
-      if (!enabled) {
-        leaving.value = [];
-        navigationDirection.value = 'none';
-      }
     },
     { flush: 'sync' },
   );

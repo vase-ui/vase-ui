@@ -7,7 +7,7 @@ import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useInputRender } from '../../useInputRender';
-import { useKeepAliveState } from '../../useKeepAliveState';
+import { useInputRegistration } from '../../field-register-control';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { fieldValidityMapping } from '../../field-constants';
 import { useSetFieldFocused } from '../../field-root-context/useSetFieldFocused';
@@ -97,16 +97,7 @@ export function useDateTimeFieldSegment(
     elementRef.value = element as HTMLInputElement | null;
   }
 
-  const { isHeld } = useKeepAliveState();
-  watch(
-    [elementRef, isHeld],
-    ([element, held], _previous, onCleanup) => {
-      if (element && !held) {
-        onCleanup(context.registerSegment(element, () => type.value));
-      }
-    },
-    { flush: 'sync' },
-  );
+  useInputRegistration(elementRef, (element) => context.registerSegment(element, () => type.value));
 
   function moveFocus(delta: 1 | -1) {
     if (elementRef.value) {
@@ -201,7 +192,7 @@ export function useDateTimeFieldSegment(
       context.disabled.value ||
       composingText.value !== null ||
       event.isComposing ||
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- The key code 229 is the IME workaround of Base UI, and the code keeps it.
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Safari can report key code 229 when `isComposing` is false.
       event.which === 229 ||
       event.ctrlKey ||
       event.metaKey ||
@@ -310,7 +301,7 @@ export function useDateTimeFieldSegment(
     context.pasteText(text, event);
   }
 
-  watch(() => context.resetCount.value, renderValue);
+  watch(context.resetCount, renderValue);
 
   const props = computed(() => {
     const { text, id } = view.value;

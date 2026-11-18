@@ -115,6 +115,9 @@
     "src/internals/composite/root/useCompositeRoot.test.tsx": {
       "fails": {}
     },
+    "src/internals/date-time/field/inputRegistration.test.tsx": {
+      "fails": {}
+    },
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },

@@ -102,8 +102,6 @@ export interface DateTimeFieldContext {
   /** The sets of props of the root element in merge order. The part gives the function to `useRenderElement` as `props`. */
   getRootProps: (attrs: Record<string, any>) => Record<string, any>[];
   hiddenInputProps: () => Record<string, unknown>;
-  /** The `ref` setter of the hidden input. The template of the root binds it by name. */
-  setHiddenInput: (input: unknown) => void;
   clear: (event?: MouseEvent | KeyboardEvent) => void;
 }
 

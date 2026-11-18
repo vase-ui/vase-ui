@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, shallowRef, watch, watchEffect } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { ownerDocument } from '../../../common/owner';
 import { activeElement } from '../../../common/shadowDom';
@@ -215,18 +215,20 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     (text) => (isTemporalCalendar(text) ? text : undefined),
   );
 
-  function assertBroadcastCalendar() {
-    if (props.broadcastCalendar === true && calendar.value !== 'iso8601') {
-      throw new Error(
-        `Vase UI: <${part}> has \`broadcastCalendar\` and shows the calendar \`${calendar.value}\`. ` +
-          'The broadcast calendar is made of Gregorian months, so no other calendar can show it. ' +
-          'Remove `broadcastCalendar`, or set `calendar="gregory"`.',
-      );
-    }
-  }
   if (process.env.NODE_ENV !== 'production') {
+    function assertBroadcastCalendar() {
+      const id = calendar.value;
+      if (props.broadcastCalendar === true && id !== 'iso8601') {
+        throw new Error(
+          `Vase UI: <${part}> has \`broadcastCalendar\` and shows the calendar \`${id}\`. ` +
+            'The broadcast calendar is made of Gregorian months, so no other calendar can show it. ' +
+            'Remove `broadcastCalendar`, or set `calendar="gregory"`.',
+        );
+      }
+    }
+    // Vue reports a second warning if the first check throws inside the watcher.
     assertBroadcastCalendar();
-    watch([() => props.broadcastCalendar, calendar], assertBroadcastCalendar);
+    watchEffect(assertBroadcastCalendar);
   }
 
   const weekData = computed(() => weekInfo(formatLocale.value));
@@ -1028,9 +1030,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     );
   });
 
-  // When fewer months than the pages are between the limits, `maxDate` wins, as in React Aria's
-  // calendar. The first pages then start before `minDate`. A grid of months or of years shows the
-  // year of one month, so it passes `1` as the count of months.
+  // When too few months fit between the limits, the last page must include `maxDate`.
   function clampMonth(
     month: Temporal.PlainYearMonth,
     pageMonths = duration.value ? 1 : monthCount.value,

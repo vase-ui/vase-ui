@@ -7,8 +7,9 @@ import {
   shallowRef,
   toValue,
   watch,
+  watchPostEffect,
 } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
 import { clamp } from '../../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
@@ -114,6 +115,7 @@ const TIME_GRANULARITIES: readonly DateTimeFieldGranularity[] = ['hour', 'minute
 export interface UseDateTimeFieldRootParameters<Value extends TemporalValue> {
   /** `date` has the date units of the granularity, and `time` has the time units only. */
   family: DateTimeFieldFamily;
+  hiddenInputElement: Readonly<Ref<HTMLInputElement | null>>;
   value?: MaybeRefOrGetter<Value | null | undefined>;
   defaultValue?: MaybeRefOrGetter<Value | null | undefined>;
   referenceDate?: MaybeRefOrGetter<TemporalValue | undefined>;
@@ -212,7 +214,7 @@ function isTimeUnit(granularity: DateTimeFieldGranularity): granularity is TimeU
 export function useDateTimeFieldRoot<Value extends TemporalValue>(
   parameters: UseDateTimeFieldRootParameters<Value>,
 ): DateTimeFieldContext {
-  const { family, valueChange, updateValue } = parameters;
+  const { family, hiddenInputElement, valueChange, updateValue } = parameters;
   const {
     setDirty,
     validityData,
@@ -677,8 +679,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   );
 
   const filled = computed(() => value.value !== null);
-  setFilled(filled.value);
-  watch(filled, setFilled);
+  watch(filled, setFilled, { immediate: true });
 
   useRegisterFieldControl(
     firstSegment,
@@ -713,7 +714,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       : getLimitMessage(value.value, limits.value, locale.value, displayCal.value);
   });
 
-  const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
   function syncCustomValidity() {
@@ -774,15 +774,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   });
 
   // A non-null value shows its own numbers, so a draft that outlives it is stale.
-  watch(
-    [value, draft],
-    ([current, entry]) => {
-      if (current !== null && entry !== null) {
-        draft.value = null;
-      }
-    },
-    { flush: 'post' },
-  );
+  watchPostEffect(() => {
+    if (value.value !== null && draft.value !== null) {
+      draft.value = null;
+    }
+  });
 
   // The numbers of a draft belong to a calendar and to an hour cycle.
   watch([displayCal, hourCycle], () => {
@@ -864,13 +860,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }),
   );
 
-  function setHiddenInput(input: unknown) {
-    hiddenInputElement.value = input as HTMLInputElement | null;
-  }
-
-  watch(hiddenInputElement, syncCustomValidity, { flush: 'post' });
-
-  watch(customMessage, syncCustomValidity, { flush: 'post' });
+  watchPostEffect(syncCustomValidity);
 
   function hiddenInputProps() {
     const type = INPUT_TYPES[kind.value] ?? 'text';
@@ -1003,7 +993,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     hiddenInputElement,
     getRootProps,
     hiddenInputProps,
-    setHiddenInput,
     clear,
   };
 
