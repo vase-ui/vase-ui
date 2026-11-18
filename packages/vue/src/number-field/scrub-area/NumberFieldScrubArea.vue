@@ -102,6 +102,8 @@ defineSlots<{
 
 const {
   state,
+  disabled: rootDisabled,
+  options,
   setIsScrubbing: setRootScrubbing,
   inputRef,
   focusInput,
@@ -193,11 +195,12 @@ async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: 
 }
 
 // A move or release can follow the press in the same task.
+// A value change must not cancel the delayed release in Firefox.
 watch(
   [
     isScrubbing,
-    () => state.value.disabled,
-    () => state.value.readOnly,
+    rootDisabled,
+    () => options.readOnly,
     () => props.direction,
     () => props.pixelSensitivity,
   ],
