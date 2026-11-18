@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { Teleport, KeepAlive, defineComponent, nextTick, onMounted, shallowRef, watch } from 'vue';
-import type { PropType, VNodeChild } from 'vue';
+import type { PropType, VNode } from 'vue';
 import {
   clientCenter,
   createRenderer,
@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  isVaporParts,
   nextAnimationsRead,
   nextCall,
   nextEvent,
@@ -24,6 +25,7 @@ import {
   waitForPositioned,
   waitSingleFrame,
 } from '#test-utils';
+import { checkFragmentChildren } from '../../../test/vaporParts/checkFragmentChildren';
 import * as Combobox from '../../combobox/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
@@ -100,7 +102,7 @@ const testPopoverProps = {
     type: String as PropType<'before-content' | 'after-content'>,
     default: 'before-content',
   },
-  afterTrigger: { type: Function as PropType<() => VNodeChild>, default: undefined },
+  afterTrigger: { type: Function as PropType<() => VNode>, default: undefined },
   includeTrigger: { type: Boolean, default: true },
 };
 
@@ -131,93 +133,56 @@ const ContainedTriggerPopover = defineComponent({
 
       return (
         <Popover.Root {...props.rootProps}>
-          {props.triggerPlacement === 'before-content' ? (
-            <>
-              {triggerElement}
-              {props.afterTrigger?.()}
-              {renderPortal()}
-            </>
-          ) : (
-            <>
-              {renderPortal()}
-              {triggerElement}
-              {props.afterTrigger?.()}
-            </>
-          )}
+          {() =>
+            props.triggerPlacement === 'before-content'
+              ? [triggerElement, props.afterTrigger?.(), renderPortal()]
+              : [renderPortal(), triggerElement, props.afterTrigger?.()]
+          }
         </Popover.Root>
       );
     };
   },
 });
 
-const DetachedTriggerPopover = defineComponent({
-  props: testPopoverProps,
-  setup(props) {
-    const popoverHandle = Popover.createHandle();
+function createDetachedTriggerPopover(multiple: boolean) {
+  return defineComponent({
+    props: testPopoverProps,
+    setup(props) {
+      const handle = Popover.createHandle();
 
-    return () => {
-      const { children: triggerChildren, ...restTriggerProps } = props.triggerProps ?? {};
-
-      const trigger = (
-        <>
-          <Popover.Trigger data-testid="trigger" handle={popoverHandle} {...restTriggerProps}>
-            {triggerChildren ?? 'Toggle'}
-          </Popover.Trigger>
-          {props.afterTrigger?.()}
-        </>
-      );
-
-      return (
-        <>
-          {props.triggerPlacement === 'before-content' && trigger}
+      return () => {
+        const { children, ...triggerProps } = props.triggerProps ?? {};
+        const triggers = [
+          <Popover.Trigger key="trigger" data-testid="trigger" handle={handle} {...triggerProps}>
+            {children ?? 'Toggle'}
+          </Popover.Trigger>,
+        ];
+        if (props.afterTrigger) {
+          triggers.push(props.afterTrigger());
+        }
+        if (multiple) {
+          triggers.push(
+            <Popover.Trigger key="trigger-2" data-testid="trigger-2" handle={handle}>
+              Toggle another
+            </Popover.Trigger>,
+          );
+        }
+        const root = (
           <ContainedTriggerPopover
-            rootProps={{ ...props.rootProps, handle: popoverHandle }}
+            key="root"
+            rootProps={{ ...props.rootProps, handle }}
             portalProps={props.portalProps}
             popupProps={props.popupProps}
             includeTrigger={false}
           />
-          {props.triggerPlacement === 'after-content' && trigger}
-        </>
-      );
-    };
-  },
-});
-
-const MultipleDetachedTriggersPopover = defineComponent({
-  props: testPopoverProps,
-  setup(props) {
-    const popoverHandle = Popover.createHandle();
-
-    return () => {
-      const { children: triggerChildren, ...restTriggerProps } = props.triggerProps ?? {};
-
-      const triggers = (
-        <>
-          <Popover.Trigger data-testid="trigger" handle={popoverHandle} {...restTriggerProps}>
-            {triggerChildren ?? 'Toggle'}
-          </Popover.Trigger>
-          {props.afterTrigger?.()}
-          <Popover.Trigger data-testid="trigger-2" handle={popoverHandle}>
-            Toggle another
-          </Popover.Trigger>
-        </>
-      );
-
-      return (
-        <>
-          {props.triggerPlacement === 'before-content' && triggers}
-          <ContainedTriggerPopover
-            rootProps={{ ...props.rootProps, handle: popoverHandle }}
-            portalProps={props.portalProps}
-            popupProps={props.popupProps}
-            includeTrigger={false}
-          />
-          {props.triggerPlacement === 'after-content' && triggers}
-        </>
-      );
-    };
-  },
-});
+        );
+        return props.triggerPlacement === 'before-content'
+          ? [...triggers, root]
+          : [root, ...triggers];
+      };
+    },
+  });
+}
 
 async function tick(ms: number) {
   await flushMicrotasks();
@@ -550,9 +515,27 @@ describe('<Popover.Root />', () => {
 
   describe.for([
     { name: 'contained triggers', Component: ContainedTriggerPopover },
-    { name: 'detached triggers', Component: DetachedTriggerPopover },
-    { name: 'multiple detached triggers', Component: MultipleDetachedTriggersPopover },
+    { name: 'detached triggers', Component: createDetachedTriggerPopover(false) },
+    { name: 'multiple detached triggers', Component: createDetachedTriggerPopover(true) },
   ])('when using $name', ({ name, Component: TestPopover }) => {
+    describe('the root slot without content after the trigger', () => {
+      if (!isVaporParts) {
+        beforeAll(checkFragmentChildren);
+      }
+
+      it.each(['before-content', 'after-content'] as const)(
+        'renders the trigger and popup with placement %s',
+        async (placement) => {
+          await render(
+            <TestPopover rootProps={{ defaultOpen: true }} triggerPlacement={placement} />,
+          );
+
+          expect(screen.getByTestId('trigger')).toHaveTextContent('Toggle');
+          expect(screen.getByTestId('popover-popup')).toHaveTextContent('Content');
+        },
+      );
+    });
+
     it('should render the children', async () => {
       await render(<TestPopover />);
 
