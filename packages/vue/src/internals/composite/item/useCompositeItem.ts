@@ -21,6 +21,7 @@ export function useCompositeItem<Metadata>(
     highlightItemOnHover,
     highlightedIndex,
     id,
+    detachedItemHandlers,
     onHighlightedIndexChange,
     takeInitialTabStop,
   } = useCompositeRootContext();
@@ -55,8 +56,9 @@ export function useCompositeItem<Metadata>(
     ref(node);
   }
 
-  function onFocusin() {
+  function onFocusin(event: FocusEvent) {
     onHighlightedIndexChange(index.value);
+    detachedItemHandlers.onFocusin(event);
   }
 
   function onMousemove() {
@@ -81,6 +83,8 @@ export function useCompositeItem<Metadata>(
       // The root finds the items that hydrate by this attribute.
       [HYDRATING_COMPOSITE_ITEM]: isHydrating.value ? id : undefined,
       onFocusin,
+      onFocusout: detachedItemHandlers.onFocusout,
+      onKeydown: detachedItemHandlers.onKeydown,
       onMousemove,
     };
   });
@@ -102,7 +106,7 @@ export interface UseCompositeItemParameters<Metadata> extends Pick<
 
 export interface UseCompositeItemReturnValue {
   /**
-   * The `tabindex` and the listeners of the item: `onFocusin` and `onMousemove`.
+   * The `tabindex` and the focus, mouse and keyboard listeners of the item.
    * While the item hydrates, the object also has `data-allow-mismatch` and
    * `data-vase-ui-hydrating-composite-item`, which holds the id of the root.
    * The part puts this object first in the `props` of `useRenderElement`.

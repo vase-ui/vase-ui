@@ -472,7 +472,11 @@ export function useFloatingFocusManager(
   // A popup below that is still open keeps the focus. A popup that a menu item opens can be below the
   // menu.
   function isInClosedPopup(element: Element | null) {
-    return (!open.value && contains(floating.value, element)) || isInClosedPopupBelow(element);
+    return (
+      (!open.value &&
+        (contains(floating.value, element) || contains(floatingFocusElement(), element))) ||
+      isInClosedPopupBelow(element)
+    );
   }
 
   provide(ParentFocusManagerContext, {
@@ -484,7 +488,11 @@ export function useFloatingFocusManager(
       };
     },
     getReturnTarget(target, type, activeElementAtClose) {
-      if (!open.value && isDisabled() && contains(floating.value, target)) {
+      if (
+        !open.value &&
+        isDisabled() &&
+        (contains(floating.value, target) || contains(floatingFocusElement(), target))
+      ) {
         const ownTarget = getReturnElement(type, activeElementAtClose);
         return ownTarget && parentFocusManager
           ? parentFocusManager.getReturnTarget(ownTarget, type, activeElementAtClose)
@@ -913,6 +921,7 @@ export function useFloatingFocusManager(
         const insideElements = getResolvedInsideElements();
         const isFocusInsideFloatingTree =
           contains(floatingEl, activeEl) ||
+          contains(floatingFocusEl, activeEl) ||
           insideElements.some((element) => element === activeEl || contains(element, activeEl)) ||
           (currentTree &&
             getNodeChildren(currentTree.nodesRef.value, getNodeId(), false).some((node) =>
@@ -966,19 +975,19 @@ export function useFloatingFocusManager(
   // when the popup unmounts from the DOM.
   // By blurring it before the popup unmounts, we can prevent this behavior.
   effect(
-    () => [open.value, floating.value],
+    () => [open.value, floating.value, floatingFocusElement()],
     () => {
       const floatingEl = floating.value;
       if (!platform.engine.webkit || open.value || !floatingEl) {
         return;
       }
 
-      const activeEl = activeElement(ownerDocument(floatingEl));
+      const activeEl = activeElement(ownerDocument(floatingFocusElement() ?? floatingEl));
       if (!isHTMLElement(activeEl) || !isTypeableElement(activeEl)) {
         return;
       }
 
-      if (contains(floatingEl, activeEl)) {
+      if (contains(floatingEl, activeEl) || contains(floatingFocusElement(), activeEl)) {
         activeEl.blur();
       }
     },
@@ -1133,6 +1142,7 @@ export function useFloatingFocusManager(
         const insideElements = getResolvedInsideElements();
         const pointerTargetInside =
           contains(floatingEl, target) ||
+          contains(floatingFocusElement(), target) ||
           contains(domReferenceEl, target) ||
           contains(portalEl, target) ||
           insideElements.some((element) => element === target || contains(element, target));
@@ -1259,7 +1269,12 @@ export function useFloatingFocusManager(
         // When focus is lost to the body (e.g. on a backdrop press), record the element that
         // had focus so a confirmation dialog opened while the body is focused can return focus
         // to it. Scoped to `modal` to avoid non-modal popups polluting the shared stack.
-        if (modal && relatedTarget == null && target != null && contains(floatingEl, target)) {
+        if (
+          modal &&
+          relatedTarget == null &&
+          target != null &&
+          (contains(floatingEl, target) || contains(floatingFocusEl, target))
+        ) {
           addPreviouslyFocusedElement(target);
         }
 
@@ -1289,6 +1304,7 @@ export function useFloatingFocusManager(
           const movedToUnrelatedNode = !(
             contains(domReferenceEl, relatedTarget) ||
             contains(floatingEl, relatedTarget) ||
+            contains(floatingFocusEl, relatedTarget) ||
             contains(relatedTarget, floatingEl) ||
             contains(portalContext?.portalNode.value, relatedTarget) ||
             insideElements.some(
@@ -1300,6 +1316,7 @@ export function useFloatingFocusManager(
               (getNodeChildren(currentTree.nodesRef.value, nodeId).find(
                 (node) =>
                   contains(node.context?.elements.floating, relatedTarget) ||
+                  contains(node.context?.rootStore?.context.popupRef?.value, relatedTarget) ||
                   contains(node.context?.elements.domReference, relatedTarget),
               ) ??
                 getNodeAncestors(currentTree.nodesRef.value, nodeId).find(
@@ -1375,31 +1392,49 @@ export function useFloatingFocusManager(
       }
 
       const anchorElement = isHTMLElement(domReferenceEl) ? domReferenceEl : null;
-      if (!floatingEl && !anchorElement) {
+      const focusContainers = new Set(
+        [floatingEl, floatingFocusEl].filter((node): node is HTMLElement => node != null),
+      );
+      if (!focusContainers.size && !anchorElement) {
         return undefined;
       }
 
       // Firefox and WebKit send no `focusout` when they remove the focused element, so a removal
       // in the floating element also restores the focus.
       let removalObserver: MutationObserver | null = null;
-      if (restoreFocus && floatingEl) {
+      if (restoreFocus && focusContainers.size) {
         removalObserver = new MutationObserver(() => {
           if (focusedElement && !focusedElement.isConnected && activeElement(doc) === doc.body) {
             focusedElement = null;
             restoreLostFocus();
           }
         });
-        removalObserver.observe(floatingEl, { childList: true, subtree: true });
+        for (const node of focusContainers) {
+          removalObserver.observe(node, { childList: true, subtree: true });
+        }
       }
 
       return mergeCleanups(
         anchorElement && addEventListener(anchorElement, 'focusout', handleFocusOutside),
         anchorElement && addEventListener(anchorElement, 'pointerdown', handlePointerDown),
-        floatingEl && addEventListener(floatingEl, 'focusin', handleFocusIn),
-        floatingEl && addEventListener(floatingEl, 'focusout', handleFocusOutside),
-        floatingEl &&
-          isInsidePortal.value &&
-          addEventListener(floatingEl, 'focusout', markInsideComponentTree, true),
+        ...Array.from(focusContainers, (node) => {
+          // The popup and its positioner can move apart. Handle an event at the first one it reaches.
+          const fromFirst = (handle: (event: FocusEvent) => void) => (event: FocusEvent) => {
+            if (
+              node === floatingFocusEl ||
+              !floatingFocusEl ||
+              !event.composedPath().includes(floatingFocusEl)
+            ) {
+              handle(event);
+            }
+          };
+          return mergeCleanups(
+            addEventListener(node, 'focusin', fromFirst(handleFocusIn)),
+            addEventListener(node, 'focusout', fromFirst(handleFocusOutside)),
+            isInsidePortal.value &&
+              addEventListener(node, 'focusout', fromFirst(markInsideComponentTree), true),
+          );
+        }),
         removalObserver && (() => removalObserver.disconnect()),
       );
     },
@@ -1427,6 +1462,7 @@ export function useFloatingFocusManager(
       portalContext?.beforeOutsideRef.value,
       portalContext?.afterOutsideRef.value,
       parentMarksCount?.value,
+      floatingFocusElement(),
       ...getNestedPortals(portalNode.value),
     ],
     () => {
@@ -1445,9 +1481,11 @@ export function useFloatingFocusManager(
         isTypeableCombobox(node.context?.elements.domReference ?? null),
       )?.context?.elements.domReference;
 
+      const popupElements = [floatingEl, floatingFocusElement(), ...portalNodes].filter(
+        (node): node is Element => node != null,
+      );
       const controlInsideElements = [
-        floatingEl,
-        ...portalNodes,
+        ...popupElements,
         beforeGuardElement.value,
         afterGuardElement.value,
         portalContext?.beforeOutsideRef.value,
@@ -1468,10 +1506,7 @@ export function useFloatingFocusManager(
         mark: false,
       });
 
-      const markerInsideElements = [floatingEl, ...portalNodes].filter(
-        (x): x is Element => x != null,
-      );
-      const markerCleanup = markOthers(markerInsideElements);
+      const markerCleanup = markOthers(popupElements);
       marksCount.value += 1;
 
       return () => {

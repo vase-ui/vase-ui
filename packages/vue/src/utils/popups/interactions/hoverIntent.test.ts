@@ -37,7 +37,7 @@ function readPointerEvents(elements: ReturnType<typeof createElements>) {
 
 describe('HoverIntent', () => {
   describe('pointer events', () => {
-    it('blocks the nearest menu popup after its slotted trigger moves', () => {
+    it('VUE-138: blocks the nearest menu popup after its slotted trigger moves', () => {
       const { triggerElement, positionerElement, scopeElement: outer } = createElements();
       const inner = document.createElement('div');
       const host = document.createElement('div');

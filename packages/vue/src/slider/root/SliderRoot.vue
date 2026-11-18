@@ -542,11 +542,17 @@ watch(
 
     const root = element.value;
     const activeEl = root ? activeElement(ownerDocument(root)) : null;
+    // Firefox and Safari can keep focus on a disabled control.
     if (contains(root, activeEl)) {
-      // This is necessary because Firefox and Safari will keep focus
-      // on a disabled element:
-      // https://codesandbox.io/p/sandbox/mui-pr-22247-forked-h151h?file=/src/App.js
       (activeEl as HTMLElement).blur();
+    } else {
+      for (const { getInput } of thumbList.map.value.values()) {
+        const input = getInput();
+        if (input?.matches(':focus')) {
+          input.blur();
+          break;
+        }
+      }
     }
 
     if (active.value !== -1) {

@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { useCompositeListContext } from './CompositeListContext';
@@ -37,7 +37,7 @@ export function useCompositeListItem<Metadata>(
   //     that sort. It is also wrong if an item left the list since that sort.
   const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
 
-  let element: HTMLElement | null = null;
+  const element = shallowRef<HTMLElement | null>(null);
 
   const registration: CompositeListRegistration<Metadata> = {
     metadata: params.metadata,
@@ -53,35 +53,16 @@ export function useCompositeListItem<Metadata>(
       return explicitIndex;
     }
 
-    // The read of `map` comes before the test of `element`. `element` is a plain variable, and an
-    // item has no element in its first render. A `computed` that reads no ref never computes again.
-    const map = context?.map.value;
-    return (element ? map?.get(element)?.index : undefined) ?? guess;
+    return (element.value ? context?.map.value.get(element.value)?.index : undefined) ?? guess;
   });
 
-  let held = false;
-
   function ref(node: HTMLElement | null) {
-    // Vue calls a function ref again on each patch.
-    if (!context || node === element) {
-      return;
-    }
-
-    if (element) {
-      context.unregister(element, registration);
-    }
-
-    element = node;
-
-    if (node && !held) {
-      context.register(node, registration);
-    }
+    element.value = node;
   }
 
   if (context) {
-    // The item does not register again when a value changes. It only asks the list to sort again.
-    // Items that share one element take the entry in the order of their ref calls. A register from
-    // a watcher would let a later update of an inner item take the entry from the outer item.
+    // A metadata change must not give an inner item ownership of an element it shares with the
+    // outer item.
     watch(
       [
         () => toValue(params.index),
@@ -93,28 +74,18 @@ export function useCompositeListItem<Metadata>(
     );
 
     const { isHeld } = useKeepAliveState();
-    // `KeepAlive` removes the element from the document and calls no ref callback.
+    // A hold moves the item without calling its ref. Register synchronously to preserve the
+    // order of the ref calls when two items share an element.
     watch(
-      isHeld,
-      (nextHeld) => {
-        held = nextHeld;
-        if (!element) {
-          return;
-        }
-
-        if (held) {
-          context.unregister(element, registration);
-        } else {
-          context.register(element, registration);
+      [element, isHeld],
+      ([node, held], _previous, onCleanup) => {
+        if (node && !held) {
+          context.register(node, registration);
+          onCleanup(() => context.unregister(node, registration));
         }
       },
-      { flush: 'sync', immediate: true },
+      { flush: 'sync' },
     );
-    onScopeDispose(() => {
-      if (element) {
-        context.unregister(element, registration);
-      }
-    });
   }
 
   return { ref, index };

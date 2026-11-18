@@ -11,8 +11,7 @@ import {
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { isElementDisabled } from '../../../common/isElementDisabled';
-import { ownerDocument } from '../../../common/owner';
-import { activeElement, contains, getTarget } from '../../../common/shadowDom';
+import { contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { useDirection } from '../../direction-context/DirectionContext';
 import type { HTMLProps } from '../../types';
@@ -35,6 +34,7 @@ import {
 } from '../composite';
 import type { DisabledIndices } from '../listIndex';
 import type { ModifierKey } from '../composite';
+import { observeRootNode } from '../../observeRootNode';
 import { HYDRATING_COMPOSITE_ITEM } from '../constants';
 import { useCompositeList } from '../list/useCompositeList';
 import type { CompositeMetadata } from '../list/useCompositeList';
@@ -212,8 +212,10 @@ export function useCompositeRoot<Metadata>(
     const isRemoval = lastActiveItem !== null && !elements.includes(lastActiveItem);
     lastActiveItem = activeItem.item;
 
-    const focused = activeElement(ownerDocument(rootElement));
-    if (contains(rootElement, focused) || elements.some((item) => contains(item, focused))) {
+    if (
+      rootElement?.matches(':focus-within') ||
+      elements.some((item) => item?.matches(':focus-within'))
+    ) {
       return;
     }
 
@@ -260,7 +262,8 @@ export function useCompositeRoot<Metadata>(
   // composite. A composite with no active item keeps the item that had the focus last, unless the
   // keys skip that item.
   function onFocusout(event: FocusEvent) {
-    if (contains(rootElement, event.relatedTarget as Element | null)) {
+    const next = event.relatedTarget as Element | null;
+    if (contains(rootElement, next) || elementsRef.value.some((item) => contains(item, next))) {
       return;
     }
 
@@ -288,7 +291,7 @@ export function useCompositeRoot<Metadata>(
     // the metadata in the map. The tab stop at index 0 can then be on a disabled item, and the
     // composite has no tab stop. The check moves the tab stop to the first enabled item.
     // It runs only when `disabledIndices` has a value, the root is uncontrolled and the first map
-    // is done. A composite with no `disabledIndices` relies on the disabled state of the DOM.
+    // is done. The item registrations supply the default when the root gives no indexes.
     if (
       disabledIndices == null ||
       toValue(params.highlightedIndex) != null ||
@@ -558,34 +561,47 @@ export function useCompositeRoot<Metadata>(
       }
       // A consumer can change these attributes on the actual item in a render slot.
       const observer = new MutationObserver(moveTabStopToActiveItem);
-      const fieldsets = new Set<HTMLFieldSetElement>();
       for (const element of map.keys()) {
         observer.observe(element, { attributeFilter: ['disabled', 'aria-disabled'] });
-        for (
-          let fieldset = element.parentElement?.closest('fieldset');
-          fieldset && !fieldsets.has(fieldset);
-          fieldset = fieldset.parentElement?.closest('fieldset')
-        ) {
-          fieldsets.add(fieldset);
+        if (element.matches(':enabled, :disabled')) {
+          // A move into another fieldset or its first legend can change the native state
+          // without changing any attribute on the control.
+          let nativeDisabled = element.matches(':disabled');
+          onCleanup(
+            observeRootNode(element, () => {
+              const disabled = element.matches(':disabled');
+              if (disabled !== nativeDisabled) {
+                nativeDisabled = disabled;
+                moveTabStopToActiveItem();
+              }
+            }, ['disabled']),
+          );
         }
-      }
-      // A native fieldset exempts controls in its first legend.
-      for (const fieldset of fieldsets) {
-        observer.observe(fieldset, {
-          attributeFilter: ['disabled', 'aria-disabled'],
-          childList: true,
-        });
       }
       onCleanup(() => observer.disconnect());
     },
     { flush: 'post' },
   );
 
+  // A teleported item belongs to the composite, but its native events can miss the root.
+  function fromDetachedItem<E extends Event>(handle: (event: E) => void) {
+    return (event: E) => {
+      if (rootElement && !event.composedPath().includes(rootElement)) {
+        handle(event);
+      }
+    };
+  }
+
   provide(CompositeRootContext, {
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
+    detachedItemHandlers: {
+      onFocusin: fromDetachedItem(onFocusin),
+      onFocusout: fromDetachedItem(onFocusout),
+      onKeydown: fromDetachedItem(onKeydown),
+    },
     takeInitialTabStop,
     id,
     hasUnmountedTabStop: computed(() => hasUnmountedTabStop.value),

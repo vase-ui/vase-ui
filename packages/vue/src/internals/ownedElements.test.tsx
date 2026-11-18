@@ -3,6 +3,7 @@ import { KeepAlive, shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
+import { Popover } from '@vase-ui/vue/popover';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimePicker } from '@vase-ui/vue/time-picker';
@@ -26,7 +27,7 @@ import SliderInputPortal from '../../test/fixtures/SliderInputPortal.vue';
 describe('owned parts', () => {
   const { render } = createRenderer();
 
-  it('keeps one tab stop when the active item moves and another item takes its index', async () => {
+  it('VUE-54: keeps one tab stop when the active item moves and another item takes its index', async () => {
     const names = shallowRef(['First', 'Active', 'Last']);
     const active = shallowRef('Active');
     const { user } = await render(() => (
@@ -60,7 +61,7 @@ describe('owned parts', () => {
     expect(button('After')).toHaveFocus();
   });
 
-  it('moves the tab stop when a fieldset disables a native item outside its first legend', async () => {
+  it('VUE-113: moves the tab stop when a fieldset disables a native item outside its first legend', async () => {
     const disabled = shallowRef(false);
     await render(() => (
       <CompositeRoot>
@@ -87,13 +88,120 @@ describe('owned parts', () => {
     expect([first.tabIndex, active.tabIndex]).toEqual([-1, 0]);
   });
 
-  it('focuses the thumb input across a portal and releases it while the thumb is held', async () => {
+  it('VUE-54: keeps the tab stop on the focused item in an iframe until focus leaves it', async () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    try {
+      const body = frame.contentDocument?.body;
+      if (!body) {
+        throw new Error('The iframe has no document.');
+      }
+      const active = shallowRef(false);
+      const { unmount } = await render(() => (
+        <CompositeRoot>
+          <CompositeItem as="button" index={0} active={active.value}>
+            First
+          </CompositeItem>
+          <Teleport to={body}>
+            <CompositeItem as="button" index={1}>
+              Second
+            </CompositeItem>
+          </Teleport>
+        </CompositeRoot>
+      ));
+      try {
+        const first = screen.getByRole('button', { name: 'First' });
+        const second = within(body).getByRole('button', { name: 'Second' });
+        second.focus();
+        await flushMicrotasks();
+        expect(body.ownerDocument.activeElement).toBe(second);
+        active.value = true;
+        await flushMicrotasks();
+        expect([first.tabIndex, second.tabIndex]).toEqual([-1, 0]);
+        second.blur();
+        await flushMicrotasks();
+        expect([first.tabIndex, second.tabIndex]).toEqual([0, -1]);
+        second.focus();
+        await flushMicrotasks();
+        await fireEvent.keyDown(second, { key: 'ArrowLeft' });
+        await flushMicrotasks();
+        expect(first).toHaveFocus();
+      } finally {
+        unmount();
+      }
+    } finally {
+      frame.remove();
+    }
+  });
+
+  it('VUE-113: follows the native fieldset after a registered item moves', async () => {
+    await render(
+      <CompositeRoot>
+        <CompositeItem as="button">First</CompositeItem>
+        <div data-testid="wrapper">
+          <CompositeItem as="button" active>
+            Active
+          </CompositeItem>
+        </div>
+        <fieldset disabled />
+      </CompositeRoot>,
+    );
+    const first = screen.getByRole('button', { name: 'First' });
+    const active = screen.getByRole('button', { name: 'Active' });
+    expect([first.tabIndex, active.tabIndex]).toEqual([-1, 0]);
+    const fieldset = screen.getByRole('group') as HTMLFieldSetElement;
+    fieldset.append(screen.getByTestId('wrapper'));
+    await flushMicrotasks();
+    expect([first.tabIndex, active.tabIndex]).toEqual([0, -1]);
+    fieldset.disabled = false;
+    await flushMicrotasks();
+    expect([first.tabIndex, active.tabIndex]).toEqual([-1, 0]);
+  });
+
+  it('VUE-87: ignores a track press until the registered thumb input is connected', async () => {
+    const target = document.createElement('div');
+    try {
+      const { unmount } = await render(
+        <Slider.Root defaultValue={50}>
+          <Slider.Control data-testid="track" style={{ width: '100px' }}>
+            <SliderInputPortal target={target} />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      try {
+        const input = within(target).getByRole('slider') as HTMLInputElement;
+        const track = screen.getByTestId('track');
+        const press = async () => {
+          await fireEvent.pointerDown(track, {
+            pointerId: 1,
+            pointerType: 'mouse',
+            button: 0,
+            buttons: 1,
+            clientX: track.getBoundingClientRect().left,
+          });
+          await fireEvent.pointerUp(track, { pointerId: 1 });
+        };
+        await press();
+        expect(input.value).toBe('50');
+        document.body.append(target);
+        await press();
+        expect(input.value).toBe('0');
+      } finally {
+        unmount();
+      }
+    } finally {
+      target.remove();
+    }
+  });
+
+  it('VUE-87: focuses the thumb input across a portal and releases it while the thumb is held', async () => {
     const target = document.createElement('div');
     document.body.append(target);
     const shown = shallowRef(true);
+    const disabled = shallowRef(false);
     try {
       const { user, unmount } = await render(() => (
-        <Slider.Root defaultValue={50}>
+        <Slider.Root defaultValue={50} disabled={disabled.value}>
           <Slider.Label>Volume</Slider.Label>
           <Slider.Control data-testid="track">
             <input type="range" aria-label="Other" />
@@ -124,6 +232,12 @@ describe('owned parts', () => {
         await waitFor(() => expect(input).toHaveFocus());
         await fireEvent.pointerUp(screen.getByTestId('track'), { pointerId: 1 });
 
+        disabled.value = true;
+        await flushMicrotasks();
+        expect(input).not.toHaveFocus();
+        disabled.value = false;
+        await flushMicrotasks();
+
         shown.value = false;
         await flushMicrotasks();
         outside.focus();
@@ -142,7 +256,7 @@ describe('owned parts', () => {
   });
 
   it.runIf(isVaporApp)(
-    'focuses a thumb that a Vapor consumer renders in another portal',
+    'VUE-87: focuses a thumb that a Vapor consumer renders in another portal',
     async () => {
       const { user } = await render(
         <Slider.Root defaultValue={50}>
@@ -166,7 +280,42 @@ describe('owned parts', () => {
     },
   );
 
-  it('finds the nearest portal after a part moves through a shadow root', async () => {
+  it.each([true, false])(
+    'VUE-47: keeps a popup outside its positioner accessible with modal=%s',
+    async (modal) => {
+      const shown = shallowRef(true);
+      await render(() => (
+        <>
+          <Popover.Root defaultOpen modal={modal}>
+            <Popover.Trigger>Open</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Teleport to="body">
+                  <Popover.Popup data-testid="popup">
+                    {shown.value && <button>Inside</button>}
+                    <Popover.Close>Close</Popover.Close>
+                  </Popover.Popup>
+                </Teleport>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+          <button data-testid="outside">Outside</button>
+        </>
+      ));
+      const popup = screen.getByTestId('popup');
+      expect(popup.closest('[aria-hidden="true"], [inert], [data-vase-ui-inert]')).toBe(null);
+      if (modal) {
+        expect(screen.getByTestId('outside').closest('[aria-hidden="true"]')).not.toBe(null);
+      }
+      const inside = within(popup).getByRole('button', { name: 'Inside' });
+      inside.focus();
+      expect(inside).toHaveFocus();
+      shown.value = false;
+      await waitFor(() => expect(popup).toHaveFocus());
+    },
+  );
+
+  it('VUE-138: finds the nearest portal after a part moves through a shadow root', async () => {
     const innerTarget = shallowRef<ShadowRoot | null>(null);
     await render(() => (
       <>
@@ -231,7 +380,7 @@ describe('owned parts', () => {
     const popup = screen.getByRole('dialog');
     expect(popup).toBeInTheDocument();
     await user.click(screen.getByTestId('selected'));
-    await waitFor(() => expect(popup).not.toBeInTheDocument());
+    await waitFor(() => expect(popup.isConnected).toBe(false));
   });
 
   it('focuses the clock face when another range precedes it in the picker', async () => {
@@ -255,7 +404,7 @@ describe('owned parts', () => {
     );
   });
 
-  it('returns the submenu key to its trigger across documents', async () => {
+  it('VUE-46: returns the submenu key to its trigger across documents', async () => {
     const frame = document.createElement('iframe');
     document.body.append(frame);
     try {
