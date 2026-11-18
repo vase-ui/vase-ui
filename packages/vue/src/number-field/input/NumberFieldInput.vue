@@ -19,7 +19,7 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { nextTick, onMounted, watch } from 'vue';
+import { nextTick } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
@@ -35,7 +35,7 @@ import { useFormContext } from '../../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useInputValueSync } from '../../internals/useInputValueSync';
+import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
@@ -121,16 +121,9 @@ useRegisterFieldControl(
   nameProp,
 );
 
-const valueSync = useInputValueSync(() => inputRef.value);
+const { valueProps, renderValue } = useInputRender();
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
-
-onMounted(valueSync.record);
-// At the mount the root formats its text again in the runtime locale. Until the hydration ends,
-// the input keeps the text that the user typed, and the `input` event parses it.
-watch(() => (writesValue.value ? state.value.inputValue : undefined), valueSync.record, {
-  flush: 'post',
-});
 
 useValueChanged(
   () => state.value.value,
@@ -254,14 +247,13 @@ function handleFocusout(event: FocusEvent) {
 // `compositionend`.
 function refuseChange(event: Event) {
   if (!(event as InputEvent).isComposing) {
-    valueSync.restore();
+    renderValue();
   }
 }
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const targetValue = input.value;
-  valueSync.record();
 
   // A listener of the consumer can prevent the event before this handler runs.
   if (event.defaultPrevented) {
@@ -311,15 +303,7 @@ const compositionTimeout = useTimeout();
 // WebKit sends the last `input` event of a composition after `compositionend`, so the render waits
 // for the next task.
 function handleCompositionend() {
-  compositionTimeout.start(0, valueSync.restore);
-}
-
-// React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. Some programs that fill a form send only `change`.
-function handleChange(event: Event) {
-  if (valueSync.isNew(event)) {
-    handleInput(event);
-  }
+  compositionTimeout.start(0, renderValue);
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -545,7 +529,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        ...(writesValue.value ? valueSync.bind(state.value.inputValue) : undefined),
+        ...(writesValue.value ? valueProps(state.value.inputValue) : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
@@ -556,7 +540,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onFocusin: handleFocusin,
         onFocusout: handleFocusout,
         onInput: handleInput,
-        onChange: handleChange,
         onKeydown: handleKeydown,
         onPaste: handlePaste,
         onCompositionend: handleCompositionend,

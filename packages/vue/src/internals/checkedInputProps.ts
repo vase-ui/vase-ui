@@ -30,3 +30,14 @@ export function checkedInputProps(own: {
     },
   };
 }
+
+export function restoreChecked(input: HTMLInputElement | null, checked: boolean, mixed?: boolean) {
+  if (input && input.checked !== checked) {
+    // eslint-disable-next-line no-restricted-syntax -- Vue skips an equal checked binding after the browser toggles the input.
+    input.checked = checked;
+  }
+  if (input && mixed !== undefined && input.indeterminate !== mixed) {
+    // eslint-disable-next-line no-restricted-syntax -- A click clears indeterminate and Vue skips an equal binding.
+    input.indeterminate = mixed;
+  }
+}

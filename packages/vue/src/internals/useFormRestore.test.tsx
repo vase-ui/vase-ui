@@ -35,8 +35,8 @@ function createRestorable(onRestore: (event?: PageTransitionEvent) => void) {
 function createRestorableInput(leaves: boolean) {
   return defineComponent(() => {
     const input = shallowRef<HTMLInputElement | null>(null);
-    useFormRestoreAsInput(input, () => 'handled', leaves);
-    return () => renderInput(input);
+    const { valueProps } = useFormRestoreAsInput(input, () => 'handled', leaves);
+    return () => h('input', { ...valueProps(), 'data-testid': 'input', ref: input });
   });
 }
 
@@ -416,19 +416,14 @@ describe('useFormRestoreAsInput before the page show', () => {
   function createStatefulInput(value: Ref<string>, revision: Ref<number>) {
     return defineComponent(() => {
       const input = shallowRef<HTMLInputElement | null>(null);
-      let handledValue: string | undefined;
-      useFormRestoreAsInput(input, () => handledValue, false);
+      const { valueProps } = useFormRestoreAsInput(input, () => value.value, false);
       return () =>
         h('input', {
-          value: value.value,
+          ...valueProps(),
           'data-revision': revision.value,
           'data-testid': 'input',
           ref: (element) => {
             input.value = element as HTMLInputElement | null;
-            handledValue = input.value?.value;
-          },
-          onInput: (event: Event) => {
-            handledValue = (event.currentTarget as HTMLInputElement).value;
           },
         });
     });

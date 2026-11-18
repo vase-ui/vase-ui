@@ -69,18 +69,14 @@ const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
 const INPUT_SYNC_SAMPLES = [
-  ['a checked write', 'input.checked = true;', 'useCheckedInputSync'],
-  ['an indeterminate write', 'input.indeterminate = false;', 'useCheckedInputSync'],
+  ['a checked write', 'input.checked = true;', 'restoreChecked'],
+  ['an indeterminate write', 'input.indeterminate = false;', 'restoreChecked'],
   [
     'a handled input value',
     'const handledHiddenValue = input.value; read(handledHiddenValue);',
-    'useInputValueSync',
+    'second copy',
   ],
-  [
-    'a handled input text',
-    'const handledText = input.value; read(handledText);',
-    'useInputValueSync',
-  ],
+  ['a handled input text', 'const handledText = input.value; read(handledText);', 'second copy'],
 ];
 
 const reported = [

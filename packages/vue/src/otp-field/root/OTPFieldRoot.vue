@@ -156,7 +156,7 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -184,7 +184,7 @@ import {
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
-import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
+import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import {
@@ -564,7 +564,10 @@ const state = computed<OTPFieldRootState>(() => ({
   value: otpValue.value,
 }));
 
+const inputRender = useInputRender();
+
 provide(OTPFieldRootContext, {
+  inputRender,
   activeIndex,
   autoComplete: computed(() => props.autoComplete),
   disabled: isDisabled,
@@ -630,33 +633,8 @@ const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement
   restorable: false,
 });
 
-const hiddenValueSync = useHiddenInputValueSync(
-  hiddenInputElement,
-  () => otpValue.value,
-  writesHiddenValue,
-);
-
-// A browser can restore the code to the hidden input and the slots without an event.
-function writeValueToInputs() {
-  hiddenValueSync.restore();
-
-  const characters = otpValue.value;
-  inputElements.value.forEach((input, index) => {
-    const slotValue = characters[index] ?? '';
-    if (input && (input as HTMLInputElement).value !== slotValue) {
-      (input as HTMLInputElement).value = slotValue;
-    }
-  });
-}
-
-// Some programs that fill a form send only `change`, and some send both events in one task. The
-// root handles an event only when the input has a new value.
 function handleHiddenInput(event: Event) {
   const rawValue = (event.currentTarget as HTMLInputElement).value;
-  if (!hiddenValueSync.isNew(event)) {
-    return;
-  }
-
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
     const [normalizedValue, didRejectCharacters] = normalizeOTPValueWithDetails(
       rawValue,
@@ -680,7 +658,7 @@ function handleHiddenInput(event: Event) {
     }
   }
 
-  void nextTick(writeValueToInputs);
+  inputRender.renderValue();
 }
 
 useFormReset(hiddenInputElement, (event) => {
@@ -713,7 +691,7 @@ function setHiddenInput(input: unknown) {
   hiddenInputElement.value = next;
 }
 
-useFormRestore(hiddenInputElement, writeValueToInputs);
+useFormRestore(hiddenInputElement, inputRender.renderValue);
 
 function hiddenInputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value);
@@ -724,7 +702,7 @@ function hiddenInputProps() {
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
     name: inputName.value,
-    ...hiddenValueSync.valueProps(),
+    ...(writesHiddenValue.value ? inputRender.valueProps(otpValue.value) : undefined),
     autocomplete: props.autoComplete,
     inputmode: resolvedInputMode.value,
     minlength: props.length,
@@ -741,7 +719,6 @@ function hiddenInputProps() {
       focusInput(0);
     },
     onInput: handleHiddenInput,
-    onChange: handleHiddenInput,
   };
 }
 

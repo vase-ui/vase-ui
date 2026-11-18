@@ -40,13 +40,13 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
+import { computed, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
-import { useInputValueSync } from '../../internals/useInputValueSync';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
@@ -120,24 +120,9 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-const valueSync = useInputValueSync(() => element.value);
-
 const attrs = useAttrs();
-onMounted(valueSync.record);
-// Vue writes the value at a render only when the input has the key `value`. Else the part reads
-// the input only when it held the handled value, so a restored value stays for the take. These
-// hooks come before the call of `useFormRestoreAsInput`, so the part reads the value of the render
-// before the composable writes a restored value back.
-let holdsHandledValue = false;
-onBeforeUpdate(() => {
-  holdsHandledValue =
-    (element.value as HTMLInputElement | null)?.value === valueSync.handledValue();
-});
-onUpdated(() => {
-  if (holdsHandledValue || (writesValue.value && attrs.value !== undefined)) {
-    valueSync.record();
-  }
-});
+// An uncontrolled input has no model to compare with a silent browser restore at pageshow.
+let lastInputText: string | undefined;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
@@ -150,17 +135,31 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       {
         onClick: preventWhenDisabled,
         onPointerdown: preventWhenDisabled,
-        onInput: valueSync.record,
-        onChange: valueSync.record,
+        onInput(event: Event) {
+          if (value === undefined) {
+            lastInputText = (event.currentTarget as HTMLInputElement).value;
+          } else {
+            inputRender.renderValue();
+          }
+        },
       },
       defaultValueProps(),
-      writesValue.value ? attrs : attrsWithoutValue,
+      attrsWithoutValue,
+      writesValue.value && value !== undefined ? inputRender.valueProps() : undefined,
       focusableWhenDisabledProps.value,
     ];
   },
 });
 
-useFormRestoreAsInput(element, valueSync.handledValue, true);
+const inputRender: ReturnType<typeof useFormRestoreAsInput<unknown>> = useFormRestoreAsInput(
+  element,
+  () => attrs.value,
+  true,
+  () => lastInputText,
+);
+useFormReset(element, () => {
+  lastInputText = undefined;
+});
 
 defineExpose({ element });
 </script>

@@ -1932,7 +1932,7 @@ describe('<Combobox.Input />', () => {
       expect(getInput().value).toBe('Malta');
     });
 
-    it('handles a change event only for a new value', async () => {
+    it('ignores a change event even when the input has new text', async () => {
       const handleInputValueChange = vi.fn();
       await render(
         <Combobox.Root items={cities} onInputValueChange={handleInputValueChange}>
@@ -1948,8 +1948,8 @@ describe('<Combobox.Input />', () => {
       getInput().value = 'mal';
       await fireEvent.change(getInput());
 
-      expect(handleInputValueChange).toHaveBeenCalledTimes(2);
-      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('mal');
+      expect(handleInputValueChange).toHaveBeenCalledTimes(1);
+      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('ma');
     });
 
     it('writes the state back when the consumer keeps the input value', async () => {

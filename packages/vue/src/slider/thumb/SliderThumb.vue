@@ -96,7 +96,8 @@ import { useDeferredServerRender, useLabelableId } from '../../internals/labelab
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
-import { useInputValueSync } from '../../internals/useInputValueSync';
+import { sanitizeValue } from '../../internals/useFormEntryValue';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
@@ -375,10 +376,11 @@ function setInputElement(value: unknown) {
 
 const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-// A range input moves its value to the step and into the range. Its text can differ from the
-// value of the thumb.
-const valueSync = useInputValueSync(() => inputElement.value);
-watch([inputElement, thumbValue, min, max, step], valueSync.record, { flush: 'post' });
+const { valueProps, renderValue } = useFormRestoreAsInput(
+  inputElement,
+  () => thumbValue.value ?? '',
+  false,
+);
 
 // The thumb follows the reset with its own input. The composite list of the root has no thumb
 // while `KeepAlive` holds the slider.
@@ -386,17 +388,10 @@ useFormReset(inputElement, reset);
 
 function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  // A range input sends `input` and then `change` for one user action. A `change` is new only when
-  // the input did not have its value after the last event or write.
-  const isNew = valueSync.isNew(event);
-  if (event.type === 'change' && !isNew) {
-    return;
-  }
-
   handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  valueSync.restore();
+  renderValue();
 }
 
 onScopeDispose(
@@ -404,13 +399,15 @@ onScopeDispose(
     take() {
       const input = inputElement.value;
       // Until its take of the hydration, the input holds a value that it got before the hydration.
-      if (!input || (writesValue.value && input.value === valueSync.handledValue())) {
+      if (
+        !input ||
+        (writesValue.value && input.value === sanitizeValue(input, String(thumbValue.value ?? '')))
+      ) {
         return undefined;
       }
-      valueSync.record();
       return { index: thumbIndex.value, value: input.valueAsNumber };
     },
-    restoreValue: valueSync.restore,
+    restoreValue: renderValue,
   }),
 );
 
@@ -458,7 +455,6 @@ function inputProps() {
       min: min.value,
       name: name.value,
       onInput: onNativeChange,
-      onChange: onNativeChange,
       onFocusin(event: FocusEvent) {
         const isRestoringFocusVisible = restoringFocusVisible;
         restoringFocusVisible = false;
@@ -591,7 +587,7 @@ function inputProps() {
       },
       tabindex: props.tabindex,
       type: 'range',
-      ...(writesValue.value ? valueSync.bind(value ?? '') : undefined),
+      ...(writesValue.value ? valueProps() : undefined),
     },
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     {
@@ -623,8 +619,6 @@ function inputProps() {
 provide(SliderThumbContext, {
   inputProps,
   setInputElement,
-  inputElement,
-  getHandledInputValue: valueSync.handledValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.
   hasPrehydrationScript: computed(() => inset.value && last.value && renderBeforeHydration.value),
 });

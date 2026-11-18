@@ -300,7 +300,7 @@ describe('<Slider.Root />', () => {
       slider.focus();
       await flushMicrotasks();
 
-      await fireEvent.change(slider, { target: { value: '51' } });
+      await fireEvent.input(slider, { target: { value: '51' } });
       expect(slider).toHaveAttribute('aria-valuenow', '51');
 
       await fireEvent.keyDown(slider, { key: ARROW_RIGHT });
@@ -946,7 +946,7 @@ describe('<Slider.Root />', () => {
       slider.focus();
       await flushMicrotasks();
 
-      await fireEvent.change(slider, { target: { value: 23 } });
+      await fireEvent.input(slider, { target: { value: 23 } });
       expect(handleValueCommitted.mock.calls.length).toBe(2);
       expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.inputChange);
     });
@@ -1230,7 +1230,7 @@ describe('<Slider.Root />', () => {
       thumb1.focus();
       await flushMicrotasks();
 
-      await fireEvent.change(thumb1, { target: { value: 23 } });
+      await fireEvent.input(thumb1, { target: { value: 23 } });
       expect(handleValueCommitted.mock.calls.length).toBe(2);
       expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.inputChange);
     });
@@ -1587,7 +1587,7 @@ describe('<Slider.Root />', () => {
       slider.focus();
       await flushMicrotasks();
 
-      await fireEvent.change(slider, { target: { value: 23 } });
+      await fireEvent.input(slider, { target: { value: 23 } });
       expect(handleValueChange.mock.calls.length).toBe(2);
       expect(handleValueCommitted.mock.calls.length).toBe(2);
       expect(handleValueCommitted.mock.calls[1][1].reason).toBe(REASONS.inputChange);
@@ -2066,7 +2066,7 @@ describe('<Slider.Root />', () => {
       await render(<TestSlider defaultValue={30} onValueChange={handleValueChange} />);
 
       const slider = screen.getByRole('slider');
-      await fireEvent.change(slider, { target: { value: '35' } });
+      await fireEvent.input(slider, { target: { value: '35' } });
 
       expect(handleValueChange).toHaveBeenCalledTimes(1);
       const [, details] = handleValueChange.mock.calls[0] as [
@@ -2403,7 +2403,7 @@ describe('<Slider.Root />', () => {
 
       slider.focus();
       await flushMicrotasks();
-      await fireEvent.change(slider, {
+      await fireEvent.input(slider, {
         target: {
           value: 4,
         },
@@ -2453,7 +2453,7 @@ describe('<Slider.Root />', () => {
         slider.focus();
         await flushMicrotasks();
 
-        await fireEvent.change(slider, {
+        await fireEvent.input(slider, {
           target: {
             value: 4,
           },
@@ -3475,7 +3475,7 @@ describe('<Slider.Root />', () => {
 
       expect(root).not.toHaveAttribute('data-dirty');
 
-      await fireEvent.change(input, { target: { value: 'value' } });
+      await fireEvent.input(input, { target: { value: 'value' } });
 
       expect(root).toHaveAttribute('data-dirty', '');
     });
@@ -3497,11 +3497,11 @@ describe('<Slider.Root />', () => {
 
       expect(root).not.toHaveAttribute('data-dirty');
 
-      await fireEvent.change(input2, { target: { value: '50' } });
+      await fireEvent.input(input2, { target: { value: '50' } });
 
       expect(root).toHaveAttribute('data-dirty', '');
 
-      await fireEvent.change(input2, { target: { value: '40' } });
+      await fireEvent.input(input2, { target: { value: '40' } });
 
       expect(root).not.toHaveAttribute('data-dirty');
     });
@@ -3635,7 +3635,7 @@ describe('<Slider.Root />', () => {
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
 
-        await fireEvent.change(input, { target: { value: '98' } });
+        await fireEvent.input(input, { target: { value: '98' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
 
@@ -3645,7 +3645,7 @@ describe('<Slider.Root />', () => {
         expect(root).toHaveAttribute('data-invalid');
         expect(thumb).toHaveAttribute('data-invalid');
 
-        await fireEvent.change(input, { target: { value: '10' } });
+        await fireEvent.input(input, { target: { value: '10' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
         expect(root).not.toHaveAttribute('data-invalid');
@@ -3653,11 +3653,11 @@ describe('<Slider.Root />', () => {
         expect(root).toHaveAttribute('data-valid');
         expect(thumb).toHaveAttribute('data-valid');
 
-        await fireEvent.change(input, { target: { value: '94' } });
+        await fireEvent.input(input, { target: { value: '94' } });
         expect(input).toHaveAttribute('aria-invalid', 'true');
         expect(screen.queryByTestId('error')).not.toBe(null);
 
-        await fireEvent.change(input, { target: { value: '12' } });
+        await fireEvent.input(input, { target: { value: '12' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
       });
@@ -3704,7 +3704,7 @@ describe('<Slider.Root />', () => {
         const input = screen.getByRole('slider');
         expect(input).not.toHaveAttribute('aria-invalid');
 
-        await fireEvent.change(input, { target: { value: '2' } });
+        await fireEvent.input(input, { target: { value: '2' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         await fireEvent.focusOut(input);
         await flushMicrotasks();
@@ -3747,7 +3747,7 @@ describe('<Slider.Root />', () => {
         const input = screen.getByRole('slider');
         expect(input).not.toHaveAttribute('aria-invalid');
 
-        await fireEvent.change(input, { target: { value: '1' } });
+        await fireEvent.input(input, { target: { value: '1' } });
         await flushMicrotasks();
         expect(input).toHaveAttribute('aria-invalid', 'true');
       });
@@ -4181,7 +4181,7 @@ describe('<Slider.Root />', () => {
               </Slider.Root>
             </form>,
           );
-          await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+          await fireEvent.input(getInputs()[0], { target: { value: '55' } });
           expect(getFormData()[0]).toEqual(['price', '55']);
           handleValueChange.mockClear();
           handleValueCommitted.mockClear();
@@ -4225,7 +4225,7 @@ describe('<Slider.Root />', () => {
             </Slider.Root>
           </form>
         ));
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         handleValueChange.mockClear();
 
         screen.getByTestId<HTMLFormElement>('form').reset();
@@ -4264,7 +4264,7 @@ describe('<Slider.Root />', () => {
         },
       ])('keeps the value of $name', async ({ renderForm }) => {
         await render(renderForm());
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
 
         screen.getByTestId<HTMLFormElement>('form').reset();
         await settleReset();
@@ -4288,7 +4288,7 @@ describe('<Slider.Root />', () => {
             <HeldBranch />
           </form>
         ));
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
 
         screen.getByTestId<HTMLFormElement>('form').reset();
@@ -4316,7 +4316,7 @@ describe('<Slider.Root />', () => {
         await render(() => <HeldBranch />);
         // A query cannot find the form while `KeepAlive` holds it.
         const form = screen.getByTestId<HTMLFormElement>('form');
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
 
         await hide();
@@ -4339,7 +4339,7 @@ describe('<Slider.Root />', () => {
             </Slider.Root>
           </form>
         ));
-        await fireEvent.change(getInputs()[1], { target: { value: '90' } });
+        await fireEvent.input(getInputs()[1], { target: { value: '90' } });
         expect(getInputs()[1]).toHaveAttribute('aria-valuenow', '90');
 
         screen.getByTestId<HTMLFormElement>('form').reset();
@@ -4369,7 +4369,7 @@ describe('<Slider.Root />', () => {
             </Slider.Root>
           </form>,
         );
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
         handleValueChange.mockClear();
 
@@ -4403,7 +4403,7 @@ describe('<Slider.Root />', () => {
             </Slider.Root>
           </form>,
         );
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         handleValueCommitted.mockClear();
 
         screen.getByTestId<HTMLFormElement>('form').reset();
@@ -4424,7 +4424,7 @@ describe('<Slider.Root />', () => {
           </Slider.Control>
         </Slider.Root>
       ),
-      change: () => fireEvent.change(getInputs()[0], { target: { value: '55' } }),
+      change: () => fireEvent.input(getInputs()[0], { target: { value: '55' } }),
       readState: () => getInputs()[0]?.getAttribute('aria-valuenow'),
       defaultState: '30',
       changedState: '55',
@@ -4465,7 +4465,7 @@ describe('<Slider.Root />', () => {
             </Field.Root>
           </Form>,
         );
-        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '55' } });
         expect(screen.getByTestId('error')).toHaveTextContent('Too high');
         validate.mockClear();
 
@@ -4477,7 +4477,7 @@ describe('<Slider.Root />', () => {
         expectNeutralField();
 
         // The next change validates again.
-        await fireEvent.change(getInputs()[0], { target: { value: '60' } });
+        await fireEvent.input(getInputs()[0], { target: { value: '60' } });
 
         expect(validate).toHaveBeenCalledTimes(1);
         expect(screen.getByTestId('error')).toHaveTextContent('Too high');

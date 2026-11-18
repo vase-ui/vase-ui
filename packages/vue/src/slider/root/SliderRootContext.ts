@@ -21,7 +21,7 @@ export interface ThumbMetadata {
 export interface ThumbInput {
   /**
    * Gives the index of the thumb and the value of its input when the input changed with no event
-   * that the slider handled. The thumb then counts that value as handled.
+   * that the slider handled.
    */
   take: () => { index: number; value: number } | undefined;
   /** Starts a render of the input, in which Vue writes the value of the thumb to it. */

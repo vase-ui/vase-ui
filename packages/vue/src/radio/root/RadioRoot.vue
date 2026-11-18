@@ -94,7 +94,7 @@ import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { checkedInputProps } from '../../internals/checkedInputProps';
+import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -112,7 +112,6 @@ import { serializeValue } from '../../internals/serializeValue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useCheckedInputSync } from '../../internals/useCheckedInputSync';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -197,15 +196,27 @@ const { getButtonProps, buttonRef } = useButton({
   composite: false,
 });
 
-// The group takes its inputs together. One radio must not clear another before that take.
-const checkedSync = useCheckedInputSync(inputElement, () => checked.value, {
-  take: group?.takeInputsAfterMount,
-});
+function restoreInput() {
+  restoreChecked(inputElement.value, checked.value);
+}
+
+// A radio must wait for the group to read its peers before a write unchecks one of them.
+watch(
+  inputElement,
+  (input) => {
+    if (input && group && input.checked !== input.defaultChecked) {
+      group.takeInputsAfterMount();
+    } else {
+      restoreInput();
+    }
+  },
+  { flush: 'post' },
+);
 
 if (group) {
   // A click checks the input and unchecks the other inputs of a group that has a name. A parent
   // that controls the group can keep the old value, and then no radio renders again.
-  watch(group.inputSyncRequest, checkedSync.write, { flush: 'post' });
+  watch(group.inputSyncRequest, restoreInput, { flush: 'post' });
 
   // Only the input that the browser checked gives its value to the group. Each radio writes its
   // state in the next tick: a write in this tick can uncheck the input that the browser checked,
@@ -222,7 +233,7 @@ if (group) {
         group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, request.event));
       }
 
-      void nextTick(checkedSync.write);
+      void nextTick(restoreInput);
     },
     { flush: 'post' },
   );
@@ -295,7 +306,7 @@ function onInputClick(event: MouseEvent) {
 
 // A radio with no group has no state to change, so it writes its state over a restored input.
 if (!group) {
-  useFormRestore(inputElement, checkedSync.write);
+  useFormRestore(inputElement, restoreInput);
 }
 
 const state = computed<RadioRootState>(() => ({

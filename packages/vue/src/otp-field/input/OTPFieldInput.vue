@@ -32,7 +32,7 @@ export interface OTPFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
+import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
@@ -48,7 +48,6 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
 import { getOTPFieldInputState, useOTPFieldRootContext } from '../root/OTPFieldRootContext';
@@ -83,6 +82,7 @@ const {
   mask,
   pattern,
   reportValueInvalid,
+  inputRender,
   readOnly,
   required,
   normalizeValue,
@@ -109,7 +109,7 @@ const writesValue = useValueBeforeHydration(props, () => element.value, { restor
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
 
-const valueSync = useInputValueSync(() => element.value);
+const { valueProps, renderValue } = inputRender;
 
 if (process.env.NODE_ENV !== 'production') {
   const attrs = useAttrs();
@@ -170,7 +170,7 @@ function commitValue(
         );
       } else if (slotValue.value !== '') {
         // Vue writes the character back at the render, and that write clears the selection.
-        valueSync.restore();
+        renderValue();
         void nextTick(() => {
           input.select();
         });
@@ -203,7 +203,6 @@ function commitValue(
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  valueSync.record();
 
   if (!disabled.value && !readOnly.value) {
     if (composingValue.value != null) {
@@ -215,14 +214,7 @@ function handleInput(event: Event) {
 
   // The root can refuse the text, a listener can cancel the change and the parent can keep its
   // value. The character of the slot then stays, and no render follows.
-  valueSync.restore();
-}
-
-// Some programs that fill a form send only `change`.
-function handleChange(event: Event) {
-  if (valueSync.isNew(event)) {
-    handleInput(event);
-  }
+  renderValue();
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -355,9 +347,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     return [
       {
         id: getInputId(slotIndex),
-        ...(writesValue.value
-          ? valueSync.bind(composingValue.value ?? slotValue.value)
-          : undefined),
+        ...(writesValue.value ? valueProps(composingValue.value ?? slotValue.value) : undefined),
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
@@ -420,7 +410,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
           }
         },
         onInput: handleInput,
-        onChange: handleChange,
         onKeydown: handleKeydown,
         onPaste: handlePaste,
       },
@@ -428,10 +417,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     ];
   },
 });
-
-// Vue writes the value to the input when the character of the slot changes. A program can then send
-// a `change` event with the value that the input had before, and the part must handle it.
-watch([slotValue, composingValue], valueSync.record, { flush: 'post' });
 
 defineExpose({ element });
 </script>

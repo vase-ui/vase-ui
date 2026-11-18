@@ -131,7 +131,7 @@ import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { checkedInputProps } from '../../internals/checkedInputProps';
+import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import {
   useInputRegistration,
@@ -152,7 +152,6 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useCheckedInputSync } from '../../internals/useCheckedInputSync';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -405,7 +404,7 @@ function onInputClick(event: MouseEvent) {
   }
 
   // A parent that controls the checkbox can keep the old value. The input then has the new one.
-  void nextTick(checkedSync.write);
+  void nextTick(restoreInput);
 }
 
 // The input changed with no event that the checkbox handled: a press on a native label before the
@@ -420,7 +419,7 @@ function takeInputState(event?: Event) {
     requestChange(input.checked, event);
   }
 
-  void nextTick(checkedSync.write);
+  void nextTick(restoreInput);
 }
 
 // An uncontrolled checkbox goes back to its default value through its change event. The result is
@@ -456,15 +455,26 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-// The field records its initial value before the part takes a change from before hydration.
-const checkedSync = useCheckedInputSync(inputElement, () => isChecked.value, {
-  indeterminate: () => isIndeterminate.value,
-  take: () =>
-    queueInputTake(() => {
-      takeInputState();
-      return true;
-    }),
-});
+function restoreInput() {
+  restoreChecked(inputElement.value, isChecked.value, isIndeterminate.value);
+}
+
+watch(
+  inputElement,
+  (input) => {
+    // The field registers its initial value before it takes a click from before hydration.
+    if (input && input.checked !== input.defaultChecked) {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    } else {
+      restoreInput();
+    }
+  },
+  { flush: 'post' },
+);
+watch(isIndeterminate, restoreInput, { flush: 'post' });
 
 useFormRestore(inputElement, takeInputState);
 

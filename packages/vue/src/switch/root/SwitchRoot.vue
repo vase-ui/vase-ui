@@ -108,7 +108,7 @@ import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { checkedInputProps } from '../../internals/checkedInputProps';
+import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -125,7 +125,6 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useCheckedInputSync } from '../../internals/useCheckedInputSync';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -286,7 +285,7 @@ function onInputClick(event: MouseEvent) {
   }
 
   // A parent that controls the switch can keep the old value. The input then has the new one.
-  void nextTick(checkedSync.write);
+  void nextTick(restoreInput);
 }
 
 // The input changed with no event that the switch handled: a press on a native label before the
@@ -301,7 +300,7 @@ function takeInputState(event?: Event) {
     requestChange(input.checked, event);
   }
 
-  void nextTick(checkedSync.write);
+  void nextTick(restoreInput);
 }
 
 useFormReset(inputElement, (event) => {
@@ -317,14 +316,25 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-// The field records its initial value before the part takes a change from before hydration.
-const checkedSync = useCheckedInputSync(inputElement, () => isChecked.value, {
-  take: () =>
-    queueInputTake(() => {
-      takeInputState();
-      return true;
-    }),
-});
+function restoreInput() {
+  restoreChecked(inputElement.value, isChecked.value);
+}
+
+watch(
+  inputElement,
+  (input) => {
+    // The field registers its initial value before it takes a click from before hydration.
+    if (input && input.checked !== input.defaultChecked) {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    } else {
+      restoreInput();
+    }
+  },
+  { flush: 'post' },
+);
 
 useFormRestore(inputElement, takeInputState);
 

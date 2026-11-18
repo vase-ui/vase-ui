@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUpdate, onMounted, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -72,7 +72,6 @@ import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
-import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -160,7 +159,8 @@ if (valueOfProps !== undefined) {
   setFilled(valueOfProps !== '');
 }
 
-const valueSync = useInputValueSync(() => element.value);
+// An uncontrolled input has no model to compare with a silent browser restore at pageshow.
+let lastInputText: string | undefined;
 
 function syncFilled() {
   const currentValue = serializedValue.value ?? (element.value as HTMLInputElement | null)?.value;
@@ -169,31 +169,8 @@ function syncFilled() {
   }
 }
 
-function syncAfterWrite() {
-  valueSync.record();
-  syncFilled();
-}
-
-// Vue writes the value at a render only when the input has the key `value`. Else a new default
-// value moves only an input that no user, browser restore or program changed. The part then reads
-// the input only when it held the handled value, so a restored value stays for the take. Vue queues
-// the watch at the change of the props, before the `onUpdated` hooks of the render. The part thus
-// reads the value of the render before `useFormRestoreAsInput` writes a restored value back.
-let holdsHandledValue = false;
-onBeforeUpdate(() => {
-  holdsHandledValue =
-    (element.value as HTMLInputElement | null)?.value === valueSync.handledValue();
-});
-onMounted(syncAfterWrite);
-watch(
-  [serializedValue, serializedDefaultValue],
-  () => {
-    if (holdsHandledValue || (writesValue.value && props.value !== undefined)) {
-      syncAfterWrite();
-    }
-  },
-  { flush: 'post' },
-);
+onMounted(syncFilled);
+watch([serializedValue, serializedDefaultValue], syncFilled, { flush: 'post' });
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {
@@ -212,9 +189,9 @@ const enterValidationTimeout = useTimeout();
 // A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
-function valueProps() {
+function valueProps(): Pick<FieldControlProps, 'value' | 'defaultValue'> | undefined {
   if (props.value !== undefined) {
-    return writesValue.value ? valueSync.bind(props.value) : undefined;
+    return writesValue.value ? inputRender.valueProps() : undefined;
   }
   if (props.defaultValue === undefined) {
     return undefined;
@@ -227,7 +204,6 @@ function valueProps() {
 
 function handleInput(event: Event) {
   const inputValue = (event.currentTarget as HTMLInputElement).value;
-  valueSync.record();
   const details = createChangeEventDetails(REASON_VALUES.none, event);
   emit('valueChange', inputValue, details);
   if (!details.isCanceled) {
@@ -237,9 +213,11 @@ function handleInput(event: Event) {
   // A controlled value comes from the `value` prop, so a value that the consumer refuses or
   // changes does not reach the state of the field.
   if (props.value !== undefined) {
-    valueSync.restore();
+    inputRender.renderValue();
     return;
   }
+
+  lastInputText = inputValue;
 
   // `validation.change` reads `markedDirtyRef`, so `dirty` comes first.
   setDirty(inputValue !== (validityData.value.initialValue ?? ''));
@@ -248,14 +226,6 @@ function handleInput(event: Event) {
   if (!event.defaultPrevented && !details.isCanceled) {
     clearErrors(controlName.value);
     validation.change(inputValue);
-  }
-}
-
-// React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. Some programs that fill a form send only `change`.
-function handleChange(event: Event) {
-  if (valueSync.isNew(event)) {
-    handleInput(event);
   }
 }
 
@@ -322,7 +292,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       name: controlName.value,
       'aria-labelledby': labelId.value,
       onInput: handleInput,
-      onChange: handleChange,
       onFocusin() {
         setFocused(true);
       },
@@ -339,13 +308,18 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
 // A native reset of the form gives the control its default value and sends no `input` event.
 useFormReset(element, () => {
   const value = (element.value as HTMLInputElement).value;
-  valueSync.record();
+  lastInputText = undefined;
   setFilled(value !== '');
   setDirty(value !== (validityData.value.initialValue ?? ''));
   clearFieldError(value);
 });
 
-useFormRestoreAsInput(element, valueSync.handledValue, true);
+const inputRender = useFormRestoreAsInput(
+  element,
+  () => props.value,
+  true,
+  () => lastInputText,
+);
 
 defineExpose({ element });
 </script>

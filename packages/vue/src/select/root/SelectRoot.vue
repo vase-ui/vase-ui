@@ -186,7 +186,6 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
-import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -686,10 +685,10 @@ function setInputElement(value: unknown) {
 
 const writesHiddenValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-const hiddenValueSync = useHiddenInputValueSync(
+const { valueProps, renderValue } = useFormRestoreAsInput(
   inputElement,
   () => serializedValue.value,
-  writesHiddenValue,
+  false,
 );
 
 // A browser autofills the hidden input with the value or the text of an item.
@@ -741,10 +740,9 @@ function selectAutofilledItem(
 function handleHiddenInputChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const autofilledValue = input.value;
-  const isNewValue = hiddenValueSync.isNew(event);
 
-  if (!isNewValue || event.defaultPrevented || isDisabled.value || props.readOnly) {
-    hiddenValueSync.restore();
+  if (event.defaultPrevented || isDisabled.value || props.readOnly) {
+    renderValue();
     return;
   }
 
@@ -753,7 +751,7 @@ function handleHiddenInputChange(event: Event) {
   store.set('forceMounted', true);
   void nextTick(() => {
     selectAutofilledItem(input, autofilledValue, eventDetails);
-    hiddenValueSync.restore();
+    renderValue();
   });
 }
 
@@ -773,7 +771,6 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-useFormRestoreAsInput(inputElement, hiddenValueSync.handledValue, false);
 useFormEntryValue(inputElement, () => serializedValue.value);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
@@ -802,7 +799,7 @@ function inputProps() {
       props.required,
     ),
     autocomplete: props.autoComplete,
-    ...hiddenValueSync.valueProps(),
+    ...(writesHiddenValue.value ? valueProps() : undefined),
     disabled: isDisabled.value,
     required: props.required && !(isMultiple.value && hasSelectedValue.value),
     readonly: props.readOnly,
@@ -818,7 +815,6 @@ function inputProps() {
       } as FocusOptions);
     },
     onInput: handleHiddenInputChange,
-    onChange: handleHiddenInputChange,
   };
 }
 

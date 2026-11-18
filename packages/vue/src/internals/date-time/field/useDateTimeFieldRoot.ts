@@ -33,7 +33,6 @@ import {
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
 import { useFormRestoreAsInput } from '../../useFormRestore';
-import { useHiddenInputValueSync } from '../../useInputValueSync';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
@@ -817,7 +816,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
     // The browser reset the inputs before this call. The text of the input is not the text of the
     // model when the reset left the model as it was.
-    hiddenValueSync.restore();
+    renderValue();
     resetCount.value += 1;
   });
 
@@ -828,22 +827,14 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     getInputLimits(kind.value, limits.value, granularity.value === 'second'),
   );
 
-  const hiddenValueSync = useHiddenInputValueSync(
+  const { valueProps, renderValue } = useFormRestoreAsInput(
     hiddenInputElement,
     () => hiddenText.value,
-    writesHiddenValue,
+    false,
   );
 
-  // Some programs that fill a form send only `change`, and some send both events in one task. The
-  // root handles an event only when the input has a new value. A browser that fills the input
-  // sends text in the ISO form of its type.
   function handleHiddenInput(event: Event) {
-    if (
-      hiddenValueSync.isNew(event) &&
-      !event.defaultPrevented &&
-      !isDisabled.value &&
-      !isReadOnly.value
-    ) {
+    if (!event.defaultPrevented && !isDisabled.value && !isReadOnly.value) {
       const text = (event.currentTarget as HTMLInputElement).value;
       const details = createChangeEventDetails(REASONS.inputChange, event);
       const parsed = text === '' ? undefined : parseText(text, false);
@@ -854,7 +845,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         setValue(null, details);
       }
     }
-    hiddenValueSync.restore();
+    renderValue();
   }
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
@@ -875,10 +866,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   watch(hiddenInputElement, syncCustomValidity, { flush: 'post' });
 
-  // The value sanitization of the input type can change the text of the value. A `date` input has
-  // no value for a year 0.
-  useFormRestoreAsInput(hiddenInputElement, hiddenValueSync.handledValue, false);
-
   watch(customMessage, syncCustomValidity, { flush: 'post' });
 
   function hiddenInputProps() {
@@ -892,7 +879,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
       form: toValue(parameters.form),
       name: inputName.value,
-      ...hiddenValueSync.valueProps(),
+      ...(writesHiddenValue.value ? valueProps() : undefined),
       autocomplete: toValue(parameters.autoComplete),
       min: inputLimits.value.min,
       max: inputLimits.value.max,
@@ -911,7 +898,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         focusSegment(getOrderedSegments()[0]);
       },
       onInput: handleHiddenInput,
-      onChange: handleHiddenInput,
     };
   }
 

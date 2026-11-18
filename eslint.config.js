@@ -73,8 +73,8 @@ const MESSAGES = {
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
-  checkedInput: 'Use `useCheckedInputSync` to write the checked state of an input.',
-  handledInput: 'Use `useInputValueSync` to record the value of an input.',
+  checkedInput: 'Use `restoreChecked` for a native click that changes an equal checked binding.',
+  handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
     '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
   groupBy:

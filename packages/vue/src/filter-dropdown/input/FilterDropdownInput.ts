@@ -1,4 +1,4 @@
-import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { platform } from '../../common/platform';
@@ -7,7 +7,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useInputValueSync } from '../../internals/useInputValueSync';
+import { useInputRender } from '../../internals/useInputRender';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import {
   useFilterDropdownItemContext,
@@ -75,14 +75,11 @@ export function useFilterDropdownInput(
     context.setInputFocusVisible(false);
   }
 
-  const valueSync = useInputValueSync(() => inputElement);
-  onMounted(valueSync.record);
-  watch(() => composingValue.value ?? value.value, valueSync.record, { flush: 'post' });
-
+  const { valueProps, renderValue } = useInputRender();
   // A write to the input while a composition runs stops the composition.
   function restoreText() {
     if (!isComposing) {
-      valueSync.restore();
+      renderValue();
     }
   }
 
@@ -114,20 +111,14 @@ export function useFilterDropdownInput(
     isComposing = false;
     composingValue.value = null;
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    valueSync.record();
     commitValue(nextValue, event);
     // WebKit sends the last `input` event of a composition after `compositionend`, so the render
     // waits for the next task.
     compositionTimeout.start(0, restoreText);
   }
 
-  // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-  // value is new.
   function handleInput(event: Event) {
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    if (!valueSync.isNew(event) && !isComposing) {
-      return;
-    }
 
     if (isComposing) {
       composingValue.value = nextValue;
@@ -141,7 +132,6 @@ export function useFilterDropdownInput(
     onCompositionstart: handleCompositionstart,
     onCompositionend: handleCompositionend,
     onInput: handleInput,
-    onChange: handleInput,
     onKeydown() {
       context.setKeyboardModality(true);
     },
@@ -190,7 +180,7 @@ export function useFilterDropdownInput(
           // https://w3c.github.io/aria/#aria-autocomplete
           'aria-autocomplete': undefined,
           'aria-controls': context.listId.value,
-          ...valueSync.bind(composingValue.value ?? value.value),
+          ...valueProps(composingValue.value ?? value.value),
           ...listeners,
         },
         autocorrect === undefined ? undefined : { autoCorrect: autocorrect },

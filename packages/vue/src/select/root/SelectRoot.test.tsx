@@ -8500,10 +8500,7 @@ describe('<Select.Root />', () => {
       expect(getFormData('font')).toEqual([]);
     });
 
-    it.each([
-      { name: 'an input event', type: 'input' },
-      { name: 'a change event', type: 'change' },
-    ])('keeps its value after $name that gives the input another value', async ({ type }) => {
+    it('keeps its value after an input event that gives the input another value', async () => {
       const handleValueChange = vi.fn();
       await render(
         <Select.Root name="font" defaultValue="serif" onValueChange={handleValueChange}>
@@ -8513,7 +8510,7 @@ describe('<Select.Root />', () => {
       const input = getHiddenInput();
 
       input.value = 'mono';
-      await fireEvent[type === 'input' ? 'input' : 'change'](input);
+      await fireEvent.input(input);
       await flushMicrotasks();
 
       expect(input.value).toBe('serif');
@@ -8826,7 +8823,7 @@ describe('<Select.Root />', () => {
       const input = getHiddenInput();
 
       input.value = 'MONO';
-      await fireEvent.change(input);
+      await fireEvent.input(input);
       await flushMicrotasks();
 
       expect(handleValueChange.mock.lastCall?.[0]).toBe(fonts[1]);

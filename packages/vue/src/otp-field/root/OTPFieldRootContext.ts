@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
+import type { useInputRender } from '../../internals/useInputRender';
 import type { OTPFieldInputState } from '../input/OTPFieldInput.vue';
 import type {
   OTPFieldRootChangeEventDetails,
@@ -10,6 +11,7 @@ import type {
 } from './OTPFieldRoot.vue';
 
 export interface OTPFieldRootContext {
+  inputRender: ReturnType<typeof useInputRender>;
   activeIndex: ComputedRef<number>;
   autoComplete: ComputedRef<string | undefined>;
   disabled: ComputedRef<boolean>;

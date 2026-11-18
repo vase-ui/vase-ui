@@ -189,7 +189,6 @@ import { useReferencedId } from '../../internals/labelable-provider/useRegistere
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
-import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import {
@@ -645,20 +644,14 @@ const hiddenInputText = computed(() =>
 
 const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
-const hiddenValueSync = useHiddenInputValueSync(
+const { valueProps, renderValue } = useFormRestoreAsInput(
   hiddenInputElement,
   () => hiddenInputText.value,
-  writesHiddenValue,
+  false,
 );
 
-// An autofill sends `input` and then `change` for one value, and a program can send only `change`,
-// or both events in one task. The value is new when the input did not have it after the last event
-// that the root handled or the last write.
 function onHiddenInputChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  if (!hiddenValueSync.isNew(event)) {
-    return;
-  }
 
   // A listener that prevented the event stops the change.
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
@@ -674,9 +667,7 @@ function onHiddenInputChange(event: Event) {
     validation.change(lastChangedValueRef.value ?? parsedValue);
   }
 
-  // The input keeps the value of the field, as a controlled input of React does. A listener that
-  // cancels the change, a parent that keeps its value and a locked field leave the field as it was.
-  hiddenValueSync.restore();
+  renderValue();
 }
 
 useFormReset(hiddenInputElement, (event) => {
@@ -700,15 +691,13 @@ useFormReset(hiddenInputElement, (event) => {
   clearFieldError(numberValue.value);
 });
 
-useFormRestoreAsInput(hiddenInputElement, hiddenValueSync.handledValue, false);
-
 function inputProps() {
   return {
     ...validation.getValidationProps(isDisabled.value),
     type: 'number',
     form: props.form,
     name: inputName.value,
-    ...hiddenValueSync.valueProps(),
+    ...(writesHiddenValue.value ? valueProps() : undefined),
     min: props.min,
     max: props.max,
     // stepMismatch validation is broken unless an explicit `min` is added.
@@ -723,7 +712,6 @@ function inputProps() {
     onInvalid: handleHiddenInputInvalid,
     onFocusin: focusInput,
     onInput: onHiddenInputChange,
-    onChange: onHiddenInputChange,
   };
 }
 

@@ -76,7 +76,7 @@ describe('useFilterDropdownInput', () => {
     expect(input).toHaveValue('ca');
   });
 
-  it('reports a change event only when its value is new', async () => {
+  it('reports edits only from input events', async () => {
     const value = shallowRef('');
     const onValueChange = vi.fn((nextValue: string) => {
       value.value = nextValue;
@@ -101,12 +101,11 @@ describe('useFilterDropdownInput', () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
 
-    // A browser can fill an input and send only `change`.
     await fireEvent.change(input, { target: { value: 'canada' } });
 
-    expect(onValueChange).toHaveBeenCalledTimes(2);
+    expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenLastCalledWith(
-      'canada',
+      'can',
       expect.objectContaining({ reason: 'input-change' }),
     );
   });
