@@ -33,7 +33,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<FieldsetRootProps>(), { as: 'fieldset', disabled: false });
 
-defineSlots<{
+const slots = defineSlots<{
   default(props: { state: FieldsetRootState }): unknown;
   render: ComponentRenderFn<HTMLProps, FieldsetRootState>;
 }>();
@@ -56,8 +56,11 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fiel
   props: (attrs) => [
     {
       'aria-labelledby': getAriaLabelledBy(attrs),
-      // Vue writes `false` as `disabled="false"` on an element that has no `disabled` property.
-      disabled: isDisabled.value ? true : undefined,
+      disabled: isDisabled.value
+        ? slots.render || typeof props.as !== 'string'
+          ? true
+          : ''
+        : undefined,
     },
     attrs,
   ],

@@ -243,14 +243,9 @@ A part that Base UI takes from another family is exported again and not copied: 
 
 ### Parts that render an element
 
-| API | Function | Base UI form |
-| --- | --- | --- |
-| `as` prop: a tag, or a component. The default is upstream's tag. | Sets the element or the component that the part renders. | `render={<a />}` |
-| `#render` slot with the slot props `{ props, state }` | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` |
-| Default slot with the slot props `{ state }` | Holds the content. | `children` |
-| `class` and `style` attributes | The part merges them with its own class and style. The class of the consumer comes first. The style of the consumer wins over the ordinary style of the part. | `className`, `style` |
-| `nativeButton` prop, where upstream has it | The same as upstream. | `nativeButton` |
-| Exposed `element` | Gives the DOM element through a template ref. | `ref` |
+| API | Function | Base UI form | | --- A disabled `Fieldset.Root` passes `disabled: true` to a render slot or component. It binds an empty `disabled` attribute on its own DOM element.
+
+- | --- | --- | | `as` prop: a tag, or a component. The default is upstream's tag. | Sets the element or the component that the part renders. | `render={<a />}` | | `#render` slot with the slot props `{ props, state }` | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` | | Default slot with the slot props `{ state }` | Holds the content. | `children` | | `class` and `style` attributes | The part merges them with its own class and style. The class of the consumer comes first. The style of the consumer wins over the ordinary style of the part. | `className`, `style` | | `nativeButton` prop, where upstream has it | The same as upstream. | `nativeButton` | | Exposed `element` | Gives the DOM element through a template ref. | `ref` |
 
 - `docs/handbook/composition.md` gives the rules of the `#render` slot for a consumer. A development build shows a warning for a slot that gives the part no element, and for `as` together with `#render`. `useRenderElement` makes these checks.
 - Select a state with its `data-*` attribute in CSS. To calculate a class or style from state, bind it on the element in the `#render` slot.
@@ -989,7 +984,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` and `useCheckboxGroupContext()` return `undefined`, because a radio or a checkbox with no group is valid.
 - `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` return stateless defaults for optional readers.
 - The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does. The default delay group is the exception, because the default context of Base UI holds state too. Only a mounted part writes it. See [Popup interactions](#popup-interactions).
-- `DEFAULT_FIELD_ROOT_CONTEXT` has three more forms. A ref that parts write drops each write: `validation.inputRef` is a `customRef` that reads `null`. A member that only a provider can have is `null`: `focusOwnerRef`. A collection is empty and read-only: `registeredInputs`.
+- A field owns its focus and its validation input. Controls use `setFocusOwner` and `validation.setFieldInput`. A reader gets the current input from `validation.inputRef`.
 - Base UI keeps three things in its default field and form contexts: the fields of the page that have no form, one focus owner and one input. Vase UI keeps none. With no form, `fields` is empty. With no field, `useSetFieldFocused` keeps the owner of its control.
 - To test for a field or labelable provider, call `inject(key, null)`. A required field reader throws if the result is `null`.
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.

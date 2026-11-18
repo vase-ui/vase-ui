@@ -57,9 +57,7 @@ export function useAriaLabelledBy(
   // there, and its root node is that element. The lookup and the observer wait for the activation.
   const { isHeld } = useKeepAliveState();
 
-  // Base UI runs this lookup after each commit. A Vue component with the same props does not render
-  // again when its parent renders, so a native `<label>` that a sibling adds or removes later would
-  // not change the result. The lookup thus also runs when the DOM of the root node changes.
+  // A sibling can add or remove a native label without an update to this control.
   watch(
     [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld],
     ([labelSource, enabled, , held], _previous, onCleanup) => {

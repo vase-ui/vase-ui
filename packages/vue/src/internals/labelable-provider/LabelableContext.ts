@@ -1,5 +1,5 @@
 import { computed, inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { NOOP } from '../noop';
 
@@ -21,7 +21,7 @@ export interface LabelableContext {
    * When `null`, the label omits `for`, either because the association is implicit or
    * because the control takes its name from `aria-labelledby`.
    */
-  controlId: ComputedRef<string | null | undefined>;
+  controlId: Readonly<Ref<string | null | undefined>>;
   registerControlId: RegisterId<string | null>;
   resetControlId: () => void;
   /**

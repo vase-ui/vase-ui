@@ -32,7 +32,6 @@ describe('the registration of a field control on a server', () => {
     const Field = defineComponent((_props, { slots }) => {
       provide(FieldRootContext, {
         ...DEFAULT_FIELD_ROOT_CONTEXT,
-        setValidityData: vi.fn(),
         registerFieldControl,
       });
       return () => slots.default?.();

@@ -144,6 +144,29 @@ describe('<Fieldset.Root />', () => {
     expect(screen.getByTestId('slider-control')).toHaveAttribute('data-disabled');
   });
 
+  it('gives the render slot a Boolean disabled prop', async () => {
+    await render(
+      <Fieldset.Root
+        disabled
+        v-slots={{
+          render: ({ props }: RenderSlotProps) => (
+            <button {...props} disabled={props.disabled === true}>
+              Save
+            </button>
+          ),
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  it('uses an empty disabled attribute on a disabled div', async () => {
+    await render(<Fieldset.Root as="div" disabled data-testid="root" />);
+
+    expect(screen.getByTestId('root')).toHaveAttribute('disabled', '');
+  });
+
   it('sets no disabled attribute on an enabled root that renders a div', async () => {
     await render(<Fieldset.Root as="div" data-testid="root" />);
 

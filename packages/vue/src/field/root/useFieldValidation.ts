@@ -1,8 +1,9 @@
-import { shallowRef, toValue, watch } from 'vue';
+import { toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { comesBeforeInSameTree } from '../../internals/comesBeforeInSameTree';
+import { createFieldInputRegistry } from '../../internals/field-register-control/useFieldInput';
 import { DEFAULT_VALIDITY_STATE } from '../../internals/field-constants/constants';
 import type {
   FieldRootState,
@@ -96,7 +97,7 @@ export function useFieldValidation(
   } = params;
 
   const timeout = useTimeout();
-  const inputRef = shallowRef<HTMLInputElement | null>(null);
+  const { inputRef, setFieldInput } = createFieldInputRegistry();
   const registeredInputs = new Map<HTMLInputElement, RegisteredInput>();
   let validationCommitId = 0;
   // Tracks the message installed by Vase UI and the custom message it displaced.
@@ -364,6 +365,7 @@ export function useFieldValidation(
   return {
     getValidationProps,
     inputRef,
+    setFieldInput,
     registeredInputs,
     registerInput,
     getInputControl,

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, inject, provide } from 'vue';
+import {
+  defineComponent,
+  inject,
+  KeepAlive,
+  nextTick,
+  onDeactivated,
+  provide,
+  shallowRef,
+} from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
@@ -54,6 +62,35 @@ describe('field providers', () => {
     );
 
     expect(screen.getByTestId('time')).toHaveAttribute('data-field', 'absent');
+  });
+
+  it('releases focus before the parent deactivation hook', async () => {
+    let focusedAtHold: boolean | undefined;
+    const shown = shallowRef(true);
+    const Branch = defineComponent(() => {
+      const field = useFieldRootContext(false);
+      onDeactivated(() => {
+        focusedAtHold = field.state.value.focused;
+      });
+      return () => <Field.Control />;
+    });
+    await render(() => (
+      <Field.Root data-testid="field">
+        <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>
+      </Field.Root>
+    ));
+
+    const input = screen.getByRole('textbox');
+    input.focus();
+    await nextTick();
+    expect(screen.getByTestId('field')).toHaveAttribute('data-focused');
+    input.addEventListener('focusout', (event) => event.stopImmediatePropagation(), {
+      capture: true,
+      once: true,
+    });
+    shown.value = false;
+    await nextTick();
+    expect(focusedAtHold).toBe(false);
   });
 
   it.each([

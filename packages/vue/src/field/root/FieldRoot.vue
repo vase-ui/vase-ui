@@ -77,6 +77,7 @@ export interface FieldRootProps
 <script setup lang="ts">
 import { computed, provide, shallowRef, watch } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { createFieldFocusOwner } from '../../internals/field-root-context/useSetFieldFocused';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldControlRegistration } from '../../internals/field-register-control';
 import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
@@ -118,7 +119,6 @@ const touchedState = shallowRef(false);
 const dirtyState = shallowRef(false);
 const filled = shallowRef(false);
 const focused = shallowRef(false);
-const focusOwnerRef = shallowRef<unknown>();
 
 const isDirty = computed(() => props.dirty ?? dirtyState.value);
 const isTouched = computed(() => props.touched ?? touchedState.value);
@@ -240,7 +240,7 @@ provide(FieldRootContext, {
   setFocused(value) {
     focused.value = value;
   },
-  focusOwnerRef,
+  setFocusOwner: createFieldFocusOwner(),
   validationMode: resolvedValidationMode,
   shouldValidateOnChange,
   state,

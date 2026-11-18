@@ -36,7 +36,6 @@ describe('FieldRootContext', () => {
       validationMode: field.validationMode.value,
       shouldValidateOnChange: field.shouldValidateOnChange(),
       state: field.state.value,
-      focusOwnerRef: field.focusOwnerRef,
       inputRef: field.validation.inputRef.value,
       registeredInputs: field.validation.registeredInputs.size,
     };
@@ -66,7 +65,7 @@ describe('FieldRootContext', () => {
       filled: false,
       focused: false,
     });
-    expect(field.focusOwnerRef).toBeNull();
+    expect(field.setFocusOwner(Symbol(), true)).toBe(false);
     expect(field.shouldValidateOnChange()).toBe(false);
   });
 
@@ -84,7 +83,7 @@ describe('FieldRootContext', () => {
     field.setFilled(true);
     field.setFocused(true);
     field.registerFieldControl(Symbol(), () => ({ controlRef: input, id: 'control', value: 'x' }));
-    field.validation.inputRef.value = input;
+    field.validation.setFieldInput(Symbol(), input);
     field.validation.registerInput(input, { controlRef: input, value: 'x' });
     field.validation.change('x');
 
