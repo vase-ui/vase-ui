@@ -111,7 +111,7 @@ it('VUE-94: keeps the author pointer style on the parent menu of an open submenu
             <Menu.SubmenuRoot>
               <Menu.SubmenuTrigger delay={0}>More</Menu.SubmenuTrigger>
               <Menu.Portal>
-                <Menu.Positioner>
+                <Menu.Positioner data-testid="submenu-positioner">
                   <Menu.Popup>
                     <Menu.Item>Details</Menu.Item>
                   </Menu.Popup>
@@ -123,9 +123,23 @@ it('VUE-94: keeps the author pointer style on the parent menu of an open submenu
       </Menu.Portal>
     </Menu.Root>,
   );
+  const parent = screen.getByTestId('parent');
+  const previousStyles: (string | null)[] = [];
+  const observer = new MutationObserver((records) => {
+    previousStyles.push(...records.map((record) => record.oldValue));
+  });
+  observer.observe(parent, {
+    attributes: true,
+    attributeFilter: ['style'],
+    attributeOldValue: true,
+  });
+  onTestFinished(() => observer.disconnect());
   await user.hover(screen.getByRole('menuitem', { name: 'More' }));
   await screen.findByRole('menuitem', { name: 'Details' });
-  expect(screen.getByTestId('parent').style.pointerEvents).toBe('all');
+  await waitSingleFrame();
+  expect(screen.getByTestId('submenu-positioner').style.pointerEvents).toBe('auto');
+  expect(previousStyles.join(' ')).not.toMatch(/pointer-events:\s*none/);
+  expect(parent.style.pointerEvents).toBe('all');
 });
 
 it.runIf(isVaporApp)(
