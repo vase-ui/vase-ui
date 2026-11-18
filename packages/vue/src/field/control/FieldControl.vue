@@ -207,8 +207,7 @@ const enterValidationTimeout = useTimeout();
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps():
-  | (Pick<FieldControlProps, 'value' | 'defaultValue'> & { '.value'?: string })
-  | undefined {
+  (Pick<FieldControlProps, 'value' | 'defaultValue'> & { '.value'?: string }) | undefined {
   if (props.value !== undefined) {
     return writesValue.value ? inputRender.valueProps() : undefined;
   }
