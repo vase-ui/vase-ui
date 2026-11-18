@@ -105,6 +105,38 @@ describe('useFormReset', () => {
     expect(onReset).toHaveBeenCalledTimes(1);
   });
 
+  it('BUG-6206: follows each reset even if a later reset is canceled in the same task', async () => {
+    const onReset = vi.fn<(event: Event) => void>();
+    const Control = defineComponent(() => {
+      const input = shallowRef<HTMLInputElement | null>(null);
+      useFormReset(input, onReset);
+      return () => <input ref={input} />;
+    });
+    const { unmount } = await render(
+      <form data-testid="form">
+        <Control />
+      </form>,
+    );
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    const events: Event[] = [];
+    form.addEventListener('reset', (event) => events.push(event));
+    vi.useFakeTimers();
+    form.reset();
+    form.reset();
+    form.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+    form.reset();
+
+    expect(onReset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(0);
+    expect(onReset.mock.calls.map(([event]) => events.indexOf(event))).toEqual([0, 1]);
+
+    form.reset();
+    form.reset();
+    unmount();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(2);
+  });
+
   it.each([
     { name: 'after the microtasks', afterMove: flushMicrotasks },
     { name: 'at the next Vue tick', afterMove: nextTick },

@@ -1,7 +1,7 @@
-import { toValue, watch, watchPostEffect } from 'vue';
+import { onScopeDispose, toValue, watch, watchPostEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../common/addEventListener';
-import { useTimeout } from '../common/useTimeout';
+import { Timeout } from '../common/useTimeout';
 import { followRootNode } from './observeRootNode';
 import { useKeepAliveState } from './useKeepAliveState';
 
@@ -19,10 +19,17 @@ export function useFormReset(
   input: MaybeRefOrGetter<HTMLElement | null>,
   onReset: (event: Event) => void,
 ): void {
-  const resetTimeout = useTimeout();
+  const pending = new Set<Timeout>();
   const { isHeld } = useKeepAliveState();
 
-  watch(() => toValue(input), resetTimeout.clear);
+  function clearPending() {
+    for (const timeout of pending) {
+      timeout.clear();
+    }
+    pending.clear();
+  }
+  watch(() => toValue(input), clearPending);
+  onScopeDispose(clearPending);
 
   watchPostEffect((onCleanup) => {
     const element = toValue(input);
@@ -36,7 +43,10 @@ export function useFormReset(
         return;
       }
 
-      resetTimeout.start(0, () => {
+      const timeout = Timeout.create();
+      pending.add(timeout);
+      timeout.start(0, () => {
+        pending.delete(timeout);
         if (!event.defaultPrevented) {
           onReset(event);
         }
