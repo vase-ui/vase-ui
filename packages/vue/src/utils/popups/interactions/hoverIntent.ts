@@ -88,7 +88,7 @@ export class HoverIntent {
 
   readonly #hoverTriggers = new Set<HoverTriggerElement>();
 
-  #foreignScopeStyle: { value: string; priority: string } | null = null;
+  #nativeScopeStyle: { value: string; priority: string } | null = null;
 
   #parentFloating: HTMLElement | null = null;
 
@@ -174,9 +174,12 @@ export class HoverIntent {
 
     if (hasHoverBinding(scopeElement)) {
       setHoverPointerEvents(scopeElement, this, 'none');
-    } else {
-      // The document body or an external scope has no part to bind its style.
-      this.#foreignScopeStyle = {
+    } else if (
+      !scopeElement.hasAttribute('data-rootownerid') ||
+      !scopeElement.style.pointerEvents
+    ) {
+      // A submenu must release its parent scope between mouseleave and pointerenter in one input.
+      this.#nativeScopeStyle = {
         value: scopeElement.style.getPropertyValue('pointer-events'),
         priority: scopeElement.style.getPropertyPriority('pointer-events'),
       };
@@ -239,10 +242,13 @@ export class HoverIntent {
     const { scopeElement, triggerElement, positionerElement } = blocked;
 
     if (pointerEventsOwnerByScopeElement.get(scopeElement) === this) {
-      if (this.#foreignScopeStyle) {
-        const { value, priority } = this.#foreignScopeStyle;
-        scopeElement.style.setProperty('pointer-events', value, priority);
-        this.#foreignScopeStyle = null;
+      if (this.#nativeScopeStyle) {
+        const { value, priority } = this.#nativeScopeStyle;
+        const { style } = scopeElement;
+        if (style.pointerEvents === 'none' && !style.getPropertyPriority('pointer-events')) {
+          style.setProperty('pointer-events', value, priority);
+        }
+        this.#nativeScopeStyle = null;
       } else {
         setHoverPointerEvents(scopeElement, this);
       }

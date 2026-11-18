@@ -851,8 +851,10 @@ describe('<Select.Popup />', () => {
         expect(positioner.style.height).toBe('226px');
 
         list.scrollTop = 14;
+        const offsetAtZoom = list.scrollTop;
+        expect(offsetAtZoom).toBeGreaterThan(0);
         await fireEvent.scroll(list);
-        expect(list.scrollTop).toBeCloseTo(14, 0);
+        expect(list.scrollTop).toBe(offsetAtZoom);
         expect(positioner.style.height).toBe('226px');
       } finally {
         docEl.style.zoom = previousZoom;

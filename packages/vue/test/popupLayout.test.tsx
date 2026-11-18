@@ -8,6 +8,7 @@ import {
   screen,
   waitSingleFrame,
 } from '#test-utils';
+import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import SelectLayout from './fixtures/SelectLayout.vue';
 import VaporPopupLayout from './fixtures/VaporPopupLayout.vue';
@@ -98,6 +99,33 @@ it('VUE-94: keeps the author pointer style when a hover block moves between trig
   expect(screen.getByTestId('list').style.pointerEvents).toBe('');
   expect(one.style.pointerEvents).toBe('all');
   expect(two.style.pointerEvents).toBe('all');
+});
+
+it('VUE-94: keeps the author pointer style on the parent menu of an open submenu', async () => {
+  const { user } = await render(
+    <Menu.Root defaultOpen>
+      <Menu.Trigger>Actions</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup data-testid="parent" style={{ pointerEvents: 'all' }}>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger delay={0}>More</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item>Details</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>,
+  );
+  await user.hover(screen.getByRole('menuitem', { name: 'More' }));
+  await screen.findByRole('menuitem', { name: 'Details' });
+  expect(screen.getByTestId('parent').style.pointerEvents).toBe('all');
 });
 
 it.runIf(isVaporApp)(
