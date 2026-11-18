@@ -17,6 +17,22 @@ const hiddenInputOf = (container: Element) =>
 describe('<DatePicker.Calendar />', () => {
   const { render } = createRenderer();
 
+  it('selects one date with a multiple attribute', async () => {
+    const onValueChange = vi.fn();
+    const { user } = await renderOpen({
+      calendarProps: { today: today(), multiple: true },
+      value: null,
+      onValueChange,
+    });
+    const button = await screen.findByRole('button', { name: 'Friday, November 20, 2026' });
+
+    await user.click(button);
+
+    const selected = onValueChange.mock.lastCall?.[0];
+    expect(selected).toBeInstanceOf(Temporal.PlainDate);
+    expect(selected.toString()).toBe('2026-11-20');
+  });
+
   describeConformance(<DatePicker.Calendar />, () => ({
     refInstanceof: window.HTMLDivElement,
     render(node) {

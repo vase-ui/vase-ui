@@ -28,6 +28,7 @@ import { computed, useTemplateRef } from 'vue';
 import { usePickerInitialFocus } from '../../internals/date-time/picker/usePickerPopup';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverPopup from '../../popover/popup/PopoverPopup.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -65,7 +66,7 @@ defineExpose({ element });
   <PopoverPopup
     v-if="$slots.render"
     ref="popup"
-    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -74,7 +75,7 @@ defineExpose({ element });
   <PopoverPopup
     v-else
     ref="popup"
-    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

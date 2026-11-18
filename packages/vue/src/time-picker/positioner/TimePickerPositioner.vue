@@ -29,6 +29,7 @@ export interface TimePickerPositionerProps extends Omit<
 <script setup lang="ts">
 import { computed, toValue, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverPositioner from '../../popover/positioner/PopoverPositioner.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 
@@ -63,13 +64,17 @@ defineExpose({ element });
   <PopoverPositioner
     v-if="$slots.render"
     ref="positioner"
-    v-bind="{ ...$attrs, ...props, anchor: anchorOf }"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverPositioner), ...props, anchor: anchorOf }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </PopoverPositioner>
-  <PopoverPositioner v-else ref="positioner" v-bind="{ ...$attrs, ...props, anchor: anchorOf }">
+  <PopoverPositioner
+    v-else
+    ref="positioner"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverPositioner), ...props, anchor: anchorOf }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

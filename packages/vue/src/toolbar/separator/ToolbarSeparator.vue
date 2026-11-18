@@ -16,6 +16,7 @@ export interface ToolbarSeparatorProps extends SeparatorProps {
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { Separator } from '../../separator';
 import { useToolbarRootContext } from '../root/ToolbarRootContext';
 
@@ -49,7 +50,7 @@ defineExpose({ element });
   <Separator
     v-if="$slots.render"
     ref="separator"
-    v-bind="{ ...$attrs, ...props, orientation: separatorOrientation }"
+    v-bind="{ ...withoutPropsOf($attrs, Separator), ...props, orientation: separatorOrientation }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -58,7 +59,7 @@ defineExpose({ element });
   <Separator
     v-else
     ref="separator"
-    v-bind="{ ...$attrs, ...props, orientation: separatorOrientation }"
+    v-bind="{ ...withoutPropsOf($attrs, Separator), ...props, orientation: separatorOrientation }"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

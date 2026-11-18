@@ -34,7 +34,7 @@ export interface DatePickerFieldProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
@@ -43,6 +43,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 import type {
@@ -59,7 +60,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerFieldState>;
 }>();
 
-const attrs = useAttrs();
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
@@ -105,10 +105,10 @@ function handleValueChange(
 
 const fieldHandlers = { onKeydown: handleKeydown };
 
-function fieldProps() {
+function fieldProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   return {
-    ...mergeProps(fieldHandlers, givenAttributes(attrs)),
+    ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
     value: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for the calendar.
@@ -144,14 +144,19 @@ defineExpose({
   <DateFieldRoot
     v-if="$slots.render"
     ref="field"
-    v-bind="fieldProps()"
+    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </DateFieldRoot>
-  <DateFieldRoot v-else ref="field" v-bind="fieldProps()" @value-change="handleValueChange">
+  <DateFieldRoot
+    v-else
+    ref="field"
+    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
+    @value-change="handleValueChange"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

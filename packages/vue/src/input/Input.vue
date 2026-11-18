@@ -23,10 +23,19 @@ export interface InputProps
   extends
     VaseUIComponentProps<InputState>,
     /* @vue-ignore */ Omit<
-      WithVaseUIEvent<InputHTMLAttributes, 'id' | 'name'>,
-      'autocomplete' | 'disabled' | 'value'
+      WithVaseUIEvent<InputHTMLAttributes>,
+      'autocomplete' | 'disabled' | 'id' | 'name' | 'value'
     >,
     /* @vue-ignore */ InputAutocomplete {
+  /**
+   * The `id` of the input. The label of the field names the input with it.
+   */
+  id?: string | undefined;
+  /**
+   * Identifies the field when a form is submitted.
+   * The `name` prop on `<Field.Root>` takes precedence over this.
+   */
+  name?: string | undefined;
   /**
    * The default value of the input. Use when uncontrolled.
    */
@@ -48,6 +57,7 @@ export interface InputProps
 import { computed, useTemplateRef } from 'vue';
 import { FieldControl } from '../field';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
+import { withoutPropsOf } from '../internals/withoutPropsOf';
 
 defineOptions({ inheritAttrs: false });
 
@@ -100,7 +110,7 @@ defineExpose({ element });
   <FieldControl
     v-if="$slots.render"
     ref="control"
-    v-bind="{ ...$attrs, ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
     @value-change="emitValueChange"
     @update:value="emitUpdateValue"
   >
@@ -111,7 +121,7 @@ defineExpose({ element });
   <FieldControl
     v-else
     ref="control"
-    v-bind="{ ...$attrs, ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
     @value-change="emitValueChange"
     @update:value="emitUpdateValue"
   />

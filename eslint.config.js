@@ -31,8 +31,8 @@ const MESSAGES = {
     'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   renderSlotCall:
     'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
-  portalAttrs:
-    'An attribute can set a prop that only the internal portal declares. Bind `withoutPropsOf($attrs, FloatingPortal)` or `withoutPropsOf($attrs, FloatingPortalLite)` before the props of the part.',
+  wrapperAttrs:
+    'An attribute can set a prop that only the inner part declares. Bind `withoutPropsOf($attrs, <the part that the tag renders>)` before the props of the wrapper. To accept a prop of the inner part, declare it on the wrapper.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -358,6 +358,11 @@ const ELEMENT_PROPS_SLOT_TAG =
   "VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.argument.name='props'] CallExpression[callee.name='elementProps'])";
 
 const RESTRICTED_TEMPLATE_SYNTAX = [
+  {
+    selector:
+      "VElement[rawName=/^[A-Z]/] > VStartTag :not(CallExpression[callee.name='withoutPropsOf']) > Identifier[name='$attrs']",
+    message: MESSAGES.wrapperAttrs,
+  },
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
   {
     // A start tag has only its attributes below it, so the descendant form is exact.
@@ -722,21 +727,6 @@ export default defineConfig([
       'vue/component-api-style': ['error', ['script-setup']],
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
       'vue/no-restricted-syntax': ['error', ...RESTRICTED_TEMPLATE_SYNTAX],
-    },
-  },
-  {
-    files: ['packages/vue/src/*/portal/*.vue'],
-    ignores: TEST_FILES,
-    rules: {
-      'vue/no-restricted-syntax': [
-        'error',
-        ...RESTRICTED_TEMPLATE_SYNTAX,
-        {
-          selector:
-            ":not(CallExpression[callee.name='withoutPropsOf']) > Identifier[name='$attrs']",
-          message: MESSAGES.portalAttrs,
-        },
-      ],
     },
   },
   {

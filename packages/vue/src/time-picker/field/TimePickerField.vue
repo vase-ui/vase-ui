@@ -31,7 +31,7 @@ export interface TimePickerFieldProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
@@ -39,6 +39,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
@@ -56,7 +57,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TimePickerFieldState>;
 }>();
 
-const attrs = useAttrs();
 const picker = useTimePickerRootContext();
 const popup = usePickerPopup();
 
@@ -102,10 +102,10 @@ function handleValueChange(
 
 const fieldHandlers = { onKeydown: handleKeydown };
 
-function fieldProps() {
+function fieldProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   return {
-    ...mergeProps(fieldHandlers, givenAttributes(attrs)),
+    ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
     value: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for each other part.
@@ -138,14 +138,19 @@ defineExpose({
   <TimeFieldRoot
     v-if="$slots.render"
     ref="field"
-    v-bind="fieldProps()"
+    v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </TimeFieldRoot>
-  <TimeFieldRoot v-else ref="field" v-bind="fieldProps()" @value-change="handleValueChange">
+  <TimeFieldRoot
+    v-else
+    ref="field"
+    v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
+    @value-change="handleValueChange"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

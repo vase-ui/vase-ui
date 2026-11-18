@@ -104,6 +104,7 @@ export interface ContextMenuPositionerProps
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import MenuPositioner from '../../menu/positioner/MenuPositioner.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -136,12 +137,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <MenuPositioner v-if="$slots.render" ref="positioner" v-bind="{ ...$attrs, ...props }">
+  <MenuPositioner
+    v-if="$slots.render"
+    ref="positioner"
+    v-bind="{ ...withoutPropsOf($attrs, MenuPositioner), ...props }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </MenuPositioner>
-  <MenuPositioner v-else ref="positioner" v-bind="{ ...$attrs, ...props }">
+  <MenuPositioner
+    v-else
+    ref="positioner"
+    v-bind="{ ...withoutPropsOf($attrs, MenuPositioner), ...props }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
