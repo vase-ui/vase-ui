@@ -66,9 +66,6 @@ export function useCollapsiblePanel(
   const instantOpenDuration = shallowRef<'transition-duration' | 'animation-duration'>();
   const layoutStyle = shallowRef<TemporaryStyle>();
   const pendingReveal = shallowRef<PendingReveal>();
-  const reveal = computed(() =>
-    pendingReveal.value?.panel === element.value ? pendingReveal.value : undefined,
-  );
 
   const runOnceCloseAnimationsFinish = useAnimationsFinished(element);
   const hidden = computed(() => !isOpen() && !mounted.value);
@@ -332,8 +329,17 @@ export function useCollapsiblePanel(
   });
 
   function finishReveal() {
-    if (!isOpen()) shouldSkipNextOpen = false;
+    const match = pendingReveal.value;
     pendingReveal.value = undefined;
+    if (!match || isOpen()) return;
+    shouldSkipNextOpen = false;
+    if (!isHiddenUntilFound()) return;
+
+    // The browser changed the matched element. Vue can replace it before this frame.
+    if (match.restoreStartingStyle) {
+      match.panel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
+    }
+    match.panel.setAttribute('hidden', 'until-found');
   }
 
   function handleBeforeMatch(event: Event) {
@@ -364,13 +370,6 @@ export function useCollapsiblePanel(
         instantOpenDuration.value = undefined;
       } else if (pendingReveal.value) {
         // The parent activation hook can read the panel before Vue patches its attributes.
-        const { panel, restoreStartingStyle } = pendingReveal.value;
-        if (!isOpen() && isHiddenUntilFound()) {
-          if (restoreStartingStyle) {
-            panel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
-          }
-          panel.setAttribute('hidden', 'until-found');
-        }
         finishReveal();
       }
     },
@@ -403,15 +402,10 @@ export function useCollapsiblePanel(
     id,
     hidden: computed(() => {
       if (!hidden.value) return undefined;
-      if (!isHiddenUntilFound()) return true;
-      return reveal.value ? undefined : 'until-found';
+      return isHiddenUntilFound() ? 'until-found' : true;
     }),
     persistStartingStyle: computed(
-      () =>
-        isHiddenUntilFound() &&
-        hidden.value &&
-        animationType.value !== 'css-animation' &&
-        !reveal.value?.restoreStartingStyle,
+      () => isHiddenUntilFound() && hidden.value && animationType.value !== 'css-animation',
     ),
     handleAnimationEnd,
     handleBeforeMatch,

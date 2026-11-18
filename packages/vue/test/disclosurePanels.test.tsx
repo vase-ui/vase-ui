@@ -76,6 +76,28 @@ describe('searchable disclosure panels', () => {
     expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
   });
 
+  it('restores the matched element when the panel renders a replacement', async () => {
+    const tag = shallowRef<'div' | 'section'>('div');
+    await render(() => (
+      <Collapsible.Root open={false}>
+        <Collapsible.Panel hiddenUntilFound as={tag.value}>
+          Details
+        </Collapsible.Panel>
+      </Collapsible.Root>
+    ));
+    const previous = screen.getByText('Details');
+    previous.dispatchEvent(new Event('beforematch'));
+    previous.removeAttribute('hidden');
+    tag.value = 'section';
+    await nextTick();
+
+    const current = screen.getByText('Details');
+    expect(current).not.toBe(previous);
+    expect(current).toHaveAttribute('hidden', 'until-found');
+    await waitFor(() => expect(previous).toHaveAttribute('hidden', 'until-found'));
+    expect(previous).toHaveAttribute('data-starting-style');
+  });
+
   it('restores a refused match before the parent activation hook reads the panel', async () => {
     const shown = shallowRef(true);
     const atActivation: [string | null, boolean][] = [];
