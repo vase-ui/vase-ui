@@ -168,15 +168,19 @@ function retainedMembers(path: string, source: string): Set<string> {
       ts.isDeclarationStatement(node) ||
       ts.isVariableDeclaration(node) ||
       ts.isBindingElement(node) ||
+      ts.isParameter(node) ||
       ts.isClassElement(node) ||
       ts.isTypeElement(node) ||
       ts.isObjectLiteralElementLike(node) ||
       ts.isEnumMember(node)
     ) {
-      const { name } = node;
+      const name =
+        node.name && ts.isComputedPropertyName(node.name) ? node.name.expression : node.name;
       if (
         name &&
-        (ts.isIdentifier(name) || ts.isPrivateIdentifier(name) || ts.isStringLiteral(name))
+        (ts.isStringLiteralLike(name) ||
+          ts.isNumericLiteral(name) ||
+          (name === node.name && (ts.isIdentifier(name) || ts.isPrivateIdentifier(name))))
       ) {
         names.add(name.text);
       }
@@ -205,6 +209,7 @@ function retainedMembers(path: string, source: string): Set<string> {
 function resolveRelocations(
   families: CurrentFamily[],
   input: CheckInput,
+  rowsOf: VaseTree['rowsOf'],
   problems: string[],
 ): VaseFiles {
   const { files, root } = input;
@@ -215,11 +220,20 @@ function resolveRelocations(
   function compiled(path: string): boolean {
     if (!typeTests) {
       const folder = join(root, 'packages/vue');
-      const config = ts.readConfigFile(join(folder, 'tsconfig.test.json'), (file) =>
-        ts.sys.readFile(file),
-      );
+      const configPath = join(folder, 'tsconfig.test.json');
+      const config = ts.readConfigFile(configPath, ts.sys.readFile);
       typeTests = new Set(
-        config.error ? [] : ts.parseJsonConfigFileContent(config.config, ts.sys, folder).fileNames,
+        config.error
+          ? []
+          : ts.parseJsonConfigFileContent(
+              config.config,
+              ts.sys,
+              folder,
+              undefined,
+              configPath,
+              undefined,
+              [{ extension: '.vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }],
+            ).fileNames,
       );
     }
     return typeTests.has(join(root, path));
@@ -246,19 +260,32 @@ function resolveRelocations(
       if (!paths.has(row.upstream)) {
         report('the family extract has no such file.');
       }
-      const direct = directCounterparts(row.upstream, files);
+      const targets = [row, ...(row.additional ?? [])];
+      const destinations = new Set(targets.map(({ destination }) => destination));
+      const direct = directCounterparts(row.upstream, files).filter(
+        (path) => destinations.size === 1 || !destinations.has(path),
+      );
       if (direct.length) {
         report(`the direct counterpart ${direct.join(', ')} exists. Remove the conflict.`);
       }
       const { witness } = row;
-      if (!files.paths.has(witness) || !(isTestFile(witness) || isTypeTestFile(witness))) {
+      const typeWitness = isTypeTestFile(witness) || witness.endsWith('.spec.vue');
+      if (!files.paths.has(witness) || !(isTestFile(witness) || typeWitness)) {
         report(`the witness ${witness} must name a test file.`);
-      } else if (isTypeTestFile(witness)) {
-        if (!compiled(witness) || (!row.member && !isTypeTestFile(row.upstream))) {
+      } else if (typeWitness) {
+        if (
+          !compiled(witness) ||
+          (!isTypeTestFile(row.upstream) && (row.behavior || isTestFile(row.upstream)))
+        ) {
           report(`the witness ${witness} must cover the retained behavior or type.`);
         }
+      } else if (
+        !rowsOf(witness).some(
+          ({ conditions }) => !conditions?.some((term) => term === 'skip' || term === 'todo'),
+        )
+      ) {
+        report(`the witness ${witness} has no runnable case or suite call.`);
       }
-      const targets = [row, ...(row.additional ?? [])];
       for (const { destination, member } of targets) {
         if (!files.paths.has(destination)) {
           report(`the destination ${destination} does not exist.`);
@@ -279,7 +306,7 @@ function resolveRelocations(
         }
       }
       if (problems.length === before) {
-        relocations.set(row.upstream, [...new Set(targets.map(({ destination }) => destination))]);
+        relocations.set(row.upstream, [...destinations]);
       }
     }
   }
@@ -331,7 +358,7 @@ export function checkRepository(input: CheckInput): CheckResult & { files: VaseF
       current.push({ name, family, extract });
     }
   }
-  const files = resolveRelocations(current, input, problems);
+  const files = resolveRelocations(current, input, rowsOf, problems);
   const vase: VaseTree = {
     files,
     rowsOf(path) {
@@ -344,13 +371,6 @@ export function checkRepository(input: CheckInput): CheckResult & { files: VaseF
     vase,
   );
   for (const { name, family, extract } of current) {
-    for (const [index, { upstream, witness }] of (family.relocations ?? []).entries()) {
-      if (files.paths.has(witness) && isTestFile(witness) && rowsOf(witness).length === 0) {
-        problems.push(
-          `${name}: relocations[${index}] (${upstream}): the witness ${witness} has no case or suite call.`,
-        );
-      }
-    }
     const cases = checkFamily(name, family, extract, vase, matches);
     problems.push(...cases.problems);
     const report: FamilyReport = { name, summary: cases.summary };

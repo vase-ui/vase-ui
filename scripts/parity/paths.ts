@@ -95,7 +95,12 @@ export function relocationKind(path: string): string {
   if (isDeclarationFile(path)) {
     return 'declaration';
   }
-  return isScriptFile(path) || path.endsWith('.vue') ? 'source' : extname(path);
+  if (isScriptFile(path) || path.endsWith('.vue')) {
+    return /^packages\/(react|vue)\/test\//.test(path) || /\.(test|spec)\.[^/]+$/.test(path)
+      ? 'test helper'
+      : 'source';
+  }
+  return extname(path);
 }
 
 export function hasCounterpart(upstreamPath: string, files: VaseFiles): boolean {

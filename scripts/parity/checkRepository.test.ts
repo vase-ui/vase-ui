@@ -247,9 +247,66 @@ test('a relocation needs its pinned upstream file, a concrete destination and a 
   assert.match(errors(), /destination .*point\.ts does not exist/);
   assert.match(errors(), /witness .*point\.test\.ts must name a test file/);
   write(witness, 'export {};');
-  assert.match(errors(), /witness .* has no case or suite call/);
+  assert.match(errors(), /witness .* has no runnable case or suite call/);
   write('packages/vue/src/common/point.tsx', 'export {};');
   assert.match(errors(), /direct counterpart .*point\.tsx exists/);
+});
+
+test('a split can keep a named part at its mapped path', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const direct = 'packages/vue/src/common/point.ts';
+  write(direct, 'export const axis = 1;');
+  write(pointOwner, 'export const point = 0;');
+  write(witness, "it('tracks the cursor', () => {});");
+  const row = { ...merged, additional: [{ destination: direct, member: 'axis' }] };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  assert.deepEqual(check().problems, []);
+  assert.equal(check().families[0].summary.sources.ported, 1);
+  write(direct + 'x', 'export const extra = 0;');
+  assert.match(check().problems.join('\n'), /direct counterpart .*point\.tsx exists/);
+});
+
+test('a runtime source cannot move into a test helper', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const row = { ...merged };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  write(witness, "it('tracks the cursor', () => {});");
+  for (const destination of ['packages/vue/test/point.ts', 'packages/vue/src/point.test.util.ts']) {
+    row.destination = destination;
+    write(destination, 'export const point = 0;');
+    assert.ok(
+      check().problems.some((problem) => problem.includes(`${destination} must be a source`)),
+    );
+  }
+});
+
+test('a behavior needs a runnable witness before its source gets credit', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  write(pointOwner, 'export const point = 0;');
+  const row = { ...merged, behavior: 'Track the cursor.' };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  write(witness, "describe.skip('pointer', () => { it('tracks', () => {}); }); it.todo('tracks');");
+  assert.match(check().problems.join('\n'), /witness .* has no runnable case or suite call/);
+  assert.equal(check().families[0].summary.sources.ported, 0);
+  row.witness = 'packages/vue/test/point.spec.ts';
+  write(row.witness, 'type Point = number;');
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['test'] }));
+  assert.match(check().problems.join('\n'), /witness .* must cover the retained behavior/);
+});
+
+test('a compiled template type test can witness a retained member', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const template = 'packages/vue/test/geometry.spec.vue';
+  write(pointOwner, 'export class Position { constructor(readonly point: number) {} }');
+  write(
+    template,
+    `<script setup lang="ts">import type { Position } from '../src/tooltip/point'; defineProps<{ point: Position['point'] }>();</script>`,
+  );
+  family('geometry', { sources: [upstreamPoint] }, [{ ...merged, witness: template }]);
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['test'] }));
+  assert.deepEqual(check().problems, []);
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['src'] }));
+  assert.match(check().problems.join('\n'), /witness .* must cover the retained behavior or type/);
 });
 
 test('a member in either SFC script counts and a reference in the template does not', (t) => {
