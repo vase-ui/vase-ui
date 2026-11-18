@@ -1187,6 +1187,29 @@ describe('<ScrollArea.Root />', () => {
   describe('scroll snap of the viewport', () => {
     const snap = { scrollSnapType: 'y mandatory' };
 
+    it('applies the last thumb move before a release in the same patch', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar keepMounted style={{ width: '10px' }}>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+      const thumb = screen.getByTestId('thumb');
+      const viewport = screen.getByTestId('viewport');
+      await waitFor(() => expect(thumb.offsetHeight).toBeGreaterThan(0));
+      vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
+      await fireEvent.pointerDown(thumb, { button: 0, pointerId: 1, clientY: 0 });
+      await Promise.all([
+        fireEvent.pointerMove(thumb, { buttons: 1, pointerId: 1, clientY: 20 }),
+        fireEvent.pointerUp(thumb, { pointerId: 1, clientY: 20 }),
+      ]);
+      expect(viewport.scrollTop).toBeGreaterThan(0);
+    });
+
     it('discards a track jump if the press ends before the viewport patch', async () => {
       await render(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>

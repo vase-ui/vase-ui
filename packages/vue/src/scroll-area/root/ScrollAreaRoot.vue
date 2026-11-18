@@ -138,10 +138,11 @@ const cornerElement = shallowRef<HTMLElement | null>(null);
 interface ScrollAreaPress {
   id: number;
   orientation: Orientation;
-  viewport: HTMLElement | null;
-  thumb: HTMLElement | null;
+  viewport: HTMLElement;
+  thumb: HTMLElement;
   start: number;
   startScroll: number;
+  pendingOffset: number | null;
 }
 
 const press = shallowRef<ScrollAreaPress | null>(null);
@@ -213,48 +214,51 @@ watch(
 );
 
 function handlePointerDown(event: PointerEvent, orientation: Orientation, trackPosition?: number) {
-  if (event.button !== 0 || press.value?.thumb?.hasPointerCapture(press.value.id)) {
+  if (event.button !== 0 || press.value?.thumb.hasPointerCapture(press.value.id)) {
     return;
   }
   const vertical = orientation === 'vertical';
   const thumb = vertical ? thumbYElement.value : thumbXElement.value;
   const viewport = viewportElement.value;
-  const active = {
+  if (!viewport || !thumb) {
+    return;
+  }
+
+  const axis = vertical ? 'scrollTop' : 'scrollLeft';
+  const active: ScrollAreaPress = {
     id: event.pointerId,
     orientation,
     viewport,
     thumb,
     start: vertical ? event.clientY : event.clientX,
-    startScroll: (vertical ? viewport?.scrollTop : viewport?.scrollLeft) ?? 0,
+    startScroll: viewport[axis],
+    pendingOffset: 0,
   };
   press.value = active;
-  thumb?.setPointerCapture(event.pointerId);
+  thumb.setPointerCapture(event.pointerId);
 
-  if (trackPosition !== undefined && viewport) {
-    // The track jump needs the viewport's snap style before the browser sets the scroll position.
-    nextTick(() => {
-      if (press.value === active) {
-        const axis = vertical ? 'scrollTop' : 'scrollLeft';
-        viewport[axis] = trackPosition;
-        active.startScroll = viewport[axis];
-        handleScroll({ x: viewport.scrollLeft, y: viewport.scrollTop });
-      }
-    });
-  }
+  // A track jump or an early move must wait for the snap style of this press.
+  nextTick(() => {
+    if (press.value !== active) {
+      return;
+    }
+    if (trackPosition !== undefined) {
+      viewport[axis] = trackPosition;
+      active.startScroll = viewport[axis];
+      handleScroll({ x: viewport.scrollLeft, y: viewport.scrollTop });
+    }
+    if (active.pendingOffset) {
+      viewport[axis] = active.startScroll + active.pendingOffset;
+    }
+    active.pendingOffset = null;
+  });
 }
 
 function finishPress(active: ScrollAreaPress) {
   press.value = null;
   (active.orientation === 'vertical' ? scrollingY : scrollingX).value = false;
-  if (active.thumb?.hasPointerCapture(active.id)) {
+  if (active.thumb.hasPointerCapture(active.id)) {
     active.thumb.releasePointerCapture(active.id);
-  }
-}
-
-function finishPressFor(element: Element | null) {
-  const active = press.value;
-  if (active && element && (active.viewport === element || active.thumb === element)) {
-    finishPress(active);
   }
 }
 
@@ -279,15 +283,10 @@ function handlePointerMove(event: PointerEvent) {
     return;
   }
 
-  const viewport = active.viewport;
-  if (!viewport) {
-    return;
-  }
-
+  const { thumb, viewport } = active;
   const vertical = active.orientation === 'vertical';
-  const thumb = active.thumb;
   const scrollbar = vertical ? scrollbarYElement.value : scrollbarXElement.value;
-  if (!thumb || !scrollbar) {
+  if (!scrollbar) {
     return;
   }
 
@@ -304,12 +303,12 @@ function handlePointerMove(event: PointerEvent) {
 
   const scrollableSize = vertical ? viewport.scrollHeight : viewport.scrollWidth;
   const viewportSize = vertical ? viewport.clientHeight : viewport.clientWidth;
-  nextTick(() => {
-    if (press.value === active) {
-      viewport[vertical ? 'scrollTop' : 'scrollLeft'] =
-        active.startScroll + scrollRatio * (scrollableSize - viewportSize);
-    }
-  });
+  const offset = scrollRatio * (scrollableSize - viewportSize);
+  if (active.pendingOffset === null) {
+    viewport[vertical ? 'scrollTop' : 'scrollLeft'] = active.startScroll + offset;
+  } else {
+    active.pendingOffset = offset;
+  }
   event.preventDefault();
 
   startScrolling(vertical);
@@ -367,7 +366,6 @@ provide(ScrollAreaRootContext, {
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
-  finishPressFor,
   handleScroll,
   press,
   rootId,

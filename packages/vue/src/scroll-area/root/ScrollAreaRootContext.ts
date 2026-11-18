@@ -32,9 +32,8 @@ export interface ScrollAreaRootContext {
   handlePointerDown(event: PointerEvent, orientation: Orientation, trackPosition?: number): void;
   handlePointerMove(event: PointerEvent): void;
   handlePointerUp(event: PointerEvent): void;
-  finishPressFor(element: Element | null): void;
   handleScroll(scrollPosition: Coords): void;
-  press: Readonly<Ref<{ viewport: HTMLElement | null } | null>>;
+  press: Readonly<Ref<{ viewport: HTMLElement } | null>>;
   rootId: ComputedRef<string>;
   hiddenState: Readonly<Ref<HiddenState>>;
   setHiddenState(hiddenState: HiddenState): void;

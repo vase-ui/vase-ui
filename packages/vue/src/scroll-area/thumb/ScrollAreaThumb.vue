@@ -43,7 +43,6 @@ const {
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
-  finishPressFor,
   scrollingX,
   scrollingY,
   hasMeasuredScrollbar,
@@ -60,28 +59,7 @@ const state = computed<ScrollAreaThumbState>(() => ({
   orientation: orientation.value,
 }));
 
-function getElementHolder(thumbOrientation: 'vertical' | 'horizontal') {
-  return thumbOrientation === 'vertical' ? thumbYElement : thumbXElement;
-}
-
-// `useRenderElement` sets `element` before it calls the callback, so the callback keeps the element.
-let mountedElement: HTMLElement | null = null;
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  // A change of the orientation can remove the scrollbar and this thumb together. The `watch`
-  // below does not run then, so the callback clears each holder of the element that left.
-  ref: (thumb) => {
-    if (thumb) {
-      getElementHolder(orientation.value).value = thumb;
-    } else {
-      for (const holder of [thumbYElement, thumbXElement]) {
-        if (holder.value === mountedElement) {
-          holder.value = null;
-        }
-      }
-    }
-    mountedElement = thumb;
-  },
   state,
   props: (attrs) => [
     {
@@ -103,27 +81,21 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 
 const { isHeld } = useKeepAliveState();
 watch(
-  isHeld,
-  (held) => {
-    if (held) {
-      finishPressFor(element.value);
+  [element, orientation, isHeld],
+  ([thumb, axis, held], _, onCleanup) => {
+    if (!thumb || held) {
+      return;
     }
+    const holder = axis === 'vertical' ? thumbYElement : thumbXElement;
+    holder.value = thumb;
+    onCleanup(() => {
+      if (holder.value === thumb) {
+        holder.value = null;
+      }
+    });
   },
-  { flush: 'sync' },
+  { flush: 'post' },
 );
-
-watch(orientation, (nextOrientation, previousOrientation) => {
-  const thumb = element.value;
-  if (!thumb) {
-    return;
-  }
-
-  const previousHolder = getElementHolder(previousOrientation);
-  if (previousHolder.value === thumb) {
-    previousHolder.value = null;
-  }
-  getElementHolder(nextOrientation).value = thumb;
-});
 
 defineExpose({ element });
 </script>

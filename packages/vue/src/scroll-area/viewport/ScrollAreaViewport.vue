@@ -117,7 +117,7 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, watch } from 'vue';
+import { computed, onMounted, provide, watch, watchPostEffect } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
@@ -164,7 +164,6 @@ const {
   setHovering,
   touchModality,
   handleScroll,
-  finishPressFor,
   press,
   viewportState: state,
 } = useScrollAreaRootContext();
@@ -372,7 +371,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ScrollAreaViewportState,
   HTMLElement
 >('div', props, {
-  ref: createElementSetter(viewportElement, { keepWhileHeld: true }),
+  ref: createElementSetter(viewportElement),
   state,
   props: (attrs) => [
     {
@@ -393,9 +392,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   stateAttributesMapping: scrollAreaStateAttributesMapping,
 });
 
-const pressed = computed(
-  () => press.value?.viewport != null && press.value.viewport === element.value,
-);
+const pressed = computed(() => press.value?.viewport === element.value);
 let declaredSnap: string | undefined;
 let savedSnap:
   | {
@@ -446,21 +443,20 @@ function viewportProps() {
   return { ...base, style: { ...otherStyles, scrollSnapType: value } };
 }
 
-watch(
-  pressed,
-  (active) => {
-    if (!active && savedSnap?.inline) {
-      const { value, priority } = savedSnap.inline;
-      if ((priority ? `${value} !important` : value) === (declaredSnap ?? '')) {
-        savedSnap = undefined;
-      } else {
-        // After the release patch, a script can change its inline declaration again.
-        savedSnap.inline = null;
-      }
-    }
-  },
-  { flush: 'post' },
-);
+// A press can start and end before Vue patches the viewport. Read the press itself so its
+// release runs even when the rendered Boolean stays false.
+watchPostEffect(() => {
+  if (press.value?.viewport === element.value || !savedSnap?.inline) {
+    return;
+  }
+  const { value, priority } = savedSnap.inline;
+  if ((priority ? `${value} !important` : value) === (declaredSnap ?? '')) {
+    savedSnap = undefined;
+  } else {
+    // After the release patch, a script can change its inline declaration again.
+    savedSnap.inline = null;
+  }
+});
 
 watch(
   element,
@@ -504,7 +500,7 @@ watch(
 // No enter event comes for a pointer that is already over the viewport, at load or when `KeepAlive`
 // brings the viewport back.
 function setHoveringIfHovered() {
-  if (viewportElement.value?.matches(':hover')) {
+  if (element.value?.matches(':hover')) {
     setHovering(true);
   }
 }
@@ -518,7 +514,6 @@ watch(
   isHeld,
   (held) => {
     if (held) {
-      finishPressFor(element.value);
       scrollEndTimeout.clear();
       // The timer that was cleared would have set the flag.
       programmaticScroll = true;
