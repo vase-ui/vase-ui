@@ -5,6 +5,7 @@ import { jobRunCommands } from './workflowJob.ts';
 
 interface Manifest {
   dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
 }
@@ -54,4 +55,18 @@ test('CONTRIBUTING.md names the lowest version of the peer range', () => {
     guide,
   )?.[1];
   assert.equal(version, floor);
+});
+
+test('each Playwright image of CI has the version of `playwright`', () => {
+  const tags = Array.from(
+    readRepositoryFile(REPOSITORY_ROOT, '.github/workflows/ci.yml').matchAll(
+      /^ +image: mcr\.microsoft\.com\/playwright:(\S+)$/gm,
+    ),
+    (match) => match[1],
+  );
+  assert.ok(tags.length > 0);
+  assert.deepEqual(
+    tags,
+    tags.map(() => `v${manifest.devDependencies?.playwright}-noble`),
+  );
 });

@@ -3,14 +3,13 @@ import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const selected = shallowRef<Temporal.PlainYearMonth | null>(
   Temporal.PlainYearMonth.from('2026-11'),
 );
 </script>
 
 <template>
-  <Calendar.Root v-model:value="selected" :today="today" locale="en-US" :class="styles.Root">
+  <Calendar.Root v-model:value="selected" locale="en-US" :class="styles.Root">
     <div :class="styles.Header">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.ViewTrigger :class="styles.Title" />

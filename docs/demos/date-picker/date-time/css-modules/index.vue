@@ -8,7 +8,6 @@ import { TimePicker } from '@vase-ui/vue/time-picker';
 import styles from '../../_index.module.css';
 
 const labelId = useId();
-const today = Temporal.PlainDate.from('2026-11-14');
 const meetingDate = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-11-18'));
 const meetingTime = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('09:30'));
 // A field has no value while one of its segments is empty.
@@ -23,7 +22,7 @@ const value = computed(() =>
   <div role="group" :aria-labelledby="labelId" :class="styles.Field">
     <div :id="labelId" :class="styles.Label">Meeting time</div>
     <div :class="styles.Row">
-      <DatePicker.Root v-model:value="meetingDate" locale="en-US" time-zone="UTC">
+      <DatePicker.Root v-model:value="meetingDate" locale="en-US">
         <div :class="styles.Control">
           <DatePicker.Field aria-label="Date" :class="styles.Group">
             <DateField.Input :class="styles.Input">
@@ -55,7 +54,7 @@ const value = computed(() =>
         <DatePicker.Portal>
           <DatePicker.Positioner :side-offset="4">
             <DatePicker.Popup aria-label="Choose a meeting date" :class="styles.Popup">
-              <DatePicker.Calendar :today="today" :class="styles.Calendar">
+              <DatePicker.Calendar :class="styles.Calendar">
                 <div :class="styles.Nav">
                   <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
                   <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>

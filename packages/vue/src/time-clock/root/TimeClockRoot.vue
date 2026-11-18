@@ -280,6 +280,7 @@ const [currentView, setViewState] = useControlled<TimeClockView>({
 });
 
 const dragging = shallowRef(false);
+const inputElement = shallowRef<HTMLInputElement | null>(null);
 
 // A server and a browser can have other `Intl` data for the locale, and the hour cycle changes the
 // numbers of the face and the day periods.
@@ -458,6 +459,7 @@ provide(TimeClockRootContext, {
   time,
   selectedNumber,
   dayPeriod,
+  inputElement,
   isNumberDisabled,
   isDayPeriodDisabled,
   setDragging(newDragging) {

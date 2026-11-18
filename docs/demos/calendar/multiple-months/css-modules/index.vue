@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { onMounted, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
+// A server does not know the day of the reader, so the value comes after the mount.
+const today = shallowRef<Temporal.PlainDate>();
+onMounted(() => {
+  today.value = Temporal.Now.plainDateISO();
+});
 const selected = shallowRef<Temporal.PlainDate | null>(null);
 </script>
 
@@ -13,7 +17,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     :number-of-months="2"
     paged-navigation
     :min-date="today"
-    :today="today"
     locale="en-US"
     aria-label="Departure day"
     :class="[styles.Root, styles.WithMonths]"

@@ -1,7 +1,11 @@
 import { computed, provide, shallowRef, toValue, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useControlled } from '../../../common/useControlled';
+import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
+import { useFieldRootContext } from '../../field-root-context';
 import { PickerResetCountContext } from '../field/PickerResetCountContext';
+import { createPickerPartElements } from './usePickerPartElement';
+import type { PickerPartElements } from './usePickerPartElement';
 
 /** What a picker root gives to its parts. The root of a family adds the props that its parts share. */
 export interface DateTimePickerContext<Value, Details extends { isCanceled: boolean }> {
@@ -27,13 +31,15 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   reset: (details: Details) => void;
   /** Whether a selection closes the popup. */
   closeOnSelect: ComputedRef<boolean>;
-  /** The element that the popup is positioned against: the element of the field. */
-  fieldElement: ShallowRef<HTMLElement | null>;
+  /** The fields that give the popup its anchor and the root its native fieldset. */
+  fields: PickerPartElements;
+  /** A picker with no field reads its native fieldset at the first trigger in the document. */
+  triggers: PickerPartElements;
   /**
-   * The element of the trigger. A picker that has no field reads a native fieldset from it, in the
-   * place of the field.
+   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
+   * fieldset around it.
    */
-  triggerElement: ShallowRef<HTMLElement | null>;
+  disabled: ComputedRef<boolean>;
 }
 
 export interface UseDateTimePickerRootParameters<Value, Details extends { isCanceled: boolean }> {
@@ -44,6 +50,8 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
   /** The value that gives the kind of a new value when the picker has never had a value. */
   fallback: MaybeRefOrGetter<Value>;
   closeOnSelect: MaybeRefOrGetter<boolean | undefined>;
+  /** The disabled prop of the root. */
+  disabled: MaybeRefOrGetter<boolean>;
   /**
    * Whether a value has a time. A selection of such a value keeps the popup open by default,
    * because the user then sets the time.
@@ -61,11 +69,9 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
 }
 
 /**
- * The state that each picker root shares: its value, the rule that closes the popup and the
- * elements of the field and the trigger. The root of a family calls it in `setup`, after
- * `assertTemporal`, and gives the result to its parts. The open state is not here: the root renders
- * a popover root, and its parts read the store of that root. It also provides the count of the
- * resets, `PickerResetCountContext`, to the field roots below the root.
+ * Gives each picker its value, its disabled state, its rule for a selection and its field and
+ * trigger registries. The root calls it in `setup` after `assertTemporal`. Its parts read the
+ * open state from the popover store. Its field roots get the reset count from `PickerResetCountContext`.
  */
 export function useDateTimePickerRoot<Value, Details extends { isCanceled: boolean }>(
   parameters: UseDateTimePickerRootParameters<Value, Details>,
@@ -126,13 +132,13 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
     () => toValue(parameters.closeOnSelect) ?? !parameters.hasTime(template.value),
   );
 
-  return {
-    value,
-    template,
-    commit,
-    reset,
-    closeOnSelect,
-    fieldElement: shallowRef<HTMLElement | null>(null),
-    triggerElement: shallowRef<HTMLElement | null>(null),
-  };
+  const fields = createPickerPartElements();
+  const triggers = createPickerPartElements();
+  const field = useFieldRootContext();
+  const fieldsetDisabled = useFieldsetDisabled(() => fields.first.value ?? triggers.first.value);
+  const disabled = computed(
+    () => toValue(parameters.disabled) || (field.disabled.value ?? false) || fieldsetDisabled.value,
+  );
+
+  return { value, template, commit, reset, closeOnSelect, fields, triggers, disabled };
 }

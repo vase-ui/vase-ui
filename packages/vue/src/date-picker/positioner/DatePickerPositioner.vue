@@ -47,7 +47,7 @@ defineSlots<{
 const picker = useDatePickerRootContext();
 
 // With no `anchor` and no field, the positioner has no anchor and uses the trigger.
-const anchorOf = () => toValue(props.anchor) ?? picker.fieldElement.value;
+const anchorOf = () => toValue(props.anchor) ?? picker.fields.first.value;
 
 // This part renders `Popover.Positioner` and makes no element of its own. The template has one form
 // for `#render` and one for the content. A `v-if` on a slot template makes the slots of

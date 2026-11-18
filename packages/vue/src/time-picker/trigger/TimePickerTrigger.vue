@@ -17,14 +17,14 @@ export interface TimePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
+import { computed, useAttrs, useTemplateRef } from 'vue';
 import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
+import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
-import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
@@ -81,7 +81,8 @@ const label = computed(() => {
     return ariaLabelValue;
   }
   const value = picker.value.value;
-  // A server and a browser can have another `Intl` text, and Vue writes no attribute while it hydrates.
+  // A server and a browser can have another `Intl` text, and Vue writes no attribute of a `v-bind`
+  // object while it hydrates.
   return value === null ? 'Choose time' : `Change time, ${describe(value)}`;
 });
 
@@ -91,13 +92,7 @@ const label = computed(() => {
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 
-// The root reads the native fieldset at the place of the trigger when the picker has no field. Vue
-// stops the `watch` before it unmounts `Popover.Trigger`, so the `watch` never gets `null`.
-const setTriggerElement = createElementSetter(picker.triggerElement);
-watch(element, setTriggerElement, { immediate: true, flush: 'post' });
-onBeforeUnmount(() => {
-  setTriggerElement(null);
-});
+usePickerPartElement(picker.triggers, element);
 
 function triggerProps() {
   return { ...attrs, ...props, disabled: isDisabled.value, 'aria-label': label.value };

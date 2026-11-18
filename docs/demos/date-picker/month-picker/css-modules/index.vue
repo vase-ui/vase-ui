@@ -6,14 +6,13 @@ import { DatePicker } from '@vase-ui/vue/date-picker';
 import styles from '../../_index.module.css';
 
 const id = useId();
-const today = Temporal.PlainDate.from('2026-11-14');
 const defaultValue = Temporal.PlainYearMonth.from('2026-11');
 </script>
 
 <template>
   <div :class="styles.Field">
     <label :for="id" :class="styles.Label">Billing month</label>
-    <DatePicker.Root :default-value="defaultValue" locale="en-US" time-zone="UTC">
+    <DatePicker.Root :default-value="defaultValue" locale="en-US">
       <div :class="styles.Control">
         <DatePicker.Field :id="id" :class="styles.Group">
           <DateField.Input :class="styles.Input">
@@ -45,7 +44,7 @@ const defaultValue = Temporal.PlainYearMonth.from('2026-11');
       <DatePicker.Portal>
         <DatePicker.Positioner :side-offset="4">
           <DatePicker.Popup aria-label="Choose a billing month" :class="styles.Popup">
-            <DatePicker.Calendar :today="today" :class="styles.Calendar">
+            <DatePicker.Calendar :class="styles.Calendar">
               <div :class="styles.Header">
                 <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
                 <Calendar.ViewTrigger :class="styles.Title" />

@@ -8,6 +8,7 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  mockToday,
   waitFor,
   waitForLaterMillisecond,
   within,
@@ -39,14 +40,6 @@ const modules = import.meta.glob<{ default: Component }>(
 const sources = import.meta.glob<string>(
   ['../../../docs/demos/**/*.{vue,ts}', '../../../docs/examples/*/demos/**/*.{vue,ts}'],
   { query: '?raw', import: 'default', eager: true },
-);
-
-// A family with a record of its Base UI demos keeps the style sheets of Base UI. The other demos
-// have style sheets that Vase UI writes.
-const familiesWithBaseUiSheets = new Set(
-  Object.keys(import.meta.glob('../../../docs/demos/*/upstream.json')).map(
-    (path) => /([^/]+)\/upstream\.json$/.exec(path)![1],
-  ),
 );
 
 // A demo has a popup when a file of its folder names a `Portal` part.
@@ -299,6 +292,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
     const { render } = createRenderer();
 
     it('opens each popup with no Vue warning, no axe violation and no cut option', async () => {
+      mockToday('2026-11-14');
       // A path is the index of the trigger at each depth. The case opens each path in a new mount,
       // and it adds the triggers of the popup at the end of a path as new paths.
       const paths: number[][] = [];
@@ -312,7 +306,6 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         0,
       );
 
-      const hasOwnSheet = !familiesWithBaseUiSheets.has(name.slice(0, name.indexOf('/')));
       const cut: string[] = [];
       for (const path of paths) {
         const view = await mount(render, variant, Demo);
@@ -343,9 +336,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         await expectNoViolationsInOpenState(frame);
         for (const portal of portals().filter((element) => !frame.contains(element))) {
           await expectNoViolationsInOpenState(portal);
-          if (hasOwnSheet) {
-            cut.push(...optionsWithCutText(portal));
-          }
+          cut.push(...optionsWithCutText(portal));
         }
 
         if (path.length < 3) {

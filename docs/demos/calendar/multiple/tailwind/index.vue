@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { onMounted, shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 
-const today = Temporal.PlainDate.from('2026-11-14');
-const days = shallowRef<Temporal.PlainDate[]>([
-  Temporal.PlainDate.from('2026-11-17'),
-  Temporal.PlainDate.from('2026-11-19'),
-]);
+// A server does not know the day of the reader, so the value comes after the mount.
+const today = shallowRef<Temporal.PlainDate>();
+onMounted(() => {
+  today.value = Temporal.Now.plainDateISO();
+});
+const days = shallowRef<Temporal.PlainDate[]>([]);
 </script>
 
 <template>
@@ -15,7 +16,6 @@ const days = shallowRef<Temporal.PlainDate[]>([
     multiple
     :max-days="3"
     :min-date="today"
-    :today="today"
     locale="en-US"
     aria-label="Interview days"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"

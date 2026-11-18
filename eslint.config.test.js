@@ -50,6 +50,7 @@ function page(body) {
 }
 
 const SRC = 'packages/vue/src/dialog';
+const PORTAL_PART = 'packages/vue/src/popover/portal/PopoverPortal.vue';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
@@ -947,6 +948,26 @@ const reported = [
       '-webkit-user-select',
     ],
     [
+      'a style key that has the webkit prefix in lower case',
+      "export const style = { webkitUserSelect: 'none' };\n",
+      '-webkit-user-select',
+    ],
+    [
+      'a style key in quotes that has the moz prefix in lower case',
+      "export const style = { 'mozUserSelect': 'none' };\n",
+      '-webkit-user-select',
+    ],
+    [
+      'a write to a style member that has the Webkit prefix',
+      "declare const style: Record<string, string>;\nstyle.WebkitUserSelect = 'none';\n",
+      'setProperty',
+    ],
+    [
+      'a write to a style member in brackets that has the webkit prefix in lower case',
+      "declare const style: Record<string, string>;\nstyle['webkitUserSelect'] = 'none';\n",
+      'setProperty',
+    ],
+    [
       'an attribute name of Base UI',
       "export const INERT = 'data-base-ui-inert';\n",
       'share a marker',
@@ -974,6 +995,11 @@ const reported = [
       'a style key that has the Webkit prefix',
       `<div :style="{ WebkitUserSelect: 'none' }" />`,
       '-webkit-user-select',
+    ],
+    [
+      'a write to a style member that has the Webkit prefix',
+      `<button @click="style.WebkitUserSelect = 'none'" />`,
+      'setProperty',
     ],
     ['an attribute name of Base UI', '<div data-base-ui-inert="" />', 'share a marker'],
     ['a bound attribute name of Base UI', `<div :data-base-ui-inert="''" />`, 'share a marker'],
@@ -1035,9 +1061,48 @@ const reported = [
     ruleId: 'vue/no-restricted-block',
     hint: 'class names',
   },
+  {
+    name: 'an if statement that sets a name when it is null or undefined',
+    file: `${SRC}/useRoot.ts`,
+    code: 'let cache: string | undefined;\n\nexport function read(make: () => string) {\n  if (cache == null) {\n    cache = make();\n  }\n  return cache;\n}\n',
+    ruleId: 'logical-assignment-operators',
+    hint: '??=',
+  },
+  {
+    name: 'an if statement that sets a name when it is null or undefined in an SFC',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nlet cache: string | undefined;\n\nfunction read(make: () => string) {\n  if (cache == null) {\n    cache = make();\n  }\n  return cache;\n}\nvoid read;\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+    ruleId: 'logical-assignment-operators',
+    hint: '??=',
+  },
+  {
+    name: 'an if statement that clears a member when it is set',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export function close(state: { open: boolean }) {\n  if (state.open) {\n    state.open = false;\n  }\n}\n',
+    ruleId: 'logical-assignment-operators',
+    hint: '&&=',
+  },
 ];
 
 const passed = [
+  {
+    name: 'a root node read at the event',
+    file: `${SRC}/useRoot.ts`,
+    code: "declare const element: Element;\n\nelement.addEventListener('click', () => element.getRootNode());\n",
+  },
+  {
+    name: 'filtered attributes on a portal part',
+    file: PORTAL_PART,
+    code: docsSfc(
+      '',
+      '<FloatingPortal v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as }" />',
+    ),
+  },
+  {
+    name: 'unfiltered attributes on the input part',
+    file: 'packages/vue/src/input/Input.vue',
+    code: docsSfc('', '<FieldControl v-bind="{ ...$attrs, ...props }" />'),
+  },
   {
     name: 'conditional part forms at the root',
     file: `${SRC}/DialogRoot.vue`,
@@ -1406,7 +1471,12 @@ const passed = [
   {
     name: 'a key that has ms inside it and a key that has no capital after a vendor prefix',
     file: `${SRC}/useRoot.ts`,
-    code: "export const labels = { itemsPerPage: 1, msg: 'a', Mozilla: 'b' };\n",
+    code: "export const labels = { itemsPerPage: 1, msg: 'a', Mozilla: 'b', webkit: true, moz: false };\n",
+  },
+  {
+    name: 'a read of a member and of an object pattern that have a vendor prefix, and a key from a variable',
+    file: `${SRC}/useRoot.ts`,
+    code: "declare const event: { webkitForce: number; mozInputSource: number };\ndeclare const style: Record<string, string>;\ndeclare const msKey: string;\n\nconst { webkitForce, 'mozInputSource': source } = event;\nexport const select = style.webkitUserSelect;\nexport const used = [webkitForce, source, { [msKey]: 1 }];\nstyle[msKey] = select;\nstyle.userSelect = style.webkitUserSelect;\n",
   },
   {
     name: 'a method of Temporal and a constant that has the name using',
@@ -1447,6 +1517,37 @@ for (const { name, file, code, ruleId, hint } of reported) {
 for (const { name, file, code } of passed) {
   test(`accepts ${name}`, async () => {
     assert.deepEqual(await lint(file, code), []);
+  });
+}
+
+for (const { name, code } of [
+  {
+    name: 'a `watch` callback',
+    code: "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
+  },
+  {
+    name: 'a `useDomEffect` effect',
+    code: "import { useDomEffect } from '../utils/popups/useDomEffect';\n\ndeclare const element: Element;\nuseDomEffect([], () => {\n  element.getRootNode();\n});\n",
+  },
+]) {
+  test(`reports a root node read in ${name} one time`, async () => {
+    const messages = await lint(`${SRC}/useRoot.ts`, code);
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['no-restricted-syntax'],
+    );
+    assert.match(messages[0].message, /followRootNode/);
+  });
+}
+
+for (const binding of ['{ ...$attrs, as }', '$attrs']) {
+  test(`reports v-bind="${binding}" on a portal part one time`, async () => {
+    const messages = await lint(PORTAL_PART, docsSfc('', `<FloatingPortal v-bind="${binding}" />`));
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['vue/no-restricted-syntax'],
+    );
+    assert.match(messages[0].message, /withoutPropsOf/);
   });
 }
 

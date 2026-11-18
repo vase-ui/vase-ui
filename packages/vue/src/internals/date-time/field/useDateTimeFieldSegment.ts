@@ -1,5 +1,5 @@
 import { computed, nextTick, shallowRef, toValue, watch } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import type { ComputedRef, CSSProperties, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating, useValueBeforeHydration } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
 import { platform } from '../../../common/platform';
@@ -43,6 +43,11 @@ export const segmentStateAttributesMapping: StateAttributesMapping<DateTimeField
   index: () => null,
   ...fieldValidityMapping,
 };
+
+// An engine gives `size` a width of average characters, which is too narrow for `AM` and `mm` in
+// some fonts. With `field-sizing: content` the box follows the text. An engine that does not have
+// the property keeps the width of `size`.
+const CONTENT_SIZING_STYLE: CSSProperties = { fieldSizing: 'content' };
 
 export interface UseDateTimeFieldSegmentReturnValue {
   state: ComputedRef<DateTimeFieldSegmentState>;
@@ -335,8 +340,10 @@ export function useDateTimeFieldSegment(
       'aria-invalid': !context.disabled.value && context.invalid.value ? true : undefined,
       disabled: context.disabled.value ? '' : undefined,
       readonly: context.readOnly.value || undefined,
-      // The server can have another layout, and Vue writes no attribute while it hydrates.
+      // The server can have another layout, and Vue writes no attribute of a `v-bind` object
+      // while it hydrates.
       'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
+      style: CONTENT_SIZING_STYLE,
       onMousedown(event: MouseEvent) {
         if (event.defaultPrevented || context.disabled.value) {
           return;

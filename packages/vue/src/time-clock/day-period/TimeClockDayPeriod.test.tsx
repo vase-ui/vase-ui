@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import { shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import TimePickerAnatomy from '../../time-picker/root/TimePickerAnatomy.test.vue';
+import TimeClockFaceReplace from './TimeClockFaceReplace.test.vue';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 
@@ -249,6 +252,87 @@ describe('<TimeClock.DayPeriod />', () => {
       );
 
       expect(screen.getByTestId('am')).toBeInTheDocument();
+    });
+
+    describe('focus', () => {
+      function renderClock() {
+        return render(
+          <TimeClock.Root hourCycle={12}>
+            <TimeClock.ViewTrigger view="hour" data-testid="hour" />
+            <TimeClock.DayPeriod value="pm" data-testid="pm" />
+            <TimeClock.Face />
+          </TimeClock.Root>,
+        );
+      }
+
+      it('gives its focus to the face when the hour cycle becomes 24', async () => {
+        const { setProps } = await renderClock();
+        const pm = screen.getByTestId('pm');
+        pm.focus();
+        expect(pm).toHaveFocus();
+
+        await setProps({ hourCycle: 24 });
+
+        expect(screen.queryByTestId('pm')).toBeNull();
+        expect(screen.getByRole('slider')).toHaveFocus();
+      });
+
+      it('keeps the focus of another element when the hour cycle becomes 24', async () => {
+        const { setProps } = await renderClock();
+        const hour = screen.getByTestId('hour');
+        hour.focus();
+        expect(hour).toHaveFocus();
+
+        await setProps({ hourCycle: 24 });
+
+        expect(screen.queryByTestId('pm')).toBeNull();
+        expect(hour).toHaveFocus();
+      });
+
+      // The popup takes a focus that moves to `<body>`, so the face must take the focus before the
+      // removal.
+      it('gives its focus to the face in the popup of a time picker', async () => {
+        const { setProps } = await render(
+          <TimePickerAnatomy
+            {...{ locale: 'en-US', hourCycle: 12, defaultOpen: true, clock: true }}
+          />,
+        );
+        await screen.findByTestId('face');
+        // The popup gives the first focus one frame after it opens.
+        await waitFor(() => {
+          expect(screen.getByRole('slider')).toHaveFocus();
+        });
+        const pm = screen.getByTestId('pm');
+        pm.focus();
+        expect(pm).toHaveFocus();
+
+        await setProps({ hourCycle: 24 });
+
+        expect(screen.queryByTestId('pm')).toBeNull();
+        expect(screen.getByRole('slider')).toHaveFocus();
+      });
+
+      it('gives its focus to a face that mounts before the old face unmounts', async () => {
+        const swapped = shallowRef(false);
+        const hourCycle = shallowRef<12 | 24>(12);
+        await render(() => (
+          <TimeClock.Root hourCycle={hourCycle.value}>
+            <TimeClock.DayPeriod value="pm" data-testid="pm" />
+            <TimeClockFaceReplace swapped={swapped.value} />
+          </TimeClock.Root>
+        ));
+        swapped.value = true;
+        await flushMicrotasks();
+        const pm = screen.getByTestId('pm');
+        pm.focus();
+        expect(pm).toHaveFocus();
+
+        hourCycle.value = 24;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('pm')).toBeNull();
+        expect(screen.getByRole('slider')).toHaveFocus();
+      });
     });
   });
 

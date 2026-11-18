@@ -8,6 +8,7 @@ import {
   mockRuntimeLocale,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   within,
 } from '#test-utils';
 import MeterRootHydration from './MeterRootHydration.test.vue';
@@ -384,6 +385,23 @@ describe('<Meter.Root />', () => {
   });
 
   describe('hydration', () => {
+    it('writes the aria-valuetext of the browser when the server HTML has another text', async () => {
+      const props = { value: 50, locale: 'en-US', 'aria-label': 'Battery Level' };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer('src/meter/root/MeterRoot.vue', props),
+        '[role="meter"]',
+        'aria-valuetext',
+        'other',
+      );
+
+      const { container } = await hydrate(Meter.Root, { serverHtml, props });
+
+      expect(within(container).getByRole('meter')).toHaveAttribute(
+        'aria-valuetext',
+        new Intl.NumberFormat(props.locale, { style: 'percent' }).format(0.5),
+      );
+    });
+
     it('hydrates the root with no warning and no DOM difference', async () => {
       const props = { value: 30, 'aria-label': 'Battery Level' };
       const serverHtml = await renderOnServer('src/meter/root/MeterRoot.vue', props);

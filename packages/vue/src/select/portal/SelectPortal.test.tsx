@@ -7,6 +7,7 @@ import {
   describeConformance,
   flushMicrotasks,
   isInaccessible,
+  portalOwnPropsTests,
   screen,
   waitFor,
 } from '#test-utils';
@@ -30,6 +31,15 @@ describe('<Select.Portal />', () => {
       return result;
     },
   }));
+
+  portalOwnPropsTests({
+    render,
+    createComponent: (attributes) => (
+      <Select.Root defaultOpen>
+        <Select.Portal {...attributes} />
+      </Select.Root>
+    ),
+  });
 
   it('renders the popup in the children component of the #render slot', async () => {
     await render(

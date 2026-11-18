@@ -2,15 +2,17 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, postcssIsolateStyles } from 'vitepress';
-import type { MarkdownRenderer } from 'vitepress';
+import type { HeadConfig, MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
 import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
+import { VASE_SOURCE_ROOT } from '../../scripts/parity/paths.ts';
 import { REPOSITORY_ROOT } from '../../scripts/parity/repository.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
+import { viteFollowSource } from './viteFollowSource.ts';
 
 const docsRoot = join(import.meta.dirname, '..');
 const manifest: { description: string; homepage: string } = JSON.parse(
@@ -71,26 +73,47 @@ function markdownConfig(md: MarkdownRenderer): void {
   markdownSiteLinks(md);
 }
 
+const SITE_TITLE = 'Vase UI';
+const PREVIEW_IMAGE = new URL('og-image.png', manifest.homepage).href;
+const PREVIEW_IMAGE_ALT =
+  'The Vase UI mark and summary beside a date picker, a menu and a time picker.';
+
 export default defineConfig({
   lang: 'en-US',
-  title: 'Vase UI',
+  title: SITE_TITLE,
   description: manifest.description,
   base: '/',
   cleanUrls: true,
-  // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
   head: [
+    // If two icons are equally appropriate, a browser uses the last one. The SVG link thus follows
+    // the raster icon links.
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon.png' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    // Link crawlers need an absolute image address. X reads og:title and og:description.
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: SITE_TITLE }],
+    ['meta', { property: 'og:image', content: PREVIEW_IMAGE }],
+    ['meta', { property: 'og:image:type', content: 'image/png' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:image:alt', content: PREVIEW_IMAGE_ALT }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:image', content: PREVIEW_IMAGE }],
+    // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
     [
       'script',
       {},
       `try{if(localStorage.getItem('${DEMO_VARIANT_STORAGE_KEY}')==='tailwind')document.documentElement.dataset.demoVariant='tailwind'}catch{}`,
     ],
   ],
-  // A demo is inside an element with the class `vp-raw`. The first plugin keeps the styles of the
-  // theme out of it, so the style sheet of the demo is the only one that styles it. For a Tailwind
-  // demo, that is `docs/demos/tailwind.css`. The second plugin makes a copied style sheet follow
-  // the theme of the site. In `tailwind.css`, the variant `dark` does the same.
+  // A demo is inside an element with the class `vp-raw`. The first PostCSS plugin keeps the styles
+  // of the theme out of it, so the style sheet of the demo is the only one that styles it. For a
+  // Tailwind demo, that is `docs/demos/tailwind.css`. The second PostCSS plugin makes a copied
+  // style sheet follow the theme of the site. In `tailwind.css`, the variant `dark` does the same.
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), viteFollowSource(join(REPOSITORY_ROOT, VASE_SOURCE_ROOT))],
     css: {
       postcss: {
         plugins: [
@@ -107,8 +130,23 @@ export default defineConfig({
   // reference of that earlier render.
   markdown: { cache: isBuild, colorReplacements: SYNTAX_COLORS, config: markdownConfig },
   transformPageData(pageData) {
+    const pagePath = pageData.relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '');
+    const pageHead: HeadConfig[] = [
+      ['meta', { property: 'og:url', content: new URL(pagePath, manifest.homepage).href }],
+      ['meta', { property: 'og:title', content: pageData.title || SITE_TITLE }],
+      [
+        'meta',
+        { property: 'og:description', content: pageData.description || manifest.description },
+      ],
+    ];
+    const frontmatterHead: HeadConfig[] = Array.isArray(pageData.frontmatter.head)
+      ? pageData.frontmatter.head
+      : [];
     const family = familyOfPage(pageData.relativePath);
-    return family === undefined ? undefined : { apiReference: readApiReference(family) };
+    return {
+      frontmatter: { ...pageData.frontmatter, head: [...pageHead, ...frontmatterHead] },
+      ...(family === undefined ? {} : { apiReference: readApiReference(family) }),
+    };
   },
   themeConfig: {
     logo: { light: '/mark-light.svg', dark: '/mark-dark.svg', alt: 'Vase UI' },

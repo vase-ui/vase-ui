@@ -88,9 +88,9 @@ export function useDayButton<State extends DayState>(
           // The first client render can put the tab stop on another day than the server HTML: the
           // `Intl` data of the engine can give another first day of the week or calendar, and a root
           // with no day of the server in the server HTML reads the clock of the browser. The day text
-          // also comes from the data of `Intl` in the engine. Hydration does not patch an attribute,
-          // so the string differs from the number that the button gives after the mount, and Vue
-          // then writes the attribute again.
+          // also comes from the data of `Intl` in the engine. Vue keeps the server `tabindex` from
+          // a `v-bind` object while it hydrates. The change from a string to a number makes Vue
+          // write it after the mount.
           tabindex: isHydrating.value ? String(tabindex) : tabindex,
           'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
           onClick: (event: MouseEvent) => {

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  portalOwnPropsTests,
+  screen,
+} from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 type RenderSlotProps = Parameters<
@@ -20,6 +26,15 @@ describe('<NavigationMenu.Portal />', () => {
       return result;
     },
   }));
+
+  portalOwnPropsTests({
+    render,
+    createComponent: (attributes) => (
+      <NavigationMenu.Root>
+        <NavigationMenu.Portal keepMounted {...attributes} />
+      </NavigationMenu.Root>
+    ),
+  });
 
   function renderMenu(portalProps: Record<string, unknown> = {}) {
     return render(

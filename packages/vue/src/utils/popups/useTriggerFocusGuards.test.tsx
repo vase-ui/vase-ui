@@ -1012,13 +1012,18 @@ describe('useTriggerFocusGuards', () => {
     );
   }
 
-  // `KeepAlive` takes a held popup out of the document, with its inside guards.
-  async function renderHeldPopup(family: 'Popover' | 'Menu', popup: 'held' | 'mounted while held') {
+  // `KeepAlive` takes a held popup out of the document, with its inside guards. An open root with
+  // no popup part has no inside guards.
+  async function renderPopupOutOfDocument(
+    family: 'Popover' | 'Menu',
+    popup: 'held' | 'mounted while held' | 'not mounted',
+  ) {
     const reasons: string[] = [];
     const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(() => renderPopupPart(family), {
       mounted: popup === 'held',
       renderBranch: (part) => part,
     });
+    const renderBranch = () => (popup === 'not mounted' ? null : <HeldBranch />);
     await render(() => (
       <div>
         {family === 'Popover' ? (
@@ -1026,14 +1031,14 @@ describe('useTriggerFocusGuards', () => {
             <Popover.Trigger id="trigger" data-testid="trigger">
               Toggle
             </Popover.Trigger>
-            <HeldBranch />
+            {renderBranch()}
           </Popover.Root>
         ) : (
           <Menu.Root modal={false} {...createRootProps({}, reasons)}>
             <Menu.Trigger id="trigger" data-testid="trigger">
               Toggle
             </Menu.Trigger>
-            <HeldBranch />
+            {renderBranch()}
           </Menu.Root>
         )}
         {renderStop('after', 'After')}
@@ -1048,7 +1053,7 @@ describe('useTriggerFocusGuards', () => {
         });
       }
       await hide();
-    } else {
+    } else if (popup === 'mounted while held') {
       await mountWhileHeld();
     }
     return { reasons, trigger: screen.getByTestId('trigger') };
@@ -1064,7 +1069,7 @@ describe('useTriggerFocusGuards', () => {
     ])(
       'goes from the trigger to the element after it for Tab, and asks for the close ($name)',
       async ({ popup }) => {
-        const { trigger, reasons } = await renderHeldPopup(family, popup);
+        const { trigger, reasons } = await renderPopupOutOfDocument(family, popup);
         await startAt('trigger', reasons);
         const focus = trackFocus();
 
@@ -1083,7 +1088,7 @@ describe('useTriggerFocusGuards', () => {
     ])(
       'goes from the element after the trigger to the trigger for Shift+Tab ($name)',
       async ({ popup }) => {
-        const { trigger, reasons } = await renderHeldPopup(family, popup);
+        const { trigger, reasons } = await renderPopupOutOfDocument(family, popup);
         await startAt('after', reasons);
         const focus = trackFocus();
 
@@ -1094,6 +1099,23 @@ describe('useTriggerFocusGuards', () => {
         expectNoReentry(focus);
       },
     );
+  });
+
+  describe.each([
+    { name: 'Popover', family: 'Popover' as const },
+    { name: 'Menu', family: 'Menu' as const },
+  ])('VUE-132: $name with no popup part', ({ family }) => {
+    it('goes from the element after the trigger to the trigger for Shift+Tab', async () => {
+      const { trigger, reasons } = await renderPopupOutOfDocument(family, 'not mounted');
+      await startAt('after', reasons);
+      const focus = trackFocus();
+
+      await pressTab(true);
+
+      expect(trigger).toHaveFocus();
+      expect(reasons).toEqual([]);
+      expectNoReentry(focus);
+    });
   });
 
   // The inner popup has guards beside its trigger and none at the place of its portal. The search

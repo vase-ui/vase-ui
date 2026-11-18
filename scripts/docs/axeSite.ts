@@ -10,6 +10,8 @@ import { serveBuiltSite, vueRequire } from './builtSite.ts';
 const WIDTHS = [1440, 320];
 // The site follows the color scheme of the browser until the reader selects a theme.
 const THEMES = ['light', 'dark'] as const;
+// Calendar demos follow the clock, so a fixed day keeps the audit the same on each day.
+const TODAY = '2026-11-14';
 
 /**
  * Each row is a fault that a page of the site has now, with its reason. The check does not report
@@ -50,7 +52,8 @@ interface ConsoleMessage {
   location(): { url: string };
 }
 
-// The functions that run in the page read these globals. The root project has no DOM types.
+// The functions that run in the page read these globals. The root project has no DOM or Temporal
+// types.
 declare const document: {
   querySelector(selector: string): (object & { __vue_app__?: unknown }) | null;
   querySelectorAll(selector: string): Iterable<{ dataset: Record<string, string | undefined> }>;
@@ -61,6 +64,10 @@ declare function requestAnimationFrame(callback: () => void): number;
 declare const localStorage: { setItem(key: string, value: string): void };
 declare const axe: {
   run(options: { resultTypes: string[] }): Promise<{ violations: Violation[] }>;
+};
+declare const Temporal: {
+  PlainDate: { from(day: string): { toString(): string } };
+  Now: { plainDateISO: () => { toString(): string } };
 };
 
 const DIST = join(REPOSITORY_ROOT, 'docs/.vitepress/dist');
@@ -105,6 +112,10 @@ async function main(): Promise<void> {
         },
         [DEMO_VARIANT_STORAGE_KEY, variant],
       );
+      await context.addInitScript((day: string) => {
+        const date = Temporal.PlainDate.from(day);
+        Temporal.Now.plainDateISO = () => date;
+      }, TODAY);
       const tab = await context.newPage();
       tab.on('pageerror', (error: Error) => {
         problems.push(`${name}: the page threw ${String(error)}`);
@@ -121,27 +132,33 @@ async function main(): Promise<void> {
       // Vue sets `__vue_app__` on the root when it has hydrated the page. A frame shows the stored
       // styling method in the render after the mount, and fonts change the width of a table.
       await tab.waitForFunction(() => document.querySelector('#app')?.__vue_app__ !== undefined);
-      const state: { dark: boolean; switchable: string[] } = await tab.evaluate(async () => {
-        await document.fonts.ready;
-        await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(resolve);
+      const state: { dark: boolean; switchable: string[]; today: string } = await tab.evaluate(
+        async () => {
+          await document.fonts.ready;
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(resolve);
+            });
           });
-        });
-        return {
-          dark: document.documentElement.classList.contains('dark'),
-          // A frame with a toolbar has both styling methods.
-          switchable: Array.from(
-            document.querySelectorAll('.demo:has(> .demo-toolbar) > .demo-frame'),
-            (frame) => frame.dataset.demo ?? '',
-          ),
-        };
-      });
+          return {
+            dark: document.documentElement.classList.contains('dark'),
+            // A frame with a toolbar has both styling methods.
+            switchable: Array.from(
+              document.querySelectorAll('.demo:has(> .demo-toolbar) > .demo-frame'),
+              (frame) => frame.dataset.demo ?? '',
+            ),
+            today: Temporal.Now.plainDateISO().toString(),
+          };
+        },
+      );
       if (state.dark !== (theme === 'dark')) {
         problems.push(`${name}: the page does not show the ${theme} theme.`);
       }
       if (state.switchable.some((shown) => shown !== variant)) {
         problems.push(`${name}: a demo frame does not show the ${variant} demo.`);
+      }
+      if (state.today !== TODAY) {
+        problems.push(`${name}: the page does not have ${TODAY} as today (${state.today}).`);
       }
       await tab.addScriptTag({ content: axeSource });
       const violations: Violation[] = await tab.evaluate(async () => {

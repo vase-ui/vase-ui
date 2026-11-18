@@ -43,10 +43,10 @@ export function useIsHydrating(): ComputedRef<boolean> {
  * The function gives `null` while Vue hydrates the part from server HTML. On a server, in a
  * client-only mount and after the mount, it gives the value.
  *
- * Vue does not patch an `aria-*` attribute while it hydrates, so the element keeps the value of the
- * server HTML. The page can remove or change a later part at the mount. The render after the mount
- * can then give the value of the first client render, and Vue writes nothing. With `null` in the
- * first client render, the render after the mount always writes its value.
+ * An `aria-*` attribute from a `v-bind` object keeps its server value while Vue hydrates. The
+ * page can remove or change a later part at the mount. The render after the mount can then give
+ * the value of the first client render, and Vue writes nothing. With `null` in the first client
+ * render, the render after the mount always writes its value.
  *
  * Give the function only the value of an attribute that Vue does not compare while it hydrates, or
  * of an attribute that the element allows to differ with `data-allow-mismatch` and the category

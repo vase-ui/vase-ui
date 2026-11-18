@@ -3,16 +3,14 @@ import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
-const today = Temporal.PlainDate.from('2026-11-14');
 const captionFormat: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-const selected = shallowRef(today);
+const selected = shallowRef<Temporal.PlainDate | null>(null);
 </script>
 
 <template>
   <Calendar.Root
     v-model:value="selected"
     :visible-duration="{ weeks: 1 }"
-    :today="today"
     locale="en-US"
     aria-label="Day of the agenda"
     :class="styles.Root"

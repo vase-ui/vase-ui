@@ -50,8 +50,8 @@ const picker = useDateRangePickerRootContext();
 // With one field only, the popup lines up with that field. With no field, the positioner has no
 // anchor and uses the trigger.
 const fieldsAnchor = computed(() => {
-  const start = picker.startFieldElement.value;
-  const end = picker.endFieldElement.value;
+  const start = picker.startFields.first.value;
+  const end = picker.endFields.first.value;
   if (!start || !end) {
     return start ?? end;
   }

@@ -15,7 +15,7 @@ const props = defineProps<TextProps>();
 
 const internalElement = shallowRef<HTMLElement | null>(null);
 
-const { element, elementProps, setRef, tag } = useRender(props, {
+const { element, elementProps, setRef, tag, usesRenderSlot } = useRender(props, {
   defaultTagName: 'p',
   ref: (value) => {
     internalElement.value = value;
@@ -26,6 +26,6 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="{}" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="{}" />
   <component :is="tag" v-else v-bind="elementProps()" :ref="setRef"><slot /></component>
 </template>
