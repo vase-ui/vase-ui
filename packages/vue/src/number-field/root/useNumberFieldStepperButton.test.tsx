@@ -846,15 +846,18 @@ describe('useNumberFieldStepperButton', () => {
         ])(
           'passes disabled state to className when $scenario',
           async ({ rootDisabled, buttonDisabled }) => {
-            const classNameSpy = vi.fn();
+            const renderButton = vi.fn<InstanceType<typeof Stepper>['$slots']['render']>(
+              ({ props, state }) => <button {...props} class={{ inactive: state.disabled }} />,
+            );
             await render(
               <NumberField.Root disabled={rootDisabled}>
-                <Stepper disabled={buttonDisabled} stateClass={classNameSpy} />
+                <Stepper disabled={buttonDisabled} v-slots={{ render: renderButton }} />
                 <NumberField.Input />
               </NumberField.Root>,
             );
 
-            expect(classNameSpy.mock.lastCall?.[0]).toHaveProperty('disabled', true);
+            expect(renderButton.mock.lastCall?.[0].state.disabled).toBe(true);
+            expect(screen.getByRole('button')).toHaveClass('inactive');
           },
         );
       });

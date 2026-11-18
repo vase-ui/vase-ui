@@ -14,8 +14,6 @@ export interface ContextMenuPositionerProps
     Omit<
       MenuPositionerProps,
       | 'as'
-      | 'stateClass'
-      | 'stateStyle'
       | 'anchor'
       | 'positionMethod'
       | 'side'
@@ -126,7 +124,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ContextMenuPositionerState>;
 }>();
 
-// As in Base UI, this part renders `Menu.Positioner` and makes no element of its own.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
 // makes the slots of `Menu.Positioner` dynamic. Vue then renders `Menu.Positioner` again each time
 // this part renders. It also renders again each part in that slot that has slot content.

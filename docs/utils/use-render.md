@@ -72,7 +72,7 @@ The `props` parameter of `useRender` also merges its sets. The function that you
 
 When you build a custom component, you often need the element inside the component, and the consumer needs it too. The `ref` parameter of `useRender` takes a callback, or an array of callbacks. Each callback gets the element, and it gets `null` when the element goes away.
 
-The component also exposes `element`. A consumer reads it through a template ref.
+Read the exposed `element` through a template ref. Its value becomes `null` when the component removes its element.
 
 <<< ./use-render/MergingRefs.vue{16,20-22}
 
@@ -80,7 +80,7 @@ The component also exposes `element`. A consumer reads it through a template ref
 
 Three types are for the props and the slot of a component:
 
-- `useRender.ComponentProps<State>` types the external (public) props of a component: `as`, `stateClass` and `stateStyle`. `State` is the state that `stateClass` and `stateStyle` get.
+- `useRender.ComponentProps` declares the `as` prop.
 - `useRender.ElementProps<'button'>` types the native attributes and listeners of a tag. Extend it behind `/* @vue-ignore */`. The SFC compiler then makes no props of them, and they stay in `$attrs`.
 - `useRender.RenderProp<State>` types the `#render` slot. Use it in `defineSlots`.
 

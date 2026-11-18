@@ -1,4 +1,4 @@
-import type { Component, HTMLAttributes, StyleValue } from 'vue';
+import type { Component } from 'vue';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../types';
 
 export type { HTMLProps, VaseUIEvent, ComponentRenderFn };
@@ -71,25 +71,14 @@ export type GenericComponent = /* @vue-ignore */ (props: any, ...args: any[]) =>
 
 /**
  * Props shared by all Vase UI parts that render an element.
- * Contains `as`, `stateClass` and `stateStyle`.
  */
-export interface VaseUIComponentProps<State> {
+export interface VaseUIComponentProps<_State> {
   /**
    * Replaces the element of the part with a different tag or component.
    * To give the element props or children of its own, use the `#render` slot.
    * If the part also has a `#render` slot, the slot wins.
    */
   as?: string | Component | GenericComponent | undefined;
-  /**
-   * Returns a CSS class from the state of the part.
-   * The class comes after the `class` attribute.
-   */
-  stateClass?: ((state: State) => ClassValue) | undefined;
-  /**
-   * Returns a style from the state of the part.
-   * It wins over the `style` attribute.
-   */
-  stateStyle?: ((state: State) => StyleValue) | undefined;
 }
 
 export interface NativeButtonProps {
@@ -128,8 +117,3 @@ export type Simplify<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 export type RequiredExcept<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T, K>;
 
 export type Orientation = 'horizontal' | 'vertical';
-
-/**
- * The package supports Vue 3.5.12, which does not export `ClassValue`.
- */
-export type ClassValue = HTMLAttributes['class'];

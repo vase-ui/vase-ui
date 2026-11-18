@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { Component, HTMLAttributes, StyleValue } from 'vue';
+import type { Component, HTMLAttributes } from 'vue';
 
 export interface SamplePopupState {
   open: boolean;
@@ -18,10 +18,6 @@ export interface SamplePopupProps extends /* @vue-ignore */ HTMLAttributes {
   keepMounted?: boolean | undefined;
   /** Whether the popup is disabled. */
   disabled?: boolean | undefined;
-  /** A class that depends on the state. */
-  stateClass?: ((state: SamplePopupState) => string | undefined) | undefined;
-  /** A style that depends on the state. */
-  stateStyle?: ((state: SamplePopupState) => StyleValue | undefined) | undefined;
 }
 </script>
 
@@ -35,8 +31,6 @@ const props = withDefaults(defineProps<SamplePopupProps>(), {
   side: 'bottom',
   keepMounted: false,
   disabled: false,
-  stateClass: undefined,
-  stateStyle: undefined,
 });
 
 defineSlots<{
@@ -62,8 +56,6 @@ function elementProps() {
     ref: setElement,
     'data-open': '',
     'data-side': props.side,
-    class: props.stateClass?.(state.value),
-    style: props.stateStyle?.(state.value),
   });
 }
 

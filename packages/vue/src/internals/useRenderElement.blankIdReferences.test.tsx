@@ -54,7 +54,7 @@ const Part = defineComponent(
     });
     return () => h('div', elementProps());
   },
-  { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+  { props: ['as'], inheritAttrs: false },
 );
 
 const Note = defineComponent(
@@ -64,7 +64,7 @@ const Note = defineComponent(
     });
     return () => h(tag.value, elementProps());
   },
-  { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+  { props: ['as'], inheritAttrs: false },
 );
 
 interface Row {

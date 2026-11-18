@@ -2630,9 +2630,11 @@ describe('<Tabs.Root />', () => {
             <Tabs.Tab value={0} />
             <Tabs.Tab
               value={1}
-              stateClass={(state) => {
-                renders.push(`${state.active} ${state.tabActivationDirection}`);
-                return '';
+              v-slots={{
+                default: ({ state }: { state: Tabs.Tab.State }) => {
+                  renders.push(`${state.active} ${state.tabActivationDirection}`);
+                  return 'Tab';
+                },
               }}
             />
           </Tabs.List>

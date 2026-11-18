@@ -30,6 +30,7 @@ describe('<Resizable.Panel />', () => {
     root?: Record<string, unknown>;
     panels: Record<string, unknown>[];
     width?: ShallowRef<number>;
+    renderFirstPanel?: InstanceType<typeof Resizable.Panel>['$slots']['render'];
   }) {
     return render(() => (
       <div style={{ width: `${options.width?.value ?? 1000}px`, height: '400px' }}>
@@ -39,7 +40,16 @@ describe('<Resizable.Panel />', () => {
               index > 0 ? (
                 <Resizable.Handle key={`handle-${index}`} data-testid={`handle-${index}`} />
               ) : null,
-              <Resizable.Panel key={`panel-${index}`} data-testid={`panel-${index}`} {...panel} />,
+              <Resizable.Panel
+                key={`panel-${index}`}
+                data-testid={`panel-${index}`}
+                {...panel}
+                v-slots={
+                  index === 0 && options.renderFirstPanel
+                    ? { render: options.renderFirstPanel }
+                    : undefined
+                }
+              />,
             ])
           }
         </Resizable.Root>
@@ -373,14 +383,15 @@ describe('<Resizable.Panel />', () => {
   });
 
   describe('state', () => {
-    it('gives the orientation and the size to the slot and to stateClass', async () => {
+    it('gives the orientation and the size to the render slot', async () => {
       await renderPanels({
         root: { orientation: 'vertical' },
+        renderFirstPanel: ({ props, state }) => (
+          <div {...props} class={`${state.orientation}-${state.size}`} />
+        ),
         panels: [
           {
             defaultSize: 30,
-            stateClass: (state: { orientation: string; size: number }) =>
-              `${state.orientation}-${state.size}`,
           },
           {},
         ],
@@ -413,11 +424,13 @@ describe('<Resizable.Panel />', () => {
 
     it('has data-collapsed and the state collapsed while the panel is collapsed', async () => {
       await renderPanels({
+        renderFirstPanel: ({ props, state }) => (
+          <div {...props} class={`collapsed-${state.collapsed}`} />
+        ),
         panels: [
           {
             ...collapsible,
             defaultSize: 40,
-            stateClass: (state: { collapsed: boolean }) => `collapsed-${state.collapsed}`,
           },
           {},
         ],
@@ -943,11 +956,13 @@ describe('<Resizable.Panel />', () => {
 
     it('has data-disabled and the state disabled', async () => {
       await renderPanels({
+        renderFirstPanel: ({ props, state }) => (
+          <div {...props} class={`disabled-${state.disabled}`} />
+        ),
         panels: [
           {
             id: 'a',
             disabled: true,
-            stateClass: (state: { disabled: boolean }) => `disabled-${state.disabled}`,
           },
           { id: 'b' },
         ],
@@ -1915,8 +1930,8 @@ describe('<Resizable.Panel />', () => {
       ],
     });
 
-    it('gives the state of the server HTML to stateClass and the slot while it hydrates', async () => {
-      const props = { composition: 'stateFunctions' };
+    it('gives the collapsed state of the server HTML to both panel slots while it hydrates', async () => {
+      const props = { composition: 'slotStyles' };
       const serverHtml = await renderOnServer(
         'src/resizable/root/ResizableRootHydration.test.vue',
         props,
@@ -1927,6 +1942,7 @@ describe('<Resizable.Panel />', () => {
       const panel = container.querySelector('[data-testid="a"]');
       expect(panel).toHaveClass('collapsed');
       expect(panel?.textContent).toBe('Closed');
+      expect(container.querySelector('[data-testid="c"]')).toHaveTextContent('Closed');
     });
   });
 

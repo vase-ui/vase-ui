@@ -127,29 +127,24 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
       return match && rowNames.has(lowerFirst(match[1])) ? [lowerFirst(match[1])] : [];
     }),
   );
-  const optionalProp = (row: string): ExpectedProp => ({
-    required: false,
-    default: null,
-    compareDefault: false,
-    controlled: false,
-    row,
-  });
   for (const row of rows) {
+    // Vue forwards class and style as native attributes.
+    if (row.name === 'className' || row.name === 'style') {
+      continue;
+    }
     if (row.name === 'render') {
       expected.props.set('as', {
-        ...optionalProp(row.name),
+        required: false,
         default: part.tag === null ? null : `'${part.tag}'`,
         compareDefault: part.tag !== null,
+        controlled: false,
+        row: row.name,
       });
       expected.slots.set('render', row.name);
       expected.exposed.set('element', row.name);
       if (part.tag === null || !VOID_ELEMENTS.has(part.tag)) {
         expected.slots.set('default', expected.slots.get('default') ?? row.name);
       }
-    } else if (row.name === 'className') {
-      expected.props.set('stateClass', optionalProp(row.name));
-    } else if (row.name === 'style') {
-      expected.props.set('stateStyle', optionalProp(row.name));
     } else if (row.name === 'children') {
       expected.slots.set('default', row.name);
     } else if (row.name === 'actionsRef') {

@@ -336,8 +336,6 @@ test('the native attributes of a part are not props', () => {
     'keepMounted',
     'name',
     'side',
-    'stateClass',
-    'stateStyle',
   ]);
   assert.equal(
     check().problems.some((problem) => /onClick|`type`/.test(problem)),

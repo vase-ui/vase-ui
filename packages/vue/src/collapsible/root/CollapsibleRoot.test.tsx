@@ -1,3 +1,4 @@
+import CollapsibleSlotStyles from './CollapsibleSlotStyles.test.vue';
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef, watch } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
@@ -451,28 +452,7 @@ describe('<Collapsible.Root />', () => {
 
   describe('state callbacks', () => {
     it('passes state to className and style callbacks', async () => {
-      const { user } = await render(
-        <Collapsible.Root
-          data-testid="root"
-          stateClass={(state) => (state.open ? 'root-open' : 'root-closed')}
-          stateStyle={(state) => ({ opacity: state.open ? 1 : 0.5 })}
-        >
-          <Collapsible.Trigger
-            stateClass={(state) => (state.open ? 'trigger-open' : 'trigger-closed')}
-            stateStyle={(state) => ({ opacity: state.open ? 1 : 0.5 })}
-          >
-            Trigger
-          </Collapsible.Trigger>
-          <Collapsible.Panel
-            keepMounted
-            data-testid="panel"
-            stateClass={(state) => (state.open ? 'panel-open' : 'panel-closed')}
-            stateStyle={(state) => ({ opacity: state.open ? 1 : 0.5 })}
-          >
-            {PANEL_CONTENT}
-          </Collapsible.Panel>
-        </Collapsible.Root>,
-      );
+      const { user } = await render(<CollapsibleSlotStyles />);
 
       const root = screen.getByTestId('root');
       const trigger = screen.getByRole('button', { name: 'Trigger' });

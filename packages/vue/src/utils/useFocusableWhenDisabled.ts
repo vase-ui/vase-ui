@@ -4,6 +4,17 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 export function useFocusableWhenDisabled(
   parameters: UseFocusableWhenDisabledParameters,
 ): UseFocusableWhenDisabledReturnValue {
+  function onKeydown(event: KeyboardEvent) {
+    // Tab must still move focus away from a disabled button.
+    if (
+      event.key !== 'Tab' &&
+      toValue(parameters.disabled) &&
+      toValue(parameters.focusableWhenDisabled)
+    ) {
+      event.preventDefault();
+    }
+  }
+
   const props = computed(() => {
     const focusableWhenDisabled = toValue(parameters.focusableWhenDisabled);
     const disabled = toValue(parameters.disabled);
@@ -16,14 +27,7 @@ export function useFocusableWhenDisabled(
 
     // The code adds a key only when it has a value. A key with the value `undefined` replaces
     // the value of an earlier set in `mergeProps`.
-    const additionalProps: FocusableWhenDisabledProps = {
-      // Tab must still move focus away from an element that is disabled and focusable.
-      onKeydown(event) {
-        if (disabled && focusableWhenDisabled && event.key !== 'Tab') {
-          event.preventDefault();
-        }
-      },
-    };
+    const additionalProps: FocusableWhenDisabledProps = { onKeydown };
 
     if (!composite) {
       additionalProps.tabindex = tabIndexProp;

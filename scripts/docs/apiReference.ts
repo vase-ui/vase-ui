@@ -96,18 +96,17 @@ export interface ApiReference {
   types: ApiType[];
 }
 
-// Base UI puts `className`, `style` and `render` last. These are their Vue names.
-const SHARED_PROPS = ['stateClass', 'stateStyle', 'as'];
-
 // Vue gives `undefined` to a controlled prop, and a composable can calculate a default. The `@default`
 // tag gives the default that a user gets.
 function propsOf({ props }: ComponentSurface, defaults: Map<string, string | null>): ApiProp[] {
-  const rank = (name: string): number => SHARED_PROPS.indexOf(name);
   return [...props]
     .flatMap(([name, { ignored, ...prop }]) =>
       ignored ? [] : [{ name, ...prop, default: defaults.get(name) ?? null }],
     )
-    .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, 'en'));
+    .sort(
+      (a, b) =>
+        Number(a.name === 'as') - Number(b.name === 'as') || a.name.localeCompare(b.name, 'en'),
+    );
 }
 
 function membersOf(members: Map<string, MemberSurface>): ApiMember[] {

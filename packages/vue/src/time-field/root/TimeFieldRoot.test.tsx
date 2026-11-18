@@ -1,3 +1,4 @@
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import type { Ref } from 'vue';
@@ -555,14 +556,18 @@ describe('<TimeField.Root />', () => {
       }
     });
 
-    it('gives the state to stateClass', async () => {
+    it('gives the empty state to the render slot', async () => {
       const { container } = await render(
         <TimeField.Root
-          stateClass={(state) => (state.empty ? 'is-empty' : 'is-filled')}
           defaultValue={Temporal.PlainTime.from('15:04')}
-        >
-          <TimeField.Input />
-        </TimeField.Root>,
+          v-slots={{
+            render: ({ props, state }: { props: HTMLProps; state: TimeField.Root.State }) => (
+              <div {...props} class={state.empty ? 'is-empty' : 'is-filled'}>
+                <TimeField.Input />
+              </div>
+            ),
+          }}
+        />,
       );
 
       expect(container.querySelector('[role="group"]')).toHaveClass('is-filled');

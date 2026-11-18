@@ -65,7 +65,7 @@ function part(name: string, file = types) {
   return found!;
 }
 
-test('a prop has its type, documented default, required mark and description, and the shared props come last', () => {
+test('a prop has its type, documented default, required mark and description, and as comes last', () => {
   const { props } = withTexts(
     [
       [
@@ -78,7 +78,7 @@ test('a prop has its type, documented default, required mark and description, an
   );
   assert.deepEqual(
     props.map(({ name }) => name),
-    ['disabled', 'keepMounted', 'name', 'side', 'stateClass', 'stateStyle', 'as'],
+    ['disabled', 'keepMounted', 'name', 'side', 'as'],
   );
   assert.deepEqual(
     props.find(({ name }) => name === 'name'),

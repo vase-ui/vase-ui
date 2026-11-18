@@ -9,7 +9,6 @@ import { expectType } from '#test-utils';
 
 export const props: ScrollArea.Viewport.Props = {
   as: 'section',
-  stateClass: (state) => (state.hasOverflowY ? 'scrolls' : ''),
 } satisfies ScrollAreaViewportProps;
 export const state: ScrollArea.Viewport.State = {
   scrolling: false,
@@ -32,7 +31,9 @@ export const nativeAttributes = (
 export const renderSlot = (
   <ScrollArea.Viewport
     v-slots={{
-      render: ({ props }: { props: HTMLProps }) => <div {...props} />,
+      render: ({ props, state }: { props: HTMLProps; state: ScrollArea.Viewport.State }) => (
+        <div {...props} class={{ scrolls: state.hasOverflowY }} />
+      ),
     }}
   />
 );

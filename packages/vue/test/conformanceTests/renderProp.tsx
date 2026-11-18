@@ -177,13 +177,17 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
         cloneElement(
           element,
           {
-            stateClass: () => 'conditional-component-classname',
+            class: 'component-classname',
             'data-testid': 'test-component',
             ...(button && { nativeButton }),
           },
           {
-            render: ({ props, children }: any) => (
-              <Element {...props} class="render-prop-classname" v-slots={childrenSlots(children)} />
+            render: ({ props, state, children }: any) => (
+              <Element
+                {...props}
+                class={{ 'render-prop-classname': state !== undefined }}
+                v-slots={childrenSlots(children)}
+              />
             ),
           },
         );
@@ -191,7 +195,7 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
       await render(<Test />);
 
       const component = screen.getByTestId('test-component');
-      expect(component.classList.contains('conditional-component-classname')).toBe(true);
+      expect(component.classList.contains('component-classname')).toBe(true);
       expect(component.classList.contains('render-prop-classname')).toBe(true);
     });
   });

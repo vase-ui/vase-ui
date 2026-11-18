@@ -45,8 +45,6 @@ const { selected } = useSelectItemContext();
 
 const shouldRender = computed(() => props.keepMounted || selected.value);
 
-// As in Base UI, this part renders `ItemIndicator` and makes no element of its own. It mounts that
-// part only while the item is selected or `keepMounted` is set.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
 // makes the slots of `ItemIndicator` dynamic. Vue then renders `ItemIndicator` again each time this
 // part renders. It also renders again each part in that slot that has slot content.
@@ -60,7 +58,7 @@ defineExpose({ element });
   <ItemIndicator
     v-if="shouldRender && $slots.render"
     ref="indicator"
-    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as }"
     :selected="selected"
   >
     <template #render="slotProps">
@@ -70,7 +68,7 @@ defineExpose({ element });
   <ItemIndicator
     v-else-if="shouldRender"
     ref="indicator"
-    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as, stateClass, stateStyle }"
+    v-bind="{ ...withoutPropsOf($attrs, ItemIndicator), as }"
     :selected="selected"
   >
     <template #default="slotProps">

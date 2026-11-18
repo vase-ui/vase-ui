@@ -248,20 +248,18 @@ A part that Base UI takes from another family is exported again and not copied: 
 | `as` prop: a tag, or a component. The default is upstream's tag. | Sets the element or the component that the part renders. | `render={<a />}` |
 | `#render` slot with the slot props `{ props, state }` | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` |
 | Default slot with the slot props `{ state }` | Holds the content. | `children` |
-| `class` and `style` attributes | The part merges them with its own class and style. The class order is `class`, `stateClass`, then the class of the part. For one style property, `stateStyle` wins over `style`, and `style` wins over the part. | `className`, `style` |
-| `stateClass` prop: `(state) => ClassValue` | Gives a class that depends on the state. | `className` as a function |
-| `stateStyle` prop: `(state) => StyleValue` | Gives a style that depends on the state. | `style` as a function |
+| `class` and `style` attributes | The part merges them with its own class and style. The class of the consumer comes first. The style of the consumer wins over the ordinary style of the part. | `className`, `style` |
 | `nativeButton` prop, where upstream has it | The same as upstream. | `nativeButton` |
 | Exposed `element` | Gives the DOM element through a template ref. | `ref` |
 
 - `docs/handbook/composition.md` gives the rules of the `#render` slot for a consumer. A development build shows a warning for a slot that gives the part no element, and for `as` together with `#render`. `useRenderElement` makes these checks.
-- Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
-- A part whose declarations must win over `style` and `stateStyle` gives them to `useRenderElement` as `overridingStyle`. `Collapsible.Panel` does this. See [What differs from the React source](#what-differs-from-the-react-source).
+- Select a state with its `data-*` attribute in CSS. To calculate a class or style from state, bind it on the element in the `#render` slot.
+- A part whose declarations must win over the `style` attribute gives them to `useRenderElement` as `overridingStyle`. `Collapsible.Panel` does this. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
 - An attribute with the value `undefined` is not given. The part keeps its own value, as Vue keeps the default of a declared prop. `null` removes the value of the part (`VUE-103`).
 - An `aria-label` or an `aria-labelledby` that is blank is not given: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own value (`VUE-106`). In Base UI, the blank value replaces the value of the part.
 - An ID reference attribute that is blank is not given either: `aria-activedescendant`, `aria-controls`, `aria-describedby`, `aria-details`, `aria-errormessage`, `aria-flowto`, `aria-owns` or `for`. Such a value refers to no element, so the part keeps its own value (`VUE-110`). In Base UI, the blank value replaces the value of the part. A blank `form` attribute stays, because HTML gives it a meaning: the control then has no form owner.
-- The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`, `stateClass` and `stateStyle`.
+- The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`.
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
@@ -1586,7 +1584,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Give each nonzero CSS length its unit, such as `'1px'`. Vue does not add a unit to a number.
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Bind each temporary declaration of an owned element through the part's style record. Remove that declaration when the override ends. `useCollapsiblePanel` returns the record as `temporaryStyle`.
-- `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
+- `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over the `style` attribute of the consumer.
 - `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. `Drawer.Popup` applies the same snap point damping to the rendered movement as it does during the drag. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
 - `Drawer.Popup` gives the `transform` and the `transition` of the drag to `useRenderElement` as `overridingStyle` while the drawer is swiping. The drag then wins over a `transform` or a `transition` in the `style` of the consumer.
 - `Drawer.SwipeArea` gives the popup its movement and the backdrop its progress. The popup binds `transition: none` for that gesture. When the gesture ends, the backdrop and indent show the resting snap progress.
