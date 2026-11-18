@@ -62,7 +62,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { REGULAR_ITEM, useMenuItem } from '../item/useMenuItem';
+import { useMenuItem } from '../item/useMenuItem';
 import { useMenuRadioGroupContext } from '../radio-group/MenuRadioGroupContext';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -104,14 +104,13 @@ const isDisabled = computed(
 );
 const checked = computed(() => selectedValue.value === props.value);
 
-const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
+const { button, commonProps } = useMenuItem(element, {
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
   id: itemId,
   store,
   nativeButton: () => props.nativeButton,
-  itemMetadata: REGULAR_ITEM,
 });
 
 const state = computed<MenuRadioItemState>(() => ({
@@ -138,7 +137,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
   ref: filterItem.ref,
   props: (attrs) => [
     commonProps.value,
-    mouseEnterProps,
     store.select('itemProps'),
     {
       role: 'menuitemradio',

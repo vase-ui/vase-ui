@@ -456,7 +456,7 @@ Rules:
 ### `useRenderElement` and `useRender`
 
 - Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Input` forwards its render slot to the inner part and exposes the inner element.
-- Supply `useButton(element, options)` through the `button` option of `useRenderElement`. Disabled buttons block press and key listeners. Enabled buttons call the consumer before keyboard activation.
+- Supply `useButton(element, options)` through the `button` option of `useRenderElement`. The button checks its disabled state before it calls the merged click, pointerdown, mousedown, keydown or keyup listener. A key listener can veto keyboard activation.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), a blank `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
@@ -1397,7 +1397,7 @@ Grid navigation:
 The composite item:
 
 - Pass the rendered element ref and item options to `useCompositeItem`. Bind its attributes and focus and key actions before the part and consumer listeners.
-- If the index must exist before the render setup, pass the same shallow ref as `elementRef` to `useRenderElement`.
+- If another composable needs the element ref during setup, pass that ref to `useRenderElement` as `elementRef`.
 - Give the list live values for `active`, `disabled` and, for a picker option, `selected`. The first two also determine the initial server tab stop. An item relays its focus and keyboard events to the root when its native event path does not reach the root.
 
 A part that is in a composite only in some trees:

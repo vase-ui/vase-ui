@@ -37,7 +37,6 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { REGULAR_ITEM } from '../item/useMenuItem';
 import { useMenuItemCommonProps } from '../item/useMenuItemCommonProps';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -66,14 +65,11 @@ const listIndex = useCompositeListItem(element, { label: () => props.label });
 
 const highlighted = computed(() => store.select('isActive', listIndex.value));
 
-const commonProps = useMenuItemCommonProps({
+const commonProps = useMenuItemCommonProps(element, {
   closeOnClick: () => props.closeOnClick,
   highlighted,
   id: itemId,
   store,
-  typingRef: store.context.typingRef,
-  getItemElement: () => element.value,
-  itemMetadata: REGULAR_ITEM,
 });
 
 const state = computed<MenuLinkItemState>(() => ({ highlighted: highlighted.value }));

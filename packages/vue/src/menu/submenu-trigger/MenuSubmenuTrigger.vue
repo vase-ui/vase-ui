@@ -87,7 +87,6 @@ import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
-import type { UseMenuItemMetadata } from '../item/useMenuItem';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
@@ -185,16 +184,13 @@ const listIndex = useCompositeListItem(triggerElement, { label: () => props.labe
 
 const highlighted = computed(() => parentMenuStore.select('isActive', listIndex.value));
 
-const itemMetadata: UseMenuItemMetadata = {
-  type: 'submenu-trigger',
-  setActive(event: MouseEvent) {
-    if (parentMenuStore.select('highlightItemOnHover')) {
-      parentMenuStore.setActiveIndex(listIndex.value, REASONS.pointer, event);
-    }
-  },
-};
+function onMouseenter(event: MouseEvent) {
+  if (parentMenuStore.select('highlightItemOnHover')) {
+    parentMenuStore.setActiveIndex(listIndex.value, REASONS.pointer, event);
+  }
+}
 
-const { button, commonProps, mouseEnterProps } = useMenuItem(triggerElement, {
+const { button, commonProps } = useMenuItem(triggerElement, {
   closeOnClick: false,
   disabled: isDisabled,
   highlighted,
@@ -202,7 +198,7 @@ const { button, commonProps, mouseEnterProps } = useMenuItem(triggerElement, {
   store,
   typingRef: parentMenuStore.context.typingRef,
   nativeButton: () => props.nativeButton,
-  itemMetadata,
+  isSubmenuTrigger: true,
 });
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
@@ -280,7 +276,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ref: [registerTrigger, filterItem.ref],
   props: (attrs) => [
     commonProps.value,
-    mouseEnterProps,
+    { onMouseenter },
     click.reference,
     hoverProps,
     { style: hoverStyle.value },

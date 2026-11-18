@@ -7,58 +7,30 @@ import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifie
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuStore } from '../store/MenuStore';
-import type { UseMenuItemMetadata } from './useMenuItem';
 
 function preventMouseDownDefault(event: MouseEvent) {
   event.preventDefault();
 }
 
 export interface UseMenuItemCommonPropsParameters {
-  /**
-   * Whether to close the menu when the item is clicked.
-   */
   closeOnClick: MaybeRefOrGetter<boolean>;
-  /**
-   * Determines if the menu item is highlighted.
-   */
   highlighted: MaybeRefOrGetter<boolean>;
-  /**
-   * The id of the menu item.
-   */
   id: MaybeRefOrGetter<string | undefined>;
-  /**
-   * The menu store.
-   */
   store: MenuStore<any>;
-  /**
-   * Whether a typeahead session is in progress.
-   */
   typingRef?: Readonly<Ref<boolean>> | undefined;
-  /**
-   * Returns the element of the item.
-   */
-  getItemElement: () => HTMLElement | null;
-  /**
-   * Metadata for checking item type before triggering click.
-   */
-  itemMetadata: UseMenuItemMetadata;
+  isSubmenuTrigger?: boolean | undefined;
 }
 
-/**
- * Returns common props shared by all menu item types.
- * This composable extracts the shared logic for id, role, tabindex, and interaction handlers.
- * Call it in `setup`, because it reads the contexts of the menu with `inject`.
- */
 export function useMenuItemCommonProps(
+  element: Readonly<Ref<HTMLElement | null>>,
   params: UseMenuItemCommonPropsParameters,
 ): ComputedRef<Record<string, unknown>> {
-  const { store, typingRef, getItemElement, itemMetadata } = params;
+  const { store, typingRef = store.context.typingRef, isSubmenuTrigger } = params;
 
   const rootContext = useMenuRootContext();
   const contextMenuContext = useContextMenuRootContext(true);
 
   // A submenu trigger is an item of the parent menu's list, so it follows that list's focus model.
-  const isSubmenuTrigger = itemMetadata.type === 'submenu-trigger';
   const virtualFocus = isSubmenuTrigger ? rootContext.parentVirtualFocus : rootContext.virtualFocus;
   const listStore =
     isSubmenuTrigger && rootContext.parent.type === 'menu'
@@ -117,11 +89,11 @@ export function useMenuItemCommonProps(
         }
       }
 
-      const item = getItemElement();
+      const item = element.value;
       const press = store.context.triggerPressRef.value;
       if (
         item &&
-        itemMetadata.type === 'regular-item' &&
+        !isSubmenuTrigger &&
         store.context.allowMouseUpTriggerRef.value &&
         (!isContextMenu || event.button === 2) &&
         // The open can put an item under a pointer that does not move (`VUE-84`).

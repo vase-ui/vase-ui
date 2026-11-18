@@ -54,7 +54,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
-import { REGULAR_ITEM, useMenuItem } from './useMenuItem';
+import { useMenuItem } from './useMenuItem';
 
 defineOptions({ inheritAttrs: false });
 
@@ -87,14 +87,13 @@ const listIndex = useCompositeListItem(element, { label: () => props.label });
 const highlighted = computed(() => store.select('isActive', listIndex.value));
 const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
-const { button, commonProps, mouseEnterProps } = useMenuItem(element, {
+const { button, commonProps } = useMenuItem(element, {
   closeOnClick: () => props.closeOnClick,
   disabled: isDisabled,
   highlighted,
   id: itemId,
   store,
   nativeButton: () => props.nativeButton,
-  itemMetadata: REGULAR_ITEM,
 });
 
 const state = computed<MenuItemState>(() => ({
@@ -107,7 +106,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
   button,
   state,
   ref: filterItem.ref,
-  props: (attrs) => [commonProps.value, mouseEnterProps, store.select('itemProps'), attrs],
+  props: (attrs) => [commonProps.value, store.select('itemProps'), attrs],
 });
 
 defineExpose({ element });
