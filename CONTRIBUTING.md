@@ -1381,7 +1381,7 @@ The composite root:
 - When two tabs have the selected value, only the first in the registered order moves the tab stop. While a registered tab has focus outside the list element, the tab stop stays on that tab.
 - The root checks the active item when focus leaves its element and its registered items (`VUE-113`). A root whose disabled items stay focusable gives `disabledIndices`, as `Tabs.List` and `Toolbar.Root` do.
 - The root watches the active and disabled state in each registration. A render slot can change the native or ARIA disabled state of a registered element. The root observes those attributes on the item. A native control also follows its fieldset after a move. The first legend of a disabled fieldset keeps its native exemption. An async child can hold the only tab stop in server HTML until it hydrates.
-- An uncontrolled root checks changes to `disabledIndices` after the DOM patch. A focused item that joins the list keeps its tab stop until focus leaves the composite. When the root has no index list, it checks the registered items and their DOM state.
+- An uncontrolled root checks edits to `disabledIndices` after the DOM patch. The focused item keeps its tab stop during the edit. Removing the list restores the disabled state from each item and its element.
 
 Grid navigation:
 
@@ -1413,7 +1413,7 @@ The item registry:
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
 - At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder.
 - `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element and registers it again in a `watch` of `isHeld` of `useKeepAliveState` with `flush: 'sync'`.
-- An item that mounts while `KeepAlive` holds its branch gets no `onDeactivated` call. The list skips its element, because the element is not in a document. `isHeld` of the item thus starts `true`, and the activation registers the element again.
+- An item that mounts in a held branch can miss `onDeactivated`. `useKeepAliveState` checks the branch in `setup`. The list also skips disconnected elements when it sorts.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
 - Each registration supplies live metadata, label, explicit index and text element values. The list reads them from its current registrations. A held item supplies its latest values on activation.
 - Give an object as metadata through a `computed` or a ref. A getter that makes a new object on each call makes the list publish a new map on each sort.
