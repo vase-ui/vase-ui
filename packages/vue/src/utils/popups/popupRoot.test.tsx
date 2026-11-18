@@ -2771,6 +2771,22 @@ describe('useSingleAnchorPopupRoot', () => {
     await fireEvent.click(trigger);
     expect(queryByRole('dialog')).toBeNull();
   });
+
+  it('stays closed on release after the parent refuses an open request', async () => {
+    const onUpdate = vi.fn();
+    const { setProps, getByText, getByRole, queryByRole } = await render(
+      <SingleAnchorRoot open={false} onUpdate:open={onUpdate} />,
+    );
+    const trigger = getByText('trigger');
+    await fireEvent.click(trigger);
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(true);
+    expect(queryByRole('dialog')).toBeNull();
+
+    await setProps({ open: undefined });
+    expect(queryByRole('dialog')).toBeNull();
+    await fireEvent.click(trigger);
+    expect(getByRole('dialog')).toBeVisible();
+  });
 });
 
 describe('usePopupRootSync', () => {
