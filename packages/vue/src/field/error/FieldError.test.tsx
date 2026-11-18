@@ -511,6 +511,34 @@ describe('<Field.Error />', () => {
       expect(screen.getByTestId('error')).not.toBe(null);
     });
 
+    it('shows the last field message when the default slot leaves during the exit', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const errors = shallowRef<Record<string, string>>({ email: 'Check the address' });
+      const custom = shallowRef(true);
+      await render(() => (
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Form errors={errors.value}>
+            <Field.Root name="email">
+              <Field.Control />
+              <Field.Error
+                class="popup"
+                v-slots={custom.value ? { default: () => 'Custom text' } : {}}
+              />
+            </Field.Root>
+          </Form>
+        </div>
+      ));
+      const error = screen.getByText('Custom text');
+      await nextEndingStyle(error, {
+        action: () => {
+          errors.value = {};
+          custom.value = false;
+        },
+      });
+      expect(error.textContent).toBe('Check the address');
+    });
+
     it('keeps its message while it animates out', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 

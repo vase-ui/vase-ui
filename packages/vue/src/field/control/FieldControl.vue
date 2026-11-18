@@ -59,7 +59,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
-import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -101,7 +101,6 @@ defineSlots<{
 
 const {
   state: fieldState,
-  name: fieldName,
   disabled: fieldDisabled,
   setTouched,
   setDirty,
@@ -118,11 +117,7 @@ const { labelId } = useLabelableContext();
 useDeferredServerRender();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(
-  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
-);
-const controlName = computed(() => fieldName.value ?? props.name);
-const clearFieldError = useClearFieldError(controlName);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const state = computed<FieldControlState>(() => ({
   ...fieldState.value,
   disabled: isDisabled.value,
@@ -156,20 +151,6 @@ watch(serializedValue, (value, previous) => {
 });
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
-
-// Until the hydration ends, the input can hold text that the part did not handle yet. The field
-// then takes the value of the props as the initial value, and the `input` event changes it.
-useRegisterFieldControl(
-  () => element.value,
-  controlId,
-  () => serializedValue.value,
-  () =>
-    writesValue.value
-      ? (element.value as HTMLInputElement | null)?.value
-      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
-  () => !isDisabled.value,
-  () => props.name,
-);
 
 // Later field parts read the filled state during the same server render.
 const initial = serializedValue.value ?? serializedDefaultValue.value;
@@ -313,11 +294,8 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-const giveFieldInput = useFieldInput();
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
-  ref: giveFieldInput,
   props: ({ value: _value, ...attrs }) => [
     {
       id: controlId.value,
@@ -337,6 +315,20 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   ],
   stateAttributesMapping: fieldValidityMapping,
 });
+
+const { name: controlName } = useFieldControl(element, {
+  input: element,
+  id: controlId,
+  name: () => props.name,
+  value: serializedValue,
+  // Hydration adopts native edits after the field captures its initial value.
+  getValue: () =>
+    writesValue.value
+      ? (element.value as HTMLInputElement | null)?.value
+      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
+  enabled: () => !isDisabled.value,
+});
+const clearFieldError = useClearFieldError(controlName);
 
 watch(
   [element, () => suppliedValue.value !== undefined],

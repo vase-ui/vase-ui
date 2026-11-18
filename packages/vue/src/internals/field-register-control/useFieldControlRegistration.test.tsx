@@ -18,6 +18,7 @@ import {
   waitFor,
   within,
 } from '#test-utils';
+import { Field } from '@vase-ui/vue/field';
 import FieldControlPart from '../../../test/fixtures/FieldControlPart.vue';
 import FieldScope from '../../../test/fixtures/FieldScope.vue';
 import FormScope from '../../../test/fixtures/FormScope.vue';
@@ -28,7 +29,7 @@ import FieldControlSwap from './FieldControlSwap.test.vue';
 import FieldRegistrationHydration from './FieldRegistrationHydration.test.vue';
 import LazyFieldControlHydration from './LazyFieldControlHydration.test.vue';
 import TwoFieldControlsHydration from './TwoFieldControlsHydration.test.vue';
-import { useRegisterFieldControl } from './useRegisterFieldControl';
+import { useRegisterFieldControl } from '../field-register-control';
 
 interface SubmittedField {
   name: string | undefined;
@@ -143,7 +144,7 @@ describe('useFieldControlRegistration', () => {
       );
       const { rerender } = await render(<Test errors={{ 'control-name': 'taken' }} />);
 
-      expect(field.value!.registeredFieldName).toBeUndefined();
+      expect(field.value!.name).toBe('root-name');
       expect(screen.getByTestId('form')).toHaveAttribute('data-fields', 'root-name');
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
 
@@ -205,7 +206,7 @@ describe('useFieldControlRegistration', () => {
       const field = shallowRef<FieldScopeInstance | null>(null);
       await render(() => (
         <FieldScope ref={field} data-testid="root">
-          <FieldControlPart id="control" value="" />
+          <Field.Control id="control" required />
         </FieldScope>
       ));
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');

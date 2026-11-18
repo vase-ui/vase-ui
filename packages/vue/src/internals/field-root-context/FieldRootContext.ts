@@ -169,3 +169,31 @@ export function useFieldRootContext(optional = true): FieldRootContext {
 
   return context ?? DEFAULT_FIELD_ROOT_CONTEXT;
 }
+
+export function getCombinedFieldValidityData(
+  validityData: FieldValidityData,
+  invalid: boolean | undefined,
+) {
+  return {
+    ...validityData,
+    state: {
+      ...validityData.state,
+      valid: !invalid && validityData.state.valid,
+    },
+  };
+}
+
+export type FieldErrorContext = Readonly<Ref<string | string[] | null | undefined>>;
+
+export const FieldErrorContext: InjectionKey<FieldErrorContext> = Symbol();
+
+export function useFieldErrorContext(): FieldErrorContext {
+  const context = inject(FieldErrorContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Field.Error> must be inside <Field.Error>. Without the part it has no message to show. Mount the `children` component in the element of the `#render` slot of <Field.Error>.',
+    );
+  }
+
+  return context;
+}

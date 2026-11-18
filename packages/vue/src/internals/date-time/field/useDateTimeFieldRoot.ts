@@ -19,7 +19,7 @@ import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/
 import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
-import { useInputRegistration, useRegisterFieldControl } from '../../field-register-control';
+import { useFieldControl, useInputRegistration } from '../../field-register-control';
 import { fieldValidityMapping } from '../../field-constants';
 import { useClearFieldError, useFieldRootContext } from '../../field-root-context';
 import { useFormContext } from '../../form-context';
@@ -221,7 +221,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     disabled: fieldDisabled,
     setFilled,
     invalid: fieldInvalid,
-    name: fieldName,
     state: fieldState,
     validation,
     validationMode,
@@ -241,8 +240,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   );
   const isReadOnly = computed(() => toValue(parameters.readOnly) ?? false);
   const isRequired = computed(() => toValue(parameters.required) ?? false);
-  const inputName = computed(() => fieldName.value ?? toValue(parameters.name));
-  const clearFieldError = useClearFieldError(inputName);
   const locale = useFormatLocale(() => toValue(parameters.locale));
 
   const value = useControlled<Value | null>({
@@ -681,14 +678,13 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const filled = computed(() => value.value !== null);
   watch(filled, setFilled, { immediate: true });
 
-  useRegisterFieldControl(
-    firstSegment,
-    controlId,
-    () => value.value,
-    undefined,
-    () => !isDisabled.value,
-    () => toValue(parameters.name),
-  );
+  const { name: inputName } = useFieldControl(firstSegment, {
+    id: controlId,
+    name: () => toValue(parameters.name),
+    value,
+    enabled: () => !isDisabled.value,
+  });
+  const clearFieldError = useClearFieldError(inputName);
 
   // A field that shows no time compares days, because the user cannot change the time of its
   // value. A limit then loses its time.

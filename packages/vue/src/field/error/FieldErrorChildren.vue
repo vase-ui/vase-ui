@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { markChildrenMounted } from '../../internals/useRenderElement';
-import { useFieldErrorContext } from './FieldErrorContext';
+import { useFieldErrorContext } from '../../internals/field-root-context/FieldRootContext';
 
 defineSlots<{
   default?(): unknown;
