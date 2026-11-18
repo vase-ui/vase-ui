@@ -56,6 +56,28 @@ Give the root element the style `isolation: isolate`. In a Vue app, the root ele
 
 The root element then has its own stacking context. A popup shows above the page, and a `z-index` inside the root element cannot put an element above the popup.
 
+### Automated accessibility checks
+
+An open popup keeps focus guards beside its trigger and around the popup. A guard is a `<span>` with `data-vase-ui-focus-guard`, `tabindex="0"` and `aria-hidden="true"`. The guards keep the Tab order correct between the page and the portal.
+
+[axe-core](https://github.com/dequelabs/axe-core) reports the guards under the rule `aria-hidden-focus`. The report is a violation when the page shows no dialog, such as with a Menu that has `modal` set to `false`. With a dialog on the page, the report is "needs review".
+
+The report is a false positive. A guard moves the focus immediately, and [ACT rule 6cfa84](https://www.w3.org/WAI/standards-guidelines/act/rules/6cfa84/) does not count such an element as focusable. Base UI and Floating UI render the same guards ([base-ui#5237](https://github.com/mui/base-ui/issues/5237), [floating-ui#2758](https://github.com/floating-ui/floating-ui/issues/2758)).
+
+Exclude the guards from the check. Do not turn the rule off for the page.
+
+::: code-group
+
+```ts [axe-core]
+await axe.run({ exclude: ['[data-vase-ui-focus-guard]'] });
+```
+
+```ts [@axe-core/playwright]
+await new AxeBuilder({ page }).exclude('[data-vase-ui-focus-guard]').analyze();
+```
+
+:::
+
 ## Use a component
 
 Each component has its own entry point, such as `@vase-ui/vue/button`. The entry point `@vase-ui/vue` exports them together.
