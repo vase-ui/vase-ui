@@ -3,6 +3,12 @@ import type { RunnerTask, RunnerTestCase } from 'vitest';
 import { checkFragmentChildren } from './checkFragmentChildren';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
+declare module 'vitest' {
+  interface TaskMeta {
+    vaporExpectation?: { cause: string; fails: boolean };
+  }
+}
+
 const files: Record<string, { fails: Record<string, string> }> = expectations.files;
 
 // A suite can create a fixture vnode while Vitest collects its cases.
@@ -38,9 +44,13 @@ beforeAll(({}, file) => {
       `expectedFailures.json lists cases that ${file.file.name} does not have:\n${missing.join('\n')}`,
     );
   }
-  for (const name of Object.keys(fails)) {
+  for (const [name, cause] of Object.entries(fails)) {
     for (const task of cases.get(name) ?? []) {
       task.fails = true;
+      if (import.meta.env.MODE === 'vue-minor') {
+        task.fails = cause !== 'vue-16301';
+        task.meta.vaporExpectation = { cause, fails: task.fails };
+      }
     }
   }
 });
