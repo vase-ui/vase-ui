@@ -252,7 +252,7 @@ watch(activeSource, (_source, previous) => {
   }
 });
 
-// A replacement keeps the first control's value as the baseline for dirty state.
+// Several controls can mount in one patch. The first registration sets the dirty baseline.
 watch(
   activeSource,
   () => {
@@ -264,7 +264,7 @@ watch(
       }
     }
   },
-  { flush: 'post', once: true },
+  { flush: 'sync', once: true },
 );
 
 if (form) {

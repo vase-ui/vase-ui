@@ -156,7 +156,7 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -278,7 +278,7 @@ const valueUnwrapped = useControlled<string>({
 });
 
 const inputElements = shallowRef<(HTMLElement | null)[]>([]);
-const hiddenInputElement = useTemplateRef<HTMLInputElement>('input');
+const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 const inputCount = shallowRef(0);
 
 let pendingFocus: { index: number; value: string } | null = null;
@@ -673,6 +673,10 @@ useFormReset(hiddenInputElement, (event) => {
 
 useFormRestore(hiddenInputElement, inputRender.renderValue);
 
+function setHiddenInput(node: unknown) {
+  hiddenInputElement.value = node as HTMLInputElement | null;
+}
+
 function hiddenInputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value);
   return {
@@ -710,5 +714,5 @@ defineExpose({ element });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-if="hasValidLength" v-bind="hiddenInputProps()" ref="input" />
+  <input v-if="hasValidLength" v-bind="hiddenInputProps()" :ref="setHiddenInput" />
 </template>

@@ -215,6 +215,7 @@ describe('useFieldControlRegistration', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('root')).toHaveAttribute('data-invalid');
+      expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('commits the result of `getValue` when the control has no value', async () => {
