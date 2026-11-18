@@ -67,6 +67,7 @@ const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 const REF_HINT = 'before the element is in the document';
 const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
+const MODEL_PART = docsSfc("const open = defineModel<boolean>('open');", '<div>{{ open }}</div>');
 
 const INPUT_SYNC_SAMPLES = [
   ['a native input write', '(event.target as HTMLInputElement).value = text;', 'Vue value binding'],
@@ -862,11 +863,6 @@ const reported = [
       'usePopupPositioner',
     ],
     [
-      'watchPostEffect',
-      "import { watchPostEffect } from 'vue';\n\nexport const effect = watchPostEffect;\n",
-      "flush: 'post'",
-    ],
-    [
       'onActivated',
       "import { onActivated } from 'vue';\n\nexport const hook = onActivated;\n",
       'useKeepAliveState',
@@ -933,10 +929,69 @@ const reported = [
   {
     name: 'defineModel',
     file: `${SRC}/DialogRoot.vue`,
-    code: `<script setup lang="ts">\nconst open = defineModel<boolean>('open');\n</script>\n\n<template>\n  <div>{{ open }}</div>\n</template>\n`,
+    code: MODEL_PART,
     ruleId: 'no-restricted-syntax',
-    hint: 'useControlled',
+    hint: 'with only the prop',
   },
+  ...[
+    ['an empty template', '<template />'],
+    ['setup with no template or renderer', '<script setup lang="ts">useSubscription();</script>'],
+    [
+      'a null render in script setup options',
+      '<script setup lang="ts">defineOptions({ render: () => null });</script>',
+    ],
+    [
+      'setup with only type exports and no template',
+      '<script lang="ts">export interface PartProps { open: boolean }</script>\n<script setup lang="ts">defineProps<PartProps>();</script>',
+    ],
+    [
+      'script setup whose render option is hidden by inline compilation',
+      '<script setup lang="ts">defineOptions({ render: () => h("span") });</script>',
+    ],
+    ['a null SFC function', '<script lang="ts">export default () => null;</script>'],
+    ['a template with only a comment', '<template>\n  <!-- No content -->\n</template>'],
+  ].map(([name, code]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code,
+    ruleId: 'vase-ui/no-empty-part',
+    hint: 'composable',
+  })),
+  ...[
+    ['a null render method', 'export default defineComponent({ render() { return null; } });'],
+    [
+      'a quoted null render method',
+      "export default defineComponent({ 'render'() { return null; } });",
+    ],
+    ['a null render from setup', 'export default defineComponent({ setup: () => () => null });'],
+    [
+      'a render with two null returns',
+      'export default defineComponent(() => () => { if (ready()) return null; record(); return null; });',
+    ],
+    ['a null functional component', 'export const Content: FunctionalComponent = () => null;'],
+    [
+      'a null render with a TypeScript annotation',
+      'export const Content = (() => null as VNode | null) satisfies FunctionalComponent;',
+    ],
+    [
+      'a named null renderer returned by setup',
+      'export default defineComponent({ setup() { return render; } }); function render() { return null; }',
+    ],
+    [
+      'a choice between two null renderers',
+      'const empty = () => null; export default defineComponent(() => ready() ? empty : () => null);',
+    ],
+    [
+      'a null render beside setup bindings',
+      'export default defineComponent({ setup: () => ({}), render: () => null });',
+    ],
+  ].map(([name, code]) => ({
+    name,
+    file: `${SRC}/DialogContent.ts`,
+    code,
+    ruleId: 'vase-ui/no-empty-part',
+    hint: 'composable',
+  })),
   ...[
     [
       'Map.groupBy',
@@ -1157,6 +1212,104 @@ const reported = [
 ];
 
 const passed = [
+  {
+    name: 'a post effect that owns an observer',
+    file: `${SRC}/useSize.ts`,
+    code: `import { watchPostEffect } from 'vue';
+import type { Ref } from 'vue';
+export function useSize(element: Readonly<Ref<Element | null>>, resize: ResizeObserverCallback) {
+  watchPostEffect((onCleanup) => {
+    if (!element.value) return;
+    const observer = new ResizeObserver(resize);
+    observer.observe(element.value);
+    onCleanup(() => observer.disconnect());
+  });
+}`,
+  },
+  {
+    name: 'defineModel in a demo',
+    file: 'docs/demos/dialog/basic/tailwind/Demo.vue',
+    code: MODEL_PART,
+  },
+  {
+    name: 'a template that renders a nonbreaking space',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<template>&nbsp;</template>',
+  },
+  {
+    name: 'a compiled template that supplies the render option',
+    file: `${SRC}/DialogContent.vue`,
+    code: docsSfc('defineOptions({ render: () => null });'),
+  },
+  {
+    name: 'a renderer supplied by the SFC default export',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<script lang="ts">export { default } from "./Root.vue";</script>',
+  },
+  {
+    name: 'component options changed before use',
+    file: `${SRC}/DialogContent.ts`,
+    code: "const options = { render: () => null }; options.render = () => h('span'); export default defineComponent(options);",
+  },
+  {
+    name: 'a null renderer replaced by setup',
+    file: `${SRC}/DialogContent.ts`,
+    code: "export default defineComponent({ render: () => null, setup: () => () => h('span') });",
+  },
+  {
+    name: 'a setup that can fall through to a visible render option',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export default defineComponent({
+  setup() { if (hidden()) return () => null; },
+  render: () => h('span'),
+});`,
+  },
+  {
+    name: 'component options with a later spread',
+    file: `${SRC}/DialogContent.ts`,
+    code: 'export default defineComponent({ render: () => null, ...options });',
+  },
+  {
+    name: 'a template with a conditional node',
+    file: `${SRC}/DialogContent.vue`,
+    code: docsSfc('const { open } = defineProps<{ open: boolean }>();', '<div v-if="open" />'),
+  },
+  {
+    name: 'an external template',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<template src="./content.html" />',
+  },
+  {
+    name: 'a render that can return a node',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export const Content = defineComponent({
+  setup() {
+    return () => {
+      if (ready()) return null;
+      return h('span', { onClick: () => null });
+    };
+  },
+});`,
+  },
+  {
+    name: 'a computed method beside a visible renderer',
+    file: `${SRC}/DialogContent.ts`,
+    code: `const render = 'placeholder';
+export default defineComponent({ [render]() { return null; }, render: () => h('span') });`,
+  },
+  {
+    name: 'a setup that can return a visible renderer',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export default defineComponent(() => {
+  if (ready()) return () => null;
+  return () => h('span');
+});`,
+  },
+  {
+    name: 'a getter that always returns null',
+    file: `${SRC}/useContent.ts`,
+    code: 'export function useContent() { return () => null; }',
+  },
   ...INPUT_SYNC_SAMPLES.map(([name, code]) => ({
     name: `${name} in a test`,
     file: `${SRC}/DialogRoot.test.tsx`,
@@ -1626,6 +1779,26 @@ const passed = [
   },
 ];
 
+for (const [name, fallback, override, empty] of [
+  ['a visible render option that replaces a null default', 'null', "h('span')", false],
+  ['a null render option that replaces a visible default', "h('span')", 'null', true],
+]) {
+  test(`checks ${name}`, async () => {
+    const code = `<script lang="ts">
+import { h } from 'vue';
+export default { render() { return ${fallback}; } };
+</script>
+<script setup lang="ts">
+defineOptions({ render: () => ${override} });
+</script>`;
+    const messages = await lint(`${SRC}/DialogContent.vue`, code);
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId).filter((id) => id !== 'vue/component-api-style'),
+      empty ? ['vase-ui/no-empty-part'] : [],
+    );
+  });
+}
+
 for (const { name, file, code, ruleId, hint } of reported) {
   test(`reports ${name}`, async () => {
     const messages = await lint(file, code);
@@ -1645,6 +1818,10 @@ for (const { name, code } of [
   {
     name: 'a `watch` callback',
     code: "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
+  },
+  {
+    name: 'a `watchPostEffect` callback',
+    code: "import { watchPostEffect } from 'vue';\n\ndeclare const element: Element;\nwatchPostEffect(() => element.getRootNode());\n",
   },
   {
     name: 'a `useDomEffect` effect',

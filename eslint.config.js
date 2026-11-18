@@ -69,8 +69,6 @@ const MESSAGES = {
     'The build writes this subpath import. A test job has no `dist`, and Vite cannot resolve the import. Write `./prehydrationScript.min`.',
   useFloating:
     '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
-  watchPostEffect:
-    "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
   popupElementWrite:
     'A part that writes this key itself does not follow `KeepAlive`, and it can clear the element of a part that replaced it. Give `popupElementTarget(store)` or `stateElementTarget(store, key)` to `createElementSetter`.',
   keepAliveHook:
@@ -81,7 +79,7 @@ const MESSAGES = {
   inputValueWrite: 'Restore the input through its Vue value binding.',
   handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
-    '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
+    'A defined model prop controls the part. An undefined prop lets the part own the value. Vue permits a local write through `useModel` with only the prop.',
   groupBy:
     'No browser that the build supports has `groupBy`, and the build adds no polyfill. Group the items in a loop.',
   withResolvers:
@@ -111,7 +109,6 @@ const RESTRICTED_IMPORTS = [
     message: MESSAGES.customDirective,
   },
   { name: 'vue', importNames: ['defineComponent'], message: MESSAGES.defineComponent },
-  { name: 'vue', importNames: ['watchPostEffect'], message: MESSAGES.watchPostEffect },
   { name: 'vue', importNames: ['onActivated', 'onDeactivated'], message: MESSAGES.keepAliveHook },
   { name: 'vue', importNames: ['Transition', 'TransitionGroup'], message: MESSAGES.transition },
   { name: '@floating-ui/vue', importNames: ['useFloating'], message: MESSAGES.useFloating },
@@ -620,6 +617,226 @@ const pageProcessor = {
   },
 };
 
+const noEmptyPart = {
+  meta: {
+    type: 'problem',
+    schema: [],
+    messages: { empty: 'A part must render a node. Move logic with no node to a composable.' },
+  },
+  create(context) {
+    const { sourceCode } = context;
+    const sfc = sourceCode.parserServices.getDocumentFragment?.();
+    const template = sfc?.children.find((block) => block.name === 'template');
+    const scriptSetup = sfc?.children.find(
+      (block) =>
+        block.name === 'script' &&
+        block.startTag.attributes.some((attr) => attr.key.name === 'setup'),
+    );
+    const returns = new WeakMap();
+    const paths = [];
+    const checks = new Map();
+
+    function initializer(id) {
+      for (let scope = sourceCode.getScope(id); scope; scope = scope.upper) {
+        const variable = scope.set.get(id.name);
+        if (!variable) continue;
+        const [def] = variable.defs;
+        if (
+          variable.defs.length !== 1 ||
+          variable.references.some((ref) => ref.isWrite() && !ref.init)
+        ) {
+          break;
+        }
+        if (def.type === 'FunctionName') return def.node;
+        if (def.parent?.kind === 'const' && def.node.id === def.name) return def.node.init;
+        break;
+      }
+      return undefined;
+    }
+
+    function everyValue(node, test, seen = new Set()) {
+      if (node?.type === 'Identifier') {
+        if (seen.has(node)) return false;
+        const value = initializer(node);
+        // The binding of a const object is fixed, but its component options can change.
+        if (value && value.type !== 'ObjectExpression') {
+          return everyValue(value, test, new Set(seen).add(node));
+        }
+      }
+      if (
+        [
+          'TSAsExpression',
+          'TSSatisfiesExpression',
+          'TSTypeAssertion',
+          'TSNonNullExpression',
+        ].includes(node?.type)
+      ) {
+        return everyValue(node.expression, test, seen);
+      }
+      if (node?.type === 'ConditionalExpression') {
+        return everyValue(node.consequent, test, seen) && everyValue(node.alternate, test, seen);
+      }
+      return test(node);
+    }
+
+    function emptyRender(node) {
+      const values = returns.get(node);
+      return (
+        values?.length > 0 &&
+        values.every((value) =>
+          everyValue(value, (result) => result?.type === 'Literal' && result.value === null),
+        )
+      );
+    }
+
+    function emptySetup(node, fallback) {
+      const values = returns.get(node);
+      return (
+        values?.length > 0 &&
+        values.every((value) =>
+          everyValue(value, (result) => {
+            // Vue uses the render option when setup returns bindings or falls through.
+            if (!result || result.type === 'ObjectExpression' || result.type === 'Literal') {
+              return fallback;
+            }
+            return emptyRender(result);
+          }),
+        )
+      );
+    }
+
+    function keyOf(property) {
+      if (property.type === 'SpreadElement') return undefined;
+      if (!property.computed && property.key.type === 'Identifier') return property.key.name;
+      if (property.key.type === 'Literal') return property.key.value;
+      return undefined;
+    }
+
+    function option(object, name) {
+      // A later spread or computed key can replace either option.
+      const property = object.properties.findLast(
+        (entry) => keyOf(entry) === name || keyOf(entry) === undefined,
+      );
+      return property && keyOf(property) === name && property.kind === 'init'
+        ? property.value
+        : property;
+    }
+
+    function emptyComponent(node, hasTemplate = false) {
+      if (node?.type !== 'ObjectExpression') return false;
+      const fallback = !hasTemplate && everyValue(option(node, 'render'), emptyRender);
+      const setup = option(node, 'setup');
+      return setup ? everyValue(setup, (fn) => emptySetup(fn, fallback)) : fallback;
+    }
+
+    function emptySfc(program) {
+      if (!sfc) return undefined;
+      if (template) {
+        if (
+          program.templateBody &&
+          !template.startTag.attributes.some(
+            (attr) => attr.key.name === 'src' && attr.value?.value,
+          ) &&
+          template.children.every(
+            (child) => child.type === 'VText' && !/[^\t\n\f\r ]/u.test(child.value),
+          )
+        ) {
+          return template;
+        }
+        return undefined;
+      }
+      if (!scriptSetup) return undefined;
+      const declaration = program.body.find(
+        (node) => node.type === 'ExportDefaultDeclaration',
+      )?.declaration;
+      const options =
+        declaration?.type === 'CallExpression' ? declaration.arguments[0] : declaration;
+      // Without a template, Vue inlines an empty render unless the normal script declares a
+      // render option by identifier. It then applies the options from script setup last.
+      if (!options?.properties?.some((property) => property.key?.name === 'render')) {
+        return scriptSetup;
+      }
+      const macro = program.body.find(
+        ({ expression, range }) =>
+          expression?.type === 'CallExpression' &&
+          expression.callee.name === 'defineOptions' &&
+          range[0] >= scriptSetup.startTag.range[1] &&
+          range[1] <= scriptSetup.range[1],
+      )?.expression.arguments[0];
+      if (macro && macro.type !== 'ObjectExpression') return undefined;
+      const render = (macro && option(macro, 'render')) ?? option(options, 'render');
+      return everyValue(render, emptyRender) ? render : undefined;
+    }
+
+    return {
+      onCodePathStart(_path, node) {
+        const values = [];
+        returns.set(node, values);
+        paths.push({ active: 0, values });
+      },
+      onCodePathSegmentStart() {
+        paths.at(-1).active += 1;
+      },
+      onCodePathSegmentEnd() {
+        paths.at(-1).active -= 1;
+      },
+      ReturnStatement(node) {
+        const path = paths.at(-1);
+        if (path.active) path.values.push(node.argument);
+      },
+      ':function:exit'(node) {
+        const path = paths.at(-1);
+        if (node.body.type !== 'BlockStatement') path.values.push(node.body);
+        else if (path.active) path.values.push(null);
+      },
+      onCodePathEnd() {
+        paths.pop();
+      },
+      "CallExpression[callee.name='defineComponent']"(call) {
+        const [component, extra] = call.arguments;
+        if (!component || (scriptSetup && call.parent.type === 'ExportDefaultDeclaration')) return;
+        checks.set(component, (node) => {
+          const hasTemplate = template && call.parent.type === 'ExportDefaultDeclaration';
+          if (node?.type === 'ObjectExpression') return emptyComponent(node, hasTemplate);
+          const fallback =
+            !hasTemplate &&
+            extra?.type === 'ObjectExpression' &&
+            everyValue(option(extra, 'render'), emptyRender);
+          return emptySetup(node, fallback);
+        });
+      },
+      ExportDefaultDeclaration(node) {
+        if (sfc && !scriptSetup) {
+          checks.set(
+            node.declaration,
+            (value) => emptyComponent(value, Boolean(template)) || emptyRender(value),
+          );
+        }
+      },
+      "VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='FunctionalComponent']"(
+        node,
+      ) {
+        if (node.init) checks.set(node.init, emptyRender);
+      },
+      ":matches(TSSatisfiesExpression, TSAsExpression, TSTypeAssertion)[typeAnnotation.typeName.name='FunctionalComponent']"(
+        node,
+      ) {
+        checks.set(node, emptyRender);
+      },
+      'Program:exit'(program) {
+        const empty = emptySfc(program);
+        if (empty) {
+          context.report({ node: empty, messageId: 'empty' });
+          return;
+        }
+        for (const [node, test] of checks) {
+          if (everyValue(node, test)) context.report({ node, messageId: 'empty' });
+        }
+      },
+    };
+  },
+};
+
 export default defineConfig([
   globalIgnores([
     '**/dist/',
@@ -753,7 +970,9 @@ export default defineConfig([
   {
     files: SOURCE_FILES,
     ignores: TEST_FILES,
+    plugins: { 'vase-ui': { rules: { 'no-empty-part': noEmptyPart } } },
     rules: {
+      'vase-ui/no-empty-part': 'error',
       'no-restricted-imports': [
         'error',
         { paths: RESTRICTED_IMPORTS, patterns: RESTRICTED_IMPORT_PATTERNS },
