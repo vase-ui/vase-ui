@@ -185,8 +185,8 @@ import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValue
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
-import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
+import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useClick } from '../../utils/popups/interactions/useClick';

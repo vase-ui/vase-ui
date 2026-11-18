@@ -467,6 +467,7 @@ const checkedSync = useCheckedInputSync(inputElement, () => isChecked.value, {
 });
 
 useFormRestore(inputElement, takeInputState);
+
 const enterTimeout = useTimeout();
 
 function onKeydown(event: VaseUIEvent<KeyboardEvent>) {

@@ -33,8 +33,8 @@ import {
 } from '../../labelable-provider';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
-import { useHiddenInputValueSync } from '../../useInputValueSync';
 import { useFormRestoreAsInput } from '../../useFormRestore';
+import { useHiddenInputValueSync } from '../../useInputValueSync';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';

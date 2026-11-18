@@ -4,6 +4,7 @@ import type { Ref } from 'vue';
 export interface InputValueSync {
   handledValue: () => string | undefined;
   record: () => void;
+  /** A separate method lets a watcher call `record` with its own callback arguments. */
   recordAs: (value: string | undefined) => void;
   isNew: (event: Event) => boolean;
   write: () => void;
@@ -11,8 +12,9 @@ export interface InputValueSync {
 
 /**
  * Vue writes the value at a render. A refused change can leave the input with a value that the
- * part does not show. The part calls `write` after that change, then the next event sees the
- * value that the browser kept. An assignment to an equal value would mark the input dirty.
+ * part does not show. After the change, `write` restores the expected text and records the value
+ * the browser kept. With an undefined expected value, it only records. An equal assignment would
+ * mark the input dirty.
  */
 export function useInputValueSync(
   input: () => Element | null,

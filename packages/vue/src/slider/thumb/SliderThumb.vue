@@ -105,8 +105,8 @@ import { useDeferredServerRender, useLabelableId } from '../../internals/labelab
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useInputValueSync } from '../../internals/useInputValueSync';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -384,7 +384,8 @@ function setInputElement(value: unknown) {
 
 const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-// A range input moves its value to the step and into the range. Its text can differ from the thumb value.
+// A range input moves its value to the step and into the range. Its text can differ from the
+// value of the thumb.
 const valueSync = useInputValueSync(
   () => inputElement.value,
   () => {
