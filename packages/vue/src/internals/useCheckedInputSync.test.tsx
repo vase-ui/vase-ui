@@ -15,18 +15,21 @@ describe('useCheckedInputSync', () => {
 
   async function mount(Part: Component, indeterminate = false) {
     const report = vi.fn<(sync: ReturnType<typeof useCheckedInputSync>) => void>();
-    const { setProps } = await render(h(Part, { checked: true, indeterminate, report }));
+    const take = vi.fn();
+    const { setProps } = await render(h(Part, { checked: true, indeterminate, take, report }));
     return {
       input: screen.getByRole<HTMLInputElement>('checkbox'),
       write: report.mock.calls[0][0].write,
+      take,
       setProps,
     };
   }
 
   async function checkMount(Part: Component) {
-    const { input, write } = await mount(Part);
+    const { input, write, take } = await mount(Part);
     expect(input.defaultChecked).toBe(false);
     expect(input.checked).toBe(true);
+    expect(take).not.toHaveBeenCalled();
     const checkedWrites = recordInputWrites(input, 'checked');
     const mixedWrites = recordInputWrites(input, 'indeterminate');
 
