@@ -63,7 +63,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { useContextMenuRootContext } from '../../internals/context-menu-root-context/ContextMenuRootContext';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';

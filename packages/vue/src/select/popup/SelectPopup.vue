@@ -52,7 +52,7 @@ import { ownerDocument, ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';

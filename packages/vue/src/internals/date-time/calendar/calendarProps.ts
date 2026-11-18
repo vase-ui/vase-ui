@@ -1,4 +1,4 @@
-import type { VaseUIChangeEventDetails } from '../../createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import type { REASONS } from '../../reasons';
 import type { DateMatcher } from '../matchers';
 import type { DateValue, DayOfWeek } from '../temporal';

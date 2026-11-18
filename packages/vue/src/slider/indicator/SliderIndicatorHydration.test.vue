@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Slider } from '@vase-ui/vue/slider';
 
-defineProps<{ defaultValue: number | number[] }>();
+defineProps<{ defaultValue: number | number[]; indicatorStyle?: string | undefined }>();
 </script>
 
 <template>
   <Slider.Root :default-value="defaultValue" thumb-alignment="edge" style="width: 200px">
     <Slider.Control style="position: relative; width: 100%; height: 10px">
       <Slider.Track style="position: relative; width: 100%; height: 10px">
-        <Slider.Indicator data-testid="indicator" />
+        <Slider.Indicator data-testid="indicator" :style="indicatorStyle" />
         <template v-if="Array.isArray(defaultValue)">
           <Slider.Thumb
             v-for="(_, index) in defaultValue"

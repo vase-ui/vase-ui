@@ -43,7 +43,7 @@ export interface SelectPositionerProps
 import { computed, onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';

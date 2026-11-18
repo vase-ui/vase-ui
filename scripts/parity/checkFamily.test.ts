@@ -65,6 +65,70 @@ const coveringRows: ExceptionRow[] = [
   row({ describe: ['a'], suite: 'describeConformance', kind: 'not-applicable' }),
 ];
 
+test('ported titles take the Vase UI name and an engine row takes the upstream title', () => {
+  const describe = ['BaseUIChangeEventDetails', 'Base UI handler'];
+  const title = 'calls preventBaseUIHandler';
+  const upstream = [
+    { describe, title },
+    { describe, suite: 'describeConformance' },
+  ];
+  const vase = ['VaseUIChangeEventDetails', 'Vase UI handler'];
+  const result = run([row({ describe, title, kind: 'engine', engine: 'webkit' })], {
+    extract: makeExtract({ cases: [{ file: UPSTREAM_FILE, rows: upstream }] }),
+    paths: [VASE_FILE],
+    rows: {
+      [VASE_FILE]: [
+        { describe: vase, title: 'calls preventVaseUIHandler', conditions: ['skipIf(isWebKit)'] },
+        { describe: vase, suite: 'describeConformance' },
+        { describe: [], title: 'as Base UI does' },
+      ],
+    },
+  });
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.cases.engine.webkit, 1);
+  assert.equal(result.summary.suiteCalls.matched, 1);
+  assert.equal(result.summary.rowsWithoutUpstream, 1);
+});
+
+test('a second copy of a ported block with the upstream name gives the Vase UI title', () => {
+  const describe = ['Base UI handler'];
+  const result = run([], {
+    extract: makeExtract({
+      cases: [{ file: UPSTREAM_FILE, rows: [{ describe, title: 'opens' }] }],
+    }),
+    paths: [VASE_FILE],
+    rows: {
+      [VASE_FILE]: [
+        { describe: ['Vase UI handler'], title: 'opens' },
+        { describe, title: 'opens' },
+      ],
+    },
+  });
+  assert.deepEqual(result.problems, [
+    `${VASE_FILE}: use "Vase UI handler" for the test title "Base UI handler".`,
+  ]);
+});
+
+test('a Vue-only title can cite Base UI when a ported case or block uses the same words', () => {
+  const title = 'calls the Base UI handler';
+  const describe = ['Base UI form'];
+  const result = run([], {
+    extract: makeExtract({ cases: [{ file: UPSTREAM_FILE, rows: [{ describe, title }] }] }),
+    paths: [VASE_FILE],
+    rows: {
+      [VASE_FILE]: [
+        { describe: ['Vase UI form'], title: 'calls the Vase UI handler' },
+        { describe: ['upstream example', ...describe], title },
+        { describe: [], title: 'Base UI form' },
+        { describe: ['Vase UI form', title], title: 'uses the upstream example' },
+      ],
+    },
+  });
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.cases.matched, 1);
+  assert.equal(result.summary.rowsWithoutUpstream, 3);
+});
+
 test('a row with no match and no exception is a problem for each kind of row', () => {
   const result = run([], { paths: [VASE_FILE], rows: { [VASE_FILE]: [first] } });
   assert.deepEqual(result.problems, [

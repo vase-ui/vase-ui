@@ -1,7 +1,7 @@
 import { computed, shallowRef, toValue } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter } from 'vue';
 import type { Placement } from '@floating-ui/vue';
-import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { resolveElement } from '../../src/internals/resolveElement';
 import type { FloatingRootStore } from '../../src/utils/popups/floating-root/FloatingRootStore';
 import { useFloatingRootStore } from '../../src/utils/popups/floating-root/useFloatingRootStore';

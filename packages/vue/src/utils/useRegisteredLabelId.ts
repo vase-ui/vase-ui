@@ -5,7 +5,7 @@ import { given } from '../internals/givenAttributes';
 import { createIdRegistry } from '../internals/labelable-provider/createIdRegistry';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { useReferencedId } from '../internals/labelable-provider/useRegisteredId';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';
 
 interface RootLabel {

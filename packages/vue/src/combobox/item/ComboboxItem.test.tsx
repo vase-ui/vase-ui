@@ -127,7 +127,7 @@ describe('<Combobox.Item />', () => {
       expect(handleClick.mock.calls.length).toBe(1);
     });
 
-    it('does not select the item when onClick prevents Base UI handler', async () => {
+    it('does not select the item when onClick prevents Vase UI handler', async () => {
       const handleClick = vi.fn((event) => event.preventVaseUIHandler());
       const { user } = await render(
         <Combobox.Root defaultOpen>

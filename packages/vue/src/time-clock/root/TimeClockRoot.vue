@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import type { TimeValue } from '../../internals/date-time/temporal';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
@@ -148,7 +148,7 @@ import { computed, provide, shallowRef, watch } from 'vue';
 import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { hourCycleOf } from '../../internals/date-time/format';
 import { assertTemporal, toPlainTime, withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';

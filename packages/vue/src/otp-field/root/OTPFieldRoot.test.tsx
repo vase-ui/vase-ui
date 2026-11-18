@@ -2288,7 +2288,7 @@ describe('<OTPField.Root />', () => {
         expect(handleSubmit).not.toHaveBeenCalled();
       });
 
-      it('does not call flushSync inside a layout effect when auto-submitting a Base UI Form', async () => {
+      it('does not call flushSync inside a layout effect when auto-submitting a Vase UI Form', async () => {
         const handleSubmit = vi.fn((event: Event) => {
           event.preventDefault();
         });
@@ -2309,7 +2309,7 @@ describe('<OTPField.Root />', () => {
         expect(handleSubmit).toHaveBeenCalledTimes(1);
       });
 
-      it('blocks invalid Base UI Form auto-submit without calling flushSync inside a layout effect', async () => {
+      it('blocks invalid Vase UI Form auto-submit without calling flushSync inside a layout effect', async () => {
         const handleSubmit = vi.fn((event: Event) => {
           event.preventDefault();
         });

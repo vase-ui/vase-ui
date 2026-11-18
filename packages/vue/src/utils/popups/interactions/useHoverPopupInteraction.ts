@@ -4,7 +4,7 @@ import { isElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { useTimeout } from '../../../common/useTimeout';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingParentNodeId, useFloatingTree } from '../tree/FloatingTree';
 import type { PopupInteractionStore } from '../types';

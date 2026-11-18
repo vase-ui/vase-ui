@@ -40,7 +40,7 @@ import { addEventListener } from '../../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../../common/empty';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerVisuallyHidden } from '../../../internals/constants';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { HTMLProps } from '../../../internals/types';
 import { createFocusGuardElement } from '../focus/createFocusGuardElement';

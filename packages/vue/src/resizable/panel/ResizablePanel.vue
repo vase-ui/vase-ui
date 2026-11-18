@@ -167,7 +167,7 @@ import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useReferencedId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useResizableRootContext } from '../root/ResizableRootContext';

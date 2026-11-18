@@ -7,7 +7,7 @@ import { platform } from '../../common/platform';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 
 // A module namespace is read-only. The mock gives `os` as a plain object, so a case can set `ios`.

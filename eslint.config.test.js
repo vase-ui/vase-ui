@@ -1541,9 +1541,9 @@ const passed = [
     code: "import { offset } from '@floating-ui/vue';\nimport type { Placement } from '@floating-ui/vue';\nimport { watch } from 'vue';\n\nexport const used = [offset, watch];\nexport type Side = Placement;\n",
   },
   {
-    name: 'an import by a relative path of a common file, a prehydration script and a file that keeps BaseUi in its name',
+    name: 'relative imports of a common file, a prehydration script and useVaseUiId',
     file: `${SRC}/useRoot.ts`,
-    code: "import { ownerDocument } from '../common/owner';\nimport { useVaseUiId } from '../internals/useBaseUiId';\nimport { script } from './prehydrationScript.min';\n\nexport const used = [ownerDocument, useVaseUiId, script];\n",
+    code: "import { ownerDocument } from '../common/owner';\nimport { useVaseUiId } from '../internals/useVaseUiId';\nimport { script } from './prehydrationScript.min';\n\nexport const used = [ownerDocument, useVaseUiId, script];\n",
   },
   {
     name: 'the names of Vase UI and a link to Base UI in a comment',

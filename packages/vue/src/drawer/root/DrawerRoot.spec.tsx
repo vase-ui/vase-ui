@@ -1,7 +1,7 @@
 import { Drawer } from '@vase-ui/vue/drawer';
 import { expectType } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { DrawerRootContext } from './DrawerRootContext';
 
 // `openChange` is an emit, so the props type has no handler key.

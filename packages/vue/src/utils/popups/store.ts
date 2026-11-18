@@ -8,7 +8,7 @@ import { ReactiveStore } from './ReactiveStore';
 import type { PopupEvents, PopupInteractionContext, ReferenceType } from './types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { PopupTriggerMap } from './popupTriggerMap';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 
 /**

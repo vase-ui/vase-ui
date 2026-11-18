@@ -42,7 +42,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import { useRegisteredMessageId } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';

@@ -20,7 +20,7 @@ export interface NavigationMenuItemProps
 <script setup lang="ts">
 import { computed, provide } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { NavigationMenuItemContext } from './NavigationMenuItemContext';

@@ -1854,7 +1854,7 @@ describe('<Toast.Root />', () => {
       expect(afterSwipeEvent.defaultPrevented).toBe(false);
     });
 
-    it('does not start swiping from elements with the data-base-ui-swipe-ignore attribute', async () => {
+    it('does not start swiping from elements with the data-vase-ui-swipe-ignore attribute', async () => {
       await render(
         <Toast.Provider>
           <Toast.Viewport>

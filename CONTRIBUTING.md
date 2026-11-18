@@ -185,10 +185,10 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 | `packages/utils/src`          | `packages/vue/src/common`   |
 | `packages/react/test`         | `packages/vue/test`         |
 
-- Folder, file and part names are the same as upstream: `dialog/root/DialogRoot.vue`.
-- The counterpart of an upstream file is the file at the mapped path with the same name. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
+- Use the upstream folder, file and part names with the Vase UI form of the library name.
+- The counterpart of an upstream file is the file at the mapped path. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
 - The counterpart of an upstream folder is the folder at the mapped path.
-- A file keeps the `BaseUi` or `BaseUI` of its upstream name, because `pnpm parity:check` finds a counterpart by its path: `useBaseUiId.ts`, `createBaseUIEventDetails.ts`. The names in the file change: `useVaseUiId`, `VaseUIChangeEventDetails`.
+- `pnpm parity:check` maps `useBaseUiId.ts` to `useVaseUiId.ts` and `createBaseUIEventDetails.ts` to `createVaseUIEventDetails.ts`. The rule also applies to paths under `docs/demos`.
 - The vocabulary is that of upstream's `GLOSSARY.md`: Popup, Root, Trigger, Anchor, Positioner.
 - A family is one upstream folder.
 - State attributes (`data-open`) and CSS variables keep upstream's names and values. Upstream CSS then works with no change.
@@ -682,7 +682,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
-- A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
+- A file of `utils` that Base UI has keeps its mapped path, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
 
 ### Vapor mode
 
@@ -742,7 +742,7 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - Vue compares the `style` of an element only when the client render gives a `style` key. An element that can have a `style` in its client render, such as the `style` of a consumer, needs the category `style`.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
-- A script can write a style property that no render writes. Vue does not remove that property when it hydrates, so the hydrated DOM differs from a client-only render. The part removes the property in `onMounted`. `Slider.Indicator` does this for `--end-position`.
+- Write only the style properties that the part needs before hydration. The slider script sets `--start-position` on the indicator. For a range, it also sets `--relative-size`.
 - A style element of the library must be in the server HTML, so that its rule applies before the page hydrates. The internal SFC `utils/StyleDisableScrollbar.vue` renders that element only while the part hydrates. `ScrollArea.Root` and `Select.Positioner` have the SFC in their element. After the mount, `useStyleDisableScrollbar(element)` keeps one shared style element for each document or shadow root that needs it. The use of a part follows its element to another document or shadow root. A part outside a document or shadow root has no use. With `disableStyleElements` of `CSPProvider`, no such element exists, and the consumer writes the rule of the class `vase-ui-disable-scrollbar` in a style sheet.
 - A portal renders after mount, except for `Dialog.Portal` with `disabled`. It does not render while the popup is closed, unless `keepMounted` is set. A portal that renders after mount leaves one comment in the server HTML, also for an open popup. With `disabled`, the server HTML has an open popup in the place of the part. See [Popup portal](#popup-portal).
 - `NavigationMenu.Content` teleports into its viewport, and the root gets the element of the viewport only after the mount. The server HTML thus has no content, also for an open item. With `keepMounted`, the content is in its item, hidden.
@@ -1444,7 +1444,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
 - An internal root component of Base UI that more than one root part renders also becomes a composable. `useMenuRoot` does the work of `MenuRootInternal` for `Menu.Root` and `Menu.SubmenuRoot`. `useAriaCombobox` does the work of `AriaCombobox`. A root part gives it a view of its props, with one getter for each prop. A spread of the props reads each prop, so each `computed` that reads the view would run again for a change of any prop.
 - A value that Base UI reads from the state of another store only in the first render, with `useRefWithInit` or a `useState` initializer, is a constant of `setup` that reads `toRaw` of that state. `useMenuRoot` reads the transition status and the `instantType` of the parent menu of a submenu in this way.
-- An internal part of Base UI that public parts wrap also becomes a composable. Its file is a `.ts` file at the mapped path, with the upstream file name. `filter-dropdown/input/FilterDropdownInput.ts` exports `useFilterDropdownInput`.
+- An internal part of Base UI that public parts wrap also becomes a composable. Its file is a `.ts` file at the mapped path. `filter-dropdown/input/FilterDropdownInput.ts` exports `useFilterDropdownInput`.
 - The composable returns what the part has of the state, the function ref and the `props` function. The public part gives them to its own `useRenderElement`. A wrapper SFC would have to forward `as`, the `#render` slot, the attributes and `element`.
 - Base UI can read the text of children that it does not render, such as the label of an item that the filter hides. A slot is a function that a render must call.
 - Do not call a slot in `setup`, in a lifecycle hook or in a watcher. A call in `setup` or in a hook makes Vue warn that the slot runs outside the render function.
@@ -1622,7 +1622,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 ### How to port a test
 
-A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. `pnpm parity:check` finds the ported case of a Base UI case by these titles. It does not read the body of a case.
+A ported test uses the mapped path. Its `describe` and `it` titles use the upstream text with the Vase UI form of the library name. For example, `preventBaseUIHandler` becomes `preventVaseUIHandler`, and `Base UI handler` becomes `Vase UI handler`. `pnpm parity:check` identifies each case by its path and titles. A test title of our own can name the upstream project as "Base UI".
 
 - A ported case asserts each behavior that the Base UI case asserts. It can assert more.
 - The body of a ported case can have a better form than the body of the Base UI case. A better form never asserts less.
@@ -1696,10 +1696,10 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `<React.Activity>` with `mode` | `<KeepAlive>` around a child that the test renders only while it is visible. The title of the block stays. |
 | `<React.StrictMode>` around the tree | No wrapper. Vue has no Strict Mode. |
 | `createRenderer({ strict })` and `render(element, { strict })` | No option. Vue has no Strict Mode. The case runs one time. |
-| `describe.each([false, true])('… (strict: %s)', …)` | `describe` with the same title. The block runs one time. |
-| `it.each([false, true])('… (strict: %s)', …)` | `it` with the same title. The case runs one time. |
+| `describe.each([false, true])('… (strict: %s)', …)` | `describe` with the mapped title. The block runs one time. |
+| `it.each([false, true])('… (strict: %s)', …)` | `it` with the mapped title. The case runs one time. |
 | A row of `it.each` that runs the case in Strict Mode | The row with no Strict Mode. Its label loses the words about Strict Mode. |
-| A row of `it.each` that mocks `useId` to give `undefined`, as in React 17 | No counterpart. Remove the row of `it.each`. The case keeps its title, so it needs no exception row. `useVaseUiId` gives an id in `setup`. |
+| A row of `it.each` that mocks `useId` to give `undefined`, as in React 17 | No counterpart. Remove the row of `it.each`. The case still matches, so it needs no exception row. `useVaseUiId` gives an id in `setup`. |
 | `React.lazy(loader)` | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions |
 | `act(fn)` | `fn()`, then `await flushMicrotasks()`. Where `fn` makes the part start a 0 ms timer, see [Test rules](#test-rules). |
 | `ignoreActWarnings()` | No call. Vue gives no warning about `act`. |
@@ -1738,7 +1738,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | A `beforeEach` hook that gives `HTMLElement.prototype` the property `inert` | No counterpart. jsdom has no `inert`, and a browser has it. |
 | A read directly after a `fireEvent` call, before the effects of the part run | Keep the promise of `fireEvent`, make the read, then `await` the promise. An `await` before the read lets the effects run first. |
 | `renderToString` of the renderer, with no `hydrate()` | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row. |
-| `renderToString` of the renderer, then `hydrate()` | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts on the server HTML before `hydrate()` calls `hydrateAfter`. See [Test helpers](#test-helpers). |
+| `renderToString` of the renderer, then `hydrate()` | The case stays in the ported test file with its mapped title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts on the server HTML before `hydrate()` calls `hydrateAfter`. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers). |
 | `expect(fn).toErrorDev(message)` or `.toWarnDev(message)` | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert that the spy got that one call: `toHaveBeenCalledExactlyOnceWith(message)`. The message starts with `Vase UI:`. |
 | `toErrorDev` for a warning that React DOM gives, such as the warning for a `NaN` value | No counterpart, because Vue gives no such warning. The case runs with no wrapper and keeps its other assertions. State the removal in the body of the pull request. |
@@ -1801,12 +1801,12 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
-- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
+- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
 - `createRenderer()` has no `renderToString`. A server render runs in Node with no DOM.
-- The row for `renderToString` with no `hydrate()` has one exception. A case that reads the layout of the server HTML needs a browser. It stays in the ported test file with the same title, so it needs no row. Each other case of its `describe` block stays with it. Each case inserts the HTML of `renderOnServer` with a fragment of a range. See `server-side rendering` in `slider/thumb/SliderThumb.test.tsx`.
+- The row for `renderToString` with no `hydrate()` has one exception. A case that reads the layout of the server HTML needs a browser. It stays in the ported test file with its mapped title, so it needs no row. Each other case of its `describe` block stays with it. Each case inserts the HTML of `renderOnServer` with a fragment of a range. See `server-side rendering` in `slider/thumb/SliderThumb.test.tsx`.
 - A row for a `describe` block also covers each case of the block that has no counterpart. Give the block a `replaced` row only when each case of the block moves to the `.node.test.tsx` file. `useButton` does this for `server-side rendering`.
 - Vue renders an async component after its loader resolves. `flushMicrotasks` waits for that render.
 - A spy as a slot gets one object with the slot props. Assert the fields of the first argument of the last call: `spy.mock.lastCall?.[0].value`.
@@ -2044,8 +2044,8 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 | Upstream thing | Counterpart in Vase UI |
 | --- | --- |
 | A source file or a type test | The file at the mapped path. See [Layout and names](#layout-and-names). |
-| A test case | A case in the test file at the mapped path, with the same `describe` titles and the same title. |
-| A call of a shared suite, such as `describeConformance(…)` | The same call in the same `describe` block. |
+| A test case | A case at the mapped path with the titles from [How to port a test](#how-to-port-a-test). |
+| A call of a shared suite, such as `describeConformance(…)` | The same call under the mapped `describe` titles. |
 | An entry of a `types.md`, and each row of its props table | The export of the family, and the prop, emit, slot or exposed member that [API convention](#api-convention) gives. |
 
 The rows of a family are in the `exceptions` list of its family file. A row names one upstream thing. The family files write the fields in this order:
@@ -2171,7 +2171,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
-- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
+- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<upstream-demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
 - A demo can have two attributes that the Base UI file lacks, because axe reports their absence in the open state. A popup that has the role `dialog` and no title part has `aria-label`. A scroll container that holds no control has `tabindex="0"`, because WebKit gives a scroll container no keyboard focus. Both variants of a demo get the attribute.
 - In a Tailwind demo, write `class` in the place of `className`. A constant that holds class names keeps its name and its text in `<script setup>`, and the template binds it with `:class="name"`. Write an array in `:class` in the place of `clsx` or a template literal. Keep each part of a string that Base UI makes with `+`. Do not write the object form of `:class`.
 - The name of a constant that holds class names ends with `Class`, `ClassName` or `Classes`.
@@ -2191,7 +2191,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The name says what the demo shows, in the fewest words, as "Undo notifications" and "Nested submenus" do. The first demo of the Toast page keeps the default name. Base UI gives these parts no `aria-label` in its demos. A demo that names such a part thus has one attribute more than its Base UI file.
 - VitePress does not add the base path of the site to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
-- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
+- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the mapped path in `docs/demos/<family>`.
 - A Base UI demo can import a library from npm, such as `match-sorter` or `@tanstack/react-virtual`. The Vue demo imports the same library, or its Vue counterpart, such as `@tanstack/vue-virtual`. Add it to the `devDependencies` of `docs/package.json` with an exact version: `pnpm --filter @vase-ui/docs add -D <name>@<version>`. Then commit `pnpm-lock.yaml`. The demo test of the package resolves the library from `docs/node_modules`.
 - Where the library has no Vue release, the page documents a Vue library in its place. The Forms page documents VeeValidate in the place of React Hook Form.
 - The Vue library of a demo can need an element that the Base UI demo does not have. `VUE_DEMO_EXTRA_CLASSES` in `scripts/docs/upstreamDemos.ts` then names the element and each class string that the Vue folder has more than its row, with the reason.

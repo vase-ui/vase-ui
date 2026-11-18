@@ -1,11 +1,11 @@
 import { computed, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useControlled } from '../../common/useControlled';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import { REASONS } from '../../internals/reasons';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { CollapsibleRootChangeEventDetails } from './CollapsibleRoot.vue';

@@ -1,7 +1,7 @@
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { getMaxListIndex, getMinListIndex } from '../../internals/composite/listIndex';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';

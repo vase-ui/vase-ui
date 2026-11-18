@@ -3,7 +3,7 @@ import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';

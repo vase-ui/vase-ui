@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { TimeValue } from '../../internals/date-time/temporal';
 import type {
   PopoverRootActions,

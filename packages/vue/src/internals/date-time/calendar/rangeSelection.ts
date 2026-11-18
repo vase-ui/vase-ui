@@ -1,8 +1,8 @@
 import { computed, shallowRef, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useControlled } from '../../../common/useControlled';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import { REASONS } from '../../reasons';
 import { matches } from '../matchers';
 import type { DateMatcher } from '../matchers';

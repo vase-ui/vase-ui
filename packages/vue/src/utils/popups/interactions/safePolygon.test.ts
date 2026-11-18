@@ -1,5 +1,6 @@
 import { vi, expect, describe, beforeEach, afterEach, it } from 'vitest';
 import { flushMicrotasks } from '#test-utils';
+import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { HandleCloseContext } from './useHoverShared';
 import type { PopupPositioningContext } from '../types';
@@ -135,6 +136,35 @@ describe('safePolygon', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('VUE-138: keeps the popup open when the pointer reaches a button in its slot', () => {
+    const button = document.createElement('button');
+    const root = createSlotHost(button);
+    const domReference = document.createElement('button');
+    const floating = document.createElement('div');
+    floating.append(document.createElement('slot'));
+    root.append(domReference, floating);
+    domReference.getBoundingClientRect = () => createRect(0, 0, 100, 100);
+    floating.getBoundingClientRect = () => createRect(120, 0, 100, 100);
+    const onClose = vi.fn();
+    const handleMove = safePolygon()(
+      createHandleCloseContext({
+        domReference,
+        floating,
+        onClose,
+        tree: new FloatingTreeStore(),
+        x: 100,
+        y: 50,
+      }),
+    );
+
+    handleMove(createMouseMoveEvent(215, 95, button));
+    vi.runAllTimers();
+    expect(onClose).not.toHaveBeenCalled();
+    handleMove(createMouseMoveEvent(250, 110, document.body));
+    vi.runAllTimers();
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('does not close when a nested child is open', async () => {

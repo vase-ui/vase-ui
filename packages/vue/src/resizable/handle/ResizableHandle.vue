@@ -102,7 +102,7 @@ import {
   PAGE_UP,
 } from '../../internals/composite/composite';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';

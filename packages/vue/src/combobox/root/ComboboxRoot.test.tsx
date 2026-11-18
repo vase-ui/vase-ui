@@ -53,7 +53,7 @@ import CompositeItem from '../../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../../test/fixtures/CompositeRootPart.vue';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { useTimeout } from '../../common/useTimeout';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { HTMLProps } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
 import type { ComboboxStore } from '../store';

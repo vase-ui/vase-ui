@@ -1154,7 +1154,7 @@ describe('<Select.Item />', () => {
       expect(screen.getByTestId('value').textContent).toBe('Select font');
     });
 
-    it('should not select item when onClick calls preventBaseUIHandler during drag-to-select', async () => {
+    it('should not select item when onClick calls preventVaseUIHandler during drag-to-select', async () => {
       const handleClick = vi.fn((event: VaseUIEvent<MouseEvent>) => event.preventVaseUIHandler());
 
       await render(

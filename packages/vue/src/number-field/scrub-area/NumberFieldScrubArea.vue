@@ -37,7 +37,7 @@ import { ownerDocument, ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import { createGenericEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createGenericEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';

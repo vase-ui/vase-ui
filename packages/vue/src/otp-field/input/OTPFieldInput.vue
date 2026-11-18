@@ -42,7 +42,7 @@ import { useCompositeListItem } from '../../internals/composite/list/useComposit
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { given } from '../../internals/givenAttributes';
