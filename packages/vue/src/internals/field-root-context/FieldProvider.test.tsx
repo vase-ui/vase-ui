@@ -93,6 +93,30 @@ describe('field providers', () => {
     expect(focusedAtHold).toBe(false);
   });
 
+  it('VUE-83: validates the visible input in the parent deactivation hook', async () => {
+    const field = shallowRef<InstanceType<typeof Field.Root> | null>(null);
+    const shown = shallowRef(true);
+    const Branch = defineComponent(() => {
+      onDeactivated(() => field.value?.validate());
+      return () => <Field.Control defaultValue="cached" />;
+    });
+    await render(() => (
+      <Field.Root ref={field} data-testid="field">
+        <Field.Control required />
+        <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>
+      </Field.Root>
+    ));
+
+    const root = screen.getByTestId('field');
+    field.value!.validate();
+    await nextTick();
+    expect(root).toHaveAttribute('data-valid');
+
+    shown.value = false;
+    await nextTick();
+    expect(root).toHaveAttribute('data-invalid');
+  });
+
   it.each([
     { name: 'Select', root: () => <Select.Root /> },
     { name: 'Combobox', root: () => <Combobox.Root /> },

@@ -1,4 +1,4 @@
-import { inject, nextTick, shallowRef, watch } from 'vue';
+import { inject, nextTick, onScopeDispose, shallowRef, watch } from 'vue';
 import { comesBeforeInSameTree } from '../comesBeforeInSameTree';
 import { FieldRootContext } from '../field-root-context/FieldRootContext';
 import type { UseFieldValidationReturnValue } from '../field-root-context/FieldRootContext';
@@ -56,19 +56,17 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   const { setFieldInput } = field.validation;
   const source = Symbol();
   const element = shallowRef<HTMLInputElement | null>(null);
-  const { isHeld, shown } = useKeepAliveState();
+  const { isHeld } = useKeepAliveState();
 
-  // A held control can mount or replace its element without another deactivation.
-  watch([isHeld, element], ([held]) => {
-    if (held) {
-      setFieldInput(source, null);
-    }
-  });
-  watch(shown, () => setFieldInput(source, element.value, true));
+  // A parent can validate the remaining controls in its deactivation hook.
+  watch(
+    [element, isHeld],
+    ([input, held], [, wasHeld]) => setFieldInput(source, held ? null : input, wasHeld),
+    { flush: 'sync' },
+  );
+  onScopeDispose(() => setFieldInput(source, null));
 
   return (node) => {
-    const input = node as HTMLInputElement | null;
-    setFieldInput(source, input);
-    element.value = input;
+    element.value = node as HTMLInputElement | null;
   };
 }
