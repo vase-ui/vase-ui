@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
 import type { Component, Directive, VNode } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
@@ -11,6 +11,8 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { Select } from '@vase-ui/vue/select';
+import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
+import type { HTMLProps } from '../../../internals/types';
 import { createAttribute } from '../createAttribute';
 import PopupRootNodeScoped from './PopupRootNodeScoped.test.vue';
 
@@ -200,5 +202,53 @@ describe('VUE-60: each popup part has one root node', () => {
       await nextTick();
       expect(getComputedStyle(popup).display).toBe('none');
     }
+  });
+});
+
+describe('each popup part follows a late target of the #render slot', () => {
+  const { render } = createRenderer();
+
+  it.each(families)('$name', async (family) => {
+    const useLateTarget = shallowRef(false);
+    const partInstance = shallowRef<{ element: HTMLElement | null } | null>(null);
+
+    await render(() =>
+      family.tree(
+        h(
+          family.part,
+          {
+            ref: (value: unknown) => {
+              partInstance.value = value as { element: HTMLElement | null } | null;
+            },
+          },
+          {
+            render: ({ props }: { props: HTMLProps }) =>
+              useLateTarget.value ? (
+                <MountedElementTarget {...props} />
+              ) : (
+                <section {...props} data-testid="initial-target" />
+              ),
+          },
+        ),
+      ),
+    );
+    const initial = await screen.findByTestId('initial-target');
+    expect(partInstance.value?.element).toBe(initial);
+
+    useLateTarget.value = true;
+    const late = await screen.findByTestId('widget');
+    await nextTick();
+
+    expect(partInstance.value?.element).toBe(late);
+    if (family.siblings === 'guards') {
+      expect([late.previousElementSibling, late.nextElementSibling].map(isInsideGuard)).toEqual([
+        true,
+        true,
+      ]);
+    } else {
+      expect(late.nextElementSibling).toHaveAttribute('role', 'button');
+      expect(late.nextElementSibling).toHaveAttribute('aria-label', 'Dismiss');
+    }
+    expect(takeReportedMessages()).toEqual([]);
   });
 });

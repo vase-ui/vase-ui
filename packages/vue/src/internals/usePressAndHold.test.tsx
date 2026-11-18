@@ -4,7 +4,10 @@ import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils'
 import { usePressAndHold } from './usePressAndHold';
 import type { UsePressAndHoldParameters } from './usePressAndHold';
 
-type HoldOptions = Pick<UsePressAndHoldParameters, 'startDelay' | 'tickDelay' | 'scrollDistance'>;
+type HoldOptions = Pick<
+  UsePressAndHoldParameters,
+  'startDelay' | 'tickDelay' | 'scrollDistance' | 'onStop'
+>;
 
 // Mirrors the touch settle delay in `usePressAndHold`.
 const TOUCH_TIMEOUT = 50;
@@ -108,6 +111,17 @@ describe('usePressAndHold', () => {
     expect(tick).toHaveBeenCalledTimes(ticks[1]);
 
     await fireEvent.pointerUp(button, { pointerType: 'touch' });
+  });
+
+  it('ignores a release after the pressed button unmounts', async () => {
+    const onStop = vi.fn();
+    const Hold = defineHoldButton({ onStop }, () => false);
+    const { unmount } = await render(<Hold />);
+    await fireEvent.pointerDown(screen.getByRole('button'), { pointerType: 'mouse' });
+
+    unmount();
+    await fireEvent.pointerUp(window, { pointerType: 'mouse' });
+    expect(onStop).not.toHaveBeenCalled();
   });
 
   it('prevents the context menu during a hold and no longer after the release', async () => {

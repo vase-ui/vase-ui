@@ -122,21 +122,19 @@ export function useFilterDropdownItem(
     });
   }
 
-  let unregister: (() => void) | undefined;
   onMounted(() => {
-    unregister = register();
+    onScopeDispose(register());
     registered.value = true;
+    if (groupContext) {
+      watch(
+        () => Boolean(toValue(params.retainGroup)),
+        (retained, _previous, onCleanup) => {
+          onCleanup(groupContext.registerItem(itemId, retained));
+        },
+        { immediate: true },
+      );
+    }
   });
-  onScopeDispose(() => unregister?.());
-
-  let unregisterFromGroup: (() => void) | undefined;
-  function registerInGroup() {
-    unregisterFromGroup?.();
-    unregisterFromGroup = groupContext?.registerItem(itemId, Boolean(toValue(params.retainGroup)));
-  }
-  onMounted(registerInGroup);
-  watch(() => Boolean(toValue(params.retainGroup)), registerInGroup);
-  onScopeDispose(() => unregisterFromGroup?.());
 
   // Re-register when the item's text changes, so the active query runs again.
   function registerChangedText(text: string | undefined) {

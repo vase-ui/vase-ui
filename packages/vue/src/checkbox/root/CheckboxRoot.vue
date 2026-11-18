@@ -469,12 +469,11 @@ watch(
         return true;
       });
     } else {
-      restoreInput();
+      restoreChecked(input, isChecked.value);
     }
   },
   { flush: 'post' },
 );
-watch(isIndeterminate, restoreInput, { flush: 'post' });
 
 useFormRestore(inputElement, takeInputState);
 
@@ -636,6 +635,8 @@ function inputProps() {
       onClick: onInputClick,
       element: () => element.value,
     }),
+    // HTML has no indeterminate attribute. Vue binds the property after mount.
+    ...(isHydrated.value && isIndeterminate.value ? { indeterminate: true } : undefined),
     // The style follows the name of the checkbox. The parent checkbox has no name, so the form
     // does not get it.
     ...(props.parent ? { name: undefined } : undefined),

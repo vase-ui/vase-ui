@@ -26,9 +26,11 @@ describe('createElementSetter', () => {
     });
   }
 
-  function createPartInBranch({ mounted = true, keepWhileHeld = false } = {}) {
+  function createPartInBranch(
+    { mounted = true, keepWhileHeld = false } = {},
+    element: ElementTarget = shallowRef(null),
+  ) {
     const isSpan = shallowRef(false);
-    const element = shallowRef<HTMLElement | null>(null);
     const Part = createPart(element, { isSpan, keepWhileHeld });
     const branch = createHeldBranch(() => <Part />, { renderBranch: (part) => part, mounted });
     return { ...branch, Part, isSpan, element };
@@ -136,6 +138,60 @@ describe('createElementSetter', () => {
     expect(element.value).not.toBe(null);
   });
 
+  it('gives the element of a part that mounts while KeepAlive holds its branch to the kept target', async () => {
+    const kept = shallowRef<HTMLElement | null>(null);
+    const { HeldBranch, mountWhileHeld, show, element } = createPartInBranch(
+      { mounted: false },
+      { value: null, kept },
+    );
+    await render(<HeldBranch />);
+    await mountWhileHeld();
+
+    const part = kept.value;
+    expect(part?.dataset.testid).toBe('part');
+    expect(part?.isConnected).toBe(false);
+    expect(element.value).toBe(null);
+
+    await show();
+    expect(screen.getByTestId('part')).toBe(part);
+    expect(element.value).toBe(part);
+    expect(kept.value).toBe(part);
+  });
+
+  it('keeps the element in the kept target while KeepAlive holds the part, and clears it at the unmount', async () => {
+    const kept = shallowRef<HTMLElement | null>(null);
+    const { HeldBranch, hide, element } = createPartInBranch(
+      { mounted: true },
+      { value: null, kept },
+    );
+    const { unmount } = await render(<HeldBranch />);
+    const part = screen.getByTestId('part');
+    expect(kept.value).toBe(part);
+
+    await hide();
+    expect(part.isConnected).toBe(false);
+    expect(element.value).toBe(null);
+    expect(kept.value).toBe(part);
+
+    unmount();
+    expect(kept.value).toBe(null);
+  });
+
+  it('does not clear the kept target of a part that replaced its part', async () => {
+    const kept = shallowRef<HTMLElement | null>(null);
+    const { HeldBranch, Part, hide } = createPartInBranch({ mounted: true }, { value: null, kept });
+    const { unmount } = await render(<HeldBranch />);
+    expect(kept.value).toBe(screen.getByTestId('part'));
+
+    await hide();
+    await render(<Part data-testid="new" />);
+    const replacement = screen.getByTestId('new');
+    expect(kept.value).toBe(replacement);
+
+    unmount();
+    expect(kept.value).toBe(replacement);
+  });
+
   it('keeps the element while KeepAlive holds the part with keepWhileHeld', async () => {
     const { HeldBranch, hide, mountWhileHeld, show, element } = createPartInBranch({
       mounted: false,
@@ -197,11 +253,13 @@ describe('createElementSetter', () => {
     const { unmount } = await render(<Part />);
     const part = screen.getByTestId('part');
     expect(store.context.popupRef.value).toBe(part);
+    expect(store.context.keptPopupRef.value).toBe(part);
     expect(store.state.popupElement).toBe(part);
 
     unmount();
 
     expect(store.context.popupRef.value).toBe(null);
+    expect(store.context.keptPopupRef.value).toBe(null);
     expect(store.state.popupElement).toBe(null);
   });
 });

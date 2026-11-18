@@ -706,7 +706,22 @@ describe('<Drawer.Root />', () => {
     );
   });
 
+  const createPopup = () => (
+    <Drawer.Viewport>
+      <Drawer.Popup data-testid="popup">Popup</Drawer.Popup>
+    </Drawer.Viewport>
+  );
+
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Drawer.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Drawer.Trigger>Open</Drawer.Trigger>
+          <Drawer.Portal keepMounted={keepMounted}>{content}</Drawer.Portal>
+        </Drawer.Root>
+      ),
+      createPopup,
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Drawer.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Drawer.Trigger>Open</Drawer.Trigger>
@@ -716,11 +731,7 @@ describe('<Drawer.Root />', () => {
         </Drawer.Portal>
       </Drawer.Root>
     ),
-    createPopup: () => (
-      <Drawer.Viewport>
-        <Drawer.Popup data-testid="popup">Popup</Drawer.Popup>
-      </Drawer.Viewport>
-    ),
+    createPopup,
     render,
   });
 

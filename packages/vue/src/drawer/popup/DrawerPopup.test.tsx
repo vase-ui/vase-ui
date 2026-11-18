@@ -1108,7 +1108,7 @@ describe('<Drawer.Popup />', () => {
     });
   });
 
-  describe('BUG-5519: a popup in the popup that closes with it', () => {
+  describe('the return of the focus when the popup closes', () => {
     nestedPopupCloseTests({
       parts: Drawer,
       wrapPopup: (popup) => <Drawer.Viewport>{popup}</Drawer.Viewport>,

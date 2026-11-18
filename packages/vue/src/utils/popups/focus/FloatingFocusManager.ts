@@ -103,9 +103,12 @@ export interface FloatingFocusManagerProps {
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus. No focus moves when the element is in the closed floating element of
-   * a disabled focus manager above. That focus manager returns no focus at its unmount, so the focus
-   * would stay in the closed element.
+   * it, cannot take the focus. The return skips targets in this popup while it is closed and in
+   * closed popups below it. It follows DOM parents and shadow hosts to check containment. For a
+   * non-tabbable target, it uses the first eligible tabbable descendant, or the target itself if
+   * it has none. When the element is in the closed floating element of a disabled focus manager
+   * above, the return element of that focus manager replaces it, because that focus manager returns
+   * no focus at its unmount. The same rule applies to the new element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -113,8 +116,10 @@ export interface FloatingFocusManagerProps {
    *   the focus, the default behavior applies. `null` and an empty ref use the default behavior.
    * - A function: Called with the type of the interaction that closed the floating element (`mouse`,
    *   `touch`, `pen`, or `keyboard`). The type is an empty string when no event of the user closed
-   *   it. Return an element to focus, `true` or `null` to use the default behavior, or `false` or
-   *   `undefined` to do nothing.
+   *   it. The return of the focus of a floating element below also calls the function, with the
+   *   close type of that element, when it replaces a target in this closed floating element. Return
+   *   an element to focus, `true` or `null` to use the default behavior, or `false` or `undefined`
+   *   to do nothing.
    * @default true
    */
   returnFocus?: FocusOption | undefined;
@@ -204,9 +209,21 @@ interface ParentFocusManager {
   getPopupElement: () => HTMLElement | null;
   // Adds the test of a focus manager below. The result removes the test.
   addPopupBelow: (isInClosedPopup: (element: Element | null) => boolean) => () => void;
-  // Whether the element is in a closed popup of a disabled focus manager, here or above. That focus
-  // manager returns no focus at its unmount, so a focus there would stay in a closed popup.
-  isInDisabledClosedPopup: (element: Element | null) => boolean;
+  // Replaces a target that is in the closed popup of a disabled focus manager, here or above, with
+  // the return element of that focus manager. That focus manager returns no focus at its unmount, so
+  // a target in its closed popup cannot keep the focus.
+  getReturnTarget: (
+    target: Element,
+    closeType: InteractionType,
+    activeElementAtClose: Element | null,
+  ) => Element | null;
+}
+
+interface ReturnTargets {
+  elementFocusedBeforeOpen: WeakRef<Element> | null;
+  domReference: WeakRef<Element> | null;
+  preferPreviousFocus: boolean;
+  doc: WeakRef<Document>;
 }
 
 const ParentFocusManagerContext: InjectionKey<ParentFocusManager> = Symbol();
@@ -263,20 +280,22 @@ function addPreviouslyFocusedElement(element: Element | null | undefined) {
   }
 }
 
-function getPreviouslyFocusedElement(skipHidden?: boolean) {
+function getPreviouslyFocusedElement(skip?: (element: Element) => boolean) {
   clearDisconnectedPreviouslyFocusedElements();
   for (let i = previouslyFocusedElements.length - 1; i >= 0; i -= 1) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
     const element = previouslyFocusedElements[i]!.deref();
-    // The marker skips elements outside an open popup, such as behind a modal.
-    if (!skipHidden || !closest(element, `[hidden],[${createAttribute('inert')}]`)) {
+    if (element && !skip?.(element)) {
       return element;
     }
   }
   return undefined;
 }
 
-function getFirstTabbableElement(container: Element | null) {
+function getFirstTabbableElement(
+  container: Element | null | undefined,
+  isInClosedPopup: (element: Element) => boolean,
+) {
   if (!container) {
     return null;
   }
@@ -285,23 +304,25 @@ function getFirstTabbableElement(container: Element | null) {
     return container;
   }
 
-  return tabbable(container)[0] ?? container;
+  return tabbable(container, isInClosedPopup)[0] ?? container;
 }
 
-// The first candidate that can take the focus. A candidate that is not in the document, or that is
-// hidden, can't take it. A hidden element is, for example, an item in a closed Select or in a
-// `keepMounted` Menu. `skippedHidden` tells the caller that the search passed such an element.
-function findReturnElement(candidates: (Element | null | undefined)[]) {
-  let skippedHidden = false;
+// The return skips detached elements, hidden elements and elements in closed popups.
+// A substitute for a connected target must preserve focus that the closing update moved.
+function findReturnElement(
+  candidates: (Element | null | undefined)[],
+  isInClosedPopup: (element: Element) => boolean,
+) {
+  let skippedConnected = false;
   for (const candidate of candidates) {
     if (candidate?.isConnected) {
-      if (!closest(candidate, '[hidden]')) {
-        return { element: candidate, skippedHidden };
+      if (!closest(candidate, '[hidden]') && !isInClosedPopup(candidate)) {
+        return { element: candidate, skippedConnected };
       }
-      skippedHidden = true;
+      skippedConnected = true;
     }
   }
-  return { element: null, skippedHidden };
+  return { element: null, skippedConnected };
 }
 
 function handleTabIndex(floatingFocusElement: HTMLElement) {
@@ -454,17 +475,25 @@ export function useFloatingFocusManager(
         popupsBelow.delete(test);
       };
     },
-    isInDisabledClosedPopup: (element) =>
-      (!open.value && isDisabled() && contains(floating.value, element)) ||
-      parentFocusManager?.isInDisabledClosedPopup(element) === true,
+    getReturnTarget(target, type, activeElementAtClose) {
+      if (!open.value && isDisabled() && contains(floating.value, target)) {
+        const ownTarget = getReturnElement(type, activeElementAtClose);
+        return ownTarget && parentFocusManager
+          ? parentFocusManager.getReturnTarget(ownTarget, type, activeElementAtClose)
+          : ownTarget;
+      }
+      return parentFocusManager
+        ? parentFocusManager.getReturnTarget(target, type, activeElementAtClose)
+        : target;
+    },
   });
 
   // A server render calls no `onBeforeMount`, so it adds nothing.
-  let removeFromParent: (() => void) | undefined;
   onBeforeMount(() => {
-    removeFromParent = parentFocusManager?.addPopupBelow(isInClosedPopup);
+    if (parentFocusManager) {
+      onScopeDispose(parentFocusManager.addPopupBelow(isInClosedPopup));
+    }
   });
-  onScopeDispose(() => removeFromParent?.());
 
   let preventReturnFocus = false;
   let isPointerDown = false;
@@ -696,6 +725,68 @@ export function useFloatingFocusManager(
   // The return of the focus that the cleanup of the effect below queued. When that effect runs again
   // while the popup is open, a source changed and the cleanup was not a close.
   let pendingReturnFocus: { cancelled: boolean } | null = null;
+  // The record stays after the close so a popup below can get the return element of this popup.
+  let returnTargets: ReturnTargets | null = null;
+
+  // This function runs in a microtask after the cleanup, or when a popup below closes. Vue can run
+  // the cleanup before it removes the reference, so the reference can still be in the document in
+  // the cleanup.
+  function getReturnElement(
+    type: InteractionType,
+    activeEl: Element | null,
+    targets = returnTargets,
+  ) {
+    const value = resolveFocusOption(resolved.value.returnFocus, type);
+
+    // `null` uses the default behavior, as an empty ref does.
+    if (value === undefined || value === false) {
+      return null;
+    }
+
+    const doc =
+      targets?.doc.deref() ??
+      ownerDocument(floatingFocusElement.value ?? domReference.value ?? activeEl);
+    const recordedBeforeOpen = targets?.elementFocusedBeforeOpen?.deref();
+    const previousElement =
+      recordedBeforeOpen && getNodeName(recordedBeforeOpen) !== 'body' ? recordedBeforeOpen : null;
+    const referenceElement = targets ? targets.domReference?.deref() : domReference.value;
+    const preferPreviousFocus = targets?.preferPreviousFocus ?? false;
+    const { element, skippedConnected } = findReturnElement(
+      [
+        value === true ? null : value,
+        ...(preferPreviousFocus
+          ? [previousElement, referenceElement]
+          : [referenceElement, previousElement]),
+        parentFocusManager?.getPopupElement(),
+      ],
+      isInClosedPopup,
+    );
+
+    if (skippedConnected && ![activeEl, doc.body].includes(activeElement(doc))) {
+      return null;
+    }
+
+    // The marker skips elements outside an open popup, such as behind a modal.
+    const target =
+      element ??
+      getPreviouslyFocusedElement(
+        (previous) =>
+          isInClosedPopup(previous) ||
+          closest(previous, `[hidden],[${createAttribute('inert')}]`) !== null,
+      );
+    return getFirstTabbableElement(target, isInClosedPopup);
+  }
+
+  // An open with a disabled focus manager records no targets, so it clears the record of an earlier
+  // open.
+  effect(
+    () => [open.value, isDisabled()],
+    () => {
+      if (open.value && isDisabled()) {
+        returnTargets = null;
+      }
+    },
+  );
 
   // Record the targets of the return of the focus, and return the focus when the popup closes.
   effect(
@@ -736,6 +827,16 @@ export function useFloatingFocusManager(
       // `undefined` is normalized to `''` by the prop default, so it never reaches
       // here as nullish and is intentionally not treated as programmatic.
       const preferPreviousFocus = resolved.value.openInteractionType == null;
+
+      const targets: ReturnTargets = {
+        elementFocusedBeforeOpen: elementFocusedBeforeOpen
+          ? new WeakRef(elementFocusedBeforeOpen)
+          : null,
+        domReference: domReferenceEl ? new WeakRef(domReferenceEl) : null,
+        preferPreviousFocus,
+        doc: new WeakRef(doc),
+      };
+      returnTargets = targets;
 
       // Safari and Firefox on macOS don't focus a pressed button, so record the reference instead.
       addPreviouslyFocusedElement(
@@ -790,39 +891,6 @@ export function useFloatingFocusManager(
 
       events.on('openchange', onOpenChangeLocal);
 
-      // This function runs in a microtask after the cleanup. Vue can run the cleanup before it
-      // removes the reference, so the reference can still be in the document in the cleanup.
-      function getReturnElement(type: InteractionType, activeEl: Element | null) {
-        const value = resolveFocusOption(resolved.value.returnFocus, type);
-
-        // `null` uses the default behavior, as an empty ref does.
-        if (value === undefined || value === false) {
-          return null;
-        }
-
-        const previousElement =
-          elementFocusedBeforeOpen && getNodeName(elementFocusedBeforeOpen) !== 'body'
-            ? elementFocusedBeforeOpen
-            : null;
-        const { element, skippedHidden } = findReturnElement([
-          value === true ? null : value,
-          ...(preferPreviousFocus
-            ? [previousElement, domReferenceEl]
-            : [domReferenceEl, previousElement]),
-          parentFocusManager?.getPopupElement(),
-        ]);
-
-        // Use the next element instead of a hidden one, unless the closing update already moved the
-        // focus (e.g. `autofocus`).
-        if (skippedHidden && ![activeEl, doc.body].includes(activeElement(doc))) {
-          return null;
-        }
-
-        // `element` if it is tabbable, otherwise its first tabbable child, otherwise `element`
-        // itself (which may not be tabbable at all).
-        return getFirstTabbableElement(element ?? getPreviouslyFocusedElement(true) ?? null);
-      }
-
       return () => {
         events.off('openchange', onOpenChangeLocal);
 
@@ -853,7 +921,11 @@ export function useFloatingFocusManager(
             pendingReturnFocus = null;
           }
 
-          const returnElement = job.cancelled ? null : getReturnElement(type, activeEl);
+          const candidate = job.cancelled ? null : getReturnElement(type, activeEl, targets);
+          const returnElement =
+            candidate && parentFocusManager
+              ? parentFocusManager.getReturnTarget(candidate, type, activeEl)
+              : candidate;
           // Read at the close on purpose: the latest `explicitReturnFocus` decides.
           const hasExplicitReturnFocus = isReturnFocusExplicit();
 
@@ -861,7 +933,6 @@ export function useFloatingFocusManager(
             !job.cancelled &&
             !preventReturnFocus &&
             isHTMLElement(returnElement) &&
-            parentFocusManager?.isInDisabledClosedPopup(returnElement) !== true &&
             // If the focus moved somewhere else after mount, avoid returning focus
             // since it likely entered a different element which should be
             // respected: https://github.com/floating-ui/floating-ui/issues/2607

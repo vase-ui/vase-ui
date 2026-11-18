@@ -1014,6 +1014,29 @@ describe('<NavigationMenu.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <NavigationMenu.Root
+          value={open ? 'item-1' : null}
+          onOpenChangeComplete={onOpenChangeComplete}
+        >
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal keepMounted={keepMounted}>{content}</NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ),
+      createPopup: () => (
+        <NavigationMenu.Positioner>
+          <NavigationMenu.Popup data-testid="popup">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete }) => (
       <NavigationMenu.Root
         value={open ? 'item-1' : null}

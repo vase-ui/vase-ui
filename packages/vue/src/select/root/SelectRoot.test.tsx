@@ -91,6 +91,22 @@ describe('<Select.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      keepsPopupAfterClose: true,
+      createRoot: ({ open, onOpenChangeComplete, content }) => (
+        <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>{content}</Select.Portal>
+        </Select.Root>
+      ),
+      createPopup: () => (
+        <Select.Positioner>
+          <Select.Popup data-testid="popup">Popup</Select.Popup>
+        </Select.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Select.Trigger>

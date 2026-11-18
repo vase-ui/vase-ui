@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef, watch } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
+import Group from '../../../test/fixtures/FilterDropdownGroupPart.vue';
 import Item from '../../../test/fixtures/FilterDropdownItemPart.vue';
 import { NOOP } from '../../common/empty';
 import { useFilterDropdownItem } from './useFilterDropdownItem';
@@ -26,6 +27,40 @@ describe('useFilterDropdownItem', () => {
     },
     { props: ['value'] },
   );
+
+  it('shows the empty message when the last item unmounts', async () => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <TestFilterDropdownRoot value="">
+        {shown.value && <Item>Canada</Item>}
+        <FilterDropdown.Empty>No items</FilterDropdown.Empty>
+      </TestFilterDropdownRoot>
+    ));
+    expect(screen.getByRole('menuitem')).toHaveTextContent('Canada');
+    expect(screen.queryByRole('status')).toBe(null);
+
+    shown.value = false;
+    await flushMicrotasks();
+    expect(screen.getByRole('status')).toHaveTextContent('No items');
+  });
+
+  it('hides the group when its retained item unmounts', async () => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <TestFilterDropdownRoot value="missing">
+        <Group data-testid="group">
+          {shown.value && <Item retainGroup>Canada</Item>}
+          <Item>Panama</Item>
+        </Group>
+      </TestFilterDropdownRoot>
+    ));
+    const group = screen.getByTestId('group');
+    expect(group).not.toHaveAttribute('hidden');
+
+    shown.value = false;
+    await flushMicrotasks();
+    expect(group).toHaveAttribute('hidden');
+  });
 
   it('renders a late item one time to read its text, then keeps it only when it matches', async () => {
     const App = defineComponent(

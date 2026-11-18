@@ -117,6 +117,7 @@ export function useClientPoint(
   const domReference = computed(() => toValue(store).select('anchorElement'));
 
   let disabledWhileOpen = false;
+  // eslint-disable-next-line no-restricted-syntax -- The pointer listener removes itself. The handler must know whether it still exists.
   let stopListening: (() => void) | null = null;
   const { isHeld } = useKeepAliveState();
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no reactive

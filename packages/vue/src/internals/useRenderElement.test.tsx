@@ -28,6 +28,7 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import { MountedElementTarget } from '../../test/fixtures/MountedElementTarget';
 import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -84,25 +85,6 @@ const InnerElementTarget = defineComponent({
         <span {...attrs} ref={inner} data-testid="inner" />
       </div>
     );
-  },
-});
-
-// A wrapper of a widget that makes its element in `onMounted`. A getter with no reactive source
-// exposes the element, so the part does not render again when the element comes.
-const MountedElementTarget = defineComponent({
-  inheritAttrs: false,
-  setup(_, { attrs, expose }) {
-    const host = shallowRef<HTMLElement | null>(null);
-    let widgetElement: HTMLElement | null = null;
-    onMounted(() => {
-      widgetElement = host.value;
-    });
-    expose({
-      get element() {
-        return widgetElement;
-      },
-    });
-    return () => <div {...attrs} ref={host} data-testid="widget" />;
   },
 });
 
@@ -1191,6 +1173,35 @@ describe('useRenderElement', () => {
       expect(refs).toHaveBeenCalledTimes(1);
       expect(refs.mock.calls[0][0]).toBe(widget);
       expect(component!.element).toBe(widget);
+    });
+
+    it('gives the element to a part whose #render slot changes to the target after the mount', async () => {
+      const refs = vi.fn();
+      let component: ComponentWithElement | null = null;
+      const Test = (props: { useTarget: boolean }) => (
+        <RerenderTestComponent
+          enabled
+          refs={refs}
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+          v-slots={{
+            render: ({ props: partProps }: { props: HTMLProps }) =>
+              props.useTarget ? <MountedElementTarget {...partProps} /> : <span {...partProps} />,
+          }}
+        />
+      );
+      const { container, rerender } = await render(<Test useTarget={false} />);
+      const span = container.firstElementChild;
+      expect(refs).toHaveBeenCalledExactlyOnceWith(span);
+      expect(component!.element).toBe(span);
+
+      await rerender(<Test useTarget />);
+
+      const widget = screen.getByTestId('widget');
+      expect(refs).toHaveBeenLastCalledWith(widget);
+      expect(component!.element).toBe(widget);
+      expect(takeReportedMessages()).toEqual([]);
     });
   });
 

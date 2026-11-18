@@ -16,7 +16,7 @@ export interface ContextMenuTriggerProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, watch } from 'vue';
+import { computed, onScopeDispose, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -30,6 +30,7 @@ import { useMenuRootContext } from '../../menu/root/MenuRootContext';
 import { findRootOwnerId } from '../../menu/utils/findRootOwnerId';
 import { stopEvent } from '../../utils/popups/event';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useContextMenuRootContext } from '../root/ContextMenuRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -66,8 +67,6 @@ const longPressTimeout = useTimeout();
 const allowMouseUpTimeout = useTimeout();
 let allowMouseUp = false;
 let mouseUpAbortController: AbortController | null = null;
-let removeDocumentListener: (() => void) | undefined;
-const { isHeld } = useKeepAliveState();
 
 function handleLongPress(x: number, y: number, event: MouseEvent | TouchEvent) {
   const isTouchEvent = event.type.startsWith('touch');
@@ -228,19 +227,15 @@ function handleDocumentContextMenu(event: MouseEvent) {
   }
 }
 
-function listenToDocument() {
-  removeDocumentListener?.();
-  removeDocumentListener = addEventListener(
-    ownerDocument(element.value),
-    'contextmenu',
-    handleDocumentContextMenu,
-  );
-}
+const { isHeld } = useKeepAliveState();
+useDomEffect(
+  [],
+  () => addEventListener(ownerDocument(element.value), 'contextmenu', handleDocumentContextMenu),
+  isHeld,
+);
 
-function release() {
-  removeDocumentListener?.();
-  removeDocumentListener = undefined;
-  // Abort a pending mouseup listener if the trigger unmounts before it fires.
+function releasePress() {
+  // A held or absent trigger cannot receive the release of a pending press.
   mouseUpAbortController?.abort();
   mouseUpAbortController = null;
   cancelLongPress();
@@ -248,13 +243,16 @@ function release() {
   allowMouseUp = false;
 }
 
-onMounted(() => {
-  if (!isHeld.value) {
-    listenToDocument();
-  }
-});
-watch(isHeld, (held) => (held ? release() : listenToDocument()), { flush: 'sync' });
-onScopeDispose(release);
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      releasePress();
+    }
+  },
+  { flush: 'sync' },
+);
+onScopeDispose(releasePress);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,

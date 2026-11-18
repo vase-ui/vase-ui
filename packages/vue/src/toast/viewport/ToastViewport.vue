@@ -313,6 +313,7 @@ watch(
 
     const win = ownerWindow(viewport);
     const doc = ownerDocument(viewport);
+    // eslint-disable-next-line no-restricted-syntax -- This watcher moves its listeners to the frame that has focus.
     let removeFrameListeners: (() => void) | undefined;
 
     function markWindowFocused() {

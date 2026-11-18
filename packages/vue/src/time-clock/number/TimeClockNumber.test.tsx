@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { nextTick, shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const hour = (value: number, inner = false) => ({ value, inner });
@@ -12,6 +13,26 @@ describe('<TimeClock.Number />', () => {
     render: (node) => render(<TimeClock.Root>{node}</TimeClock.Root>),
     refInstanceof: window.HTMLSpanElement,
   }));
+
+  it('measures only the numbers that remain on the face', async () => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <TimeClock.Root>
+        <TimeClock.Face data-testid="face">
+          {shown.value && <TimeClock.Number number={hour(3)} data-testid="old" />}
+          <TimeClock.Number number={hour(6)} data-testid="current" />
+        </TimeClock.Face>
+      </TimeClock.Root>
+    ));
+    const previous = vi.spyOn(screen.getByTestId('old'), 'getBoundingClientRect');
+    const current = vi.spyOn(screen.getByTestId('current'), 'getBoundingClientRect');
+    shown.value = false;
+    await nextTick();
+
+    await fireEvent.pointerDown(screen.getByTestId('face'), { button: 0, pointerId: 1 });
+    expect(current).toHaveBeenCalled();
+    expect(previous).not.toHaveBeenCalled();
+  });
 
   describe('text', () => {
     it.each([

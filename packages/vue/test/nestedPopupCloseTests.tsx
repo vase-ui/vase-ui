@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type * as Dialog from '../src/dialog/index.parts';
@@ -8,6 +9,7 @@ import * as Select from '../src/select/index.parts';
 import { nextAnimationsRead, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
+import { FocusAtMount } from './fixtures/FocusAtMount';
 import { flushMicrotasks } from './flushMicrotasks';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
@@ -15,9 +17,8 @@ import { waitFor } from './waitFor';
 type PopupParts = Pick<typeof Dialog, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
 
 /**
- * The return of the focus of a popup that closes in the same update as a popup inside it
- * (`BUG-5519`). Dialog and Drawer stop their focus manager when the popup closes, so the focus
- * returns at the close and not at the unmount.
+ * Dialog and Drawer return focus at close, before the popup unmounts. These cases cover nested
+ * popups (`BUG-5519`) and focus targets inside a popup that closes (`BUG-6037`).
  */
 export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
   const { parts, wrapPopup, render } = config;
@@ -181,15 +182,14 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     },
   );
 
-  // A menu or a select in the popup. Its item closes the popup.
-  function renderList(list: 'menu' | 'select', closePopup: () => void) {
+  function renderList(list: 'menu' | 'select', onItemClick?: () => void) {
     return list === 'menu' ? (
       <Menu.Root>
         <Menu.Trigger data-testid="list-trigger">Actions</Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner>
             <Menu.Popup data-testid="list-popup">
-              <Menu.Item onClick={closePopup}>Delete</Menu.Item>
+              <Menu.Item onClick={onItemClick}>Delete</Menu.Item>
             </Menu.Popup>
           </Menu.Positioner>
         </Menu.Portal>
@@ -200,7 +200,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
         <Select.Portal>
           <Select.Positioner>
             <Select.Popup data-testid="list-popup">
-              <Select.Item value="delete" onClick={closePopup}>
+              <Select.Item value="delete" onClick={onItemClick}>
                 Delete
               </Select.Item>
             </Select.Popup>
@@ -209,6 +209,109 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       </Select.Root>
     );
   }
+
+  async function openWithoutTrigger(content: () => VNode, fromMenu = false) {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const open = shallowRef(false);
+    const onOpenChangeComplete = vi.fn();
+    const setOpen = (value: boolean) => {
+      open.value = value;
+    };
+    const { user } = await render(() => (
+      <div>
+        <style>{exitStyle(['outer'])}</style>
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item onClick={() => setOpen(true)}>Edit</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <Root open={open.value} onOpenChange={setOpen} onOpenChangeComplete={onOpenChangeComplete}>
+          <Portal>
+            {wrapPopup(
+              <Popup class="outer" data-testid="outer-popup">
+                {content()}
+                <button onClick={() => setOpen(false)}>Close</button>
+              </Popup>,
+            )}
+          </Portal>
+        </Root>
+      </div>
+    ));
+    const actions = screen.getByRole('button', { name: 'Actions' });
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(actions, () => user.keyboard('{Enter}')),
+    );
+    if (fromMenu) {
+      await waitForLaterMillisecond(() =>
+        user.click(screen.getByRole('menuitem', { name: 'Edit' })),
+      );
+    } else {
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(actions).toHaveFocus());
+      actions.blur();
+      expect(document.body).toHaveFocus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => setOpen(true) }),
+      );
+    }
+    const popup = screen.getByTestId('outer-popup');
+    await waitForOpenChangeComplete(onOpenChangeComplete);
+    expect(popup.contains(document.activeElement)).toBe(true);
+
+    async function checkReturn(
+      action = () => user.click(screen.getByRole('button', { name: 'Close' })),
+    ) {
+      const { focusAtExitStart, exits } = await startExit(popup, [], action);
+      await finishExits(exits);
+      await flushMicrotasks();
+      expect(popup).not.toBeInTheDocument();
+      expect(focusAtExitStart).toBe(actions);
+      expect(actions).toHaveFocus();
+    }
+    return { user, popup, checkReturn };
+  }
+
+  it.each([
+    { name: 'the app opens the popup', fromMenu: false },
+    { name: 'a menu item opens the popup', fromMenu: true },
+  ])(
+    'BUG-6037: skips the trigger of a select that was open in the popup: $name',
+    async ({ fromMenu }) => {
+      const { user, checkReturn } = await openWithoutTrigger(() => renderList('select'), fromMenu);
+      const trigger = screen.getByTestId('list-trigger');
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(trigger, () => user.keyboard('{Enter}')),
+      );
+      expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(trigger).toHaveFocus());
+
+      await checkReturn();
+    },
+  );
+
+  it('BUG-6037: returns focus to the earlier menu trigger after a press outside', async () => {
+    // The drawer viewport needs space for a press outside its popup.
+    const { popup, checkReturn } = await openWithoutTrigger(() => (
+      <style>{'[role="presentation"]:has(> .outer) { position: relative; padding: 12px; }'}</style>
+    ));
+    const outside =
+      popup.closest('[role="presentation"]') ?? screen.getByRole('presentation', { hidden: true });
+
+    await checkReturn(() => userEvent.click(outside, { position: { x: 2, y: 2 } }));
+  });
+
+  it('BUG-6037: returns focus to the earlier menu trigger after a field takes focus at mount', async () => {
+    const { checkReturn } = await openWithoutTrigger(() => <FocusAtMount data-testid="field" />);
+    expect(screen.getByTestId('field')).toHaveFocus();
+
+    await checkReturn();
+  });
 
   it.each<{ name: string; list: 'menu' | 'select'; modal: boolean }>([
     { name: 'a menu in a modal popup', list: 'menu', modal: true },
@@ -268,6 +371,253 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       expect(trigger).toHaveFocus();
     },
   );
+
+  it('BUG-5519: returns the focus to the outer trigger when the nested popup closes during the exit of the outer popup', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const outerOpen = shallowRef(false);
+    const innerOpen = shallowRef(false);
+    const onOuterOpenChangeComplete = vi.fn();
+    const { user } = await render(() => (
+      <div>
+        <style>{exitStyle(['outer'])}</style>
+        <Root
+          open={outerOpen.value}
+          onOpenChange={(open: boolean) => {
+            outerOpen.value = open;
+          }}
+          onOpenChangeComplete={onOuterOpenChangeComplete}
+        >
+          <Trigger>Open outer</Trigger>
+          <Portal>
+            {wrapPopup(
+              <Popup class="outer" data-testid="outer-popup">
+                <Root
+                  open={innerOpen.value}
+                  onOpenChange={(open: boolean) => {
+                    innerOpen.value = open;
+                  }}
+                >
+                  <Trigger>Open inner</Trigger>
+                  <Portal>
+                    {wrapPopup(
+                      <Popup data-testid="inner-popup">
+                        <button
+                          onClick={() => {
+                            outerOpen.value = false;
+                          }}
+                        >
+                          Close outer
+                        </button>
+                        <button
+                          onClick={() => {
+                            innerOpen.value = false;
+                          }}
+                        >
+                          Close inner
+                        </button>
+                      </Popup>,
+                    )}
+                  </Portal>
+                </Root>
+              </Popup>,
+            )}
+          </Portal>
+        </Root>
+      </div>
+    ));
+    const outerTrigger = screen.getByRole('button', { name: 'Open outer' });
+
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger)),
+    );
+    const outerPopup = screen.getByTestId('outer-popup');
+    expect(outerPopup.contains(document.activeElement)).toBe(true);
+    const innerTrigger = screen.getByRole('button', { name: 'Open inner' });
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger)),
+    );
+    const innerPopup = screen.getByTestId('inner-popup');
+    expect(innerPopup.contains(document.activeElement)).toBe(true);
+    await waitForOpenChangeComplete(onOuterOpenChangeComplete);
+
+    const { focusAtExitStart, exits } = await startExit(outerPopup, [], () =>
+      user.click(screen.getByRole('button', { name: 'Close outer' })),
+    );
+    expect(innerPopup.contains(focusAtExitStart)).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Close inner' }));
+    await waitFor(() => {
+      expect(innerPopup).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('inner-popup')).toBe(null);
+    expect(outerPopup).toBeInTheDocument();
+    expect(outerTrigger).toHaveFocus();
+
+    await finishExits(exits);
+    await flushMicrotasks();
+    expect(screen.queryByTestId('outer-popup')).toBe(null);
+    expect(outerTrigger).toHaveFocus();
+  });
+
+  it.each([
+    { name: 'the outer popup animates', outerAnimates: true },
+    { name: 'the outer popup does not animate', outerAnimates: false },
+  ])(
+    'BUG-5519: keeps the focus in a nested popup that stays open, and returns it to the outer trigger at the unmount: $name',
+    async ({ outerAnimates }) => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = !outerAnimates;
+      const outerOpen = shallowRef(false);
+      const innerOpen = shallowRef(false);
+      const onOuterOpenChangeComplete = vi.fn();
+      const { user } = await render(() => (
+        <div>
+          {outerAnimates ? <style>{exitStyle(['outer'])}</style> : null}
+          <Root
+            open={outerOpen.value}
+            onOpenChange={(open: boolean) => {
+              outerOpen.value = open;
+            }}
+            onOpenChangeComplete={onOuterOpenChangeComplete}
+          >
+            <Trigger>Open outer</Trigger>
+            <Portal>
+              {wrapPopup(
+                <Popup class="outer" data-testid="outer-popup">
+                  <Root
+                    open={innerOpen.value}
+                    onOpenChange={(open: boolean) => {
+                      innerOpen.value = open;
+                    }}
+                  >
+                    <Trigger>Open inner</Trigger>
+                    <Portal>
+                      {wrapPopup(
+                        <Popup data-testid="inner-popup">
+                          <button
+                            onClick={() => {
+                              outerOpen.value = false;
+                            }}
+                          >
+                            Close outer
+                          </button>
+                        </Popup>,
+                      )}
+                    </Portal>
+                  </Root>
+                </Popup>,
+              )}
+            </Portal>
+          </Root>
+        </div>
+      ));
+      const outerTrigger = screen.getByRole('button', { name: 'Open outer' });
+
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger)),
+      );
+      const outerPopup = screen.getByTestId('outer-popup');
+      expect(outerPopup.contains(document.activeElement)).toBe(true);
+      const innerTrigger = screen.getByRole('button', { name: 'Open inner' });
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger)),
+      );
+      const innerPopup = screen.getByTestId('inner-popup');
+      expect(innerPopup.contains(document.activeElement)).toBe(true);
+
+      if (outerAnimates) {
+        await waitForOpenChangeComplete(onOuterOpenChangeComplete);
+        const { focusAtExitStart, exits } = await startExit(outerPopup, [], () =>
+          user.click(screen.getByRole('button', { name: 'Close outer' })),
+        );
+        expect(innerPopup.contains(focusAtExitStart)).toBe(true);
+        expect(innerPopup.contains(document.activeElement)).toBe(true);
+
+        await finishExits(exits);
+      } else {
+        await user.click(screen.getByRole('button', { name: 'Close outer' }));
+      }
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('outer-popup')).toBe(null);
+      expect(screen.queryByTestId('inner-popup')).toBe(null);
+      expect(outerTrigger).toHaveFocus();
+    },
+  );
+
+  it('BUG-5519: returns the focus to the outer trigger when a nested popup closes after a kept outer popup closed', async () => {
+    const outerOpen = shallowRef(false);
+    const innerOpen = shallowRef(false);
+    const { user } = await render(() => (
+      <div>
+        <Root
+          open={outerOpen.value}
+          onOpenChange={(open: boolean) => {
+            outerOpen.value = open;
+          }}
+        >
+          <Trigger>Open outer</Trigger>
+          <Portal keepMounted>
+            {wrapPopup(
+              <Popup data-testid="outer-popup">
+                <Root
+                  open={innerOpen.value}
+                  onOpenChange={(open: boolean) => {
+                    innerOpen.value = open;
+                  }}
+                >
+                  <Trigger>Open inner</Trigger>
+                  <Portal>
+                    {wrapPopup(
+                      <Popup data-testid="inner-popup">
+                        <button
+                          onClick={() => {
+                            outerOpen.value = false;
+                          }}
+                        >
+                          Close outer
+                        </button>
+                        <button
+                          onClick={() => {
+                            innerOpen.value = false;
+                          }}
+                        >
+                          Close inner
+                        </button>
+                      </Popup>,
+                    )}
+                  </Portal>
+                </Root>
+              </Popup>,
+            )}
+          </Portal>
+        </Root>
+      </div>
+    ));
+    const outerTrigger = screen.getByRole('button', { name: 'Open outer' });
+
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger)),
+    );
+    const outerPopup = screen.getByTestId('outer-popup');
+    expect(outerPopup.contains(document.activeElement)).toBe(true);
+    const innerTrigger = screen.getByRole('button', { name: 'Open inner' });
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger)),
+    );
+    const innerPopup = screen.getByTestId('inner-popup');
+    expect(innerPopup.contains(document.activeElement)).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Close outer' }));
+    await flushMicrotasks();
+    expect(outerPopup).toBeInTheDocument();
+    expect(innerPopup.contains(document.activeElement)).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Close inner' }));
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('inner-popup')).toBe(null);
+    expect(outerTrigger).toHaveFocus();
+  });
 }
 
 export interface NestedPopupCloseTestsConfig {
