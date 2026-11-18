@@ -315,7 +315,7 @@ A part that Base UI writes as another part renders that part and no element of i
 - If that part reads `$slots.default`, as `SelectScrollArrow` does, add a third form. The second form then has `v-else-if="$slots.default"`, and the third form has `v-else` and no slot. Without the third form, that part always gets a default slot, so it never shows its own content.
 - Fallback content in the `<slot>` of that part needs no third form. Vue shows the fallback when the slot renders nothing. The check mark of `ItemIndicator.vue` is an example.
 - `test/stableSlots.test.tsx` checks this rule. Add a fixture and a row to its `partsWithPopup` for each new part that has a popup below it.
-- Declare the wrapper's public component events with `defineEmits`. Relay each declared event once with its original arguments, before the inner emit returns. The inner part checks `details.isCanceled` then. Forward undeclared listeners to their intended element or component through the filtered attributes.
+- Declare the wrapper's public component events with `defineEmits`. Relay each declared event once with its original arguments, before the inner emit returns. For a cancelable change, the inner part then checks `details.isCanceled` before it requests the model update. Forward undeclared listeners to their intended element or component through the filtered attributes.
 - Expose the `element` of that part.
 - To add listeners, pass the filtered attributes from the template to the function that calls `mergeProps(listeners, givenAttributes(attributes))`. Use `useAttrs()` only to read an individual attribute. A listener of the consumer with the same key then runs first, and `event.preventVaseUIHandler()` stops the listener of the part. `Drawer.Viewport` does this for its swipe listeners (`VUE-58`). An attribute of the consumer that is not given keeps the value of the part.
 - A part that removes an attribute of that part gives `null`. `Drawer.Viewport` removes `data-nested-dialog-open` of `Dialog.Viewport` in this way.
@@ -455,7 +455,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- A part with a public render slot calls `useRenderElement` in setup. It exposes `element` and binds `setRef` by name on its default element. Both the slot and the default element then reach the same setter.
+- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Input` forwards its render slot to the inner part and exposes the inner element.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), a blank `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
@@ -561,7 +561,7 @@ The change event carries these details:
 - An emit can report a state that the part derives from other state, such as `collapsedChange` of `Resizable.Panel`. It has the new value and no `details`, and the part has no `update:x` for it. The part emits it after the DOM update of each change of the state, also a change that comes from the `layout` prop of the root. It does not emit it at the mount.
 - An emit and an exposed method can have one name. `Resizable.Panel` emits `resize` and exposes `resize(size)`. Vue keeps the two apart: the emit is the listener `onResize`, and the method is a member of the exposed object.
 - A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
-- Declare a listener prop beside an emit only when native behavior depends on its presence. `Form` prevents native submit when it has a `formSubmit` listener. It declares `onFormSubmit` for that check.
+- Declare a listener prop beside an emit only when native behavior depends on its presence. After validation passes, `Form` prevents native submission if it has a `formSubmit` listener. It reads the listener props for that check.
 - Vue gives the listener to the prop, and the emit still calls it. Type the prop as a function or an array of functions, because Vue gives the prop an array for two listeners.
 - A listener with `.once` has the key `onFormSubmitOnce`. Declare that prop too, and read both props. The emit calls the `.once` listener one time.
 - A callback whose result the component uses stays a function prop: `validate`, `format`, `getAriaValueText`, `filter`, `itemToStringValue`, `isItemEqualToValue`, `initialFocus`, `finalFocus`.
@@ -694,7 +694,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Give mutable defaults a factory with `withDefaults`. Use `default: undefined` when a Boolean prop must distinguish absence from `false`.
 - Declare component notifications with typed emits. Give a return-valued callback or an imperative command option a function type.
 - Use `v-model` for two-way data flow. Pair each model prop with its matching `update:` event.
-- Keep one ownership rule for each package model. A defined prop controls the part. An undefined prop lets the part own the value. Use a writable computed for a model with that contract. Vue's `useModel` permits a local write with only the prop, so ESLint refuses `defineModel` in `packages/vue/src`. A demo can use `defineModel` for Vue's own model contract.
+- Use a writable computed for a package model. Read the defined prop as the value. Let the part own the value while the prop is `undefined`. Vue's `useModel` permits a local write with only the prop, so ESLint refuses `defineModel` in `packages/vue/src`. A demo can use `defineModel` for Vue's own model contract.
 - Emit a cancelable change before the model write. Check the veto as soon as the listener returns. A listener's return value cannot veto a Vue emit.
 - Place undeclared attributes and native listeners on their intended element once. A wrapper or a part with multiple roots must choose that element.
 - Bind state-dependent classes and styles in the template. The consumer can use the state of a scoped slot on its own element.
@@ -715,7 +715,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Put a Teleport target in place before the Teleport needs it. With `defer`, the target must exist in the same mount or update tick.
 - Tie effects that need a visible part to `useKeepAliveState`. Cover a first mount in a held branch and the next activation.
 - Use the package presence helpers for an enter, exit or interrupted close. ESLint refuses `<Transition>` and `<TransitionGroup>` in package source.
-- Use only Vue 3.5.12 APIs in the shared package entry. Keep VDOM-specific code within the exceptions in [Vapor mode](#vapor-mode).
+- Use APIs available in Vue 3.5.12 in the shared package entry. Keep VDOM-specific code within the exceptions in [Vapor mode](#vapor-mode).
 - Give children stable props when their state stays equal. Measure component updates before a performance change.
 
 ### Review checklist
@@ -956,7 +956,7 @@ A date or time field and the `Intl` data of the server:
 ### What Vue replaces
 
 - Keep reactive state with the instance that consumes it. A reader subscribes when it reads that state in a reactive effect.
-- An external producer can publish commands through an imperative subscription. `createToastManager` delivers an add, update or close command to its subscribers.
+- An external producer can publish commands through an imperative subscription. `createToastManager` notifies its subscribers when a caller uses `add`, `update`, `close` or `promise`.
 - A popup store is `shallowReactive` state, selector functions and a plain `context`. Each root makes one. See [Popup store](#popup-store).
 - `Teleport` puts the portal element, with the popup in it, into the container, except when `Dialog.Portal` has `disabled`. It has no `defer`, because the portal renders the `Teleport` after the mount, when the container exists. See [Popup portal](#popup-portal).
 - Each context has a plain `Symbol()` key for `provide` and `inject`. Each copy of the library then has its own contexts.
@@ -1214,7 +1214,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `useFloatingFocusManager(props, element)` of `FloatingFocusManager.ts` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part calls it in `setup`, after `useRenderElement`, with a getter of its props and its `element`.
 - Each prop takes its default only when its value is `undefined`, as `withDefaults` does. `null` has its own meaning for `openInteractionType` and `returnFocus`.
 - The JSDoc of each prop of `useFloatingFocusManager` gives its forms and its default. The comments of `FloatingFocusManager.ts` give the initial focus, the return of the focus, the close for a focus outside the popup, and the context that each focus manager gives to the focus managers below. The comments of `markOthers.ts` give the marks on the other elements.
-- In the focus manager, record the element that has focus before the popup makes other elements inert. Keep coupled operations in that order when several sources change together. Give independent resources their own watcher and cleanup.
+- In the focus manager, record the element that has focus before the popup makes other elements inert. Keep coupled operations in that order when several sources change together. Run the cleanup of each changed operation before its next setup. Give independent resources their own watcher and cleanup.
 - At activation, the portal can still lack its popup. The focus manager restores its document listeners and modal marks after the DOM patch.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
 - The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
@@ -1473,14 +1473,14 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 | `onDoubleClick`                           | `onDblclick`                                      |
 | `onContextMenu`                           | `onContextmenu`                                   |
 | `onFocus`, `onBlur`                       | `onFocusin`, `onFocusout`                         |
-| `onChange` on a text input                | `onInput`.                                        |
+| `onChange` on a text input                | `onInput`                                         |
 | `onChange` on a checkbox or a radio input | `onClick`                                         |
 | `onKeyDownCapture`                        | `onKeydownCapture`. The `Capture` suffix stays.   |
 | `onOpenChange` (a component event)        | `onOpenChange`. A component event keeps its name. |
 
 - The rule applies to the handler keys of a part and to a ported test.
 - Use `focusin` and `focusout` for focus events that must bubble.
-- A text or range input takes an edit from `input` alone. A native `change` listener can still receive the later commit.
+- A text or range input takes an edit from `input` alone. A script that changes the DOM value after mount must dispatch `input` for the part to handle the edit. A native `change` listener can receive the later commit.
 - Handle checkbox and radio activation on `click`. Read `event.defaultPrevented` to honor an earlier native cancel.
 - Ignore a click on a radio that the model already has as checked.
 - To stop the focus handler of a part, call `event.preventVaseUIHandler()` from a `focusin` or `focusout` listener.
@@ -1497,7 +1497,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Capture a setup constant only for a real initial snapshot. A submenu reads its parent's initial transition status and `instantType` from raw state in `useMenuRoot`.
 - An object prop can be a reactive proxy that the consumer changes in place. Read the keys, entries or array elements the result uses. `Object.hasOwn` alone does not track a new key. Track key presence when it affects the result.
 - Keep a shallow snapshot when a comparison needs the old contents or a local dismissal must survive a render. Test both replacement and an edit in place.
-- `CheckboxGroup` gives a copy of its `value` to `useControlled`: `controlled: () => props.value?.slice()`. The copy reads each item. A change in place thus gives the watchers of the part a new array.
+- `CheckboxGroup` gives `useControlled` an empty array for `null` and preserves `undefined`. For an array, its getter calls `slice()` to track the items. An edit in place then gives the group's watchers a new array.
 
 #### Share behavior and markup
 
@@ -1511,7 +1511,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 #### React to a change
 
-- Choose the watcher from the change that must trigger it. A server skips a lazy callback watcher in setup unless its flush is synchronous.
+- Choose the watcher from the change that must trigger it. During server setup, a default `watchEffect` or an immediate default-flush `watch` runs once. A lazy callback watcher observes later changes there only with a synchronous flush.
 - For work that requires a mount, start the watcher in `onMounted`. For a later DOM read, choose a post-flush effect or an explicit post-flush source. Check whether one watcher can cover mount and replacement.
 - A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and `useImageLoadingStatus` use this order.
 - `useAnchorPositioning` updates `isPositioned` synchronously. `usePopupRoot` also copies `mounted` and `transitionStatus` in the same task.
@@ -1555,7 +1555,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Run coupled callbacks in the order the user can observe. Await a flush between them only when the next callback needs the published DOM or child state.
 - Two events can arrive in the same task, before the Vue flush. `NumberField.ScrubArea` must install its move and release listeners before the next pointer event.
 - A default-flush watcher runs before the post-flush watchers. `Autocomplete.Root` clears the inline text and suppresses further completions until `nextTick` so the clear wins for that update.
-- Vue runs queued post-flush watchers and mount hooks in queue order. A parent's watcher can run before the children that its update mounts. `useAriaCombobox` retries after `nextTick` if the children have yet to register the active index of a list without `items`.
+- A parent's post-flush watcher can run before the mount hooks and post-flush watchers of the children that its update mounts. `useAriaCombobox` retries after `nextTick` if the children have yet to register the active index of a list without `items`.
 - A submenu sends focus events and unhandled navigation keys through the popup tree. A filterable parent uses the registered popup, trigger and event path for a navigation key. This also works when a portal places the submenu in another document.
 - The transition-status watcher runs synchronously so an interrupted transition sees each state change.
 - `Field.Error` retains the last message for its exit. Its immediate synchronous watcher captures that text before the exit removes it.
@@ -1563,7 +1563,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useTransitionStatus` has a fifth parameter, `element`, that upstream does not have. It is the element that gets `data-starting-style`, or a ref or a getter for it. Its JSDoc and its comments give the reason for the read of the layout. Omit `element` only when the element has no enter transition, as `Accordion.Item` does.
 - `useUnmountAfterClose` keeps a popup mounted until its exit animation ends. Then it sets `mounted` to `false` and calls `onUnmount` one time. A `forceUnmount()` call while the popup is open is a request. Its JSDoc and its comments give the rules for that request, and for the last element that attached (`VUE-92`).
 - Do not decide that request in `nextTick`. With no flush in the queue, `nextTick` runs before the flush of a write that comes later in the same task.
-- A real key press can run microtasks between native listeners. Use a zero-delay timer for a decision that needs every ancestor's handler to finish. For Enter, `Checkbox.Root` prevents the default until the timer. Its event exposes `defaultPrevented` and `preventDefault` so an ancestor can still prevent submission.
+- A real key press can run microtasks between native listeners. Use a zero-delay timer for a decision that needs every ancestor's handler to finish. On Enter, `Checkbox.Root` prevents the button's native click. An ancestor initially reads `defaultPrevented` as `false` and can call `preventDefault()` to stop the form submission. The timer removes the two properties from the event.
 
 #### Read hidden slot content
 
@@ -1662,7 +1662,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The getter of such a registration reads `isHeld` of `useKeepAliveState`. `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A new entry in that hook would reverse the order of the parts.
 - `useRegisteredLabelId` registers a getter of the referenced id and the element with the root, by source, and removes the entry in `onScopeDispose`. While the root is not mounted, the label registers in `setup`, for the server HTML and the hydration. After the root is mounted, the label registers in `onMounted`, so that the root does not name it before it has an element. The getter gives no value while `KeepAlive` holds the label.
 - `useLabelId` computes `labelId` as the last registered label in document order (`VUE-131`). React runs the effects of a branch that `Activity` shows in tree order, so the last label of the branch wins there too. `KeepAlive` runs its hooks from the last part to the first part, and a label that mounted later can be before another label. A `computed` in document order does not depend on the order of the hooks or of the mounts.
-- Compute the current winner from all eligible registrations when it needs no earlier value. Use a batched watcher when the winner depends on the previous state. Both see all registrations after the hooks. `controlElementId` of the labelable context is a computed.
+- Use a computed to read the current registrations at the time of the read. The labelable provider computes `controlElementId` from the selected id and the ids on the elements. Its default-flush watcher waits for the batch of control registrations and keeps the selected id while a control still claims it.
 - An action of a part that needs the registrations of other parts runs in a `watch` of `shown`. In its own hook, the parts before it are still held and give no value. `useLabelableId` does this for a control with no id: it takes the default id of the provider again.
 - The active control of a field is the last control of its registry that gives a registration. A control registers again when its `id`, its `name`, its value or `enabled` changes, as the effect of Base UI does. When the active control goes away, the field uses the control that was active before it and is still there. Base UI has no control then.
 - A field gives no value to its form while it has no active control. `fields` of the form context then does not list the field, so a form does not validate it, submit its value or focus its control. A form finds the first invalid control by the position of the controls in the document, as Base UI does.
