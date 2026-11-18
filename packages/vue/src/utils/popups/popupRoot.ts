@@ -117,8 +117,8 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    */
   disabled?: MaybeRefOrGetter<boolean | undefined>;
   /**
-   * Gives the element whose animations end an open change. The default is the popup element, else
-   * the positioner element, else the backdrop element.
+   * Gives the element whose animations end an open change. The default checks the popup, the
+   * positioner, the backdrop and the kept popup element, in that order.
    */
   getTransitionElement?: ((store: Store) => HTMLElement | null) | undefined;
 }
@@ -134,12 +134,15 @@ export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick
 >;
 
 /**
- * Gives the element whose animations end an open change: the popup element, else the positioner
- * element, else the backdrop element.
+ * Checks the popup, positioner, backdrop and kept popup, in that order. A positioner or backdrop
+ * can still animate while `KeepAlive` holds the popup.
  */
 export function getPopupTransitionElement(store: PopupRootStore) {
   return (
-    store.context.popupRef.value ?? store.state.positionerElement ?? store.context.backdropRef.value
+    store.context.popupRef.value ??
+    store.state.positionerElement ??
+    store.context.backdropRef.value ??
+    store.context.keptPopupRef.value
   );
 }
 

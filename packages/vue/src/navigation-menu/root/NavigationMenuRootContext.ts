@@ -31,7 +31,8 @@ export interface NavigationMenuRootContext<Value = any> {
   popupElementId: Readonly<Ref<string | undefined>>;
   /**
    * The positioner element, also while `KeepAlive` holds it. `null` means that the menu has no
-   * positioner. The trigger of an open menu then has no click interaction.
+   * positioner. The trigger of an open menu then has no click interaction. The root waits for
+   * the positioner's animations at a close when the popup gives no element.
    */
   positionerElement: ShallowRef<HTMLElement | null>;
   /**

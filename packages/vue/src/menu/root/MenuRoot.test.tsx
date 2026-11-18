@@ -274,6 +274,19 @@ describe('<Menu.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal keepMounted={keepMounted}>{content}</Menu.Portal>
+        </Menu.Root>
+      ),
+      createPopup: () => (
+        <Menu.Positioner>
+          <Menu.Popup data-testid="popup">Popup</Menu.Popup>
+        </Menu.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Menu.Trigger>Open</Menu.Trigger>
