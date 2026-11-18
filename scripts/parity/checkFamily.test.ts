@@ -45,11 +45,16 @@ function row(overrides: Partial<ExceptionRow> & Pick<ExceptionRow, 'kind'>): Exc
 
 function run(
   exceptions: ExceptionRow[],
-  options: { extract?: FamilyExtract; paths?: string[]; rows?: Record<string, TestRow[]> } = {},
+  options: {
+    extract?: FamilyExtract;
+    paths?: string[];
+    rows?: Record<string, TestRow[]>;
+    relocations?: Map<string, string[]>;
+  } = {},
 ) {
   const rows = options.rows ?? {};
   return checkFamily('sample', makeFamily(exceptions), options.extract ?? makeExtract(), {
-    files: vaseFiles(options.paths ?? []),
+    files: { ...vaseFiles(options.paths ?? []), relocations: options.relocations },
     rowsOf: (path) => rows[path] ?? [],
   });
 }
@@ -362,6 +367,46 @@ test('rows with the same key pair one to one in source order', () => {
   assert.equal(more.summary.rowsWithoutUpstream, 1);
 });
 
+test('a moved suite keeps the original describe path, title, suite calls and engine row', () => {
+  const title = 'calls the Base UI handler';
+  const describe = ['Base UI point', 'click'];
+  const path = 'packages/vue/src/tooltip/Root.point.test.tsx';
+  const upstream = { describe, title };
+  const local = { describe: ['Vase UI point', 'click'], title: 'calls the Vase UI handler' };
+  const options = {
+    extract: makeExtract({
+      cases: [
+        {
+          file: UPSTREAM_FILE,
+          rows: [upstream, upstream, { describe, suite: 'describeConformance' }],
+        },
+      ],
+    }),
+    paths: [path],
+    relocations: new Map([[UPSTREAM_FILE, [path]]]),
+    rows: {
+      [path]: [
+        local,
+        { ...local, conditions: ['skipIf(isWebKit)'] },
+        { describe: local.describe, suite: 'describeConformance' },
+      ],
+    },
+  };
+  const engine = row({ describe, title, kind: 'engine', engine: 'webkit' });
+  const covered = run([engine], options);
+  assert.deepEqual(covered.problems, []);
+  assert.equal(covered.summary.cases.matched, 2);
+  assert.equal(covered.summary.cases.engine.webkit, 1);
+  assert.equal(covered.summary.suiteCalls.matched, 1);
+  assert.match(run([], options).problems.join('\n'), /added condition.*skipIf\(isWebKit\)/);
+  options.rows[path][0] = { ...local, describe: ['Other', 'click'] };
+  assert.ok(
+    run([engine], options).problems.some((problem) =>
+      problem.includes(`uncovered case "Base UI point > click > ${title}" in ${UPSTREAM_FILE}`),
+    ),
+  );
+});
+
 test('a test file with both a .ts and a .tsx counterpart is a problem', () => {
   const result = run([], {
     paths: [VASE_FILE, `${VASE_FILE}x`],
@@ -371,6 +416,23 @@ test('a test file with both a .ts and a .tsx counterpart is a problem', () => {
     result.problems[0],
     /packages\/vue\/src\/common\/a\.test\.ts and packages\/vue\/src\/common\/a\.test\.tsx both match/,
   );
+});
+
+test('a split suite helper can retain cases in more than one source file', () => {
+  const file = 'packages/react/test/shared.tsx';
+  const left = 'packages/vue/test/pointer.ts';
+  const right = 'packages/vue/test/keyboard.ts';
+  const options = {
+    extract: makeExtract({ sources: [file], cases: [{ file, rows: [first, second] }] }),
+    paths: [left, right],
+    relocations: new Map([[file, [left, right]]]),
+    rows: { [left]: [first], [right]: [first, second] },
+  };
+  const result = run([], options);
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.sources.ported, 1);
+  assert.equal(result.summary.cases.matched, 2);
+  assert.equal(result.summary.rowsWithoutUpstream, 1);
 });
 
 const SOURCE = 'packages/utils/src/clamp.ts';

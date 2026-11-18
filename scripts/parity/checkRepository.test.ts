@@ -246,6 +246,29 @@ test('a relocation needs its pinned upstream file, a concrete destination and a 
   assert.match(errors(), /direct counterpart .*point\.tsx exists/);
 });
 
+test('a member in either SFC script counts and a reference in the template does not', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const destination = 'packages/vue/src/tooltip/Root.vue';
+  const row = { ...merged, relation: 'inlined-into' as const, destination, member: 'Axis' };
+  write(
+    destination,
+    [
+      '<script lang="ts">export type Axis = number;</script>',
+      '<script setup lang="ts">const point: Axis = 1;</script>',
+      '<template><span>{{ point }} {{ absent }}</span></template>',
+    ].join('\n'),
+  );
+  write(witness, "it('tracks the cursor', () => {});");
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  assert.deepEqual(check().problems, []);
+  row.member = 'point';
+  assert.deepEqual(check().problems, []);
+  row.member = 'absent';
+  assert.ok(
+    check().problems.some((problem) => problem.endsWith('has no declaration for "absent".')),
+  );
+});
+
 test('a relocation has one upstream owner and cannot redirect through another relocation', (t) => {
   const { family, check, write } = relocationFixture(t);
   const axis = 'packages/utils/src/axis.ts';
@@ -290,6 +313,66 @@ test('a moved type test must belong to the type test project', (t) => {
   row.destination = witness;
   assert.ok(
     check().problems.some((problem) => problem.endsWith(`${witness} must be a type test.`)),
+  );
+});
+
+test('two families can share a test file but each occurrence belongs to one upstream suite', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const a = 'packages/utils/src/a.test.tsx';
+  const b = 'packages/utils/src/b.test.ts';
+  const destination = 'packages/vue/src/common/a.test.ts';
+  const port = (describe: string[], title: string) => ({ describe, title });
+  const shared = port(['shared'], 'fires');
+  family('a', { cases: [{ file: a, rows: [port(['A'], 'opens'), shared] }] });
+  family('b', { cases: [{ file: b, rows: [port(['B'], 'opens'), shared] }] }, [
+    {
+      upstream: b,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Open B.',
+      witness: destination,
+    },
+  ]);
+  const cases = [
+    "describe('B', () => { it('opens', () => {}); it('local case', () => {}); });",
+    "describe('shared', () => { it('fires', () => {}); it('fires', () => {}); });",
+    "describe('A', () => { it('opens', () => {}); });",
+  ].join('\n');
+  write(destination, cases);
+  const result = check();
+  assert.deepEqual(result.problems, []);
+  assert.deepEqual(
+    result.families.map(({ summary }) => [summary.cases.matched, summary.rowsWithoutUpstream]),
+    [
+      [2, 0],
+      [2, 1],
+    ],
+  );
+  write(destination, cases.replace("it('fires', () => {}); ", ''));
+  assert.match(check().problems.join('\n'), new RegExp(`uncovered case "shared > fires" in ${b}`));
+  write(
+    destination,
+    cases.replace("describe('B', () => { it('opens'", "describe('B', () => { it('opens later'"),
+  );
+  assert.match(check().problems.join('\n'), new RegExp(`uncovered case "B > opens" in ${b}`));
+});
+
+test('a moved browser suite cannot become a Node test', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const upstream = 'packages/utils/src/point.test.ts';
+  const destination = 'packages/vue/test/point.node.test.ts';
+  write(destination, "it('tracks', () => {});");
+  family('point', { cases: [{ file: upstream, rows: [{ describe: [], title: 'tracks' }] }] }, [
+    {
+      upstream,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Track the cursor.',
+      witness: destination,
+    },
+  ]);
+  assert.ok(
+    check().problems.some((problem) => problem.endsWith(`${destination} must be a browser test.`)),
   );
 });
 

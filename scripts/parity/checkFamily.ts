@@ -138,24 +138,75 @@ function addedConditions(upstreamRow: TestRow, vaseRow: TestRow): string[] {
   return (vaseRow.conditions ?? []).flatMap(conditionTerms).filter((term) => !upstream.has(term));
 }
 
-function pairRows(upstreamRows: TestRow[], vaseRows: TestRow[]) {
-  const pool = new Map<string, TestRow[]>();
-  for (const row of vaseRows) {
-    const key = keyOf(row, 'vase');
-    pool.set(key, [...(pool.get(key) ?? []), row]);
-  }
-  const pairs: [TestRow, TestRow][] = [];
-  const unmatched: TestRow[] = [];
-  for (const row of upstreamRows) {
-    const found = pool.get(keyOf(row, 'upstream'))?.shift();
-    if (found) {
-      pairs.push([row, found]);
-    } else {
-      unmatched.push(row);
+type UpstreamSuite = FamilyExtract['cases'][number];
+
+interface SuiteMatch {
+  suite: UpstreamSuite;
+  rows: ({ path: string; row: TestRow } | undefined)[];
+  unpaired: number;
+  titleProblems: string[];
+  ambiguous?: string[];
+}
+
+function describePaths(titles: string[]): string[] {
+  return titles.map((_, i) => JSON.stringify(titles.slice(0, titles.length - i)));
+}
+
+export function matchCases(
+  suites: UpstreamSuite[],
+  vase: VaseTree,
+): Map<UpstreamSuite, SuiteMatch> {
+  const matches = new Map<UpstreamSuite, SuiteMatch>();
+  const destinations = new Map<string, SuiteMatch[]>();
+  for (const suite of suites) {
+    const match: SuiteMatch = { suite, rows: [], unpaired: 0, titleProblems: [] };
+    matches.set(suite, match);
+    const paths = counterparts(suite.file, vase.files).filter((path) => !path.endsWith('.vue'));
+    if (paths.length > 1 && !vase.files.relocations?.has(suite.file)) {
+      match.ambiguous = paths;
+      continue;
+    }
+    for (const path of paths) {
+      destinations.set(path, [...(destinations.get(path) ?? []), match]);
     }
   }
-  const unpaired = [...pool.values()].reduce((total, rows) => total + rows.length, 0);
-  return { pairs, unmatched, unpaired };
+
+  for (const [path, owners] of destinations) {
+    const rows = vase.rowsOf(path);
+    const pool = Map.groupBy(rows, (row) => keyOf(row, 'vase'));
+    const upstream = owners.flatMap(({ suite }) => suite.rows);
+    owners[0].titleProblems.push(...checkTitleNames(path, rows, upstream));
+    const blocks = new Map<string, SuiteMatch>();
+    for (const owner of owners) {
+      owner.suite.rows.forEach((row, index) => {
+        if (!owner.rows[index]) {
+          const found = pool.get(keyOf(row, 'upstream'))?.shift();
+          if (found) {
+            owner.rows[index] = { path, row: found };
+          }
+        }
+        if (owners.length > 1) {
+          for (const block of describePaths(
+            row.describe.map((title) => toVaseName(title, 'title')),
+          )) {
+            if (!blocks.has(block)) {
+              blocks.set(block, owner);
+            }
+          }
+        }
+      });
+    }
+    for (const remaining of pool.values()) {
+      if (remaining.length) {
+        const owner =
+          describePaths(remaining[0].describe)
+            .map((block) => blocks.get(block))
+            .find(Boolean) ?? owners[0];
+        owner.unpaired += remaining.length;
+      }
+    }
+  }
+  return matches;
 }
 
 function targetExists(target: Target, extract: FamilyExtract): boolean {
@@ -183,6 +234,7 @@ export function checkFamily(
   family: FamilyFile,
   extract: FamilyExtract,
   vase: VaseTree,
+  matches = matchCases(extract.cases, vase),
 ): FamilyResult {
   const problems: string[] = [];
   const problem = (message: string): void => {
@@ -260,48 +312,45 @@ export function checkFamily(
     (item) => item.target.type === 'file' && isTypeTestFile(item.row.upstream),
   );
 
-  for (const { file, rows: upstreamRows } of extract.cases) {
+  for (const suite of extract.cases) {
+    const { file, rows: upstreamRows } = suite;
+    const match = matches.get(suite) as SuiteMatch;
     for (const row of upstreamRows) {
       (isSuiteRow(row) ? summary.suiteCalls : summary.cases).total += 1;
     }
-    const candidates = counterparts(file, vase.files).filter((path) => !path.endsWith('.vue'));
-    if (candidates.length > 1) {
-      problem(`${file}: ${candidates.join(' and ')} both match. Delete one of them.`);
+    if (match.ambiguous) {
+      problem(`${file}: ${match.ambiguous.join(' and ')} both match. Delete one of them.`);
       continue;
     }
-    let vaseRows: TestRow[] = [];
-    if (candidates.length === 1) {
-      vaseRows = vase.rowsOf(candidates[0]);
-      problems.push(...checkTitleNames(candidates[0], vaseRows, upstreamRows));
-    }
-    const { pairs, unmatched, unpaired } = pairRows(upstreamRows, vaseRows);
-    summary.rowsWithoutUpstream += unpaired;
-    for (const [upstreamRow, vaseRow] of pairs) {
+    problems.push(...match.titleProblems);
+    summary.rowsWithoutUpstream += match.unpaired;
+    for (const [index, upstreamRow] of upstreamRows.entries()) {
       const tally = isSuiteRow(upstreamRow) ? summary.suiteCalls : summary.cases;
+      const port = match.rows[index];
+      if (!port) {
+        const cover = coveringRow(rows, file, upstreamRow, (kind) => kind !== 'engine');
+        if (!cover) {
+          problem(
+            `uncovered ${describesRow(upstreamRow)} in ${file}: Vase UI has no row for it. Port it, or add an exception row.`,
+          );
+        } else {
+          used.add(cover.index);
+          tally[cover.row.kind as CoveredKind] += 1;
+        }
+        continue;
+      }
       tally.matched += 1;
-      const added = addedConditions(upstreamRow, vaseRow);
+      const added = addedConditions(upstreamRow, port.row);
       if (added.length > 0) {
         const cover = coveringRow(rows, file, upstreamRow, (kind) => kind === 'engine');
         if (!cover) {
           problem(
-            `added condition on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
+            `added condition on ${describesRow(port.row)} in ${port.path}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
           );
         } else {
           used.add(cover.index);
           tally.engine[cover.row.engine as Engine] += 1;
         }
-      }
-    }
-    for (const row of unmatched) {
-      const tally = isSuiteRow(row) ? summary.suiteCalls : summary.cases;
-      const cover = coveringRow(rows, file, row, (kind) => kind !== 'engine');
-      if (!cover) {
-        problem(
-          `uncovered ${describesRow(row)} in ${file}: Vase UI has no row for it. Port it, or add an exception row.`,
-        );
-      } else {
-        used.add(cover.index);
-        tally[cover.row.kind as CoveredKind] += 1;
       }
     }
   }

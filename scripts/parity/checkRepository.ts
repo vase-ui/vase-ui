@@ -3,8 +3,8 @@ import ts from 'typescript';
 import { parse } from 'vue/compiler-sfc';
 import { checkTitleNames, isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
-import { checkFamily } from './checkFamily.ts';
-import type { FamilySummary, FileTally, RowTally } from './checkFamily.ts';
+import { checkFamily, matchCases } from './checkFamily.ts';
+import type { FamilySummary, FileTally, RowTally, VaseTree } from './checkFamily.ts';
 import { checkOwnComponent } from './checkOwn.ts';
 import { checkSurface } from './checkSurface.ts';
 import type { SurfaceSummary, Tally } from './checkSurface.ts';
@@ -205,7 +205,6 @@ function retainedMembers(path: string, source: string): Set<string> {
 function resolveRelocations(
   families: CurrentFamily[],
   input: CheckInput,
-  rowsOf: CheckInput['rowsOf'],
   problems: string[],
 ): VaseFiles {
   const { files, root } = input;
@@ -218,7 +217,7 @@ function resolveRelocations(
       const folder = join(root, 'packages/vue');
       const config = ts.readConfigFile(join(folder, 'tsconfig.test.json'), ts.sys.readFile);
       typeTests = new Set(
-        ts.parseJsonConfigFileContent(config.config ?? {}, ts.sys, folder).fileNames,
+        config.error ? [] : ts.parseJsonConfigFileContent(config.config, ts.sys, folder).fileNames,
       );
     }
     return typeTests.has(join(root, path));
@@ -256,8 +255,6 @@ function resolveRelocations(
         if (!compiled(witness) || (!row.member && !isTypeTestFile(row.upstream))) {
           report(`the witness ${witness} must cover the retained behavior or type.`);
         }
-      } else if (rowsOf(witness).length === 0) {
-        report(`the witness ${witness} has no case or suite call.`);
       }
       const targets = [row, ...(row.additional ?? [])];
       for (const { destination, member } of targets) {
@@ -332,15 +329,27 @@ export function checkRepository(input: CheckInput): CheckResult & { files: VaseF
       current.push({ name, family, extract });
     }
   }
-  const files = resolveRelocations(current, input, rowsOf, problems);
+  const files = resolveRelocations(current, input, problems);
+  const vase: VaseTree = {
+    files,
+    rowsOf(path) {
+      readTests.add(path);
+      return rowsOf(path);
+    },
+  };
+  const matches = matchCases(
+    current.flatMap(({ extract }) => extract.cases),
+    vase,
+  );
   for (const { name, family, extract } of current) {
-    const cases = checkFamily(name, family, extract, {
-      files,
-      rowsOf(path) {
-        readTests.add(path);
-        return rowsOf(path);
-      },
-    });
+    for (const [index, { upstream, witness }] of (family.relocations ?? []).entries()) {
+      if (files.paths.has(witness) && isTestFile(witness) && rowsOf(witness).length === 0) {
+        problems.push(
+          `${name}: relocations[${index}] (${upstream}): the witness ${witness} has no case or suite call.`,
+        );
+      }
+    }
+    const cases = checkFamily(name, family, extract, vase, matches);
     problems.push(...cases.problems);
     const report: FamilyReport = { name, summary: cases.summary };
     if (
