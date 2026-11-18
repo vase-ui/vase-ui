@@ -5,8 +5,8 @@ import { given } from './givenAttributes';
 /**
  * Wraps `useId` and prefixes generated `id`s with `vase-ui-`.
  * Call it in `setup`.
- * @param idOverride Overrides the generated id when it is not `undefined` and not empty.
- * It is a getter, so that the id follows a prop: `useVaseUiId(() => props.id)`.
+ * @param idOverride An optional id. The generated id applies when the value is `undefined`, empty,
+ * or white space only. Use a getter to follow a prop, such as `useVaseUiId(() => props.id)`.
  */
 export function useVaseUiId(
   idOverride?: MaybeRefOrGetter<string | undefined>,

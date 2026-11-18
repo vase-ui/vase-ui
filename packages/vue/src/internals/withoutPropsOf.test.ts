@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import PopoverRoot from '../popover/root/PopoverRoot.vue';
 import FloatingPortal from '../utils/popups/portal/FloatingPortal.vue';
 import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
 import { withoutPropsOf } from './withoutPropsOf';
@@ -11,6 +12,14 @@ describe('withoutPropsOf', () => {
     { name: 'portal-owner-role' },
   ])('drops the declared prop $name', ({ name }) => {
     expect(withoutPropsOf({ [name]: '' }, FloatingPortal)).toEqual({});
+  });
+
+  it('drops handle and trigger-id from the attributes of a generic part', () => {
+    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, PopoverRoot)).toEqual(
+      {
+        id: 'picker',
+      },
+    );
   });
 
   it('keeps the values of attributes that the portal does not declare', () => {

@@ -80,7 +80,18 @@ describe('<AlertDialog.Root />', () => {
     );
   });
 
+  const createPopup = () => <AlertDialog.Popup data-testid="popup">Popup</AlertDialog.Popup>;
+
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <AlertDialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <AlertDialog.Trigger>Open</AlertDialog.Trigger>
+          <AlertDialog.Portal keepMounted={keepMounted}>{content}</AlertDialog.Portal>
+        </AlertDialog.Root>
+      ),
+      createPopup,
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <AlertDialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <AlertDialog.Trigger>Open</AlertDialog.Trigger>
@@ -90,7 +101,7 @@ describe('<AlertDialog.Root />', () => {
         </AlertDialog.Portal>
       </AlertDialog.Root>
     ),
-    createPopup: () => <AlertDialog.Popup data-testid="popup">Popup</AlertDialog.Popup>,
+    createPopup,
     render,
   });
 

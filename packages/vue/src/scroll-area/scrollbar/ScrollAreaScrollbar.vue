@@ -205,7 +205,7 @@ function handleTrackPointerDown(event: PointerEvent) {
 
   handleScroll({ x: viewport.scrollLeft, y: viewport.scrollTop });
 
-  handlePointerDown(event);
+  handlePointerDown(event, props.orientation);
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

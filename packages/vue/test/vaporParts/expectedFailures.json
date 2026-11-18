@@ -374,6 +374,9 @@
         "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "src/utils/popups/createElementSetter.test.tsx": {
+      "fails": {}
+    },
     "test/reportedMessages.test.tsx": {
       "fails": {}
     },

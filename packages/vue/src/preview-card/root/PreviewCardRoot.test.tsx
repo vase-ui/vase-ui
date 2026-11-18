@@ -101,6 +101,19 @@ describe('<PreviewCard.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>
+          <PreviewCard.Portal keepMounted={keepMounted}>{content}</PreviewCard.Portal>
+        </PreviewCard.Root>
+      ),
+      createPopup: () => (
+        <PreviewCard.Positioner>
+          <PreviewCard.Popup data-testid="popup">Popup</PreviewCard.Popup>
+        </PreviewCard.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>

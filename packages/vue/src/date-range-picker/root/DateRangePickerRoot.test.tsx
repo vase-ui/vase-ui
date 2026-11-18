@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
@@ -68,6 +69,15 @@ const rangeAttributes = () => {
 
 describe('<DateRangePicker.Root />', () => {
   const { render } = createRenderer();
+
+  it('keeps the handle of a handle attribute closed while the picker is open', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await renderPicker({ handle });
+
+    await open(user);
+
+    expect(handle.isOpen).toBe(false);
+  });
 
   function renderPicker(props: Record<string, unknown> = {}) {
     return render(

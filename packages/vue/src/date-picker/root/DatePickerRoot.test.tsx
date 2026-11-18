@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
   flushMicrotasks,
   popupConformanceTests,
   screen,
+  takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
@@ -29,6 +31,27 @@ const selectedCells = () =>
 
 describe('<DatePicker.Root />', () => {
   const { render } = createRenderer();
+
+  it('keeps the handle of a handle attribute closed while the picker is open', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await renderPicker({ handle });
+
+    await open(user);
+
+    expect(handle.isOpen).toBe(false);
+  });
+
+  it('reports a class attribute that no element of the root takes', async () => {
+    await render(
+      <DatePicker.Root class="picker">
+        <span />
+      </DatePicker.Root>,
+    );
+
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Extraneous non-props attributes (class)'),
+    ]);
+  });
 
   function renderPicker(props: Record<string, unknown> = {}) {
     return render(

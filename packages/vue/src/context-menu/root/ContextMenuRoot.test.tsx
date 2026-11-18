@@ -11,6 +11,7 @@ import {
   popupAnatomyTests,
   renderOnServer,
   screen,
+  takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
@@ -71,7 +72,30 @@ interface RootActions {
 describe('<ContextMenu.Root />', () => {
   const { render } = createRenderer();
 
+  it('VUE-136: ignores a modal attribute on the context menu', async () => {
+    await render(
+      <ContextMenu.Root {...{ modal: false }}>
+        <ContextMenu.Trigger>Options</ContextMenu.Trigger>
+      </ContextMenu.Root>,
+    );
+
+    expect(takeReportedMessages()).toEqual([]);
+  });
+
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+          <ContextMenu.Portal keepMounted={keepMounted}>{content}</ContextMenu.Portal>
+        </ContextMenu.Root>
+      ),
+      createPopup: () => (
+        <ContextMenu.Positioner>
+          <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>
+        </ContextMenu.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <ContextMenu.Trigger>Open</ContextMenu.Trigger>

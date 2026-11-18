@@ -87,13 +87,12 @@ import { computed, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import type { HTMLProps } from '../../internals/types';
+import type { HTMLProps, Orientation } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useStyleDisableScrollbar } from '../../utils/styles';
 import { SCROLL_TIMEOUT } from '../constants';
-import * as ScrollAreaScrollbarDataAttributes from '../scrollbar/ScrollAreaScrollbarDataAttributes';
 import { getOffset } from '../utils/getOffset';
 import ScrollAreaRootChildren from './ScrollAreaRootChildren.vue';
 import { ScrollAreaRootContext } from './ScrollAreaRootContext';
@@ -141,7 +140,7 @@ let startY = 0;
 let startX = 0;
 let startScrollTop = 0;
 let startScrollLeft = 0;
-let currentOrientation: 'vertical' | 'horizontal' = 'vertical';
+let currentOrientation: Orientation = 'vertical';
 let lastScrollPosition = DEFAULT_COORDS;
 let savedSnapType: string | null = null;
 
@@ -218,7 +217,7 @@ function reapplyViewportSnapNone() {
   }
 }
 
-function handlePointerDown(event: PointerEvent) {
+function handlePointerDown(event: PointerEvent, orientation: Orientation) {
   if (event.button !== 0) {
     return;
   }
@@ -237,9 +236,7 @@ function handlePointerDown(event: PointerEvent) {
   activePointerId = event.pointerId;
   startY = event.clientY;
   startX = event.clientX;
-  currentOrientation = (event.currentTarget as Element).getAttribute(
-    ScrollAreaScrollbarDataAttributes.orientation,
-  ) as 'vertical' | 'horizontal';
+  currentOrientation = orientation;
 
   const viewport = viewportElement.value;
   if (viewport) {

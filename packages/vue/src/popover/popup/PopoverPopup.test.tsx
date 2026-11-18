@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { VNodeChild } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../index.parts';
@@ -9,6 +10,9 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextAnimationsRead,
+  nextEvent,
+  POPUP_EXIT_CSS,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -499,6 +503,85 @@ describe('<Popover.Popup />', () => {
         expect.objectContaining({ reason: REASONS.triggerHover }),
       );
     });
+  });
+
+  it('BUG-5519: returns the focus to the trigger when a dialog in a popover that a hover opened closes during the exit of the popover', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const onOpenChange = vi.fn();
+    const onOpenChangeComplete = vi.fn();
+    await render(() => (
+      <div>
+        <style>{POPUP_EXIT_CSS}</style>
+        <Popover.Root onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
+          <Popover.Trigger openOnHover delay={0} closeDelay={0}>
+            Open popover
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner data-testid="positioner">
+              <Popover.Popup class="popup" data-testid="popover-popup">
+                <Dialog.Root>
+                  <Dialog.Trigger>Open dialog</Dialog.Trigger>
+                  <Dialog.Portal>
+                    <Dialog.Popup data-testid="dialog-popup">
+                      <Dialog.Close>Close dialog</Dialog.Close>
+                    </Dialog.Popup>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </div>
+    ));
+    const trigger = screen.getByRole('button', { name: 'Open popover' });
+    await fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
+    await fireEvent.mouseEnter(trigger);
+    const popoverPopup = await screen.findByTestId('popover-popup');
+    expect(onOpenChange).toHaveBeenLastCalledWith(
+      true,
+      expect.objectContaining({ reason: REASONS.triggerHover }),
+    );
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
+    const positioner = screen.getByTestId('positioner');
+    await fireEvent.mouseEnter(positioner);
+
+    await nextEvent(document, 'focusin', {
+      action: () => fireEvent.click(screen.getByRole('button', { name: 'Open dialog' })),
+    });
+    const dialogPopup = screen.getByTestId('dialog-popup');
+    expect(dialogPopup.contains(document.activeElement)).toBe(true);
+
+    const animations = await nextAnimationsRead(popoverPopup, {
+      action: () => fireEvent.mouseLeave(positioner),
+    });
+    const finished = animations.map((animation) => animation.finished);
+    expect(onOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.triggerHover }),
+    );
+    expect(popoverPopup).toBeInTheDocument();
+    expect(popoverPopup).toHaveAttribute('data-ending-style');
+    expect(dialogPopup.contains(document.activeElement)).toBe(true);
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+    await waitFor(() => {
+      expect(dialogPopup).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('dialog-popup')).toBe(null);
+    expect(popoverPopup).toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    for (const animation of animations) {
+      animation.finish();
+    }
+    await Promise.all(finished);
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('popover-popup')).toBe(null);
+    expect(trigger).toHaveFocus();
   });
 
   it('throws a descriptive error when rendered outside <Popover.Positioner>', async () => {

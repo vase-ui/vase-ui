@@ -53,7 +53,7 @@ const state = computed<PreviewCardBackdropState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: createElementSetter(store.context.backdropRef),
+  ref: createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     { role: 'presentation', hidden: !store.select('mounted'), style: BACKDROP_STYLE },

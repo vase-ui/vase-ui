@@ -15,6 +15,18 @@ const hiddenInputsOf = (container: Element) =>
 describe('<DatePicker.TimeField />', () => {
   const { render } = createRenderer();
 
+  it('gives the form no input for a name attribute on the time field', async () => {
+    await render(
+      <DatePicker.Root defaultValue={dateTime}>
+        <DatePicker.TimeField {...{ name: 'time' }}>
+          <TimeField.Input />
+        </DatePicker.TimeField>
+      </DatePicker.Root>,
+    );
+
+    expect(document.querySelector('input[name="time"]')).toBeNull();
+  });
+
   describeConformance(<DatePicker.TimeField />, () => ({
     elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,

@@ -216,7 +216,7 @@ const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
   styles: positioning.positionerStyles,
   transitionStatus,
-  ref: createElementSetter(positionerElement),
+  ref: createElementSetter(positionerElement, { keepWhileHeld: true }),
   hidden: () => !mounted.value,
   inert: () => !open.value,
 });

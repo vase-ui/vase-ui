@@ -29,7 +29,7 @@ export interface DateRangePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, provide, useAttrs, useTemplateRef } from 'vue';
+import { computed, provide, useTemplateRef } from 'vue';
 import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
 import type { DateValue } from '../../internals/date-time/temporal';
 import {
@@ -41,6 +41,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import RangeCalendarRoot from '../../range-calendar/root/RangeCalendarRoot.vue';
 import type { DateRangePickerRange } from '../root/DateRangePickerRootContext';
@@ -86,7 +87,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DateRangePickerCalendarState>;
 }>();
 
-const attrs = useAttrs();
 const picker = useDateRangePickerRootContext();
 const popup = usePickerPopup();
 
@@ -152,14 +152,14 @@ const calendarHandlers = {
 // `RangeCalendar.Root` has a type parameter for the kind of its ends, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
 // default value gives the kind of a new end, the same kind as for the fields.
-function calendarProps() {
+function calendarProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   const valueProps: Record<string, any> = {
     value: picker.range.value,
     defaultValue: [picker.template.value, picker.template.value],
   };
   return {
-    ...mergeProps(calendarHandlers, givenAttributes(attrs)),
+    ...mergeProps(calendarHandlers, givenAttributes(attributes)),
     ...props,
     ...valueProps,
     minDate: root.minDate,
@@ -186,7 +186,7 @@ defineExpose({
   <RangeCalendarRoot
     v-if="$slots.render"
     ref="calendar"
-    v-bind="calendarProps()"
+    v-bind="calendarProps(withoutPropsOf($attrs, RangeCalendarRoot))"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
@@ -196,7 +196,7 @@ defineExpose({
   <RangeCalendarRoot
     v-else
     ref="calendar"
-    v-bind="calendarProps()"
+    v-bind="calendarProps(withoutPropsOf($attrs, RangeCalendarRoot))"
     @value-change="handleValueChange"
   >
     <template #default="slotProps">

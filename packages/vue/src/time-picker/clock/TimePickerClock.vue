@@ -37,13 +37,14 @@ export interface TimePickerClockProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, useAttrs, useTemplateRef, watch } from 'vue';
+import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   usePickerFocusTarget,
   usePickerPopup,
 } from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import TimeClockRoot from '../../time-clock/root/TimeClockRoot.vue';
 import type {
   TimeClockRootChangeEventDetails,
@@ -95,7 +96,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TimePickerClockState>;
 }>();
 
-const attrs = useAttrs();
 const picker = useTimePickerRootContext();
 const popup = usePickerPopup();
 
@@ -162,7 +162,6 @@ function clockProps() {
     referenceDate: withTime(picker.template.value, picker.referenceTime.value),
   };
   return {
-    ...attrs,
     ...props,
     ...valueProps,
     view: currentView.value,
@@ -183,7 +182,7 @@ defineExpose({ element });
   <TimeClockRoot
     v-if="$slots.render"
     ref="clock"
-    v-bind="clockProps()"
+    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
     @value-change="handleValueChange"
     @value-committed="handleValueCommitted"
     @view-change="handleViewChange"
@@ -196,7 +195,7 @@ defineExpose({ element });
   <TimeClockRoot
     v-else
     ref="clock"
-    v-bind="clockProps()"
+    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
     @value-change="handleValueChange"
     @value-committed="handleValueCommitted"
     @view-change="handleViewChange"

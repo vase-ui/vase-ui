@@ -24,11 +24,11 @@ export interface DateFieldActions {
 
 /**
  * The state that the start field and the end field of a range picker share. A part calls it in
- * `setup`. It binds one end of the range of the picker to the `DateField.Root` that the part renders.
+ * `setup`. Its template gives the filtered attributes to `fieldProps` for its end of the range.
  * @param end The end that the field shows.
  * @param field The ref of the `DateField.Root` that the part renders.
- * @param props The declared props of the part. The prop `ariaLabelledby` is the name that the
- * consumer gives to the group.
+ * @param props The declared props of the part. The prop `ariaLabelledby` names the elements that
+ * label the group.
  * @param defaultLabel The name of the field when the consumer gives none.
  */
 export function useDateRangePickerField(
@@ -99,12 +99,12 @@ export function useDateRangePickerField(
     return typeof ariaLabel() === 'string' ? `${groupId} ${labelId}` : labelId;
   }
 
-  function fieldProps() {
+  function fieldProps(attributes: Record<string, unknown>) {
     const root = picker.props;
     const [start] = picker.range.value;
     const labelledby = ariaLabelledby();
     return {
-      ...mergeProps(fieldHandlers, givenAttributes(attrs)),
+      ...mergeProps(fieldHandlers, givenAttributes(attributes)),
       ...props,
       'aria-label': ariaLabel(),
       ariaLabelledby: labelledby ?? props.ariaLabelledby,

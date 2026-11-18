@@ -4,7 +4,6 @@ import { getTarget } from '../../common/shadowDom';
 import { given } from '../../internals/givenAttributes';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { FilterDropdownGroupContext } from '../group/FilterDropdownGroupContext';
 import { useFilterDropdownRootContext } from '../root/FilterDropdownRootContext';
 import { refocusOwner } from '../utils/refocusOwner';
@@ -44,7 +43,7 @@ export function useFilterDropdownList(
   };
 
   return {
-    ref: useKeepAliveElementRef(createElementSetter(context.listElement)),
+    ref: createElementSetter(context.listElement),
     props: (attrs) => [
       {
         // Chromium includes scrollable elements in sequential focus navigation by default.
