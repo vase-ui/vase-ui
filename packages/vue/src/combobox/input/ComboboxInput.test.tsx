@@ -1899,7 +1899,7 @@ describe('<Combobox.Input />', () => {
 
       expect(onInputValueChange).toHaveBeenCalledTimes(1);
       expect(onInputValueChange).toHaveBeenCalledWith('マ', expect.anything());
-      await vi.waitFor(() => expect(input).toHaveValue('old'));
+      await waitFor(() => expect(input).toHaveValue('old'));
     });
 
     it('keeps a new composition when the previous composition timer runs', async () => {

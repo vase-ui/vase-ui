@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
-import { createRenderer, fireEvent, screen } from '#test-utils';
+import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
 import type { FilterDropdownRootChangeEventDetails } from '../root/FilterDropdownRootContext';
@@ -99,7 +99,7 @@ describe('useFilterDropdownInput', () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith('マ', expect.anything());
-    await vi.waitFor(() => expect(input).toHaveValue('old'));
+    await waitFor(() => expect(input).toHaveValue('old'));
   });
 
   it('reports edits only from input events', async () => {
