@@ -476,6 +476,40 @@ test('a split helper compares duplicate guards in the file that retains each cas
   assert.match(run([], options).problems.join('\n'), /added condition.*skipIf\(isWebKit\)/);
 });
 
+test('shared titles can witness block exceptions across different cases', () => {
+  const other = 'packages/utils/src/other.test.ts';
+  const upstreamRows = [first, second];
+  const options = {
+    extract: makeExtract({
+      cases: [UPSTREAM_FILE, other].map((file) => ({ file, rows: upstreamRows })),
+    }),
+    paths: [VASE_FILE],
+    relocations: new Map([[other, [VASE_FILE]]]),
+    rows: {
+      [VASE_FILE]: upstreamRows.flatMap((testRow) => [
+        { ...testRow, conditions: ['skipIf(isWebKit)'] },
+        testRow,
+      ]),
+    },
+  };
+  const exceptions = [UPSTREAM_FILE, other].map((upstream) =>
+    row({
+      kind: 'engine',
+      upstream,
+      describe: ['a'],
+      engine: 'webkit',
+      link: 'https://example.com/issue',
+    }),
+  );
+  const result = run(exceptions, options);
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.cases.engine.webkit, 2);
+  options.rows[VASE_FILE] = [options.rows[VASE_FILE][0], first, second, second];
+  const stale = run(exceptions, options).problems;
+  assert.equal(stale.length, 1);
+  assert.match(stale[0], /stale row.*no matched row with an added condition/);
+});
+
 const SOURCE = 'packages/utils/src/clamp.ts';
 const sourceExtract = makeExtract({ sources: [SOURCE], cases: [] });
 

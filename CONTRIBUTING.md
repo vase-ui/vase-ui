@@ -1743,7 +1743,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 ### How to port a test
 
-A ported test uses a mapped path. Its `describe` and `it` titles use the upstream text with the Vase UI form of the library name. For example, `preventBaseUIHandler` becomes `preventVaseUIHandler`, and `Base UI handler` becomes `Vase UI handler`. The parity check matches each occurrence once, even when suites share a file. A test title of our own can name the upstream project as "Base UI".
+A ported test uses a mapped path. Its `describe` and `it` titles use the upstream text with the Vase UI form of the library name. For example, `preventBaseUIHandler` becomes `preventVaseUIHandler`, and `Base UI handler` becomes `Vase UI handler`. Each local occurrence can match one upstream case or suite call, even when suites share a file. A test title of our own can name the upstream project as "Base UI".
 
 - A ported case asserts each behavior that the Base UI case asserts. It can assert more.
 - The body of a ported case can have a better form than the body of the Base UI case. A better form never asserts less.

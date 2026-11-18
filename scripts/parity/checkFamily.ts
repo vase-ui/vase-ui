@@ -164,6 +164,7 @@ interface RowPool {
   rows: TestRow[];
   claims: RowClaim[];
   candidates: RowClaim[];
+  exceptions: Set<IndexedRow>;
   extraOwner: SuiteMatch;
 }
 
@@ -171,6 +172,10 @@ interface RowClaim {
   owner: SuiteMatch;
   index: number;
   order: number;
+  key: string;
+  sequence: RowClaim[];
+  omission?: IndexedRow;
+  engine?: IndexedRow;
   choices: RowPool[];
 }
 
@@ -198,53 +203,18 @@ function reserveRow(claim: RowClaim, visited: Set<RowPool>): boolean {
   return false;
 }
 
-function coverForPort({ owner, index }: RowClaim, port?: TestRow): IndexedRow | true | undefined {
-  const { file, rows } = owner.suite;
-  const row = rows[index];
-  if (port && addedConditions(row, port).length === 0) {
-    return true;
+function coverForPort(claim: RowClaim, port?: TestRow): IndexedRow | true | undefined {
+  if (!port) {
+    return claim.omission;
   }
-  return coveringRow(owner.exceptions, file, row, (kind) =>
-    port ? kind === 'engine' : kind !== 'engine',
-  );
+  return addedConditions(claim.owner.suite.rows[claim.index], port).length ? claim.engine : true;
 }
 
-function alignSharedRows(pools: RowPool[]): void {
-  const first = pools[0].candidates[0];
-  if (
-    !first ||
-    (pools.length === 1 && pools[0].candidates.every((claim) => claim.owner === first.owner))
-  ) {
-    return;
-  }
-  const claims = [...new Set(pools.flatMap((pool) => pool.candidates))].sort(
-    (a, b) => a.order - b.order,
+function alignSharedRows(pools: RowPool[], required: IndexedRow[]): void {
+  const sequences = new Set(
+    pools.flatMap((pool) => pool.candidates.map((claim) => claim.sequence)),
   );
-  const byOwner = new Map<SuiteMatch, RowClaim[]>();
-  for (const claim of claims) {
-    const queue = byOwner.get(claim.owner);
-    if (queue) {
-      queue.push(claim);
-    } else {
-      byOwner.set(claim.owner, [claim]);
-    }
-  }
-  const required: IndexedRow[] = [];
-  for (const [owner, items] of byOwner) {
-    const indices = new Set(items.map(({ index }) => index));
-    for (const item of owner.exceptions) {
-      if (item.row.upstream !== owner.suite.file) {
-        continue;
-      }
-      const covered = owner.suite.rows.flatMap((row, i) =>
-        coverRank(item.target, row) >= 0 ? [i] : [],
-      );
-      if (covered.length && covered.every((i) => indices.has(i))) {
-        required.push(item);
-      }
-    }
-  }
-
+  const claims = [...sequences].flat();
   const original = pools.map((pool) => pool.claims);
   const reserved = new Map<RowClaim, TestRow>();
   for (const pool of pools) {
@@ -258,7 +228,6 @@ function alignSharedRows(pools: RowPool[]): void {
   if (!problems) {
     return;
   }
-  const optional = new Map(claims.map((claim) => [claim, coverForPort(claim)]));
   const usable = pools.reduce(
     (total, pool) =>
       total +
@@ -266,7 +235,7 @@ function alignSharedRows(pools: RowPool[]): void {
     0,
   );
   const minimum =
-    Math.max(0, misses - [...optional.values()].filter(Boolean).length) +
+    Math.max(0, misses - claims.filter((claim) => claim.omission).length) +
     Math.max(0, reserved.size - usable);
   if (minimum >= problems) {
     return;
@@ -274,7 +243,7 @@ function alignSharedRows(pools: RowPool[]): void {
 
   // Separate upstream files have no common order. Keep the maximum number of matches and
   // each file's duplicate order when a guard or an exception distinguishes the occurrences.
-  const queues = [...byOwner.values()].map((items) => ({ items, next: 0 }));
+  const queues = [...sequences].map((items) => ({ items, next: 0 }));
   const unused = new Set(required);
   const refused = new Set<string>();
   for (const pool of pools) {
@@ -293,9 +262,10 @@ function alignSharedRows(pools: RowPool[]): void {
     if (refused.has(state)) {
       return false;
     }
+    const key = queues.find((queue) => queue.next < queue.items.length)?.items[0].key;
     for (const queue of queues) {
       const claim = queue.items[queue.next];
-      if (!claim) {
+      if (!claim || claim.key !== key) {
         continue;
       }
       for (const pool of [...claim.choices, undefined]) {
@@ -303,7 +273,7 @@ function alignSharedRows(pools: RowPool[]): void {
         if (pool ? !port : omissions === 0) {
           continue;
         }
-        const cover = pool ? coverForPort(claim, port) : optional.get(claim);
+        const cover = coverForPort(claim, port);
         const cost = cover ? 0 : 1;
         if (cost > budget) {
           continue;
@@ -398,45 +368,114 @@ export function matchCases(
         describePaths(row.describe)
           .map((block) => blocks.get(block))
           .find(Boolean) ?? owners[0];
-      byKey.set(key, { path, rows: [row], claims: [], candidates: [], extraOwner });
+      byKey.set(key, {
+        path,
+        rows: [row],
+        claims: [],
+        candidates: [],
+        exceptions: new Set(),
+        extraOwner,
+      });
     }
     pools.set(path, byKey);
   }
 
   let order = 0;
+  const used = new Set<IndexedRow>();
   for (const owner of matches.values()) {
     if (owner.ambiguous) {
       continue;
     }
+    const sequences = new Map<string, RowClaim[]>();
     for (const [index, row] of owner.suite.rows.entries()) {
       const key = keyOf(row, 'upstream');
       const choices = owner.paths.flatMap((path) => pools.get(path)?.get(key) ?? []);
-      const claim = { owner, index, order: order++, choices };
+      const omission = coveringRow(
+        owner.exceptions,
+        owner.suite.file,
+        row,
+        (kind) => kind !== 'engine',
+      );
+      if (!choices.length) {
+        if (omission) {
+          used.add(omission);
+        }
+        continue;
+      }
+      const engine = coveringRow(
+        owner.exceptions,
+        owner.suite.file,
+        row,
+        (kind) => kind === 'engine',
+      );
+      const sequence = sequences.get(key) ?? [];
+      sequences.set(key, sequence);
+      const claim = { owner, index, order: order++, key, sequence, omission, engine, choices };
+      sequence.push(claim);
       for (const pool of choices) {
         pool.candidates.push(claim);
+        if (omission) {
+          pool.exceptions.add(omission);
+        }
+        if (engine && pool.rows.some((port) => addedConditions(row, port).length)) {
+          pool.exceptions.add(engine);
+        }
       }
       reserveRow(claim, new Set());
     }
   }
-  const remaining = new Set([...pools.values()].flatMap((byKey) => [...byKey.values()]));
+  const all = [...pools.values()].flatMap((byKey) => [...byKey.values()]);
+  const remaining = new Set<RowPool>();
+  const byException = new Map<IndexedRow, RowPool[]>();
+  for (const pool of all) {
+    pool.claims.sort((a, b) => a.order - b.order);
+    if (
+      pool.candidates.every(
+        (claim) => claim.choices.length === 1 && claim.sequence === pool.candidates[0].sequence,
+      )
+    ) {
+      pool.candidates.forEach((claim, i) => {
+        const cover = coverForPort(claim, pool.rows[i]);
+        if (cover && cover !== true) {
+          used.add(cover);
+        }
+      });
+      continue;
+    }
+    remaining.add(pool);
+    for (const row of pool.exceptions) {
+      const peers = byException.get(row) ?? [];
+      peers.push(pool);
+      byException.set(row, peers);
+    }
+  }
   for (const first of remaining) {
     const connected = new Set([first]);
+    const required = new Set<IndexedRow>();
     for (const pool of connected) {
       remaining.delete(pool);
-      pool.claims.sort((a, b) => a.order - b.order);
       for (const claim of pool.candidates) {
         for (const choice of claim.choices) {
           connected.add(choice);
         }
       }
+      // A block or file exception needs one witness among all the titles it covers.
+      for (const row of pool.exceptions) {
+        if (!used.has(row) && !required.has(row)) {
+          required.add(row);
+          for (const peer of byException.get(row) ?? []) {
+            connected.add(peer);
+          }
+        }
+      }
     }
-    alignSharedRows([...connected]);
-    for (const pool of connected) {
-      pool.claims.forEach(({ owner, index }, i) => {
-        owner.rows[index] = { path: pool.path, row: pool.rows[i] };
-      });
-      pool.extraOwner.unpaired += pool.rows.length - pool.claims.length;
-    }
+    alignSharedRows([...connected], [...required]);
+  }
+  for (const pool of all) {
+    pool.claims.forEach(({ owner, index }, i) => {
+      owner.rows[index] = { path: pool.path, row: pool.rows[i] };
+    });
+    pool.extraOwner.unpaired += pool.rows.length - pool.claims.length;
   }
   return matches;
 }
