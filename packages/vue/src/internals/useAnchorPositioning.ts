@@ -1,4 +1,4 @@
-import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
 import type {
   ComponentPublicInstance,
   ComputedRef,
@@ -307,15 +307,14 @@ export function useAnchorPositioning(
 
   let arrowElement: Element | null = null;
 
-  // The style of the positioner reads these two values, and `size()` writes them. Vue writes each
-  // key of a rendered style again on each render, so constants there would replace the values that
-  // `size()` wrote.
   // The start values make a consumer rule such as `max-height: min(x, var(--available-height))`
   // valid in the first position pass. Without them, the unresolved `var()` makes the whole
   // declaration invalid. The popup then has no cap, and `flip()` picks the side from the full
   // height of the content and not from the capped height.
   const availableWidthValue = shallowRef('100vw');
   const availableHeightValue = shallowRef('100vh');
+  const anchorWidthValue = shallowRef<string>();
+  const anchorHeightValue = shallowRef<string>();
 
   const readOffset = (value: OffsetSource | undefined, state: MiddlewareState) => {
     const offsetValue = toValue(value) ?? 0;
@@ -427,19 +426,12 @@ export function useAnchorPositioning(
       size({
         ...commonCollisionProps,
         apply({ elements: { floating }, availableWidth, availableHeight, rects }) {
-          if (!mounted.value) {
-            return;
+          if (!mounted.value || !isActive.value || floating !== toValue(params.positionerElement)) {
+            return undefined;
           }
 
-          const nextAvailableWidth = `${availableWidth}px`;
-          const nextAvailableHeight = `${availableHeight}px`;
-          // A positioner part can render a style of its own and not `positionerStyles`. An example
-          // is `Select.Positioner`, which aligns an item with the trigger. Its element then has
-          // the two values only from this write.
-          floating.style.setProperty(AVAILABLE_WIDTH_VAR, nextAvailableWidth);
-          floating.style.setProperty(AVAILABLE_HEIGHT_VAR, nextAvailableHeight);
-          availableWidthValue.value = nextAvailableWidth;
-          availableHeightValue.value = nextAvailableHeight;
+          availableWidthValue.value = `${availableWidth}px`;
+          availableHeightValue.value = `${availableHeight}px`;
 
           // Snap the anchor size to device pixels. The visual width of the popup then matches the
           // anchor.
@@ -450,8 +442,10 @@ export function useAnchorPositioning(
           const anchorHeight =
             (Math.round((anchorY + rectHeight) * dpr) - Math.round(anchorY * dpr)) / dpr;
 
-          floating.style.setProperty(CommonPositionerCssVars.anchorWidth, `${anchorWidth}px`);
-          floating.style.setProperty(CommonPositionerCssVars.anchorHeight, `${anchorHeight}px`);
+          anchorWidthValue.value = `${anchorWidth}px`;
+          anchorHeightValue.value = `${anchorHeight}px`;
+          // Floating UI measures the new box after the owner applies these variables.
+          return nextTick();
         },
       }),
       arrow((state) => ({
@@ -515,12 +509,11 @@ export function useAnchorPositioning(
             sideOrigin = `${rects.reference.y + rects.reference.height / 2 - currentY}px`;
           }
 
-          floating.style.setProperty(
-            CommonPositionerCssVars.transformOrigin,
-            isVertical ? `${crossOrigin} ${sideOrigin}` : `${sideOrigin} ${crossOrigin}`,
-          );
-
-          return {};
+          return {
+            data: {
+              value: isVertical ? `${crossOrigin} ${sideOrigin}` : `${sideOrigin} ${crossOrigin}`,
+            },
+          };
         },
       },
       hide,
@@ -661,6 +654,16 @@ export function useAnchorPositioning(
     });
   };
 
+  const positionerCssVars = computed<CSSProperties>(() => ({
+    [AVAILABLE_WIDTH_VAR]: availableWidthValue.value,
+    [AVAILABLE_HEIGHT_VAR]: availableHeightValue.value,
+    [CommonPositionerCssVars.anchorWidth]: anchorWidthValue.value,
+    [CommonPositionerCssVars.anchorHeight]: anchorHeightValue.value,
+    [CommonPositionerCssVars.transformOrigin]: isPositioned.value
+      ? middlewareData.value.transformOrigin?.value
+      : undefined,
+  }));
+
   const positionerStyles = computed<CSSProperties>(() => {
     // Use `fixed` until the popup has a position. The popup then stays in the viewport, and
     // `autoFocus` causes no scroll jump.
@@ -679,13 +682,10 @@ export function useAnchorPositioning(
       base = { ...floatingStyles.value, position };
     }
 
-    base[AVAILABLE_WIDTH_VAR] = availableWidthValue.value;
-    base[AVAILABLE_HEIGHT_VAR] = availableHeightValue.value;
-
     if (!isPositioned.value) {
       base.opacity = 0;
     }
-    return base;
+    return { ...base, ...positionerCssVars.value };
   });
 
   const renderedSide = computed(() => getSide(renderedPlacement.value));
@@ -721,6 +721,7 @@ export function useAnchorPositioning(
   const arrowUncentered = computed(() => middlewareData.value.arrow?.centerOffset !== 0);
 
   return {
+    positionerCssVars,
     positionerStyles,
     arrowStyles,
     arrowRef,
@@ -919,6 +920,7 @@ export interface UseAnchorPositioningParameters extends Sources<
 }
 
 export interface UseAnchorPositioningReturnValue {
+  positionerCssVars: ComputedRef<CSSProperties>;
   positionerStyles: ComputedRef<CSSProperties>;
   arrowStyles: ComputedRef<CSSProperties>;
   arrowRef: (element: Element | null) => void;

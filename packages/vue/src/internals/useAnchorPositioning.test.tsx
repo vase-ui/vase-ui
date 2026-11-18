@@ -23,11 +23,12 @@ import UseAnchorPositioningHydration from './UseAnchorPositioningHydration.test.
 
 // `passSpy` gets one call for each position pass. `stopSpy` gets one call for each cleanup of
 // `autoUpdate`.
-const { autoUpdateSpy, stopSpy, passSpy, shiftSpy } = vi.hoisted(() => ({
+const { autoUpdateSpy, stopSpy, passSpy, shiftSpy, sizeSpy } = vi.hoisted(() => ({
   autoUpdateSpy: vi.fn(),
   stopSpy: vi.fn(),
   passSpy: vi.fn(),
   shiftSpy: vi.fn(),
+  sizeSpy: vi.fn(),
 }));
 
 vi.mock('@floating-ui/vue', async () => {
@@ -35,6 +36,17 @@ vi.mock('@floating-ui/vue', async () => {
 
   return {
     ...actual,
+    size: ((...args: Parameters<typeof actual.size>) => {
+      const middleware = actual.size(...args);
+      return {
+        ...middleware,
+        async fn(state) {
+          const result = await middleware.fn(state);
+          sizeSpy(state.rects.floating.width, state.rects.floating.height, Boolean(result.reset));
+          return result;
+        },
+      };
+    }) satisfies typeof actual.size,
     shift: ((...args: Parameters<typeof actual.shift>) => {
       shiftSpy(...args);
       return actual.shift(...args);
@@ -885,6 +897,26 @@ describe('useAnchorPositioning', () => {
       popup.style.getPropertyValue('--available-height');
     const heightBelow = () => `${document.documentElement.clientHeight - BELOW.top - 5}px`;
 
+    it('remeasures the bound anchor width in the same position pass', async () => {
+      const { trigger, part, popup } = await renderPopup({
+        disableAnchorTracking: true,
+        style: { width: 'var(--anchor-width, 100px)', height: '50px' },
+      });
+      await settle();
+      sizeSpy.mockClear();
+
+      trigger.style.width = '80px';
+      part.value!.update();
+      await waitSingleFrame();
+
+      expect(sizeSpy.mock.calls).toEqual([
+        [40, 50, true],
+        [80, 50, false],
+      ]);
+      expect(popup.getBoundingClientRect().width).toBe(80);
+      expect(popup.style.getPropertyValue('--transform-origin')).toBe('40px 0px');
+    });
+
     it('keeps the available size of the last position after a later render', async () => {
       const { props, popup } = await renderPopup({ disableAnchorTracking: true });
       await waitFor(() => {
@@ -900,18 +932,22 @@ describe('useAnchorPositioning', () => {
       expect(popup.style.getPropertyValue('--anchor-width')).toBe(`${ANCHOR.width}px`);
     });
 
-    it('writes the available size on a positioner that does not render the positioner styles', async () => {
+    it('binds the measured variables on a positioner with its own coordinates', async () => {
       const trigger = createAnchor();
       const Test = defineComponent(() => {
         const positionerElement = shallowRef<HTMLDivElement | null>(null);
-        useAnchorPositioning({
+        const positioning = useAnchorPositioning({
           mounted: true,
           collisionAvoidance: {},
           positionerElement,
           defaultAnchor: trigger,
         });
         return () => (
-          <div ref={positionerElement} data-testid="popup" style={{ position: 'fixed' }} />
+          <div
+            ref={positionerElement}
+            data-testid="popup"
+            style={{ position: 'fixed', ...positioning.positionerCssVars.value }}
+          />
         );
       });
       await render(<Test />);

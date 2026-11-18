@@ -179,7 +179,10 @@ let positionerElement: HTMLElement | null = null;
 
 const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
-  styles: () => (alignItemWithTriggerActive.value ? FIXED : positioning.positionerStyles.value),
+  styles: () =>
+    alignItemWithTriggerActive.value
+      ? { ...FIXED, ...positioning.positionerCssVars.value }
+      : positioning.positionerStyles.value,
   transitionStatus: () => store.select('transitionStatus'),
   ref(positioner) {
     // A compiled template can mount a new positioner before it unmounts the old one. The old one
