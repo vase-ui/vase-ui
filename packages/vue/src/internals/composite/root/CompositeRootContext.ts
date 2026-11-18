@@ -2,6 +2,7 @@ import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 
 export interface CompositeRootContext {
+  hasFocus: () => boolean;
   highlightedIndex: ComputedRef<number>;
   onHighlightedIndexChange: (index: number, shouldScrollIntoView?: boolean) => void;
   highlightItemOnHover: ComputedRef<boolean>;

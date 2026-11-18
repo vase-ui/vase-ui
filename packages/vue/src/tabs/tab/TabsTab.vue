@@ -78,7 +78,6 @@ export interface TabsTabProps
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
-import { activeElement, contains } from '../../common/shadowDom';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
@@ -115,13 +114,14 @@ defineSlots<{
 const {
   value: activeTabValue,
   getTabPanelIdByValue,
+  getTabElementBySelectedValue,
   onValueChange,
   orientation,
   registerTab,
   tabActivationDirection,
 } = useTabsRootContext();
-const { activateOnFocus, registerTabResizeObserverElement, tabsListElement } = useTabsListContext();
-const { highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext();
+const { activateOnFocus, registerTabResizeObserverElement } = useTabsListContext();
+const { hasFocus, highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext();
 
 // A panel registers its id in `setup`, and it can come after the tab.
 useDeferredServerRender();
@@ -160,6 +160,9 @@ const { getButtonProps, buttonRef } = useButton({
 
 let isNavigating = false;
 
+// Tabs with the same value are all selected. Only the first may move the tab stop.
+const selectedTab = computed(() => getTabElementBySelectedValue(activeTabValue.value));
+
 // Keeps the highlighted item in sync with the active tab when the value changes outside the list.
 function syncHighlight() {
   if (isNavigating) {
@@ -171,14 +174,8 @@ function syncHighlight() {
     return;
   }
 
-  // While focus is inside the list, the highlight follows the focus. The keys continue from the
-  // focused tab after a change of the value outside the list.
-  const listElement = tabsListElement.value;
-  if (listElement !== null) {
-    const focusedElement = activeElement(ownerDocument(listElement));
-    if (focusedElement && contains(listElement, focusedElement)) {
-      return;
-    }
+  if (selectedTab.value !== element.value || hasFocus()) {
+    return;
   }
 
   // A tab disabled by its prop can get focus. No disabled tab takes the tab stop from an external
@@ -189,7 +186,7 @@ function syncHighlight() {
 }
 
 onMounted(syncHighlight);
-watch([active, index, highlightedIndex, isDisabled, tabsListElement], syncHighlight, {
+watch([active, index, highlightedIndex, isDisabled, selectedTab], syncHighlight, {
   flush: 'post',
 });
 

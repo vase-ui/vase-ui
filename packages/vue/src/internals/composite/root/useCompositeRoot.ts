@@ -189,6 +189,13 @@ export function useCompositeRoot<Metadata>(
     }
   }
 
+  function hasFocus() {
+    return (
+      rootElement?.matches(':focus-within') === true ||
+      elementsRef.value.some((item) => item?.matches(':focus-within'))
+    );
+  }
+
   // A reset of a form and a controlled value change the active item while the composite does not
   // have the focus. The tab stop then moves to the active item, so the Tab key enters the
   // composite on that item, as it does for a native radio group. If the change leaves no active
@@ -212,10 +219,7 @@ export function useCompositeRoot<Metadata>(
     const isRemoval = lastActiveItem !== null && !elements.includes(lastActiveItem);
     lastActiveItem = activeItem.item;
 
-    if (
-      rootElement?.matches(':focus-within') ||
-      elements.some((item) => item?.matches(':focus-within'))
-    ) {
+    if (hasFocus()) {
       return;
     }
 
@@ -593,6 +597,7 @@ export function useCompositeRoot<Metadata>(
   }
 
   provide(CompositeRootContext, {
+    hasFocus,
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),

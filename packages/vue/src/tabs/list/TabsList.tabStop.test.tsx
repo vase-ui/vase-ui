@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, shallowRef, Teleport } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 
@@ -9,6 +9,51 @@ function readTabindexes() {
 
 describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
   const { render } = createRenderer();
+
+  it('keeps the tab stop on a focused tab rendered outside its list', async () => {
+    const value = shallowRef('first');
+    await render(() => (
+      <>
+        <Tabs.Root value={value.value}>
+          <Tabs.List>
+            <Tabs.Tab value="first">First</Tabs.Tab>
+            <Teleport to="body">
+              <Tabs.Tab value="remote">Remote</Tabs.Tab>
+            </Teleport>
+            <Tabs.Tab value="last">Last</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>
+        <button>Outside</button>
+      </>
+    ));
+    const remote = screen.getByRole('tab', { name: 'Remote' });
+    const last = screen.getByRole('tab', { name: 'Last' });
+    remote.focus();
+    value.value = 'last';
+    await flushMicrotasks();
+    expect(remote).toHaveFocus();
+    expect([remote.tabIndex, last.tabIndex]).toEqual([0, -1]);
+    screen.getByRole('button', { name: 'Outside' }).focus();
+    await flushMicrotasks();
+    expect([remote.tabIndex, last.tabIndex]).toEqual([-1, 0]);
+  });
+
+  it('gives the tab stop to the first of two tabs with the selected value', async () => {
+    const value = shallowRef('other');
+    await render(() => (
+      <Tabs.Root value={value.value}>
+        <Tabs.List>
+          <Tabs.Tab value="same" />
+          <Tabs.Tab value="same" />
+          <Tabs.Tab value="other" />
+        </Tabs.List>
+      </Tabs.Root>
+    ));
+    expect(readTabindexes()).toEqual([-1, -1, 0]);
+    value.value = 'same';
+    await flushMicrotasks();
+    expect(readTabindexes()).toEqual([0, -1, -1]);
+  });
 
   it('enters the list on the active tab after the focus leaves it, with manual activation', async () => {
     const { user } = await render(

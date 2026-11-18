@@ -34,6 +34,7 @@ function readTabindexes(root: ParentNode) {
 }
 
 const testCompositeContext: CompositeRootContext = {
+  hasFocus: () => false,
   detachedItemHandlers: { onFocusin: NOOP, onFocusout: NOOP, onKeydown: NOOP },
   highlightedIndex: computed(() => 0),
   onHighlightedIndexChange: NOOP,
