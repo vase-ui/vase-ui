@@ -1219,16 +1219,7 @@ describe('<Drawer.SwipeArea />', () => {
   });
 
   it('keeps the swipe-area movement on the popup when re-grabbed during close', async () => {
-    // Regression guard for the swipe-area re-grab flash. When the swipe area drives the open, the
-    // popup's `--drawer-swipe-movement-*` are written imperatively by `applySwipeMovement`, but
-    // the viewport's open-reset effect would otherwise zero them
-    // (`resetSwipe` -> `syncDragStyles(false)`) on the same commit that flips `open` true,
-    // flashing the popup fully open for a frame. The shared `swipeAreaActiveRef` must make the
-    // viewport skip that reset while the swipe area owns the gesture.
-    //
-    // The flash only reproduces on a *re-grab*, i.e. when the popup is already mounted as the open
-    // commit lands. A real exit animation keeps the popup mounted (`mounted` stays true) through
-    // the close, so the re-grab below drives a fresh open while it is still in the DOM.
+    // The second press reaches the popup while its exit animation still holds it in the document.
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
     // Base UI's exit lasts 200 ms. This exit lasts 100 s, so the popup stays in its exit until

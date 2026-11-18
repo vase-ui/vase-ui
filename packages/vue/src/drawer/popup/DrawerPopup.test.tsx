@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, onMounted, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import {
   createRenderer,
@@ -997,7 +997,7 @@ describe('<Drawer.Popup />', () => {
       expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe(strength);
 
       key.value += 1;
-      await flushMicrotasks();
+      await nextTick();
       const replacement = screen.getByTestId('popup');
       expect(replacement).not.toBe(popup);
       expect(replacement.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');

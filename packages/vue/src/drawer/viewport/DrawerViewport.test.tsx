@@ -4210,6 +4210,50 @@ describe('<Drawer.Viewport />', () => {
     expect(samples).toEqual(['0']);
   });
 
+  it('keeps the active drawer progress when another viewport enters a hold', async () => {
+    const first = shallowRef(true);
+    const second = shallowRef(true);
+    function drawer(name: string, shown: boolean) {
+      return (
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal keepMounted>
+            <Drawer.Backdrop data-testid={name + '-backdrop'} />
+            <KeepAlive>
+              {shown && (
+                <Drawer.Viewport>
+                  <Drawer.Popup data-testid={name} style={{ height: '100px' }} />
+                </Drawer.Viewport>
+              )}
+            </KeepAlive>
+          </Drawer.Portal>
+        </Drawer.Root>
+      );
+    }
+    await render(() => (
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        {drawer('first', first.value)}
+        {drawer('second', second.value)}
+      </Drawer.Provider>
+    ));
+    const indent = screen.getByTestId('indent');
+    const backdrop = screen.getByTestId('second-backdrop');
+    await dragPopup(screen.getByTestId('second'), 50);
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+
+    first.value = false;
+    await flushMicrotasks();
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    second.value = false;
+    await flushMicrotasks();
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
   it('clears provider and backdrop swipe state during layout teardown', async () => {
     const shown = shallowRef(true);
     const samples: unknown[] = [];
