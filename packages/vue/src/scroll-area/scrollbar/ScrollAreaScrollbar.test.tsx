@@ -204,9 +204,6 @@ describe('<ScrollArea.Scrollbar />', () => {
       }
     });
 
-    // The native `pointerenter` and `pointerleave` do not bubble, and the helper dispatches them
-    // with `bubbles: false`. React makes them from `pointerover` and `pointerout`, so the upstream
-    // case fires them on the viewport. Here they go to the root, which has the listeners.
     it('VUE-138: shows hover on the scrollbar when the pointer moves over a slotted control', async () => {
       const button = document.createElement('button');
       const root = createSlotHost(button);
@@ -224,6 +221,9 @@ describe('<ScrollArea.Scrollbar />', () => {
       expect(scrollbar).toHaveAttribute('data-hovering');
     });
 
+    // The native `pointerenter` and `pointerleave` do not bubble, and the helper dispatches them
+    // with `bubbles: false`. React makes them from `pointerover` and `pointerout`, so the upstream
+    // case fires them on the viewport. Here they go to the root, which has the listeners.
     it('does not enter hover state for touch pointers', async () => {
       await render(
         <ScrollArea.Root data-testid="root">

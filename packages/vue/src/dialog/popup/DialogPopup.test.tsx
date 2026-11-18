@@ -147,6 +147,8 @@ describe('<Dialog.Popup />', () => {
     await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
     const popup = root.querySelector<HTMLElement>('[role="dialog"]')!;
     expect(popup.contains(field.assignedSlot)).toBe(true);
+    const fieldFocus = vi.fn();
+    field.addEventListener('focus', fieldFocus);
     await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
     expect(trigger).toHaveFocus();
     for (const animation of popup.getAnimations()) {
@@ -155,6 +157,7 @@ describe('<Dialog.Popup />', () => {
     await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
     expect(popup).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+    expect(fieldFocus).not.toHaveBeenCalled();
   });
 
   describe('prop: initialFocus', () => {
