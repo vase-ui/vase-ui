@@ -113,6 +113,20 @@ describe('usePressAndHold', () => {
     await fireEvent.pointerUp(button, { pointerType: 'touch' });
   });
 
+  it('keeps the final release after a repeat boundary', async () => {
+    const onStop = vi.fn();
+    const tick = vi.fn(() => false);
+    const Hold = defineHoldButton({ onStop }, tick);
+    await render(<Hold />);
+    const button = screen.getByRole('button');
+    button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }));
+    const up = new PointerEvent('pointerup', { pointerType: 'mouse' });
+    window.dispatchEvent(up);
+    window.dispatchEvent(new PointerEvent('pointerup'));
+    expect(tick).toHaveBeenCalledOnce();
+    expect(onStop.mock.calls).toEqual([[up]]);
+  });
+
   it('ignores a release after the pressed button unmounts', async () => {
     const onStop = vi.fn();
     const Hold = defineHoldButton({ onStop }, () => false);

@@ -1,8 +1,9 @@
-import { onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { ownerWindow } from '../common/owner';
 import { useInterval } from '../common/useInterval';
+import { useListenerSession } from '../common/useListenerSession';
 import { useTimeout } from '../common/useTimeout';
 import { useKeepAliveState } from './useKeepAliveState';
 
@@ -91,7 +92,8 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
   let ignoreClick = false;
   let pointerType = '';
   const autoChangeWindow = shallowRef<Window | null>(null);
-  const pressWindow = shallowRef<Window | null>(null);
+  const { isHeld } = useKeepAliveState();
+  const press = useListenerSession(isHeld);
 
   // A touch just outside the element can open the context menu.
   watch(
@@ -99,29 +101,6 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
     (win, _previous, onCleanup) => {
       if (win) {
         onCleanup(addEventListener(win, 'contextmenu', (event) => event.preventDefault()));
-      }
-    },
-    { flush: 'sync' },
-  );
-
-  // `stopAutoChange` keeps the release listener. A hold at a boundary still calls `onStop`.
-  watch(
-    pressWindow,
-    (win, _previous, onCleanup) => {
-      if (win) {
-        onCleanup(
-          addEventListener(
-            win,
-            'pointerup',
-            (event) => {
-              pressWindow.value = null;
-              isPressed = false;
-              stopAutoChange();
-              onStop?.(event);
-            },
-            { once: true },
-          ),
-        );
       }
     },
     { flush: 'sync' },
@@ -150,7 +129,22 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
     const win = ownerWindow(element);
 
     autoChangeWindow.value = win;
-    pressWindow.value = win;
+    // A repeat boundary stops the timer. The final release still calls onStop.
+    press.start((onCleanup, end) => {
+      onCleanup(
+        addEventListener(
+          win,
+          'pointerup',
+          (event) => {
+            end();
+            isPressed = false;
+            stopAutoChange();
+            onStop?.(event);
+          },
+          { once: true },
+        ),
+      );
+    });
 
     if (!tick(triggerNativeEvent)) {
       stopAutoChange();
@@ -166,20 +160,12 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
     });
   }
 
-  function release() {
-    isPressed = false;
-    stopAutoChange();
-    pressWindow.value = null;
-  }
-
-  onScopeDispose(release);
-  // `KeepAlive` takes the button out of the document and sends no `pointerup`.
-  const { isHeld } = useKeepAliveState();
   watch(
     isHeld,
     (held) => {
       if (held) {
-        release();
+        isPressed = false;
+        stopAutoChange();
       }
     },
     { flush: 'sync' },

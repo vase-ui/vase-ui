@@ -1191,6 +1191,7 @@ The viewport of a popup, in `src/utils/popups/viewport`, shows the old content w
 
 - A viewport part calls `usePopupViewport({ store, side })` in `setup` and gets `state`.
 - The template of `PopupViewportChildren.vue` gives the two containers. The comments of `usePopupViewport.ts` and `usePopupAutoResize.ts` give the clone of the old content and the resize (`VUE-88`).
+- The viewport waits for its own enter phase after the DOM patch. An animation wait on a consumer marker observes the attribute on its element.
 - The viewport publishes the measured dimensions for the popup and positioner to bind. The popup binds the anchor edges for its side. Deactivation clears the viewport’s edges before ancestor hooks run. Temporary styles expose both intrinsic sizes in one layout read.
 - While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends. A live popup releases the size bindings of its held viewport. A detached popup keeps its last dimensions. The active viewport publishes its bindings again when it returns. The resize of a part that mounts in a held branch measures first at the activation.
 
@@ -1525,10 +1526,10 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 #### Own a resource
 
 - `useDomEffect` owns a DOM effect across mount, a post-flush update and a KeepAlive hold. A queued effect can run after the branch leaves the document but before `onDeactivated`.
-- To observe a part after its DOM update, watch the `element` of `useRenderElement` with `flush: 'post'`. The watcher cleanup disconnects the observer when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
+- Use `useResizeObserver` or `useMutationObserver` for targets that follow a part. Each post-flush watcher owns one observer per target window. A hold or target change invalidates pending deliveries.
 - Create a replaceable resource in its watcher. Give its release to `onCleanup`. In Vue 3.5.12, a reactive read in a sync callback during a patch can make the render depend on that value.
 - For a resource that starts at mount and follows later changes, create its watcher in `onMounted` with `immediate: true`. For a registration that lasts from mount to unmount, give its release to `onScopeDispose` in the mount hook.
-- For a listener that must start in the press task, watch its event, window or document with a synchronous flush.
+- Use `useListenerSession` for a press that needs a document or window listener in the same task. Register each remover at attachment. End the session before a release callback can start another press.
 - Vue stops the watchers of a part before it calls its `onScopeDispose` callbacks. ESLint refuses a `let` with a void function type, a `let` that starts as `NOOP`, and a `let` copy of `isHeld`.
 - `Teleport` can move an element to another document or shadow root with no change of a `watch` source. Use `observeRootNode` for changes in the tree of the root node. Use `followRootNode` for a listener or another subscription on the root node itself. ESLint refuses a call to `getRootNode()` inside a watcher, a `computed`, a `useDomEffect` effect, or a mount, update or activation hook. The helper calls the callback before it moves its observers, because the callback can write in the new root. For a tree outside a document or shadow root, the helper also observes the last document or shadow root of the element. If the element had neither, it observes the owner document. When the consumer attaches such a tree in another root, such as another shadow root, no observer gets a record.
 - A teleported child popup has four links to its parent: the popup tree and the `provide` chains of `useDismiss`, `useListNavigation` and `useFloatingFocusManager`. See [Popup dismissal](#popup-dismissal), [Popup list navigation](#popup-list-navigation) and [Focus helpers](#focus-helpers).

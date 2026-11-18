@@ -80,6 +80,15 @@
     "src/common/shadowDom.test.ts": {
       "fails": {}
     },
+    "src/common/useListenerSession.test.tsx": {
+      "fails": {}
+    },
+    "src/common/useMutationObserver.test.tsx": {
+      "fails": {}
+    },
+    "src/common/useResizeObserver.test.tsx": {
+      "fails": {}
+    },
     "src/drawer/popup/DrawerPopup.test.tsx": {
       "fails": {
         "<Drawer.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -125,6 +134,9 @@
       "fails": {}
     },
     "src/internals/useOpenChangeComplete.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/usePressAndHold.test.tsx": {
       "fails": {}
     },
     "src/internals/useRenderElement.test.tsx": {
@@ -275,6 +287,9 @@
       "fails": {}
     },
     "src/utils/popups/useDomEffect.test.tsx": {
+      "fails": {}
+    },
+    "src/utils/popups/viewport/usePopupViewport.transitions.test.tsx": {
       "fails": {}
     },
     "src/utils/styles.test.tsx": {
