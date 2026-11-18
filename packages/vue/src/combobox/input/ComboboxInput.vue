@@ -62,6 +62,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
+import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -214,35 +215,25 @@ function displayText(value: unknown) {
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-// The value that the input has after the last event that the part handled. A write of Vue or of
-// the part sets it too.
-let handledValue: string | undefined;
+const valueSync = useInputValueSync(
+  () => element.value,
+  () => displayText(inputValue.value),
+);
 
-function syncHandledValue() {
-  handledValue = (element.value as HTMLInputElement | null)?.value;
-}
 // At the mount the input can hold text that the user typed before the hydration, also in a
 // component in `as`. The last write of Vue, and the server HTML, have the text of the state. The
 // browser removes the line breaks of that text from an input.
 onMounted(() => {
   const input = element.value;
   const text = displayText(inputValue.value);
-  handledValue = isTextControl(input) ? sanitizeValue(input, text) : text;
+  valueSync.recordAs(isTextControl(input) ? sanitizeValue(input, text) : text);
 });
-watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
+watch(() => composingValue.value ?? inputValue.value, valueSync.record, { flush: 'post' });
 
-// Vue writes the DOM value only when the part renders. The part does not render when a listener
-// cancels the change or the consumer keeps its value.
 function writeStateToInput() {
-  const input = element.value as HTMLInputElement | null;
-  if (!input || isComposing) {
-    return;
+  if (!isComposing) {
+    valueSync.write();
   }
-  const text = displayText(inputValue.value);
-  if (input.value !== text) {
-    input.value = text;
-  }
-  handledValue = input.value;
 }
 
 const compositionTimeout = useTimeout();
@@ -259,7 +250,7 @@ function handleCompositionend(event: CompositionEvent) {
   isComposing = false;
   const next = (event.currentTarget as HTMLInputElement).value;
   composingValue.value = null;
-  handledValue = next;
+  valueSync.record();
   store.context.setInputValue(next, createChangeEventDetails(REASONS.inputChange, event));
   // WebKit sends the last `input` event of a composition after `compositionend`, so the write
   // waits for the next task.
@@ -272,10 +263,9 @@ function handleCompositionend(event: CompositionEvent) {
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const value = input.value;
-  if (!isComposing && value === handledValue) {
+  if (!valueSync.isNew(event) && !isComposing) {
     return;
   }
-  handledValue = value;
 
   const isOpen = open.value;
   const autoHighlightEnabled = Boolean(autoHighlightMode.value);

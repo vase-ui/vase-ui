@@ -33,6 +33,7 @@ import {
 } from '../../labelable-provider';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
+import { useHiddenInputValueSync } from '../../useInputValueSync';
 import { useFormRestoreAsInput } from '../../useFormRestore';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
@@ -817,7 +818,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
     // The browser reset the inputs before this call. The text of the input is not the text of the
     // model when the reset left the model as it was.
-    writeValueToHiddenInput();
+    hiddenValueSync.write();
     resetCount.value += 1;
   });
 
@@ -828,37 +829,33 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     getInputLimits(kind.value, limits.value, granularity.value === 'second'),
   );
 
-  // The value that the hidden input had after the last event that the root handled. A write of
-  // the root and a write of Vue set it too.
-  let handledHiddenValue: string | undefined;
-
-  function writeValueToHiddenInput() {
-    const input = hiddenInputElement.value;
-    if (input && input.value !== hiddenText.value) {
-      input.value = hiddenText.value;
-    }
-    handledHiddenValue = input?.value;
-  }
+  const hiddenValueSync = useHiddenInputValueSync(
+    hiddenInputElement,
+    () => hiddenText.value,
+    writesHiddenValue,
+  );
 
   // Some programs that fill a form send only `change`, and some send both events in one task. The
   // root handles an event only when the input has a new value. A browser that fills the input
   // sends text in the ISO form of its type.
   function handleHiddenInput(event: Event) {
-    const text = (event.currentTarget as HTMLInputElement).value;
-    if (text !== handledHiddenValue) {
-      handledHiddenValue = text;
-      if (!event.defaultPrevented && !isDisabled.value && !isReadOnly.value) {
-        const details = createChangeEventDetails(REASONS.inputChange, event);
-        const parsed = text === '' ? undefined : parseText(text, false);
-        if (parsed) {
-          applyNumbers(parsed, details);
-        } else if (text === '') {
-          draft.value = null;
-          setValue(null, details);
-        }
+    if (
+      hiddenValueSync.isNew(event) &&
+      !event.defaultPrevented &&
+      !isDisabled.value &&
+      !isReadOnly.value
+    ) {
+      const text = (event.currentTarget as HTMLInputElement).value;
+      const details = createChangeEventDetails(REASONS.inputChange, event);
+      const parsed = text === '' ? undefined : parseText(text, false);
+      if (parsed) {
+        applyNumbers(parsed, details);
+      } else if (text === '') {
+        draft.value = null;
+        setValue(null, details);
       }
     }
-    void nextTick(writeValueToHiddenInput);
+    void nextTick(hiddenValueSync.write);
   }
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
@@ -877,33 +874,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     hiddenInputElement.value = input as HTMLInputElement | null;
   }
 
-  watch(
-    hiddenInputElement,
-    (input) => {
-      if (!input) {
-        return;
-      }
-      // Until the take of the hydration, the input can hold a value that the root did not handle.
-      handledHiddenValue = writesHiddenValue.value ? input.value : hiddenText.value;
-      syncCustomValidity();
-    },
-    { flush: 'post' },
-  );
+  watch(hiddenInputElement, syncCustomValidity, { flush: 'post' });
 
   // The value sanitization of the input type can change the text of the value. A `date` input has
   // no value for a year 0.
-  useFormRestoreAsInput(hiddenInputElement, () => handledHiddenValue, false);
-
-  // Vue writes the value to the hidden input when the text changes, and when the input gets the
-  // `value` key after the hydration. A program can then send a `change` event with the text that
-  // the input had before, and the root must handle it.
-  watch(
-    [hiddenText, writesHiddenValue],
-    () => {
-      handledHiddenValue = hiddenInputElement.value?.value;
-    },
-    { flush: 'post' },
-  );
+  useFormRestoreAsInput(hiddenInputElement, hiddenValueSync.handledValue, false);
 
   watch(customMessage, syncCustomValidity, { flush: 'post' });
 

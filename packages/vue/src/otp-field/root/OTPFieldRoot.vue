@@ -184,6 +184,7 @@ import {
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
+import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import {
@@ -629,19 +630,15 @@ const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement
   restorable: false,
 });
 
-// The value that the root last saw in the hidden input. The root sets it after each event that it
-// handles, after each write of its own and after each write of Vue.
-let handledHiddenValue: string | undefined;
+const hiddenValueSync = useHiddenInputValueSync(
+  hiddenInputElement,
+  () => otpValue.value,
+  writesHiddenValue,
+);
 
-// Vue writes `value` to an input only when the root renders. The root does not render when a
-// listener cancels the change or when the parent keeps its value. It also does not render when the
-// browser restores the form state of a page, which sends no event to the inputs.
+// A browser can restore the code to the hidden input and the slots without an event.
 function writeValueToInputs() {
-  const hiddenInput = hiddenInputElement.value;
-  if (hiddenInput && hiddenInput.value !== otpValue.value) {
-    hiddenInput.value = otpValue.value;
-  }
-  handledHiddenValue = hiddenInput?.value;
+  hiddenValueSync.write();
 
   const characters = otpValue.value;
   inputElements.value.forEach((input, index) => {
@@ -656,10 +653,9 @@ function writeValueToInputs() {
 // root handles an event only when the input has a new value.
 function handleHiddenInput(event: Event) {
   const rawValue = (event.currentTarget as HTMLInputElement).value;
-  if (rawValue === handledHiddenValue) {
+  if (!hiddenValueSync.isNew(event)) {
     return;
   }
-  handledHiddenValue = rawValue;
 
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
     const [normalizedValue, didRejectCharacters] = normalizeOTPValueWithDetails(
@@ -717,28 +713,7 @@ function setHiddenInput(input: unknown) {
   hiddenInputElement.value = next;
 }
 
-// Until the take of the hydration, the hidden input can hold a value that the root did not handle.
-watch(
-  hiddenInputElement,
-  (hiddenInput) => {
-    if (hiddenInput) {
-      handledHiddenValue = writesHiddenValue.value ? hiddenInput.value : otpValue.value;
-    }
-  },
-  { flush: 'post' },
-);
-
 useFormRestore(hiddenInputElement, writeValueToInputs);
-
-// Vue writes the value to the hidden input when the value changes. A program can then send a
-// `change` event with the value that the input had before, and the root must handle it.
-watch(
-  otpValue,
-  () => {
-    handledHiddenValue = hiddenInputElement.value?.value;
-  },
-  { flush: 'post' },
-);
 
 function hiddenInputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value);

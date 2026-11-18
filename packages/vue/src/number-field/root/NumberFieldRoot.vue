@@ -166,7 +166,7 @@ export type NumberFieldRootCommitEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useHiddenValueBeforeHydration, useIsHydrated } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -189,6 +189,7 @@ import { useReferencedId } from '../../internals/labelable-provider/useRegistere
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
+import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import {
@@ -644,39 +645,20 @@ const hiddenInputText = computed(() =>
 
 const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
-// The value that the hidden input had after the last event that the root handled. A write of Vue
-// or of the root sets it too.
-let handledValue: string | undefined;
-
-function syncHandledValue() {
-  handledValue = hiddenInputElement.value?.value;
-}
-
-// Until the take of the hydration, the input can hold a value that the root did not handle.
-onMounted(() => {
-  handledValue = writesHiddenValue.value ? hiddenInputElement.value?.value : hiddenInputText.value;
-});
-watch(hiddenInputText, syncHandledValue, { flush: 'post' });
-
-// Vue writes the value to the input only when the root renders. The root does not render when a
-// listener cancels a change or the parent keeps the old value.
-function writeValueToHiddenInput() {
-  const input = hiddenInputElement.value;
-  if (input && input.value !== hiddenInputText.value) {
-    input.value = hiddenInputText.value;
-  }
-  syncHandledValue();
-}
+const hiddenValueSync = useHiddenInputValueSync(
+  hiddenInputElement,
+  () => hiddenInputText.value,
+  writesHiddenValue,
+);
 
 // An autofill sends `input` and then `change` for one value, and a program can send only `change`,
 // or both events in one task. The value is new when the input did not have it after the last event
 // that the root handled or the last write.
 function onHiddenInputChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  if (input.value === handledValue) {
+  if (!hiddenValueSync.isNew(event)) {
     return;
   }
-  handledValue = input.value;
 
   // A listener that prevented the event stops the change.
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
@@ -694,7 +676,7 @@ function onHiddenInputChange(event: Event) {
 
   // The input keeps the value of the field, as a controlled input of React does. A listener that
   // cancels the change, a parent that keeps its value and a locked field leave the field as it was.
-  void nextTick(writeValueToHiddenInput);
+  void nextTick(hiddenValueSync.write);
 }
 
 useFormReset(hiddenInputElement, (event) => {
@@ -718,7 +700,7 @@ useFormReset(hiddenInputElement, (event) => {
   clearFieldError(numberValue.value);
 });
 
-useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
+useFormRestoreAsInput(hiddenInputElement, hiddenValueSync.handledValue, false);
 
 function inputProps() {
   return {

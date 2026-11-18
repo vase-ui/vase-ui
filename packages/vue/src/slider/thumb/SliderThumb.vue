@@ -106,6 +106,7 @@ import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -383,16 +384,17 @@ function setInputElement(value: unknown) {
 
 const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-// The value that the input had after the last event that the thumb handled, or after the last
-// write of Vue or of the thumb. A range input moves its value to the step and into `min` and
-// `max`, so this text can differ from the value of the thumb.
-let handledInputValue: string | undefined;
-
-function syncHandledInputValue() {
-  handledInputValue = inputElement.value?.value;
-}
-
-watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
+// A range input moves its value to the step and into the range. Its text can differ from the thumb value.
+const valueSync = useInputValueSync(
+  () => inputElement.value,
+  () => {
+    const value = thumbValue.value;
+    return value === undefined || inputElement.value?.valueAsNumber === value
+      ? undefined
+      : String(value);
+  },
+);
+watch([inputElement, thumbValue, min, max, step], valueSync.record, { flush: 'post' });
 
 // The thumb follows the reset with its own input. The composite list of the root has no thumb
 // while `KeepAlive` holds the slider.
@@ -402,27 +404,15 @@ function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   // A range input sends `input` and then `change` for one user action. A `change` is new only when
   // the input did not have its value after the last event or write.
-  if (event.type === 'change' && input.value === handledInputValue) {
+  const isNew = valueSync.isNew(event);
+  if (event.type === 'change' && !isNew) {
     return;
   }
-  handledInputValue = input.value;
 
   handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  void nextTick(writeValueToInput);
-}
-
-// Vue writes the value only when the thumb renders again.
-function writeValueToInput() {
-  const input = inputElement.value;
-  if (!input) {
-    return;
-  }
-  if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
-    input.value = String(thumbValue.value);
-  }
-  handledInputValue = input.value;
+  void nextTick(valueSync.write);
 }
 
 onScopeDispose(
@@ -430,13 +420,13 @@ onScopeDispose(
     take() {
       const input = inputElement.value;
       // Until its take of the hydration, the input holds a value that it got before the hydration.
-      if (!input || (writesValue.value && input.value === handledInputValue)) {
+      if (!input || (writesValue.value && input.value === valueSync.handledValue())) {
         return undefined;
       }
-      handledInputValue = input.value;
+      valueSync.record();
       return { index: thumbIndex.value, value: input.valueAsNumber };
     },
-    writeValue: writeValueToInput,
+    writeValue: valueSync.write,
   }),
 );
 
@@ -650,7 +640,7 @@ provide(SliderThumbContext, {
   inputProps,
   setInputElement,
   inputElement,
-  getHandledInputValue: () => handledInputValue,
+  getHandledInputValue: valueSync.handledValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.
   hasPrehydrationScript: computed(() => inset.value && last.value && renderBeforeHydration.value),
 });

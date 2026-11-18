@@ -72,6 +72,7 @@ import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
+import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -159,9 +160,10 @@ if (valueOfProps !== undefined) {
   setFilled(valueOfProps !== '');
 }
 
-// The value that the input has after the last event that the part handled. A write of Vue, of the
-// part or of a reset sets it too.
-let handledValue: string | undefined;
+const valueSync = useInputValueSync(
+  () => element.value,
+  () => serializedValue.value,
+);
 
 function syncFilled() {
   const currentValue = serializedValue.value ?? (element.value as HTMLInputElement | null)?.value;
@@ -171,7 +173,7 @@ function syncFilled() {
 }
 
 function syncAfterWrite() {
-  handledValue = (element.value as HTMLInputElement | null)?.value;
+  valueSync.record();
   syncFilled();
 }
 
@@ -182,7 +184,8 @@ function syncAfterWrite() {
 // reads the value of the render before `useFormRestoreAsInput` writes a restored value back.
 let holdsHandledValue = false;
 onBeforeUpdate(() => {
-  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+  holdsHandledValue =
+    (element.value as HTMLInputElement | null)?.value === valueSync.handledValue();
 });
 onMounted(syncAfterWrite);
 watch(
@@ -226,9 +229,8 @@ function valueProps() {
 }
 
 function handleInput(event: Event) {
-  const input = event.currentTarget as HTMLInputElement;
-  const inputValue = input.value;
-  handledValue = inputValue;
+  const inputValue = (event.currentTarget as HTMLInputElement).value;
+  valueSync.record();
   const details = createChangeEventDetails(REASON_VALUES.none, event);
   emit('valueChange', inputValue, details);
   if (!details.isCanceled) {
@@ -238,15 +240,7 @@ function handleInput(event: Event) {
   // A controlled value comes from the `value` prop, so a value that the consumer refuses or
   // changes does not reach the state of the field.
   if (props.value !== undefined) {
-    // Vue writes the DOM value only when the part renders. The part does not render when the
-    // consumer keeps its value.
-    nextTick(() => {
-      const expectedValue = serializedValue.value;
-      if (expectedValue !== undefined && input.value !== expectedValue) {
-        input.value = expectedValue;
-      }
-      handledValue = input.value;
-    });
+    void nextTick(valueSync.write);
     return;
   }
 
@@ -263,7 +257,7 @@ function handleInput(event: Event) {
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
 // value is new. Some programs that fill a form send only `change`.
 function handleChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledValue) {
+  if (valueSync.isNew(event)) {
     handleInput(event);
   }
 }
@@ -348,13 +342,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
 // A native reset of the form gives the control its default value and sends no `input` event.
 useFormReset(element, () => {
   const value = (element.value as HTMLInputElement).value;
-  handledValue = value;
+  valueSync.record();
   setFilled(value !== '');
   setDirty(value !== (validityData.value.initialValue ?? ''));
   clearFieldError(value);
 });
 
-useFormRestoreAsInput(element, () => handledValue, true);
+useFormRestoreAsInput(element, valueSync.handledValue, true);
 
 defineExpose({ element });
 </script>

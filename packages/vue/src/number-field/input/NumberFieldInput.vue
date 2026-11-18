@@ -35,6 +35,7 @@ import { useFormContext } from '../../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useInputValueSync } from '../../internals/useInputValueSync';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
@@ -121,24 +122,18 @@ useRegisterFieldControl(
   nameProp,
 );
 
-// The text that the input has after the last event that the part handled. A write of Vue or of
-// the part sets it too.
-let handledText: string | undefined;
+const valueSync = useInputValueSync(
+  () => inputRef.value,
+  () => state.value.inputValue,
+);
 
-// Vue writes the text of the state to the input only when the part renders. React writes it after
-// each event, so a change that the part refuses leaves the input as it was. The part writes the
-// text itself where no render follows. After a paste it also moves the caret behind the pasted
-// text, which the browser would put at the end of the new text.
+// A paste puts the caret after the new text. The browser would put it at the end of the input.
 function writeTextToInput() {
   const input = inputRef.value;
   if (!input) {
     return;
   }
-  const text = state.value.inputValue;
-  if (input.value !== text) {
-    input.value = text;
-  }
-  handledText = input.value;
+  valueSync.write();
   if (pendingCaret !== null) {
     const caret = pendingCaret;
     pendingCaret = null;
@@ -148,9 +143,7 @@ function writeTextToInput() {
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-onMounted(() => {
-  handledText = inputRef.value?.value;
-});
+onMounted(valueSync.record);
 // At the mount the root formats its text again in the runtime locale. Until the hydration ends,
 // the input keeps the text that the user typed, and the `input` event parses it.
 watch(() => (writesValue.value ? state.value.inputValue : undefined), writeTextToInput, {
@@ -286,7 +279,7 @@ function refuseChange(event: Event) {
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const targetValue = input.value;
-  handledText = targetValue;
+  valueSync.record();
 
   // A listener of the consumer can prevent the event before this handler runs.
   if (event.defaultPrevented) {
@@ -342,7 +335,7 @@ function handleCompositionend() {
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
 // value is new. Some programs that fill a form send only `change`.
 function handleChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledText) {
+  if (valueSync.isNew(event)) {
     handleInput(event);
   }
 }

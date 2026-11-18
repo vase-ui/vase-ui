@@ -7,6 +7,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useInputValueSync } from '../../internals/useInputValueSync';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import {
   useFilterDropdownItemContext,
@@ -74,26 +75,17 @@ export function useFilterDropdownInput(
     context.setInputFocusVisible(false);
   }
 
-  // The value that the input has after the last event that the part handled, or after the last
-  // write of Vue or of the part.
-  let handledValue: string | undefined;
+  const valueSync = useInputValueSync(
+    () => inputElement,
+    () => value.value,
+  );
+  onMounted(valueSync.record);
+  watch(() => composingValue.value ?? value.value, valueSync.record, { flush: 'post' });
 
-  function syncHandledValue() {
-    handledValue = inputElement?.value;
-  }
-  onMounted(syncHandledValue);
-  watch(() => composingValue.value ?? value.value, syncHandledValue, { flush: 'post' });
-
-  // Vue writes the DOM value only when the part renders. The part does not render when a listener
-  // cancels the change or the consumer keeps its value.
   function writeValueToInput() {
-    if (inputElement === null || isComposing) {
-      return;
+    if (!isComposing) {
+      valueSync.write();
     }
-    if (inputElement.value !== value.value) {
-      inputElement.value = value.value;
-    }
-    handledValue = inputElement.value;
   }
 
   const compositionTimeout = useTimeout();
@@ -124,7 +116,7 @@ export function useFilterDropdownInput(
     isComposing = false;
     composingValue.value = null;
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    handledValue = nextValue;
+    valueSync.record();
     commitValue(nextValue, event);
     // WebKit sends the last `input` event of a composition after `compositionend`, so the write
     // waits for the next task.
@@ -135,10 +127,9 @@ export function useFilterDropdownInput(
   // value is new.
   function handleInput(event: Event) {
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    if (!isComposing && nextValue === handledValue) {
+    if (!valueSync.isNew(event) && !isComposing) {
       return;
     }
-    handledValue = nextValue;
 
     if (isComposing) {
       composingValue.value = nextValue;

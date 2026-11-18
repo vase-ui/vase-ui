@@ -56,6 +56,7 @@ import type { Group } from '../../internals/resolveValueLabel';
 import type { VaseUIEvent } from '../../internals/types';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
+import { useHiddenInputValueSync } from '../../internals/useInputValueSync';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -1935,32 +1936,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
-  // The value that the input has after the last event that the root handled. A write of Vue or of
-  // the root sets it too.
-  let handledValue: string | undefined;
-
-  // Vue writes the value to the input only when the root renders. A browser can change the input
-  // with no change of the state, such as an autofill.
-  function writeValueToInput() {
-    const input = hiddenInputElement.value;
-    if (input && input.value !== serializedValue.value) {
-      input.value = serializedValue.value;
-    }
-    handledValue = input?.value;
-  }
-
-  // Until the take of the hydration, the input can hold a value that the root did not handle.
-  onMounted(() => {
-    handledValue = writesHiddenValue.value
-      ? hiddenInputElement.value?.value
-      : serializedValue.value;
-  });
-  watch(
-    serializedValue,
-    () => {
-      handledValue = hiddenInputElement.value?.value;
-    },
-    { flush: 'post' },
+  const hiddenValueSync = useHiddenInputValueSync(
+    hiddenInputElement,
+    () => serializedValue.value,
+    writesHiddenValue,
   );
 
   // Handle browser autofill.
@@ -1968,11 +1947,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const input = event.currentTarget as HTMLInputElement;
     const nextValue = input.value;
     // A program can send `input` and `change` in one task. The root handles a value one time.
-    if (nextValue === handledValue) {
+    if (!hiddenValueSync.isNew(event)) {
       return;
     }
-    handledValue = nextValue;
-    void nextTick(writeValueToInput);
+    void nextTick(hiddenValueSync.write);
     if (event.defaultPrevented || disabled.value || readOnly.value) {
       return;
     }
@@ -2088,7 +2066,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   });
 
-  useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
+  useFormRestoreAsInput(hiddenInputElement, hiddenValueSync.handledValue, false);
   useFormEntryValue(hiddenInputElement, () => serializedValue.value);
 
   function hiddenInputProps() {
