@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
+import { readTestRows } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { checkBetter, checkRepository, formatSummary } from './checkRepository.ts';
 import type { BetterRow, FamilyExtract, FamilyFile, UpstreamFile } from './parityFiles.ts';
@@ -152,6 +153,30 @@ test('a family with no problem gives a summary line and makes no project', () =>
   assert.deepEqual(formatSummary(result), [
     'sample: sources 0; type tests 0; cases 0; suite calls 0; 0 Vase UI rows with no upstream row',
     'parity/better: 0 rows, 0 due',
+  ]);
+});
+
+test('the check names the Vase UI path of a file or demo and the Vase UI title of a test', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'parity-names-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const demo = 'docs/demos/sample/base-ui-handler/index.vue';
+  mkdirSync(dirname(join(root, demo)), { recursive: true });
+  writeFileSync(join(root, demo), '');
+  const source = 'packages/vue/src/common/useBaseUiId.ts';
+  const file = 'packages/vue/test/handler.test.ts';
+  const result = checkRepository({
+    parity: makeParity(),
+    files: vaseFiles([source, file]),
+    root,
+    rowsOf: (path) => readTestRows(path, "it('calls preventBaseUIHandler', () => use('base-ui'));"),
+    project: () => {
+      throw new Error('No project expected.');
+    },
+  });
+  assert.deepEqual(result.problems, [
+    `${demo}: rename the file to docs/demos/sample/vase-ui-handler/index.vue.`,
+    `${source}: rename the file to packages/vue/src/common/useVaseUiId.ts.`,
+    `${file}: use "calls preventVaseUIHandler" for the test title "calls preventBaseUIHandler".`,
   ]);
 });
 

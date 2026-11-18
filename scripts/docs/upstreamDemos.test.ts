@@ -614,6 +614,31 @@ function makeOwnRoot(files: Record<string, string>): string {
   return makeRoot({ 'parity/own/sample.json': OWN_RECORD, ...files });
 }
 
+test('the demo record keeps upstream paths and both Vue variants use the Vase UI folder', async () => {
+  const demo = 'prevent-base-ui-handler';
+  const folder = 'docs/demos/sample/prevent-vase-ui-handler';
+  const style = `${demo}/css-modules/index.module.css`;
+  const demos = readTexts(
+    new Map([
+      ...VARIANT_FILES(demo, '<div>Save</div>', '<span className="px-2">Save</span>'),
+      [`${DEMOS}/${style}`, STYLE],
+    ]),
+  );
+  const copies = await expectedFiles('sample', demos);
+  assert.equal(demos.record.files[style], sha256(STYLE));
+  assert.equal(copies.get(`${folder}/css-modules/index.module.css`), STYLE);
+
+  const root = makeRoot({
+    ...Object.fromEntries(copies),
+    'parity/families/sample.json': JSON.stringify(BUTTON),
+    [`${folder}/css-modules/index.vue`]: '<template><div>Save</div></template>',
+    [`${folder}/tailwind/index.vue`]: '<template><span class="px-2">Save</span></template>',
+  });
+  const families = loadDemoFamilies(root);
+  assert.deepEqual(families[0].vueClasses.get(`${demo}/tailwind`), { span: ['px-2'] });
+  assert.deepEqual(checkDemos(families, ENTRY_POINTS), []);
+});
+
 test('an own component with a page and a demo folder is a demo family with no record, and the command leaves it out', () => {
   const root = makeOwnRoot({ 'docs/demos/sample/upstream.json': 'not a record' });
   assert.deepEqual(

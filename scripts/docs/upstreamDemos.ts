@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { format, resolveConfig } from 'prettier';
 import ts from 'typescript';
 import type { FamilyFile } from '../parity/parityFiles.ts';
-import { DOCS_FOLDER_PREFIX, VASE_SOURCE_ROOT } from '../parity/paths.ts';
+import { DOCS_FOLDER_PREFIX, toVaseName, VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
   familyFile,
@@ -150,21 +150,9 @@ function sortedUnique(names: string[]): string[] {
   return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'en'));
 }
 
-/** The name of the Vue folder of the demo of Base UI `demo`. */
-function vueDemoName(family: string, demo: string): string {
-  return VUE_DEMO_NAMES[family]?.[demo] ?? demo;
-}
-
-/** The name of the demo of Base UI that the Vue folder `vueDemo` holds. */
-function upstreamDemoName(family: string, vueDemo: string): string {
-  const names = Object.entries(VUE_DEMO_NAMES[family] ?? {});
-  return names.find(([, name]) => name === vueDemo)?.[0] ?? vueDemo;
-}
-
-/** The Vue folder of a folder of Base UI, both by their paths from the folder of the demos. */
-function vueFolder(family: string, upstreamFolder: string): string {
-  const [demo, ...rest] = upstreamFolder.split('/');
-  return [vueDemoName(family, demo), ...rest].join('/');
+function vueDemoPath(family: string, upstreamPath: string): string {
+  const [demo, ...rest] = upstreamPath.split('/');
+  return toVaseName([VUE_DEMO_NAMES[family]?.[demo] ?? demo, ...rest].join('/'));
 }
 
 /** The strings of `strings` that `other` does not have. A repeated string counts as often as it repeats. */
@@ -325,7 +313,7 @@ export async function expectedFiles(
   return new Map([
     [recordPath(name), record],
     ...[...demos.styles].map(([path, text]): [string, string] => [
-      `${demosFolder(name)}/${path}`,
+      `${demosFolder(name)}/${vueDemoPath(name, path)}`,
       text,
     ]),
   ]);
@@ -362,10 +350,13 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         `${recordPath(name)}: the record was read at commit ${record.commit}, but matchedCommit of ${name} is ${matchedCommit}. ${rerun}`,
       );
     }
-    for (const [path, hash] of Object.entries(record.files)) {
-      if (!path.endsWith('.css')) {
+    const styles = new Set<string>();
+    for (const [upstreamPath, hash] of Object.entries(record.files)) {
+      if (!upstreamPath.endsWith('.css')) {
         continue;
       }
+      const path = vueDemoPath(name, upstreamPath);
+      styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
       } else if (files.get(path) !== hash) {
@@ -375,7 +366,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
     }
     for (const path of [...files.keys()].filter((file) => file.endsWith('.css'))) {
-      if (!(path in record.files)) {
+      if (!styles.has(path)) {
         problems.push(
           `${folder}/${path} is not in ${recordPath(name)}. Base UI has no such style sheet. Delete the file.`,
         );
@@ -387,7 +378,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         continue;
       }
       const [, demo, variant] = match;
-      const vueFile = `${vueDemoName(name, demo)}/${variant}/index.vue`;
+      const vueFile = `${vueDemoPath(name, demo)}/${variant}/index.vue`;
       const waits = (record.entryPoints?.[demo] ?? []).some(
         (entryPoint) => !entryPoints.has(entryPoint),
       );
@@ -407,25 +398,30 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       const differences = rowDifferences(expected, vueRow);
       if (differences.length > 0) {
         problems.push(
-          `${folder}/${vueFolder(name, key)} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,
+          `${folder}/${vueDemoPath(name, key)} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,
         );
       }
     }
     const recordedFolders = new Set(
-      Object.keys(record.files).flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
+      Object.keys(record.files)
+        .flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? [])
+        .map((demo) => vueDemoPath(name, demo)),
     );
     const vueFolders = new Set(
       [...files.keys()].flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
     );
     for (const vueDemo of vueFolders) {
-      if (!recordedFolders.has(upstreamDemoName(name, vueDemo))) {
+      if (!recordedFolders.has(vueDemo)) {
         problems.push(
           `${folder}/${vueDemo}/${TAILWIND_FOLDER} is not in ${recordPath(name)}. ${rerun} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
         );
       }
     }
+    const differentVariants = new Set(
+      record.differentVariants?.map((demo) => vueDemoPath(name, demo)),
+    );
     for (const [vueDemo, { form, text }] of vueVariants) {
-      const differs = record.differentVariants?.includes(upstreamDemoName(name, vueDemo)) ?? false;
+      const differs = differentVariants.has(vueDemo);
       if (!differs && form !== undefined) {
         problems.push(
           `${folder}/${vueDemo}: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${form}. Make the two demos equal apart from the classes.`,
@@ -552,7 +548,7 @@ function readDemoFiles(directory: string): DemoFile[] {
 function readVueClasses(name: string, folder: string, keys: string[]): Map<string, ClassRow> {
   return new Map(
     keys.flatMap((key): [string, ClassRow][] => {
-      const files = readDemoFiles(join(folder, vueFolder(name, key)));
+      const files = readDemoFiles(join(folder, vueDemoPath(name, key)));
       return files.length === 0 ? [] : [[key, classRowOfVue(files)]];
     }),
   );

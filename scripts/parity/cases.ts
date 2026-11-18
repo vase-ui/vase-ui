@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { toVaseName } from './paths.ts';
 
 export interface CaseRow {
   describe: string[];
@@ -16,6 +17,24 @@ export type TestRow = CaseRow | SuiteRow;
 
 export function isSuiteRow(row: TestRow): row is SuiteRow {
   return 'suite' in row;
+}
+
+export function titlesOf(row: TestRow): string[] {
+  return isSuiteRow(row) ? row.describe : [...row.describe, row.title];
+}
+
+export function checkTitleNames(
+  path: string,
+  rows: TestRow[],
+  upstreamRows: TestRow[] = [],
+): string[] {
+  // A title of our own can name the upstream project, as in "rules with no Base UI case".
+  const ported = new Set(upstreamRows.flatMap(titlesOf).map((title) => toVaseName(title, 'title')));
+  return [...new Set(rows.flatMap(titlesOf))].flatMap((title) => {
+    const vaseTitle = toVaseName(title, 'title');
+    const name = ported.has(vaseTitle) ? vaseTitle : toVaseName(title);
+    return name === title ? [] : [`${path}: use "${name}" for the test title "${title}".`];
+  });
 }
 
 interface Declaration {

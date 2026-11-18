@@ -164,8 +164,8 @@ export function readParityFiles(root: string, options: { readExtracts: boolean }
   return { upstream, families: [...names.values()], ownComponents, better, problems };
 }
 
-export function listVaseFiles(root: string): string[] {
-  return VASE_ROOTS.flatMap((folder) => {
+export function listVaseFiles(root: string, folders = VASE_ROOTS): string[] {
+  return folders.flatMap((folder) => {
     const path = join(root, folder);
     if (!existsSync(path)) {
       return [];
