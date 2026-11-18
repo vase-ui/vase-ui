@@ -34,15 +34,16 @@ export function useControlled<T = unknown>(
   const local = shallowRef<T>();
   local.value = useControlledDefault(props);
   const parent = computed(props.controlled);
-  // A local write can follow the release of the prop in the same task.
+  // A sync listener can read and write the model before a watcher of the release runs.
+  // Save the parent's value while it still owns the prop.
   watch(
     parent,
-    (value, previous) => {
-      if (value === undefined) {
-        local.value = previous;
+    (value) => {
+      if (value !== undefined) {
+        local.value = value;
       }
     },
-    { flush: 'sync' },
+    { flush: 'sync', immediate: true },
   );
 
   return computed({

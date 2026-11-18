@@ -1,5 +1,5 @@
 import { expect, describe, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, shallowRef, watch } from 'vue';
 import type { WritableComputedRef } from 'vue';
 import { createRenderer, flushMicrotasks, takeReportedMessages } from '#test-utils';
 import { useControlled } from './useControlled';
@@ -103,6 +103,36 @@ describe('useControlled', () => {
     await flushMicrotasks();
     expect(model.value).toBe('next');
     expect(takeReportedMessages()).toEqual([]);
+  });
+
+  it('VUE-141: lets a synchronous release listener read the last value and write the next one', async () => {
+    const prop = shallowRef<string | undefined>('first');
+    let model!: WritableComputedRef<string>;
+    let valueOnRelease: string | undefined;
+    const Part = defineComponent(() => {
+      watch(
+        prop,
+        (value) => {
+          if (value === undefined) {
+            valueOnRelease = model.value;
+            model.value = 'local';
+          }
+        },
+        { flush: 'sync' },
+      );
+      model = useControlled({
+        controlled: () => prop.value,
+        default: () => 'initial',
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
+
+    prop.value = 'last';
+    prop.value = undefined;
+    expect(valueOnRelease).toBe('last');
+    expect(model.value).toBe('local');
   });
 
   it('keeps the same array when a parent releases a derived selection', async () => {
