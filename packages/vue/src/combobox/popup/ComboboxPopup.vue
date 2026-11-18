@@ -69,7 +69,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import { getComboboxPopupId } from '../root/utils';
@@ -115,18 +115,6 @@ const state = computed<ComboboxPopupState>(() => ({
   empty: empty.value,
 }));
 
-let popupElement: HTMLElement | null = null;
-
-function setPopupElement(popup: HTMLElement | null) {
-  // A compiled template can mount a new popup before it unmounts the old one. The old one then must
-  // not clear the element of the new one.
-  if (popup !== null || store.context.popupRef.value === popupElement) {
-    store.context.popupRef.value = popup;
-    store.set('popupElement', popup);
-  }
-  popupElement = popup;
-}
-
 function handleFocusin(event: FocusEvent) {
   const target = getTarget(event) as Element | null;
   if (
@@ -137,9 +125,12 @@ function handleFocusin(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  ComboboxPopupState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement),
+  ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

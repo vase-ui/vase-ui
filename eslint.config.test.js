@@ -70,6 +70,20 @@ const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" /
 
 const reported = [
   {
+    name: 'a direct popup element write in a part',
+    file: `${SRC}/DialogPopup.vue`,
+    code: docsSfc("store.set('popupElement', element);"),
+    ruleId: 'no-restricted-syntax',
+    hint: 'createElementSetter',
+  },
+  {
+    name: 'a direct list element write in a composable',
+    file: `${SRC}/useList.ts`,
+    code: "store.set('listElement', element);",
+    ruleId: 'no-restricted-syntax',
+    hint: 'createElementSetter',
+  },
+  {
     name: 'conditional part forms inside template v-if',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
@@ -1085,6 +1099,16 @@ const reported = [
 ];
 
 const passed = [
+  {
+    name: 'a popup element write in the shared setter',
+    file: 'packages/vue/src/utils/popups/createElementSetter.ts',
+    code: "store.set('popupElement', element);",
+  },
+  {
+    name: 'a different store key and a list element in a map',
+    file: `${SRC}/useList.ts`,
+    code: "store.set('listElementId', id); map.set('listElement', element);",
+  },
   {
     name: 'a root node read at the event',
     file: `${SRC}/useRoot.ts`,

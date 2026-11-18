@@ -38,6 +38,7 @@ import { computed } from 'vue';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
@@ -72,21 +73,12 @@ const state = computed<TooltipPopupState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-let popupElement: HTMLElement | null = null;
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  TooltipPopupState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: [
-    (popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old one then
-      // must not clear the element of the new one.
-      if (popup !== null || store.context.popupRef.value === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    },
-  ],
+  ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,

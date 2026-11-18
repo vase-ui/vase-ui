@@ -169,7 +169,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
 import { useDrawerViewportContext } from '../viewport/DrawerViewportContext';
@@ -411,19 +411,17 @@ function popupStyle(): CSSProperties {
   };
 }
 
-function setPopup(popup: HTMLElement | null) {
-  // A compiled template can mount a new popup before it unmounts the old one. The old one then
-  // must not clear the element of the new one.
-  if (popup !== null || popupRef.value === ownPopup) {
-    popupRef.value = popup;
-    store.set('popupElement', popup);
-  }
-  ownPopup = popup;
-}
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  DrawerPopupState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopup),
+  ref: [
+    createElementSetter(popupElementTarget(store)),
+    (popup) => {
+      ownPopup = popup;
+    },
+  ],
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

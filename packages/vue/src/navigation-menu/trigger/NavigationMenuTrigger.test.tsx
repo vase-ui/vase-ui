@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
-import type { PropType } from 'vue';
+import type { PropType, VNodeChild } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createHeldBranch,
@@ -816,6 +816,20 @@ describe('<NavigationMenu.Trigger />', () => {
     );
   }
 
+  function inOuterMenu(menu: () => VNodeChild) {
+    return (
+      <NavigationMenu.Root defaultValue="outer">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="outer">
+            <NavigationMenu.Trigger>Outer</NavigationMenu.Trigger>
+            <NavigationMenu.Content>{menu()}</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        {renderPositionedViewport()}
+      </NavigationMenu.Root>
+    );
+  }
+
   async function renderViewportOutOfDocument(popup: ViewportOutOfDocument, defaultValue = 'one') {
     const reasons: string[] = [];
     const handleValueChange = (
@@ -837,19 +851,7 @@ describe('<NavigationMenu.Trigger />', () => {
     );
     const result = await render(() => (
       <div>
-        {isInline ? (
-          <NavigationMenu.Root defaultValue="outer">
-            <NavigationMenu.List>
-              <NavigationMenu.Item value="outer">
-                <NavigationMenu.Trigger>Outer</NavigationMenu.Trigger>
-                <NavigationMenu.Content>{renderMenu()}</NavigationMenu.Content>
-              </NavigationMenu.Item>
-            </NavigationMenu.List>
-            {renderPositionedViewport()}
-          </NavigationMenu.Root>
-        ) : (
-          renderMenu()
-        )}
+        {isInline ? inOuterMenu(renderMenu) : renderMenu()}
         <button data-testid="after">After</button>
       </div>
     ));
@@ -1041,6 +1043,44 @@ describe('<NavigationMenu.Trigger />', () => {
 
       return { deactivateAndActivate };
     }
+
+    it('closes the active item on a click while KeepAlive holds the positioner', async () => {
+      await renderViewportOutOfDocument('held');
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      await fireEvent.click(trigger);
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('keeps the content in the element of an inline viewport while KeepAlive holds the viewport', async () => {
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <NavigationMenu.Viewport data-testid="inline-viewport" />,
+        { renderBranch: (part) => part, mounted: true },
+      );
+      await render(() =>
+        inOuterMenu(() => (
+          <NavigationMenu.Root defaultValue="one">
+            {renderItems()}
+            <HeldBranch />
+          </NavigationMenu.Root>
+        )),
+      );
+      const viewport = screen.getByTestId('inline-viewport');
+      const content = screen.getByText('Link of one').parentElement!;
+      const target = content.parentElement!;
+      expect(target.parentElement).toBe(viewport);
+
+      await hide();
+
+      expect(viewport.isConnected).toBe(false);
+      expect(content.parentElement).toBe(target);
+      await show();
+
+      expect(viewport.isConnected).toBe(true);
+      expect(target.contains(screen.getByText('Link of one'))).toBe(true);
+    });
 
     it('closes a menu that hover opened', async () => {
       const { deactivateAndActivate } = await renderKeptMenu();
