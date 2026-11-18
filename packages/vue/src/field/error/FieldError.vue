@@ -33,7 +33,7 @@ export interface FieldErrorProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watchSyncEffect } from 'vue';
+import { computed, provide, shallowRef, watchEffect } from 'vue';
 import type { Component } from 'vue';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -105,7 +105,7 @@ useRegisteredMessageId(
 
 // The default slot can supply other text until the exit.
 const message = shallowRef<string | string[] | null | undefined>(null);
-watchSyncEffect(() => {
+watchEffect(() => {
   if (rendered.value) {
     const { error, errors } = validityData.value;
     const current =

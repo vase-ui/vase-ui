@@ -126,7 +126,6 @@ const dirtyState = shallowRef(false);
 const filled = shallowRef(false);
 const focused = shallowRef(false);
 
-// A validator in the same task must see the new dirty prop.
 const markedDirtyRef = shallowRef(props.dirty ?? false);
 watch(
   () => props.dirty,
@@ -135,7 +134,6 @@ watch(
       markedDirtyRef.value = dirtyProp;
     }
   },
-  { flush: 'sync' },
 );
 
 function setDirty(value: boolean) {

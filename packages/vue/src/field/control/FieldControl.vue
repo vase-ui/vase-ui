@@ -335,7 +335,6 @@ watch(
   () => {
     lastInputText = undefined;
   },
-  { flush: 'sync' },
 );
 
 // A native reset of the form gives the control its default value and sends no `input` event.
