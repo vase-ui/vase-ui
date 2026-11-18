@@ -146,7 +146,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const controlId = useVaseUiId(() => props.id);
 const clearFieldError = useClearFieldError(inputName);
 
-const [checkedValue, setCheckedValueState] = useControlled<Value>({
+const checkedValue = useControlled<Value>({
   controlled: () => props.value,
   default: () => props.defaultValue,
   name: 'RadioGroup',
@@ -195,7 +195,7 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
   }
 
   emit('update:value', value);
-  setCheckedValueState(value);
+  checkedValue.value = value;
   inputSyncRequest.value += 1;
 }
 

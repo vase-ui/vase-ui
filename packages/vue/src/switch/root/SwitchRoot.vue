@@ -205,7 +205,7 @@ const controlId = useLabelableId({
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
-const [isChecked, setCheckedState] = useControlled({
+const isChecked = useControlled({
   controlled: () => props.checked,
   default: () => props.defaultChecked,
   name: 'Switch',
@@ -266,7 +266,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
   }
 
   emit('update:checked', nextChecked);
-  setCheckedState(nextChecked);
+  isChecked.value = nextChecked;
   return true;
 }
 

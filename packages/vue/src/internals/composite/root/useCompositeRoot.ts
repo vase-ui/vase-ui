@@ -66,7 +66,7 @@ export function useCompositeRoot<Metadata>(
   const id = useId();
   const hasUnmountedTabStop = shallowRef(false);
 
-  const [highlightedIndex, setHighlightedIndex] = useControlled({
+  const highlightedIndex = useControlled({
     controlled: () => toValue(params.highlightedIndex),
     default: () => 0,
     name: 'CompositeRoot',
@@ -83,7 +83,7 @@ export function useCompositeRoot<Metadata>(
   function onHighlightedIndexChange(index: number, shouldScrollIntoView = false) {
     highlightedElement = elementsRef.value[index] ?? null;
     params.onHighlightedIndexChange?.(index);
-    setHighlightedIndex(index);
+    highlightedIndex.value = index;
     if (shouldScrollIntoView) {
       const newActiveItem = elementsRef.value[index];
       scrollIntoViewIfNeeded(rootElement, newActiveItem, direction.value, getOrientation());

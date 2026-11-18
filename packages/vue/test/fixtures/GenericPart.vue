@@ -54,7 +54,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, GenericPartState>;
 }>();
 
-const [value, setValue] = useControlled({
+const value = useControlled({
   controlled: () => props.value,
   default: () => props.defaultValue,
   name: 'GenericPart',
@@ -70,7 +70,7 @@ function handleClick(event: MouseEvent) {
     return;
   }
   emit('update:value', props.option);
-  setValue(props.option);
+  value.value = props.option;
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

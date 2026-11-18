@@ -241,22 +241,15 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
 
-    it('warns when it changes from controlled to uncontrolled', async () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-      onTestFinished(() => {
-        error.mockRestore();
-      });
-      const layout = shallowRef<Record<string, number> | undefined>({ a: 50, b: 50, c: 0 });
+    it('resizes from the last layout when the parent releases it', async () => {
+      const layout = shallowRef<Record<string, number> | undefined>({ a: 20, b: 30, c: 50 });
       await render(() => <Three root={{ layout: layout.value }} />);
 
       layout.value = undefined;
       await nextTick();
-
-      expect(error).toHaveBeenCalledExactlyOnceWith(
-        expect.stringMatching(
-          /^Vase UI: A component is changing the controlled layout state of Resizable to be uncontrolled\./,
-        ),
-      );
+      expect(grows('a', 'b', 'c')).toEqual(['20', '30', '50']);
+      await drag('handle-a', 100);
+      expect(grows('a', 'b', 'c')).toEqual(['30', '20', '50']);
     });
   });
 

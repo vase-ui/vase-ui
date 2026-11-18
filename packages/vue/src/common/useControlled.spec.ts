@@ -1,49 +1,45 @@
-import type { ComputedRef } from 'vue';
+import type { WritableComputedRef } from 'vue';
 import { expectType } from './testUtils';
 import { useControlled } from './useControlled';
 
 function AcceptsOptionalDefault(props: { open?: boolean; defaultOpen?: boolean }) {
-  const [open, setOpen] = useControlled({
+  const open = useControlled({
     controlled: () => props.open,
     default: () => props.defaultOpen,
     name: 'Popup',
   });
 
-  expectType<ComputedRef<boolean | undefined>, typeof open>(open);
-  expectType<(newValue: boolean | undefined) => void, typeof setOpen>(setOpen);
+  expectType<WritableComputedRef<boolean | undefined>, typeof open>(open);
 }
 
 function AcceptsDefinedDefault(props: { open?: boolean }) {
-  const [open, setOpen] = useControlled({
+  const open = useControlled({
     controlled: () => props.open,
     default: () => false,
     name: 'Popup',
   });
 
-  expectType<ComputedRef<boolean>, typeof open>(open);
-  expectType<(newValue: boolean) => void, typeof setOpen>(setOpen);
+  expectType<WritableComputedRef<boolean>, typeof open>(open);
 }
 
 function AcceptsOptionalDefaultWithExplicitType(props: { open?: boolean; defaultOpen?: boolean }) {
-  const [open, setOpen] = useControlled<boolean>({
+  const open = useControlled<boolean>({
     controlled: () => props.open,
     default: () => props.defaultOpen,
     name: 'Popup',
   });
 
-  expectType<ComputedRef<boolean | undefined>, typeof open>(open);
-  expectType<(newValue: boolean | undefined) => void, typeof setOpen>(setOpen);
+  expectType<WritableComputedRef<boolean | undefined>, typeof open>(open);
 }
 
 function AcceptsDefinedDefaultWithExplicitType(props: { open?: boolean }) {
-  const [open, setOpen] = useControlled<boolean>({
+  const open = useControlled<boolean>({
     controlled: () => props.open,
     default: () => false,
     name: 'Popup',
   });
 
-  expectType<ComputedRef<boolean>, typeof open>(open);
-  expectType<(newValue: boolean) => void, typeof setOpen>(setOpen);
+  expectType<WritableComputedRef<boolean>, typeof open>(open);
 }
 
 void AcceptsOptionalDefault;

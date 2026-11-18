@@ -114,7 +114,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuCheckboxItemState>;
 }>();
 
-const [isChecked, setChecked] = useControlled({
+const isChecked = useControlled({
   controlled: () => props.checked,
   default: () => props.defaultChecked,
   name: 'MenuCheckboxItem',
@@ -163,7 +163,7 @@ function handleClick(event: MouseEvent) {
   }
 
   emit('update:checked', nextChecked);
-  setChecked(nextChecked);
+  isChecked.value = nextChecked;
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

@@ -248,6 +248,22 @@
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
       "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.test.tsx",
+      "describe": ["useControlled"],
+      "title": "warns when switching from uncontrolled to controlled",
+      "kind": "replaced",
+      "test": "packages/vue/src/common/useControlled.test.tsx",
+      "reason": "VUE-141 (B3): A parent can take control after mount. The case checks the new value and the absence of a warning."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.test.tsx",
+      "describe": ["useControlled"],
+      "title": "warns and falls back to the default when switching from controlled to uncontrolled",
+      "kind": "replaced",
+      "test": "packages/vue/src/common/useControlled.test.tsx",
+      "reason": "VUE-141 (B3): When the parent releases the prop, the part keeps the last value and accepts a local write."
     }
   ],
   "surfaceAdditions": [],

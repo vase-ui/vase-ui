@@ -252,7 +252,7 @@ const enableInline = computed(
 const staticItems = computed(() => props.mode === 'inline' || props.mode === 'none');
 
 const isControlled = computed(() => props.value !== undefined);
-const [typedValue, setTypedValue] = useControlled<ComboboxInputElementValue>({
+const typedValue = useControlled<ComboboxInputElementValue>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? '',
   name: 'Autocomplete',
@@ -404,7 +404,7 @@ const { actions, inputElement, hiddenInputProps, setHiddenInputElement } = useAr
       if (eventDetails.isCanceled) {
         return;
       }
-      setTypedValue(value);
+      typedValue.value = value;
       emit('update:value', value);
     },
     onOpenChange(open, eventDetails) {

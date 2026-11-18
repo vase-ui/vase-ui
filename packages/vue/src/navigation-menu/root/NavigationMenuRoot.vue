@@ -153,7 +153,7 @@ defineSlots<{
 const nested = useFloatingParentNodeId().value != null;
 const parentRootContext = useNavigationMenuRootContext(true);
 
-const [currentValue, setValueUnwrapped] = useControlled<Value | null>({
+const currentValue = useControlled<Value | null>({
   controlled: () => props.value,
   default: () => props.defaultValue,
   name: 'NavigationMenu',
@@ -298,7 +298,7 @@ function setValue(
   if (changed) {
     emit('update:value', nextValue);
   }
-  setValueUnwrapped(nextValue);
+  currentValue.value = nextValue;
 
   if (
     nested &&

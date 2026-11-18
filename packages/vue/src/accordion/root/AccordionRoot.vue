@@ -142,7 +142,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const itemList = useCompositeList({ elementsRef: shallowRef([]), provide: false });
 
-const [openValues, setOpenValues] = useControlled<AccordionValue<Value>>({
+const openValues = useControlled<AccordionValue<Value>>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
   controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
@@ -170,7 +170,7 @@ function handleValueChange(
     return;
   }
   emit('update:value', nextValue);
-  setOpenValues(nextValue);
+  openValues.value = nextValue;
 }
 
 const state = computed<AccordionRootState<Value>>(() => ({

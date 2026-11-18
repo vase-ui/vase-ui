@@ -15,7 +15,7 @@ export function useCollapsibleRoot(
 ): UseCollapsibleRootReturnValue {
   const { onOpenChange } = parameters;
 
-  const [open, setOpen] = useControlled({
+  const open = useControlled({
     controlled: () => toValue(parameters.open),
     default: () => toValue(parameters.defaultOpen) ?? false,
     name: 'Collapsible',
@@ -46,7 +46,7 @@ export function useCollapsibleRoot(
       return;
     }
 
-    setOpen(nextOpen);
+    open.value = nextOpen;
   }
 
   return {
@@ -58,7 +58,9 @@ export function useCollapsibleRoot(
     panelId,
     registerPanelId,
     setMounted,
-    setOpen,
+    setOpen(nextOpen) {
+      open.value = nextOpen;
+    },
     transitionStatus,
   };
 }

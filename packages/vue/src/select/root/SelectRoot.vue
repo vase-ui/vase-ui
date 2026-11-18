@@ -284,7 +284,7 @@ function getDefaultValue() {
   return isMultiple.value ? (props.defaultValue ?? EMPTY_ARRAY) : props.defaultValue;
 }
 
-const [selectedValue, setSelectedValue] = useControlled<any>({
+const selectedValue = useControlled<any>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
   controlled: () => (isMultiple.value && props.value === null ? EMPTY_ARRAY : props.value),
   default: getDefaultValue,
@@ -515,7 +515,7 @@ function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails)
   }
 
   emit('update:value', nextValue);
-  setSelectedValue(nextValue);
+  selectedValue.value = nextValue;
   return true;
 }
 

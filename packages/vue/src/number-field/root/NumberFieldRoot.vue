@@ -309,7 +309,7 @@ function setHiddenInputElement(next: unknown) {
 const controlId = useLabelableId({ id: () => props.id, element: inputRef });
 const inputId = useReferencedId(() => controlId.value, inputRef);
 
-const [numberValue, setValueUnwrapped] = useControlled<number | null>({
+const numberValue = useControlled<number | null>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? null,
   name: 'NumberField',
@@ -478,7 +478,7 @@ function setValue(
     }
 
     emit('update:value', validatedValue);
-    setValueUnwrapped(validatedValue);
+    numberValue.value = validatedValue;
     setDirty(validatedValue !== validityData.value.initialValue);
     hasPendingCommitRef.value = true;
   }

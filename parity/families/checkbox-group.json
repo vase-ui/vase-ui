@@ -7,6 +7,14 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "describe": ["<CheckboxGroup />", "prop: value"],
+      "title": "treats a controlled value that becomes undefined as an empty array",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.test.tsx",
+      "reason": "VUE-141 (B3): The group retains the last selection when the parent releases its value. A click can then change the selection."
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
       "describe": ["<CheckboxGroup />", "Field.Label"],
       "title": "keeps checkbox ids unique in a shared Field.Root during SSR (nativeButton=%s)",
       "kind": "replaced",

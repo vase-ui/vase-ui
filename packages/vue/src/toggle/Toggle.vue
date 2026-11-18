@@ -120,7 +120,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
   watch([() => props.value, groupContext.isValueInitialized], checkValue);
 }
 
-const [isPressed, setPressedState] = useControlled({
+const isPressed = useControlled({
   controlled: () =>
     groupContext ? groupContext.value.value.includes(groupItemValue.value) : props.pressed,
   default: () => props.defaultPressed,
@@ -157,7 +157,7 @@ function onClick(event: MouseEvent) {
   }
 
   emit('update:pressed', nextPressed);
-  setPressedState(nextPressed);
+  isPressed.value = nextPressed;
 }
 
 // A disabled toggle cannot hold the roving focus. The toolbar makes its `disabledIndices` from

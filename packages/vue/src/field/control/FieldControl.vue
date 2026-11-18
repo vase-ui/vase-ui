@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, shallowRef, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -135,6 +135,12 @@ const serializedValue = computed(() => (props.value == null ? undefined : String
 const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
+const releasedText = shallowRef<string>();
+watch(serializedValue, (value, previous) => {
+  if (value === undefined) {
+    releasedText.value = previous;
+  }
+});
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
@@ -167,10 +173,21 @@ function syncFilled() {
   if (currentValue !== undefined) {
     setFilled(currentValue !== '');
   }
+  return currentValue;
 }
 
 onMounted(syncFilled);
-watch([serializedValue, serializedDefaultValue], syncFilled, { flush: 'post' });
+watch(
+  [serializedValue, serializedDefaultValue],
+  ([value], [previous]) => {
+    const text = syncFilled();
+    if (value === undefined && previous !== undefined) {
+      // The browser can sanitize the text. Compare pageshow with the value after Vue's patch.
+      lastInputText = text;
+    }
+  },
+  { flush: 'post' },
+);
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {
@@ -189,9 +206,15 @@ const enterValidationTimeout = useTimeout();
 // A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
-function valueProps(): Pick<FieldControlProps, 'value' | 'defaultValue'> | undefined {
+function valueProps():
+  (Pick<FieldControlProps, 'value' | 'defaultValue'> & { '.value'?: string }) | undefined {
   if (props.value !== undefined) {
     return writesValue.value ? inputRender.valueProps() : undefined;
+  }
+  if (releasedText.value !== undefined && writesValue.value) {
+    // Removing `value` clears the input. The property binding restores the text once, so later
+    // renders leave native edits alone. The default still belongs to form.reset().
+    return { '.value': releasedText.value, defaultValue: props.defaultValue ?? '' };
   }
   if (props.defaultValue === undefined) {
     return undefined;

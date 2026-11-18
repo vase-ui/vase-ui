@@ -227,6 +227,23 @@ describe('<TimePicker.Clock />', () => {
       });
     });
 
+    it('keeps the last view after a refused request and a release', async () => {
+      const onUpdateView = vi.fn();
+      const { setProps } = await renderClock(
+        { granularity: 'second', closeOnSelect: false },
+        { view: 'minute', 'onUpdate:view': onUpdateView },
+      );
+      await pressAt(90);
+      const clock = screen.getByTestId('clock');
+      expect(onUpdateView).toHaveBeenCalledExactlyOnceWith('second');
+      expect(clock).toHaveAttribute('data-view', 'minute');
+
+      await setProps({ clockProps: {} });
+      expect(clock).toHaveAttribute('data-view', 'minute');
+      await pressAt(180);
+      expect(clock).toHaveAttribute('data-view', 'second');
+    });
+
     it('takes the view and the steps of the consumer', async () => {
       await renderClock({}, { defaultView: 'minute', minuteStep: 15 });
 

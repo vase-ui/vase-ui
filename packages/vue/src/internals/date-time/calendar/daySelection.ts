@@ -85,7 +85,7 @@ export function useDaySelection(
   props: DaySelectionProps,
   emit: DaySelectionEmit,
 ): CalendarSelection<CalendarChangeEventDetails> {
-  const [value, setValue] = useControlled<DayValueInput>({
+  const value = useControlled<DayValueInput>({
     controlled: () => props.value,
     default: () => props.defaultValue ?? (props.multiple ? EMPTY_ARRAY : null),
     name: 'Calendar',
@@ -125,7 +125,7 @@ export function useDaySelection(
       return;
     }
     emit('update:value', next);
-    setValue(next);
+    value.value = next;
   }
 
   function add(date: Temporal.PlainDate, details: CalendarChangeEventDetails) {

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-141",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useControlled.ts#L38-L61",
+    "https://vuejs.org/guide/components/v-model.html#under-the-hood"
+  ],
+  "behavior": "For parts that use the shared model helper, a defined prop gives the parent control, even without an update listener. When the parent sets the prop to undefined, the part keeps the last parent value and accepts local writes. Neither transfer produces a mode-change warning.",
+  "dueWith": "packages/utils/src/useControlled.ts"
+}

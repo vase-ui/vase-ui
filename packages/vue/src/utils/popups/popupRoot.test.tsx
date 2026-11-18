@@ -972,29 +972,64 @@ describe('usePopupRoot', () => {
       expect(inside.current.store.context.nested).toBe(true);
     });
 
-    it.each([
-      { name: 'open', props: { open: true } },
-      { name: 'triggerId', props: { triggerId: 'trigger' } },
-    ])(
-      'warns when the $name prop changes from uncontrolled to controlled',
-      async ({ name, props }) => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        const { setProps } = await render(
-          <PopupRootPart>
-            <TriggerAndPopup />
-          </PopupRootPart>,
-        );
-        expect(errorSpy).not.toHaveBeenCalled();
+    it('hands the open popup and its active trigger back to the root', async () => {
+      const { setProps, getByText, getByRole } = await render(
+        <PopupRootPart>
+          <PopupTriggerPart id="a">A</PopupTriggerPart>
+          <PopupTriggerPart id="b">B</PopupTriggerPart>
+          <PopupPart>popup</PopupPart>
+        </PopupRootPart>,
+      );
+      const a = getByText('A');
+      const b = getByText('B');
+      await setProps({ open: true, triggerId: 'b' });
+      expect(b).toHaveAttribute('aria-expanded', 'true');
+      await fireEvent.click(a);
+      expect(b).toHaveAttribute('aria-expanded', 'true');
 
-        await setProps(props);
+      await setProps({ open: undefined, triggerId: undefined });
+      expect(getByRole('dialog')).toBeVisible();
+      expect(b).toHaveAttribute('aria-expanded', 'true');
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'true');
+      expect(b).toHaveAttribute('aria-expanded', 'false');
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'false');
+    });
 
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy.mock.calls[0][0]).toContain(
-          `Vase UI: A component is changing the uncontrolled ${name} state of PopupRootPart to be controlled.`,
-        );
-        errorSpy.mockRestore();
-      },
-    );
+    it('VUE-142: clears the active trigger when the parent refuses a press and sets null', async () => {
+      const root = createRootRef();
+      const triggerId = shallowRef<string | null | undefined>('b');
+      const { getByText, getByRole } = await render(() => (
+        <PopupRootPart ref={root.ref} open triggerId={triggerId.value}>
+          <PopupTriggerPart id="a">A</PopupTriggerPart>
+          <PopupTriggerPart id="b">B</PopupTriggerPart>
+          <PopupPart>popup</PopupPart>
+        </PopupRootPart>
+      ));
+      const a = getByText('A');
+      const b = getByText('B');
+      await fireEvent.click(a);
+      expect(b).toHaveAttribute('aria-expanded', 'true');
+
+      triggerId.value = null;
+      await flushMicrotasks();
+      expect(getByRole('dialog')).toBeVisible();
+      expect(a).toHaveAttribute('aria-expanded', 'false');
+      expect(b).toHaveAttribute('aria-expanded', 'false');
+      expect(root.current.store.select('activeTriggerId')).toBeNull();
+      expect(root.current.store.select('activeTriggerElement')).toBeNull();
+
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'false');
+      triggerId.value = undefined;
+      await flushMicrotasks();
+      expect(root.current.store.select('activeTriggerId')).toBeNull();
+      expect(root.current.store.select('activeTriggerElement')).toBeNull();
+      await fireEvent.click(a);
+      expect(a).toHaveAttribute('aria-expanded', 'true');
+      expect(root.current.store.select('activeTriggerElement')).toBe(a);
+    });
 
     it.each([
       { name: 'open', prop: 'defaultOpen', props: { defaultOpen: true } },
@@ -2758,17 +2793,33 @@ describe('useSingleAnchorPopupRoot', () => {
     expect(events).toEqual([['openChangeComplete', true]]);
   });
 
-  it('warns when open changes between controlled and uncontrolled', async () => {
-    const { setProps } = await render(<SingleAnchorRoot />);
-    expect(takeReportedMessages()).toEqual([]);
-
+  it('keeps the open prop after a refused close and closes after release', async () => {
+    const { setProps, getByText, getByRole, queryByRole } = await render(<SingleAnchorRoot />);
     await setProps({ open: true });
+    const trigger = getByText('trigger');
+    await fireEvent.click(trigger);
+    expect(getByRole('dialog')).toBeVisible();
 
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining(
-        'Vase UI: A component is changing the uncontrolled open state of SingleAnchorRoot to be controlled.',
-      ),
-    ]);
+    await setProps({ open: undefined });
+    expect(getByRole('dialog')).toBeVisible();
+    await fireEvent.click(trigger);
+    expect(queryByRole('dialog')).toBeNull();
+  });
+
+  it('stays closed on release after the parent refuses an open request', async () => {
+    const onUpdate = vi.fn();
+    const { setProps, getByText, getByRole, queryByRole } = await render(
+      <SingleAnchorRoot open={false} onUpdate:open={onUpdate} />,
+    );
+    const trigger = getByText('trigger');
+    await fireEvent.click(trigger);
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(true);
+    expect(queryByRole('dialog')).toBeNull();
+
+    await setProps({ open: undefined });
+    expect(queryByRole('dialog')).toBeNull();
+    await fireEvent.click(trigger);
+    expect(getByRole('dialog')).toBeVisible();
   });
 });
 

@@ -490,7 +490,8 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
           it('keeps the trigger a controlled `triggerId` moved the popup to while it closes', async () => {
             const handle = getHandle();
-            const triggerId = shallowRef<string | null>(null);
+            // The first press selects its trigger before the parent moves the popup.
+            const triggerId = shallowRef<string | null>();
 
             const Controlled = defineComponent(() => {
               const open = shallowRef(false);

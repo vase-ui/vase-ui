@@ -1,7 +1,7 @@
 import { expect, describe, it, vi } from 'vitest';
-import { defineComponent } from 'vue';
-import type { ComputedRef } from 'vue';
-import { createRenderer, flushMicrotasks } from '#test-utils';
+import { defineComponent, shallowRef, watch } from 'vue';
+import type { WritableComputedRef } from 'vue';
+import { createRenderer, flushMicrotasks, takeReportedMessages } from '#test-utils';
 import { useControlled } from './useControlled';
 
 interface TestComponentChildrenArgument {
@@ -16,11 +16,14 @@ interface TestComponentProps {
 
 const TestComponent = defineComponent(
   (props: TestComponentProps, { slots }) => {
-    const [value, setValue] = useControlled({
+    const value = useControlled({
       controlled: () => props.value,
       default: () => props.defaultValue,
       name: 'TestComponent',
     });
+    function setValue(next: number | string) {
+      value.value = next;
+    }
     return () => slots.default?.({ value: value.value, setValue });
   },
   { props: ['value', 'defaultValue'] },
@@ -70,64 +73,113 @@ describe('useControlled', () => {
     expect(valueState).toBe(1);
   });
 
-  it('warns when switching from uncontrolled to controlled', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('VUE-141: keeps the last parent value and accepts a local write in the same task', async () => {
+    const prop = shallowRef<string | null>();
+    let model!: WritableComputedRef<string | null>;
+    const Part = defineComponent(() => {
+      model = useControlled<string | null>({
+        controlled: () => prop.value,
+        default: () => 'initial',
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
 
-    const { setProps } = await render(<TestComponent v-slots={renderNothing} />);
+    model.value = 'local';
+    expect(model.value).toBe('local');
+    prop.value = 'parent';
+    model.value = 'refused';
+    expect(model.value).toBe('parent');
 
-    expect(errorSpy).not.toHaveBeenCalled();
-
-    await setProps({ value: 'foobar' });
-
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy.mock.calls[0][0]).toContain(
-      'Vase UI: A component is changing the uncontrolled value state of TestComponent to be controlled.',
-    );
+    prop.value = null;
+    model.value = 'refused';
+    expect(model.value).toBeNull();
+    prop.value = 'last';
+    prop.value = undefined;
+    expect(model.value).toBe('last');
+    model.value = 'next';
+    expect(model.value).toBe('next');
+    await flushMicrotasks();
+    expect(model.value).toBe('next');
+    expect(takeReportedMessages()).toEqual([]);
   });
 
-  it('warns and falls back to the default when switching from controlled to uncontrolled', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    let result: [ComputedRef<string>, (newValue: string) => void] | undefined;
+  it('VUE-141: lets a synchronous release listener read the last value and write the next one', async () => {
+    const prop = shallowRef<string | undefined>('first');
+    let model!: WritableComputedRef<string>;
+    let valueOnRelease: string | undefined;
+    const Part = defineComponent(() => {
+      watch(
+        prop,
+        (value) => {
+          if (value === undefined) {
+            valueOnRelease = model.value;
+            model.value = 'local';
+          }
+        },
+        { flush: 'sync' },
+      );
+      model = useControlled({
+        controlled: () => prop.value,
+        default: () => 'initial',
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
 
-    const TestHook = defineComponent(
-      (props: { controlled: string | undefined }) => {
-        result = useControlled({
-          controlled: () => props.controlled,
-          default: () => 'default',
-          name: 'TestHook',
-        });
-        return () => null;
-      },
-      { props: ['controlled'] },
-    );
+    prop.value = 'last';
+    prop.value = undefined;
+    expect(valueOnRelease).toBe('last');
+    expect(model.value).toBe('local');
+  });
 
-    const { setProps } = await render(<TestHook controlled="foobar" />);
+  it('keeps the same array when a parent releases a derived selection', async () => {
+    const selection = shallowRef<string[] | undefined>(['red']);
+    let model!: WritableComputedRef<string[]>;
+    const Part = defineComponent(() => {
+      model = useControlled({
+        controlled: () => selection.value?.slice(),
+        default: () => [] as string[],
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
+    const last = model.value;
+    selection.value = undefined;
+    expect(model.value).toBe(last);
+  });
 
-    expect(errorSpy).not.toHaveBeenCalled();
+  it('VUE-141: keeps a ref default intact when the parent releases a ref value', async () => {
+    const initial = shallowRef('initial');
+    const last = shallowRef('last');
+    const prop = shallowRef<typeof initial>();
+    let model!: WritableComputedRef<typeof initial>;
+    const Part = defineComponent(() => {
+      model = useControlled({
+        controlled: () => prop.value,
+        default: () => initial,
+        name: 'Part',
+      });
+      return () => null;
+    });
+    await render(<Part />);
 
-    const [value, setValue] = result!;
-
-    expect(value.value).toBe('foobar');
-
-    await setProps({ controlled: undefined });
-
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy.mock.calls[0][0]).toContain(
-      'Vase UI: A component is changing the controlled value state of TestHook to be uncontrolled.',
-    );
-
-    expect(value.value).toBe('default');
-
-    setValue('next');
-    await flushMicrotasks();
-
-    expect(value.value).toBe('default');
+    expect(model.value).toBe(initial);
+    prop.value = last;
+    prop.value = undefined;
+    expect(model.value).toBe(last);
+    model.value = shallowRef('local');
+    expect(initial.value).toBe('initial');
+    expect(last.value).toBe('last');
   });
 
   describe('prop: defaultValue', () => {
     it('stores a function default value instead of calling it', async () => {
       const defaultValue = () => 'called';
-      let result: [ComputedRef<() => string>, (newValue: () => string) => void] | undefined;
+      let result: WritableComputedRef<() => string> | undefined;
 
       const TestHook = defineComponent(() => {
         result = useControlled({
@@ -140,7 +192,7 @@ describe('useControlled', () => {
 
       await render(<TestHook />);
 
-      expect(result![0].value).toBe(defaultValue);
+      expect(result!.value).toBe(defaultValue);
     });
 
     it('warns when changed after initial rendering', async () => {
@@ -170,6 +222,19 @@ describe('useControlled', () => {
       await setProps({ defaultValue: 1 });
 
       expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns about a new default only while the part owns the value', async () => {
+      const { setProps } = await render(<TestComponent defaultValue={0} v-slots={renderNothing} />);
+      await setProps({ value: 2, defaultValue: 1 });
+      expect(takeReportedMessages()).toEqual([]);
+
+      await setProps({ value: undefined, defaultValue: 3 });
+      expect(takeReportedMessages()).toEqual([
+        expect.stringContaining(
+          'changing the default value state of an uncontrolled TestComponent',
+        ),
+      ]);
     });
 
     it('does not warn when NaN', async () => {

@@ -5,7 +5,7 @@ import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { FOCUSABLE_ATTRIBUTE } from './constants';
-import { popupStoreSelectors } from './store';
+import { canClaimOpenPopup, popupStoreSelectors } from './store';
 import type { PopupStoreState, PopupTriggerDataStore } from './store';
 
 export const FOCUSABLE_POPUP_PROPS = {
@@ -124,7 +124,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
  * `setup`, and give `registerTrigger` to the `ref` of the element.
  *
  * The active trigger gives its element, and its `stateUpdates` while the popup is open. Another
- * trigger claims an open popup that has no active trigger, unless the popup opened with no trigger.
+ * trigger can claim an open popup that allows an implicit trigger.
  * An activation by `KeepAlive` claims nothing, because it runs the hooks of the triggers in an
  * order that depends on the tree. The root then picks the trigger in `useImplicitActiveTrigger`.
  * While the trigger owns the mounted popup, each change of `stateUpdates` goes to the store.
@@ -162,7 +162,7 @@ export function useTriggerDataForwarding<
         return;
       }
 
-      if (!activated && activeTriggerId == null && open && !state.openedWithoutTrigger) {
+      if (!activated && canClaimOpenPopup(state)) {
         // A detached trigger can mount while the popup is open and has no active trigger. The
         // first trigger that registers then claims the popup. A popup that opened with no trigger
         // keeps its own state, such as the payload that the caller gave.

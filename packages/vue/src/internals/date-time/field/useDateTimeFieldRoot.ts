@@ -243,7 +243,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const clearFieldError = useClearFieldError(inputName);
   const locale = useFormatLocale(() => toValue(parameters.locale));
 
-  const [value, setValueState] = useControlled<Value | null>({
+  const value = useControlled<Value | null>({
     controlled: () => toValue(parameters.value),
     default: () => toValue(parameters.defaultValue) ?? null,
     name: family === 'date' ? 'DateField' : 'TimeField',
@@ -492,7 +492,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       return false;
     }
     updateValue(next);
-    setValueState(next);
+    value.value = next;
     return true;
   }
 

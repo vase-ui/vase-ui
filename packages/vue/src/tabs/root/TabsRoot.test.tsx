@@ -1173,6 +1173,92 @@ describe('<Tabs.Root />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('initial');
     });
 
+    it('keeps a parent selection on release without an initial change event', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root value="b" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+            <Tabs.Tab value="b">B</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+
+      await setProps({ value: undefined });
+      expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('clears the panel on release after the last controlled tab is removed', async () => {
+      const value = shallowRef<string | undefined>('a');
+      const showTab = shallowRef(true);
+      const onValueChange = vi.fn();
+      await render(() => (
+        <Tabs.Root value={value.value} onValueChange={onValueChange}>
+          <Tabs.List>{showTab.value && <Tabs.Tab value="a">A</Tabs.Tab>}</Tabs.List>
+          <Tabs.Panel value="a" keepMounted>
+            Panel A
+          </Tabs.Panel>
+        </Tabs.Root>
+      ));
+      const panel = screen.getByRole('tabpanel');
+      showTab.value = false;
+      await flushMicrotasks();
+      expect(panel).toBeVisible();
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      value.value = undefined;
+      await flushMicrotasks();
+      expect(panel).toHaveAttribute('hidden');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        null,
+        expect.objectContaining({ reason: 'missing' }),
+      );
+    });
+
+    it('selects an enabled tab after release even if the disabled tab matches the default', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root value="b" defaultValue="b" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+            <Tabs.Tab value="b" disabled>
+              B
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+      expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
+      await setProps({ value: undefined });
+      expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        'a',
+        expect.objectContaining({ reason: 'disabled' }),
+      );
+    });
+
+    it('selects a fallback for a missing tab only after the parent releases the value', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root defaultValue="a" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+      const tab = screen.getByRole('tab');
+      await setProps({ value: 'missing' });
+      expect(tab).toHaveAttribute('aria-selected', 'false');
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      await setProps({ value: undefined });
+      expect(tab).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        'a',
+        expect.objectContaining({ reason: 'missing' }),
+      );
+    });
+
     it('does not call onValueChange when a controlled selected tab becomes disabled', async () => {
       const handleChange = vi.fn();
       const TestComponent = defineComponent(

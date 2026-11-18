@@ -297,7 +297,7 @@ const groupChecked = computed(() =>
     : groupProps.value.checked,
 );
 
-const [isChecked, setCheckedState] = useControlled({
+const isChecked = useControlled({
   controlled: () => groupChecked.value ?? props.checked,
   default: () => props.defaultChecked,
   name: 'Checkbox',
@@ -385,7 +385,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
   }
 
   emit('update:checked', nextChecked);
-  setCheckedState(nextChecked);
+  isChecked.value = nextChecked;
   return true;
 }
 

@@ -273,7 +273,7 @@ const isDisabled = computed(
 const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
-const [valueUnwrapped, setValueUnwrapped] = useControlled<string>({
+const valueUnwrapped = useControlled<string>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? '',
   name: 'OTPField',
@@ -501,7 +501,7 @@ function setValue(nextValue: string, details: OTPFieldRootChangeEventDetails) {
   }
 
   emit('update:value', normalizedValue);
-  setValueUnwrapped(normalizedValue);
+  valueUnwrapped.value = normalizedValue;
 
   if (completeEventDetails != null) {
     pendingCompleteValue = {
