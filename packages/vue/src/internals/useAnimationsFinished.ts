@@ -1,7 +1,8 @@
-import { nextTick, toValue } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import { effectScope, getCurrentScope, nextTick, onScopeDispose, toValue, watch } from 'vue';
+import type { EffectScope, MaybeRefOrGetter } from 'vue';
+import { addEventListener } from '../common/addEventListener';
 import { NOOP } from '../common/empty';
-import { useAnimationFrame } from '../common/useAnimationFrame';
+import { AnimationFrame } from '../common/useAnimationFrame';
 import { isFiniteAnimation } from '../utils/getFiniteAnimations';
 import * as TransitionStatusDataAttributes from './TransitionStatusDataAttributes';
 import { createFlushBeforePaint } from './createFlushBeforePaint';
@@ -88,11 +89,11 @@ let lastCompletion: Promise<void> = Promise.resolve();
 // here, so the browser does not paint between the end of the animation and the effect of the
 // callback: https://github.com/mui/base-ui/issues/979
 // An error of a completion, or of the flush that it causes, does not stop the later completions.
-function runAfterEarlierCompletions(fnToExecute: () => void, signal: AbortSignal | null) {
+function runAfterEarlierCompletions(fnToExecute: () => void, wait: EffectScope) {
   lastCompletion = lastCompletion
     .then(() => {
       // The flush of an earlier completion can abort this completion.
-      if (signal?.aborted) {
+      if (!wait.active) {
         return undefined;
       }
       fnToExecute();
@@ -101,118 +102,88 @@ function runAfterEarlierCompletions(fnToExecute: () => void, signal: AbortSignal
     .catch((error: unknown) => reportError(error));
 }
 
-/**
- * Executes a function once all animations have finished on the provided element.
- * If an animation is canceled, waits for any replacement animations before executing.
- * @param elementOrRef - The element to watch for animations, or a ref or a getter for it.
- * @param waitForStartingStyleRemoved - Whether to wait for [data-starting-style] to be removed before checking for animations. A ref or a getter gives the value when the returned function is called.
- * @param batch - Whether completions ready in the same microtask may be coalesced into a single
- * flush. A batched callback runs before the flush of the state writes of earlier callbacks, so only
- * opt in when the callback doesn't read state that another completion can change.
- * @returns A function that takes a callback to execute once all animations have finished, and an optional AbortSignal to abort the callback
- */
+/** Waits for the finite animations of one element, including replacements after cancellation. */
 export function useAnimationsFinished(
   elementOrRef: MaybeRefOrGetter<HTMLElement | null | undefined>,
   waitForStartingStyleRemoved: MaybeRefOrGetter<boolean | undefined> = false,
   batch = false,
+  isStarting?: () => boolean,
 ) {
-  const frame = useAnimationFrame();
+  const owner = getCurrentScope();
+  let current: EffectScope | undefined;
 
-  return (
-    /**
-     * A function to execute once all animations have finished.
-     */
-    fnToExecute: () => void,
-    /**
-     * An optional [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that
-     * can be used to abort `fnToExecute` before all the animations have finished.
-     * @default null
-     */
-    signal: AbortSignal | null = null,
-  ) => {
-    frame.cancel();
-
+  return (onFinish: () => void, signal: AbortSignal | null = null) => {
+    current?.stop();
     const element = toValue(elementOrRef);
-    if (element == null) {
+    if (!element || !owner?.active || signal?.aborted) return;
+
+    if (typeof element.getAnimations !== 'function' || globalThis.VASE_UI_ANIMATIONS_DISABLED) {
+      onFinish();
       return;
     }
 
-    const resolvedElement = element;
+    // A frame or a native event can start a wait outside the component's active scope.
+    const wait = owner.run(() => effectScope());
+    if (!wait) return;
+    current = wait;
 
-    const done = () => {
-      if (!batch) {
-        runAfterEarlierCompletions(fnToExecute, signal);
-        return;
+    const finish = () => {
+      if (wait.active) {
+        wait.stop();
+        onFinish();
       }
-
-      flushBeforePaint(() => {
-        // Re-check at flush time: the signal may abort between queueing and the flush.
-        if (!signal?.aborted) {
-          fnToExecute();
-        }
-      });
     };
 
-    if (
-      typeof resolvedElement.getAnimations !== 'function' ||
-      globalThis.VASE_UI_ANIMATIONS_DISABLED
-    ) {
-      fnToExecute();
-      return;
-    }
-
-    function exec() {
-      getAnimationsBatched([resolvedElement, waitForAnimations]);
-    }
-
-    function waitForAnimations(animations: Animation[]) {
-      // Discard fulfilled Animation values so unfinished animations cannot retain their targets.
-      Promise.all(
-        animations.filter(isFiniteAnimation).map((animation) => animation.finished.then(NOOP)),
-      ).then(
-        () => {
-          if (!signal?.aborted) {
-            done();
-          }
+    const sample = () => {
+      if (!wait.active) return;
+      getAnimationsBatched([
+        element,
+        (animations) => {
+          if (!wait.active) return;
+          Promise.all(
+            animations.filter(isFiniteAnimation).map((animation) => animation.finished.then(NOOP)),
+          ).then(
+            () => {
+              if (batch) flushBeforePaint(finish);
+              else runAfterEarlierCompletions(finish, wait);
+            },
+            () => {
+              if (wait.active) sample();
+            },
+          );
         },
-        () => {
-          // Sometimes animations can be aborted because a property they depend on changes while
-          // the animation plays. Wait for the element's current animations, which include any
-          // replacement.
-          if (!signal?.aborted) {
-            exec();
+      ]);
+    };
+
+    wait.run(() => {
+      if (signal)
+        onScopeDispose(addEventListener(signal, 'abort', () => wait.stop(), { once: true }));
+      if (toValue(waitForStartingStyleRemoved)) {
+        if (isStarting) {
+          if (isStarting()) {
+            watch(isStarting, sample, { once: true, flush: 'post' });
+            return;
           }
-        },
-      );
-    }
-
-    if (toValue(waitForStartingStyleRemoved)) {
-      const startingStyleAttribute = TransitionStatusDataAttributes.startingStyle;
-
-      // If `[data-starting-style]` isn't present, fall back to waiting one more frame
-      // to give "open" animations a chance to be registered.
-      if (!resolvedElement.hasAttribute(startingStyleAttribute)) {
-        frame.request(exec);
-        return;
+        } else {
+          const attribute = TransitionStatusDataAttributes.startingStyle;
+          const Observer = element.ownerDocument.defaultView?.MutationObserver;
+          if (Observer && element.hasAttribute(attribute)) {
+            const observer = new Observer(() => {
+              if (!element.hasAttribute(attribute)) {
+                observer.disconnect();
+                sample();
+              }
+            });
+            onScopeDispose(() => observer.disconnect());
+            observer.observe(element, { attributes: true, attributeFilter: [attribute] });
+            return;
+          }
+        }
       }
 
-      // Wait for `[data-starting-style]` to have been removed.
-      const attributeObserver = new MutationObserver(() => {
-        if (!resolvedElement.hasAttribute(startingStyleAttribute)) {
-          attributeObserver.disconnect();
-          exec();
-        }
-      });
-
-      attributeObserver.observe(resolvedElement, {
-        attributes: true,
-        attributeFilter: [startingStyleAttribute],
-      });
-
-      signal?.addEventListener('abort', () => attributeObserver.disconnect(), { once: true });
-      return;
-    }
-
-    frame.request(exec);
+      // The browser can register an animation in the next frame.
+      const id = AnimationFrame.request(sample);
+      onScopeDispose(() => AnimationFrame.cancel(id));
+    });
   };
 }

@@ -8,7 +8,7 @@ import { useAnimationsFinished } from './useAnimationsFinished';
 export function useOpenChangeComplete(parameters: UseOpenChangeCompleteParameters) {
   const { enabled, open, ref, batch = false, restartKey, onComplete } = parameters;
 
-  const runOnceAnimationsFinish = useAnimationsFinished(ref, open, batch);
+  const runOnceAnimationsFinish = useAnimationsFinished(ref, open, batch, parameters.isStarting);
 
   const readEnabled = () => toValue(enabled);
   const readOpen = () => toValue(open);
@@ -51,6 +51,8 @@ export interface UseOpenChangeCompleteParameters {
    * Restarts the wait when it changes, such as when the element attaches after the wait started.
    */
   restartKey?: MaybeRefOrGetter<unknown>;
+  /** The enter phase of the target, when the caller owns it. */
+  isStarting?: () => boolean;
   /**
    * Function to call when the animation completes (or there is no animation).
    */

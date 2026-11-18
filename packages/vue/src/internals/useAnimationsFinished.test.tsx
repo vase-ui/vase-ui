@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
 import { Teleport, defineComponent, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue';
 import { createRenderer, flushMicrotasks, isJSDOM, screen, waitFor } from '#test-utils';
+import { EffectOwner } from '../../test/fixtures/effectOwner';
+import { AnimationFrame } from '../common/useAnimationFrame';
 import { useAnimationsFinished } from './useAnimationsFinished';
 
 const mockedAnimations = new Map<Element, () => Animation[]>();
@@ -77,6 +79,99 @@ const Test = defineComponent(
 
 describe('useAnimationsFinished', () => {
   const { render } = createRenderer();
+
+  it('samples the owned phase after its patch and cancels earlier waits', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const starting = shallowRef(true);
+    const element = shallowRef<HTMLDivElement | null>(null);
+    let wait!: ReturnType<typeof useAnimationsFinished>;
+    const { unmount } = await render(() => (
+      <EffectOwner
+        setupEffect={() => {
+          wait = useAnimationsFinished(element, true, false, () => starting.value);
+        }}
+      >
+        {() => <div ref={element} data-starting-style={starting.value ? '' : undefined} />}
+      </EffectOwner>
+    ));
+    const box = element.value!;
+    const reads: boolean[] = [];
+    const animation = createAnimation();
+    mockAnimations(box, () => {
+      reads.push(box.hasAttribute('data-starting-style'));
+      return [animation.animation];
+    });
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    const frame = vi.spyOn(AnimationFrame, 'request');
+    const prior = vi.fn();
+    const finish = vi.fn();
+    const controller = new AbortController();
+    const remove = vi.spyOn(controller.signal, 'removeEventListener');
+    wait(prior);
+    wait(prior, controller.signal);
+    controller.abort();
+    wait(finish);
+    starting.value = false;
+    await flushMicrotasks();
+    expect(reads).toEqual([false]);
+    expect(observe.mock.calls.filter(([target]) => target === box)).toHaveLength(0);
+    expect(frame).not.toHaveBeenCalled();
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function), { once: true });
+    animation.finish();
+    await flushMicrotasks();
+    expect(prior).not.toHaveBeenCalled();
+    expect(finish).toHaveBeenCalledTimes(1);
+
+    wait(prior);
+    expect(frame).toHaveBeenCalledTimes(1);
+    starting.value = true;
+    wait(prior);
+    starting.value = false;
+    unmount();
+    await flushMicrotasks();
+    expect(reads).toEqual([false]);
+    expect(prior).not.toHaveBeenCalled();
+  });
+
+  it('observes a consumer marker in its own window until removal or unmount', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    onTestFinished(() => iframe.remove());
+    const doc = iframe.contentDocument!;
+    const box = doc.createElement('div');
+    doc.body.append(box);
+    const observe = vi.spyOn(doc.defaultView!.MutationObserver.prototype, 'observe');
+    const disconnect = vi.spyOn(doc.defaultView!.MutationObserver.prototype, 'disconnect');
+    const finish = vi.fn();
+    const read = vi.spyOn(box, 'getAnimations').mockReturnValue([]);
+    let wait!: ReturnType<typeof useAnimationsFinished>;
+    const { unmount } = await render(
+      <EffectOwner
+        setupEffect={() => {
+          wait = useAnimationsFinished(box, true);
+        }}
+      />,
+    );
+    box.setAttribute('data-starting-style', '');
+    wait(finish);
+    expect(observe).toHaveBeenCalledWith(box, {
+      attributes: true,
+      attributeFilter: ['data-starting-style'],
+    });
+    box.removeAttribute('data-starting-style');
+    await flushMicrotasks();
+    expect(finish).toHaveBeenCalledTimes(1);
+    box.setAttribute('data-starting-style', '');
+    wait(finish);
+    disconnect.mockClear();
+    unmount();
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    box.removeAttribute('data-starting-style');
+    await flushMicrotasks();
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(finish).toHaveBeenCalledTimes(1);
+  });
 
   it.each(['finish', 'cancel'] as const)(
     'ignores infinite animations when a finite animation completes via %s',
