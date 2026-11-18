@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -32,6 +33,35 @@ describe('<Input />', () => {
 
     expect(screen.getByRole('textbox', { name: 'Address' })).toHaveAttribute('id', 'address');
     expect(screen.getByText('Address')).toHaveAttribute('for', 'address');
+  });
+
+  it('follows the native value of a toolbar input in the field state', async () => {
+    const value = shallowRef('prefilled');
+    await render(() => (
+      <Toolbar.Root>
+        <Field.Root>
+          <Toolbar.Input as={Input} value={value.value} />
+          <Field.Description>Search terms</Field.Description>
+        </Field.Root>
+      </Toolbar.Root>
+    ));
+
+    const input = screen.getByRole('textbox');
+    const description = screen.getByText('Search terms');
+    expect(input).toHaveAttribute('data-filled');
+    value.value = '';
+    await flushMicrotasks();
+    expect(input).toHaveValue('');
+    expect(input).not.toHaveAttribute('data-filled');
+    expect(description).not.toHaveAttribute('data-filled');
+    await fireEvent.input(input, { target: { value: 'refused' } });
+    expect(input).toHaveValue('');
+    expect(description).not.toHaveAttribute('data-filled');
+
+    value.value = 'prefilled';
+    await flushMicrotasks();
+    expect(input).toHaveAttribute('data-filled');
+    expect(description).not.toHaveAttribute('data-dirty');
   });
 
   describeConformance(<Input />, () => ({
@@ -81,6 +111,17 @@ describe('<Input />', () => {
 
     expect(updates).toEqual([]);
     expect(input).toHaveValue('fixed');
+  });
+
+  it.each([
+    { name: 'defaultValue', props: { defaultValue: 'first' }, expected: 'edit' },
+    { name: 'modelValue alone', props: { modelValue: 'first' }, expected: 'first' },
+  ])('edits an input with $name', async ({ props, expected }) => {
+    await render(<Input {...props} />);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('first');
+    await fireEvent.input(input, { target: { value: 'edit' } });
+    expect(input).toHaveValue(expected);
   });
 
   it('gives the state of the field to the #render slot', async () => {

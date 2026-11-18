@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, shallowRef, useAttrs, watch } from 'vue';
+import { computed, onBeforeUpdate, onMounted, shallowRef, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -130,9 +130,20 @@ const state = computed<FieldControlState>(() => ({
 
 const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
+const attrs = useAttrs();
+// An outer part can supply the native value through `as`. Vue refreshes $attrs before each
+// render, but it does not expose the attributes as reactive watch sources.
+const nativeValue = shallowRef(attrs.value);
+onBeforeUpdate(() => {
+  nativeValue.value = attrs.value;
+});
+const suppliedValue = computed(() =>
+  props.modelValue === undefined ? nativeValue.value : props.modelValue,
+);
+
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
 const serializedValue = computed(() =>
-  props.modelValue == null ? undefined : String(props.modelValue),
+  suppliedValue.value == null ? undefined : String(suppliedValue.value),
 );
 const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
@@ -143,12 +154,6 @@ watch(serializedValue, (value, previous) => {
     releasedText.value = previous;
   }
 });
-
-const attrs = useAttrs();
-function initialText() {
-  const value = serializedValue.value ?? serializedDefaultValue.value ?? attrs.value;
-  return value == null ? undefined : String(value);
-}
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
@@ -161,13 +166,13 @@ useRegisterFieldControl(
   () =>
     writesValue.value
       ? (element.value as HTMLInputElement | null)?.value
-      : (initialText() ?? ''),
+      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
   () => !isDisabled.value,
   () => props.name,
 );
 
 // Later field parts read the filled state during the same server render.
-const initial = initialText();
+const initial = serializedValue.value ?? serializedDefaultValue.value;
 if (initial !== undefined) {
   setFilled(initial !== '');
 }
@@ -213,14 +218,8 @@ const enterValidationTimeout = useTimeout();
 // A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
-function valueProps():
-  | {
-      value?: FieldControlProps['modelValue'];
-      defaultValue?: FieldControlProps['defaultValue'];
-      '.value'?: string;
-    }
-  | undefined {
-  if (props.modelValue !== undefined) {
+function valueProps() {
+  if (suppliedValue.value !== undefined) {
     return writesValue.value ? inputRender.valueProps() : undefined;
   }
   if (releasedText.value !== undefined && writesValue.value) {
@@ -245,9 +244,8 @@ function handleInput(event: Event) {
     emit('update:modelValue', inputValue);
   }
 
-  // A controlled value comes from the `modelValue` prop, so a value that the consumer refuses or
-  // changes does not reach the state of the field.
-  if (props.modelValue !== undefined) {
+  // The field follows the value that its owner accepts, including a value the owner changes.
+  if (suppliedValue.value !== undefined) {
     inputRender.renderValue();
     return;
   }
@@ -275,7 +273,7 @@ function handleFocusout(event: FocusEvent) {
   const inputValue = (event.currentTarget as HTMLInputElement).value;
   validation.commit(inputValue);
 
-  if (props.modelValue !== undefined) {
+  if (suppliedValue.value !== undefined) {
     // A `focusout` listener of the consumer can change the controlled value before this microtask.
     // A value that goes back to the initial value is a reset by the program. The field then looks
     // unchanged, so a commit would only show a `valueMissing` error.
@@ -320,7 +318,7 @@ const giveFieldInput = useFieldInput();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
   ref: giveFieldInput,
-  props: ({ value, ...attrs }) => [
+  props: ({ value: _value, ...attrs }) => [
     {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
@@ -334,8 +332,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       onKeydown: handleKeydown,
     },
     attrs,
-    // An outer part can pass the native value through `as`. Preserve text typed before hydration.
-    writesValue.value && value !== undefined ? { value } : undefined,
     valueProps(),
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
@@ -343,7 +339,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
 });
 
 watch(
-  [element, () => props.modelValue !== undefined],
+  [element, () => suppliedValue.value !== undefined],
   () => {
     lastInputText = undefined;
   },
@@ -359,9 +355,9 @@ useFormReset(element, () => {
   clearFieldError(value);
 });
 
-const inputRender = useFormRestoreAsInput(
+const inputRender: ReturnType<typeof useFormRestoreAsInput<unknown>> = useFormRestoreAsInput(
   element,
-  () => props.modelValue,
+  () => suppliedValue.value,
   true,
   () => lastInputText,
 );
