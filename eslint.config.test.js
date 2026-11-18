@@ -1800,6 +1800,10 @@ for (const { name, code } of [
     code: "import { watch } from 'vue';\n\ndeclare const element: Element;\nwatch(() => element, () => element.getRootNode());\n",
   },
   {
+    name: 'a `watchPostEffect` callback',
+    code: "import { watchPostEffect } from 'vue';\n\ndeclare const element: Element;\nwatchPostEffect(() => element.getRootNode());\n",
+  },
+  {
     name: 'a `useDomEffect` effect',
     code: "import { useDomEffect } from '../utils/popups/useDomEffect';\n\ndeclare const element: Element;\nuseDomEffect([], () => {\n  element.getRootNode();\n});\n",
   },
