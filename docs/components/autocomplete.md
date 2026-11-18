@@ -70,11 +70,11 @@ Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
 
-Bind the text with `v-model:value`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:value` for an action that gives the text that it has, such as a press of the item with that text.
+Bind the text with `v-model`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:modelValue` for an action that gives the text that it has, such as a press of the item with that text.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:value` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:modelValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
-The root also takes a value that a program or the browser writes into its hidden input before the page hydrates. It takes a value that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A root with no `name`, no field and no `required` keeps its value, because its hidden input is `type="hidden"`.
+The root also takes a value that a program or the browser writes into its hidden input before the page hydrates. It takes a value that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A root with no `name`, no field and no `required` keeps its value, because its hidden input is `type="hidden"`.
 
 ## Item values
 

@@ -32,11 +32,11 @@ export interface MenuCheckboxItemProps
    *
    * To render an uncontrolled checkbox item, use the `defaultChecked` prop instead.
    */
-  checked?: boolean | undefined;
+  modelValue?: boolean | undefined;
   /**
    * Whether the checkbox item is initially ticked.
    *
-   * To render a controlled checkbox item, use the `checked` prop instead.
+   * To render a controlled checkbox item, use the `modelValue` prop instead.
    * @default false
    */
   defaultChecked?: boolean | undefined;
@@ -86,7 +86,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<MenuCheckboxItemProps>(), {
   as: 'div',
-  checked: undefined,
+  modelValue: undefined,
   defaultChecked: false,
   nativeButton: false,
   disabled: false,
@@ -104,9 +104,9 @@ const emit = defineEmits<{
   checkedChange: [checked: boolean, eventDetails: MenuCheckboxItemChangeEventDetails];
   /**
    * Event handler called after `checkedChange` with the new value, unless a listener cancels the
-   * change. `v-model:checked` uses it.
+   * change. `v-model` uses it.
    */
-  'update:checked': [checked: boolean];
+  'update:modelValue': [checked: boolean];
 }>();
 
 defineSlots<{
@@ -115,7 +115,7 @@ defineSlots<{
 }>();
 
 const isChecked = useControlled({
-  controlled: () => props.checked,
+  controlled: () => props.modelValue,
   default: () => props.defaultChecked,
   name: 'MenuCheckboxItem',
   state: 'checked',
@@ -162,7 +162,7 @@ function handleClick(event: MouseEvent) {
     return;
   }
 
-  emit('update:checked', nextChecked);
+  emit('update:modelValue', nextChecked);
   isChecked.value = nextChecked;
 }
 

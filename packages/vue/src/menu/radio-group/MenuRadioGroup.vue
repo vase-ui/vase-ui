@@ -19,11 +19,11 @@ export interface MenuRadioGroupProps
    *
    * To render an uncontrolled radio group, use the `defaultValue` prop instead.
    */
-  value?: any;
+  modelValue?: any;
   /**
    * The uncontrolled value of the radio item that should be initially selected.
    *
-   * To render a controlled radio group, use the `value` prop instead.
+   * To render a controlled radio group, use the `modelValue` prop instead.
    */
   defaultValue?: any;
   /**
@@ -52,7 +52,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<MenuRadioGroupProps>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   disabled: false,
 });
 
@@ -63,9 +63,9 @@ const emit = defineEmits<{
   valueChange: [value: any, eventDetails: MenuRadioGroupChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: any];
+  'update:modelValue': [value: any];
 }>();
 
 defineSlots<{
@@ -74,7 +74,7 @@ defineSlots<{
 }>();
 
 const checkedValue = useControlled({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue,
   name: 'MenuRadioGroup',
 });
@@ -91,7 +91,7 @@ function setValue(newValue: any, eventDetails: MenuRadioGroupChangeEventDetails)
     return;
   }
 
-  emit('update:value', newValue);
+  emit('update:modelValue', newValue);
   checkedValue.value = newValue;
 }
 

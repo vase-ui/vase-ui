@@ -7,7 +7,7 @@ import type {
 } from '@vase-ui/vue/number-field';
 
 const props = defineProps<{
-  // The root is controlled with `v-model:value`.
+  // The root is controlled with `v-model`.
   controlled?: boolean | undefined;
   value?: number | undefined;
   locale?: string | undefined;
@@ -30,7 +30,7 @@ function handleValueCommitted(value: number | null, details: NumberFieldRootComm
 <template>
   <NumberField.Root
     v-if="controlled"
-    v-model:value="model"
+    v-model="model"
     :locale="locale"
     :format="format"
     data-testid="root"

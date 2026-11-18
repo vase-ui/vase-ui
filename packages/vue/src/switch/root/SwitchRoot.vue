@@ -47,11 +47,11 @@ export interface SwitchRootProps
    *
    * To render an uncontrolled switch, use the `defaultChecked` prop instead.
    */
-  checked?: boolean | undefined;
+  modelValue?: boolean | undefined;
   /**
    * Whether the switch is initially active.
    *
-   * To render a controlled switch, use the `checked` prop instead.
+   * To render a controlled switch, use the `modelValue` prop instead.
    * @default false
    */
   defaultChecked?: boolean | undefined;
@@ -136,7 +136,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<SwitchRootProps>(), {
   as: 'span',
-  checked: undefined,
+  modelValue: undefined,
   defaultChecked: false,
   disabled: false,
   nativeButton: false,
@@ -155,9 +155,9 @@ const emit = defineEmits<{
   checkedChange: [checked: boolean, eventDetails: SwitchRootChangeEventDetails];
   /**
    * Event handler called after `checkedChange` with the new value, unless a listener cancels the
-   * change. `v-model:checked` uses it.
+   * change. `v-model` uses it.
    */
-  'update:checked': [checked: boolean];
+  'update:modelValue': [checked: boolean];
 }>();
 
 defineSlots<{
@@ -206,7 +206,7 @@ const controlId = useLabelableId({
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const isChecked = useControlled({
-  controlled: () => props.checked,
+  controlled: () => props.modelValue,
   default: () => props.defaultChecked,
   name: 'Switch',
   state: 'checked',
@@ -265,7 +265,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
     return false;
   }
 
-  emit('update:checked', nextChecked);
+  emit('update:modelValue', nextChecked);
   isChecked.value = nextChecked;
   return true;
 }
@@ -305,7 +305,7 @@ function takeInputState(event?: Event) {
 
 useFormReset(inputElement, (event) => {
   const hasChanged =
-    props.checked === undefined &&
+    props.modelValue === undefined &&
     isChecked.value !== props.defaultChecked &&
     requestChange(props.defaultChecked, event);
 

@@ -8,7 +8,7 @@ describe('<Tabs.Indicator />', () => {
   describe('pre-hydration rendering', () => {
     it('renders the inline pre-hydration script during server-side rendering', async () => {
       const html = await renderToString(
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.List>
             <Tabs.Tab value={1}>One</Tabs.Tab>
             <Tabs.Indicator renderBeforeHydration />
@@ -21,7 +21,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('inlines the script contents during server-side rendering', async () => {
       const html = await renderToString(
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.List>
             <Tabs.Tab value={1}>One</Tabs.Tab>
             <Tabs.Indicator renderBeforeHydration />
@@ -36,7 +36,7 @@ describe('<Tabs.Indicator />', () => {
     it('applies the CSP nonce to the pre-hydration script', async () => {
       const html = await renderToString(
         <CSPProvider nonce="test-nonce">
-          <Tabs.Root value={1}>
+          <Tabs.Root modelValue={1}>
             <Tabs.List>
               <Tabs.Tab value={1}>One</Tabs.Tab>
               <Tabs.Indicator renderBeforeHydration />

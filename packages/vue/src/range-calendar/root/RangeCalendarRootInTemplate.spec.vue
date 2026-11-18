@@ -22,7 +22,7 @@ function onWrongEventDetails(
   <RangeCalendar.Root @value-change="onRange" />
   <RangeCalendar.Root @value-change.once="onRange" />
   <RangeCalendar.Root
-    @update:value="(value: [Temporal.PlainDate | null, Temporal.PlainDate | null]) => value"
+    @update:model-value="(value: [Temporal.PlainDate | null, Temporal.PlainDate | null]) => value"
   />
   <RangeCalendar.Root
     @value-change="

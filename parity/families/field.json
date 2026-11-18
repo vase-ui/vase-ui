@@ -41,13 +41,13 @@
   "surfaceAdditions": [
     {
       "entry": "Control",
-      "prop": "value",
-      "reason": "The part reads `value` to find out that it is controlled, so it is a declared prop. Base UI reads it from the native attributes of the input, and `types.md` has no row for a native attribute."
+      "prop": "modelValue",
+      "reason": "The part reads `modelValue` to find out that it is controlled, so it is a declared prop. Base UI reads it from the native attributes of the input, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Control",
-      "emit": "update:value",
-      "reason": "The part has the prop `value`, so `v-model:value` needs this emit. `types.md` has no row `value`, so the check expects no such emit."
+      "emit": "update:modelValue",
+      "reason": "The part has the prop `modelValue`, so `v-model` needs this emit. `types.md` has no row `value`, so the check expects no such emit."
     },
     {
       "entry": "Control",

@@ -29,7 +29,7 @@ const dates = (text: string | undefined) =>
 <template>
   <CalendarAnatomy
     :today="date(props.today)"
-    :value="props.multiple ? dates(props.value) : date(props.value)"
+    :model-value="props.multiple ? dates(props.value) : date(props.value)"
     :focused-date="date(props.focusedDate)"
     :min-date="date(props.minDate)"
     :max-date="date(props.maxDate)"

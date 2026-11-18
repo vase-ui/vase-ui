@@ -15,7 +15,7 @@ export interface DatePickerCalendarState extends CalendarRootState {}
  */
 export interface DatePickerCalendarProps extends Omit<
   CalendarRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'multiple'
   | 'minDays'
@@ -152,7 +152,7 @@ const calendarHandlers = {
 function calendarProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   const valueProps: Record<string, any> = {
-    value: picker.value.value,
+    modelValue: picker.value.value,
     defaultValue: picker.template.value,
   };
   return {

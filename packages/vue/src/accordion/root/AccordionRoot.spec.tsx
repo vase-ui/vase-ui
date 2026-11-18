@@ -6,7 +6,7 @@ const nullableValues: (string | null)[] = ['a', null];
 
 export const inferredFromValue = (
   <Accordion.Root
-    value={stringValues}
+    modelValue={stringValues}
     onValueChange={(value) => {
       expectType<string[], typeof value>(value);
     }}
@@ -22,10 +22,10 @@ export const inferredFromDefaultValue = (
   />
 );
 
-export const explicitValue = <Accordion.Root<'a' | 'b'> value={['a']} />;
+export const explicitValue = <Accordion.Root<'a' | 'b'> modelValue={['a']} />;
 
 // `null` is an empty value.
-export const nullValue = <Accordion.Root value={null} defaultValue={null} />;
+export const nullValue = <Accordion.Root modelValue={null} defaultValue={null} />;
 
 export const explicitHandler = (
   <Accordion.Root<'a' | 'b'>
@@ -37,7 +37,7 @@ export const explicitHandler = (
 
 export const nullableValue = (
   <Accordion.Root<string | null>
-    value={nullableValues}
+    modelValue={nullableValues}
     onValueChange={(value) => {
       expectType<(string | null)[], typeof value>(value);
     }}
@@ -54,16 +54,16 @@ export const defaultGeneric = (
 );
 
 // @ts-expect-error value must match explicit generic type
-export const wrongValue = <Accordion.Root<'a' | 'b'> value={['c']} />;
+export const wrongValue = <Accordion.Root<'a' | 'b'> modelValue={['c']} />;
 
 // `valueChange` is an emit, so the props type has no handler key. The handler types take the value
 // type from the props type.
 type AccordionChangeHandler = (
-  value: NonNullable<Accordion.Root.Props<'a'>['value']>,
+  value: NonNullable<Accordion.Root.Props<'a'>['modelValue']>,
   eventDetails: Accordion.Root.ChangeEventDetails,
 ) => void;
 type AccordionDefaultChangeHandler = (
-  value: NonNullable<Accordion.Root.Props['value']>,
+  value: NonNullable<Accordion.Root.Props['modelValue']>,
   eventDetails: Accordion.Root.ChangeEventDetails,
 ) => void;
 
@@ -83,7 +83,7 @@ export function Wrapper<Value>(props: Accordion.Root.Props<Value>) {
   return <Accordion.Root {...props} />;
 }
 
-export const model = <Accordion.Root<'a' | 'b'> v-model:value={['a']} multiple />;
+export const model = <Accordion.Root<'a' | 'b'> v-model={['a']} multiple />;
 
 // @ts-expect-error `Accordion.Item` emits `openChange` and has no prop `open`
 export const itemHasNoOpenProp = <Accordion.Item open />;

@@ -22,7 +22,7 @@ function onUserHighlighted(
 <template>
   <Combobox.Root @value-change="onUserChange" />
   <Combobox.Root @value-change.once="onUserChange" />
-  <Combobox.Root @update:value="(value: User | null) => value" />
+  <Combobox.Root @update:model-value="(value: User | null) => value" />
   <Combobox.Root @item-highlighted="onUserHighlighted" />
   <Combobox.Root multiple @value-change="(value: string[]) => value" />
   <Combobox.Root @value-change="(value) => expectType<null, typeof value>(value)" />

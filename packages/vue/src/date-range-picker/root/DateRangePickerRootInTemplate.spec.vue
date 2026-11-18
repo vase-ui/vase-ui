@@ -25,27 +25,27 @@ function onWrongKind(value: [Temporal.PlainTime | null, Temporal.PlainTime | nul
 </script>
 
 <template>
-  <!-- `v-model:value` gives back the kind of the ends that the parent gave. -->
-  <DateRangePicker.Root v-model:value="days" v-model:open="open" />
-  <DateRangePicker.Root v-model:value="zoned" />
-  <DateRangePicker.Root v-model:value="optional" />
+  <!-- `v-model` gives back the kind of the ends that the parent gave. -->
+  <DateRangePicker.Root v-model="days" v-model:open="open" />
+  <DateRangePicker.Root v-model="zoned" />
+  <DateRangePicker.Root v-model="optional" />
   <!-- @vue-expect-error a zoned end does not fit a ref of dates -->
   <DateRangePicker.Root
-    v-model:value="days"
+    v-model="days"
     :default-value="[Temporal.ZonedDateTime.from('2026-11-14T15:04[UTC]'), null]"
   />
 
   <DateRangePicker.Root
-    :value="days"
+    :model-value="days"
     @value-change="
       (value) => {
         expectType<[Temporal.PlainDate | null, Temporal.PlainDate | null], typeof value>(value);
       }
     "
   />
-  <DateRangePicker.Root :value="days" @value-change="onDaysChange" />
+  <DateRangePicker.Root :model-value="days" @value-change="onDaysChange" />
   <!-- @vue-expect-error the picker gives dates, and a time does not fit them -->
-  <DateRangePicker.Root :value="days" @value-change="onWrongKind" />
+  <DateRangePicker.Root :model-value="days" @value-change="onWrongKind" />
 
   <!-- Each part has the props of the part that it renders, less the props of the root. -->
   <DateRangePicker.Root>

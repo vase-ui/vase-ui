@@ -52,14 +52,14 @@ describe('<DateRangePicker.StartField />', () => {
 
   it('follows a new range of a controlled picker', async () => {
     const { container, setProps } = await render(
-      <DateRangePicker.Root value={range('2026-11-18', '2026-11-20')} locale="en-US">
+      <DateRangePicker.Root modelValue={range('2026-11-18', '2026-11-20')} locale="en-US">
         <DateRangePicker.StartField>
           <DateField.Input />
         </DateRangePicker.StartField>
       </DateRangePicker.Root>,
     );
 
-    await setProps({ value: range('2026-12-24', '2026-12-26') });
+    await setProps({ modelValue: range('2026-12-24', '2026-12-26') });
 
     expect(segmentOf(container, 'month').value).toBe('12');
     expect(segmentOf(container, 'day').value).toBe('24');
@@ -74,7 +74,7 @@ describe('<DateRangePicker.StartField />', () => {
         defaultValue={range('2026-11-18', '2026-11-20')}
         locale="en-US"
         onValueChange={onValueChange}
-        {...{ 'onUpdate:value': onUpdateValue }}
+        {...{ 'onUpdate:modelValue': onUpdateValue }}
       >
         <DateRangePicker.StartField>
           <DateField.Input />

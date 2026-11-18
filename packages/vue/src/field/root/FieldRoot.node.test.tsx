@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import * as Select from '../../select/index.parts';
 import FieldPartOrder from './FieldPartOrder.test.vue';
 
@@ -24,6 +26,22 @@ describe('<Field.Root /> on a server', () => {
     expect(html).toBe(
       `<div><!--[--><input data-filled id="${readId(html)}" name="name" value="foo"><!--]--></div>`,
     );
+  });
+
+  it('marks the input and its description as filled when a toolbar supplies the native value', async () => {
+    const html = await renderToString(
+      <Toolbar.Root>
+        <Field.Root>
+          <Toolbar.Input as={Input} value="prefilled" />
+          <Field.Description>Search terms</Field.Description>
+        </Field.Root>
+      </Toolbar.Root>,
+    );
+
+    const input = /<input\b[^>]*>/.exec(html)?.[0];
+    expect(input).toContain('value="prefilled"');
+    expect(input).toContain(' data-filled');
+    expect(html).toMatch(/<p\b[^>]* data-filled\b/);
   });
 
   it('renders the disabled state on the root and on the control', async () => {

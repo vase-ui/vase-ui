@@ -38,7 +38,7 @@ export interface FieldControlProps
   /**
    * The value of the input. Use when controlled.
    */
-  value?: string | number | readonly string[] | undefined;
+  modelValue?: string | number | readonly string[] | undefined;
   /**
    * The default value of the input. Use when uncontrolled.
    */
@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, shallowRef, watch } from 'vue';
+import { computed, onBeforeUpdate, onMounted, shallowRef, useAttrs, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -80,19 +80,19 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<FieldControlProps>(), {
   as: 'input',
   disabled: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
   /**
-   * Callback fired when the `value` changes. Use when controlled.
+   * The control emits this event when the user edits its value.
    */
   valueChange: [value: string, eventDetails: FieldControlChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
 }>();
 
 defineSlots<{
@@ -130,8 +130,21 @@ const state = computed<FieldControlState>(() => ({
 
 const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
+const attrs = useAttrs();
+// An outer part can supply the native value through `as`. Vue refreshes $attrs before each
+// render, but it does not expose the attributes as reactive watch sources.
+const nativeValue = shallowRef(attrs.value);
+onBeforeUpdate(() => {
+  nativeValue.value = attrs.value;
+});
+const suppliedValue = computed(() =>
+  props.modelValue === undefined ? nativeValue.value : props.modelValue,
+);
+
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
-const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
+const serializedValue = computed(() =>
+  suppliedValue.value == null ? undefined : String(suppliedValue.value),
+);
 const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
@@ -158,11 +171,10 @@ useRegisterFieldControl(
   () => props.name,
 );
 
-// The value that the props give. The server HTML of the control and of each part after it then has
-// `data-filled`.
-const valueOfProps = serializedValue.value ?? serializedDefaultValue.value;
-if (valueOfProps !== undefined) {
-  setFilled(valueOfProps !== '');
+// Later field parts read the filled state during the same server render.
+const initial = serializedValue.value ?? serializedDefaultValue.value;
+if (initial !== undefined) {
+  setFilled(initial !== '');
 }
 
 // An uncontrolled input has no model to compare with a silent browser restore at pageshow.
@@ -206,9 +218,8 @@ const enterValidationTimeout = useTimeout();
 // A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
-function valueProps():
-  (Pick<FieldControlProps, 'value' | 'defaultValue'> & { '.value'?: string }) | undefined {
-  if (props.value !== undefined) {
+function valueProps() {
+  if (suppliedValue.value !== undefined) {
     return writesValue.value ? inputRender.valueProps() : undefined;
   }
   if (releasedText.value !== undefined && writesValue.value) {
@@ -230,12 +241,11 @@ function handleInput(event: Event) {
   const details = createChangeEventDetails(REASON_VALUES.none, event);
   emit('valueChange', inputValue, details);
   if (!details.isCanceled) {
-    emit('update:value', inputValue);
+    emit('update:modelValue', inputValue);
   }
 
-  // A controlled value comes from the `value` prop, so a value that the consumer refuses or
-  // changes does not reach the state of the field.
-  if (props.value !== undefined) {
+  // The field follows the value that its owner accepts, including a value the owner changes.
+  if (suppliedValue.value !== undefined) {
     inputRender.renderValue();
     return;
   }
@@ -263,7 +273,7 @@ function handleFocusout(event: FocusEvent) {
   const inputValue = (event.currentTarget as HTMLInputElement).value;
   validation.commit(inputValue);
 
-  if (props.value !== undefined) {
+  if (suppliedValue.value !== undefined) {
     // A `focusout` listener of the consumer can change the controlled value before this microtask.
     // A value that goes back to the initial value is a reset by the program. The field then looks
     // unchanged, so a commit would only show a `valueMissing` error.
@@ -308,7 +318,7 @@ const giveFieldInput = useFieldInput();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
   ref: giveFieldInput,
-  props: (attrs) => [
+  props: ({ value: _value, ...attrs }) => [
     {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
@@ -321,15 +331,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       onFocusout: handleFocusout,
       onKeydown: handleKeydown,
     },
-    valueProps(),
     attrs,
+    valueProps(),
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
   stateAttributesMapping: fieldValidityMapping,
 });
 
 watch(
-  [element, () => props.value !== undefined],
+  [element, () => suppliedValue.value !== undefined],
   () => {
     lastInputText = undefined;
   },
@@ -345,9 +355,9 @@ useFormReset(element, () => {
   clearFieldError(value);
 });
 
-const inputRender = useFormRestoreAsInput(
+const inputRender: ReturnType<typeof useFormRestoreAsInput<unknown>> = useFormRestoreAsInput(
   element,
-  () => props.value,
+  () => suppliedValue.value,
   true,
   () => lastInputText,
 );

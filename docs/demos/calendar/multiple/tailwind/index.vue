@@ -12,7 +12,7 @@ const days = shallowRef<Temporal.PlainDate[]>([]);
 
 <template>
   <Calendar.Root
-    v-model:value="days"
+    v-model="days"
     multiple
     :max-days="3"
     :min-date="today"

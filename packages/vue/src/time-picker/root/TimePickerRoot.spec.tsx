@@ -8,7 +8,7 @@ declare const zoned: Temporal.ZonedDateTime;
 
 // The type of the value that the picker gives follows the value that the parent gives.
 <TimePicker.Root
-  value={time}
+  modelValue={time}
   onValueChange={(value) => {
     expectType<Temporal.PlainTime | null, typeof value>(value);
   }}
@@ -25,12 +25,12 @@ declare const zoned: Temporal.ZonedDateTime;
     expectType<Temporal.ZonedDateTime | null, typeof value>(value);
   }}
 />;
-<TimePicker.Root value={null} />;
+<TimePicker.Root modelValue={null} />;
 
 // @ts-expect-error a plain `Date` is not a value of the picker
-<TimePicker.Root value={new Date()} />;
+<TimePicker.Root modelValue={new Date()} />;
 // @ts-expect-error a date has no time
-<TimePicker.Root value={Temporal.PlainDate.from('2026-11-14')} />;
+<TimePicker.Root modelValue={Temporal.PlainDate.from('2026-11-14')} />;
 // @ts-expect-error `minTime` is a `Temporal.PlainTime`
 <TimePicker.Root minTime="09:00" />;
 

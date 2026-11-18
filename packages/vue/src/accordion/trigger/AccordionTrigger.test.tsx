@@ -103,7 +103,7 @@ describe('<Accordion.Trigger />', () => {
 
   it('does not render the root value as data-value', async () => {
     await render(
-      <Accordion.Root value={['a', 'b']} multiple>
+      <Accordion.Root modelValue={['a', 'b']} multiple>
         <Accordion.Item value="a">
           <Accordion.Header>
             <Accordion.Trigger>header a</Accordion.Trigger>
@@ -147,7 +147,7 @@ describe('<Accordion.Trigger />', () => {
 
   it('keeps data-panel-open instead of data-open', async () => {
     await render(
-      <Accordion.Root value={['a']}>
+      <Accordion.Root modelValue={['a']}>
         <Accordion.Item value="a">
           <Accordion.Header>
             <Accordion.Trigger>header a</Accordion.Trigger>

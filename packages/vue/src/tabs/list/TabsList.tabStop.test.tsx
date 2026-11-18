@@ -14,7 +14,7 @@ describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
     const value = shallowRef('first');
     await render(() => (
       <>
-        <Tabs.Root value={value.value}>
+        <Tabs.Root modelValue={value.value}>
           <Tabs.List>
             <Tabs.Tab value="first">First</Tabs.Tab>
             <Teleport to="body">
@@ -41,7 +41,7 @@ describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
   it('gives the tab stop to the first of two tabs with the selected value', async () => {
     const value = shallowRef('other');
     await render(() => (
-      <Tabs.Root value={value.value}>
+      <Tabs.Root modelValue={value.value}>
         <Tabs.List>
           <Tabs.Tab value="same" />
           <Tabs.Tab value="same" />
@@ -91,7 +91,7 @@ describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
     async ({ tabProps }) => {
       const value = shallowRef<number | null>(2);
       const TestComponent = defineComponent(() => () => (
-        <Tabs.Root value={value.value}>
+        <Tabs.Root modelValue={value.value}>
           <Tabs.List>
             <Tabs.Tab value={0} disabled />
             <Tabs.Tab value={1} />

@@ -17,18 +17,22 @@ function validateUsername(value: unknown) {
 
 <template>
   <VeeField
-    v-slot="{ field, value, meta, errorMessage, handleChange, handleBlur }"
+    v-slot="{ componentField, meta, errorMessage }"
     name="username"
     :rules="validateUsername"
   >
     <Field.Root
-      :name="field.name"
+      :name="componentField.name"
       :invalid="!!errorMessage"
       :touched="meta.touched"
       :dirty="meta.dirty"
     >
       <Field.Label>Username</Field.Label>
-      <Field.Control :value="value" @update:value="handleChange" @blur="handleBlur" />
+      <Field.Control
+        :model-value="componentField.modelValue"
+        @update:model-value="componentField['onUpdate:modelValue']"
+        @blur="componentField.onBlur"
+      />
       <Field.Error :match="!!errorMessage">{{ errorMessage }}</Field.Error>
     </Field.Root>
   </VeeField>

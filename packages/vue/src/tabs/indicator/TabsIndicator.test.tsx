@@ -73,7 +73,7 @@ describe('<Tabs.Indicator />', () => {
     const indicatorStates: Tabs.Indicator.State[] = [];
 
     await render(
-      <Tabs.Root value="missing">
+      <Tabs.Root modelValue="missing">
         <Tabs.List>
           <Tabs.Tab value="one">One</Tabs.Tab>
           <Tabs.Indicator
@@ -100,7 +100,7 @@ describe('<Tabs.Indicator />', () => {
   describe.skipIf(isJSDOM)('rendering', () => {
     it('should not render when no tab is active', async () => {
       await render(
-        <Tabs.Root value={null}>
+        <Tabs.Root modelValue={null}>
           <Tabs.List>
             <Tabs.Indicator data-testid="bubble" />
           </Tabs.List>
@@ -174,7 +174,7 @@ describe('<Tabs.Indicator />', () => {
         <>
           <style>{STYLED_INDICATOR_CSS}</style>
           <div style={wrapperStyle}>
-            <Tabs.Root value={3}>
+            <Tabs.Root modelValue={3}>
               <Tabs.List style={tabsListStyle}>
                 <Tabs.Tab value={1} style={{ width: '80px', height: '32px' }}>
                   One
@@ -217,7 +217,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('should set CSS variables corresponding to the active tab', async () => {
       await render(
-        <Tabs.Root value={2}>
+        <Tabs.Root modelValue={2}>
           <Tabs.List>
             <Tabs.Tab value={1}>One</Tabs.Tab>
             <Tabs.Tab value={2}>Two</Tabs.Tab>
@@ -239,7 +239,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('should update the position and movement variables when the active tab changes', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={2}>
+        <Tabs.Root modelValue={2}>
           <Tabs.List>
             <Tabs.Tab value={1}>One</Tabs.Tab>
             <Tabs.Tab value={2}>Two</Tabs.Tab>
@@ -249,7 +249,7 @@ describe('<Tabs.Indicator />', () => {
         </Tabs.Root>,
       );
 
-      await setProps({ value: 3 });
+      await setProps({ modelValue: 3 });
 
       const bubble = screen.getByTestId('bubble');
       const tabs = screen.getAllByRole('tab');
@@ -258,7 +258,7 @@ describe('<Tabs.Indicator />', () => {
 
       expectBubblePositionVariables(bubble, tabList, activeTab);
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
       activeTab = tabs[0];
       await waitFor(() => {
         expectBubblePositionVariables(bubble, tabList, activeTab);
@@ -267,7 +267,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('should update the position variables when the tab list is resized', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={1} style={{ width: '400px' }}>
+        <Tabs.Root modelValue={1} style={{ width: '400px' }}>
           <Tabs.List style={{ display: 'flex' }}>
             <Tabs.Tab value={1} style={{ flex: '1 1 auto' }}>
               One
@@ -299,7 +299,7 @@ describe('<Tabs.Indicator />', () => {
     it('should account for scroll and border when the tab list is transformed', async () => {
       await render(
         <div style={{ transform: 'scale(1.5)' }}>
-          <Tabs.Root value={3}>
+          <Tabs.Root modelValue={3}>
             <Tabs.List
               data-testid="tab-list"
               style={{
@@ -347,7 +347,7 @@ describe('<Tabs.Indicator />', () => {
       await render(
         <>
           <style>{STYLED_INDICATOR_CSS}</style>
-          <Tabs.Root value={3}>
+          <Tabs.Root modelValue={3}>
             <Tabs.List style={{ display: 'flex', position: 'relative' }}>
               {/* 240px of tabs inside a 200px viewport, so the container scrolls by 40px. */}
               <div
@@ -454,7 +454,7 @@ describe('<Tabs.Indicator />', () => {
       await render(
         <>
           <style>{STYLED_INDICATOR_CSS}</style>
-          <Tabs.Root value={3}>
+          <Tabs.Root modelValue={3}>
             <Tabs.List style={{ display: 'flex', position: 'relative' }}>
               <Tabs.Tab value={1} style={{ width: '80px', height: '32px' }}>
                 One
@@ -488,7 +488,7 @@ describe('<Tabs.Indicator />', () => {
       await render(
         <>
           <style>{STYLED_INDICATOR_CSS}</style>
-          <Tabs.Root value={3}>
+          <Tabs.Root modelValue={3}>
             <Tabs.List style={{ display: 'flex', position: 'relative' }}>
               <Tabs.Tab value={1} style={{ width: '80px', height: '32px' }}>
                 One
@@ -515,7 +515,7 @@ describe('<Tabs.Indicator />', () => {
       await render(
         <>
           <style>{STYLED_INDICATOR_CSS}</style>
-          <Tabs.Root value={3}>
+          <Tabs.Root modelValue={3}>
             <Tabs.List style={{ display: 'flex', position: 'relative' }}>
               <Tabs.Tab value={1} style={{ width: '80px', height: '32px' }}>
                 One
@@ -541,7 +541,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('updates position when a different tab resizes', async () => {
       await render(
-        <Tabs.Root value={2}>
+        <Tabs.Root modelValue={2}>
           <Tabs.List
             data-testid="tab-list"
             style={{ width: '300px', display: 'flex', overflow: 'hidden' }}
@@ -587,7 +587,7 @@ describe('<Tabs.Indicator />', () => {
       const textSlots = { default: () => 'One' };
       const TestTabs = defineComponent(
         (props: { asAnchor: boolean }) => () => (
-          <Tabs.Root value={2}>
+          <Tabs.Root modelValue={2}>
             <Tabs.List
               data-testid="tab-list"
               style={{ width: '300px', display: 'flex', overflow: 'hidden' }}
@@ -640,7 +640,7 @@ describe('<Tabs.Indicator />', () => {
     it('falls back to offset positions when the tab list is scaled to zero', async () => {
       await render(
         <div style={{ transform: 'scale(0)' }}>
-          <Tabs.Root value={2}>
+          <Tabs.Root modelValue={2}>
             <Tabs.List
               data-testid="tab-list"
               style={{
@@ -681,7 +681,7 @@ describe('<Tabs.Indicator />', () => {
     it('updates position when a new tab is inserted and then resized', async () => {
       const TestTabs = defineComponent(
         (props: { insertedTabWidth: number | null }) => () => (
-          <Tabs.Root value={2}>
+          <Tabs.Root modelValue={2}>
             <Tabs.List
               data-testid="tab-list"
               style={{ width: '320px', display: 'flex', overflow: 'hidden' }}
@@ -737,7 +737,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('updates all indicators when a different tab resizes', async () => {
       await render(
-        <Tabs.Root value={2}>
+        <Tabs.Root modelValue={2}>
           <Tabs.List
             data-testid="tab-list"
             style={{ width: '300px', display: 'flex', overflow: 'hidden' }}
@@ -783,7 +783,7 @@ describe('<Tabs.Indicator />', () => {
     it('measures again when the orientation changes with no change of size', async () => {
       const TestTabs = defineComponent(
         (props: { orientation: Tabs.Root.Orientation }) => () => (
-          <Tabs.Root value={1} orientation={props.orientation}>
+          <Tabs.Root modelValue={1} orientation={props.orientation}>
             <Tabs.List
               style={{
                 display: 'flex',
@@ -830,7 +830,7 @@ describe('<Tabs.Indicator />', () => {
 
       // The part calls its `#render` slot in each render, so the calls count the renders.
       await render(
-        <Tabs.Root value={50}>
+        <Tabs.Root modelValue={50}>
           <Tabs.List
             data-testid="tab-list"
             style={{ width: '1200px', display: 'flex', overflow: 'hidden' }}
@@ -889,7 +889,7 @@ describe('<Tabs.Indicator />', () => {
 
     it('sets the orientation and the activation direction, and no attribute for the position or the size', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} style={{ width: '80px' }}>
               One
@@ -911,7 +911,7 @@ describe('<Tabs.Indicator />', () => {
         'data-testid': 'bubble',
       });
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(readDataAttributes(bubble)).toEqual({
         'data-activation-direction': 'right',
@@ -1172,7 +1172,7 @@ describe('<Tabs.Indicator />', () => {
   it('throws a descriptive error when rendered outside <Tabs.List>', async () => {
     await expect(
       render(
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.Indicator />
         </Tabs.Root>,
       ),

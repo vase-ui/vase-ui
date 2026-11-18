@@ -111,7 +111,7 @@ The `delay` prop gives the time in milliseconds to wait before the menu opens on
 
 ### Checkbox items
 
-Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its state with `v-model:checked`.
+Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its state with `v-model`.
 
 <DemoFrame>
   <DemoMenuCheckboxItems />
@@ -144,7 +144,7 @@ Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its s
 
 ### Radio items
 
-Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio buttons. Bind the selected value with `v-model:value` on the group.
+Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio buttons. Bind the selected value with `v-model` on the group.
 
 <DemoFrame>
   <DemoMenuRadioItems />
@@ -501,7 +501,7 @@ For external filtering, set `filter` to `null` and render the results yourself. 
 
 #### Controlling the query
 
-Control the query with `v-model:value` on `<Menu.FilterProvider>`, or with its `value` prop and its `valueChange` event. The query resets to an empty string when the menu closes. The `valueChange` event reports that change with the reason `'popup-close'`. Call `eventDetails.cancel()` to keep the query.
+Control the query with `v-model` on `<Menu.FilterProvider>`, or with its `modelValue` prop and its `valueChange` event. The query resets to an empty string when the menu closes. The `valueChange` event reports that change with the reason `'popup-close'`. Call `eventDetails.cancel()` to keep the query.
 
 #### Highlighting
 

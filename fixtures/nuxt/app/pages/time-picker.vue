@@ -9,7 +9,7 @@ const time = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('15:0
 <template>
   <main>
     <form data-testid="form" @submit.prevent>
-      <TimePicker.Root v-model:value="time" name="start" locale="en-US" :hour-cycle="12">
+      <TimePicker.Root v-model="time" name="start" locale="en-US" :hour-cycle="12">
         <TimePicker.Field data-testid="start">
           <TimeField.Input>
             <template #segment="{ segment }">

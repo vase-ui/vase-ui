@@ -8,7 +8,7 @@ import { Field } from '@vase-ui/vue/field';
 
 const props = withDefaults(
   defineProps<{
-    // `model` binds `v-model:checked`. `keeps` gives `checked` and keeps it for each change.
+    // `model` binds `v-model`. `keeps` gives `checked` and keeps it for each change.
     mode?: 'uncontrolled' | 'model' | 'keeps' | 'field' | 'group';
     defaultChecked?: boolean;
     checked?: boolean | undefined;
@@ -36,7 +36,7 @@ function handleGroupChange(value: string[], details: CheckboxGroupChangeEventDet
   <form data-testid="form" @submit.prevent>
     <CheckboxGroup
       v-if="mode === 'group'"
-      v-model:value="groupModel"
+      v-model="groupModel"
       :all-values="['a', 'b']"
       @value-change="handleGroupChange"
     >
@@ -55,16 +55,12 @@ function handleGroupChange(value: string[], details: CheckboxGroupChangeEventDet
       </label>
     </Field.Root>
     <label v-else-if="mode === 'model'" data-testid="label">
-      <Checkbox.Root
-        v-model:checked="model"
-        data-testid="checkbox"
-        @checked-change="handleCheckedChange"
-      />
+      <Checkbox.Root v-model="model" data-testid="checkbox" @checked-change="handleCheckedChange" />
       News
     </label>
     <label v-else-if="mode === 'keeps'" data-testid="label">
       <Checkbox.Root
-        :checked="model"
+        :model-value="model"
         data-testid="checkbox"
         @checked-change="handleCheckedChange"
       />

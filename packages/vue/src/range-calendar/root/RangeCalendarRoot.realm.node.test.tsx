@@ -18,7 +18,7 @@ describe('<RangeCalendar.Root /> with a value of another realm', () => {
     });
 
     const html = await renderToString(
-      <RangeCalendarAnatomy {...{ locale: 'en-US', value: [start, end] }} />,
+      <RangeCalendarAnatomy {...{ locale: 'en-US', modelValue: [start, end] }} />,
     );
 
     expect(clock).toHaveBeenCalledWith('Asia/Tokyo');

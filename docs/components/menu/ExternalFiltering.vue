@@ -10,7 +10,7 @@ const results = computed(() => actions.filter((action) => contains(action, query
 </script>
 
 <template>
-  <Menu.FilterProvider v-model:value="query" :filter="null">
+  <Menu.FilterProvider v-model="query" :filter="null">
     <Menu.Root>
       <Menu.Trigger>Actions</Menu.Trigger>
       <Menu.Portal>

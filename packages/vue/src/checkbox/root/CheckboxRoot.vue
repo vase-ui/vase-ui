@@ -62,11 +62,11 @@ export interface CheckboxRootProps
    * To render an uncontrolled checkbox, use the `defaultChecked` prop instead.
    * @default undefined
    */
-  checked?: boolean | undefined;
+  modelValue?: boolean | undefined;
   /**
    * Whether the checkbox is initially ticked.
    *
-   * To render a controlled checkbox, use the `checked` prop instead.
+   * To render a controlled checkbox, use the `modelValue` prop instead.
    * @default false
    */
   defaultChecked?: boolean | undefined;
@@ -166,7 +166,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CheckboxRootProps>(), {
   as: 'span',
-  checked: undefined,
+  modelValue: undefined,
   defaultChecked: false,
   disabled: false,
   indeterminate: false,
@@ -188,9 +188,9 @@ const emit = defineEmits<{
   checkedChange: [checked: boolean, eventDetails: CheckboxRootChangeEventDetails];
   /**
    * Event handler called after `checkedChange` with the new value, unless a listener cancels the
-   * change. `v-model:checked` uses it.
+   * change. `v-model` uses it.
    */
-  'update:checked': [checked: boolean];
+  'update:modelValue': [checked: boolean];
 }>();
 
 defineSlots<{
@@ -298,7 +298,7 @@ const groupChecked = computed(() =>
 );
 
 const isChecked = useControlled({
-  controlled: () => groupChecked.value ?? props.checked,
+  controlled: () => groupChecked.value ?? props.modelValue,
   default: () => props.defaultChecked,
   name: 'Checkbox',
   state: 'checked',
@@ -366,7 +366,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
   }
 
   // The group gets the same `details` object, so a `cancel()` in `valueChange` of the group also
-  // stops `update:checked`.
+  // stops `update:modelValue`.
   const value = itemValue.value;
   const changeGroup = groupProps.value.onCheckedChange;
   if (changeGroup) {
@@ -384,7 +384,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
     return false;
   }
 
-  emit('update:checked', nextChecked);
+  emit('update:modelValue', nextChecked);
   isChecked.value = nextChecked;
   return true;
 }
@@ -426,7 +426,7 @@ function takeInputState(event?: Event) {
 // `true` when the state changed.
 function resetChecked(event: Event) {
   return (
-    props.checked === undefined &&
+    props.modelValue === undefined &&
     isChecked.value !== props.defaultChecked &&
     requestChange(props.defaultChecked, event)
   );

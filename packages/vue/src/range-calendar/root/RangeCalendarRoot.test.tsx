@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -54,7 +55,7 @@ describe('<RangeCalendar.Root />', () => {
   }
 
   function listeners() {
-    return { onValueChange: vi.fn(), 'onUpdate:value': vi.fn() };
+    return { onValueChange: vi.fn(), 'onUpdate:modelValue': vi.fn() };
   }
 
   describeConformance(<RangeCalendar.Root today={today()} />, () => ({
@@ -102,7 +103,10 @@ describe('<RangeCalendar.Root />', () => {
       expect(ends([value])).toEqual(['2026-11-10', null]);
       expect(details.reason).toBe('day-press');
       expect(details.event).toBeInstanceOf(MouseEvent);
-      expect(ends([handlers['onUpdate:value'].mock.calls[0]![0]])).toEqual(['2026-11-10', null]);
+      expect(ends([handlers['onUpdate:modelValue'].mock.calls[0]![0]])).toEqual([
+        '2026-11-10',
+        null,
+      ]);
       expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
       expect(cell('2026-11-10')).toHaveAttribute('aria-selected', 'true');
       expect(cell('2026-11-10')).toHaveAttribute('data-selected');
@@ -156,7 +160,7 @@ describe('<RangeCalendar.Root />', () => {
         onValueChange: vi.fn((_value: unknown, details: { cancel: () => void }) => {
           details.cancel();
         }),
-        'onUpdate:value': vi.fn(),
+        'onUpdate:modelValue': vi.fn(),
       };
       const { user } = await renderRange({
         defaultValue: [day('2026-11-03'), day('2026-11-05')],
@@ -166,7 +170,7 @@ describe('<RangeCalendar.Root />', () => {
       await user.click(button('2026-11-10'));
 
       expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
-      expect(handlers['onUpdate:value']).not.toHaveBeenCalled();
+      expect(handlers['onUpdate:modelValue']).not.toHaveBeenCalled();
       expect(shown().start).toEqual(['2026-11-03']);
     });
 
@@ -230,16 +234,36 @@ describe('<RangeCalendar.Root />', () => {
   });
 
   describe('the value', () => {
+    it('writes the selected range to v-model and follows the range set by the parent', async () => {
+      const range = shallowRef<readonly [Temporal.PlainDate | null, Temporal.PlainDate | null]>([
+        null,
+        null,
+      ]);
+      const { user } = await render(() => (
+        <RangeCalendarAnatomy {...{ today: today(), locale: 'en-US' }} v-model={range.value} />
+      ));
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-11'));
+      expect(range.value.map((date) => date?.toString())).toEqual(['2026-11-10', '2026-11-11']);
+
+      range.value = [null, null];
+      await flushMicrotasks();
+      expect(shown()).toEqual({ start: [], middle: [], end: [] });
+    });
+
     it('leaves the range of a controlled calendar to its value', async () => {
       const handlers = listeners();
-      const { user, setProps } = await renderRange({ value: [null, null], ...handlers });
+      const { user, setProps } = await renderRange({
+        modelValue: [null, null],
+        onValueChange: handlers.onValueChange,
+      });
 
       await user.click(button('2026-11-10'));
 
       expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
       expect(shown()).toEqual({ start: [], middle: [], end: [] });
 
-      await setProps({ value: [day('2026-11-10'), null] });
+      await setProps({ modelValue: [day('2026-11-10'), null] });
 
       expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
       expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
@@ -247,7 +271,7 @@ describe('<RangeCalendar.Root />', () => {
 
     it('shows a controlled range with a null end as a range in progress, and ends it', async () => {
       const handlers = listeners();
-      const { user } = await renderRange({ value: [day('2026-11-10'), null], ...handlers });
+      const { user } = await renderRange({ modelValue: [day('2026-11-10'), null], ...handlers });
 
       expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
       await user.click(button('2026-11-14'));
@@ -256,7 +280,7 @@ describe('<RangeCalendar.Root />', () => {
     });
 
     it('shows a range that the consumer gives in the reverse order', async () => {
-      await renderRange({ value: [day('2026-11-14'), day('2026-11-10')] });
+      await renderRange({ modelValue: [day('2026-11-14'), day('2026-11-10')] });
 
       expect(shown().start).toEqual(['2026-11-10']);
       expect(shown().end).toEqual(['2026-11-14']);

@@ -181,7 +181,7 @@ describe('<Select.Positioner />', () => {
         <Select.Root
           open
           multiple={options.multiple}
-          value={options.value?.value}
+          modelValue={options.value?.value}
           defaultValue={options.defaultValue}
           onValueChange={(value: unknown, details: Select.Root.ChangeEventDetails) => {
             options.onValueChange(value, details);

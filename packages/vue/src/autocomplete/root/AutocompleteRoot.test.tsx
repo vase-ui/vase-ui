@@ -188,7 +188,7 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('VUE-74: text that the user typed before the hydration', () => {
-    it('writes the text to v-model:value', async () => {
+    it('writes the text to v-model', async () => {
       const serverHtml = await renderOnServer(
         'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
       );
@@ -1722,7 +1722,7 @@ describe('<Autocomplete.Root />', () => {
             <Autocomplete.Root
               mode="both"
               items={items}
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -1769,7 +1769,7 @@ describe('<Autocomplete.Root />', () => {
             <Autocomplete.Root
               mode="both"
               items={items}
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -2082,7 +2082,7 @@ describe('<Autocomplete.Root />', () => {
   describe('prop: value', () => {
     it('treats a controlled null value as an empty query', async () => {
       await render(
-        <Autocomplete.Root mode="both" value={null as never} items={['apple']} defaultOpen>
+        <Autocomplete.Root mode="both" modelValue={null as never} items={['apple']} defaultOpen>
           <Autocomplete.Input />
           <Autocomplete.Portal>
             <Autocomplete.Positioner>
@@ -2113,7 +2113,7 @@ describe('<Autocomplete.Root />', () => {
           return () => (
             <Autocomplete.Root
               mode={mode}
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue) => {
                 handleValueChange(nextValue);
                 value.value = nextValue;
@@ -3278,13 +3278,15 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('events', () => {
-    it('emits valueChange, then update:value, then openChange for typed text', async () => {
+    it('emits valueChange, then update:modelValue, then openChange for typed text', async () => {
       const events: string[] = [];
       await render(
         <Autocomplete.Root
           items={cities}
           onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+          }}
           onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
           {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
         >
@@ -3297,7 +3299,7 @@ describe('<Autocomplete.Root />', () => {
 
       expect(events).toEqual([
         'valueChange:ma:input-change',
-        'update:value:ma',
+        'update:modelValue:ma',
         'openChange:true:input-change',
         'update:open:true',
       ]);
@@ -3334,7 +3336,9 @@ describe('<Autocomplete.Root />', () => {
           defaultValue="Malta"
           defaultOpen
           onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+          }}
           onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
         >
           <Autocomplete.Input />
@@ -3358,7 +3362,9 @@ describe('<Autocomplete.Root />', () => {
           mode="both"
           items={cities}
           onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+          }}
         >
           <Autocomplete.Input />
           {popupWithList()}
@@ -3373,7 +3379,7 @@ describe('<Autocomplete.Root />', () => {
       await fireEvent.keyDown(getInput(), { key: 'Enter' });
       await flushMicrotasks();
 
-      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
+      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:modelValue:Malmö']);
       expect(getInput().value).toBe('Malmö');
     });
 
@@ -3388,7 +3394,9 @@ describe('<Autocomplete.Root />', () => {
             onValueChange={(value, details) =>
               events.push(`valueChange:${value}:${details.reason}`)
             }
-            {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+            {...{
+              'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+            }}
           >
             <Autocomplete.Input />
             {popupWithList()}
@@ -3466,7 +3474,7 @@ describe('<Autocomplete.Root />', () => {
               key="root"
               mode="both"
               items={cities}
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -3506,7 +3514,9 @@ describe('<Autocomplete.Root />', () => {
             events.push(`valueChange:${value}`);
             details.cancel();
           }}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+          }}
         >
           <Autocomplete.Input />
           <span data-testid="value">
@@ -3664,7 +3674,7 @@ describe('<Autocomplete.Root />', () => {
           <Autocomplete.Root
             name="search"
             items={cities}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next) => {
               handleValueChange(next);
               value.value = next;
@@ -3727,7 +3737,9 @@ describe('<Autocomplete.Root />', () => {
               onValueChange={(value, details) =>
                 events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
               }
-              {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+              {...{
+                'onUpdate:modelValue': (value: string) => events.push(`update:modelValue:${value}`),
+              }}
             >
               <Autocomplete.Input />
               {popupWithList()}
@@ -3743,7 +3755,7 @@ describe('<Autocomplete.Root />', () => {
 
         await reset();
 
-        expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:value:Malmö']);
+        expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:modelValue:Malmö']);
         expect(getFormData('search')).toEqual(['Malmö']);
         await fireEvent.keyDown(getInput(), { key: 'Escape' });
         await flushMicrotasks();

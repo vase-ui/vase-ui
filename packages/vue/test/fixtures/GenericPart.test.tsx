@@ -12,7 +12,7 @@ describe('<GenericPart />', () => {
   }));
 
   describe('uncontrolled', () => {
-    it('emits valueChange and then update:value before the click call returns, and changes the state', async () => {
+    it('emits valueChange and then update:modelValue before the click call returns, and changes the state', async () => {
       const calls: string[] = [];
       const { container } = await render(
         <GenericPart
@@ -21,8 +21,8 @@ describe('<GenericPart />', () => {
             calls.push('valueChange');
           }}
           {...{
-            'onUpdate:value': () => {
-              calls.push('update:value');
+            'onUpdate:modelValue': () => {
+              calls.push('update:modelValue');
             },
           }}
         />,
@@ -33,19 +33,19 @@ describe('<GenericPart />', () => {
 
       element.click();
 
-      expect(calls).toEqual(['valueChange', 'update:value']);
+      expect(calls).toEqual(['valueChange', 'update:modelValue']);
       await flushMicrotasks();
       expect(element).toHaveAttribute('data-selected');
     });
 
-    it('stops update:value and the state change when valueChange cancels the change', async () => {
+    it('stops update:modelValue and the state change when valueChange cancels the change', async () => {
       const updated: string[] = [];
       const { container } = await render(
         <GenericPart
           option="a"
           onValueChange={(_value, details) => details.cancel()}
           {...{
-            'onUpdate:value': (value: string) => {
+            'onUpdate:modelValue': (value: string) => {
               updated.push(value);
             },
           }}
@@ -77,9 +77,9 @@ describe('<GenericPart />', () => {
       const { container, setProps } = await render(
         <GenericPart
           option="a"
-          value="b"
+          modelValue="b"
           {...{
-            'onUpdate:value': (value: string) => {
+            'onUpdate:modelValue': (value: string) => {
               updated.push(value);
             },
           }}
@@ -93,7 +93,7 @@ describe('<GenericPart />', () => {
       expect(updated).toEqual(['a']);
       expect(element).not.toHaveAttribute('data-selected');
 
-      await setProps({ value: 'a' });
+      await setProps({ modelValue: 'a' });
 
       expect(element).toHaveAttribute('data-selected');
     });

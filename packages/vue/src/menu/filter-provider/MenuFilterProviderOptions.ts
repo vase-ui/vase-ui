@@ -26,7 +26,7 @@ export interface MenuFilterProviderOptions {
   locale?: Intl.LocalesArgument | undefined;
   /**
    * The uncontrolled filter query when the menu is initially rendered.
-   * To render a controlled query, use the `value` prop instead.
+   * To render a controlled query, use the `modelValue` prop instead.
    */
   defaultValue?: string | undefined;
   /**
@@ -34,5 +34,5 @@ export interface MenuFilterProviderOptions {
    * When the popup closes, `valueChange` is emitted with an empty query. The controlled
    * value changes only when the consumer updates this prop.
    */
-  value?: string | undefined;
+  modelValue?: string | undefined;
 }

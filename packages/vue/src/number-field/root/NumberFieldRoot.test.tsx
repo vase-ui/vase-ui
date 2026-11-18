@@ -160,8 +160,8 @@ describe('<NumberField />', () => {
       { name: 'no value', props: {}, text: '' },
       { name: '`defaultValue`', props: { defaultValue: 1234.5 }, text: '1234.5' },
       { name: 'a `defaultValue` of zero', props: { defaultValue: 0 }, text: '0' },
-      { name: '`value`', props: { value: 7 }, text: '7' },
-      { name: 'a `value` of `null`', props: { value: null }, text: '' },
+      { name: '`value`', props: { modelValue: 7 }, text: '7' },
+      { name: 'a `value` of `null`', props: { modelValue: null }, text: '' },
     ])('has the number of $name', async ({ props, text }) => {
       await render(<NumberFieldBase.Root {...props} />);
 
@@ -183,23 +183,26 @@ describe('<NumberField />', () => {
     });
 
     it('follows a controlled value', async () => {
-      const { setProps } = await render(<NumberFieldBase.Root value={1} />);
+      const { setProps } = await render(<NumberFieldBase.Root modelValue={1} />);
 
-      await setProps({ value: 2.5 });
+      await setProps({ modelValue: 2.5 });
       expect(getHiddenInput().value).toBe('2.5');
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       expect(getHiddenInput().value).toBe('');
     });
   });
 
-  describe('v-model:value', () => {
-    it('emits `valueChange` and then `update:value`, before the listener of the event returns', async () => {
+  describe('v-model', () => {
+    it('emits `valueChange` and then `update:modelValue`, before the listener of the event returns', async () => {
       const order: string[] = [];
       await render(
         <NumberFieldBase.Root
           onValueChange={(value: number | null) => order.push(`valueChange ${value}`)}
-          {...{ 'onUpdate:value': (value: number | null) => order.push(`update:value ${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: number | null) =>
+              order.push(`update:modelValue ${value}`),
+          }}
         />,
       );
       const input = getHiddenInput();
@@ -208,7 +211,7 @@ describe('<NumberField />', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
       order.push('end of the event');
 
-      expect(order).toEqual(['valueChange 7', 'update:value 7', 'end of the event']);
+      expect(order).toEqual(['valueChange 7', 'update:modelValue 7', 'end of the event']);
     });
 
     it('gives `valueChange` the reason `none` and the event of the hidden input', async () => {
@@ -224,7 +227,7 @@ describe('<NumberField />', () => {
       expect(details.event.target).toBe(getHiddenInput());
     });
 
-    it('does not emit `update:value`, and keeps the value, for a change that a listener cancels', async () => {
+    it('does not emit `update:modelValue`, and keeps the value, for a change that a listener cancels', async () => {
       const handleUpdate = vi.fn();
       await render(
         <NumberFieldBase.Root
@@ -233,7 +236,7 @@ describe('<NumberField />', () => {
             _value: number | null,
             details: NumberFieldBase.Root.ChangeEventDetails,
           ) => details.cancel()}
-          {...{ 'onUpdate:value': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         />,
       );
 
@@ -271,9 +274,9 @@ describe('<NumberField />', () => {
           const value = shallowRef<number | null>(null);
           return () => (
             <NumberFieldBase.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={handleChange}
-              {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+              {...{ 'onUpdate:modelValue': (next: number | null) => (value.value = next) }}
             />
           );
         },
@@ -326,9 +329,9 @@ describe('<NumberField />', () => {
       const value = shallowRef<number | null>(null);
       await render(() => (
         <NumberFieldBase.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={handleChange}
-          {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+          {...{ 'onUpdate:modelValue': (next: number | null) => (value.value = next) }}
         />
       ));
       await autofill('42');
@@ -506,7 +509,9 @@ describe('<NumberField />', () => {
 
     it('after an autofill that the parent of a controlled field does not accept', async () => {
       const handleUpdate = vi.fn();
-      await render(<NumberFieldBase.Root value={5} {...{ 'onUpdate:value': handleUpdate }} />);
+      await render(
+        <NumberFieldBase.Root modelValue={5} {...{ 'onUpdate:modelValue': handleUpdate }} />,
+      );
 
       await autofill('7');
 
@@ -744,8 +749,8 @@ describe('<NumberField />', () => {
               <form data-testid="form">
                 <NumberFieldBase.Root
                   name="quantity"
-                  value={value.value}
-                  {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+                  modelValue={value.value}
+                  {...{ 'onUpdate:modelValue': (next: number | null) => (value.value = next) }}
                 />
               </form>
             );
@@ -1064,8 +1069,8 @@ describe('<NumberField />', () => {
               <Form data-testid="form" errors={errors}>
                 <Field.Root data-testid="root" name="quantity">
                   <NumberFieldBase.Root
-                    value={value.value}
-                    {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+                    modelValue={value.value}
+                    {...{ 'onUpdate:modelValue': (next: number | null) => (value.value = next) }}
                   />
                   <Field.Error data-testid="error" />
                 </Field.Root>
@@ -1162,8 +1167,8 @@ describe('<NumberField />', () => {
                 validationMode="onChange"
               >
                 <NumberFieldBase.Root
-                  value={value.value}
-                  {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+                  modelValue={value.value}
+                  {...{ 'onUpdate:modelValue': (next: number | null) => (value.value = next) }}
                 />
                 <Field.Error data-testid="error" />
               </Field.Root>
@@ -1347,10 +1352,10 @@ describe('<NumberField />', () => {
 
   describe('prop: value', () => {
     it('should accept a number value that can change over time', async () => {
-      const { rerender } = await render(<NumberField value={1} />);
+      const { rerender } = await render(<NumberField modelValue={1} />);
       const input = screen.getByRole('textbox');
       expect(input).toHaveValue('1');
-      await rerender(<NumberField value={2} />);
+      await rerender(<NumberField modelValue={2} />);
       expect(input).toHaveValue('2');
     });
 
@@ -1361,14 +1366,14 @@ describe('<NumberField />', () => {
     });
 
     it('should accept a `null` value', async () => {
-      await render(<NumberField value={null} />);
+      await render(<NumberField modelValue={null} />);
       const input = screen.getByRole('textbox');
       expect(input).toHaveValue('');
     });
 
     it('should be `null` when the input is empty but not trimmed', async () => {
       const onValueChange = vi.fn();
-      await render(<NumberField value={1} onValueChange={onValueChange} />);
+      await render(<NumberField modelValue={1} onValueChange={onValueChange} />);
       const input = screen.getByRole('textbox');
       await fireEvent.input(input, { target: { value: '  ' } });
       expect(onValueChange.mock.calls[0][0]).toBe(null);
@@ -1457,7 +1462,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(1);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(val) => {
               onValueChange(val);
               value.value = val;
@@ -1478,7 +1483,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(val) => {
               onValueChange(val);
               value.value = val;
@@ -1499,7 +1504,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(val) => {
               onValueChange(val);
               value.value = val;
@@ -2288,7 +2293,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v) => {
               fn(v);
               value.value = v;
@@ -2314,7 +2319,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v) => {
               fn(v);
               value.value = v;
@@ -2341,7 +2346,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v) => {
               fn(v);
               value.value = v;
@@ -2367,7 +2372,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v) => {
               fn(v);
               value.value = v;
@@ -2520,7 +2525,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(0);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             step={0.0001}
             onValueChange={(val: number | null) => {
               onValueChange(val);
@@ -2562,7 +2567,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(100000000000000.1);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             step={0.1}
             onValueChange={(val: number | null) => {
               onValueChange(val);
@@ -2650,7 +2655,7 @@ describe('<NumberField />', () => {
 
   describe('prop: format', () => {
     it('reformats the visible text when the format prop changes at the same value', async () => {
-      const { setProps } = await render(<NumberField value={1000} />);
+      const { setProps } = await render(<NumberField modelValue={1000} />);
       const input = screen.getByRole('textbox');
       expect(input).toHaveValue(new Intl.NumberFormat().format(1000));
 
@@ -2677,7 +2682,7 @@ describe('<NumberField />', () => {
         const val = shallowRef<number | null>(1);
         return () => (
           <div>
-            <NumberField value={val.value} onValueChange={(next) => (val.value = next)} />
+            <NumberField modelValue={val.value} onValueChange={(next) => (val.value = next)} />
             <button onClick={() => (val.value = 1234)}>set</button>
           </div>
         );
@@ -3602,7 +3607,7 @@ describe('<NumberField />', () => {
             <>
               <Field.Root validationMode="onChange" validate={validateSpy} name="quantity">
                 <NumberFieldBase.Root
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next) => {
                     value.value = next;
                   }}
@@ -3816,7 +3821,7 @@ describe('<NumberField />', () => {
           <Form>
             <Field.Root validationMode="onBlur" validate={validate} name="quantity">
               <NumberFieldBase.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -3979,7 +3984,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4035,7 +4040,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4059,7 +4064,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4083,7 +4088,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4108,7 +4113,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             format={{ style: 'percent' }}
             onValueChange={(v: number | null) => {
               onValueChange(v);
@@ -4154,7 +4159,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4178,7 +4183,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;
@@ -4202,7 +4207,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(null);
         return () => (
           <NumberField
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(v: number | null) => {
               onValueChange(v);
               value.value = v;

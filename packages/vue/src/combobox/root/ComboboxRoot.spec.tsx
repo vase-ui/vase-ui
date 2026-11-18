@@ -91,7 +91,7 @@ const groupItemsReadonly = [
 
 <Combobox.Root
   items={objectItems}
-  value="a"
+  modelValue="a"
   onValueChange={(value) => {
     // @ts-expect-error - possibly null
     value.startsWith('a');
@@ -100,7 +100,7 @@ const groupItemsReadonly = [
 
 <Combobox.Root
   items={objectItems}
-  value={objectItems[0]}
+  modelValue={objectItems[0]}
   onValueChange={(value) => {
     // @ts-expect-error - possibly null
     value.label;
@@ -254,13 +254,13 @@ declare const dynamicMultiple: boolean;
     { id: 1, name: 'Alice' },
     { id: 2, name: 'Bob' },
   ]}
-  value={null}
+  modelValue={null}
 />;
 
 const stringValue = shallowRef('a');
 
 <Combobox.Root
-  value={stringValue.value}
+  modelValue={stringValue.value}
   onValueChange={(newValue) => {
     // @ts-expect-error The selection can be cleared even when the current value is a string.
     newValue.length;
@@ -273,7 +273,7 @@ const stringValue = shallowRef('a');
 const nullableStringValue = shallowRef<string | null>('a');
 
 <Combobox.Root
-  value={nullableStringValue.value}
+  modelValue={nullableStringValue.value}
   onValueChange={(newValue) => {
     // @ts-expect-error The selected value may be null.
     newValue.length;
@@ -288,7 +288,7 @@ const tupleValue = ['javascript', 'typescript'] as const;
 <>
   <Combobox.Root
     multiple
-    value={readonlyValue}
+    modelValue={readonlyValue}
     onValueChange={(newValue) => {
       multipleValue.value = newValue;
     }}
@@ -302,7 +302,7 @@ const tupleValue = ['javascript', 'typescript'] as const;
   />
   <Combobox.Root
     multiple
-    value={tupleValue}
+    modelValue={tupleValue}
     onValueChange={(newValue) => {
       expectType<('javascript' | 'typescript')[], typeof newValue>(newValue);
       newValue.pop();
@@ -320,7 +320,7 @@ const tupleValue = ['javascript', 'typescript'] as const;
 // Pinning the type arguments defaults `Item` to `Value`, so filtered items are typed in the
 // selection value domain rather than inferred from the array that is passed.
 <Combobox.Root<string>
-  value="a"
+  modelValue="a"
   // @ts-expect-error Filtered items must match the pinned value type.
   filteredItems={objectItems}
 />;

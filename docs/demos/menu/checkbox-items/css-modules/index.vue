@@ -45,19 +45,19 @@ const CheckIcon: FunctionalComponent = () =>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
         <Menu.Popup :class="styles.Popup">
-          <Menu.CheckboxItem v-model:checked="showMinimap" :class="styles.CheckboxItem">
+          <Menu.CheckboxItem v-model="showMinimap" :class="styles.CheckboxItem">
             <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>
             <span :class="styles.CheckboxItemText">Minimap</span>
           </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model:checked="showSearch" :class="styles.CheckboxItem">
+          <Menu.CheckboxItem v-model="showSearch" :class="styles.CheckboxItem">
             <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>
             <span :class="styles.CheckboxItemText">Search</span>
           </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model:checked="showSidebar" :class="styles.CheckboxItem">
+          <Menu.CheckboxItem v-model="showSidebar" :class="styles.CheckboxItem">
             <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>

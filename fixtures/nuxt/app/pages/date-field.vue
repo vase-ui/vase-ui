@@ -11,7 +11,7 @@ const month = Temporal.PlainYearMonth.from('2026-11');
   <main>
     <form data-testid="form" @submit.prevent>
       <Field.Root>
-        <DateField.Root v-model:value="day" name="when" locale="en-US" data-testid="when">
+        <DateField.Root v-model="day" name="when" locale="en-US" data-testid="when">
           <DateField.Input>
             <template #segment="{ segment }">
               <DateField.Segment

@@ -6,7 +6,7 @@ const nullableValue: string | null = 'item-1';
 
 export const inferredFromValue = (
   <NavigationMenu.Root
-    value={stringValue}
+    modelValue={stringValue}
     onValueChange={(value) => {
       expectType<string | null, typeof value>(value);
     }}
@@ -22,7 +22,7 @@ export const inferredFromDefaultValue = (
   />
 );
 
-export const explicitValue = <NavigationMenu.Root<'a' | 'b'> value="a" />;
+export const explicitValue = <NavigationMenu.Root<'a' | 'b'> modelValue="a" />;
 
 export const explicitHandler = (
   <NavigationMenu.Root<'a' | 'b'>
@@ -34,7 +34,7 @@ export const explicitHandler = (
 
 export const nullableValueRoot = (
   <NavigationMenu.Root<string | null>
-    value={nullableValue}
+    modelValue={nullableValue}
     onValueChange={(value) => {
       expectType<string | null, typeof value>(value);
     }}
@@ -51,7 +51,7 @@ export const defaultGeneric = (
 );
 
 // @ts-expect-error value must match explicit generic type
-export const wrongValue = <NavigationMenu.Root<'a' | 'b'> value="c" />;
+export const wrongValue = <NavigationMenu.Root<'a' | 'b'> modelValue="c" />;
 
 // `valueChange` is an emit, so the props type has no handler key. The handler types take the value
 // type from `NavigationMenu.Root.Value`.

@@ -74,11 +74,11 @@ Import the component and assemble its parts:
 
 `Combobox.Root` renders no element. It renders hidden inputs beside its content. A combobox with a `name` submits its value with the form. With `multiple`, it submits one entry for each selected item.
 
-Bind the value with `v-model:value`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:value`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event. Without `multiple`, a pick of the selected item emits no `valueChange` and no `update:value`. For the text that the input has, the root emits no `inputValueChange` and no `update:inputValue`. A press of `Combobox.Clear`, or Escape in a closed input, emits no `valueChange` and no `update:value` when the combobox has no value.
+Bind the value with `v-model`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:modelValue`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event. Without `multiple`, a pick of the selected item emits no `valueChange` and no `update:modelValue`. For the text that the input has, the root emits no `inputValueChange` and no `update:inputValue`. A press of `Combobox.Clear`, or Escape in a closed input, emits no `valueChange` and no `update:modelValue` when the combobox has no value.
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in `Combobox.Input`. After the hydration, the root emits `inputValueChange` and `update:inputValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
-The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A combobox with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its hidden input is `type="hidden"`.
+The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A combobox with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its hidden input is `type="hidden"`.
 
 ## Item values
 
@@ -86,7 +86,7 @@ Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item be
 
 <<< ./combobox/ItemObjects.vue{19}
 
-That item is the selected value. The `value` and `defaultValue` props take it, and `valueChange` gives it. To store IDs instead, see [Value selection with IDs](#value-selection-with-ids).
+That item is the selected value. The `modelValue` and `defaultValue` props take it, and `valueChange` gives it. To store IDs instead, see [Value selection with IDs](#value-selection-with-ids).
 
 ## Examples
 

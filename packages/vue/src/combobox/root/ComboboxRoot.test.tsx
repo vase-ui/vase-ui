@@ -1595,7 +1595,7 @@ describe('<Combobox.Root />', () => {
   });
 
   describe('events', () => {
-    it('emits valueChange, update:value, inputValueChange, update:inputValue, openChange and update:open in this order for a pick', async () => {
+    it('emits valueChange, update:modelValue, inputValueChange, update:inputValue, openChange and update:open in this order for a pick', async () => {
       const events: string[] = [];
       let inputValue: ComputedRef<ComboboxInputElementValue>;
       const InputValueProbe = defineComponent(() => {
@@ -1615,7 +1615,8 @@ describe('<Combobox.Root />', () => {
           }
           onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
           {...{
-            'onUpdate:value': (value: unknown) => events.push(`update:value:${String(value)}`),
+            'onUpdate:modelValue': (value: unknown) =>
+              events.push(`update:modelValue:${String(value)}`),
             'onUpdate:inputValue': (value: unknown) =>
               events.push(`update:inputValue:${String(value)}`),
             'onUpdate:open': (value: unknown) => events.push(`update:open:${String(value)}`),
@@ -1640,7 +1641,7 @@ describe('<Combobox.Root />', () => {
 
       expect(events).toEqual([
         'valueChange:Malta:item-press',
-        'update:value:Malta',
+        'update:modelValue:Malta',
         'inputValueChange:Malta:item-press:ma',
         'update:inputValue:Malta',
         'openChange:false:item-press',
@@ -1673,7 +1674,7 @@ describe('<Combobox.Root />', () => {
             {...{
               [`on${name[0].toUpperCase()}${name.slice(1)}`]: (_: unknown, details: any) =>
                 cancel(details),
-              'onUpdate:value': () => updates.push('value'),
+              'onUpdate:modelValue': () => updates.push('value'),
               'onUpdate:inputValue': () => updates.push('inputValue'),
               'onUpdate:open': () => updates.push('open'),
             }}
@@ -1758,7 +1759,7 @@ describe('<Combobox.Root />', () => {
             }
             onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
             {...{
-              'onUpdate:value': () => events.push('update:value'),
+              'onUpdate:modelValue': () => events.push('update:modelValue'),
               'onUpdate:inputValue': () => events.push('update:inputValue'),
             }}
           >
@@ -1811,7 +1812,7 @@ describe('<Combobox.Root />', () => {
       await render(() => (
         <Combobox.Root
           items={cities}
-          value={value.value}
+          modelValue={value.value}
           itemToStringLabel={upperCase.value ? (city: string) => city.toUpperCase() : undefined}
           onInputValueChange={handleInputValueChange}
         >
@@ -2517,7 +2518,7 @@ describe('<Combobox.Root />', () => {
           <Combobox.Root
             name="city"
             items={cities}
-            value="Oslo"
+            modelValue="Oslo"
             inputValue="Oslo"
             onValueChange={handleValueChange}
             onInputValueChange={handleInputValueChange}
@@ -2955,7 +2956,7 @@ describe('<Combobox.Root />', () => {
               key="root"
               name="city"
               items={cities}
-              value={value.value}
+              modelValue={value.value}
               onInputValueChange={handleInputValueChange}
               onOpenChange={handleOpenChange}
             >
@@ -3268,7 +3269,7 @@ describe('<Combobox.Root />', () => {
     it('sends no event at a `pageshow` event after a change of the controlled value', async () => {
       const value = shallowRef<string | null>('Main Street 1\nFlat 2');
       const { container } = await render(() => (
-        <Combobox.Root name="address" items={addresses} value={value.value}>
+        <Combobox.Root name="address" items={addresses} modelValue={value.value}>
           <ComboboxInputPart />
           <ComboboxListPart />
         </Combobox.Root>
@@ -3768,7 +3769,7 @@ describe('<Combobox.Root />', () => {
                 items={['apple', 'banana', 'cherry']}
                 inline
                 open
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -3823,7 +3824,7 @@ describe('<Combobox.Root />', () => {
                   items={['apple', 'banana', 'cherry']}
                   inline
                   open
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next) => {
                     value.value = next;
                   }}
@@ -4383,7 +4384,7 @@ describe('<Combobox.Root />', () => {
 
       it('restores the selected item with the input outside the popup', async () => {
         const { user } = await render(
-          <Combobox.Root items={['apple', 'banana', 'cherry']} value="banana" defaultOpen>
+          <Combobox.Root items={['apple', 'banana', 'cherry']} modelValue="banana" defaultOpen>
             <Combobox.Input data-testid="input" />
             <Combobox.Portal>
               <Combobox.Positioner>
@@ -4753,7 +4754,7 @@ describe('<Combobox.Root />', () => {
           return () => (
             <div>
               <Combobox.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -4817,7 +4818,7 @@ describe('<Combobox.Root />', () => {
           return () => (
             <div>
               <Combobox.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -4913,7 +4914,7 @@ describe('<Combobox.Root />', () => {
           return () => (
             <div>
               <Combobox.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -4995,7 +4996,7 @@ describe('<Combobox.Root />', () => {
           return () => (
             <div>
               <Combobox.Root
-                value={{ id: 2, label: 'banana' }}
+                modelValue={{ id: 2, label: 'banana' }}
                 isItemEqualToValue={isItemEqualToValue}
                 onItemHighlighted={onItemHighlighted}
                 itemToStringLabel={(v: any) => v.label}
@@ -5235,7 +5236,7 @@ describe('<Combobox.Root />', () => {
             <Combobox.Root
               items={['apple', 'banana', 'cherry']}
               multiple
-              value={value.value}
+              modelValue={value.value}
               onValueChange={() => {}}
             >
               <Combobox.Trigger data-testid="trigger">
@@ -5724,7 +5725,7 @@ describe('<Combobox.Root />', () => {
             <Combobox.Root
               items={items}
               multiple
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -5779,7 +5780,7 @@ describe('<Combobox.Root />', () => {
             <Combobox.Root
               items={items}
               multiple
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -5845,7 +5846,7 @@ describe('<Combobox.Root />', () => {
           return () => (
             <Combobox.Root
               multiple
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 value.value = next;
               }}
@@ -5901,7 +5902,7 @@ describe('<Combobox.Root />', () => {
       it('should create multiple hidden inputs for form submission', async () => {
         const items = ['a', 'b', 'c'];
         await render(
-          <Combobox.Root multiple value={items} name="languages">
+          <Combobox.Root multiple modelValue={items} name="languages">
             <Combobox.Input />
             <Combobox.Portal>
               <Combobox.Positioner>
@@ -7507,7 +7508,7 @@ describe('<Combobox.Root />', () => {
   describe('prop: required', () => {
     it('does not mark the hidden input as required when selection exists in multiple mode', async () => {
       await render(
-        <Combobox.Root multiple required name="languages" value={['a']}>
+        <Combobox.Root multiple required name="languages" modelValue={['a']}>
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -7519,7 +7520,7 @@ describe('<Combobox.Root />', () => {
 
     it('keeps the hidden input required when no selection exists in multiple mode', async () => {
       await render(
-        <Combobox.Root multiple required name="languages" value={[]}>
+        <Combobox.Root multiple required name="languages" modelValue={[]}>
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -7839,7 +7840,7 @@ describe('<Combobox.Root />', () => {
       await render(
         <Combobox.Root
           items={items}
-          value={value}
+          modelValue={value}
           itemToStringLabel={(item) => item.country}
           itemToStringValue={(item) => item.code}
         >
@@ -7954,7 +7955,7 @@ describe('<Combobox.Root />', () => {
 
     it('derives input from controlled value on first mount when unspecified', async () => {
       await render(
-        <Combobox.Root value="banana">
+        <Combobox.Root modelValue="banana">
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -7974,7 +7975,7 @@ describe('<Combobox.Root />', () => {
 
     it('inputValue overrides derivation when provided', async () => {
       await render(
-        <Combobox.Root value="apple" inputValue="x">
+        <Combobox.Root modelValue="apple" inputValue="x">
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -8026,7 +8027,7 @@ describe('<Combobox.Root />', () => {
       ];
 
       const { setProps } = await render(
-        <Combobox.Root items={items} value={items[0]}>
+        <Combobox.Root items={items} modelValue={items[0]}>
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -8034,7 +8035,7 @@ describe('<Combobox.Root />', () => {
       const input = screen.getByRole<HTMLInputElement>('combobox');
       expect(input).toHaveValue('Apple');
 
-      await setProps({ value: items[1] });
+      await setProps({ modelValue: items[1] });
 
       expect(input).toHaveValue('Banana');
     });
@@ -8063,7 +8064,7 @@ describe('<Combobox.Root />', () => {
             </button>
             <Combobox.Root
               items={items}
-              value={withItems.value}
+              modelValue={withItems.value}
               onValueChange={(value: string | null) => {
                 withItems.value = value;
               }}
@@ -8087,7 +8088,7 @@ describe('<Combobox.Root />', () => {
               </Combobox.Portal>
             </Combobox.Root>
             <Combobox.Root
-              value={withoutItems.value}
+              modelValue={withoutItems.value}
               onValueChange={(value: string | null) => {
                 withoutItems.value = value;
               }}
@@ -8127,7 +8128,7 @@ describe('<Combobox.Root />', () => {
       ];
 
       const { setProps } = await render(
-        <Combobox.Root items={initialItems} value={initialItems[0]}>
+        <Combobox.Root items={initialItems} modelValue={initialItems[0]}>
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -8141,7 +8142,7 @@ describe('<Combobox.Root />', () => {
         { value: 'c', label: 'Cherry' },
       ];
 
-      await setProps({ items: nextItems, value: nextItems[0] });
+      await setProps({ items: nextItems, modelValue: nextItems[0] });
       expect(input).toHaveValue('Apricot');
 
       const sameLengthDifferentItems = [
@@ -8150,14 +8151,14 @@ describe('<Combobox.Root />', () => {
         { value: 'c', label: 'Clementine' },
       ];
 
-      await setProps({ items: sameLengthDifferentItems, value: sameLengthDifferentItems[0] });
+      await setProps({ items: sameLengthDifferentItems, modelValue: sameLengthDifferentItems[0] });
       expect(input).toHaveValue('Ambrosia');
     });
 
     it('restores the selected label after a one-step clear and items reload', async () => {
       const itemToStringLabel = (item: string) => (item === 'apple' ? 'Apple' : item);
       const { setProps, user } = await render(
-        <Combobox.Root items={['apple']} value="apple" itemToStringLabel={itemToStringLabel}>
+        <Combobox.Root items={['apple']} modelValue="apple" itemToStringLabel={itemToStringLabel}>
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -8182,24 +8183,24 @@ describe('<Combobox.Root />', () => {
       ];
 
       const { setProps } = await render(
-        <Combobox.Root items={items} value={items[0]} onInputValueChange={onInputValueChange}>
+        <Combobox.Root items={items} modelValue={items[0]} onInputValueChange={onInputValueChange}>
           <Combobox.Input />
         </Combobox.Root>,
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
-      await setProps({ value: items[1] });
+      await setProps({ modelValue: items[1] });
 
       expect(input).toHaveValue('Banana');
       expect(onInputValueChange).toHaveBeenCalledTimes(1);
 
-      await setProps({ value: items[2] });
+      await setProps({ modelValue: items[2] });
 
       expect(input).toHaveValue('Cherry');
       expect(onInputValueChange).toHaveBeenCalledTimes(2);
 
-      await setProps({ value: items[0] });
+      await setProps({ modelValue: items[0] });
 
       expect(input).toHaveValue('Apple');
       expect(onInputValueChange).toHaveBeenCalledTimes(3);
@@ -8212,7 +8213,7 @@ describe('<Combobox.Root />', () => {
         (props: { value: string }) => () => (
           <Combobox.Root
             items={['One', 'Two']}
-            value={props.value}
+            modelValue={props.value}
             onInputValueChange={(_, eventDetails) => {
               if (cancelSync && eventDetails.reason === 'none') {
                 eventDetails.cancel();
@@ -8255,7 +8256,7 @@ describe('<Combobox.Root />', () => {
         return () => (
           <Combobox.Root
             items={['Apple', 'Banana', 'Cherry']}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next === 'Banana' ? 'Cherry' : (next ?? '');
             }}
@@ -8292,7 +8293,11 @@ describe('<Combobox.Root />', () => {
     it('re-syncs the input when the resolved label of an unchanged value changes', async () => {
       const App = defineComponent(
         (props: { itemToStringLabel: (value: string) => string }) => () => (
-          <Combobox.Root items={['a', 'b']} value="b" itemToStringLabel={props.itemToStringLabel}>
+          <Combobox.Root
+            items={['a', 'b']}
+            modelValue="b"
+            itemToStringLabel={props.itemToStringLabel}
+          >
             <Combobox.Input />
           </Combobox.Root>
         ),
@@ -8313,7 +8318,7 @@ describe('<Combobox.Root />', () => {
 
     it('restores derived input after items load asynchronously', async () => {
       const { setProps } = await render(
-        <Combobox.Root items={[]} value="banana">
+        <Combobox.Root items={[]} modelValue="banana">
           <Combobox.Input />
         </Combobox.Root>,
       );
@@ -8761,7 +8766,7 @@ describe('<Combobox.Root />', () => {
             <style>{closeAnimationStyle}</style>
             <Combobox.Root
               items={['apple', 'apricot', 'banana']}
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next: string | null) => {
                 value.value = next;
                 inputValue.value = next ?? '';
@@ -10478,9 +10483,9 @@ describe('<Combobox.Root />', () => {
         <Field.Root validationMode="onBlur" validate={validate}>
           <Combobox.Root
             multiple
-            value={value.value}
+            modelValue={value.value}
             {...{
-              'onUpdate:value': (next: string[]) => {
+              'onUpdate:modelValue': (next: string[]) => {
                 value.value = next;
               },
             }}
@@ -10585,7 +10590,7 @@ describe('<Combobox.Root />', () => {
         return () => (
           <Combobox.Root
             items={movies}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: Movie | null) => {
               value.value = next;
             }}
@@ -10675,7 +10680,7 @@ describe('<Combobox.Root />', () => {
             onInputValueChange={(next: string) => {
               searchValue.value = next;
             }}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: TestItem | null) => {
               value.value = next;
             }}
@@ -10737,7 +10742,7 @@ describe('<Combobox.Root />', () => {
         return () => (
           <Combobox.Root
             filteredItems={fruits}
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(next: string | null) => {
               value.value = next;
             }}
@@ -13858,7 +13863,7 @@ describe('<Combobox.Root />', () => {
                 <label for="fruit">Fruit</label>
                 <Combobox.Root
                   items={asyncFruits}
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -15827,7 +15832,7 @@ describe('<Combobox.Root />', () => {
       await render(
         <Combobox.Root
           items={users}
-          value={{ id: 2, name: 'Bob' }}
+          modelValue={{ id: 2, name: 'Bob' }}
           itemToStringLabel={(item) => item.name}
           itemToStringValue={(item) => String(item.id)}
           isItemEqualToValue={(item, value) => item.id === value.id}
@@ -16044,7 +16049,7 @@ describe('<Combobox.Root />', () => {
       const { user, setProps } = await render(
         <Combobox.Root
           items={undefined}
-          value={loadedItems[0]}
+          modelValue={loadedItems[0]}
           inputValue=""
           onInputValueChange={handleInputValueChange}
           onValueChange={handleValueChange}
@@ -16119,7 +16124,7 @@ describe('<Combobox.Root />', () => {
             <Combobox.Root
               items={props.countries}
               filter={null}
-              value={country.value}
+              modelValue={country.value}
               inputValue={inputValue.value}
               onInputValueChange={(value: string) => {
                 inputValue.value = value;
@@ -16517,7 +16522,12 @@ describe('<Combobox.Root />', () => {
     it('normalizes a controlled null value when selecting in multiple mode', async () => {
       const onValueChange = vi.fn();
       await render(
-        <Combobox.Root multiple value={null as never} defaultOpen onValueChange={onValueChange}>
+        <Combobox.Root
+          multiple
+          modelValue={null as never}
+          defaultOpen
+          onValueChange={onValueChange}
+        >
           <Combobox.Input />
           <Combobox.List>
             <Combobox.Item value="apple">apple</Combobox.Item>
@@ -16532,7 +16542,7 @@ describe('<Combobox.Root />', () => {
 
     it('normalizes a controlled null value while closed in multiple mode', async () => {
       await render(
-        <Combobox.Root multiple value={null as never} items={['apple']}>
+        <Combobox.Root multiple modelValue={null as never} items={['apple']}>
           <Combobox.Input />
           <SelectedIndexProbe />
         </Combobox.Root>,

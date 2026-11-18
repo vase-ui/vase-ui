@@ -811,7 +811,7 @@ describe('<TimeClock.Face />', () => {
         },
       },
       { name: 'a read only clock', extra: { readOnly: true } },
-      { name: 'a controlled clock that keeps its time', extra: { value: time('11:00') } },
+      { name: 'a controlled clock that keeps its time', extra: { modelValue: time('11:00') } },
     ])('puts the old value back on the range input after $name', async ({ extra }) => {
       const { slider } = await renderClock(extra);
 

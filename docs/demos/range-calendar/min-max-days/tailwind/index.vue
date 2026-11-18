@@ -30,7 +30,7 @@ const summary = computed(() => {
 <template>
   <RangeCalendar.Root
     class="relative box-border inline-block rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
-    v-model:value="value"
+    v-model="value"
     aria-label="Rental dates"
     :min-days="3"
     :max-days="7"

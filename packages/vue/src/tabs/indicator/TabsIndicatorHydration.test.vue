@@ -17,7 +17,7 @@ const AsyncIndicator = defineAsyncComponent(() => Promise.resolve(Tabs.Indicator
 </script>
 
 <template>
-  <Tabs.Root :value="value">
+  <Tabs.Root :model-value="value">
     <Tabs.List style="display: flex; position: relative; width: 300px">
       <Tabs.Tab value="a" style="width: 100px; height: 40px; padding: 0; border: 0">A</Tabs.Tab>
       <Tabs.Tab value="b" style="width: 100px; height: 40px; padding: 0; border: 0">B</Tabs.Tab>

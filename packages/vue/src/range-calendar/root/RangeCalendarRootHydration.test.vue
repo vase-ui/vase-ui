@@ -24,7 +24,7 @@ const range = () =>
 <template>
   <RangeCalendarAnatomy
     :today="date(props.today)"
-    :value="range()"
+    :model-value="range()"
     :focused-date="date(props.focusedDate)"
     :disabled-dates="date(props.disabledDate)"
     :disabled="props.disabled"

@@ -54,14 +54,14 @@ describe('<DatePicker.Field />', () => {
 
   it('follows a new value of a controlled picker', async () => {
     const { container, setProps } = await render(
-      <DatePicker.Root value={day} locale="en-US">
+      <DatePicker.Root modelValue={day} locale="en-US">
         <DatePicker.Field>
           <DateField.Input />
         </DatePicker.Field>
       </DatePicker.Root>,
     );
 
-    await setProps({ value: Temporal.PlainDate.from('2026-12-24') });
+    await setProps({ modelValue: Temporal.PlainDate.from('2026-12-24') });
 
     expect(segmentOf(container, 'month').value).toBe('12');
     expect(segmentOf(container, 'day').value).toBe('24');
@@ -121,7 +121,7 @@ describe('<DatePicker.Field />', () => {
           defaultValue={day}
           locale="en-US"
           onValueChange={onValueChange}
-          {...{ 'onUpdate:value': onUpdateValue }}
+          {...{ 'onUpdate:modelValue': onUpdateValue }}
         >
           <DatePicker.Field>
             <DateField.Input />
@@ -148,7 +148,7 @@ describe('<DatePicker.Field />', () => {
           onValueChange={(_value: unknown, details: { cancel: () => void }) => {
             details.cancel();
           }}
-          {...{ 'onUpdate:value': onUpdateValue }}
+          {...{ 'onUpdate:modelValue': onUpdateValue }}
         >
           <DatePicker.Field>
             <DateField.Input />
@@ -413,7 +413,7 @@ describe('<DatePicker.Field />', () => {
       const { container } = await render(
         <form>
           <DatePicker.Root
-            value={Temporal.PlainDate.from('2026-12-24')}
+            modelValue={Temporal.PlainDate.from('2026-12-24')}
             defaultValue={day}
             name="when"
             locale="en-US"

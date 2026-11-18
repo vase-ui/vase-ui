@@ -36,14 +36,14 @@ function record(name: string, value: unknown, details: { event: Event }) {
       </label>
     </Field.Root>
     <CheckboxGroup
-      v-model:value="letters"
+      v-model="letters"
       @value-change="(value, details) => record('letters', value, details)"
     >
       <label data-testid="letter-a-label"><Checkbox.Root name="letters" value="a" />A</label>
       <label data-testid="letter-b-label"><Checkbox.Root name="letters" value="b" />B</label>
     </CheckboxGroup>
     <RadioGroup
-      v-model:value="size"
+      v-model="size"
       name="size"
       @value-change="(value, details) => record('size', value, details)"
     >
@@ -60,7 +60,7 @@ function record(name: string, value: unknown, details: { event: Event }) {
       />
     </Field.Root>
     <Slider.Root
-      v-model:value="range"
+      v-model="range"
       name="range"
       @value-change="(value, details) => record('range', value, details)"
     >
@@ -78,7 +78,7 @@ function record(name: string, value: unknown, details: { event: Event }) {
       </Slider.Control>
     </Slider.Root>
     <DateField.Root
-      v-model:value="when"
+      v-model="when"
       name="when"
       locale="en-US"
       :class="`size-${size}`"

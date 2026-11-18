@@ -63,7 +63,7 @@ describe('<Checkbox.Indicator />', () => {
 
   it('should render indicator when checked', async () => {
     await render(
-      <Checkbox.Root checked>
+      <Checkbox.Root modelValue>
         <Checkbox.Indicator data-testid="indicator" />
       </Checkbox.Root>,
     );
@@ -84,7 +84,7 @@ describe('<Checkbox.Indicator />', () => {
 
     it('should keep indicator mounted when checked', async () => {
       await render(
-        <Checkbox.Root checked>
+        <Checkbox.Root modelValue>
           <Checkbox.Indicator data-testid="indicator" keepMounted />
         </Checkbox.Root>,
       );
@@ -115,7 +115,7 @@ describe('<Checkbox.Indicator />', () => {
           >
             Close
           </button>
-          <Checkbox.Root checked={checked.value}>
+          <Checkbox.Root modelValue={checked.value}>
             <Checkbox.Indicator data-testid="indicator" />
           </Checkbox.Root>
         </div>
@@ -160,7 +160,7 @@ describe('<Checkbox.Indicator />', () => {
           >
             Close
           </button>
-          <Checkbox.Root checked={checked.value}>
+          <Checkbox.Root modelValue={checked.value}>
             <Checkbox.Indicator
               class="animation-test-indicator"
               data-testid="indicator"
@@ -219,7 +219,7 @@ describe('<Checkbox.Indicator />', () => {
           <div>
             <style>{style}</style>
             <button onClick={handleCheck}>Check</button>
-            <Checkbox.Root checked={checked.value}>
+            <Checkbox.Root modelValue={checked.value}>
               <Checkbox.Indicator
                 class="animation-test-indicator"
                 data-testid="indicator"
@@ -279,7 +279,7 @@ describe('<Checkbox.Indicator />', () => {
           <div>
             <style>{style}</style>
             <button onClick={handleUncheck}>Uncheck</button>
-            <Checkbox.Root checked={checked.value}>
+            <Checkbox.Root modelValue={checked.value}>
               <Checkbox.Indicator class="animation-test-indicator" data-testid="indicator" />
             </Checkbox.Root>
           </div>
@@ -331,7 +331,7 @@ describe('<Checkbox.Indicator />', () => {
             <style>{style}</style>
             <button onClick={handleUncheck}>Uncheck</button>
             {Array.from({ length: 10 }, (_, index) => (
-              <Checkbox.Root checked={checked.value} key={index}>
+              <Checkbox.Root modelValue={checked.value} key={index}>
                 <Checkbox.Indicator
                   class="animation-test-indicator"
                   data-testid={`indicator-${index}`}

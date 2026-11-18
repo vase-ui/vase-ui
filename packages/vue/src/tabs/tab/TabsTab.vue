@@ -64,7 +64,7 @@ export interface TabsTabProps
    * Instead, the next enabled Tab will be selected.
    * However, it does not work like this during server-side rendering, as it is not known
    * during pre-rendering which Tabs are disabled.
-   * To work around it, ensure that `defaultValue` or `value` on `<Tabs.Root>` is set to an enabled Tab's value.
+   * Give `defaultValue` or `modelValue` on `<Tabs.Root>` the value of an enabled tab.
    */
   disabled?: boolean | undefined;
   /**

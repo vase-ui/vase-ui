@@ -1022,7 +1022,7 @@ describe('<Slider.Thumb />', () => {
       const App = defineComponent(
         (props: { max: number }) => () => (
           <Slider.Root
-            value={0}
+            modelValue={0}
             min={0}
             max={props.max}
             thumbAlignment="edge"
@@ -1069,7 +1069,7 @@ describe('<Slider.Thumb />', () => {
         const App = defineComponent(
           (props: { value: number[]; width: number }) => () => (
             <Slider.Root
-              value={props.value}
+              modelValue={props.value}
               thumbAlignment="edge"
               style={{ width: `${props.width}px` }}
             >
@@ -1126,7 +1126,7 @@ describe('<Slider.Thumb />', () => {
       async () => {
         const App = defineComponent(
           (props: { value: number[] }) => () => (
-            <Slider.Root value={props.value} thumbAlignment="edge" style={{ width: '200px' }}>
+            <Slider.Root modelValue={props.value} thumbAlignment="edge" style={{ width: '200px' }}>
               <Slider.Control
                 data-testid="control"
                 style={{ position: 'relative', width: '100%', height: '10px' }}
@@ -1645,7 +1645,7 @@ describe('<Slider.Thumb />', () => {
               }}
             />
             <Slider.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(newValue) => {
                 value.value = newValue as number;
               }}
@@ -1680,7 +1680,7 @@ describe('<Slider.Thumb />', () => {
               }}
             />
             <Slider.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(newValue) => {
                 value.value = newValue as number[];
               }}
@@ -1732,7 +1732,7 @@ describe('<Slider.Thumb />', () => {
             min
           </button>
           <Slider.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue) => {
               value.value = newValue;
             }}
@@ -1951,7 +1951,7 @@ describe('<Slider.Thumb />', () => {
       const value = shallowRef(30);
       const visible = shallowRef(true);
       const Content = defineComponent(() => () => (
-        <Slider.Root value={value.value} thumbAlignment="edge" style={{ width: '200px' }}>
+        <Slider.Root modelValue={value.value} thumbAlignment="edge" style={{ width: '200px' }}>
           <Slider.Control style={{ position: 'relative', width: '100%', height: '10px' }}>
             <Slider.Thumb data-testid="thumb" style={{ width: '20px', height: '10px' }} />
           </Slider.Control>
@@ -1992,7 +1992,7 @@ describe('<Slider.Thumb />', () => {
       const width = shallowRef(200);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Slider.Root
-          value={value.value}
+          modelValue={value.value}
           thumbAlignment="edge"
           style={{ width: `${width.value}px` }}
         >

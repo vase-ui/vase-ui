@@ -76,7 +76,7 @@ Because of the hidden input, `DateField.Root` has more than one root node. A rul
 
 ## Value
 
-The value is a `Temporal` object, and `v-model:value` gives back the same kind. The field has a value only when each segment has a number, and it is `null` before that.
+The value is a `Temporal` object, and `v-model` gives back the same kind. The field has a value only when each segment has a number, and it is `null` before that.
 
 | Kind                      | Segments                  | Default granularity |
 | ------------------------- | ------------------------- | ------------------- |
@@ -87,7 +87,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind. 
 
 An emitted value keeps the calendar, the time and the time zone of the value that you gave. With no value, the `granularity` prop gives the kind of the value that the field makes: `day` gives a `Temporal.PlainDate`, `month` gives a `Temporal.PlainYearMonth`, and each other unit gives a `Temporal.PlainDateTime`. Use `referenceDate` to give the kind, the time zone and the numbers that an empty segment takes when the user presses an arrow key.
 
-Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. The locale gives only the calendar in which the field shows the date, never the calendar of the value. A field with no `value`, `defaultValue` and `referenceDate` makes a value in the ISO calendar. The exception is an empty year and month field whose `calendar` prop names a calendar with other months than ISO, such as `persian` or `hebrew`. It makes its value in that calendar, because an ISO year and month does not show in that calendar. See the [guide](/handbook/dates-and-times#calendars).
+Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. The locale gives only the calendar in which the field shows the date, never the calendar of the value. A field with no `modelValue`, `defaultValue` or `referenceDate` makes a value in the ISO calendar. The exception is an empty year and month field whose `calendar` prop names a calendar with other months than ISO, such as `persian` or `hebrew`. It makes its value in that calendar, because an ISO year and month does not show in that calendar. See the [guide](/handbook/dates-and-times#calendars).
 
 ## Examples
 
@@ -266,9 +266,9 @@ A server and a browser can have other `Intl` data for the same locale. The layou
 
 `DateField.Input` renders its parts in a list of fixed length, with a comment in each place after the last part. A layout with more or fewer parts thus hydrates with no message, also in the `children` component of a `#render` slot.
 
-Digits that a visitor types, or that the browser fills, before the page hydrates stay in the segments. After the hydration, the field takes their numbers. When each segment then has a number, the root emits `valueChange` and `update:value`. When the visitor left a segment before the page hydrated, the segment then also gets `change`, `blur` and `focusout`.
+Digits that a visitor types, or that the browser fills, before the page hydrates stay in the segments. After the hydration, the field takes their numbers. When each segment then has a number, the root emits `valueChange` and `update:modelValue`. When the visitor left a segment before the page hydrated, the segment then also gets `change`, `blur` and `focusout`.
 
-The root also takes a date that a program or the browser writes into its hidden input before the page hydrates. It takes a date that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+The root also takes a date that a program or the browser writes into its hidden input before the page hydrates. It takes a date that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 

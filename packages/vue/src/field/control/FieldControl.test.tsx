@@ -85,7 +85,7 @@ describe('<Field.Control />', () => {
         <Field.Root>
           <Field.Control
             data-testid="control"
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -138,7 +138,7 @@ describe('<Field.Control />', () => {
       return () => (
         <Field.Root validationMode="onChange" validate={validate}>
           <Field.Control
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -160,7 +160,7 @@ describe('<Field.Control />', () => {
       return () => (
         <Field.Root data-testid="root">
           <Field.Control
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = Number(nextValue);
             }}
@@ -193,7 +193,7 @@ describe('<Field.Control />', () => {
       return () => (
         <Field.Root data-testid="root" validationMode="onChange" validate={validate}>
           <Field.Control
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -230,7 +230,7 @@ describe('<Field.Control />', () => {
       return () => (
         <Field.Root validationMode="onBlur" validate={validate}>
           <Field.Control
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -269,7 +269,7 @@ describe('<Field.Control />', () => {
       return () => (
         <Field.Root validationMode="onBlur" validate={validate}>
           <Field.Control
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -311,7 +311,7 @@ describe('<Field.Control />', () => {
         <Field.Root validationMode="onBlur">
           <Field.Control
             required
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue) => {
               value.value = nextValue;
             }}
@@ -348,7 +348,7 @@ describe('<Field.Control />', () => {
   it('does not set filled state on mount for an empty controlled value', async () => {
     await render(
       <Field.Root data-testid="root">
-        <Field.Control value="" onValueChange={() => {}} />
+        <Field.Control modelValue="" onValueChange={() => {}} />
       </Field.Root>,
     );
 
@@ -362,7 +362,7 @@ describe('<Field.Control />', () => {
         <Field.Root data-testid="root">
           <Field.Control
             key={String(empty.value)}
-            value={empty.value ? '' : 'value'}
+            modelValue={empty.value ? '' : 'value'}
             onValueChange={() => {}}
           />
           <button
@@ -461,7 +461,7 @@ describe('<Field.Control />', () => {
   it('sets filled state from a controlled value on a custom element', async () => {
     await render(
       <Field.Root data-testid="root">
-        <Field.Control value="value" onValueChange={() => {}} as="div" />
+        <Field.Control modelValue="value" onValueChange={() => {}} as="div" />
       </Field.Root>,
     );
 
@@ -596,7 +596,7 @@ describe('<Field.Control />', () => {
         >
           <Field.Root validate={validate}>
             <Field.Control
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue) => {
                 value.value = nextValue;
               }}
@@ -803,19 +803,19 @@ describe('<Field.Control />', () => {
     });
   });
 
-  describe('v-model:value', () => {
-    it('emits valueChange with the value and the details, then update:value', async () => {
+  describe('v-model', () => {
+    it('emits valueChange with the value and the details, then update:modelValue', async () => {
       const calls: string[] = [];
 
       await render(
         <Field.Root>
           <Field.Control
-            value=""
+            modelValue=""
             onValueChange={(value, details) => {
               calls.push(`valueChange ${value} ${details.reason} ${details.event.type}`);
             }}
-            onUpdate:value={(value) => {
-              calls.push(`update:value ${value}`);
+            onUpdate:modelValue={(value) => {
+              calls.push(`update:modelValue ${value}`);
             }}
           />
         </Field.Root>,
@@ -823,7 +823,7 @@ describe('<Field.Control />', () => {
 
       await fireEvent.input(screen.getByRole('textbox'), { target: { value: 'a' } });
 
-      expect(calls).toEqual(['valueChange a none input', 'update:value a']);
+      expect(calls).toEqual(['valueChange a none input', 'update:modelValue a']);
     });
 
     it.each([
@@ -835,13 +835,13 @@ describe('<Field.Control />', () => {
       await render(
         <Field.Root data-testid="root">
           <Field.Control
-            value="fixed"
+            modelValue="fixed"
             onValueChange={(value, details) => {
               if (cancel) {
                 details.cancel();
               }
             }}
-            onUpdate:value={(value) => {
+            onUpdate:modelValue={(value) => {
               updates.push(value);
             }}
           />
@@ -867,7 +867,7 @@ describe('<Field.Control />', () => {
 
       await render(
         <Field.Root>
-          <Field.Control as={TextInput} value="fixed" />
+          <Field.Control as={TextInput} modelValue="fixed" />
         </Field.Root>,
       );
 
@@ -951,7 +951,7 @@ describe('<Field.Control />', () => {
           return () => (
             <Field.Root>
               <Field.Control
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   handleValueChange(next);
                   value.value = keep(next);
@@ -981,7 +981,7 @@ describe('<Field.Control />', () => {
         return () => (
           <Field.Root data-testid="root">
             <Field.Control
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(next) => {
                 handleValueChange(next);
                 value.value = next;
@@ -1023,7 +1023,7 @@ describe('<Field.Control />', () => {
         return () => (
           <Field.Root invalid={invalid.value}>
             <Field.Control
-              value="abc"
+              modelValue="abc"
               onValueChange={(next) => {
                 handleValueChange(next);
                 // The control renders in the same flush as the event, and Vue writes the prop.
@@ -1625,7 +1625,7 @@ describe('<Field.Control />', () => {
       };
     }
 
-    it('writes the typed text to v-model:value', async () => {
+    it('writes the typed text to v-model', async () => {
       const { control, root, model, changes } = await hydrateTyped(
         { value: 'foo' },
         { typed: 'foo bar', focus: 'control' },
@@ -1664,7 +1664,7 @@ describe('<Field.Control />', () => {
       expect(control).toHaveValue('foo');
     });
 
-    it('writes the typed text of a textarea to v-model:value', async () => {
+    it('writes the typed text of a textarea to v-model', async () => {
       const { control, model } = await hydrateTyped(
         { value: 'foo', as: 'textarea' },
         { typed: 'foo bar', focus: 'control' },
@@ -1793,7 +1793,7 @@ describe('<Field.Control />', () => {
       const value = shallowRef('a');
       const { container } = await render(() => (
         <Field.Root>
-          <Field.Control value={value.value} data-testid="input" />
+          <Field.Control modelValue={value.value} data-testid="input" />
         </Field.Root>
       ));
       const recorded = recordInputEvents(container);

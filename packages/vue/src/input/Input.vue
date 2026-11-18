@@ -43,7 +43,7 @@ export interface InputProps
   /**
    * The value of the input. Use when controlled.
    */
-  value?: string | number | readonly string[] | undefined;
+  modelValue?: string | number | readonly string[] | undefined;
   /**
    * Whether the component should ignore user interaction.
    * The `disabled` prop on `<Field.Root>` takes precedence over this.
@@ -64,19 +64,19 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<InputProps>(), {
   as: 'input',
   disabled: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
   /**
-   * Callback fired when the `value` changes. Use when controlled.
+   * The input emits this event when the user edits its value.
    */
   valueChange: [value: string, eventDetails: InputChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
 }>();
 
 defineSlots<{
@@ -94,13 +94,13 @@ const element = computed(() => control.value?.element ?? null);
 // Vue takes a declared event out of `$attrs`, so the template gives `Field.Control` a listener for
 // each event. Each handler emits the event again at once with the same arguments.
 // `Field.Control` reads `details.isCanceled` after its `valueChange` emit returns. A
-// `details.cancel()` in a listener of this part thus stops `update:value`.
+// `details.cancel()` in a listener of this part thus stops `update:modelValue`.
 function emitValueChange(value: string, eventDetails: InputChangeEventDetails) {
   emit('valueChange', value, eventDetails);
 }
 
 function emitUpdateValue(value: string) {
-  emit('update:value', value);
+  emit('update:modelValue', value);
 }
 
 defineExpose({ element });
@@ -112,7 +112,7 @@ defineExpose({ element });
     ref="control"
     v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
     @value-change="emitValueChange"
-    @update:value="emitUpdateValue"
+    @update:model-value="emitUpdateValue"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -123,6 +123,6 @@ defineExpose({ element });
     ref="control"
     v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
     @value-change="emitValueChange"
-    @update:value="emitUpdateValue"
+    @update:model-value="emitUpdateValue"
   />
 </template>

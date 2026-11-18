@@ -38,7 +38,7 @@ function switchProps() {
     as: props.nativeButton ? 'button' : undefined,
     nativeButton: props.nativeButton,
     defaultChecked: props.defaultChecked,
-    checked: props.checked,
+    modelValue: props.checked,
     disabled: props.disabled,
     readOnly: props.readOnly,
     required: props.required,

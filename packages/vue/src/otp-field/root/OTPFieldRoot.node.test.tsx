@@ -143,7 +143,11 @@ describe('<OTPField.Root />', () => {
 
     it.each([
       { name: 'a field that is complete', props: { defaultValue: '123456' }, complete: true },
-      { name: 'a controlled field that is complete', props: { value: '123456' }, complete: true },
+      {
+        name: 'a controlled field that is complete',
+        props: { modelValue: '123456' },
+        complete: true,
+      },
       {
         name: 'a value with extra characters',
         props: { defaultValue: '12a34b56c7' },

@@ -60,9 +60,9 @@ Import the component and assemble its parts:
 
 `TimeClock.Face` is the part that the user presses or drags. The `number` slot of the face gives each number of the face to `TimeClock.Number`. The face has no numbers without that slot. It also keeps a range input that is hidden from sight. The input is the one slider that assistive technology sees.
 
-Bind the time with `v-model:value`. The value is a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A pick keeps the kind of the value, and its date, its time zone and each unit that the user did not pick.
+Bind the time with `v-model`. The value is a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A pick keeps the kind of the value, and its date, its time zone and each unit that the user did not pick.
 
-The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
 A clock with no value shows the time of `referenceDate`, or 00:00. The first pick has the kind, the date and the time zone of `referenceDate`. With no `referenceDate`, it is a `Temporal.PlainTime`.
 

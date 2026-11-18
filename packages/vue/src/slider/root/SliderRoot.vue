@@ -60,7 +60,7 @@ export interface SliderRootProps<
   /**
    * The uncontrolled value of the slider when it's initially rendered.
    *
-   * To render a controlled slider, use the `value` prop instead.
+   * To render a controlled slider, use the `modelValue` prop instead.
    */
   defaultValue?: Value | undefined;
   /**
@@ -143,7 +143,7 @@ export interface SliderRootProps<
    * The value of the slider.
    * For range sliders, provide an array with one value per thumb.
    */
-  value?: Value | undefined;
+  modelValue?: Value | undefined;
   /**
    * The id of the root. The id of `Slider.Label` derives from it.
    */
@@ -183,7 +183,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
-// With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
+// With no `modelValue` and no `defaultValue`, the value is `min`, so the default is `number`.
 import { computed, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
@@ -227,7 +227,7 @@ const props = withDefaults(defineProps<SliderRootProps<Value>>(), {
   step: 1,
   thumbAlignment: 'center',
   thumbCollisionBehavior: 'push',
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -251,9 +251,9 @@ const emit = defineEmits<{
   ];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value extends number ? number : Value];
+  'update:modelValue': [value: Value extends number ? number : Value];
   /**
    * Callback function that is fired when a value change is committed.
    * Does not fire if the value did not change, or if the change was canceled.
@@ -318,7 +318,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 // The internal value is potentially unsorted, e.g. to support frozen arrays
 // https://github.com/mui/material-ui/pull/28472
 const valueUnwrapped = useControlled<number | readonly number[]>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue ?? props.min,
   name: 'Slider',
 });
@@ -442,7 +442,7 @@ function setValue(newValue: number | number[], details: SliderRootChangeEventDet
 
   lastChangeReasonRef.value = details.reason;
 
-  emit('update:value', newValue as Value extends number ? number : Value);
+  emit('update:modelValue', newValue as Value extends number ? number : Value);
   valueUnwrapped.value = newValue;
 
   return true;
@@ -562,7 +562,7 @@ watch(
 
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
-  if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
+  if (props.modelValue !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
     return false;
   }
 

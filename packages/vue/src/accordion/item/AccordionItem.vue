@@ -31,7 +31,7 @@ export interface AccordionItemProps
    * open state.
    * @example
    * ```vue
-   * <Accordion.Root :value="['a']">
+   * <Accordion.Root :model-value="['a']">
    *   <Accordion.Item value="a" /> <!-- initially open -->
    *   <Accordion.Item value="b" /> <!-- initially closed -->
    * </Accordion.Root>

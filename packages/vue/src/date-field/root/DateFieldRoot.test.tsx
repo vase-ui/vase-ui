@@ -166,7 +166,7 @@ describe('<DateField.Root />', () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
         <DateField.Root
-          value={Temporal.PlainDate.from('2026-11-14')}
+          modelValue={Temporal.PlainDate.from('2026-11-14')}
           locale="en-US"
           onValueChange={onValueChange}
         >
@@ -305,7 +305,7 @@ describe('<DateField.Root />', () => {
   });
 
   describe('event: valueChange', () => {
-    it('emits valueChange and then update:value, and a cancel stops update:value', async () => {
+    it('emits valueChange and then update:modelValue, and a cancel stops update:modelValue', async () => {
       const calls: string[] = [];
       let cancel = false;
       const { container, user } = await render(
@@ -319,8 +319,8 @@ describe('<DateField.Root />', () => {
             }
           }}
           {...{
-            'onUpdate:value': (value: Temporal.PlainDate | null) =>
-              calls.push(`update:value ${value?.toString()}`),
+            'onUpdate:modelValue': (value: Temporal.PlainDate | null) =>
+              calls.push(`update:modelValue ${value?.toString()}`),
           }}
         >
           <DateField.Input />
@@ -332,7 +332,7 @@ describe('<DateField.Root />', () => {
 
       expect(calls).toEqual([
         `valueChange 2026-11-15 ${REASONS.keyboard}`,
-        'update:value 2026-11-15',
+        'update:modelValue 2026-11-15',
       ]);
 
       cancel = true;

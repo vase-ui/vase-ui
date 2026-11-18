@@ -9,7 +9,7 @@ declare const month: Temporal.PlainYearMonth;
 
 // The type of the value that the picker gives follows the value that the parent gives.
 <DatePicker.Root
-  value={day}
+  modelValue={day}
   onValueChange={(value) => {
     expectType<Temporal.PlainDate | null, typeof value>(value);
   }}
@@ -27,17 +27,17 @@ declare const month: Temporal.PlainYearMonth;
   }}
 />;
 <DatePicker.Root
-  value={month}
+  modelValue={month}
   onValueChange={(value) => {
     expectType<Temporal.PlainYearMonth | null, typeof value>(value);
   }}
 />;
-<DatePicker.Root value={null} />;
+<DatePicker.Root modelValue={null} />;
 
 // @ts-expect-error a plain `Date` is not a value of the picker
-<DatePicker.Root value={new Date()} />;
+<DatePicker.Root modelValue={new Date()} />;
 // @ts-expect-error a time has no date
-<DatePicker.Root value={Temporal.PlainTime.from('15:04')} />;
+<DatePicker.Root modelValue={Temporal.PlainTime.from('15:04')} />;
 // @ts-expect-error `minDate` is a `Temporal` value
 <DatePicker.Root minDate={new Date()} />;
 

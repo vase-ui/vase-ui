@@ -9,7 +9,7 @@ declare const month: Temporal.PlainYearMonth;
 
 // The type of the value that the field gives follows the value that the parent gives.
 <DateField.Root
-  value={day}
+  modelValue={day}
   onValueChange={(value) => {
     expectType<Temporal.PlainDate | null, typeof value>(value);
   }}
@@ -27,17 +27,17 @@ declare const month: Temporal.PlainYearMonth;
   }}
 />;
 <DateField.Root
-  value={month}
+  modelValue={month}
   onValueChange={(value) => {
     expectType<Temporal.PlainYearMonth | null, typeof value>(value);
   }}
 />;
-<DateField.Root value={null} />;
+<DateField.Root modelValue={null} />;
 
 // @ts-expect-error a plain `Date` is not a value of the field
-<DateField.Root value={new Date()} />;
+<DateField.Root modelValue={new Date()} />;
 // @ts-expect-error a time has no date
-<DateField.Root value={Temporal.PlainTime.from('15:04')} />;
+<DateField.Root modelValue={Temporal.PlainTime.from('15:04')} />;
 // @ts-expect-error `minDate` is a `Temporal` value
 <DateField.Root minDate={new Date()} />;
 

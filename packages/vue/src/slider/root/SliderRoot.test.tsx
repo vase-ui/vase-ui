@@ -242,7 +242,7 @@ describe('<Slider.Root />', () => {
     async () => {
       const onValueChange = vi.fn();
       await render(
-        <TestRangeSlider value={[19, 41]} min={20} max={40} onValueChange={onValueChange} />,
+        <TestRangeSlider modelValue={[19, 41]} min={20} max={40} onValueChange={onValueChange} />,
       );
 
       const sliderControl = screen.getByTestId('control');
@@ -324,7 +324,7 @@ describe('<Slider.Root />', () => {
       await render(
         <div dir="rtl">
           <DirectionProvider direction="rtl">
-            <TestSlider value={30} onValueChange={handleValueChange} />
+            <TestSlider modelValue={30} onValueChange={handleValueChange} />
           </DirectionProvider>
         </div>,
       );
@@ -657,9 +657,9 @@ describe('<Slider.Root />', () => {
     it('supports non-integer values', async () => {
       await render(
         <>
-          <TestSlider value={51.1} min={-100} max={100} step={0.00000001} />
-          <TestSlider value={0.00000005} min={-100} max={100} step={0.00000001} />
-          <TestSlider value={1e-7} min={-100} max={100} step={0.00000001} />
+          <TestSlider modelValue={51.1} min={-100} max={100} step={0.00000001} />
+          <TestSlider modelValue={0.00000005} min={-100} max={100} step={0.00000001} />
+          <TestSlider modelValue={1e-7} min={-100} max={100} step={0.00000001} />
         </>,
       );
       const [slider1, slider2, slider3] = screen.getAllByRole('slider');
@@ -958,7 +958,7 @@ describe('<Slider.Root />', () => {
         const value = shallowRef(0);
         return () => (
           <Slider.Root
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(newValue: number) => {
               value.value = newValue;
             }}
@@ -1558,7 +1558,7 @@ describe('<Slider.Root />', () => {
         <TestSlider
           onValueChange={handleValueChange}
           onValueCommitted={handleValueCommitted}
-          value={0}
+          modelValue={0}
         />,
       );
 
@@ -1667,7 +1667,7 @@ describe('<Slider.Root />', () => {
           <TestSlider
             onValueChange={handleValueChange}
             onValueCommitted={handleValueCommitted}
-            value={0}
+            modelValue={0}
           />,
         );
 
@@ -1817,7 +1817,7 @@ describe('<Slider.Root />', () => {
     it.skipIf(isJSDOM)('should hedge against a dropped mouseup event', async () => {
       const handleValueChange = vi.fn();
 
-      await render(<TestSlider onValueChange={handleValueChange} value={0} />);
+      await render(<TestSlider onValueChange={handleValueChange} modelValue={0} />);
 
       const sliderControl = screen.getByTestId('control');
 
@@ -1894,7 +1894,7 @@ describe('<Slider.Root />', () => {
 
           return () => (
             <div onTouchstart={handleEvent}>
-              <TestSlider value={0} onValueChange={handleValueChange} />
+              <TestSlider modelValue={0} onValueChange={handleValueChange} />
             </div>
           );
         });
@@ -1933,7 +1933,7 @@ describe('<Slider.Root />', () => {
 
         return () => (
           <div onMousedown={handleEvent}>
-            <TestSlider value={0} onValueChange={handleValueChange} />
+            <TestSlider modelValue={0} onValueChange={handleValueChange} />
           </div>
         );
       });
@@ -2362,7 +2362,7 @@ describe('<Slider.Root />', () => {
             min={0}
             max={5}
             onValueChange={handleValueChange}
-            value={value}
+            modelValue={value}
             style={{ width: '100px' }}
           />,
         );
@@ -2396,7 +2396,7 @@ describe('<Slider.Root />', () => {
         .mockImplementation((_newValue, data: Slider.Root.ChangeEventDetails) => data.event.target);
 
       await render(
-        <TestSlider onValueChange={handleValueChange} name="change-testing" value={3} />,
+        <TestSlider onValueChange={handleValueChange} name="change-testing" modelValue={3} />,
       );
 
       const slider = screen.getByRole('slider');
@@ -2445,7 +2445,7 @@ describe('<Slider.Root />', () => {
         const handleValueChange = vi.fn();
 
         await render(
-          <TestSlider onValueChange={handleValueChange} name="change-testing" value={3} />,
+          <TestSlider onValueChange={handleValueChange} name="change-testing" modelValue={3} />,
         );
 
         const slider = screen.getByRole('slider');
@@ -2481,7 +2481,7 @@ describe('<Slider.Root />', () => {
 
         await render(
           <Teleport to={container}>
-            <TestSlider onValueChange={handleValueChange} name="shadow" value={3} />
+            <TestSlider onValueChange={handleValueChange} name="shadow" modelValue={3} />
           </Teleport>,
         );
 
@@ -3144,7 +3144,7 @@ describe('<Slider.Root />', () => {
       const value = shallowRef(5.4698);
       const { user } = await render(() => (
         <Slider.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(next) => {
             value.value = next;
           }}
@@ -3224,7 +3224,7 @@ describe('<Slider.Root />', () => {
       };
       const expectedValue = new Intl.NumberFormat('de-DE', format).format(70.51);
 
-      await render(<TestSlider value={70.51} format={format} step={0.01} locale="de-DE" />);
+      await render(<TestSlider modelValue={70.51} format={format} step={0.01} locale="de-DE" />);
 
       expect(screen.getByTestId('value')).toHaveTextContent(expectedValue);
     });
@@ -3238,7 +3238,7 @@ describe('<Slider.Root />', () => {
       const expectedValue = `${new Intl.NumberFormat('de-DE', format).format(24.8)} – ${new Intl.NumberFormat('de-DE', format).format(70.51)}`;
 
       await render(
-        <TestRangeSlider value={[24.8, 70.51]} format={format} step={0.01} locale="de-DE" />,
+        <TestRangeSlider modelValue={[24.8, 70.51]} format={format} step={0.01} locale="de-DE" />,
       );
 
       expect(screen.getByTestId('value')).toHaveTextContent(expectedValue);
@@ -3807,7 +3807,7 @@ describe('<Slider.Root />', () => {
           <>
             <Field.Root validationMode="onChange" validate={validateSpy} name="volume">
               <Slider.Root
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
@@ -4215,9 +4215,9 @@ describe('<Slider.Root />', () => {
           <form data-testid="form">
             <Slider.Root
               name="price"
-              value={value.value}
+              modelValue={value.value}
               onValueChange={handleValueChange}
-              {...{ 'onUpdate:value': (next: number) => (value.value = next) }}
+              {...{ 'onUpdate:modelValue': (next: number) => (value.value = next) }}
             >
               <Slider.Control>
                 <Slider.Thumb />

@@ -443,7 +443,7 @@ describe('<Field.Root />', () => {
           </KeepAlive>
         </Field.Root>
         <Checkbox.Root
-          checked={!showSelect.value}
+          modelValue={!showSelect.value}
           onCheckedChange={(checked: boolean) => {
             showSelect.value = !checked;
           }}
@@ -488,7 +488,7 @@ describe('<Field.Root />', () => {
           </KeepAlive>
         </Field.Root>
         <Checkbox.Root
-          checked={!showSelect.value}
+          modelValue={!showSelect.value}
           onCheckedChange={(checked: boolean) => {
             showSelect.value = !checked;
           }}
@@ -2706,7 +2706,7 @@ describe('<Field.Root />', () => {
             <div>
               <Field.Root data-testid="root">
                 <Select.Root
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -2763,7 +2763,7 @@ describe('<Field.Root />', () => {
             <div>
               <Field.Root data-testid="root">
                 <RadioGroup
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(next: string | null) => {
                     value.value = next;
                   }}
@@ -2847,7 +2847,7 @@ describe('<Field.Root />', () => {
                 {mounted.value && (
                   <Field.Control
                     data-testid="control"
-                    value={value.value}
+                    modelValue={value.value}
                     onValueChange={(nextValue) => {
                       value.value = nextValue;
                     }}
@@ -2964,7 +2964,7 @@ describe('<Field.Root />', () => {
             <div>
               <Field.Root>
                 <Field.Control
-                  value={value.value}
+                  modelValue={value.value}
                   onInput={(event) => {
                     value.value = (event.target as HTMLInputElement).value;
                   }}

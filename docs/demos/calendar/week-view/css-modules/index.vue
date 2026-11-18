@@ -9,7 +9,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 
 <template>
   <Calendar.Root
-    v-model:value="selected"
+    v-model="selected"
     :visible-duration="{ weeks: 1 }"
     locale="en-US"
     aria-label="Day of the agenda"

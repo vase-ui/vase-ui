@@ -74,11 +74,11 @@ export interface CalendarRootProps<
    * value that becomes `null` or empty keeps them for the next value.
    * This is the controlled counterpart of `defaultValue`.
    */
-  value?: CalendarInputValue<Value, Multiple> | undefined;
+  modelValue?: CalendarInputValue<Value, Multiple> | undefined;
   /**
    * The selected day, or the list of selected days with `multiple`, when the calendar first
    * renders. With no value, it also gives the kind of a new value.
-   * This is the uncontrolled counterpart of `value`.
+   * This is the uncontrolled counterpart of `modelValue`.
    */
   defaultValue?: CalendarInputValue<Value, Multiple> | undefined;
   /**
@@ -129,7 +129,7 @@ assertTemporal('Calendar.Root');
 
 const props = withDefaults(defineProps<CalendarRootProps<Value, Multiple>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   disabled: false,
   readOnly: false,
@@ -156,9 +156,9 @@ const emit = defineEmits<{
   ];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: CalendarOutputValue<Value, Multiple>];
+  'update:modelValue': [value: CalendarOutputValue<Value, Multiple>];
   /**
    * Callback fired when the month that the grid shows changes.
    */

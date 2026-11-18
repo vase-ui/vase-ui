@@ -16,7 +16,7 @@ function onVolumeCommitted(value: number, eventDetails: Slider.Root.CommitEventD
   <Slider.Root @value-change="onVolumeChange" />
   <Slider.Root @value-change.once="onVolumeChange" />
   <Slider.Root @value-committed="onVolumeCommitted" />
-  <Slider.Root @update:value="(value: number) => value" />
+  <Slider.Root @update:model-value="(value: number) => value" />
   <Slider.Root @value-change="(value) => expectType<number, typeof value>(value)" />
   <Slider.Root :default-value="[25, 75]" @value-change="(value: number[]) => value" />
   <!-- @vue-expect-error With no `value` and no `default-value`, the value is `min`, a number. -->

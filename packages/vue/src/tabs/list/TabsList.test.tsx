@@ -87,7 +87,7 @@ describe('<Tabs.List />', () => {
   describe('prop: loopFocus', () => {
     it('does not wrap focus past the first tab when `loopFocus` is false', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List loopFocus={false}>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -109,7 +109,7 @@ describe('<Tabs.List />', () => {
 
     it('does not wrap focus past the last tab when `loopFocus` is false', async () => {
       await render(
-        <Tabs.Root value={2}>
+        <Tabs.Root modelValue={2}>
           <Tabs.List loopFocus={false}>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -133,7 +133,7 @@ describe('<Tabs.List />', () => {
   describe('keyboard navigation', () => {
     it('moves focus to a tab disabled with the `disabled` prop', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} disabled />
@@ -154,7 +154,7 @@ describe('<Tabs.List />', () => {
 
     it('skips a natively disabled tab in a single keypress', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab
@@ -221,7 +221,7 @@ describe('<Tabs.List />', () => {
     it('can fall back to a tab that is focusable when disabled', async () => {
       const TestComponent = defineComponent(
         (props: { showSelectedTab: boolean }) => () => (
-          <Tabs.Root value={2}>
+          <Tabs.Root modelValue={2}>
             <Tabs.List>
               <Tabs.Tab value={0} disabled>
                 Tab 0
@@ -245,7 +245,7 @@ describe('<Tabs.List />', () => {
     it('keeps the tab stop on the selected tab when focus is inside the list', async () => {
       const TestComponent = defineComponent(
         (props: { showFirstTab: boolean }) => () => (
-          <Tabs.Root value={2}>
+          <Tabs.Root modelValue={2}>
             <Tabs.List>
               {props.showFirstTab && <Tabs.Tab value={0}>Tab 0</Tabs.Tab>}
               <Tabs.Tab value={1}>Tab 1</Tabs.Tab>
@@ -272,7 +272,7 @@ describe('<Tabs.List />', () => {
     it('keeps tracking a successor through subsequent removals', async () => {
       const TestComponent = defineComponent(
         (props: { showFirstTab: boolean; showSelectedTab: boolean }) => () => (
-          <Tabs.Root value={1}>
+          <Tabs.Root modelValue={1}>
             <Tabs.List>
               {props.showFirstTab && <Tabs.Tab value={0}>Tab 0</Tabs.Tab>}
               {props.showSelectedTab && <Tabs.Tab value={1}>Tab 1</Tabs.Tab>}
@@ -340,7 +340,7 @@ describe('<Tabs.List />', () => {
       const TestComponent = defineComponent(
         (props: { listWidth: number; firstTabWidth: number; insertedTabWidth: number | null }) =>
           () => (
-            <Tabs.Root value={1}>
+            <Tabs.Root modelValue={1}>
               <Tabs.List style={{ width: `${props.listWidth}px` }}>
                 {props.insertedTabWidth !== null && (
                   <Tabs.Tab value={2} style={{ width: `${props.insertedTabWidth}px` }} />
@@ -417,7 +417,7 @@ describe('<Tabs.List />', () => {
       });
 
       const Inner = defineComponent(() => () => (
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List data-testid="list" style={{ width: '200px' }}>
             <Tabs.Tab value={0} style={{ width: '50px' }} />
             <Tabs.Indicator data-testid="indicator" />
@@ -456,7 +456,7 @@ describe('<Tabs.List />', () => {
 
     it('observes tab sizes from the first activation after a held mount', async () => {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List data-testid="list" style={{ width: '200px' }}>
             <Tabs.Tab value={0} style={{ width: '50px' }} />
             <Tabs.Indicator data-testid="indicator" />
@@ -533,7 +533,7 @@ describe('<Tabs.List />', () => {
       {
         name: 'hidden',
         tabs: () => (
-          <Tabs.Root value={0}>
+          <Tabs.Root modelValue={0}>
             <Tabs.List>
               <Tabs.Tab value={0} hidden />
               <Tabs.Tab value={1} />
@@ -546,7 +546,7 @@ describe('<Tabs.List />', () => {
       {
         name: 'natively disabled',
         tabs: () => (
-          <Tabs.Root value={0}>
+          <Tabs.Root modelValue={0}>
             <Tabs.List>
               <Tabs.Tab
                 value={0}
@@ -592,7 +592,7 @@ describe('<Tabs.List />', () => {
       const App = defineComponent(() => () => (
         <div>
           <button type="button" data-testid="before" />
-          <Tabs.Root value={1}>
+          <Tabs.Root modelValue={1}>
             <Tabs.List>
               <Tabs.Tab value={0}>Tab 0</Tabs.Tab>
               <Tabs.Tab value={1} disabled={disabled.value}>

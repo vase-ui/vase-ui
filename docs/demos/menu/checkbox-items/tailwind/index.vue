@@ -51,19 +51,19 @@ const checkboxItemClass =
         <Menu.Popup
           class="relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
         >
-          <Menu.CheckboxItem v-model:checked="showMinimap" :class="checkboxItemClass">
+          <Menu.CheckboxItem v-model="showMinimap" :class="checkboxItemClass">
             <Menu.CheckboxItemIndicator class="col-start-1">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>
             <span class="col-start-2">Minimap</span>
           </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model:checked="showSearch" :class="checkboxItemClass">
+          <Menu.CheckboxItem v-model="showSearch" :class="checkboxItemClass">
             <Menu.CheckboxItemIndicator class="col-start-1">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>
             <span class="col-start-2">Search</span>
           </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model:checked="showSidebar" :class="checkboxItemClass">
+          <Menu.CheckboxItem v-model="showSidebar" :class="checkboxItemClass">
             <Menu.CheckboxItemIndicator class="col-start-1">
               <CheckIcon />
             </Menu.CheckboxItemIndicator>

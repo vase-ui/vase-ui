@@ -21,7 +21,7 @@ describe('<DatePicker.Calendar />', () => {
     const onValueChange = vi.fn();
     const { user } = await renderOpen({
       calendarProps: { today: today(), multiple: true },
-      value: null,
+      modelValue: null,
       onValueChange,
     });
     const button = await screen.findByRole('button', { name: 'Friday, November 20, 2026' });

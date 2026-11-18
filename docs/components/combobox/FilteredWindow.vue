@@ -20,7 +20,7 @@ const items = computed(() =>
 </script>
 
 <template>
-  <Combobox.Root v-model:value="selectedUserId" :items="items" :filtered-items="searchResults">
+  <Combobox.Root v-model="selectedUserId" :items="items" :filtered-items="searchResults">
     <!-- ... -->
   </Combobox.Root>
 </template>

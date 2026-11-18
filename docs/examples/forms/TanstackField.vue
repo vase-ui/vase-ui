@@ -16,7 +16,7 @@ const form = useForm({ defaultValues: { username: '' } });
       >
         <Field.Label>Username</Field.Label>
         <Field.Control
-          :value="field.state.value"
+          :model-value="field.state.value"
           placeholder="e.g. bob276"
           @value-change="field.handleChange"
           @blur="field.handleBlur"

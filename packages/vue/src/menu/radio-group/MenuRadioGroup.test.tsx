@@ -18,16 +18,16 @@ describe('<Menu.RadioGroup />', () => {
   });
 
   describe('value', () => {
-    it('selects an item on a click, and emits valueChange and then update:value', async () => {
+    it('selects an item on a click, and emits valueChange and then update:modelValue', async () => {
       const events: string[] = [];
       const onValueChange = vi.fn(() => events.push('valueChange'));
-      const onUpdateValue = vi.fn(() => events.push('update:value'));
+      const onUpdateValue = vi.fn(() => events.push('update:modelValue'));
       const { user } = await render(
         <Menu.Root open>
           <Menu.RadioGroup
             defaultValue="a"
             onValueChange={onValueChange}
-            {...{ 'onUpdate:value': onUpdateValue }}
+            {...{ 'onUpdate:modelValue': onUpdateValue }}
           >
             <Menu.RadioItem value="a">A</Menu.RadioItem>
             <Menu.RadioItem value="b">B</Menu.RadioItem>
@@ -42,7 +42,7 @@ describe('<Menu.RadioGroup />', () => {
 
       expect(a).toHaveAttribute('aria-checked', 'false');
       expect(b).toHaveAttribute('aria-checked', 'true');
-      expect(events).toEqual(['valueChange', 'update:value']);
+      expect(events).toEqual(['valueChange', 'update:modelValue']);
       expect(onValueChange.mock.lastCall).toEqual(['b', expect.anything()]);
       const details = (
         onValueChange.mock.lastCall as unknown[]
@@ -59,7 +59,7 @@ describe('<Menu.RadioGroup />', () => {
           <Menu.RadioGroup
             defaultValue="a"
             onValueChange={onValueChange}
-            {...{ 'onUpdate:value': onUpdateValue }}
+            {...{ 'onUpdate:modelValue': onUpdateValue }}
           >
             <Menu.RadioItem value="a">A</Menu.RadioItem>
             <Menu.RadioItem value="b">B</Menu.RadioItem>
@@ -84,7 +84,7 @@ describe('<Menu.RadioGroup />', () => {
             onValueChange={(_: unknown, details: Menu.RadioGroup.ChangeEventDetails) =>
               details.cancel()
             }
-            {...{ 'onUpdate:value': onUpdateValue }}
+            {...{ 'onUpdate:modelValue': onUpdateValue }}
           >
             <Menu.RadioItem value="a">A</Menu.RadioItem>
             <Menu.RadioItem value="b">B</Menu.RadioItem>
@@ -100,14 +100,30 @@ describe('<Menu.RadioGroup />', () => {
       expect(onUpdateValue).not.toHaveBeenCalled();
     });
 
-    it('follows v-model:value', async () => {
+    it('keeps the checked item with only the modelValue prop', async () => {
+      const { user } = await render(
+        <Menu.Root open>
+          <Menu.RadioGroup modelValue="a">
+            <Menu.RadioItem value="a">A</Menu.RadioItem>
+            <Menu.RadioItem value="b">B</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Root>,
+      );
+      await user.click(screen.getByRole('menuitemradio', { name: 'B' }));
+      expect(screen.getByRole('menuitemradio', { name: 'A' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+
+    it('follows v-model', async () => {
       const value = shallowRef('a');
       const Test = defineComponent(() => () => (
         <Menu.Root open>
           <Menu.RadioGroup
-            value={value.value}
+            modelValue={value.value}
             {...{
-              'onUpdate:value': (next: string) => {
+              'onUpdate:modelValue': (next: string) => {
                 value.value = next;
               },
             }}

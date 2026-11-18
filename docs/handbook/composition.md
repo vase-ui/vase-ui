@@ -124,8 +124,7 @@ An absent prop and `false` give different results in four cases.
 A value of `false` makes these props controlled:
 
 - `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox, Autocomplete, Date Picker, Date Range Picker and Time Picker roots, and `Menu.SubmenuRoot`.
-- `checked` on `Checkbox.Root`, `Switch.Root` and `Menu.CheckboxItem`.
-- `pressed` on `Toggle`.
+- `modelValue` on `Checkbox.Root`, `Switch.Root`, `Menu.CheckboxItem` and `Toggle`.
 
 A defined model prop gives the parent control, even without an update listener. With `v-model:open`, a parent can take control after mount by setting its ref to `true` or `false`.
 

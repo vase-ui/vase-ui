@@ -11,7 +11,7 @@ const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-
 <template>
   <main>
     <form data-testid="form" @submit.prevent>
-      <DatePicker.Root v-model:value="day" name="when" locale="en-US" time-zone="UTC">
+      <DatePicker.Root v-model="day" name="when" locale="en-US" time-zone="UTC">
         <DatePicker.Field data-testid="when">
           <DateField.Input>
             <template #segment="{ segment }">

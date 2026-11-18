@@ -101,7 +101,7 @@ describe('<DatePicker.Trigger />', () => {
 
     it('follows the value, and the locale', async () => {
       const { setProps } = await render(
-        <DatePicker.Root value={day} locale="de-DE">
+        <DatePicker.Root modelValue={day} locale="de-DE">
           <DatePicker.Trigger />
         </DatePicker.Root>,
       );
@@ -111,7 +111,7 @@ describe('<DatePicker.Trigger />', () => {
       );
 
       const next = Temporal.PlainDate.from('2026-12-24');
-      await setProps({ value: next });
+      await setProps({ modelValue: next });
 
       expect(screen.getByRole('button', { name: changeDate(next, FULL_DATE, 'de-DE') })).not.toBe(
         null,
@@ -120,12 +120,12 @@ describe('<DatePicker.Trigger />', () => {
 
     it('gives the name back to the default when the value goes', async () => {
       const { setProps } = await render(
-        <DatePicker.Root value={day} locale="en-US">
+        <DatePicker.Root modelValue={day} locale="en-US">
           <DatePicker.Trigger />
         </DatePicker.Root>,
       );
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(screen.getByRole('button', { name: 'Choose date' })).not.toBe(null);
     });

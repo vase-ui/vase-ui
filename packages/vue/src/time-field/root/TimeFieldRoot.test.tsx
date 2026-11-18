@@ -209,7 +209,7 @@ describe('<TimeField.Root />', () => {
       expect(container.querySelector('[data-type="timeZoneName"]')).toBe(null);
     });
 
-    it('emits valueChange and then update:value, and stops both for a change that a listener cancels', async () => {
+    it('emits valueChange and then update:modelValue, and stops both for a change that a listener cancels', async () => {
       const calls: string[] = [];
       let changes = 0;
       const { container, user } = await render(
@@ -223,8 +223,8 @@ describe('<TimeField.Root />', () => {
               details.cancel();
             }
           }}
-          onUpdate:value={() => {
-            calls.push('update:value');
+          onUpdate:modelValue={() => {
+            calls.push('update:modelValue');
           }}
         >
           <TimeField.Input />
@@ -233,11 +233,11 @@ describe('<TimeField.Root />', () => {
 
       await user.click(segmentOf(container, 'minute'));
       await user.keyboard('{ArrowUp}');
-      expect(calls).toEqual(['valueChange:keyboard', 'update:value']);
+      expect(calls).toEqual(['valueChange:keyboard', 'update:modelValue']);
       expect(segmentOf(container, 'minute').value).toBe('05');
 
       await user.keyboard('{ArrowUp}');
-      expect(calls).toEqual(['valueChange:keyboard', 'update:value', 'valueChange:keyboard']);
+      expect(calls).toEqual(['valueChange:keyboard', 'update:modelValue', 'valueChange:keyboard']);
       expect(segmentOf(container, 'minute').value).toBe('05');
     });
 
@@ -245,7 +245,7 @@ describe('<TimeField.Root />', () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
         <TimeField.Root
-          value={Temporal.PlainTime.from('15:04')}
+          modelValue={Temporal.PlainTime.from('15:04')}
           locale="en-US"
           onValueChange={onValueChange}
         >
@@ -263,7 +263,7 @@ describe('<TimeField.Root />', () => {
     it('follows a new value of the parent', async () => {
       const value: Ref<Temporal.PlainTime | null> = shallowRef(Temporal.PlainTime.from('15:04'));
       const { container } = await render(() => (
-        <TimeField.Root value={value.value} locale="en-US">
+        <TimeField.Root modelValue={value.value} locale="en-US">
           <TimeField.Input />
         </TimeField.Root>
       ));

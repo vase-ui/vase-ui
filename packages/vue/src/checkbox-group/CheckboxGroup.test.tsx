@@ -70,7 +70,7 @@ describe('<CheckboxGroup />', () => {
         const value = shallowRef(['red']);
         return () => (
           <CheckboxGroup
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue: string[]) => {
               value.value = nextValue;
             }}
@@ -116,7 +116,7 @@ describe('<CheckboxGroup />', () => {
         const value = shallowRef(['']);
         return () => (
           <CheckboxGroup
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue: string[]) => {
               value.value = nextValue;
             }}
@@ -143,7 +143,7 @@ describe('<CheckboxGroup />', () => {
     it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
       const handleValueChange = vi.fn();
       await render(
-        <CheckboxGroup value={null} defaultValue={['green']} onValueChange={handleValueChange}>
+        <CheckboxGroup modelValue={null} defaultValue={['green']} onValueChange={handleValueChange}>
           <Checkbox.Root value="red" data-testid="red" />
           <Checkbox.Root value="green" data-testid="green" />
         </CheckboxGroup>,
@@ -161,7 +161,7 @@ describe('<CheckboxGroup />', () => {
 
     it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
       const { setProps } = await render(
-        <CheckboxGroup value={['red']} defaultValue={['green']}>
+        <CheckboxGroup modelValue={['red']} defaultValue={['green']}>
           <Checkbox.Root value="red" data-testid="red" />
           <Checkbox.Root value="green" data-testid="green" />
         </CheckboxGroup>,
@@ -169,7 +169,7 @@ describe('<CheckboxGroup />', () => {
       expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'true');
       expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'false');
       expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
@@ -177,12 +177,12 @@ describe('<CheckboxGroup />', () => {
 
     it('keeps the last selection when the parent releases the value', async () => {
       const { setProps } = await render(
-        <CheckboxGroup value={['red']}>
+        <CheckboxGroup modelValue={['red']}>
           <Checkbox.Root value="red" data-testid="red" />
         </CheckboxGroup>,
       );
       const red = screen.getByTestId('red');
-      await setProps({ value: undefined });
+      await setProps({ modelValue: undefined });
       expect(red).toHaveAttribute('aria-checked', 'true');
       await fireEvent.click(red);
       expect(red).toHaveAttribute('aria-checked', 'false');
@@ -197,7 +197,7 @@ describe('<CheckboxGroup />', () => {
         const value = shallowRef<string[]>([]);
         return () => (
           <CheckboxGroup
-            value={value.value}
+            modelValue={value.value}
             onValueChange={(nextValue: string[]) => {
               value.value = nextValue;
               handleValueChange(nextValue);
@@ -711,7 +711,7 @@ describe('<CheckboxGroup />', () => {
         return () => (
           <Field.Root name="protocols" validationMode="onChange" validate={validate}>
             <CheckboxGroup
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue: string[]) => {
                 value.value = nextValue;
               }}
@@ -883,7 +883,7 @@ describe('<CheckboxGroup />', () => {
         return () => (
           <>
             <Field.Root validationMode="onChange" validate={validateSpy} name="apple">
-              <CheckboxGroup value={selected.value}>
+              <CheckboxGroup modelValue={selected.value}>
                 <Field.Item>
                   <Checkbox.Root value="one" data-testid="checkbox" />
                 </Field.Item>
@@ -1916,7 +1916,7 @@ describe('<CheckboxGroup />', () => {
         return () => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="group" validate={validate}>
-              <CheckboxGroup value={value.value}>
+              <CheckboxGroup modelValue={value.value}>
                 {mounted.value && <Checkbox.Root value="one" />}
               </CheckboxGroup>
               <Field.Error />
@@ -1968,7 +1968,7 @@ describe('<CheckboxGroup />', () => {
           return () => (
             <Form>
               <Field.Root name="group" validationMode={validationMode} validate={validate}>
-                <CheckboxGroup value={value.value}>
+                <CheckboxGroup modelValue={value.value}>
                   {mounted.value && <Checkbox.Root value="one" />}
                 </CheckboxGroup>
               </Field.Root>
@@ -2018,7 +2018,7 @@ describe('<CheckboxGroup />', () => {
           return () => (
             <Form>
               <Field.Root name="group" validationMode={validationMode} validate={validate}>
-                <CheckboxGroup value={value.value} />
+                <CheckboxGroup modelValue={value.value} />
               </Field.Root>
               <button
                 type="button"
@@ -2139,7 +2139,7 @@ describe('<CheckboxGroup />', () => {
       const { user } = await render(
         <Form>
           <Field.Root name="group" validate={() => 'Invalid group'}>
-            <CheckboxGroup value={[]} />
+            <CheckboxGroup modelValue={[]} />
           </Field.Root>
           <Field.Root name="email">
             <Field.Control required data-testid="email" />
@@ -2193,7 +2193,7 @@ describe('<CheckboxGroup />', () => {
           >
             <Field.Root name="apple">
               <CheckboxGroup
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={(nextValue: string[]) => {
                   value.value = nextValue;
                 }}
@@ -2272,7 +2272,7 @@ describe('<CheckboxGroup />', () => {
 
         return () => (
           <Field.Root name="group" validationMode="onChange" validate={validate}>
-            <CheckboxGroup value={value.value} />
+            <CheckboxGroup modelValue={value.value} />
             <button
               type="button"
               onClick={() => {
@@ -2319,13 +2319,16 @@ describe('<CheckboxGroup />', () => {
     });
   });
 
-  describe('v-model:value', () => {
-    it('emits `valueChange` and then `update:value`, before the click handler returns', async () => {
+  describe('v-model', () => {
+    it('emits `valueChange` and then `update:modelValue`, before the click handler returns', async () => {
       const order: string[] = [];
       await render(
         <CheckboxGroup
           onValueChange={(value: string[]) => order.push(`valueChange ${value.join()}`)}
-          {...{ 'onUpdate:value': (value: string[]) => order.push(`update:value ${value.join()}`) }}
+          {...{
+            'onUpdate:modelValue': (value: string[]) =>
+              order.push(`update:modelValue ${value.join()}`),
+          }}
         >
           <Checkbox.Root value="a" />
         </CheckboxGroup>,
@@ -2334,14 +2337,14 @@ describe('<CheckboxGroup />', () => {
       screen.getByRole('checkbox').click();
       order.push('end of the click');
 
-      expect(order).toEqual(['valueChange a', 'update:value a', 'end of the click']);
+      expect(order).toEqual(['valueChange a', 'update:modelValue a', 'end of the click']);
     });
 
     it.each([
       {
         name: 'no listener cancels',
         cancelIn: undefined,
-        events: ['checkedChange', 'valueChange', 'update:value', 'update:checked'],
+        events: ['checkedChange', 'valueChange', 'group update', 'child update'],
         checked: 'true',
       },
       {
@@ -2371,7 +2374,7 @@ describe('<CheckboxGroup />', () => {
                 eventDetails.cancel();
               }
             }}
-            {...{ 'onUpdate:value': () => received.push('update:value') }}
+            {...{ 'onUpdate:modelValue': () => received.push('group update') }}
           >
             <Checkbox.Root
               value="a"
@@ -2385,7 +2388,7 @@ describe('<CheckboxGroup />', () => {
                   eventDetails.cancel();
                 }
               }}
-              {...{ 'onUpdate:checked': () => received.push('update:checked') }}
+              {...{ 'onUpdate:modelValue': () => received.push('child update') }}
             />
           </CheckboxGroup>,
         );
@@ -2399,7 +2402,7 @@ describe('<CheckboxGroup />', () => {
     );
   });
 
-  describe('VUE-35: a controlled `value` that the consumer changes in place', () => {
+  describe('VUE-35: a model array that the consumer changes in place', () => {
     it('gives the checkboxes, the state of the field and the validation the new value', async () => {
       const validate = vi.fn((value: unknown) =>
         (value as string[]).includes('banana') ? 'error' : null,
@@ -2407,7 +2410,7 @@ describe('<CheckboxGroup />', () => {
       const selected = ref<string[]>(['apple']);
       const App = defineComponent(() => () => (
         <Field.Root name="fruits" validationMode="onChange" validate={validate}>
-          <CheckboxGroup value={selected.value} data-testid="group">
+          <CheckboxGroup modelValue={selected.value} data-testid="group">
             <Field.Item>
               <Checkbox.Root value="apple" data-testid="apple" />
             </Field.Item>
@@ -2443,7 +2446,7 @@ describe('<CheckboxGroup />', () => {
   describe('the hidden input has the state of the checkbox', () => {
     it('after a click that the parent of a controlled group does not accept', async () => {
       await render(
-        <CheckboxGroup value={['a']}>
+        <CheckboxGroup modelValue={['a']}>
           <Checkbox.Root value="a" />
           <Checkbox.Root value="b" />
         </CheckboxGroup>,
@@ -2666,10 +2669,10 @@ describe('<CheckboxGroup />', () => {
         return () => (
           <form data-testid="form">
             <CheckboxGroup
-              value={value.value}
+              modelValue={value.value}
               onValueChange={handleChange}
               {...{
-                'onUpdate:value': (next: string[]) => {
+                'onUpdate:modelValue': (next: string[]) => {
                   handleUpdate(next);
                   value.value = next;
                 },
@@ -2721,7 +2724,7 @@ describe('<CheckboxGroup />', () => {
       await render(
         <form data-testid="form">
           <Field.Root name="fruits">
-            <CheckboxGroup value={null} defaultValue={['apple']} onValueChange={handleChange}>
+            <CheckboxGroup modelValue={null} defaultValue={['apple']} onValueChange={handleChange}>
               <Checkbox.Root value="apple" />
               <Checkbox.Root value="banana" />
             </CheckboxGroup>
@@ -2858,8 +2861,8 @@ describe('<CheckboxGroup />', () => {
                 validate={(next) => ((next as string[]).length > 0 ? null : 'Pick one')}
               >
                 <CheckboxGroup
-                  value={value.value}
-                  {...{ 'onUpdate:value': (next: string[]) => (value.value = next) }}
+                  modelValue={value.value}
+                  {...{ 'onUpdate:modelValue': (next: string[]) => (value.value = next) }}
                 >
                   <Checkbox.Root value="apple" aria-label="Apple" />
                 </CheckboxGroup>

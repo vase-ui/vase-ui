@@ -26,7 +26,7 @@ const dayButtonClassName =
   <div role="group" :aria-labelledby="labelId" class="flex flex-col items-start gap-1">
     <div :id="labelId" class="text-sm font-bold text-neutral-950 dark:text-white">Meeting time</div>
     <div class="flex flex-wrap gap-2">
-      <DatePicker.Root v-model:value="meetingDate" locale="en-US">
+      <DatePicker.Root v-model="meetingDate" locale="en-US">
         <div
           class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
         >
@@ -113,7 +113,7 @@ const dayButtonClassName =
           </DatePicker.Positioner>
         </DatePicker.Portal>
       </DatePicker.Root>
-      <TimePicker.Root v-model:value="meetingTime" locale="en-US" :hour-cycle="12">
+      <TimePicker.Root v-model="meetingTime" locale="en-US" :hour-cycle="12">
         <div
           class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
         >

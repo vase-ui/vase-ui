@@ -12,7 +12,7 @@ export interface DatePickerFieldState extends DateFieldRootState {}
  */
 export interface DatePickerFieldProps extends Omit<
   DateFieldRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
   | 'granularity'
@@ -110,7 +110,7 @@ function fieldProps(attributes: Record<string, unknown>) {
   return {
     ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
-    value: picker.value.value,
+    modelValue: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for the calendar.
     defaultValue: picker.template.value,
     referenceDate: root.referenceDate,

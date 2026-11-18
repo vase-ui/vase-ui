@@ -65,7 +65,7 @@ Each field has a hidden `<input>` after its element. A rule of `<style scoped>` 
 
 ## Value
 
-The value is a range of two `Temporal` objects, the first day and the last day. `v-model:value` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. An end is `null` while it has no value, and `null` is the same as `[null, null]`. A range in progress has its first day and a `null` last day.
+The value is a range of two `Temporal` objects, the first day and the last day. `v-model` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. An end is `null` while it has no value, and `null` is the same as `[null, null]`. A range in progress has its first day and a `null` last day.
 
 The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required` and `form`. Give the props of the range calendar that the root does not own, such as `numberOfMonths`, `minDays`, `maxDays` and `allowNonContiguousRanges`, to `DateRangePicker.Calendar`.
 
@@ -85,7 +85,7 @@ Put the picker in a `Field` to show the errors of its validation. Do not give a 
 
 ## Events
 
-The root emits `valueChange` and `update:value` for each change of the range. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for each change of the range. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
 
 | Reason of `valueChange` | When                                                     |
 | ----------------------- | -------------------------------------------------------- |

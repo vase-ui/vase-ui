@@ -39,7 +39,7 @@ describe('<Tabs.Panel />', () => {
             >
               unmount shadowed
             </button>
-            <Tabs.Root value="a">
+            <Tabs.Root modelValue="a">
               <Tabs.List>
                 <Tabs.Tab value="a">A</Tabs.Tab>
                 <Tabs.Tab value="b">B</Tabs.Tab>
@@ -314,7 +314,7 @@ describe('<Tabs.Panel />', () => {
       const { container } = await render(() => (
         <div>
           <style>{style}</style>
-          <Tabs.Root value={value.value}>
+          <Tabs.Root modelValue={value.value}>
             <Tabs.Panel value="one" class="animation-test-panel" />
           </Tabs.Root>
         </div>

@@ -11,7 +11,7 @@ const amount = ref<number | null>(1234.5);
     <form data-testid="form">
       <Field.Root name="amount" data-testid="label-first">
         <Field.Label data-testid="label-first-label">Amount</Field.Label>
-        <NumberField.Root v-model:value="amount" :format="{ style: 'currency', currency: 'EUR' }">
+        <NumberField.Root v-model="amount" :format="{ style: 'currency', currency: 'EUR' }">
           <NumberField.Group>
             <NumberField.Input data-testid="label-first-control" />
           </NumberField.Group>

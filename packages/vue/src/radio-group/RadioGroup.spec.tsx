@@ -4,7 +4,7 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 const values = ['a', 'b', 'c'];
 
 <RadioGroup
-  value={values[0]}
+  modelValue={values[0]}
   onValueChange={(value) => {
     expectType<string, typeof value>(value);
   }}
@@ -16,7 +16,7 @@ const narrowedIndex: number = 0;
 const narrowedValue = narrowedValues[narrowedIndex];
 
 <RadioGroup
-  value={narrowedValue}
+  modelValue={narrowedValue}
   onValueChange={(value) => {
     expectType<NarrowedValue, typeof value>(value);
   }}
@@ -30,7 +30,7 @@ const narrowedValue = narrowedValues[narrowedIndex];
 />;
 
 <RadioGroup<NarrowedValue>
-  value={narrowedValue}
+  modelValue={narrowedValue}
   onValueChange={(value) => {
     expectType<NarrowedValue, typeof value>(value);
   }}
@@ -43,7 +43,7 @@ const narrowedValue = narrowedValues[narrowedIndex];
 />;
 
 <RadioGroup
-  value={null}
+  modelValue={null}
   onValueChange={(value) => {
     expectType<null, typeof value>(value);
   }}

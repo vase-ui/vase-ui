@@ -164,22 +164,22 @@ const protocols = ['http', 'https', 'ssh'];
     @submit="onSubmit"
   >
     <VeeField
-      v-slot="{ field, value, meta, errorMessage, handleChange, handleBlur }"
+      v-slot="{ componentField, meta, errorMessage }"
       name="serverName"
       :rules="validateServerName"
     >
       <Field.Root
-        :name="field.name"
+        :name="componentField.name"
         :invalid="!!errorMessage"
         :dirty="meta.dirty"
         :touched="meta.touched"
       >
         <Field.Label>Server name</Field.Label>
         <Field.Control
-          :value="value"
           placeholder="e.g. api-server-01"
-          @update:value="handleChange"
-          @blur="handleBlur"
+          :model-value="componentField.modelValue"
+          @update:model-value="componentField['onUpdate:modelValue']"
+          @blur="componentField.onBlur"
         />
         <Field.Description>Must be 3 or more characters long</Field.Description>
         <Field.Error :match="!!errorMessage">
@@ -199,7 +199,7 @@ const protocols = ['http', 'https', 'ssh'];
         :dirty="meta.dirty"
         :touched="meta.touched"
       >
-        <Combobox.Root :items="REGIONS" :value="value" @update:value="handleChange">
+        <Combobox.Root :items="REGIONS" :model-value="value" @update:model-value="handleChange">
           <div class="relative text-sm leading-5 font-bold text-neutral-950 dark:text-white">
             <Field.Label class="mb-1 block">Region</Field.Label>
             <Combobox.InputGroup>
@@ -252,9 +252,9 @@ const protocols = ['http', 'https', 'ssh'];
         <Autocomplete.Root
           :items="IMAGES"
           mode="both"
-          :value="value"
+          :model-value="value"
           :item-to-string-value="(itemValue: Image) => itemValue.url"
-          @update:value="handleChange"
+          @update:model-value="handleChange"
         >
           <Field.Label>Container image</Field.Label>
           <Autocomplete.Input placeholder="e.g. docker.io/library/node:latest" @blur="handleBlur" />
@@ -293,7 +293,7 @@ const protocols = ['http', 'https', 'ssh'];
         :dirty="meta.dirty"
         :touched="meta.touched"
       >
-        <Select.Root :items="SERVER_TYPES" :value="value" @update:value="handleChange">
+        <Select.Root :items="SERVER_TYPES" :model-value="value" @update:model-value="handleChange">
           <div class="w-fit space-y-1">
             <Select.Label>Server type</Select.Label>
             <Select.Trigger class="w-48" @blur="handleBlur">
@@ -341,7 +341,12 @@ const protocols = ['http', 'https', 'ssh'];
         :dirty="meta.dirty"
         :touched="meta.touched"
       >
-        <NumberField.Root :value="value" :min="1" :max="64" @update:value="handleChange">
+        <NumberField.Root
+          :model-value="value"
+          :min="1"
+          :max="64"
+          @update:model-value="handleChange"
+        >
           <Field.Label>Number of instances</Field.Label>
           <NumberField.Group>
             <NumberField.Decrement>
@@ -373,14 +378,14 @@ const protocols = ['http', 'https', 'ssh'];
           <template #render="{ props }">
             <Slider.Root
               v-bind="props"
-              :value="value"
+              :model-value="value"
               thumb-alignment="edge"
               :min="0"
               :max="1"
               :step="0.01"
               :format="{ style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }"
               class="w-full gap-y-2"
-              @update:value="handleChange"
+              @update:model-value="handleChange"
               @value-committed="(committed) => handleChange(committed)"
             >
               <Fieldset.Legend>Scaling threshold</Fieldset.Legend>
@@ -410,7 +415,12 @@ const protocols = ['http', 'https', 'ssh'];
       >
         <Fieldset.Root>
           <template #render="{ props }">
-            <RadioGroup v-bind="props" :value="value" class="gap-4" @update:value="handleChange">
+            <RadioGroup
+              v-bind="props"
+              :model-value="value"
+              class="gap-4"
+              @update:model-value="handleChange"
+            >
               <Fieldset.Legend class="-mt-px">Storage type</Fieldset.Legend>
               <Field.Item>
                 <Field.Label>
@@ -446,7 +456,7 @@ const protocols = ['http', 'https', 'ssh'];
       >
         <Field.Label class="gap-2">
           Restart on failure
-          <Switch.Root :checked="value" @update:checked="handleChange" @blur="handleBlur">
+          <Switch.Root :model-value="value" @update:model-value="handleChange" @blur="handleBlur">
             <Switch.Thumb />
           </Switch.Root>
         </Field.Label>
@@ -465,7 +475,7 @@ const protocols = ['http', 'https', 'ssh'];
       >
         <Fieldset.Root>
           <template #render="{ props }">
-            <CheckboxGroup v-bind="props" :value="value" @update:value="handleChange">
+            <CheckboxGroup v-bind="props" :model-value="value" @update:model-value="handleChange">
               <Fieldset.Legend class="mb-2">Allowed network protocols</Fieldset.Legend>
               <div class="flex gap-4">
                 <Field.Item v-for="protocol in protocols" :key="protocol">

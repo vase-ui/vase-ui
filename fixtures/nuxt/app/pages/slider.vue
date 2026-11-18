@@ -15,7 +15,7 @@ const volume = ref(30);
   <main>
     <CSPProvider nonce="test-nonce">
       <form data-testid="form">
-        <Slider.Root v-model:value="volume" data-testid="volume" name="volume">
+        <Slider.Root v-model="volume" data-testid="volume" name="volume">
           <Slider.Label data-testid="volume-label">Volume</Slider.Label>
           <Slider.Value data-testid="volume-value" />
           <Slider.Control data-testid="volume-control" :style="CONTROL_STYLE">

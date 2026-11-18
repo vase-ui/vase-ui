@@ -79,14 +79,14 @@ export interface ComboboxRootProps<
    * The uncontrolled selected value of the combobox when it's initially rendered.
    * With `multiple`, `null` is an empty value.
    *
-   * To render a controlled combobox, use the `value` prop instead.
+   * To render a controlled combobox, use the `modelValue` prop instead.
    */
   defaultValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
   /**
    * The selected value of the combobox. Use when controlled.
    * With `multiple`, `null` is an empty value, and the combobox stays controlled.
    */
-  value?: ComboboxInputValue<Value, Multiple> | null | undefined;
+  modelValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
 }
 
 export interface ComboboxRootState extends AriaComboboxState {}
@@ -115,7 +115,7 @@ import { useAriaCombobox } from './AriaCombobox';
 const props = withDefaults(defineProps<ComboboxRootProps<Value, Multiple, Item>>(), {
   open: undefined,
   defaultOpen: false,
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   inputValue: undefined,
   defaultInputValue: undefined,
@@ -147,9 +147,9 @@ const emit = defineEmits<{
   valueChange: [value: ValueChange, eventDetails: ComboboxRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: ValueChange];
+  'update:modelValue': [value: ValueChange];
   /**
    * Event handler called when the input value changes.
    */
@@ -204,7 +204,7 @@ const {
       return (props.multiple ? 'multiple' : 'single') as ModeFromMultiple<Multiple>;
     },
     get selectedValue() {
-      return props.value as any;
+      return props.modelValue as any;
     },
     get defaultSelectedValue() {
       return props.defaultValue as any;
@@ -301,7 +301,7 @@ const {
     onSelectedValueChange(value, eventDetails) {
       emit('valueChange', value, eventDetails);
       if (!eventDetails.isCanceled) {
-        emit('update:value', value);
+        emit('update:modelValue', value);
       }
     },
     onInputValueChange(value, eventDetails) {

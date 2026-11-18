@@ -36,7 +36,7 @@ describe('<Toggle />', () => {
                 pressed.value = !pressed.value;
               }}
             />
-            <Toggle pressed={pressed.value} />;
+            <Toggle modelValue={pressed.value} />;
           </div>
         );
       });
@@ -55,6 +55,20 @@ describe('<Toggle />', () => {
       await flushMicrotasks();
 
       expect(button).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it.each([
+      { name: 'v-model', bound: true },
+      { name: 'modelValue alone', bound: false },
+    ])('follows the parent after a press with $name', async ({ bound }) => {
+      const pressed = shallowRef(false);
+      const { user } = await render(() =>
+        bound ? <Toggle v-model={pressed.value} /> : <Toggle modelValue={pressed.value} />,
+      );
+      const button = screen.getByRole('button');
+      await user.click(button);
+      expect(pressed.value).toBe(bound);
+      expect(button).toHaveAttribute('aria-pressed', String(bound));
     });
 
     it('uncontrolled', async () => {
@@ -108,7 +122,7 @@ describe('<Toggle />', () => {
       expect(button).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('emits pressedChange with the details and then update:pressed', async () => {
+    it('emits pressedChange with the details and then update:modelValue', async () => {
       const calls: unknown[][] = [];
 
       await render(
@@ -116,7 +130,9 @@ describe('<Toggle />', () => {
           onPressedChange={(pressed, eventDetails) => {
             calls.push(['pressedChange', pressed, eventDetails.reason, eventDetails.event.type]);
           }}
-          {...{ 'onUpdate:pressed': (pressed: boolean) => calls.push(['update:pressed', pressed]) }}
+          {...{
+            'onUpdate:modelValue': (pressed: boolean) => calls.push(['update:modelValue', pressed]),
+          }}
         />,
       );
 
@@ -125,11 +141,11 @@ describe('<Toggle />', () => {
 
       expect(calls).toEqual([
         ['pressedChange', true, 'none', 'click'],
-        ['update:pressed', true],
+        ['update:modelValue', true],
       ]);
     });
 
-    it('does not emit update:pressed when the event is canceled', async () => {
+    it('does not emit update:modelValue when the event is canceled', async () => {
       const handleUpdate = vi.fn();
 
       await render(
@@ -137,7 +153,7 @@ describe('<Toggle />', () => {
           onPressedChange={(_pressed, eventDetails) => {
             eventDetails.cancel();
           }}
-          {...{ 'onUpdate:pressed': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         />,
       );
 
@@ -256,7 +272,7 @@ describe('<Toggle />', () => {
       );
 
       expect(errorSpy).toHaveBeenCalledExactlyOnceWith(
-        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Provide the `<Toggle>` with a `value` prop matching the `<ToggleGroup>` values prop type.',
+        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
       );
     });
   });

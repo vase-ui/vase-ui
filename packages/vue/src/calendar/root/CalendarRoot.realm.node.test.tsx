@@ -16,7 +16,9 @@ describe('<Calendar.Root /> with a value of another realm', () => {
       clock.mockRestore();
     });
 
-    const html = await renderToString(<CalendarAnatomy {...{ locale: 'en-US', value: foreign }} />);
+    const html = await renderToString(
+      <CalendarAnatomy {...{ locale: 'en-US', modelValue: foreign }} />,
+    );
 
     expect(clock).toHaveBeenCalledWith('Asia/Tokyo');
     const cell = new RegExp(`<td[^>]* data-date="2026-11-15"[^>]*>`).exec(html)![0];

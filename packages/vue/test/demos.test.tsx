@@ -21,6 +21,7 @@ import DemoSource from '../../../docs/.vitepress/components/DemoSource.vue';
 import { demoVariant } from '../../../docs/.vitepress/components/demoVariant.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from '../../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import '../../../docs/demos/tailwind.css';
+import VeeValidateRules from '../../../docs/examples/forms/VeeValidateRules.vue';
 import { platform } from '../src/common/platform';
 
 const modules = import.meta.glob<{ default: Component }>(
@@ -324,6 +325,21 @@ describe('toast/promise', () => {
 
 describe('the form library demos of the Forms page', () => {
   const { render } = createRenderer();
+
+  it('updates the VeeValidate field only when the control emits a model update', async () => {
+    await render(h(VeeValidateRules));
+    const input = screen.getByRole('textbox', { name: 'Username' });
+
+    await fireEvent.change(input, { target: { value: 'x' } });
+    expect(input).not.toHaveAttribute('data-dirty');
+    expect(screen.queryByText('Too short')).toBeNull();
+
+    await fireEvent.input(input, { target: { value: 'y' } });
+    await waitFor(() => expect(screen.getByText('Too short')).toBeVisible());
+    expect(input).toHaveAttribute('data-dirty');
+    await fireEvent.blur(input);
+    expect(input).toHaveAttribute('data-touched');
+  });
 
   it.each([{ name: 'handbook-forms/vee-validate' }, { name: 'handbook-forms/tanstack-form' }])(
     '$name: a failed submit moves the focus to the first invalid control',

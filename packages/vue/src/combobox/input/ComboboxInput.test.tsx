@@ -1078,7 +1078,7 @@ describe('<Combobox.Input />', () => {
         await render(
           <DirectionProvider direction={direction}>
             <Combobox.Root
-              {...(controlled ? { value: null } : {})}
+              {...(controlled ? { modelValue: null } : {})}
               onValueChange={handleValueChange}
             >
               <Combobox.Chips>
@@ -1136,7 +1136,7 @@ describe('<Combobox.Input />', () => {
 
     it('VUE-115: gives no error for ArrowLeft in the chips with a null value', async () => {
       const { user } = await render(
-        <Combobox.Root multiple value={null}>
+        <Combobox.Root multiple modelValue={null}>
           <Combobox.Chips>
             <Combobox.Input />
           </Combobox.Chips>
@@ -1419,7 +1419,8 @@ describe('<Combobox.Input />', () => {
                 events.push(`valueChange:${value.join()}:${details.reason}`)
               }
               {...{
-                'onUpdate:value': (value: string[]) => events.push(`update:value:${value.join()}`),
+                'onUpdate:modelValue': (value: string[]) =>
+                  events.push(`update:modelValue:${value.join()}`),
               }}
               onInputValueChange={(value: string, details: { reason: string }) =>
                 events.push(`inputValueChange:${value}:${details.reason}`)
@@ -1938,7 +1939,7 @@ describe('<Combobox.Input />', () => {
     it('shows a new input value of the root during a composition', async () => {
       const value = shallowRef<string | null>(null);
       await render(() => (
-        <Combobox.Root items={cities} value={value.value}>
+        <Combobox.Root items={cities} modelValue={value.value}>
           <Combobox.Input />
         </Combobox.Root>
       ));

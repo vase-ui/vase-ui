@@ -21,7 +21,9 @@ describe('<NavigationMenu.Portal />', () => {
     elementIsRoot: false,
     refInstanceof: window.HTMLDivElement,
     async render(node) {
-      const result = await render(<NavigationMenu.Root value="item">{node}</NavigationMenu.Root>);
+      const result = await render(
+        <NavigationMenu.Root modelValue="item">{node}</NavigationMenu.Root>,
+      );
       await flushMicrotasks();
       return result;
     },

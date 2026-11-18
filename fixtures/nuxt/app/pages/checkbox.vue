@@ -14,7 +14,7 @@ const news = ref(true);
         </Checkbox.Root>
         Terms
       </label>
-      <Checkbox.Root v-model:checked="news" data-testid="news" name="news" aria-label="News">
+      <Checkbox.Root v-model="news" data-testid="news" name="news" aria-label="News">
         <Checkbox.Indicator data-testid="news-indicator">Tick</Checkbox.Indicator>
       </Checkbox.Root>
       <Checkbox.Root indeterminate data-testid="some" aria-label="Some">

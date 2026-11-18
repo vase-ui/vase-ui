@@ -19,7 +19,7 @@ describe.runIf(isVaporApp)('VUE-129: the slot of a Vapor component in a hidden f
       onContent: { type: Function as PropType<(element: Element) => void>, required: true },
     },
     setup: (props) => () => (
-      <Menu.FilterProvider value={props.value}>
+      <Menu.FilterProvider modelValue={props.value}>
         <Menu.Root open>
           <Menu.Trigger>Actions</Menu.Trigger>
           <Menu.Portal>

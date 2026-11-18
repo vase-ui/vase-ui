@@ -1046,7 +1046,7 @@ describe('<OTPField.Input />', () => {
 
       await render(() => (
         <OTPFieldTest
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue) => {
             value.value = nextValue;
           }}
@@ -1082,7 +1082,7 @@ describe('<OTPField.Input />', () => {
       const value = shallowRef('1');
       const onValueChange = vi.fn();
 
-      await render(() => <OTPFieldTest value={value.value} onValueChange={onValueChange} />);
+      await render(() => <OTPFieldTest modelValue={value.value} onValueChange={onValueChange} />);
 
       const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
 

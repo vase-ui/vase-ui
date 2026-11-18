@@ -171,7 +171,7 @@ describe('filtered Menu items', () => {
       const Test = defineComponent({
         props: { value: { type: String, required: true }, tick: { type: Number, required: true } },
         setup: (props) => () => (
-          <Menu.FilterProvider value={props.value}>
+          <Menu.FilterProvider modelValue={props.value}>
             <Menu.Root open>
               <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
@@ -217,7 +217,7 @@ describe('filtered Menu items', () => {
           label: { type: String, required: true },
         },
         setup: (props) => () => (
-          <Menu.FilterProvider value={props.value}>
+          <Menu.FilterProvider modelValue={props.value}>
             <Menu.Root open>
               <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
@@ -251,7 +251,7 @@ describe('filtered Menu items', () => {
     const RenderElementTest = defineComponent({
       props: { value: { type: String, required: true }, name: { type: String, required: true } },
       setup: (props) => () => (
-        <Menu.FilterProvider value={props.value}>
+        <Menu.FilterProvider modelValue={props.value}>
           <Menu.Root open>
             <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Portal>

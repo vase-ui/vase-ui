@@ -17,7 +17,7 @@ describe('<NavigationMenu.Arrow />', () => {
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       const result = await render(
-        <NavigationMenu.Root value="test">
+        <NavigationMenu.Root modelValue="test">
           <NavigationMenu.Portal>
             <NavigationMenu.Positioner>{node}</NavigationMenu.Positioner>
           </NavigationMenu.Portal>
@@ -30,7 +30,7 @@ describe('<NavigationMenu.Arrow />', () => {
 
   it('is hidden from assistive technology and has the state attributes of the open popup', async () => {
     await render(
-      <NavigationMenu.Root value="test">
+      <NavigationMenu.Root modelValue="test">
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
             <NavigationMenu.Arrow data-testid="arrow" />

@@ -168,7 +168,7 @@ it('VUE-94: keeps the author pointer style on the parent menu of an open submenu
 it('updates the positioner when the controlled Navigation Menu value changes', async () => {
   const active = shallowRef('one');
   await render(() => (
-    <NavigationMenu.Root value={active.value}>
+    <NavigationMenu.Root modelValue={active.value}>
       <NavigationMenu.List>
         {['one', 'two'].map((value) => (
           <NavigationMenu.Item key={value} value={value}>

@@ -139,10 +139,10 @@ describe('<TimeClock.Root />', () => {
         <TimeClock.Root
           locale="en-US"
           hourCycle={12}
-          value={model.value}
+          modelValue={model.value}
           onValueChange={(value: Temporal.PlainTime) => calls.push(`change ${value.hour}`)}
           {...{
-            'onUpdate:value': (value: Temporal.PlainTime) => {
+            'onUpdate:modelValue': (value: Temporal.PlainTime) => {
               calls.push(`update ${value.hour}`);
               model.value = value;
             },
@@ -166,7 +166,7 @@ describe('<TimeClock.Root />', () => {
 
     it('keeps the time of a controlled clock whose parent does not update it', async () => {
       const { user } = await render(
-        <TimeClock.Root locale="en-US" hourCycle={12} value={time('10:30')}>
+        <TimeClock.Root locale="en-US" hourCycle={12} modelValue={time('10:30')}>
           <TimeClock.Face />
         </TimeClock.Root>,
       );
@@ -187,7 +187,7 @@ describe('<TimeClock.Root />', () => {
           onValueChange={(_value: unknown, details: { cancel: () => void }) => {
             details.cancel();
           }}
-          {...{ 'onUpdate:value': onUpdate }}
+          {...{ 'onUpdate:modelValue': onUpdate }}
         >
           <TimeClock.Face />
         </TimeClock.Root>,

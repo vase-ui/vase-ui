@@ -363,21 +363,21 @@ describe('<Calendar.Root /> views', () => {
     it('selects the month that the consumer gives, and waits for the consumer', async () => {
       const onValueChange = vi.fn();
       const { user, setProps } = await renderViews({
-        value: yearMonth('2026-11'),
+        modelValue: yearMonth('2026-11'),
         onValueChange,
       });
 
       await user.click(monthCell('2026-03-01'));
 
       expect(cellsWith('data-selected')).toEqual([monthLabel('2026-11-01')]);
-      await setProps({ value: onValueChange.mock.calls[0]![0] });
+      await setProps({ modelValue: onValueChange.mock.calls[0]![0] });
       expect(cellsWith('data-selected')).toEqual([monthLabel('2026-03-01')]);
     });
 
     it('has no month selected for a value of null, and keeps the kind of the default value', async () => {
       const onValueChange = vi.fn();
       const { user } = await renderViews({
-        value: null,
+        modelValue: null,
         defaultValue: yearMonth('2026-11'),
         onValueChange,
       });
@@ -392,12 +392,12 @@ describe('<Calendar.Root /> views', () => {
       const onValueChange = vi.fn();
       const { user, setProps } = await renderViews({
         multiple: true,
-        value: [yearMonth('2026-11')],
+        modelValue: [yearMonth('2026-11')],
         onValueChange,
       });
 
       await user.click(monthCell('2026-11-01'));
-      await setProps({ value: onValueChange.mock.lastCall![0] });
+      await setProps({ modelValue: onValueChange.mock.lastCall![0] });
       expect(onValueChange.mock.lastCall![0]).toEqual([]);
 
       expect(root()).toHaveAttribute('data-view', 'month');
@@ -411,9 +411,9 @@ describe('<Calendar.Root /> views', () => {
       const persian = day('2026-11-14').withCalendar('persian').toPlainYearMonth();
       const next = persian.add({ months: 1 });
       const onValueChange = vi.fn();
-      const { user, setProps } = await renderViews({ value: persian, onValueChange });
+      const { user, setProps } = await renderViews({ modelValue: persian, onValueChange });
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       await user.click(
         screen.getByRole('gridcell', {
           name: monthLabel(

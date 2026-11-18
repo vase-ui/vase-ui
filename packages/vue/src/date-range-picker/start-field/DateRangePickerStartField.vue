@@ -13,7 +13,7 @@ export interface DateRangePickerStartFieldState extends DateFieldRootState {}
  */
 export interface DateRangePickerStartFieldProps extends Omit<
   DateFieldRootProps,
-  | 'value'
+  | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
   | 'granularity'

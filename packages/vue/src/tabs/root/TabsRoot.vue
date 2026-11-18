@@ -29,7 +29,7 @@ export interface TabsRootProps
    * The value of the currently active `Tab`. Use when the component is controlled.
    * When the value is `null`, no Tab will be active.
    */
-  value?: TabsTabValue | undefined;
+  modelValue?: TabsTabValue | undefined;
   /**
    * The default value. Use when the component is not controlled.
    * When the value is `null`, no Tab will be active.
@@ -122,7 +122,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TabsRootProps>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   orientation: 'horizontal',
 });
 
@@ -138,16 +138,16 @@ const emit = defineEmits<{
    * `defaultValue` never names a mounted tab.
    *
    * For an automatic change, the value can be `null` when no enabled tab is available.
-   * An automatic change emits `valueChange` and then `update:value`.
+   * An automatic change emits `valueChange` and then `update:modelValue`.
    * Automatic changes cannot be canceled: `eventDetails.cancel()` has no effect on `'initial'`,
    * `'disabled'` and `'missing'`.
    */
   valueChange: [value: TabsTabValue, eventDetails: TabsRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels a change
-   * by the user. `v-model:value` uses it.
+   * by the user. `v-model` uses it.
    */
-  'update:value': [value: TabsTabValue];
+  'update:modelValue': [value: TabsTabValue];
 }>();
 
 defineSlots<{
@@ -162,13 +162,13 @@ const hasExplicitDefaultValue = props.defaultValue !== undefined;
 const initialDefaultValue = hasExplicitDefaultValue ? props.defaultValue : 0;
 
 const activeTabValue = useControlled<TabsTabValue>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => (props.defaultValue === undefined ? 0 : props.defaultValue),
   name: 'Tabs',
   state: 'value',
 });
 
-const isControlled = computed(() => props.value !== undefined);
+const isControlled = computed(() => props.modelValue !== undefined);
 
 // An implicit selection is an automatic change too, so the root emits it one time when the tabs
 // register. An explicit `defaultValue` is the choice of the consumer.
@@ -262,7 +262,7 @@ function onValueChange(newValue: TabsTabValue, eventDetails: TabsRootChangeEvent
     return;
   }
 
-  emit('update:value', newValue);
+  emit('update:modelValue', newValue);
   activeTabValue.value = newValue;
 }
 
@@ -274,7 +274,7 @@ function notifyAutomaticValueChange(nextValue: TabsTabValue, reason: TabsRootCha
       activationDirection: 'none' as const,
     }),
   );
-  emit('update:value', nextValue);
+  emit('update:modelValue', nextValue);
 }
 
 function commitAutomaticValueChange(

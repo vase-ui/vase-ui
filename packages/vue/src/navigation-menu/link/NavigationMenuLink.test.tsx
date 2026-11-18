@@ -197,7 +197,7 @@ describe('<NavigationMenu.Link />', () => {
         <NavigationMenu.Root
           defaultValue="item-1"
           onValueChange={handleValueChange}
-          onUpdate:value={handleUpdateValue}
+          onUpdate:modelValue={handleUpdateValue}
         >
           <NavigationMenu.List>
             <NavigationMenu.Item value="item-1">

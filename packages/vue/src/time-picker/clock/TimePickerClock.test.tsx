@@ -128,10 +128,10 @@ describe('<TimePicker.Clock />', () => {
     it('gives a value of the kind of the last value after the picker is emptied', async () => {
       const onValueChange = vi.fn();
       const { user, setProps } = await renderClock({
-        value: Temporal.PlainDateTime.from('2026-11-14T15:30'),
+        modelValue: Temporal.PlainDateTime.from('2026-11-14T15:30'),
         onValueChange,
       });
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       await waitFor(() => {
         expect(screen.getByTestId('clock')).toHaveAttribute('data-empty');
       });

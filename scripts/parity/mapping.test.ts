@@ -106,9 +106,35 @@ const rules: {
     expected: { props: ['open<-open required'] },
   },
   {
-    name: 'a change handler with event details needs the emits xChange and update:x when the entry has the row x',
+    name: 'the value model uses the default prop and update event',
     part: makePart([row('value'), row('onValueChange', CHANGE)]),
-    expected: { props: ['value<-value'], emits: ['valueChange', 'update:value'] },
+    expected: { props: ['modelValue<-value'], emits: ['valueChange', 'update:modelValue'] },
+  },
+  {
+    name: 'the pressed model preserves the item value',
+    part: makePart([
+      row('value'),
+      row('pressed'),
+      row('defaultPressed'),
+      row('onPressedChange', CHANGE),
+    ]),
+    expected: {
+      props: ['value<-value', 'modelValue<-pressed controlled', 'defaultPressed<-defaultPressed'],
+      emits: ['pressedChange', 'update:modelValue'],
+    },
+  },
+  {
+    name: 'a checked model can coexist with a named open model',
+    part: makePart([
+      row('checked'),
+      row('onCheckedChange', CHANGE),
+      row('open'),
+      row('onOpenChange', CHANGE),
+    ]),
+    expected: {
+      props: ['modelValue<-checked', 'open<-open'],
+      emits: ['checkedChange', 'update:modelValue', 'openChange', 'update:open'],
+    },
   },
   {
     name: 'a change handler with event details needs no update:x when the entry has no row x',

@@ -210,20 +210,20 @@ Initialize the form with the `useForm` function. Give the initial value of each 
 
 Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default slot gives the state of the field. Give the slot props to these parts:
 
-- `field.name` goes to the `name` prop of `<Field.Root>`.
+- `componentField.name` goes to the `name` prop of `<Field.Root>`.
 - `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>` and to `match` of `<Field.Error>`.
 - `meta.touched` and `meta.dirty` go to `touched` and `dirty` of `<Field.Root>`.
-- `value`, `handleChange` and `handleBlur` go to the `value` prop, the `update:value` event and the `blur` event of the control.
+- Bind `componentField.modelValue` to `<Field.Control>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
 
-<<< ../examples/forms/VeeValidateField.vue{9,11-14,22-24,26}
+<<< ../examples/forms/VeeValidateField.vue{9,11-14,22-24}
 
-Listen to `update:value`, not to `valueChange`. `valueChange` gives `eventDetails` as a second argument, and `handleChange` takes a Boolean there.
+For a composite control, pass `value` to `modelValue` and `handleChange` to `update:modelValue`. Attach `handleBlur` to the part that takes focus.
 
 ### Field validation
 
 Give `<Field>` a `rules` function. It returns `true` when the value is valid, or an error message. Use the `match` prop of `<Field.Error>` to show the message:
 
-<<< ../examples/forms/VeeValidateRules.vue{7-15,22,32}
+<<< ../examples/forms/VeeValidateRules.vue{7-15,22,32-34,36}
 
 VeeValidate gives the function a value of the type `unknown`. Check the type in the function.
 
@@ -269,7 +269,7 @@ Use the `<form.Field>` component of the form instance. Its default slot gives `f
 
 - `field.name` goes to the `name` prop of `<Field.Root>`.
 - `field.state.meta.isValid`, `isDirty` and `isTouched` go to `invalid`, `dirty` and `touched` of `<Field.Root>`. `invalid` takes the opposite of `isValid`.
-- `field.state.value`, `field.handleChange` and `field.handleBlur` go to the `value` prop, the `valueChange` event and the `blur` event of the control.
+- `field.state.value`, `field.handleChange` and `field.handleBlur` go to the `modelValue` prop, the `valueChange` event and the `blur` event of the control.
 
 <<< ../examples/forms/TanstackField.vue{10-16,19,21,22,24}
 

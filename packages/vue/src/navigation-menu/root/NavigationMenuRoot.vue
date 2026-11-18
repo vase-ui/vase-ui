@@ -25,11 +25,11 @@ export interface NavigationMenuRootProps<Value = any>
    *
    * To render an uncontrolled navigation menu, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The uncontrolled value of the item that should be initially selected.
    *
-   * To render a controlled navigation menu, use the `value` prop instead.
+   * To render a controlled navigation menu, use the `modelValue` prop instead.
    * @default null
    */
   defaultValue?: Value | null | undefined;
@@ -120,7 +120,7 @@ import type {
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<NavigationMenuRootProps<Value>>(), {
-  value: undefined,
+  modelValue: undefined,
   defaultValue: null,
   delay: 50,
   closeDelay: 50,
@@ -134,9 +134,9 @@ const emit = defineEmits<{
   valueChange: [value: Value | null, eventDetails: NavigationMenuRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value | null];
+  'update:modelValue': [value: Value | null];
   /**
    * Event handler called after any animations complete when the navigation menu is closed.
    */
@@ -154,7 +154,7 @@ const nested = useFloatingParentNodeId().value != null;
 const parentRootContext = useNavigationMenuRootContext(true);
 
 const currentValue = useControlled<Value | null>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue,
   name: 'NavigationMenu',
   state: 'value',
@@ -296,7 +296,7 @@ function setValue(
   }
 
   if (changed) {
-    emit('update:value', nextValue);
+    emit('update:modelValue', nextValue);
   }
   currentValue.value = nextValue;
 

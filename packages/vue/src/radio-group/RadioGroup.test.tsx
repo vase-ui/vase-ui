@@ -578,7 +578,7 @@ describe('<RadioGroup />', () => {
 
       return () => (
         <>
-          <RadioGroup ref={group} value={value.value}>
+          <RadioGroup ref={group} modelValue={value.value}>
             <Radio.Root value="a" data-testid="radio-a" />
             <Radio.Root value="b" data-testid="radio-b" />
           </RadioGroup>
@@ -684,7 +684,7 @@ describe('<RadioGroup />', () => {
     const value = shallowRef<string | null>('b');
     const group = shallowRef<RadioGroupInstance | null>(null);
     await render(() => (
-      <RadioGroup ref={group} value={value.value}>
+      <RadioGroup ref={group} modelValue={value.value}>
         <Radio.Root value="a" data-testid="radio-a" />
         {showSecond.value && <Radio.Root value="b" data-testid="radio-b" />}
       </RadioGroup>
@@ -976,7 +976,7 @@ describe('<RadioGroup />', () => {
     it('moves the tab stop to the checked radio when the highlighted radio is removed', async () => {
       function App({ showLast }: { showLast: boolean }) {
         return (
-          <RadioGroup value="b">
+          <RadioGroup modelValue="b">
             <Radio.Root value="a" data-testid="a" />
             <Radio.Root value="b" data-testid="b" />
             {showLast && <Radio.Root value="c" data-testid="c" />}
@@ -1052,7 +1052,7 @@ describe('<RadioGroup />', () => {
 
   it('does not forward `value` prop', async () => {
     await render(
-      <RadioGroup value="test" data-testid="radio-group">
+      <RadioGroup modelValue="test" data-testid="radio-group">
         <Radio.Root value="" />
       </RadioGroup>,
     );
@@ -1399,7 +1399,7 @@ describe('<RadioGroup />', () => {
       it('should receive name prop from Field.Root', async () => {
         await render(
           <Field.Root name="field-radio">
-            <RadioGroup value="a">
+            <RadioGroup modelValue="a">
               <Field.Item>
                 <Radio.Root value="a" data-testid="radio" />
               </Field.Item>
@@ -1423,7 +1423,7 @@ describe('<RadioGroup />', () => {
             <>
               <Field.Root validationMode="onChange" validate={validateSpy} name="choices">
                 <RadioGroup
-                  value={value.value}
+                  modelValue={value.value}
                   onValueChange={(nextValue) => {
                     value.value = nextValue as string;
                   }}
@@ -2488,7 +2488,7 @@ describe('<RadioGroup />', () => {
     );
   });
 
-  describe('v-model:value', () => {
+  describe('v-model', () => {
     // The sync watcher logs each write of the parent value, so `calls` shows the order of the two
     // events.
     function createModelApp(calls: string[], model: { value: string }, cancel = false) {
@@ -2496,14 +2496,14 @@ describe('<RadioGroup />', () => {
         watch(
           () => model.value,
           (value) => {
-            calls.push(`update:value ${value}`);
+            calls.push(`update:modelValue ${value}`);
           },
           { flush: 'sync' },
         );
 
         return () => (
           <RadioGroup
-            v-model:value={model.value}
+            v-model={model.value}
             onValueChange={(value: string, eventDetails: RadioGroup.ChangeEventDetails) => {
               calls.push(`valueChange ${value}`);
               if (cancel) {
@@ -2518,7 +2518,7 @@ describe('<RadioGroup />', () => {
       });
     }
 
-    it('emits `valueChange` and then `update:value`, before the click handler returns', async () => {
+    it('emits `valueChange` and then `update:modelValue`, before the click handler returns', async () => {
       const calls: string[] = [];
       const model = shallowRef('a');
       const App = createModelApp(calls, model);
@@ -2527,7 +2527,7 @@ describe('<RadioGroup />', () => {
       screen.getByTestId('b').click();
       calls.push('end of the click');
 
-      expect(calls).toEqual(['valueChange b', 'update:value b', 'end of the click']);
+      expect(calls).toEqual(['valueChange b', 'update:modelValue b', 'end of the click']);
     });
 
     it('writes the value to the parent and shows the value that the parent writes', async () => {
@@ -2549,7 +2549,7 @@ describe('<RadioGroup />', () => {
       expect(getInputs().map((input) => input.checked)).toEqual([true, false]);
     });
 
-    it('emits no `update:value` and keeps the parent value when a listener cancels the change', async () => {
+    it('emits no `update:modelValue` and keeps the parent value when a listener cancels the change', async () => {
       const calls: string[] = [];
       const model = shallowRef('a');
       const App = createModelApp(calls, model, true);
@@ -2571,7 +2571,7 @@ describe('<RadioGroup />', () => {
 
     it.each([
       { name: 'the default value', props: { defaultValue: 'b' } },
-      { name: 'the controlled value', props: { value: 'b' } },
+      { name: 'the controlled value', props: { modelValue: 'b' } },
     ])('submits $name of the group', async ({ props }) => {
       await render(
         <form data-testid="form">
@@ -2822,10 +2822,10 @@ describe('<RadioGroup />', () => {
             <form data-testid="form">
               <RadioGroup
                 name="fruit"
-                value={value.value}
+                modelValue={value.value}
                 onValueChange={handleChange}
                 {...{
-                  'onUpdate:value': (next: string) => {
+                  'onUpdate:modelValue': (next: string) => {
                     handleUpdate(next);
                     value.value = next;
                   },
@@ -3069,8 +3069,8 @@ describe('<RadioGroup />', () => {
                 validate={(next) => (next ? null : 'Pick one')}
               >
                 <RadioGroup
-                  value={value.value}
-                  {...{ 'onUpdate:value': (next: string | null) => (value.value = next) }}
+                  modelValue={value.value}
+                  {...{ 'onUpdate:modelValue': (next: string | null) => (value.value = next) }}
                 >
                   {renderRadios()}
                 </RadioGroup>
@@ -3251,8 +3251,8 @@ describe('<RadioGroup />', () => {
               validate={(next) => (next === 'a' ? null : 'Pick a')}
             >
               <RadioGroup
-                value={value.value}
-                {...{ 'onUpdate:value': (next: string) => (value.value = next) }}
+                modelValue={value.value}
+                {...{ 'onUpdate:modelValue': (next: string) => (value.value = next) }}
               >
                 {renderRadios()}
               </RadioGroup>
@@ -3391,7 +3391,7 @@ describe('<RadioGroup />', () => {
 
   describe('KeepAlive', () => {
     // The group stays active. `KeepAlive` hides and shows its radios.
-    function createApp(getGroupProps: () => { defaultValue?: string; value?: string }) {
+    function createApp(getGroupProps: () => { defaultValue?: string; modelValue?: string }) {
       const visible = shallowRef(true);
       const group = shallowRef<RadioGroupInstance | null>(null);
       const handleSubmit = vi.fn();
@@ -3505,7 +3505,7 @@ describe('<RadioGroup />', () => {
 
     it('does not give the group the input of a radio that is deactivated when the value changes', async () => {
       const value = shallowRef('a');
-      const { App, visible, group } = createApp(() => ({ value: value.value }));
+      const { App, visible, group } = createApp(() => ({ modelValue: value.value }));
       await render(<App />);
       const inputA = getInput('a');
       const inputB = getInput('b');
@@ -3957,7 +3957,7 @@ describe('<RadioGroup />', () => {
       const value = shallowRef<string | null>('a');
       const group = shallowRef<RadioGroupInstance | null>(null);
       const App = defineComponent(() => () => (
-        <RadioGroup ref={group} value={value.value}>
+        <RadioGroup ref={group} modelValue={value.value}>
           {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
           <Radio.Root key="a" value="a" data-testid="a" />
         </RadioGroup>
@@ -4227,7 +4227,7 @@ describe('<RadioGroup />', () => {
       const group = shallowRef<RadioGroupInstance | null>(null);
       await render(() => (
         <fieldset disabled={disabled.value}>
-          <RadioGroup ref={group} value={value.value}>
+          <RadioGroup ref={group} modelValue={value.value}>
             <Radio.Root value="a" data-testid="a" />
             {showSecond.value && <Radio.Root value="b" data-testid="b" />}
           </RadioGroup>

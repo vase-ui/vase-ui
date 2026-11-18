@@ -44,11 +44,11 @@ export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime
    *
    * To render an uncontrolled clock, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The time of an uncontrolled clock when it first renders.
    *
-   * To render a controlled clock, use the `value` prop instead.
+   * To render a controlled clock, use the `modelValue` prop instead.
    */
   defaultValue?: Value | null | undefined;
   /**
@@ -184,7 +184,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimeClockRootProps<Value>>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   view: undefined,
   granularity: 'minute',
   minuteStep: 1,
@@ -210,9 +210,9 @@ const emit = defineEmits<{
   valueChange: [value: Value, eventDetails: TimeClockRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value];
+  'update:modelValue': [value: Value];
   /**
    * Callback fired when the user commits the time: when a press or a drag that selects a number
    * ends, and when the user presses Enter or Space on the face.
@@ -272,7 +272,7 @@ if (process.env.NODE_ENV !== 'production') {
 const formatLocale = useFormatLocale(() => props.locale);
 
 const currentValue = useControlled<Value | null>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue ?? null,
   name: 'TimeClock',
 });
@@ -350,7 +350,7 @@ function changeTime(
   if (details.isCanceled) {
     return null;
   }
-  emit('update:value', next);
+  emit('update:modelValue', next);
   currentValue.value = next;
   return next;
 }

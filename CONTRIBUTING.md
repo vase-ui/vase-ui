@@ -520,26 +520,27 @@ Rules:
 
 ### State and `v-model`
 
-Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each trio `x`, `defaultX`, `onXChange`:
+Base UI has prop trios such as `checked`, `defaultChecked` and `onCheckedChange`.
 
-- The props `x` and `defaultX` keep their names.
+- Bind the value of a part with `v-model`. Declare the prop `modelValue` and the event `update:modelValue`.
+- Give independent state a named model, such as `v-model:open`. Keep `value` for the identity of an item.
+- Keep the default prop and change event names, such as `defaultChecked` and `checkedChange`.
 - Declare each controlled prop with `default: undefined` through `withDefaults`. Without it, Vue changes an absent Boolean prop to `false`.
-- When `x` returns to `undefined`, the part keeps the last value from the parent. An update listener alone leaves the part in control.
-- The part emits `xChange(value, details)` and then `update:x(value)`, synchronously.
-- The part does not emit `update:x` when `details.isCanceled` is true.
-- `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:value` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
-- To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
-- An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
-- Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
-- A consumer writes `v-model:x`, such as `v-model:open`. There is no `modelValue` alias.
+- When the model prop returns to `undefined`, the part keeps the last value from the parent. An update listener alone leaves the part in control.
+- Emit the change event first. Emit the model update in the same task.
+- Skip the model update when `details.isCanceled` is true. `Tabs.Root` always emits the update for an automatic selection with reason `initial`, `disabled` or `missing`.
+- `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:modelValue` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
+- To stop a cancelable change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
+- A `Toggle` in a `ToggleGroup` emits `pressedChange` first. The group emits `valueChange` and `update:modelValue`. The item then emits its own `update:modelValue`. Both change events get the same `details` object. A call to `details.cancel()` stops each later event.
+- Do not throw to stop a change. A listener that throws stops the model update only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits the model update.
 - `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })` returns a writable computed. Assign its `.value` after the veto check.
 - The default getter lets a development build warn when the default of an uncontrolled part changes.
 - A prop can take more forms than its event gives, as `layout` of `Resizable.Root` does. The JSDoc of such a prop gives each form, and the form that the event gives.
-- `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.
-- With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `value` and `defaultValue` as an empty array (`VUE-115`). A `null` `value` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
+- `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `modelValue` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `modelValue` keeps the part controlled.
+- With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `modelValue` and `defaultValue` as an empty array (`VUE-115`). A `null` `modelValue` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
 - `Combobox.Input` in `Combobox.Chips` moves the focus to a chip only when the value is an array (`VUE-122`). With each other value, such as the `null` of a combobox with no `multiple` prop, the arrow key keeps its default action.
 - `Combobox.Chip` and `Combobox.ChipRemove` remove a value only when the value of the combobox is an array (`VUE-122`). With each other value, the chip ignores Backspace and Delete, and the remove button ignores a press.
-- When a parent releases `Field.Control.value`, the native input keeps the last parent text. A later render preserves typed edits, and a form reset applies `defaultValue`.
+- When a parent releases `Field.Control.modelValue`, the native input keeps the last parent text. A later render preserves typed edits, and a form reset applies `defaultValue`.
 
 The change event carries these details:
 
@@ -576,11 +577,11 @@ The change event carries these details:
 - A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
-- Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `value` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
+- Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `modelValue` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
 - vue-tsc does not use a listener of a template to resolve a type parameter of a generic SFC. It resolves the type parameters from the other props, and then it checks each listener against the result.
 - A type parameter that only a listener can give is the exception to the default of Base UI. Give it a default that accepts a listener with a typed parameter. A consumer then gives the parameter of the listener the type: `(formValues: { id: string }) => void` on `Form`. With the default of Base UI, `Record<string, any>`, vue-tsc refuses that listener.
 - Use the first default of this list that applies:
-  1. The type of the value when no prop gives the type parameter, where no other part gives the value. With no `value` and no `defaultValue`, the value of `Slider.Root` is its `min`, a number. So its default is `number`.
+  1. The type of the value when no prop gives the type parameter, where no other part gives the value. With no `modelValue` and no `defaultValue`, the value of `Slider.Root` is its `min`, a number. So its default is `number`.
   2. `never`, where Base UI gives `unknown` to a listener with no type: `Select.Root`, `Combobox.Root` and `Autocomplete.Root`. As with `unknown`, a listener with no type then cannot read a member of an item. vue-tsc still refuses `(value: string) => void` where the value can be `null` or `undefined`. With `any`, some lines of the Base UI type tests that must fail then pass.
   3. `any`, where Base UI gives a type with members: `Form` (`Record<string, any>`) and `ToggleGroup` (`string[]`). With `never`, vue-tsc refuses a call such as `value.includes('a')`.
 - The exported props interface keeps the default of Base UI: `FormProps<FormValues extends Record<string, any> = Record<string, any>>`.
@@ -1012,7 +1013,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - A `minDate` or `maxDate` that is a `Temporal.PlainDate` limits whole days. One with a time, such as a `Temporal.PlainDateTime`, is a moment. `compareMoments` compares two zoned values by the moment, also in two time zones, and any other pair by the wall clock. The `min` and `max` of a `datetime-local` input take the time of the limit. A least limit rounds up to the minute, or to the second when the field shows seconds, and a greatest limit rounds down, because the text of a value has no more than that unit and the step base of the input is its `min`. The message about a zoned value names a zoned limit in the zone of the value, and it rounds a least limit up to the minute. A field that shows no time compares days, so its root drops the time of a limit.
 - Make an emitted value with `withDate` or `withTime`. `withDate` keeps the kind, the calendar, the time and the zone of the value. `withTime` keeps the kind, the calendar, the date and the zone.
 - `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
-- The locale gives only the calendar that a part shows. It never gives the calendar of a value. A part with no `value`, `defaultValue` or `referenceDate` makes its value in the ISO calendar.
+- The locale gives only the calendar that a part shows. It never gives the calendar of a value. A part with no `modelValue`, `defaultValue` or `referenceDate` makes its value in the ISO calendar.
 - The exception is such a part that makes a year and month, when its `calendar` prop names a calendar that has other months than ISO. The part then makes its value in that calendar, because an ISO year and month does not show in that calendar.
 - Thus an empty year and month field in `fa-IR` shows Gregorian months and gives an ISO `Temporal.PlainYearMonth`. With `calendar="persian"` it shows Persian months and gives a Persian `Temporal.PlainYearMonth`. An empty date field in `fa-IR` shows Persian dates and gives an ISO `Temporal.PlainDate`.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
@@ -1048,7 +1049,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - The style of `TimeClock.Hand` and `TimeClock.Number` has only CSS variables: an angle and a ratio of the radius of the face. They set no position. The style sheet of the consumer places them, so the server HTML is exact. `time-clock/utils/clockGeometry.ts` turns a point of the face into an angle and a ratio. A press measures the radius of the outer ring from the boxes of the numbers.
 - A picker root renders `Popover.Root` and no element. `useDateTimePickerRoot` of `internals/date-time/picker` gives it the value, the template of a new value, the rule `closeOnSelect` and the disabled state. It creates a registry for the fields and one for the triggers with `createPickerPartElements`. The open state stays in the store of the popover. A part of the picker reads that store with `usePickerPopup()`.
 - Each field and trigger registers its element with `usePickerPartElement`. A part that `KeepAlive` holds gives no element. The root and the positioner use the first element in document order from each registry they read. While no element of a registry is in the document, the registry gives its first registered element. A picker of an app that mounts in a detached element thus keeps its field and its trigger.
-- A picker holds one value, and its field, its calendar and its time field hold none of their own. Each of them is controlled: the root gives it `value`, which is `null` while the picker has no value, and never `undefined`. The root also gives each of them the template as `defaultValue`. The template is the value, else the default value, else the last value, else the value that the granularity and the reference date give. A new value then has the same kind whichever part makes it.
+- The picker root controls its fields, calendar and clock through `modelValue`. An empty field, single-date calendar or clock receives `null`. An empty range calendar receives `[null, null]`. The root chooses the template for a new value from the current value, the default value, the last nonempty value or the fallback, in that order. Fields and calendars use it for `defaultValue`. The clock uses it for `referenceDate`.
 - A part gives each change to the root with its own `details` object, so a `details.cancel()` in `valueChange` of the root also stops the change in the part.
 - A controlled field does not follow the reset of its form, so the field of a picker calls `useFormReset` with its hidden input. The root puts an uncontrolled picker back to its default value, with the reason `none`.
 - The field roots get the value of a reset with the next render. The picker counts each reset so its field roots can identify that value change as a reset. `PickerResetCountContext` gives the count to a synchronous watcher in each field root. A field root then treats the change of its value in the next flush as the change of a reset: it clears the error of its field and starts no validation. This holds when the field of the picker hears of the reset first or last, and for a picker with more than one field.
@@ -1443,7 +1444,7 @@ The tab stop on a server:
 - When the root part sets `hasActiveItem`, the tab stop is the first item with `active`. Set `hasActiveItem` only when an item is active.
 - If not, the tab stop is the first item that is not `disabled` and is at or after the highlighted index of the root.
 - The first client render uses the same rule and reads no DOM. An item keeps this tab stop until it is mounted. Then the tab stop is the item at the highlighted index, as in Base UI.
-- `Tabs.List` sets `hasActiveItem` only when `value` or an explicit `defaultValue` is not `null`. With the implicit default, the first enabled tab has the tab stop. With `null`, the first tab has it, also when it is disabled.
+- `Tabs.List` sets `hasActiveItem` only when `modelValue` or an explicit `defaultValue` is not `null`. With the implicit default, the first enabled tab has the tab stop. With `null`, the first tab has it, also when it is disabled.
 - `RadioGroup` sets `hasActiveItem` only when it has a value.
 - The order of `setup` is the order of the document, with the exceptions of the list above. Two exceptions are usual:
   - An item below a component with an async `setup`. A server runs the `setup` of that item after the items that follow it.

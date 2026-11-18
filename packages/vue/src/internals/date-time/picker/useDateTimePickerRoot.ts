@@ -13,15 +13,13 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   value: ComputedRef<Value | null>;
   /**
    * The value that gives the kind, the calendar, the time and the time zone of a new value: the
-   * value, else the default value, else the last value that the picker had, else the fallback. Each
-   * part that makes a value, such as the field and the calendar, gets it as its default value, so a
-   * new value has the same kind whichever part makes it.
+   * value, else the default value, else the last value that the picker had, else the fallback.
    */
   template: ComputedRef<Value>;
   /**
    * Applies a change that a part reports. The root emits `valueChange` with the details of the
    * part, so a `details.cancel()` of a listener also stops the change of the part. Then the root
-   * emits `update:value` and takes the value.
+   * emits `update:modelValue` and takes the value.
    */
   commit: (value: Value | null, details: Details) => void;
   /**

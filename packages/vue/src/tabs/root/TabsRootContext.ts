@@ -20,7 +20,7 @@ export interface TabsRootContext {
    */
   value: ComputedRef<TabsTabValue>;
   /**
-   * Sets a new value. It emits `valueChange` and `update:value` and writes the value of an
+   * Sets a new value. It emits `valueChange` and `update:modelValue` and writes the value of an
    * uncontrolled root.
    */
   onValueChange(value: TabsTabValue, eventDetails: TabsRootChangeEventDetails): void;
@@ -59,7 +59,7 @@ export interface TabsRootContext {
    */
   tabActivationDirection: Readonly<Ref<TabsTabActivationDirection>>;
   /**
-   * Whether `value` or `defaultValue` chose a tab. It is `false` for `null` and for the implicit
+   * Whether `modelValue` or `defaultValue` chose a tab. It is `false` for `null` and for the implicit
    * default `0`, because a server cannot tell which tab the implicit default names. The list gives
    * it to the composite root as `hasActiveItem`.
    */

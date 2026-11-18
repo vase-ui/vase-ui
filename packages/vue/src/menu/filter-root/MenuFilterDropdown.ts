@@ -19,7 +19,7 @@ export interface MenuFilterDropdownParameters {
   value: () => string | undefined;
   /** The query when the menu mounts and the query is not controlled. */
   defaultValue: () => string | undefined;
-  /** Emits `valueChange`, and then `update:value` when `details.isCanceled` is `false`. */
+  /** Emits `valueChange`, and then `update:modelValue` when `details.isCanceled` is `false`. */
   onValueChange: (value: string, eventDetails: MenuFilterProviderChangeEventDetails) => void;
   filter: () => FilterDropdownFilter | null | undefined;
   autoHighlight: () => boolean | 'always' | undefined;

@@ -33,7 +33,7 @@ describe('fixture parts on a server', () => {
   });
 
   it('renders GenericPart with its state attribute', async () => {
-    const html = await renderToString(<GenericPart option="a" value="a" />);
+    const html = await renderToString(<GenericPart option="a" modelValue="a" />);
 
     expect(html).toBe('<div data-selected><!--[--><!--]--></div>');
   });

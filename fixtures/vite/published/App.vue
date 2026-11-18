@@ -14,7 +14,7 @@ function update(value: boolean) {
 
 <template>
   <main>
-    <Toggle ref="toggle" v-slot="{ state }" :pressed="pressed" @update:pressed="update">
+    <Toggle ref="toggle" v-slot="{ state }" :model-value="pressed" @update:model-value="update">
       {{ state.pressed ? 'On' : 'Off' }}
     </Toggle>
     <output v-if="updates.length">Vue {{ version }} emitted {{ JSON.stringify(updates) }}</output>

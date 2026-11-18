@@ -52,7 +52,7 @@ describe('<Tabs.Root />', () => {
     },
   });
 
-  describeConformance(<Tabs.Root value={0} />, () => ({
+  describeConformance(<Tabs.Root modelValue={0} />, () => ({
     render,
     refInstanceof: window.HTMLDivElement,
   }));
@@ -60,7 +60,7 @@ describe('<Tabs.Root />', () => {
   describe('prop: children', () => {
     it('should accept a null child', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           {null}
           <Tabs.List>
             <Tabs.Tab value={1} />
@@ -72,7 +72,7 @@ describe('<Tabs.Root />', () => {
     });
 
     it('should support empty children', async () => {
-      const { container } = await render(<Tabs.Root value={1} />);
+      const { container } = await render(<Tabs.Root modelValue={1} />);
 
       // Vue puts empty text nodes around the content of a slot, so the matcher cannot tell.
       expect(container.firstElementChild!.innerHTML).toBe('');
@@ -80,7 +80,7 @@ describe('<Tabs.Root />', () => {
 
     it('puts the selected child in tab order', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -90,7 +90,7 @@ describe('<Tabs.Root />', () => {
 
       expect(screen.getAllByRole('tab').map((tab) => tab.tabIndex)).toEqual([-1, 0]);
 
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
 
       expect(screen.getAllByRole('tab').map((tab) => tab.tabIndex)).toEqual([0, -1]);
     });
@@ -225,7 +225,7 @@ describe('<Tabs.Root />', () => {
             >
               remount
             </button>
-            <Tabs.Root value="a">
+            <Tabs.Root modelValue="a">
               <Tabs.List>
                 <Tabs.Tab value="a">A</Tabs.Tab>
                 <Tabs.Tab value="b">B</Tabs.Tab>
@@ -270,7 +270,7 @@ describe('<Tabs.Root />', () => {
   describe('prop: value', () => {
     it('should pass selected prop to children', async () => {
       const tabs = (
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -452,7 +452,7 @@ describe('<Tabs.Root />', () => {
 
     it('should still honor explicit value prop even if it points to a disabled tab', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} disabled data-testid="tab-0">
               Tab 0
@@ -480,7 +480,7 @@ describe('<Tabs.Root />', () => {
 
     it('does not set tabIndex=0 on disabled tabs when they are programmatically selected', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={1}>
+        <Tabs.Root modelValue={1}>
           <Tabs.List>
             <Tabs.Tab value={0} disabled>
               Tab 0
@@ -502,7 +502,7 @@ describe('<Tabs.Root />', () => {
       expect(tabs[2]).toHaveAttribute('tabindex', '-1');
 
       // Programmatically select the disabled tab 0
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
       await flushMicrotasks();
 
       // The disabled tab should be selected but NOT highlighted (tabIndex should remain -1)
@@ -559,7 +559,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
       const handlePointerDown = vi.fn();
       const { user } = await render(
-        <Tabs.Root value={0} onValueChange={handleChange}>
+        <Tabs.Root modelValue={0} onValueChange={handleChange}>
           <Tabs.List activateOnFocus>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} onPointerdown={handlePointerDown} />
@@ -576,7 +576,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
 
       await render(
-        <Tabs.Root value={0} onValueChange={handleChange}>
+        <Tabs.Root modelValue={0} onValueChange={handleChange}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -594,7 +594,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
 
       const { user } = await render(
-        <Tabs.Root value={0} onValueChange={handleChange}>
+        <Tabs.Root modelValue={0} onValueChange={handleChange}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -612,7 +612,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
 
       await render(
-        <Tabs.Root value={0} onValueChange={handleChange}>
+        <Tabs.Root modelValue={0} onValueChange={handleChange}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -628,7 +628,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
 
       await render(
-        <Tabs.Root value={0} onValueChange={handleChange}>
+        <Tabs.Root modelValue={0} onValueChange={handleChange}>
           <Tabs.List activateOnFocus>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -652,7 +652,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
 
       await render(
-        <Tabs.Root value={1} onValueChange={handleChange}>
+        <Tabs.Root modelValue={1} onValueChange={handleChange}>
           <Tabs.List activateOnFocus={false}>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -1176,7 +1176,7 @@ describe('<Tabs.Root />', () => {
     it('keeps a parent selection on release without an initial change event', async () => {
       const onValueChange = vi.fn();
       const { setProps } = await render(
-        <Tabs.Root value="b" onValueChange={onValueChange}>
+        <Tabs.Root modelValue="b" onValueChange={onValueChange}>
           <Tabs.List>
             <Tabs.Tab value="a">A</Tabs.Tab>
             <Tabs.Tab value="b">B</Tabs.Tab>
@@ -1184,7 +1184,7 @@ describe('<Tabs.Root />', () => {
         </Tabs.Root>,
       );
 
-      await setProps({ value: undefined });
+      await setProps({ modelValue: undefined });
       expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
       expect(onValueChange).not.toHaveBeenCalled();
     });
@@ -1194,7 +1194,7 @@ describe('<Tabs.Root />', () => {
       const showTab = shallowRef(true);
       const onValueChange = vi.fn();
       await render(() => (
-        <Tabs.Root value={value.value} onValueChange={onValueChange}>
+        <Tabs.Root modelValue={value.value} onValueChange={onValueChange}>
           <Tabs.List>{showTab.value && <Tabs.Tab value="a">A</Tabs.Tab>}</Tabs.List>
           <Tabs.Panel value="a" keepMounted>
             Panel A
@@ -1219,7 +1219,7 @@ describe('<Tabs.Root />', () => {
     it('selects an enabled tab after release even if the disabled tab matches the default', async () => {
       const onValueChange = vi.fn();
       const { setProps } = await render(
-        <Tabs.Root value="b" defaultValue="b" onValueChange={onValueChange}>
+        <Tabs.Root modelValue="b" defaultValue="b" onValueChange={onValueChange}>
           <Tabs.List>
             <Tabs.Tab value="a">A</Tabs.Tab>
             <Tabs.Tab value="b" disabled>
@@ -1229,7 +1229,7 @@ describe('<Tabs.Root />', () => {
         </Tabs.Root>,
       );
       expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true');
-      await setProps({ value: undefined });
+      await setProps({ modelValue: undefined });
       expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('aria-selected', 'true');
       expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
         'a',
@@ -1247,11 +1247,11 @@ describe('<Tabs.Root />', () => {
         </Tabs.Root>,
       );
       const tab = screen.getByRole('tab');
-      await setProps({ value: 'missing' });
+      await setProps({ modelValue: 'missing' });
       expect(tab).toHaveAttribute('aria-selected', 'false');
       expect(onValueChange).not.toHaveBeenCalled();
 
-      await setProps({ value: undefined });
+      await setProps({ modelValue: undefined });
       expect(tab).toHaveAttribute('aria-selected', 'true');
       expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
         'a',
@@ -1263,7 +1263,7 @@ describe('<Tabs.Root />', () => {
       const handleChange = vi.fn();
       const TestComponent = defineComponent(
         (props: { disableFirst: boolean }) => () => (
-          <Tabs.Root value={0} onValueChange={handleChange}>
+          <Tabs.Root modelValue={0} onValueChange={handleChange}>
             <Tabs.List>
               <Tabs.Tab value={0} disabled={props.disableFirst}>
                 Tab 0
@@ -1291,7 +1291,7 @@ describe('<Tabs.Root />', () => {
         (props: { showLastTab: boolean }) => () => (
           <>
             <button type="button">Before</button>
-            <Tabs.Root value={2} onValueChange={handleChange}>
+            <Tabs.Root modelValue={2} onValueChange={handleChange}>
               <Tabs.List>
                 <Tabs.Tab value={0}>Tab 0</Tabs.Tab>
                 <Tabs.Tab value={1}>Tab 1</Tabs.Tab>
@@ -1329,7 +1329,7 @@ describe('<Tabs.Root />', () => {
   describe('prop: orientation', () => {
     it('does not add aria-orientation by default', async () => {
       await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Root />
           </Tabs.List>
@@ -1341,7 +1341,7 @@ describe('<Tabs.Root />', () => {
 
     it('adds the proper aria-orientation when vertical', async () => {
       await render(
-        <Tabs.Root value={0} orientation="vertical">
+        <Tabs.Root modelValue={0} orientation="vertical">
           <Tabs.List>
             <Tabs.Root />
           </Tabs.List>
@@ -1455,7 +1455,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={0}
+                    modelValue={0}
                   >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1488,7 +1488,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={1}
+                    modelValue={1}
                   >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1517,7 +1517,10 @@ describe('<Tabs.Root />', () => {
 
               await render(
                 <DirectionProvider direction={direction as TextDirection}>
-                  <Tabs.Root orientation={orientation as Tabs.Root.Props['orientation']} value={2}>
+                  <Tabs.Root
+                    orientation={orientation as Tabs.Root.Props['orientation']}
+                    modelValue={2}
+                  >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
                       <Tabs.Tab value={1} disabled />
@@ -1550,7 +1553,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={0}
+                    modelValue={0}
                   >
                     <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                       <Tabs.Tab value={0} />
@@ -1584,7 +1587,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={1}
+                    modelValue={1}
                   >
                     <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                       <Tabs.Tab value={0} />
@@ -1615,7 +1618,10 @@ describe('<Tabs.Root />', () => {
 
             await render(
               <DirectionProvider direction={direction as TextDirection}>
-                <Tabs.Root orientation={orientation as Tabs.Root.Props['orientation']} value={2}>
+                <Tabs.Root
+                  orientation={orientation as Tabs.Root.Props['orientation']}
+                  modelValue={2}
+                >
                   <Tabs.List onKeydown={handleKeyDown}>
                     <Tabs.Tab value={0} />
                     <Tabs.Tab value={1} disabled />
@@ -1649,7 +1655,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={2}
+                    modelValue={2}
                   >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1682,7 +1688,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={1}
+                    modelValue={1}
                   >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1715,7 +1721,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={0}
+                    modelValue={0}
                   >
                     <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1754,7 +1760,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={2}
+                    modelValue={2}
                   >
                     <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                       <Tabs.Tab value={0} />
@@ -1788,7 +1794,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={1}
+                    modelValue={1}
                   >
                     <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                       <Tabs.Tab value={0} />
@@ -1823,7 +1829,7 @@ describe('<Tabs.Root />', () => {
                 <Tabs.Root
                   onValueChange={handleChange}
                   orientation={orientation as Tabs.Root.Props['orientation']}
-                  value={0}
+                  modelValue={0}
                 >
                   <Tabs.List onKeydown={handleKeyDown}>
                     <Tabs.Tab value={0} />
@@ -1868,7 +1874,7 @@ describe('<Tabs.Root />', () => {
                   <Tabs.Root
                     onValueChange={handleChange}
                     orientation={orientation as Tabs.Root.Props['orientation']}
-                    value={0}
+                    modelValue={0}
                   >
                     <Tabs.List onKeydown={handleKeyDown}>
                       <Tabs.Tab value={0} />
@@ -1906,7 +1912,7 @@ describe('<Tabs.Root />', () => {
           const handleKeyDown = vi.fn();
 
           await render(
-            <Tabs.Root onValueChange={handleChange} value={2}>
+            <Tabs.Root onValueChange={handleChange} modelValue={2}>
               <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                 <Tabs.Tab value={0} />
                 <Tabs.Tab value={1} />
@@ -1933,7 +1939,7 @@ describe('<Tabs.Root />', () => {
           const handleKeyDown = vi.fn();
 
           await render(
-            <Tabs.Root onValueChange={handleChange} value={2}>
+            <Tabs.Root onValueChange={handleChange} modelValue={2}>
               <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                 <Tabs.Tab value={0} />
                 <Tabs.Tab value={1} />
@@ -1963,7 +1969,7 @@ describe('<Tabs.Root />', () => {
             const handleKeyDown = vi.fn();
 
             await render(
-              <Tabs.Root onValueChange={handleChange} value={2}>
+              <Tabs.Root onValueChange={handleChange} modelValue={2}>
                 <Tabs.List activateOnFocus={activateOnFocusProp} onKeydown={handleKeyDown}>
                   <Tabs.Tab value={0} disabled />
                   <Tabs.Tab value={1} />
@@ -1993,7 +1999,7 @@ describe('<Tabs.Root />', () => {
           const handleKeyDown = vi.fn();
 
           await render(
-            <Tabs.Root onValueChange={handleChange} value={0}>
+            <Tabs.Root onValueChange={handleChange} modelValue={0}>
               <Tabs.List activateOnFocus={false} onKeydown={handleKeyDown}>
                 <Tabs.Tab value={0} />
                 <Tabs.Tab value={1} />
@@ -2020,7 +2026,7 @@ describe('<Tabs.Root />', () => {
           const handleKeyDown = vi.fn();
 
           await render(
-            <Tabs.Root onValueChange={handleChange} value={0}>
+            <Tabs.Root onValueChange={handleChange} modelValue={0}>
               <Tabs.List onKeydown={handleKeyDown} activateOnFocus>
                 <Tabs.Tab value={0} />
                 <Tabs.Tab value={1} />
@@ -2050,7 +2056,7 @@ describe('<Tabs.Root />', () => {
             const handleKeyDown = vi.fn();
 
             await render(
-              <Tabs.Root onValueChange={handleChange} value={0}>
+              <Tabs.Root onValueChange={handleChange} modelValue={0}>
                 <Tabs.List activateOnFocus={activateOnFocusProp} onKeydown={handleKeyDown}>
                   <Tabs.Tab value={0} />
                   <Tabs.Tab value={1} />
@@ -2184,7 +2190,7 @@ describe('<Tabs.Root />', () => {
           const value = shallowRef(0);
           return () => (
             <Tabs.Root
-              value={value.value}
+              modelValue={value.value}
               onValueChange={(nextValue) => {
                 onValueChange(nextValue);
                 void Promise.resolve().then(() => {
@@ -2229,7 +2235,7 @@ describe('<Tabs.Root />', () => {
 
     it('when focus is outside the tablist, highlight follows the new active tab (tabIndex=0 moves)', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List activateOnFocus={false}>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -2242,14 +2248,14 @@ describe('<Tabs.Root />', () => {
 
       expect(firstTab.tabIndex).toBe(0);
 
-      await setProps({ value: 2 });
+      await setProps({ modelValue: 2 });
       await flushMicrotasks();
 
       expect(firstTab.tabIndex).toBe(-1);
       expect(secondTab.tabIndex).toBe(-1);
       expect(thirdTab.tabIndex).toBe(0);
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
       await flushMicrotasks();
 
       expect(firstTab.tabIndex).toBe(-1);
@@ -2259,7 +2265,7 @@ describe('<Tabs.Root />', () => {
 
     it('when focus is inside the tablist, highlight stays put on external change and arrow keys continue from the focused tab', async () => {
       const { setProps } = await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List activateOnFocus={false}>
             <Tabs.Tab value={0}>Tab 1</Tabs.Tab>
             <Tabs.Tab value={1}>Tab 2</Tabs.Tab>
@@ -2274,7 +2280,7 @@ describe('<Tabs.Root />', () => {
       await flushMicrotasks();
       expect(firstTab).toHaveProperty('tabIndex', 0);
 
-      await setProps({ value: 2 });
+      await setProps({ modelValue: 2 });
       await flushMicrotasks();
 
       // Highlight should not change (still on first tab), but selection did
@@ -2325,7 +2331,7 @@ describe('<Tabs.Root />', () => {
     // A vertical list needs tabs that stack.
     function renderTwoTabs(
       root: {
-        value: number | null;
+        modelValue: number | null;
         orientation?: Tabs.Root.Orientation;
         onValueChange?: (value: Tabs.Tab.Value, eventDetails: Tabs.Root.ChangeEventDetails) => void;
       },
@@ -2420,7 +2426,7 @@ describe('<Tabs.Root />', () => {
     it('should update `data-activation-direction` on programmatic value changes with orientation=horizontal', async () => {
       const panelRenderMock = vi.fn();
       const { setProps } = await render(
-        <Tabs.Root data-testid="root" value={0}>
+        <Tabs.Root data-testid="root" modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -2438,7 +2444,7 @@ describe('<Tabs.Root />', () => {
       expect(root).toHaveAttribute('data-activation-direction', 'none');
       expect(tabs[0]).toHaveAttribute('data-activation-direction', 'none');
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(getFirstPanelRenderStateByValue(panelRenderMock, 1)).toEqual(
         expect.objectContaining({ value: 1, tabActivationDirection: 'right' }),
@@ -2448,7 +2454,7 @@ describe('<Tabs.Root />', () => {
 
       panelRenderMock.mockClear();
 
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
 
       expect(getFirstPanelRenderStateByValue(panelRenderMock, 0)).toEqual(
         expect.objectContaining({ value: 0, tabActivationDirection: 'left' }),
@@ -2460,7 +2466,7 @@ describe('<Tabs.Root />', () => {
     it('should update `data-activation-direction` on programmatic value changes with orientation=vertical', async () => {
       const panelRenderMock = vi.fn();
       const { setProps } = await render(
-        <Tabs.Root data-testid="root" value={0} orientation="vertical">
+        <Tabs.Root data-testid="root" modelValue={0} orientation="vertical">
           <Tabs.List>
             <Tabs.Tab value={0} style={{ display: 'block' }} />
             <Tabs.Tab value={1} style={{ display: 'block' }} />
@@ -2478,7 +2484,7 @@ describe('<Tabs.Root />', () => {
       expect(root).toHaveAttribute('data-activation-direction', 'none');
       expect(tabs[0]).toHaveAttribute('data-activation-direction', 'none');
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(getFirstPanelRenderStateByValue(panelRenderMock, 1)).toEqual(
         expect.objectContaining({ value: 1, tabActivationDirection: 'down' }),
@@ -2488,7 +2494,7 @@ describe('<Tabs.Root />', () => {
 
       panelRenderMock.mockClear();
 
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
 
       expect(getFirstPanelRenderStateByValue(panelRenderMock, 0)).toEqual(
         expect.objectContaining({ value: 0, tabActivationDirection: 'up' }),
@@ -2526,7 +2532,7 @@ describe('<Tabs.Root />', () => {
 
     it('resets `data-activation-direction` when the selection is cleared and restored', async () => {
       const { setProps } = await render(
-        <Tabs.Root data-testid="root" value={0}>
+        <Tabs.Root data-testid="root" modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -2537,16 +2543,16 @@ describe('<Tabs.Root />', () => {
 
       const root = screen.getByTestId('root');
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
       expect(root).toHaveAttribute('data-activation-direction', 'right');
 
       // Clearing the selection is not a directional transition.
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       expect(root).toHaveAttribute('data-activation-direction', 'none');
       expect(screen.queryByTestId('indicator')).toBe(null);
 
       // Neither is selecting a tab again from a cleared state.
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
       expect(root).toHaveAttribute('data-activation-direction', 'none');
       expect(screen.getByTestId('indicator')).not.toBe(null);
     });
@@ -2555,7 +2561,7 @@ describe('<Tabs.Root />', () => {
       const { user, setProps } = await render(
         <Tabs.Root
           data-testid="root"
-          value={0}
+          modelValue={0}
           onValueChange={(_value, eventDetails) => {
             eventDetails.cancel();
           }}
@@ -2577,14 +2583,14 @@ describe('<Tabs.Root />', () => {
       expect(root).toHaveAttribute('data-activation-direction', 'none');
 
       // A later programmatic change should still compute direction correctly
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(root).toHaveAttribute('data-activation-direction', 'right');
     });
 
     it('should update `data-activation-direction` on programmatic change after a controlled parent ignores click', async () => {
       const { user, setProps } = await render(
-        <Tabs.Root data-testid="root" value={0} onValueChange={() => {}}>
+        <Tabs.Root data-testid="root" modelValue={0} onValueChange={() => {}}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab value={1} />
@@ -2601,7 +2607,7 @@ describe('<Tabs.Root />', () => {
       await user.click(tab2);
 
       // A later programmatic change should still compute direction correctly
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(root).toHaveAttribute('data-activation-direction', 'right');
     });
@@ -2623,7 +2629,7 @@ describe('<Tabs.Root />', () => {
             >
               Add and Select
             </button>
-            <Tabs.Root data-testid="root" value={value.value}>
+            <Tabs.Root data-testid="root" modelValue={value.value}>
               <Tabs.List>
                 {tabs.value.map((tab) => (
                   <Tabs.Tab key={tab} value={tab} />
@@ -2674,7 +2680,7 @@ describe('<Tabs.Root />', () => {
             >
               Add and Select
             </button>
-            <Tabs.Root data-testid="root" value={value.value}>
+            <Tabs.Root data-testid="root" modelValue={value.value}>
               <Tabs.List>
                 {tabs.value.map((tab) => (
                   <Tabs.Tab key={tab} value={tab} />
@@ -2711,7 +2717,7 @@ describe('<Tabs.Root />', () => {
     it('gives a tab its direction in its first render after the value changes', async () => {
       const renders: string[] = [];
       const { setProps } = await render(
-        <Tabs.Root value={0}>
+        <Tabs.Root modelValue={0}>
           <Tabs.List>
             <Tabs.Tab value={0} />
             <Tabs.Tab
@@ -2728,25 +2734,25 @@ describe('<Tabs.Root />', () => {
       );
       renders.length = 0;
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
 
       expect(renders[0]).toBe('true right');
     });
 
     it('computes the direction with the new orientation when the value and the orientation change together', async () => {
       const { setProps } = await renderTwoTabs(
-        { value: 0, orientation: 'horizontal' },
+        { modelValue: 0, orientation: 'horizontal' },
         { display: 'block' },
       );
 
-      await setProps({ value: 1, orientation: 'vertical' });
+      await setProps({ modelValue: 1, orientation: 'vertical' });
 
       expect(screen.getByTestId('root')).toHaveAttribute('data-activation-direction', 'down');
     });
 
     it('sets no direction for a canceled click or a cleared value, and sets it for a later change', async () => {
       const { user, setProps } = await renderTwoTabs({
-        value: 0,
+        modelValue: 0,
         onValueChange: (_value, eventDetails) => eventDetails.cancel(),
       });
       const root = screen.getByTestId('root');
@@ -2754,13 +2760,13 @@ describe('<Tabs.Root />', () => {
       await user.click(screen.getAllByRole('tab')[1]);
       expect(root).toHaveAttribute('data-activation-direction', 'none');
 
-      await setProps({ value: 1 });
+      await setProps({ modelValue: 1 });
       expect(root).toHaveAttribute('data-activation-direction', 'right');
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
       expect(root).toHaveAttribute('data-activation-direction', 'none');
 
-      await setProps({ value: 0 });
+      await setProps({ modelValue: 0 });
       expect(root).toHaveAttribute('data-activation-direction', 'none');
     });
 
@@ -2844,8 +2850,25 @@ describe('<Tabs.Root />', () => {
     });
   });
 
+  it('writes the selected tab to v-model and follows the tab set by the parent', async () => {
+    const selected = shallowRef(0);
+    const { user } = await render(() => (
+      <Tabs.Root v-model={selected.value}>
+        <Tabs.List>
+          <Tabs.Tab value={0}>First</Tabs.Tab>
+          <Tabs.Tab value={1}>Second</Tabs.Tab>
+        </Tabs.List>
+      </Tabs.Root>
+    ));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
+    expect(selected.value).toBe(1);
+    selected.value = 0;
+    await flushMicrotasks();
+    expect(screen.getByRole('tab', { name: 'First' })).toHaveAttribute('aria-selected', 'true');
+  });
+
   describe('events', () => {
-    it('emits valueChange and then update:value, and a canceled change emits no update:value', async () => {
+    it('emits valueChange and then update:modelValue, and a canceled change emits no update:modelValue', async () => {
       const calls: string[] = [];
       let cancel = false;
       const { user } = await render(
@@ -2856,7 +2879,9 @@ describe('<Tabs.Root />', () => {
               eventDetails.cancel();
             }
           }}
-          {...{ 'onUpdate:value': (value: number) => calls.push(`update:value ${value}`) }}
+          {...{
+            'onUpdate:modelValue': (value: number) => calls.push(`update:modelValue ${value}`),
+          }}
         >
           <Tabs.List>
             <Tabs.Tab value={0} disabled />
@@ -2868,11 +2893,11 @@ describe('<Tabs.Root />', () => {
       const tabs = screen.getAllByRole('tab');
 
       // The first tab is disabled, so the root selects the second tab. That change is automatic.
-      expect(calls).toEqual(['valueChange 1 initial', 'update:value 1']);
+      expect(calls).toEqual(['valueChange 1 initial', 'update:modelValue 1']);
 
       calls.length = 0;
       await user.click(tabs[2]);
-      expect(calls).toEqual(['valueChange 2 none', 'update:value 2']);
+      expect(calls).toEqual(['valueChange 2 none', 'update:modelValue 2']);
 
       calls.length = 0;
       cancel = true;

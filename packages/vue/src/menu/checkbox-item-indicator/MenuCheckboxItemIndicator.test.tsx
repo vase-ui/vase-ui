@@ -55,7 +55,7 @@ describe('<Menu.CheckboxItemIndicator />', () => {
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup>
-                    <Menu.CheckboxItem checked={checked.value}>
+                    <Menu.CheckboxItem modelValue={checked.value}>
                       <Menu.CheckboxItemIndicator data-testid="indicator" />
                     </Menu.CheckboxItem>
                   </Menu.Popup>
@@ -107,7 +107,7 @@ describe('<Menu.CheckboxItemIndicator />', () => {
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
-                  <Menu.CheckboxItem checked={checked.value}>
+                  <Menu.CheckboxItem modelValue={checked.value}>
                     <Menu.CheckboxItemIndicator
                       class="animation-test-indicator"
                       data-testid="indicator"
@@ -166,7 +166,7 @@ describe('<Menu.CheckboxItemIndicator />', () => {
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup>
-                    <Menu.CheckboxItem checked={checked.value}>
+                    <Menu.CheckboxItem modelValue={checked.value}>
                       <Menu.CheckboxItemIndicator
                         class="animation-test-indicator"
                         data-testid="indicator"

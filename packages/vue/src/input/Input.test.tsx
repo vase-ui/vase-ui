@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -34,18 +35,47 @@ describe('<Input />', () => {
     expect(screen.getByText('Address')).toHaveAttribute('for', 'address');
   });
 
+  it('follows the native value of a toolbar input in the field state', async () => {
+    const value = shallowRef('prefilled');
+    await render(() => (
+      <Toolbar.Root>
+        <Field.Root>
+          <Toolbar.Input as={Input} value={value.value} />
+          <Field.Description>Search terms</Field.Description>
+        </Field.Root>
+      </Toolbar.Root>
+    ));
+
+    const input = screen.getByRole('textbox');
+    const description = screen.getByText('Search terms');
+    expect(input).toHaveAttribute('data-filled');
+    value.value = '';
+    await flushMicrotasks();
+    expect(input).toHaveValue('');
+    expect(input).not.toHaveAttribute('data-filled');
+    expect(description).not.toHaveAttribute('data-filled');
+    await fireEvent.input(input, { target: { value: 'refused' } });
+    expect(input).toHaveValue('');
+    expect(description).not.toHaveAttribute('data-filled');
+
+    value.value = 'prefilled';
+    await flushMicrotasks();
+    expect(input).toHaveAttribute('data-filled');
+    expect(description).not.toHaveAttribute('data-dirty');
+  });
+
   describeConformance(<Input />, () => ({
     refInstanceof: window.HTMLInputElement,
     render,
   }));
 
-  it('writes the typed value to v-model:value and shows a value written to it', async () => {
+  it('writes the typed value to v-model and shows a value written to it', async () => {
     const value = shallowRef('');
 
     await render(() => (
       <Input
-        value={value.value}
-        onUpdate:value={(next: string) => {
+        modelValue={value.value}
+        onUpdate:modelValue={(next: string) => {
           value.value = next;
         }}
       />
@@ -62,14 +92,14 @@ describe('<Input />', () => {
     expect(input).toHaveValue('written');
   });
 
-  it('stops update:value when a valueChange listener cancels the change', async () => {
+  it('stops update:modelValue when a valueChange listener cancels the change', async () => {
     const updates: string[] = [];
 
     await render(
       <Input
-        value="fixed"
+        modelValue="fixed"
         onValueChange={(_value: string, details: Input.ChangeEventDetails) => details.cancel()}
-        onUpdate:value={(next: string) => {
+        onUpdate:modelValue={(next: string) => {
           updates.push(next);
         }}
       />,
@@ -81,6 +111,17 @@ describe('<Input />', () => {
 
     expect(updates).toEqual([]);
     expect(input).toHaveValue('fixed');
+  });
+
+  it.each([
+    { name: 'defaultValue', props: { defaultValue: 'first' }, expected: 'edit' },
+    { name: 'modelValue alone', props: { modelValue: 'first' }, expected: 'first' },
+  ])('edits an input with $name', async ({ props, expected }) => {
+    await render(<Input {...props} />);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('first');
+    await fireEvent.input(input, { target: { value: 'edit' } });
+    expect(input).toHaveValue(expected);
   });
 
   it('gives the state of the field to the #render slot', async () => {
@@ -154,7 +195,7 @@ describe('<Input />', () => {
   });
 
   describe('VUE-74: text that the user typed before the hydration', () => {
-    it('writes the text to v-model:value', async () => {
+    it('writes the text to v-model', async () => {
       const serverHtml = await renderOnServer('src/input/InputBeforeHydration.test.vue');
 
       const { container } = await hydrateAfter(InputBeforeHydration, {
@@ -173,7 +214,7 @@ describe('<Input />', () => {
   });
 
   describe('VUE-81: the form state that the browser restores', () => {
-    it('writes a value that the browser restores to v-model:value', async () => {
+    it('writes a value that the browser restores to v-model', async () => {
       const { container } = await render(<InputBeforeHydration />);
       within(container).getByTestId<HTMLInputElement>('input').value = 'restored';
 
@@ -186,7 +227,9 @@ describe('<Input />', () => {
     it('sends no event at the page show after a new value of Input', async () => {
       mockPageBeforeLoad();
       const value = shallowRef('a');
-      const { container } = await render(() => <Input value={value.value} data-testid="input" />);
+      const { container } = await render(() => (
+        <Input modelValue={value.value} data-testid="input" />
+      ));
       const recorded = recordInputEvents(container);
       screen.getByTestId<HTMLInputElement>('input').value = 'restored';
 

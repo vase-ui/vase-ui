@@ -79,7 +79,7 @@ const tags: Tag[] = [
 </script>
 
 <template>
-  <Autocomplete.Root :items="tags" v-model:value="value" :limit="limit">
+  <Autocomplete.Root :items="tags" v-model="value" :limit="limit">
     <label class="flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white">
       Limit results to 8
       <Autocomplete.Input

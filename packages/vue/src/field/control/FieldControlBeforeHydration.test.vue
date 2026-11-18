@@ -4,7 +4,7 @@ import { Field } from '../index';
 import type { FieldControlChangeEventDetails } from '../index';
 
 const props = defineProps<{
-  // A value makes the control controlled, with `v-model:value`.
+  // A value makes the control controlled, with `v-model`.
   value?: string | undefined;
   defaultValue?: string | undefined;
   as?: string | undefined;
@@ -29,7 +29,7 @@ function handleValueChange(value: string, details: FieldControlChangeEventDetail
     <Field.Label>Name</Field.Label>
     <Field.Control
       v-if="value !== undefined"
-      v-model:value="model"
+      v-model="model"
       :as="as"
       :type="type"
       data-testid="control"

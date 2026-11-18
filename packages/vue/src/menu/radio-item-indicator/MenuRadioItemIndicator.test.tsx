@@ -53,7 +53,7 @@ describe('<Menu.RadioItemIndicator />', () => {
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup>
-                    <Menu.RadioGroup value={value.value}>
+                    <Menu.RadioGroup modelValue={value.value}>
                       <Menu.RadioItem value="a">
                         <Menu.RadioItemIndicator data-testid="indicator" />
                       </Menu.RadioItem>
@@ -110,7 +110,7 @@ describe('<Menu.RadioItemIndicator />', () => {
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
-                  <Menu.RadioGroup value={value.value}>
+                  <Menu.RadioGroup modelValue={value.value}>
                     <Menu.RadioItem value="a">
                       <Menu.RadioItemIndicator
                         class="animation-test-indicator"
@@ -174,7 +174,7 @@ describe('<Menu.RadioItemIndicator />', () => {
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup>
-                    <Menu.RadioGroup value={value.value}>
+                    <Menu.RadioGroup modelValue={value.value}>
                       <Menu.RadioItem value="a">
                         <Menu.RadioItemIndicator
                           class="animation-test-indicator"

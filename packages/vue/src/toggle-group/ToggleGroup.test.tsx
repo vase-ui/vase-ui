@@ -153,7 +153,7 @@ describe('<ToggleGroup />', () => {
       );
 
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
-        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Provide the `<Toggle>` with a `value` prop matching the `<ToggleGroup>` values prop type.',
+        'Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
       );
     });
   });
@@ -161,7 +161,7 @@ describe('<ToggleGroup />', () => {
   describe('controlled', () => {
     it('pressed state', async () => {
       const { setProps } = await render(
-        <ToggleGroup value={['two']}>
+        <ToggleGroup modelValue={['two']}>
           <Toggle value="one" />
           <Toggle value="two" />
         </ToggleGroup>,
@@ -173,13 +173,13 @@ describe('<ToggleGroup />', () => {
       expect(button2).toHaveAttribute('aria-pressed', 'true');
       expect(button2).toHaveAttribute('data-pressed');
 
-      await setProps({ value: ['one'] });
+      await setProps({ modelValue: ['one'] });
 
       expect(button1).toHaveAttribute('aria-pressed', 'true');
       expect(button1).toHaveAttribute('data-pressed');
       expect(button2).toHaveAttribute('aria-pressed', 'false');
 
-      await setProps({ value: ['two'] });
+      await setProps({ modelValue: ['two'] });
 
       expect(button2).toHaveAttribute('aria-pressed', 'true');
       expect(button2).toHaveAttribute('data-pressed');
@@ -188,7 +188,7 @@ describe('<ToggleGroup />', () => {
 
     it('prop: value', async () => {
       const { setProps } = await render(
-        <ToggleGroup value={['two']}>
+        <ToggleGroup modelValue={['two']}>
           <Toggle value="one" />
           <Toggle value="two" />
         </ToggleGroup>,
@@ -200,7 +200,7 @@ describe('<ToggleGroup />', () => {
       expect(button2).toHaveAttribute('data-pressed');
       expect(button1).toHaveAttribute('aria-pressed', 'false');
 
-      await setProps({ value: ['one'] });
+      await setProps({ modelValue: ['one'] });
 
       expect(button1).toHaveAttribute('aria-pressed', 'true');
       expect(button1).toHaveAttribute('data-pressed');
@@ -210,7 +210,12 @@ describe('<ToggleGroup />', () => {
     it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
       const handleValueChange = vi.fn();
       const { user } = await render(
-        <ToggleGroup value={null} defaultValue={['two']} multiple onValueChange={handleValueChange}>
+        <ToggleGroup
+          modelValue={null}
+          defaultValue={['two']}
+          multiple
+          onValueChange={handleValueChange}
+        >
           <Toggle value="one" />
           <Toggle value="two" />
         </ToggleGroup>,
@@ -228,7 +233,7 @@ describe('<ToggleGroup />', () => {
 
     it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
       const { setProps } = await render(
-        <ToggleGroup value={['one']} defaultValue={['two']}>
+        <ToggleGroup modelValue={['one']} defaultValue={['two']}>
           <Toggle value="one" />
           <Toggle value="two" />
         </ToggleGroup>,
@@ -237,7 +242,7 @@ describe('<ToggleGroup />', () => {
       expect(button1).toHaveAttribute('aria-pressed', 'true');
       expect(button2).toHaveAttribute('aria-pressed', 'false');
 
-      await setProps({ value: null });
+      await setProps({ modelValue: null });
 
       expect(button1).toHaveAttribute('aria-pressed', 'false');
       expect(button2).toHaveAttribute('aria-pressed', 'false');
@@ -721,7 +726,7 @@ describe('<ToggleGroup />', () => {
   });
 
   describe('emits', () => {
-    it('emits pressedChange, valueChange, update:value and update:pressed in this sequence', async () => {
+    it('emits both change events before the group and the toggle update their models', async () => {
       const calls: unknown[][] = [];
 
       await render(
@@ -729,13 +734,15 @@ describe('<ToggleGroup />', () => {
           onValueChange={(value, eventDetails) => {
             calls.push(['valueChange', value, eventDetails.reason, eventDetails.event.type]);
           }}
-          {...{ 'onUpdate:value': (value: string[]) => calls.push(['update:value', value]) }}
+          {...{
+            'onUpdate:modelValue': (value: string[]) => calls.push(['group update', value]),
+          }}
         >
           <Toggle
             value="one"
             onPressedChange={(pressed) => calls.push(['pressedChange', pressed])}
             {...{
-              'onUpdate:pressed': (pressed: boolean) => calls.push(['update:pressed', pressed]),
+              'onUpdate:modelValue': (pressed: boolean) => calls.push(['toggle update', pressed]),
             }}
           />
         </ToggleGroup>,
@@ -747,8 +754,8 @@ describe('<ToggleGroup />', () => {
       expect(calls).toEqual([
         ['pressedChange', true],
         ['valueChange', ['one'], 'none', 'click'],
-        ['update:value', ['one']],
-        ['update:pressed', true],
+        ['group update', ['one']],
+        ['toggle update', true],
       ]);
     });
 
@@ -760,9 +767,9 @@ describe('<ToggleGroup />', () => {
           onValueChange={(_value, eventDetails) => {
             eventDetails.cancel();
           }}
-          {...{ 'onUpdate:value': handleUpdate }}
+          {...{ 'onUpdate:modelValue': handleUpdate }}
         >
-          <Toggle value="one" {...{ 'onUpdate:pressed': handleUpdate }} />
+          <Toggle value="one" {...{ 'onUpdate:modelValue': handleUpdate }} />
         </ToggleGroup>,
       );
 

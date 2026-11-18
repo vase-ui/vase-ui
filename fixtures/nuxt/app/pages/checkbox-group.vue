@@ -16,7 +16,7 @@ const apples = ref(['fuji']);
   <main>
     <form data-testid="form">
       <Field.Root name="apples">
-        <CheckboxGroup v-model:value="apples" :all-values="APPLES" data-testid="group">
+        <CheckboxGroup v-model="apples" :all-values="APPLES" data-testid="group">
           <Checkbox.Root parent aria-label="All" :style="CHECKBOX_STYLE" data-testid="parent" />
           <Checkbox.Root
             v-for="apple in APPLES"

@@ -164,7 +164,7 @@ const TestActiveItemDropsTrigger = defineComponent({
 
     return () => (
       <NavigationMenu.Root
-        value={value.value}
+        modelValue={value.value}
         onValueChange={(nextValue) => {
           value.value = nextValue;
         }}
@@ -729,7 +729,7 @@ describe('<NavigationMenu.Trigger />', () => {
       const value = shallowRef<string | null>('one');
       const hasTrigger = shallowRef(true);
       await render(() => (
-        <NavigationMenu.Root value={value.value}>
+        <NavigationMenu.Root modelValue={value.value}>
           <RootContextReader />
           <NavigationMenu.List>
             <NavigationMenu.Item value="one">

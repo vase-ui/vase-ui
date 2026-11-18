@@ -405,7 +405,7 @@ describe('<Combobox.Clear />', () => {
     const { container } = await render(() => (
       <>
         <style>{`.clear { transition: opacity 100ms; } .clear[data-starting-style] { opacity: 0; }`}</style>
-        <Combobox.Root value={value.value}>
+        <Combobox.Root modelValue={value.value}>
           <Combobox.Input />
           <Combobox.Clear
             class="clear"
@@ -436,7 +436,7 @@ describe('<Combobox.Clear />', () => {
       <>
         <style>{`.clear { transition: opacity 100ms; } .clear[data-ending-style] { opacity: 0; }`}</style>
         <Combobox.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(next: string | null) => {
             value.value = next;
           }}
@@ -469,7 +469,8 @@ describe('<Combobox.Clear />', () => {
       return {
         onValueChange: (value: string[], details: { reason: string }) =>
           events.push(`valueChange:${value.join()}:${details.reason}`),
-        'onUpdate:value': (value: string[]) => events.push(`update:value:${value.join()}`),
+        'onUpdate:modelValue': (value: string[]) =>
+          events.push(`update:modelValue:${value.join()}`),
       };
     }
 
@@ -502,7 +503,7 @@ describe('<Combobox.Clear />', () => {
       );
       const clear = screen.getByTestId('clear');
       await nextEvent(clear, 'transitionrun', { action: () => user.click(clear) });
-      expect(events).toEqual(['valueChange::clear-press', 'update:value:']);
+      expect(events).toEqual(['valueChange::clear-press', 'update:modelValue:']);
       events.length = 0;
 
       await user.click(clear);

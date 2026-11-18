@@ -4,6 +4,7 @@ import { shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Field } from '@vase-ui/vue/field';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import DefaultModel from './fixtures/DefaultModel.vue';
 
 const { render } = createRenderer();
 
@@ -15,10 +16,10 @@ it('VUE-141: Field.Control keeps the last parent text and accepts typed edits af
     <form>
       <Field.Root>
         <Field.Control
-          value={value.value}
+          modelValue={value.value}
           defaultValue="reset"
           placeholder={hint.value}
-          onUpdate:value={updates}
+          onUpdate:modelValue={updates}
         />
       </Field.Root>
     </form>
@@ -77,4 +78,23 @@ it('VUE-142: a lone dialog trigger waits for the parent to select it', async () 
   expect(trigger).toHaveAttribute('aria-expanded', 'true');
   expect(trigger).toHaveAttribute('aria-controls', dialog.id);
   expect(dialog).toHaveTextContent('from A');
+});
+
+it('binds the group, pressed and checked values with the default model', async () => {
+  const { container } = await render(<DefaultModel />);
+  const italic = screen.getByRole('button', { name: 'Italic' });
+  const email = screen.getByRole('switch', { name: 'Email' });
+  const output = screen.getByRole('status');
+  const form = container.querySelector('form')!;
+
+  expect(screen.getByRole('button', { name: 'Bold' })).toHaveAttribute('aria-pressed', 'true');
+  expect(new FormData(form).get('notifications')).toBe('email');
+  await userEvent.click(italic);
+  expect(italic).toHaveAttribute('aria-pressed', 'true');
+  expect(output).toHaveTextContent('bold,italic / true / true');
+
+  await userEvent.click(email);
+  expect(email).toHaveAttribute('aria-checked', 'false');
+  expect(new FormData(form).has('notifications')).toBe(false);
+  expect(output).toHaveTextContent('bold,italic / true / false');
 });

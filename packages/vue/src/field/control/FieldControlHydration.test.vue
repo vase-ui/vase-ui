@@ -36,7 +36,7 @@ onMounted(() => {
     <Field.Description v-if="description === 'both'" id="desc-0">Your name</Field.Description>
     <Field.Control
       :as="as"
-      :value="value"
+      :model-value="value"
       :default-value="defaultValue"
       :autofocus="autofocus"
       data-testid="control"

@@ -84,7 +84,7 @@ Import the component and assemble its parts:
 
 ## Value
 
-The value is a `Temporal` object, and `v-model:value` gives back the same kind. A new value has the kind, the calendar, the time and the time zone of the value that the calendar has.
+The value is a `Temporal` object, and `v-model` gives back the same kind. A new value has the kind, the calendar, the time and the time zone of the value that the calendar has.
 
 | Kind                      | What a press selects                          |
 | ------------------------- | --------------------------------------------- |
@@ -93,7 +93,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind. 
 | `Temporal.ZonedDateTime`  | A day, and the value keeps its time and zone. |
 | `Temporal.PlainYearMonth` | A month, in the grid of months.               |
 
-With no value, the calendar makes a `Temporal.PlainDate`. While the value is `null` or an empty list, `defaultValue` gives the kind of a new value. With no `defaultValue`, the last value of the calendar gives it, with its calendar, its time and its time zone. A month picker thus stays a month picker when its value becomes empty. To make a month picker that starts with no month selected, give `value` the `null` and `defaultValue` a `Temporal.PlainYearMonth`.
+With no value, the calendar makes a `Temporal.PlainDate`. While the value is `null` or an empty list, `defaultValue` gives the kind of a new value. With no `defaultValue`, the last value of the calendar gives it, with its calendar, its time and its time zone. A month picker thus stays a month picker when its value becomes empty. To make a month picker that starts with no month selected, set `modelValue` to `null` and `defaultValue` to a `Temporal.PlainYearMonth`.
 
 The value is `null` when nothing is selected. With `multiple`, the value is a list, and a press on a selected day removes it down to `minDays`. A press past `maxDays` changes nothing. In a single selection, a press on the selected day changes nothing. `readOnly` keeps the days focusable and selects nothing.
 
@@ -581,7 +581,7 @@ A page that the user leaves stays until its animations end. It has `data-ending-
 
 ## Events
 
-The root emits `valueChange` and `update:value` for a selection, and `monthChange` and `update:month` when the page changes. It emits `viewChange` and `update:view` when the view changes, and `focusedDateChange` and `update:focusedDate` when the focus moves to another day. Each event with a name that ends in `Change` has a `details` object with a `reason`. `details.cancel()` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for a selection, and `monthChange` and `update:month` when the page changes. It emits `viewChange` and `update:view` when the view changes, and `focusedDateChange` and `update:focusedDate` when the focus moves to another day. Each event with a name that ends in `Change` has a `details` object with a `reason`. `details.cancel()` stops the change and its `update` event.
 
 | Reason          | When                                                                                                   |
 | --------------- | ------------------------------------------------------------------------------------------------------ |

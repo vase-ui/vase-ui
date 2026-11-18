@@ -40,11 +40,11 @@ export interface TimePickerRootProps<
    *
    * To render an uncontrolled picker, use the `defaultValue` prop instead.
    */
-  value?: Value | null | undefined;
+  modelValue?: Value | null | undefined;
   /**
    * The uncontrolled value of the picker when it is initially rendered.
    *
-   * To render a controlled picker, use the `value` prop instead.
+   * To render a controlled picker, use the `modelValue` prop instead.
    */
   defaultValue?: Value | null | undefined;
   /**
@@ -146,7 +146,7 @@ const props = withDefaults(defineProps<TimePickerRootProps<Value>>(), {
   open: undefined,
   defaultOpen: false,
   modal: false,
-  value: undefined,
+  modelValue: undefined,
   closeOnSelect: undefined,
   forceLeadingZeros: false,
   hideTimeZone: false,
@@ -178,9 +178,9 @@ const emit = defineEmits<{
   valueChange: [value: Value | null, eventDetails: TimePickerRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: Value | null];
+  'update:modelValue': [value: Value | null];
   /**
    * Event handler called when the popup is opened or closed.
    *
@@ -214,7 +214,7 @@ const referenceTime = computed(() =>
 
 const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEventDetails>({
   part: 'TimePicker',
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
   fallback: () => props.referenceDate ?? new Temporal.PlainTime(),
   closeOnSelect: () => props.closeOnSelect,
@@ -222,7 +222,7 @@ const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEv
   // A pick sets the time itself, so no value keeps the popup open by default.
   hasTime: () => false,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
-  updateValue: (value) => emit('update:value', value as Value | null),
+  updateValue: (value) => emit('update:modelValue', value as Value | null),
 });
 
 const isReadOnly = computed(() => props.readOnly);

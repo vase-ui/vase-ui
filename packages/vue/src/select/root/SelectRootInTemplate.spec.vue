@@ -19,7 +19,7 @@ function onObjectChange(value: Font | null) {
 <template>
   <Select.Root @value-change="onFontChange" />
   <Select.Root @value-change.once="onFontChange" />
-  <Select.Root @update:value="(value: string | null) => value" />
+  <Select.Root @update:model-value="(value: string | null) => value" />
   <Select.Root @value-change="onObjectChange" />
   <Select.Root multiple @value-change="(value: string[]) => value" />
   <Select.Root @value-change="(value) => expectType<null, typeof value>(value)" />

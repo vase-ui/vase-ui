@@ -200,7 +200,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(0);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           smallStep={0.0001}
           onValueChange={(val) => {
             onValueChange(val);
@@ -275,7 +275,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -306,7 +306,7 @@ describe('<NumberField.Input />', () => {
     const onValueChange = vi.fn();
 
     await render(
-      <NumberField.Root value={0} onValueChange={onValueChange}>
+      <NumberField.Root modelValue={0} onValueChange={onValueChange}>
         <NumberField.Input />
       </NumberField.Root>,
     );
@@ -333,7 +333,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(0);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val, details) => {
             if (cancelNextChange) {
               details.cancel();
@@ -380,7 +380,7 @@ describe('<NumberField.Input />', () => {
     const onValueChange = vi.fn();
 
     await render(
-      <NumberField.Root value={0} onValueChange={onValueChange}>
+      <NumberField.Root modelValue={0} onValueChange={onValueChange}>
         <NumberField.Input />
       </NumberField.Root>,
     );
@@ -404,7 +404,7 @@ describe('<NumberField.Input />', () => {
     const onValueChange = vi.fn();
 
     await render(
-      <NumberField.Root value={0} onValueChange={onValueChange}>
+      <NumberField.Root modelValue={0} onValueChange={onValueChange}>
         <NumberField.Input />
         <NumberField.Increment />
       </NumberField.Root>,
@@ -426,7 +426,7 @@ describe('<NumberField.Input />', () => {
     const onValueChange = vi.fn();
 
     await render(
-      <NumberField.Root value={0} onValueChange={onValueChange}>
+      <NumberField.Root modelValue={0} onValueChange={onValueChange}>
         <NumberField.Input />
       </NumberField.Root>,
     );
@@ -713,7 +713,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={props.value} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -743,7 +743,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(0);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -786,7 +786,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(5);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -827,7 +827,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={props.value} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -862,7 +862,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={props.value} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -891,7 +891,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={props.value} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -926,7 +926,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={props.value} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -957,7 +957,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -998,7 +998,7 @@ describe('<NumberField.Input />', () => {
     function Controlled(props: { value: number | null }) {
       return (
         <NumberField.Root
-          value={props.value}
+          modelValue={props.value}
           onValueChange={onValueChange}
           format={{ maximumFractionDigits: 2 }}
         >
@@ -1035,7 +1035,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(nextValue) => {
             onValueChange(nextValue);
             value.value = nextValue;
@@ -1185,7 +1185,7 @@ describe('<NumberField.Input />', () => {
 
     function Controlled(props: { value: number | null }) {
       return (
-        <NumberField.Root value={props.value} format={format}>
+        <NumberField.Root modelValue={props.value} format={format}>
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -1370,7 +1370,7 @@ describe('<NumberField.Input />', () => {
 
     await render(
       <NumberField.Root
-        value={0}
+        modelValue={0}
         format={{ maximumFractionDigits: 2 }}
         onValueChange={onValueChange}
         onValueCommitted={onValueCommitted}
@@ -1398,7 +1398,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -1438,7 +1438,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -1476,7 +1476,7 @@ describe('<NumberField.Input />', () => {
       const value = shallowRef<number | null>(null);
       return () => (
         <NumberField.Root
-          value={value.value}
+          modelValue={value.value}
           onValueChange={(val) => {
             onValueChange(val);
             value.value = val;
@@ -1882,7 +1882,7 @@ describe('<NumberField.Input />', () => {
 
     await render(
       <NumberField.Root
-        value={NaN}
+        modelValue={NaN}
         onValueChange={onValueChange}
         onValueCommitted={onValueCommitted}
       >
@@ -1891,6 +1891,7 @@ describe('<NumberField.Input />', () => {
     );
 
     const input = screen.getByRole('textbox');
+    expect(input).toHaveValue(new Intl.NumberFormat().format(NaN));
     input.focus();
     await flushMicrotasks();
     await fireEvent.focusOut(input);
@@ -2325,13 +2326,13 @@ describe('<NumberField.Input />', () => {
     it('ignores the `change` event of text that a new value of the parent put in the input', async () => {
       const onValueChange = vi.fn();
       const { setProps } = await render(
-        <NumberField.Root value={5} onValueChange={onValueChange}>
+        <NumberField.Root modelValue={5} onValueChange={onValueChange}>
           <NumberField.Input />
         </NumberField.Root>,
       );
       const input = screen.getByRole('textbox');
 
-      await setProps({ value: 7 });
+      await setProps({ modelValue: 7 });
       expect(input).toHaveValue('7');
       await fireEvent.change(input);
 
@@ -2654,7 +2655,7 @@ describe('<NumberField.Input />', () => {
       };
     }
 
-    it('writes the typed number to v-model:value', async () => {
+    it('writes the typed number to v-model', async () => {
       const { input, model, changes } = await hydrateTyped(
         { controlled: true, value: 5, locale: 'en-US' },
         { typed: '56', focus: 'input' },

@@ -108,7 +108,7 @@ export function useDateRangePickerField(
       ...props,
       'aria-label': ariaLabel(),
       ariaLabelledby: labelledby ?? props.ariaLabelledby,
-      value: picker.range.value[index],
+      modelValue: picker.range.value[index],
       // The end that gives the kind of a new end is the same kind for both fields.
       defaultValue: picker.template.value,
       referenceDate: root.referenceDate,

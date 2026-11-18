@@ -73,14 +73,14 @@ const groupItemsReadonly = [
 
 <Autocomplete.Root
   items={objectItems}
-  value="a"
+  modelValue="a"
   onValueChange={(value) => {
     value.startsWith('a');
   }}
 />;
 
 // @ts-expect-error value refers to the input value, not the item object
-<Autocomplete.Root items={objectItems} value={objectItems[0]} />;
+<Autocomplete.Root items={objectItems} modelValue={objectItems[0]} />;
 
 <Autocomplete.Root
   items={objectItems}
@@ -121,7 +121,7 @@ void CollectionApp;
 declare const value: string;
 
 <Autocomplete.Root
-  value={value}
+  modelValue={value}
   onValueChange={(newValue) => {
     newValue.length;
   }}

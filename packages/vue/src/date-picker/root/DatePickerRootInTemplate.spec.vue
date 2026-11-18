@@ -25,26 +25,26 @@ function onWrongKind(value: Temporal.PlainTime | null) {
 </script>
 
 <template>
-  <!-- `v-model:value` gives back the kind of the value that the parent gave. -->
-  <DatePicker.Root v-model:value="day" v-model:open="open" />
-  <DatePicker.Root v-model:value="zoned" />
+  <!-- `v-model` gives back the kind of the value that the parent gave. -->
+  <DatePicker.Root v-model="day" v-model:open="open" />
+  <DatePicker.Root v-model="zoned" />
   <!-- @vue-expect-error a zoned value does not fit a ref of a date -->
   <DatePicker.Root
-    v-model:value="day"
+    v-model="day"
     :default-value="Temporal.ZonedDateTime.from('2026-11-14T15:04[UTC]')"
   />
 
   <DatePicker.Root
-    :value="day"
+    :model-value="day"
     @value-change="
       (value) => {
         expectType<Temporal.PlainDate | null, typeof value>(value);
       }
     "
   />
-  <DatePicker.Root :value="day" @value-change="onDayChange" />
+  <DatePicker.Root :model-value="day" @value-change="onDayChange" />
   <!-- @vue-expect-error the picker gives a date, and a time does not fit it -->
-  <DatePicker.Root :value="day" @value-change="onWrongKind" />
+  <DatePicker.Root :model-value="day" @value-change="onWrongKind" />
 
   <!-- Each part has the props of the part that it renders, less the props of the root. -->
   <DatePicker.Root>

@@ -12,7 +12,7 @@ describe('<Select.ItemIndicator />', () => {
       keepMounted: { type: Boolean, default: undefined },
     },
     setup: (props) => () => (
-      <Select.Root value={props.value} open>
+      <Select.Root modelValue={props.value} open>
         <Select.Trigger />
         <Select.Positioner>
           <Select.Popup>

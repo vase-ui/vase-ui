@@ -17,18 +17,18 @@ function onWrongKind(value: Temporal.PlainTime | null) {
 </script>
 
 <template>
-  <!-- `v-model:value` gives back the kind of the value that the parent gave. -->
-  <DateField.Root v-model:value="day" />
-  <DateField.Root v-model:value="zoned" />
+  <!-- `v-model` gives back the kind of the value that the parent gave. -->
+  <DateField.Root v-model="day" />
+  <DateField.Root v-model="zoned" />
   <!-- @vue-expect-error a zoned value does not fit a ref of a date -->
   <DateField.Root
-    v-model:value="day"
+    v-model="day"
     :default-value="Temporal.ZonedDateTime.from('2026-11-14T15:04[UTC]')"
   />
 
-  <DateField.Root :value="day" @value-change="onDayChange" />
+  <DateField.Root :model-value="day" @value-change="onDayChange" />
   <DateField.Root
-    :value="day"
+    :model-value="day"
     @value-change="
       (value) => {
         expectType<Temporal.PlainDate | null, typeof value>(value);
@@ -36,7 +36,7 @@ function onWrongKind(value: Temporal.PlainTime | null) {
     "
   />
   <!-- @vue-expect-error the field gives a date, and a time does not fit it -->
-  <DateField.Root :value="day" @value-change="onWrongKind" />
+  <DateField.Root :model-value="day" @value-change="onWrongKind" />
 
   <!-- The slot narrows the part of the layout, so that each part gets what it needs. -->
   <DateField.Root>

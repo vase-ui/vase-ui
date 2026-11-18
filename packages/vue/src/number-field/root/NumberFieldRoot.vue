@@ -105,11 +105,11 @@ export interface NumberFieldRootProps
   /**
    * The raw numeric value of the field.
    */
-  value?: number | null | undefined;
+  modelValue?: number | null | undefined;
   /**
    * The uncontrolled value of the field when it's initially rendered.
    *
-   * To render a controlled number field, use the `value` prop instead.
+   * To render a controlled number field, use the `modelValue` prop instead.
    */
   defaultValue?: number | undefined;
   /**
@@ -218,7 +218,7 @@ const props = withDefaults(defineProps<NumberFieldRootProps>(), {
   required: false,
   disabled: false,
   readOnly: false,
-  value: undefined,
+  modelValue: undefined,
   allowWheelScrub: false,
   snapOnStep: false,
   allowOutOfRange: false,
@@ -241,9 +241,9 @@ const emit = defineEmits<{
   valueChange: [value: number | null, eventDetails: NumberFieldRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: number | null];
+  'update:modelValue': [value: number | null];
   /**
    * Callback function that is fired when the value is committed.
    * It runs later than `valueChange`, when:
@@ -310,7 +310,7 @@ const controlId = useLabelableId({ id: () => props.id, element: inputRef });
 const inputId = useReferencedId(() => controlId.value, inputRef);
 
 const numberValue = useControlled<number | null>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue ?? null,
   name: 'NumberField',
   state: 'value',
@@ -477,7 +477,7 @@ function setValue(
       return false;
     }
 
-    emit('update:value', validatedValue);
+    emit('update:modelValue', validatedValue);
     numberValue.value = validatedValue;
     setDirty(validatedValue !== validityData.value.initialValue);
     hasPendingCommitRef.value = true;
@@ -675,7 +675,7 @@ function onHiddenInputChange(event: Event) {
 }
 
 useFormReset(hiddenInputElement, (event) => {
-  if (props.value === undefined) {
+  if (props.modelValue === undefined) {
     const previousValue = numberValue.value;
     allowInputSyncRef.value = true;
     setValue(props.defaultValue ?? null, createChangeEventDetails(REASONS.none, event));

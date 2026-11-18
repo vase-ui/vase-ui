@@ -14,7 +14,7 @@ const fruit = ref('banana');
   <main>
     <form data-testid="form">
       <Field.Root>
-        <RadioGroup v-model:value="fruit" name="fruit" data-testid="fruit">
+        <RadioGroup v-model="fruit" name="fruit" data-testid="fruit">
           <Radio.Root value="apple" aria-label="Apple" :style="RADIO_STYLE" data-testid="apple">
             <Radio.Indicator data-testid="apple-indicator" />
           </Radio.Root>

@@ -32,7 +32,7 @@ const removed = computed(() => (isMounted.value ? props.removedAtMount : 'none')
 
 <template>
   <Tabs.Root
-    :value="value"
+    :model-value="value"
     :default-value="defaultValue"
     :orientation="orientation"
     data-testid="root"

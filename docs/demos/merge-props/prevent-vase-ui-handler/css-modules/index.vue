@@ -47,7 +47,7 @@ const HeartOutlineIcon: FunctionalComponent = () =>
 <template>
   <div :class="styles.Container">
     <div :class="styles.ToggleRow">
-      <Toggle v-model:pressed="pressed" aria-label="Favorite" :class="styles.Toggle">
+      <Toggle v-model="pressed" aria-label="Favorite" :class="styles.Toggle">
         <template #render="{ props, state }">
           <button type="button" v-bind="getToggleProps(props)">
             <HeartFilledIcon v-if="state.pressed" />

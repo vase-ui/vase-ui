@@ -10,7 +10,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
 
 <template>
   <main>
-    <TimeClock.Root v-model:value="time" locale="is-IS" aria-label="Time" data-testid="clock">
+    <TimeClock.Root v-model="time" locale="is-IS" aria-label="Time" data-testid="clock">
       <TimeClock.ViewTrigger view="hour" data-testid="hour" />
       <TimeClock.ViewTrigger view="minute" data-testid="minute" />
       <TimeClock.DayPeriod value="am" data-testid="period" />
@@ -24,7 +24,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
     </TimeClock.Root>
     <output data-testid="time-value">{{ time?.toString() ?? '' }}</output>
 
-    <Calendar.Root v-model:value="date" :today="today" locale="is-IS" data-testid="calendar">
+    <Calendar.Root v-model="date" :today="today" locale="is-IS" data-testid="calendar">
       <Calendar.Months>
         <template #month="{ month }">
           <Calendar.Month :month="month">

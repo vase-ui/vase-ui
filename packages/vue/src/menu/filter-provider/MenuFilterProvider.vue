@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<MenuFilterProviderProps>(), {
   autoHighlight: false,
   locale: undefined,
   defaultValue: undefined,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -35,9 +35,9 @@ const emit = defineEmits<{
   valueChange: [value: string, eventDetails: MenuFilterProviderChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
 }>();
 
 defineSlots<{
@@ -48,12 +48,12 @@ defineSlots<{
 }>();
 
 const options: MenuFilterRootOptions = {
-  value: () => props.value,
+  value: () => props.modelValue,
   defaultValue: () => props.defaultValue,
   onValueChange(value, eventDetails) {
     emit('valueChange', value, eventDetails);
     if (!eventDetails.isCanceled) {
-      emit('update:value', value);
+      emit('update:modelValue', value);
     }
   },
   filter: () => props.filter,

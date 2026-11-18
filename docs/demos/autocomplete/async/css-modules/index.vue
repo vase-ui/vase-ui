@@ -197,7 +197,7 @@ const top100Movies: Movie[] = [
 <template>
   <Autocomplete.Root
     :items="searchResults"
-    :value="searchValue"
+    :model-value="searchValue"
     :item-to-string-value="(item: Movie) => item.title"
     :filter="null"
     @value-change="search"

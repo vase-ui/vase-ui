@@ -113,7 +113,7 @@ describe('<Calendar.Root />', () => {
     function listeners() {
       return {
         onValueChange: vi.fn(),
-        'onUpdate:value': vi.fn(),
+        'onUpdate:modelValue': vi.fn(),
       };
     }
 
@@ -128,7 +128,7 @@ describe('<Calendar.Root />', () => {
       expect(value.toString()).toBe('2026-11-11');
       expect(details.reason).toBe('day-press');
       expect(details.event).toBeInstanceOf(MouseEvent);
-      expect(handlers['onUpdate:value'].mock.calls[0]![0].toString()).toBe('2026-11-11');
+      expect(handlers['onUpdate:modelValue'].mock.calls[0]![0].toString()).toBe('2026-11-11');
       expect(cell('2026-11-11')).toHaveAttribute('aria-selected', 'true');
       expect(cell('2026-11-11')).toHaveAttribute('data-selected');
       expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'false');
@@ -146,7 +146,10 @@ describe('<Calendar.Root />', () => {
 
     it('leaves the selection of a controlled calendar to its value', async () => {
       const handlers = listeners();
-      const { user, setProps } = await renderCalendar({ value: day('2026-11-10'), ...handlers });
+      const { user, setProps } = await renderCalendar({
+        modelValue: day('2026-11-10'),
+        ...handlers,
+      });
 
       await user.click(button('2026-11-12')!);
 
@@ -154,13 +157,13 @@ describe('<Calendar.Root />', () => {
       expect(cell('2026-11-10')).toHaveAttribute('aria-selected', 'true');
       expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'false');
 
-      await setProps({ value: day('2026-11-12') });
+      await setProps({ modelValue: day('2026-11-12') });
 
       expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'true');
     });
 
     it('gives a controlled calendar with a null value an empty selection', async () => {
-      const { user } = await renderCalendar({ value: null });
+      const { user } = await renderCalendar({ modelValue: null });
 
       await user.click(button('2026-11-12')!);
 
@@ -173,14 +176,14 @@ describe('<Calendar.Root />', () => {
         onValueChange: vi.fn((_value: unknown, details: { cancel: () => void }) => {
           details.cancel();
         }),
-        'onUpdate:value': vi.fn(),
+        'onUpdate:modelValue': vi.fn(),
       };
       const { user } = await renderCalendar({ defaultValue: day('2026-11-10'), ...handlers });
 
       await user.click(button('2026-11-12')!);
 
       expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
-      expect(handlers['onUpdate:value']).not.toHaveBeenCalled();
+      expect(handlers['onUpdate:modelValue']).not.toHaveBeenCalled();
       expect(cell('2026-11-10')).toHaveAttribute('aria-selected', 'true');
       expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'false');
     });
@@ -264,14 +267,14 @@ describe('<Calendar.Root />', () => {
         const handlers = listeners();
         const { user, setProps } = await renderCalendar({
           multiple: true,
-          value: [day('2026-11-10')],
+          modelValue: [day('2026-11-10')],
           ...handlers,
         });
 
         await user.click(button('2026-11-12')!);
         expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'false');
 
-        await setProps({ value: [day('2026-11-10'), day('2026-11-12')] });
+        await setProps({ modelValue: [day('2026-11-10'), day('2026-11-12')] });
         expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'true');
       });
     });
@@ -344,7 +347,7 @@ describe('<Calendar.Root />', () => {
         const value = Temporal.ZonedDateTime.from('2026-11-14T23:30:00+00:00[UTC]').withTimeZone(
           'Asia/Tokyo',
         );
-        await renderCalendar({ value });
+        await renderCalendar({ modelValue: value });
 
         expect(cell('2026-11-15')).toHaveAttribute('aria-selected', 'true');
         expect(cell('2026-11-14')).toHaveAttribute('aria-selected', 'false');

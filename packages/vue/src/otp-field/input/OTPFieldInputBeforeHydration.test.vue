@@ -36,7 +36,7 @@ function handleValueComplete(value: string, details: OTPFieldRootCompleteEventDe
     <Field.Root :validation-mode="validationMode" data-testid="field">
       <Field.Label>Code</Field.Label>
       <OTPField.Root
-        v-model:value="model"
+        v-model="model"
         :length="4"
         auto-submit
         data-testid="root"

@@ -26,12 +26,12 @@ export interface CheckboxGroupProps
    *
    * To render an uncontrolled checkbox group, use the `defaultValue` prop instead.
    */
-  value?: string[] | null | undefined;
+  modelValue?: string[] | null | undefined;
   /**
    * Names of the checkboxes in the group that should be initially ticked.
    * `null` is an empty value.
    *
-   * To render a controlled checkbox group, use the `value` prop instead.
+   * To render a controlled checkbox group, use the `modelValue` prop instead.
    */
   defaultValue?: string[] | null | undefined;
   /**
@@ -80,7 +80,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CheckboxGroupProps>(), {
   as: 'div',
-  value: undefined,
+  modelValue: undefined,
   defaultValue: undefined,
   allValues: undefined,
   disabled: false,
@@ -94,9 +94,9 @@ const emit = defineEmits<{
   valueChange: [value: string[], eventDetails: CheckboxGroupChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string[]];
+  'update:modelValue': [value: string[]];
 }>();
 
 defineSlots<{
@@ -126,7 +126,7 @@ const groupValue = useControlled<string[]>({
   // A consumer can change a reactive array in place. The copy reads each item, so such a change
   // gives the group a new value, and the checkboxes, the field state and the validation follow it.
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
-  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value?.slice()),
+  controlled: () => (props.modelValue === null ? EMPTY_ARRAY : props.modelValue?.slice()),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'CheckboxGroup',
   state: 'value',
@@ -139,7 +139,7 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
     return;
   }
 
-  emit('update:value', nextValue);
+  emit('update:modelValue', nextValue);
   groupValue.value = nextValue;
 }
 
@@ -220,7 +220,7 @@ function reset(event: Event) {
 
   const defaultValue = props.defaultValue ?? EMPTY_ARRAY;
 
-  if (props.value === undefined) {
+  if (props.modelValue === undefined) {
     if (areArraysEqual(groupValue.value, defaultValue)) {
       parent.reset(defaultValue.slice());
     } else {

@@ -4,7 +4,7 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import type { NumberFieldRootChangeEventDetails } from '@vase-ui/vue/number-field';
 
 const props = defineProps<{
-  // The first value of `v-model:value`.
+  // The first value of `v-model`.
   value?: number | undefined;
 }>();
 
@@ -19,7 +19,7 @@ function handleValueChange(value: number | null, details: NumberFieldRootChangeE
 <template>
   <form data-testid="form" @submit.prevent>
     <NumberField.Root
-      v-model:value="model"
+      v-model="model"
       name="quantity"
       data-testid="root"
       @value-change="handleValueChange"

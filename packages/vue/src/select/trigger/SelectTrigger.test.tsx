@@ -355,7 +355,7 @@ describe('<Select.Trigger />', () => {
   describe('placeholder state', () => {
     it('should have the data-placeholder attribute when provided `null` value', async () => {
       await render(
-        <Select.Root value={null}>
+        <Select.Root modelValue={null}>
           <Select.Trigger data-testid="trigger">
             <Select.Value data-testid="value" />
           </Select.Trigger>

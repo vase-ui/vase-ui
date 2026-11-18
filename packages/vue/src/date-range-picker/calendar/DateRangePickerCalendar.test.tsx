@@ -64,12 +64,12 @@ describe('<DateRangePicker.Calendar />', () => {
   });
 
   it('follows a new range of a controlled picker', async () => {
-    const { setProps } = await renderPicker({ value: range('2026-11-18', '2026-11-20') });
+    const { setProps } = await renderPicker({ modelValue: range('2026-11-18', '2026-11-20') });
     await waitFor(() => {
       expect(startCells()).toEqual(['2026-11-18']);
     });
 
-    await setProps({ value: range('2026-11-22', '2026-11-24') });
+    await setProps({ modelValue: range('2026-11-22', '2026-11-24') });
 
     expect(startCells()).toEqual(['2026-11-22']);
   });
@@ -80,7 +80,7 @@ describe('<DateRangePicker.Calendar />', () => {
     const { user } = await renderPicker({
       defaultValue: range('2026-11-18', '2026-11-20'),
       onValueChange,
-      'onUpdate:value': onUpdateValue,
+      'onUpdate:modelValue': onUpdateValue,
     });
     await waitFor(() => {
       expect(dayButton('2026-11-24')).not.toBe(null);

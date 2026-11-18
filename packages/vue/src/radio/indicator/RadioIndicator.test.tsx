@@ -54,7 +54,7 @@ describe('<Radio.Indicator />', () => {
           >
             Close
           </button>
-          <RadioGroup value={value.value}>
+          <RadioGroup modelValue={value.value}>
             <Radio.Root value="a">
               <Radio.Indicator class="animation-test-indicator" data-testid="indicator-a" />
             </Radio.Root>
@@ -105,7 +105,7 @@ describe('<Radio.Indicator />', () => {
           >
             Close
           </button>
-          <RadioGroup value={value.value}>
+          <RadioGroup modelValue={value.value}>
             <Radio.Root value="a">
               <Radio.Indicator
                 class="animation-test-indicator"
@@ -162,7 +162,7 @@ describe('<Radio.Indicator />', () => {
           <div>
             <style>{style}</style>
             <button onClick={handleSelectA}>Select a</button>
-            <RadioGroup value={value.value}>
+            <RadioGroup modelValue={value.value}>
               <Radio.Root value="a" data-testid="radio-a">
                 <Radio.Indicator class="animation-test-indicator" data-testid="indicator-a" />
               </Radio.Root>
@@ -213,7 +213,7 @@ describe('<Radio.Indicator />', () => {
           <div>
             <style>{style}</style>
             <button onClick={handleSelectB}>Select b</button>
-            <RadioGroup value={value.value}>
+            <RadioGroup modelValue={value.value}>
               <Radio.Root value="a">
                 <Radio.Indicator class="animation-test-indicator" data-testid="indicator-a" />
               </Radio.Root>
@@ -274,7 +274,7 @@ describe('<Radio.Indicator />', () => {
           <div>
             <style>{style}</style>
             <button onClick={handleSelectA}>Select a</button>
-            <RadioGroup value={value.value}>
+            <RadioGroup modelValue={value.value}>
               <Radio.Root value="a" data-testid="radio-a">
                 <Radio.Indicator
                   class="animation-test-indicator"
@@ -335,7 +335,7 @@ describe('<Radio.Indicator />', () => {
             <style>{style}</style>
             <button onClick={handleSelectB}>Select b</button>
             {Array.from({ length: 10 }, (_, index) => (
-              <RadioGroup value={value.value} key={index}>
+              <RadioGroup modelValue={value.value} key={index}>
                 <Radio.Root value="a">
                   <Radio.Indicator
                     class="animation-test-indicator"

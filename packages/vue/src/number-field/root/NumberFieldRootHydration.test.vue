@@ -31,7 +31,7 @@ const props = withDefaults(
 
 function rootProps() {
   return {
-    value: props.value,
+    modelValue: props.value,
     defaultValue: props.defaultValue,
     locale: props.locale,
     format: props.format,

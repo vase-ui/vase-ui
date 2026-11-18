@@ -190,7 +190,7 @@ const SERVER_TYPES = [
       >
         <Field.Label>Server name</Field.Label>
         <Field.Control
-          :value="field.state.value"
+          :model-value="field.state.value"
           placeholder="e.g. api-server-01"
           @value-change="field.handleChange"
           @blur="field.handleBlur"
@@ -211,7 +211,7 @@ const SERVER_TYPES = [
       >
         <Combobox.Root
           :items="REGIONS"
-          :value="field.state.value"
+          :model-value="field.state.value"
           @value-change="field.handleChange"
         >
           <div class="relative text-sm leading-5 font-bold text-neutral-950 dark:text-white">
@@ -262,7 +262,7 @@ const SERVER_TYPES = [
         <Autocomplete.Root
           :items="IMAGES"
           mode="both"
-          :value="field.state.value"
+          :model-value="field.state.value"
           :item-to-string-value="(itemValue: Image) => itemValue.url"
           @value-change="field.handleChange"
         >
@@ -304,7 +304,7 @@ const SERVER_TYPES = [
       >
         <Select.Root
           :items="SERVER_TYPES"
-          :value="field.state.value"
+          :model-value="field.state.value"
           @value-change="field.handleChange"
         >
           <div class="w-fit space-y-1">
@@ -347,7 +347,7 @@ const SERVER_TYPES = [
         :touched="field.state.meta.isTouched"
       >
         <NumberField.Root
-          :value="field.state.value"
+          :model-value="field.state.value"
           :min="1"
           :max="64"
           @value-change="field.handleChange"
@@ -380,7 +380,7 @@ const SERVER_TYPES = [
           <template #render="{ props }">
             <Slider.Root
               v-bind="props"
-              :value="field.state.value"
+              :model-value="field.state.value"
               thumb-alignment="edge"
               :min="0"
               :max="1"
@@ -427,7 +427,7 @@ const SERVER_TYPES = [
           <template #render="{ props }">
             <RadioGroup
               v-bind="props"
-              :value="field.state.value"
+              :model-value="field.state.value"
               class="gap-4"
               @value-change="field.handleChange"
             >
@@ -459,7 +459,7 @@ const SERVER_TYPES = [
         <Field.Label class="gap-2">
           Restart on failure
           <Switch.Root
-            :checked="field.state.value"
+            :model-value="field.state.value"
             @checked-change="field.handleChange"
             @blur="field.handleBlur"
           >
@@ -483,7 +483,7 @@ const SERVER_TYPES = [
           <template #render="{ props }">
             <CheckboxGroup
               v-bind="props"
-              :value="field.state.value"
+              :model-value="field.state.value"
               @value-change="field.handleChange"
             >
               <Fieldset.Legend class="mb-2">Allowed network protocols</Fieldset.Legend>

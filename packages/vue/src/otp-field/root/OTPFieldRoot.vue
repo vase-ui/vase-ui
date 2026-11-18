@@ -122,7 +122,7 @@ export interface OTPFieldRootProps
   /**
    * The OTP value.
    */
-  value?: string | undefined;
+  modelValue?: string | undefined;
   /**
    * The uncontrolled OTP value when the component is initially rendered.
    */
@@ -206,7 +206,7 @@ const props = withDefaults(defineProps<OTPFieldRootProps>(), {
   disabled: false,
   readOnly: false,
   required: false,
-  value: undefined,
+  modelValue: undefined,
 });
 
 const emit = defineEmits<{
@@ -223,9 +223,9 @@ const emit = defineEmits<{
   valueChange: [value: string, eventDetails: OTPFieldRootChangeEventDetails];
   /**
    * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model:value` uses it.
+   * change. `v-model` uses it.
    */
-  'update:value': [value: string];
+  'update:modelValue': [value: string];
   /**
    * Callback fired when entered text contains characters that are rejected by validation or
    * normalization before the OTP value updates.
@@ -274,7 +274,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const valueUnwrapped = useControlled<string>({
-  controlled: () => props.value,
+  controlled: () => props.modelValue,
   default: () => props.defaultValue ?? '',
   name: 'OTPField',
   state: 'value',
@@ -500,7 +500,7 @@ function setValue(nextValue: string, details: OTPFieldRootChangeEventDetails) {
     return null;
   }
 
-  emit('update:value', normalizedValue);
+  emit('update:modelValue', normalizedValue);
   valueUnwrapped.value = normalizedValue;
 
   if (completeEventDetails != null) {
@@ -663,7 +663,7 @@ function handleHiddenInput(event: Event) {
 
 useFormReset(hiddenInputElement, (event) => {
   const committedValue =
-    props.value === undefined
+    props.modelValue === undefined
       ? setValue(props.defaultValue ?? '', createChangeEventDetails(REASONS.none, event))
       : null;
 

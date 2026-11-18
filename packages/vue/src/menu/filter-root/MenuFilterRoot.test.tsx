@@ -369,7 +369,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
           return (
             <Menu.FilterProvider
               autoHighlight="always"
-              value={props.value}
+              modelValue={props.value}
               onValueChange={() => {}}
             >
               <Menu.Root open>
@@ -931,7 +931,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
           return () => (
             <Menu.FilterProvider
               autoHighlight
-              value={query.value}
+              modelValue={query.value}
               onValueChange={(nextQuery: string) => {
                 query.value = nextQuery;
               }}
@@ -2043,7 +2043,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       function Test(props: { value: string }) {
         return (
-          <Menu.FilterProvider value={props.value} onValueChange={() => {}}>
+          <Menu.FilterProvider modelValue={props.value} onValueChange={() => {}}>
             <Menu.Root open>
               <Menu.Trigger>Fruit</Menu.Trigger>
               <Menu.Portal>
@@ -3941,7 +3941,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       return () => (
         <Menu.FilterProvider
-          value={query.value}
+          modelValue={query.value}
           onValueChange={(nextQuery: string) => {
             query.value = nextQuery;
           }}
@@ -4104,7 +4104,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
             toggle
           </button>
           <Menu.FilterProvider
-            value={inputValue.value}
+            modelValue={inputValue.value}
             onValueChange={(value: string, details: Menu.FilterProvider.ChangeEventDetails) => {
               if (details.reason === 'popup-close') {
                 details.cancel();
@@ -4826,7 +4826,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                 `}</style>
                 <Menu.FilterProvider
                   filter={null}
-                  value={query.value}
+                  modelValue={query.value}
                   onValueChange={(value, eventDetails) => {
                     onValueChange(value, eventDetails.reason);
                     query.value = value;
@@ -4912,7 +4912,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
               }
             `}</style>
             <Menu.FilterProvider
-              value={query.value}
+              modelValue={query.value}
               onValueChange={(value, eventDetails) => {
                 props.onValueChange(value, eventDetails.reason);
                 query.value = value;
@@ -5183,7 +5183,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                     <Menu.List>
                       <Menu.CheckboxItem
                         closeOnClick={false}
-                        checked={checked.value}
+                        modelValue={checked.value}
                         onCheckedChange={(nextChecked: boolean) => {
                           checked.value = nextChecked;
                         }}
