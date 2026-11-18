@@ -1278,7 +1278,7 @@ Trigger press, focus and modality actions live in `src/utils/popups/usePopupTrig
 The Tooltip provider owns the delay group in `src/tooltip/root/TooltipRootContext.ts`. The popups of a group share a delay. While a popup of the group is open, and for `timeoutMs` after it closes, the open delay of the group is 0.
 
 - `provideFloatingDelayGroup({ delay, timeoutMs })` replaces the component `FloatingDelayGroup`. A part calls it in `setup`, and it gives the group to the parts below.
-- `useDelayGroup(store, { open })` makes the caller a member of the group above it. `store` is a store, a ref or a getter, because a detached trigger moves from the store of its handle to the store of a root. The store has `closeForSibling()`, which closes its popup because another popup of the group opened.
+- A trigger passes its open ref, current popup id, effective open state and sibling-close action to `useDelayGroup`. These getters follow its handle.
 - Parts with no provider share the default group of the module, and only a mounted part writes to it.
 - A trigger publishes `isInstantPhase` after mount and when that ref or its store changes. A detached trigger thus updates its new root. If it unmounts during its instant phase, the store keeps `true` until the next trigger mounts. `Tooltip.Trigger` uses this order.
 - `KeepAlive` does not stop the timer of a group. The instant phase thus ends on time while `KeepAlive` holds the provider.

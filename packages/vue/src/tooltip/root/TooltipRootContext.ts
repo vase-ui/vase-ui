@@ -26,7 +26,7 @@ import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import type { UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
 import { Timeout, useTimeout } from '../../common/useTimeout';
 import { getDelay } from '../../utils/popups/interactions/useHoverShared';
-import type { Delay, PopupInteractionStore } from '../../utils/popups/types';
+import type { Delay } from '../../utils/popups/types';
 
 export type State<Payload> = PopupStoreState<Payload> & {
   disabled: boolean;
@@ -282,6 +282,9 @@ interface UseDelayGroupOptions {
    * Whether the trigger that calls the composable opened the popup.
    */
   open: MaybeRefOrGetter<boolean>;
+  popupId: () => string | undefined;
+  popupOpen: () => boolean;
+  closeForSibling: () => void;
 }
 
 interface UseDelayGroupReturn {
@@ -304,35 +307,20 @@ interface UseDelayGroupReturn {
   hasProvider: boolean;
 }
 
-/**
- * Makes the caller a member of the delay group above it. Call it in `setup`. The store can be a
- * ref or a getter. A detached trigger moves from the store of its handle to the store of a root.
- * @see https://floating-ui.com/docs/FloatingDelayGroup
- * @internal
- */
-export function useDelayGroup(
-  store: MaybeRefOrGetter<
-    PopupInteractionStore & {
-      /**
-       * Closes the popup because another popup in the group opened.
-       */
-      closeForSibling(): void;
-    }
-  >,
-  options: UseDelayGroupOptions,
-): UseDelayGroupReturn {
+/** A detached member follows its current popup when the group closes a sibling. */
+export function useDelayGroup(options: UseDelayGroupOptions): UseDelayGroupReturn {
   const group = inject(FloatingDelayGroupContext, DEFAULT_DELAY_GROUP);
 
   const isInstantPhase = shallowRef(false);
   const member: DelayGroupMember = {
-    closeForSibling: () => toValue(store).closeForSibling(),
+    closeForSibling: options.closeForSibling,
     setIsInstantPhase: (value) => {
       isInstantPhase.value = value;
     },
   };
 
   const isOpen = () => toValue(options.open);
-  const getPopupId = () => toValue(store).select('defaultPopupId');
+  const getPopupId = options.popupId;
 
   function unset() {
     group.currentContext?.setIsInstantPhase(false);
@@ -356,7 +344,7 @@ export function useDelayGroup(
 
     group.timeout.start(timeoutMs, () => {
       // The popup can be open for another trigger, or another popup can hold the group.
-      if (toValue(store).select('open') || (group.currentId && group.currentId !== id)) {
+      if (options.popupOpen() || (group.currentId && group.currentId !== id)) {
         return;
       }
       unset();

@@ -51,11 +51,7 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import {
-  useTriggerFocus,
-  usePopupTrigger,
-  useTriggerOwner,
-} from '../../utils/popups/usePopupTrigger';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
@@ -86,6 +82,7 @@ const thisTriggerId = useVaseUiId(() => props.id);
 
 const {
   registerTrigger,
+  useFocus,
   bindings: rootTriggerProps,
   isOpenedByThisTrigger,
   isTriggerActive,
@@ -108,7 +105,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
-const focusProps = useTriggerFocus(store, { delay: () => props.delay });
+const focusProps = useFocus({ delay: () => props.delay });
 
 const inlineRectTriggerProps = getInlineRectTriggerProps(
   () => store.value.context.inlineRectCoordsRef,

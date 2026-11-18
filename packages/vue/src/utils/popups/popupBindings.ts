@@ -8,14 +8,14 @@ import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 type Store = Pick<PopupTriggerDataStore<PopupStoreState<unknown>>, 'state' | 'update'>;
 
 interface PopupParts {
-  trigger(): HTMLAttributes;
-  inactiveTrigger?(): HTMLAttributes;
-  popup(): HTMLAttributes;
+  trigger: () => HTMLAttributes;
+  inactiveTrigger?: () => HTMLAttributes;
+  popup: () => HTMLAttributes;
 }
 
 interface PopupBindings {
   trigger(active: boolean): HTMLAttributes;
-  popup(): HTMLAttributes;
+  popup: () => HTMLAttributes;
   expose(): void;
 }
 
@@ -31,7 +31,8 @@ export function bindPopupParts(store: Store, parts: PopupParts) {
   bindings.set(store, {
     trigger(active) {
       const value = active ? store.state.activeTriggerProps : store.state.inactiveTriggerProps;
-      return exposed ? value : active ? trigger.value : inactive.value;
+      const current = active ? trigger : inactive;
+      return exposed ? value : current.value;
     },
     popup() {
       const value = store.state.popupProps;

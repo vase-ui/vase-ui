@@ -10,6 +10,7 @@ import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 import { getTarget, activeElement, contains } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { useTimeout } from '../../common/useTimeout';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { isTypeableElement, isTargetInsideEnabledTrigger, matchesFocusVisible } from './element';
@@ -175,7 +176,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
 export function usePopupTrigger<
   State extends PopupStoreState<unknown>,
   const Key extends keyof Omit<State, 'activeTriggerId' | 'activeTriggerElement'>,
-  Details,
+  Details extends VaseUIChangeEventDetails<string>,
 >(
   triggerId: MaybeRefOrGetter<string | undefined>,
   store: MaybeRefOrGetter<
@@ -184,6 +185,7 @@ export function usePopupTrigger<
   stateUpdates: () => Pick<State, Key>,
 ) {
   const state = () => toValue(store).state;
+  const open = computed(() => popupStoreSelectors.open(state()));
   const id = () => toValue(triggerId);
   const isMountedByThisTrigger = computed(() =>
     popupStoreSelectors.isMountedByTrigger(state(), id()),
@@ -236,7 +238,11 @@ export function usePopupTrigger<
   return {
     element,
     registerTrigger,
-    open: computed(() => popupStoreSelectors.open(state())),
+    open,
+    usePress: (options?: UseClickProps) => useTriggerPress(store, options),
+    useFocus: (options?: UseFocusProps) => useTriggerFocus(store, options),
+    useModality: (setMethod: (method: InteractionType | null) => void) =>
+      useTriggerModality(open, setMethod),
     requestOpen: (open: boolean, details: Details) => toValue(store).setOpen(open, details),
     bindings: computed(() => triggerBindings(toValue(store), isMountedByThisTrigger.value)),
     isMountedByThisTrigger,

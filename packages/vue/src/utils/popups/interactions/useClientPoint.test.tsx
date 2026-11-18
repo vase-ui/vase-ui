@@ -22,7 +22,7 @@ import { REASONS } from '../../../internals/reasons';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../usePopupRoot';
 import type { PopupInteractionStore } from '../types';
-import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipCursor';
+import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipInteractions';
 
 const { render } = createRenderer();
 

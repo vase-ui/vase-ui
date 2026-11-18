@@ -3,7 +3,7 @@ import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../usePopupRoot';
-import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipCursor';
+import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipInteractions';
 
 // The window of the positioner element. It records each listener that the composable adds.
 const added: string[] = [];

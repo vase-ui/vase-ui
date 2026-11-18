@@ -78,12 +78,7 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import {
-  useTriggerPress,
-  useTriggerModality,
-  usePopupTrigger,
-  useTriggerOwner,
-} from '../../utils/popups/usePopupTrigger';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import {
@@ -138,8 +133,9 @@ const isDisabled = computed(() => props.disabled || (props.nativeButton && field
 
 const {
   registerTrigger,
+  useModality,
+  usePress,
   bindings: rootTriggerProps,
-  open: popupOpen,
   isOpenedByThisTrigger,
   isTriggerActive,
   popupId,
@@ -165,8 +161,8 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
-const click = useTriggerPress(store, { stickIfOpen: () => store.value.context.stickIfOpen });
-const interactionTypeProps = useTriggerModality(popupOpen, (interactionType) =>
+const click = usePress({ stickIfOpen: () => store.value.context.stickIfOpen });
+const interactionTypeProps = useModality((interactionType) =>
   store.value.set('openMethod', interactionType),
 );
 

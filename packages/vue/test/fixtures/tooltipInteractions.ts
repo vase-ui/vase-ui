@@ -1,5 +1,6 @@
 import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
+import { useDelayGroup } from '../../src/tooltip/root/TooltipRootContext';
 import { useTooltipCursor } from '../../src/tooltip/root/TooltipRoot.vue';
 import type { PopupInteractionStore, ReferenceType } from '../../src/utils/popups/types';
 
@@ -24,4 +25,16 @@ export function useTestCursor(
     };
   });
   return useTooltipCursor(owner, options);
+}
+
+export function useTestDelayGroup(
+  store: MaybeRefOrGetter<PopupInteractionStore & { closeForSibling(): void }>,
+  { open }: { open: MaybeRefOrGetter<boolean> },
+) {
+  return useDelayGroup({
+    open,
+    popupId: () => toValue(store).select('defaultPopupId'),
+    popupOpen: () => toValue(store).select('open'),
+    closeForSibling: () => toValue(store).closeForSibling(),
+  });
 }

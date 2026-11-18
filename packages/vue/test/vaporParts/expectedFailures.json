@@ -169,6 +169,9 @@
     "src/menu/filter-root/useMenuFilterItem.test.tsx": {
       "fails": {}
     },
+    "src/menu/trigger/MenuTrigger.press.test.tsx": {
+      "fails": {}
+    },
     "src/navigation-menu/arrow/NavigationMenuArrow.test.tsx": {
       "fails": {
         "<NavigationMenu.Arrow /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"

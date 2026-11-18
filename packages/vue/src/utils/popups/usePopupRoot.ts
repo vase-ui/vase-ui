@@ -862,6 +862,7 @@ type PopupRootStore = ReactiveStore<
   PopupStoreSelectors
 > & {
   setOpen(
+    this: void,
     open: boolean,
     eventDetails: VaseUIChangeEventDetails<typeof REASONS.imperativeAction | typeof REASONS.none>,
   ): void;

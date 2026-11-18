@@ -56,12 +56,7 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import {
-  useTriggerPress,
-  useTriggerModality,
-  usePopupTrigger,
-  useTriggerOwner,
-} from '../../utils/popups/usePopupTrigger';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import type { DialogHandleStore } from '../store/DialogStore';
@@ -94,8 +89,9 @@ const thisTriggerId = useVaseUiId(() => props.id);
 
 const {
   registerTrigger,
+  useModality,
+  usePress,
   bindings: rootTriggerProps,
-  open: popupOpen,
   isOpenedByThisTrigger,
   popupId,
 } = usePopupTrigger(thisTriggerId, store, () => ({ payload: props.payload }));
@@ -103,8 +99,8 @@ const {
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
-const click = useTriggerPress(store);
-const interactionTypeProps = useTriggerModality(popupOpen, (interactionType) => {
+const click = usePress();
+const interactionTypeProps = useModality((interactionType) => {
   store.value.set('openMethod', interactionType);
 });
 

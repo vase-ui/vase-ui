@@ -86,11 +86,7 @@ import {
 import { isMouseLikePointerType } from '../../utils/popups/event';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import {
-  useTriggerFocus,
-  usePopupTrigger,
-  useTriggerOwner,
-} from '../../utils/popups/usePopupTrigger';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { getDelay } from '../../utils/popups/interactions/useHoverShared';
@@ -127,6 +123,7 @@ const thisTriggerId = useVaseUiId(() => props.id);
 const {
   element: triggerElement,
   registerTrigger,
+  useFocus,
   isMountedByThisTrigger,
   isTriggerActive,
   isOpenedByThisTrigger,
@@ -139,9 +136,14 @@ const {
 }));
 
 const providerDelay = useTooltipProviderContext();
-const delayGroup = useDelayGroup(store, { open: isOpenedByThisTrigger });
+const delayGroup = useDelayGroup({
+  open: isOpenedByThisTrigger,
+  popupId: () => store.value.state.defaultPopupId,
+  popupOpen: () => popupOpen.value,
+  closeForSibling: () => store.value.closeForSibling(),
+});
 function writeIsInstantPhase() {
-  store.value.set('isInstantPhase', delayGroup.isInstantPhase.value);
+  store.value.update({ isInstantPhase: delayGroup.isInstantPhase.value });
 }
 // A trigger that unmounts in its instant phase leaves the value `true` in the store. The write at
 // the mount of the next trigger ends that phase, as `useSyncedValue` of Base UI does.
@@ -218,7 +220,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   shouldOpen: () => !isNestedTriggerHovered,
 });
 
-const focusProps = useTriggerFocus(store, { enabled: () => !isDisabled.value });
+const focusProps = useFocus({ enabled: () => !isDisabled.value });
 
 function handleNestedTriggerHover(event: MouseEvent) {
   const currentStore = store.value;
@@ -314,7 +316,7 @@ function handlePointerdown(event: PointerEvent) {
   pointerType = event.pointerType;
   // A press of a trigger that is not active reaches the dismissal of the root while the tooltip
   // follows the cursor. The dismissal then reads `closeOnClick` of this trigger.
-  store.value.set('closeOnClick', props.closeOnClick);
+  store.value.update({ closeOnClick: props.closeOnClick });
   cancelPendingOpen(event);
 }
 

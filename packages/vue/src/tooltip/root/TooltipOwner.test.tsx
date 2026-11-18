@@ -71,18 +71,46 @@ describe('Tooltip popup owner', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
-  it('reads the current trigger action after a handle write', async () => {
+  it('exposes writable actions on the first public handle read', async () => {
     const handle = Tooltip.createHandle();
     const click = vi.fn();
-    await render(
-      <Tooltip.Root handle={handle} trackCursorAxis="both">
-        <Tooltip.Trigger>Trigger</Tooltip.Trigger>
-      </Tooltip.Root>,
+    const keys: string[][] = [];
+    const Probe = defineComponent(() => {
+      const { store } = useTooltipRootContext();
+      watch(
+        () => store.state.activeTriggerProps,
+        (value) => keys.push(Object.keys(value)),
+        {
+          immediate: true,
+          flush: 'sync',
+        },
+      );
+      return () => null;
+    });
+    const { user } = await render(
+      <>
+        <Tooltip.Trigger handle={handle}>Trigger</Tooltip.Trigger>
+        <Tooltip.Root handle={handle} trackCursorAxis="both">
+          <Probe />
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>Hint</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </>,
     );
+    const trigger = screen.getByRole('button');
+    await user.keyboard('[Tab]');
+    expect(trigger).toHaveAttribute('data-popup-open');
+    await user.keyboard('[Escape]');
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+    expect(trigger).toHaveFocus();
+    expect(keys).toEqual([[]]);
     expect(handle.store.select('triggerProps', true).onClick).toBeTypeOf('function');
     handle.store.update({ activeTriggerProps: { onClick: click } });
     await nextTick();
-    await fireEvent.click(screen.getByRole('button'));
+    await fireEvent.click(trigger);
     expect(click).toHaveBeenCalledOnce();
   });
 });

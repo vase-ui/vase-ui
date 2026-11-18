@@ -84,12 +84,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import {
-  useTriggerPress,
-  useTriggerFocus,
-  usePopupTrigger,
-  useTriggerOwner,
-} from '../../utils/popups/usePopupTrigger';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
@@ -156,6 +151,8 @@ const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
 const {
   registerTrigger,
+  useFocus,
+  usePress,
   isMountedByThisTrigger,
   bindings: rootTriggerProps,
   open: popupOpen,
@@ -305,7 +302,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
 // Whether to ignore clicks to open the menu.
 const stickIfOpen = useStickIfOpen();
 
-const click = useTriggerPress(store, {
+const click = usePress({
   enabled: () => !isDisabled.value,
   event: () => (isOpenedByThisTrigger.value && isInMenubar ? 'click' : 'mousedown'),
   toggle: true,
@@ -313,7 +310,7 @@ const click = useTriggerPress(store, {
   stickIfOpen: () => (parent.type === undefined ? stickIfOpen.value : false),
 });
 
-const focusProps = useTriggerFocus(store, {
+const focusProps = useFocus({
   enabled: () => !isDisabled.value && parentMenubarHasSubmenuOpen.value,
 });
 
