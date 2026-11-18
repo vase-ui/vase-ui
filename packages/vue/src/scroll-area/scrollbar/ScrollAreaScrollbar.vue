@@ -74,7 +74,6 @@ const {
   handlePointerDown,
   handlePointerUp,
   handleScroll,
-  disableViewportSnap,
   rootId,
   thumbSize,
   hasMeasuredScrollbar,
@@ -190,22 +189,8 @@ function handleTrackPointerDown(event: PointerEvent) {
   const scrollRatio = clickPosition / maxThumbOffset;
   const maxScrollDistance = scrollableSize - viewportSize;
 
-  // Stop the scroll snap before the jump to the press position. If the snap is on, the new
-  // position goes to the nearest snap point, and the thumb stays away from the pointer for the
-  // whole drag. `handlePointerDown` below calls this again, and the second call changes nothing.
-  disableViewportSnap();
-
-  if (vertical) {
-    viewport.scrollTop = scrollRatio * maxScrollDistance;
-  } else if (direction.value === 'rtl') {
-    viewport.scrollLeft = -(1 - scrollRatio) * maxScrollDistance;
-  } else {
-    viewport.scrollLeft = scrollRatio * maxScrollDistance;
-  }
-
-  handleScroll({ x: viewport.scrollLeft, y: viewport.scrollTop });
-
-  handlePointerDown(event, props.orientation);
+  const position = !vertical && direction.value === 'rtl' ? scrollRatio - 1 : scrollRatio;
+  handlePointerDown(event, props.orientation, position * maxScrollDistance);
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

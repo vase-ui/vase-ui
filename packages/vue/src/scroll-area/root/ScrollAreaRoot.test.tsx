@@ -1187,6 +1187,32 @@ describe('<ScrollArea.Root />', () => {
   describe('scroll snap of the viewport', () => {
     const snap = { scrollSnapType: 'y mandatory' };
 
+    it('discards a track jump if the press ends before the viewport patch', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar data-testid="track" keepMounted style={{ width: '10px' }}>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+      const track = screen.getByTestId('track');
+      const thumb = screen.getByTestId('thumb');
+      const viewport = screen.getByTestId('viewport');
+      await waitFor(() => expect(thumb.offsetHeight).toBeGreaterThan(0));
+      vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
+      const down = fireEvent.pointerDown(track, {
+        button: 0,
+        pointerId: 1,
+        clientY: track.getBoundingClientRect().top + 100,
+      });
+      await Promise.all([down, fireEvent.pointerCancel(track, { pointerId: 1 })]);
+      expect(viewport.scrollTop).toBe(0);
+      expect(viewport.style.scrollSnapType).toBe('');
+    });
+
     it.each([
       { name: 'style, thumb drag', source: 'style', gesture: 'thumb drag' },
       { name: 'style, track press', source: 'style', gesture: 'track press' },
@@ -1230,12 +1256,13 @@ describe('<ScrollArea.Root />', () => {
       const thumb = screen.getByTestId('thumb');
       await waitFor(() => expect(thumb.offsetHeight).toBeGreaterThan(0));
       if (source === 'script write') {
-        viewport.style.scrollSnapType = snap.scrollSnapType;
+        viewport.style.setProperty('scroll-snap-type', snap.scrollSnapType, 'important');
       }
       Object.defineProperty(thumb, 'setPointerCapture', { configurable: true, value: () => {} });
 
       const inlineBefore = viewport.style.scrollSnapType;
       const computedBefore = getComputedStyle(viewport).scrollSnapType;
+      const priority = viewport.style.getPropertyPriority('scroll-snap-type');
 
       expect(inlineBefore).toBe(source === 'style sheet' ? '' : snap.scrollSnapType);
       expect(computedBefore).toBe(snap.scrollSnapType);
@@ -1264,15 +1291,10 @@ describe('<ScrollArea.Root />', () => {
       // between two snap points.
       expect(scrollTopBefore % 200).not.toBe(0);
 
-      // The listener of the release runs in the dispatch, before the render that the release causes.
-      const release = fireEvent.pointerUp(thumb, { pointerId: 1 });
-
-      expect(viewport.style.scrollSnapType).toBe(inlineBefore);
-
-      await release;
-
+      await fireEvent.pointerUp(thumb, { pointerId: 1 });
       expect(viewport.style.scrollSnapType).toBe(inlineBefore);
       expect(getComputedStyle(viewport).scrollSnapType).toBe(computedBefore);
+      expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe(priority);
     });
   });
 

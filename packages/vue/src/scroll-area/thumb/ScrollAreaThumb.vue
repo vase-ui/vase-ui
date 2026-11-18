@@ -87,6 +87,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       onPointermove: handlePointerMove,
       onPointerup: handlePointerUp,
       onPointercancel: handlePointerUp,
+      onLostpointercapture: handlePointerUp,
       style: {
         visibility: hasMeasuredScrollbar.value ? undefined : 'hidden',
         ...(orientation.value === 'vertical'

@@ -84,6 +84,42 @@ describe('<ScrollArea.Thumb />', () => {
     expect(thumb).not.toHaveAttribute('data-scrolling');
   });
 
+  it('VUE-140: restores the inline snap priority on lost capture and accepts the next style', async () => {
+    const snap = shallowRef('x mandatory');
+    const label = shallowRef('first');
+    await render(() => (
+      <ScrollArea.Root>
+        <ScrollArea.Viewport
+          data-testid="viewport"
+          data-label={label.value}
+          style={{ scrollSnapType: snap.value }}
+        />
+        <ScrollArea.Scrollbar keepMounted>
+          <ScrollArea.Thumb data-testid="thumb" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    ));
+    const viewport = screen.getByTestId('viewport');
+    const thumb = screen.getByTestId('thumb');
+    vi.spyOn(thumb, 'setPointerCapture').mockImplementation(() => {});
+    viewport.style.setProperty('scroll-snap-type', 'x mandatory', 'important');
+    await fireEvent.pointerDown(thumb, { button: 0, pointerId: 1 });
+    expect(viewport.style.scrollSnapType).toBe('none');
+
+    await fireEvent(thumb, new PointerEvent('lostpointercapture', { bubbles: true, pointerId: 1 }));
+    expect(viewport.style.scrollSnapType).toBe('x mandatory');
+    expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('important');
+    viewport.style.setProperty('scroll-snap-type', 'both mandatory');
+    label.value = 'second';
+    await nextTick();
+    expect(viewport.style.scrollSnapType).toBe('both mandatory');
+
+    snap.value = 'y mandatory';
+    await nextTick();
+    expect(viewport.style.scrollSnapType).toBe('y mandatory');
+    expect(viewport.style.getPropertyPriority('scroll-snap-type')).toBe('');
+  });
+
   it('handles the scrollbar unmounting from a user pointer-move callback', async () => {
     await render(
       <ScrollArea.Root>

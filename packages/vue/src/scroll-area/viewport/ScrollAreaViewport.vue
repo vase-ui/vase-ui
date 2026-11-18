@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { CSSProperties, HTMLAttributes } from 'vue';
 import { clamp } from '../../common/clamp';
 import { platform } from '../../common/platform';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
@@ -117,13 +117,14 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import { onMounted, onUpdated, provide, watch } from 'vue';
+import { computed, onMounted, provide, watch } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { getFiniteAnimations } from '../../utils/getFiniteAnimations';
 import { normalizeScrollOffset } from '../../utils/scrollEdges';
 import { styleDisableScrollbar } from '../../utils/styles';
@@ -163,7 +164,7 @@ const {
   setHovering,
   touchModality,
   handleScroll,
-  reapplyViewportSnapNone,
+  press,
   viewportState: state,
 } = useScrollAreaRootContext();
 
@@ -265,6 +266,7 @@ function computeThumbPosition() {
 
   setThumbSize(pickState(thumbSize.value, { width: clampedNextWidth, height: clampedNextHeight }));
 
+  // The native thumb styles keep overscroll within its frame budget.
   if (scrollbarYEl && thumbYEl) {
     const maxThumbOffsetY =
       scrollbarYEl.offsetHeight - clampedNextHeight - scrollbarYOffset - thumbYOffset;
@@ -308,6 +310,7 @@ function computeThumbPosition() {
     scrollTopFromEnd,
   ];
 
+  // A native sample avoids a render of the viewport for each scroll.
   OVERFLOW_EDGE_VARS.forEach((cssVar, index) => {
     viewportEl.style.setProperty(cssVar, `${overflowMetricsPx[index]}px`);
   });
@@ -364,10 +367,11 @@ function handleViewportScroll() {
   });
 }
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  ref: (viewport) => {
-    viewportElement.value = viewport;
-  },
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  ScrollAreaViewportState,
+  HTMLElement
+>('div', props, {
+  ref: createElementSetter(viewportElement, { keepWhileHeld: true }),
   state,
   props: (attrs) => [
     {
@@ -388,8 +392,91 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   stateAttributesMapping: scrollAreaStateAttributesMapping,
 });
 
-// A patch writes the rendered `style` again, and that can replace the `none` of a press.
-onUpdated(reapplyViewportSnapNone);
+const pressed = computed(
+  () => press.value?.viewport != null && press.value.viewport === element.value,
+);
+let declaredSnap: string | undefined;
+let savedSnap:
+  | {
+      viewport: HTMLElement;
+      declared: string | undefined;
+      inline: { value: string; priority: string } | null;
+    }
+  | undefined;
+
+function readInlineSnap(viewport: HTMLElement) {
+  return {
+    value: viewport.style.scrollSnapType,
+    priority: viewport.style.getPropertyPriority('scroll-snap-type'),
+  };
+}
+
+watch(
+  pressed,
+  (active) => {
+    const viewport = element.value;
+    if (active && viewport && (savedSnap?.viewport !== viewport || !savedSnap.inline)) {
+      savedSnap = { viewport, declared: declaredSnap, inline: readInlineSnap(viewport) };
+    }
+  },
+  { flush: 'sync' },
+);
+
+function viewportProps() {
+  const base = elementProps();
+  const active = pressed.value;
+  const style = base.style as CSSProperties;
+  declaredSnap = style.scrollSnapType ?? style['scroll-snap-type'];
+  if (!savedSnap || savedSnap.viewport !== element.value) {
+    return base;
+  }
+
+  let value = 'none !important';
+  if (!active) {
+    if (!savedSnap.inline && declaredSnap !== savedSnap.declared) {
+      savedSnap = undefined;
+      return base;
+    }
+    const inline = savedSnap.inline ?? readInlineSnap(savedSnap.viewport);
+    value = inline.priority ? `${inline.value} !important` : inline.value;
+  }
+
+  const { 'scroll-snap-type': _snap, ...otherStyles } = style;
+  return { ...base, style: { ...otherStyles, scrollSnapType: value } };
+}
+
+watch(
+  pressed,
+  (active) => {
+    if (!active && savedSnap?.inline) {
+      const { value, priority } = savedSnap.inline;
+      if ((priority ? `${value} !important` : value) === (declaredSnap ?? '')) {
+        savedSnap = undefined;
+      } else {
+        // After the release patch, a script can change its inline declaration again.
+        savedSnap.inline = null;
+      }
+    }
+  },
+  { flush: 'post' },
+);
+
+watch(
+  element,
+  (viewport, _, onCleanup) => {
+    onCleanup(() => {
+      if (savedSnap && savedSnap.viewport === viewport) {
+        // Vue has no release patch for a viewport whose element leaves during the press.
+        if (savedSnap.inline) {
+          const { value, priority } = savedSnap.inline;
+          viewport.style.setProperty('scroll-snap-type', value, priority);
+        }
+        savedSnap = undefined;
+      }
+    });
+  },
+  { flush: 'sync' },
+);
 
 onMounted(removeCSSVariableInheritance);
 
@@ -503,8 +590,8 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot v-if="usesRenderSlot()" name="render" :props="viewportProps()" :state="state" />
+  <component :is="as" v-else v-bind="viewportProps()" :ref="setRef">
     <slot :state="state" />
   </component>
 </template>
