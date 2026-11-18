@@ -18,9 +18,13 @@ export interface CSPProviderProps {
 import { computed, provide } from 'vue';
 import { CSPContext } from '../internals/csp-context/CSPContext';
 
-const props = withDefaults(defineProps<CSPProviderProps>(), { disableStyleElements: false });
+const props = withDefaults(defineProps<CSPProviderProps>(), {
+  disableStyleElements: false,
+});
 
-defineSlots<{ default?: () => unknown }>();
+defineSlots<{
+  default?: () => unknown;
+}>();
 
 provide(
   CSPContext,
