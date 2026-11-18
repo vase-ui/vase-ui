@@ -194,7 +194,6 @@ import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
-import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -360,13 +359,8 @@ function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
   indicatorPosition.value = edge === 0 ? [position, end] : [start, position];
 }
 
-const thumbMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>(new Map());
-
 const thumbList = useCompositeList<ThumbMetadata>({
   elementsRef: thumbRefs,
-  onMapChange(map) {
-    thumbMap.value = map;
-  },
   provide: false,
 });
 
@@ -631,7 +625,7 @@ provide(SliderRootContext, {
   rootLabelId,
   registerLabelId,
   reset,
-  thumbMap,
+  thumbMap: thumbList.map,
   thumbList,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,

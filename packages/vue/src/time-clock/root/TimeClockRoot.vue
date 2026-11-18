@@ -144,6 +144,10 @@ export type TimeClockRootCommitEventDetails =
 </script>
 
 <script setup lang="ts" generic="Value extends TimeValue = Temporal.PlainTime">
+import {
+  PickerClockOwner,
+  usePickerControl,
+} from '../../internals/date-time/picker/PickerControlContext';
 import { computed, provide, shallowRef, watch } from 'vue';
 import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
@@ -281,6 +285,7 @@ const [currentView, setViewState] = useControlled<TimeClockView>({
 
 const dragging = shallowRef(false);
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+usePickerControl(PickerClockOwner, () => inputElement.value);
 
 // A server and a browser can have other `Intl` data for the locale, and the hour cycle changes the
 // numbers of the face and the day periods.

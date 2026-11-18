@@ -9,7 +9,7 @@ import {
   toValue,
   watch,
 } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
 import { clamp } from '../../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
@@ -618,11 +618,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   // The segments in the order of the document, because a part can render them in a wrapper.
-  const segmentElements = shallowReactive(new Set<HTMLInputElement>());
-  function getOrderedSegments() {
-    return [...segmentElements].sort((a, b) =>
-      a.compareDocumentPosition(b) & ownerWindow(a).Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
-    );
+  const segmentElements = shallowReactive(
+    new Map<HTMLInputElement, Readonly<Ref<EditableSegmentType>>>(),
+  );
+  function getOrderedSegments(connectedOnly = false) {
+    return [...segmentElements.keys()]
+      .filter((element) => !connectedOnly || element.isConnected)
+      .sort((a, b) =>
+        a.compareDocumentPosition(b) & ownerWindow(a).Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+      );
   }
   const firstSegment = computed(() => getOrderedSegments()[0] ?? null);
 
@@ -632,7 +636,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   function moveFocus(from: HTMLInputElement, direction: 1 | -1) {
-    const ordered = getOrderedSegments();
+    const ordered = getOrderedSegments(true);
     focusSegment(ordered[ordered.indexOf(from) + direction]);
   }
 
@@ -641,9 +645,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       return;
     }
     event.preventDefault();
-    const ordered = getOrderedSegments();
+    const ordered = getOrderedSegments(true);
     const emptyType = editableTypes.value.find((type) => numbers.value[type] === undefined);
-    focusSegment(ordered.find((element) => element.dataset.type === emptyType) ?? ordered[0]);
+    focusSegment(
+      ordered.find((element) => segmentElements.get(element)?.value === emptyType) ?? ordered[0],
+    );
   }
 
   const focused = shallowRef(false);
@@ -795,7 +801,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         : createChangeEventDetails(REASONS.none),
     );
     if (event) {
-      focusSegment(getOrderedSegments()[0]);
+      focusSegment(getOrderedSegments(true)[0]);
     }
   }
 
@@ -934,7 +940,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
       onInvalid: handleHiddenInputInvalid,
       onFocusin() {
-        focusSegment(getOrderedSegments()[0]);
+        focusSegment(getOrderedSegments(true)[0]);
       },
       onInput: handleHiddenInput,
       onChange: handleHiddenInput,
@@ -1019,8 +1025,14 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     spin,
     pasteText,
     moveFocus,
-    registerSegment: (element) => segmentElements.add(element),
-    unregisterSegment: (element) => segmentElements.delete(element),
+    registerSegment(element, type) {
+      segmentElements.set(element, type);
+      return () => {
+        if (segmentElements.get(element) === type) {
+          segmentElements.delete(element);
+        }
+      };
+    },
     registerLiteral: (element, index) => literalElements.set(element, index),
     unregisterLiteral: (element) => literalElements.delete(element),
     setFocused(next) {

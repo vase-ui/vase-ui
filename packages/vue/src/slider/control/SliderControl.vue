@@ -103,6 +103,7 @@ const {
   step,
   thumbCollisionBehavior,
   thumbRefs,
+  thumbMap,
   values,
 } = useSliderRootContext();
 
@@ -157,7 +158,7 @@ function getFingerCoords(event: TouchEvent | PointerEvent): Coords | null {
 }
 
 function getThumbInput(el: Element | null | undefined) {
-  return el?.querySelector<HTMLInputElement>('input[type="range"]');
+  return el?.isConnected ? thumbMap.value.get(el)?.getInput() : null;
 }
 
 function updatePressedThumb(nextIndex: number) {
@@ -508,10 +509,10 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
 
-  const pressedOnFocusedThumb = contains(
-    thumbRefs.value[finger.thumbIndex],
-    activeElement(ownerDocument(control)),
-  );
+  const focused = activeElement(ownerDocument(control));
+  const thumb = thumbRefs.value[finger.thumbIndex];
+  const pressedOnFocusedThumb =
+    focused != null && (focused === getThumbInput(thumb) || contains(thumb, focused));
 
   if (pressedOnFocusedThumb) {
     event.preventDefault();

@@ -243,10 +243,14 @@ const defaultInputId = useVaseUiId();
 const labelableId = useLabelableId();
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
-const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
+const thumbMetadata = computed<ThumbMetadata>(() => ({
+  inputId: inputId.value,
+  getInput: () => (inputElement.value?.isConnected ? inputElement.value : null),
+}));
 
 const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
   list: thumbList,
+  index: () => (range.value ? props.index : undefined),
   metadata: thumbMetadata,
 });
 

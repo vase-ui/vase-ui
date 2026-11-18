@@ -1,5 +1,5 @@
-import { computed, inject, onBeforeUnmount, provide, unref } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import { computed, inject, provide, unref } from 'vue';
+import type { ComputedRef } from 'vue';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
 import { REASONS } from '../../reasons';
 import { ownerWindow } from '../../../common/owner';
@@ -7,6 +7,9 @@ import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { usePopoverRootContext } from '../../../popover/root/PopoverRootContext';
 import type { FocusOption } from '../../../utils/popups/focus/FloatingFocusManager';
 import { createDefaultInitialFocus } from '../../../utils/popups/popupStoreUtils';
+
+import { PickerFocusTargets, registerPickerFocusTarget } from './PickerControlContext';
+import type { PickerFocusTarget } from './PickerControlContext';
 
 export interface PickerPopup {
   /** Whether the popup is open. */
@@ -42,23 +45,6 @@ export function usePickerPopup(): PickerPopup {
   }
 
   return { open, openByKey, closeAfterSelection };
-}
-
-/** Gives the element that takes the focus when the popup opens, such as the day that has the tab stop. */
-export type PickerFocusTarget = () => Element | null | undefined;
-
-const PickerFocusTargetContext: InjectionKey<Set<PickerFocusTarget>> = Symbol();
-
-// The cell of a month or a year has the tab stop itself, and the cell of a day has it in its button.
-const CALENDAR_TAB_STOP = '[role="gridcell"][tabindex="0"], [role="gridcell"] [tabindex="0"]';
-
-/**
- * Gives the day, the month or the year of `calendar` that has the tab stop. It is the element that
- * the date picker pattern names for the focus at the open. A calendar part gives it to
- * `usePickerFocusTarget`.
- */
-export function getCalendarTabStop(calendar: Element | null | undefined): HTMLElement | null {
-  return calendar?.querySelector<HTMLElement>(CALENDAR_TAB_STOP) ?? null;
 }
 
 /**
@@ -99,7 +85,7 @@ export function usePickerInitialFocus(
 ): ComputedRef<FocusOption> {
   const store = usePopoverRootContext();
   const targets = new Set<PickerFocusTarget>();
-  provide(PickerFocusTargetContext, targets);
+  provide(PickerFocusTargets, targets);
 
   const popupDefault = createDefaultInitialFocus(store.context.popupRef);
   const pickerDefault = (interactionType: InteractionType) =>
@@ -128,12 +114,5 @@ export function usePickerInitialFocus(
  * element in the document that a target gives.
  */
 export function usePickerFocusTarget(target: PickerFocusTarget): void {
-  const targets = inject(PickerFocusTargetContext, null);
-  if (!targets) {
-    return;
-  }
-  targets.add(target);
-  onBeforeUnmount(() => {
-    targets.delete(target);
-  });
+  registerPickerFocusTarget(inject(PickerFocusTargets, null), target);
 }

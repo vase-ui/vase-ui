@@ -30,6 +30,7 @@ import type {
 import { assertModifierNames, canFocus, canSelect, getDayState, ownsDay } from './dayState';
 import type { DayRules } from './dayState';
 import type { CalendarSelection } from './daySelection';
+import { PickerCalendarOwner, usePickerControl } from '../picker/PickerControlContext';
 import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
 import { formatPages, formatRangeText, formatText } from './formatText';
 import { findGridTarget, getGridMove } from './gridKeys';
@@ -625,6 +626,10 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   }
 
   const dayElements = new Map<string, HTMLElement>();
+  const onPickerSelect = usePickerControl(PickerCalendarOwner, () => {
+    const date = tabStop.value;
+    return date ? dayElements.get(toInputText(date, false)) : null;
+  });
 
   function registerDay(date: Temporal.PlainDate, element: HTMLElement) {
     const key = toInputText(date, false);
@@ -776,7 +781,11 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   function pressDay(date: Temporal.PlainDate, event: MouseEvent) {
     const state = getStateOfDate(date);
     if (canChange() && canSelect(state)) {
-      selection.press(date, createChangeEventDetails(REASONS.dayPress, event));
+      const details = createChangeEventDetails(REASONS.dayPress, event);
+      selection.press(date, details);
+      if (!details.isCanceled) {
+        onPickerSelect?.(event);
+      }
     }
     // A day that no page owns shows as an outside day. A press on it shows its page.
     if (canFocus(state) && !isOwned(date)) {
@@ -929,10 +938,11 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     }
     if (isMonthValue.value) {
       if (canChange()) {
-        optionsWithViews.selection.press(
-          cellDate(month),
-          createChangeEventDetails(REASONS.monthPress, event),
-        );
+        const details = createChangeEventDetails(REASONS.monthPress, event);
+        optionsWithViews.selection.press(cellDate(month), details);
+        if (!details.isCanceled) {
+          onPickerSelect?.(event);
+        }
       }
       return;
     }
