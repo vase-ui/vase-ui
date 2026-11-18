@@ -78,7 +78,6 @@ describe('searchable disclosure panels', () => {
 
   it('restores the inline duration before the parent reads a cached panel', async () => {
     const shown = shallowRef(true);
-    let panel: HTMLElement;
     let durationAtDeactivation: string | undefined;
     const Content = defineComponent(() => {
       onDeactivated(() => {
@@ -91,7 +90,7 @@ describe('searchable disclosure panels', () => {
       );
     });
     await render(() => <KeepAlive>{shown.value ? <Content /> : null}</KeepAlive>);
-    panel = screen.getByText('Details');
+    const panel = screen.getByText('Details');
     panel.style.setProperty('transition-duration', '123ms', 'important');
     panel.dispatchEvent(new Event('beforematch'));
     await nextTick();
@@ -154,6 +153,31 @@ describe('searchable disclosure panels', () => {
     expect(panel.style.transitionDuration).toBe('123ms');
     expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
   });
+
+  it.each(['0s', undefined])(
+    'uses the updated duration %s on the first close after a match',
+    async (nextDuration) => {
+      const duration = shallowRef<string | undefined>('123ms');
+      const open = shallowRef(false);
+      await render(() => (
+        <Collapsible.Root v-model:open={open.value}>
+          <Collapsible.Panel hiddenUntilFound style={{ transitionDuration: duration.value }}>
+            Details
+          </Collapsible.Panel>
+        </Collapsible.Root>
+      ));
+      const panel = screen.getByText('Details');
+      panel.dispatchEvent(new Event('beforematch'));
+      await nextTick();
+      expect(panel.style.transitionDuration).toBe('0s');
+
+      duration.value = nextDuration;
+      open.value = false;
+      await nextTick();
+      expect(panel).toHaveAttribute('hidden', 'until-found');
+      expect(panel.style.transitionDuration).toBe(nextDuration ?? '');
+    },
+  );
 
   it('restores the matched element when the panel renders a replacement', async () => {
     const tag = shallowRef<'div' | 'section'>('div');

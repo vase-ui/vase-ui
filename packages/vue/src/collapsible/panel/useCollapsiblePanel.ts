@@ -1,4 +1,14 @@
-import { computed, nextTick, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  normalizeStyle,
+  onMounted,
+  onScopeDispose,
+  shallowRef,
+  toValue,
+  useAttrs,
+  watch,
+} from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -45,6 +55,7 @@ export function useCollapsiblePanel(
     keepMounted?: MaybeRefOrGetter<boolean | undefined>;
   },
 ) {
+  const attrs = useAttrs();
   const { mounted, setMounted, requestOpen, state, defaultPanelId, registerPanelId } = root;
   const isOpen = () => state.value.open;
   const getTransitionStatus = () => state.value.transitionStatus;
@@ -73,6 +84,7 @@ export function useCollapsiblePanel(
   const instantOpenDuration = shallowRef<{
     panel: HTMLElement;
     property: 'transition-duration' | 'animation-duration';
+    bound: boolean;
     restore: () => void;
   }>();
   const layoutStyle = shallowRef<TemporaryStyle>();
@@ -101,19 +113,27 @@ export function useCollapsiblePanel(
 
   const { isHeld } = useKeepAliveState();
 
-  function suppressDuration(
-    panel: HTMLElement,
-    property: 'transition-duration' | 'animation-duration',
-  ) {
+  function suppressDuration(panel: HTMLElement, motion: 'transition' | 'animation') {
+    const property = `${motion}-duration` as const;
+    const style = normalizeStyle([attrs.style]) as Record<string, unknown>;
     instantOpenDuration.value = {
       panel,
       property,
+      bound: [motion, property, `${motion}Duration`].some((key) => style[key] != null),
       restore: saveInlineStyle(panel.style, property),
     };
   }
 
-  function restoreDuration() {
-    instantOpenDuration.value?.restore();
+  function restoreDuration(patchedPanel?: HTMLElement | null) {
+    const saved = instantOpenDuration.value;
+    if (!saved) return;
+    // After a patch, Vue owns the consumer's current declaration, including its removal.
+    if (
+      saved.panel !== patchedPanel ||
+      (!saved.bound && !patchedPanel.style.getPropertyValue(saved.property))
+    ) {
+      saved.restore();
+    }
     instantOpenDuration.value = undefined;
   }
 
@@ -121,7 +141,7 @@ export function useCollapsiblePanel(
   watch(
     [element, isHeld],
     ([panel, held]) => {
-      if (held || instantOpenDuration.value?.panel !== panel) restoreDuration();
+      if (held || instantOpenDuration.value?.panel !== panel) restoreDuration(panel);
     },
     { flush: 'post' },
   );
@@ -139,7 +159,7 @@ export function useCollapsiblePanel(
     // A render function can remove the element when the panel closes. The suppression of the open
     // animation is for one open, so clear it also when there is no element.
     if (!open) {
-      restoreDuration();
+      restoreDuration(panel);
       shouldPreventMountAnimation.value = false;
       shouldPreventActivityResumeAnimation.value = false;
     }
@@ -183,7 +203,7 @@ export function useCollapsiblePanel(
           return restoreLayoutStyles;
         }
 
-        suppressDuration(panel, 'transition-duration');
+        suppressDuration(panel, 'transition');
         forcePanelIdle.value = true;
         return restoreLayoutStyles;
       }
@@ -193,7 +213,7 @@ export function useCollapsiblePanel(
       resetAnimationName(panel);
       if (!skipNextOpen) return;
 
-      suppressDuration(panel, 'animation-duration');
+      suppressDuration(panel, 'animation');
       forcePanelIdle.value = true;
 
       return;
