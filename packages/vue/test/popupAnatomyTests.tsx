@@ -10,6 +10,7 @@ import { isScrollLocked } from './fixtures/scrollDocument';
 import { flushMicrotasks } from './flushMicrotasks';
 import { createHeldBranch } from './heldBranch';
 import { clientCenter, holdPress } from './pointer';
+import { screen } from './queries';
 import { waitFor } from './waitFor';
 import { waitSingleFrame } from './wait';
 
@@ -274,15 +275,7 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
         await waitFor(() => expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls));
       }
 
-      async function closeWhileHeld(show: () => Promise<void>) {
-        expect(getPopup()).toBe(null);
-        await closeAfterOpen();
-        expect(getPopup()).toBe(null);
-
-        await show();
-        await waitSingleFrame();
-        await waitSingleFrame();
-        expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls);
+      function expectClosedPopup() {
         const popup = getPopup();
         if (keepMounted || held.keepsPopupAfterClose) {
           expect(popup).toBeInTheDocument();
@@ -290,6 +283,19 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
         } else {
           expect(popup).toBe(null);
         }
+      }
+
+      async function closeWhileHeld(show: () => Promise<void>) {
+        expect(getPopup()).toBe(null);
+        await closeAfterOpen();
+        expect(getPopup()).toBe(null);
+
+        await show();
+        expectClosedPopup();
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expectClosedPopup();
+        expect(onOpenChangeComplete.mock.calls).toEqual(expectedCalls);
       }
 
       return { open, root, closeAfterOpen, closeWhileHeld };
@@ -329,10 +335,13 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
       await render(<HeldBranch />);
       open.value = true;
       await closeAfterOpen();
+      const popup = screen.getByTestId('popup');
+      expect(popup).not.toBeVisible();
 
       await hide();
       open.value = true;
       await closeWhileHeld(show);
+      expect(getPopup()).toBe(popup);
     });
   });
 

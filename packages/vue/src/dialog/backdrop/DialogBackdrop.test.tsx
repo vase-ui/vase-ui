@@ -8,9 +8,11 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  nextAnimationsRead,
   renderOnServer,
   screen,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../store/DialogStore';
@@ -247,6 +249,39 @@ describe('<Dialog.Backdrop />', () => {
     await waitFor(() => {
       expect(handleOpenChangeComplete).toHaveBeenCalledWith(false);
     });
+  });
+
+  it('VUE-137: waits for the visible backdrop to finish its exit while KeepAlive holds the popup', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const open = shallowRef(true);
+    const onOpenChangeComplete = vi.fn();
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => <Dialog.Popup />);
+    await render(() => (
+      <Dialog.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+        <Dialog.Portal>
+          <Dialog.Backdrop data-testid="backdrop" />
+          <HeldBranch />
+        </Dialog.Portal>
+      </Dialog.Root>
+    ));
+    await mountWhileHeld();
+    await waitFor(() => expect(onOpenChangeComplete.mock.calls).toEqual([[true]]));
+
+    const backdrop = screen.getByTestId('backdrop');
+    const exit = backdrop.animate({ opacity: [1, 0] }, 100_000);
+    const animations = await nextAnimationsRead(backdrop, {
+      action: () => {
+        open.value = false;
+      },
+    });
+    expect(animations).toContain(exit);
+    await waitSingleFrame();
+    expect(backdrop).toBeInTheDocument();
+    expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
+
+    exit.finish();
+    await waitFor(() => expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false]]));
+    expect(backdrop).not.toBeInTheDocument();
   });
 
   describe('server render', () => {
