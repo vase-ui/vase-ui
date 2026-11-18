@@ -356,11 +356,11 @@ export function useCompositeListItem<Metadata>(
   });
 
   if (context) {
-    const { isHeld } = useKeepAliveState();
-    // A hold moves the item without calling its ref. Register synchronously to preserve the
-    // order of the ref calls when two items share an element.
+    const { isHeld, shown } = useKeepAliveState();
+    // A Vapor item can mount while held without a change to isHeld. Its first activation
+    // must publish the visible element. Synchronous registration preserves nested ref order.
     watch(
-      [element, isHeld],
+      [element, isHeld, shown],
       ([node, held], _previous, onCleanup) => {
         if (node && !held) {
           context.register(node, registration);

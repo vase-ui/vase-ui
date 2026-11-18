@@ -1417,7 +1417,7 @@ The item registry:
 - Pass the element ref to `useCompositeListItem` for registration and its index.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
 - At mount, the list reserves explicit indexes and assigns the rest in document order. A post-flush watcher updates that snapshot after a registration, an item source change or a DOM reorder. Changing the target of a `Teleport` updates the automatic indexes in document order.
-- One synchronous watcher registers the element while the item is visible. Its cleanup removes the registration on replacement, a KeepAlive hold or unmount.
+- One synchronous watcher tracks the element, its KeepAlive state and its activation count. Its cleanup removes the registration on replacement, a hold or unmount. A Vapor item that mounts in a held branch registers its visible element when the branch activates.
 - An item that mounts in a held branch can miss `onDeactivated`. `useKeepAliveState` checks the branch in `setup`. The list also skips disconnected elements when it sorts.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.
 - Each registration supplies live metadata, label, explicit index and text element values. The list reads them from its current registrations. A held item supplies its latest values on activation.
