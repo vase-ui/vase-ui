@@ -57,8 +57,7 @@ describe('useInitialLiveRegionTextMutation', () => {
 
     const Status = defineComponent(() => {
       let element: HTMLDivElement | null = null;
-      // A layout effect of React runs before a passive effect, so this hook comes before the
-      // hook of the composable.
+      // Insert both nodes before the live region reads its text.
       onMounted(() => {
         element?.append(text, empty);
       });

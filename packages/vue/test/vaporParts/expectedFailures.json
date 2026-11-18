@@ -301,13 +301,13 @@
     "test/modelOwnership.test.tsx": {
       "fails": {}
     },
-    "test/popupLayout.test.tsx": {
-      "fails": {}
-    },
     "test/reportedMessages.test.tsx": {
       "fails": {}
     },
     "test/testApp.test.tsx": {
+      "fails": {}
+    },
+    "test/popupLayout.test.tsx": {
       "fails": {}
     },
     "test/vaporParts/vaporParts.test.tsx": {
