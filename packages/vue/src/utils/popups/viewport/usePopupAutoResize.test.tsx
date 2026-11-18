@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, onDeactivated, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  defineComponent,
+  h,
+  mergeProps,
+  nextTick,
+  onDeactivated,
+  shallowRef,
+} from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createHeldBranch,
@@ -428,6 +436,14 @@ describe('usePopupAutoResize', () => {
       let popup: HTMLElement | null = null;
       let stylesAtDeactivation: string[] = [];
       const ownPosition = shallowRef(false);
+      // Keep the consumer's priority through any popup patch before deactivation.
+      const ConsumerPopup = defineComponent({
+        inheritAttrs: false,
+        setup(_, { attrs, slots }) {
+          return () =>
+            h('div', mergeProps(attrs, { style: { left: '0px !important' } }), slots.default?.());
+        },
+      });
       const Scene = defineComponent({
         setup() {
           onDeactivated(() => {
@@ -446,7 +462,10 @@ describe('usePopupAutoResize', () => {
               root: openRoot,
               triggers: [{ id: 'trigger' }],
               positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
-              popup: { style: ownPosition.value ? { position: 'absolute' } : {} },
+              popup: {
+                as: ConsumerPopup,
+                style: ownPosition.value ? { position: 'absolute' } : {},
+              },
               content: () => 'Content',
             });
         },
@@ -455,7 +474,7 @@ describe('usePopupAutoResize', () => {
       await render(() => <KeepAlive>{visible.value ? <Scene /> : null}</KeepAlive>);
       popup = screen.getByTestId('popup');
       expect(popup.style.position).toBe('absolute');
-      popup.style.setProperty('left', '0px', 'important');
+      expect(popup.style.getPropertyPriority('left')).toBe('important');
 
       visible.value = false;
       await nextTick();
@@ -465,7 +484,6 @@ describe('usePopupAutoResize', () => {
       visible.value = true;
       ownPosition.value = true;
       await nextTick();
-      popup.style.setProperty('left', '0px', 'important');
       visible.value = false;
       await nextTick();
       expect(stylesAtDeactivation).toEqual(['absolute', '', '0px', 'important']);
