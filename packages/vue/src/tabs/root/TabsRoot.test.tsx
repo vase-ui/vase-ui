@@ -2850,6 +2850,23 @@ describe('<Tabs.Root />', () => {
     });
   });
 
+  it('writes the selected tab to v-model and follows the tab set by the parent', async () => {
+    const selected = shallowRef(0);
+    const { user } = await render(() => (
+      <Tabs.Root v-model={selected.value}>
+        <Tabs.List>
+          <Tabs.Tab value={0}>First</Tabs.Tab>
+          <Tabs.Tab value={1}>Second</Tabs.Tab>
+        </Tabs.List>
+      </Tabs.Root>
+    ));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
+    expect(selected.value).toBe(1);
+    selected.value = 0;
+    await flushMicrotasks();
+    expect(screen.getByRole('tab', { name: 'First' })).toHaveAttribute('aria-selected', 'true');
+  });
+
   describe('events', () => {
     it('emits valueChange and then update:modelValue, and a canceled change emits no update:modelValue', async () => {
       const calls: string[] = [];

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -233,9 +234,29 @@ describe('<RangeCalendar.Root />', () => {
   });
 
   describe('the value', () => {
+    it('writes the selected range to v-model and follows the range set by the parent', async () => {
+      const range = shallowRef<readonly [Temporal.PlainDate | null, Temporal.PlainDate | null]>([
+        null,
+        null,
+      ]);
+      const { user } = await render(() => (
+        <RangeCalendarAnatomy {...{ today: today(), locale: 'en-US' }} v-model={range.value} />
+      ));
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-11'));
+      expect(range.value.map((date) => date?.toString())).toEqual(['2026-11-10', '2026-11-11']);
+
+      range.value = [null, null];
+      await flushMicrotasks();
+      expect(shown()).toEqual({ start: [], middle: [], end: [] });
+    });
+
     it('leaves the range of a controlled calendar to its value', async () => {
       const handlers = listeners();
-      const { user, setProps } = await renderRange({ modelValue: [null, null], ...handlers });
+      const { user, setProps } = await renderRange({
+        modelValue: [null, null],
+        onValueChange: handlers.onValueChange,
+      });
 
       await user.click(button('2026-11-10'));
 

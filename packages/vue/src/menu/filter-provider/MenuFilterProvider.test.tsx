@@ -39,6 +39,14 @@ describe('<Menu.FilterProvider />', () => {
     expect(calls).toEqual(['valueChange r input-change', 'update:modelValue r']);
   });
 
+  it('keeps the query with only the modelValue prop', async () => {
+    const { user } = await renderMenu({ modelValue: 'ren' });
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await user.clear(input);
+    expect(input).toHaveValue('ren');
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBeNull();
+  });
+
   it('follows a query that the consumer holds with v-model', async () => {
     const query = shallowRef('');
     const Test = defineComponent(() => () => (
@@ -117,10 +125,13 @@ describe('<Menu.FilterProvider />', () => {
   });
 
   it('starts with the default query', async () => {
-    await renderMenu({ defaultValue: 'ren' });
+    const { user } = await renderMenu({ defaultValue: 'ren' });
 
     expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveValue('ren');
     expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
+
+    await user.clear(screen.getByRole('searchbox', { name: 'Filter actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
   });
 });

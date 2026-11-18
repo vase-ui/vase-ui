@@ -57,6 +57,20 @@ describe('<Toggle />', () => {
       expect(button).toHaveAttribute('aria-pressed', 'false');
     });
 
+    it.each([
+      { name: 'v-model', bound: true },
+      { name: 'modelValue alone', bound: false },
+    ])('follows the parent after a press with $name', async ({ bound }) => {
+      const pressed = shallowRef(false);
+      const { user } = await render(() =>
+        bound ? <Toggle v-model={pressed.value} /> : <Toggle modelValue={pressed.value} />,
+      );
+      const button = screen.getByRole('button');
+      await user.click(button);
+      expect(pressed.value).toBe(bound);
+      expect(button).toHaveAttribute('aria-pressed', String(bound));
+    });
+
     it('uncontrolled', async () => {
       await render(<Toggle defaultPressed={false} />);
 

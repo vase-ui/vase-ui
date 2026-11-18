@@ -100,6 +100,22 @@ describe('<Menu.RadioGroup />', () => {
       expect(onUpdateValue).not.toHaveBeenCalled();
     });
 
+    it('keeps the checked item with only the modelValue prop', async () => {
+      const { user } = await render(
+        <Menu.Root open>
+          <Menu.RadioGroup modelValue="a">
+            <Menu.RadioItem value="a">A</Menu.RadioItem>
+            <Menu.RadioItem value="b">B</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Root>,
+      );
+      await user.click(screen.getByRole('menuitemradio', { name: 'B' }));
+      expect(screen.getByRole('menuitemradio', { name: 'A' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+
     it('follows v-model', async () => {
       const value = shallowRef('a');
       const Test = defineComponent(() => () => (
