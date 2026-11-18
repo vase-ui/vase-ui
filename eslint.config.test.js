@@ -935,6 +935,20 @@ const reported = [
   },
   ...[
     ['an empty template', '<template />'],
+    ['setup with no template or renderer', '<script setup lang="ts">useSubscription();</script>'],
+    [
+      'a null render in script setup options',
+      '<script setup lang="ts">defineOptions({ render: () => null });</script>',
+    ],
+    [
+      'setup with only type exports and no template',
+      '<script lang="ts">export interface PartProps { open: boolean }</script>\n<script setup lang="ts">defineProps<PartProps>();</script>',
+    ],
+    [
+      'script setup whose render option is hidden by inline compilation',
+      '<script setup lang="ts">defineOptions({ render: () => h("span") });</script>',
+    ],
+    ['a null SFC function', '<script lang="ts">export default () => null;</script>'],
     ['a template with only a comment', '<template>\n  <!-- No content -->\n</template>'],
   ].map(([name, code]) => ({
     name,
@@ -955,6 +969,22 @@ const reported = [
       'export default defineComponent(() => () => { if (ready()) return null; record(); return null; });',
     ],
     ['a null functional component', 'export const Content: FunctionalComponent = () => null;'],
+    [
+      'a null render with a TypeScript annotation',
+      'export const Content = (() => null as VNode | null) satisfies FunctionalComponent;',
+    ],
+    [
+      'a named null renderer returned by setup',
+      'export default defineComponent({ setup() { return render; } }); function render() { return null; }',
+    ],
+    [
+      'a choice between two null renderers',
+      'const empty = () => null; export default defineComponent(() => ready() ? empty : () => null);',
+    ],
+    [
+      'a null render beside setup bindings',
+      'export default defineComponent({ setup: () => ({}), render: () => null });',
+    ],
   ].map(([name, code]) => ({
     name,
     file: `${SRC}/DialogContent.ts`,
@@ -1200,6 +1230,44 @@ export function useSize(element: Readonly<Ref<Element | null>>, resize: ResizeOb
     name: 'defineModel in a demo',
     file: 'docs/demos/dialog/basic/tailwind/Demo.vue',
     code: MODEL_PART,
+  },
+  {
+    name: 'a template that renders a nonbreaking space',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<template>&nbsp;</template>',
+  },
+  {
+    name: 'a compiled template that supplies the render option',
+    file: `${SRC}/DialogContent.vue`,
+    code: docsSfc('defineOptions({ render: () => null });'),
+  },
+  {
+    name: 'a renderer supplied by the SFC default export',
+    file: `${SRC}/DialogContent.vue`,
+    code: '<script lang="ts">export { default } from "./Root.vue";</script>',
+  },
+  {
+    name: 'component options changed before use',
+    file: `${SRC}/DialogContent.ts`,
+    code: "const options = { render: () => null }; options.render = () => h('span'); export default defineComponent(options);",
+  },
+  {
+    name: 'a null renderer replaced by setup',
+    file: `${SRC}/DialogContent.ts`,
+    code: "export default defineComponent({ render: () => null, setup: () => () => h('span') });",
+  },
+  {
+    name: 'a setup that can fall through to a visible render option',
+    file: `${SRC}/DialogContent.ts`,
+    code: `export default defineComponent({
+  setup() { if (hidden()) return () => null; },
+  render: () => h('span'),
+});`,
+  },
+  {
+    name: 'component options with a later spread',
+    file: `${SRC}/DialogContent.ts`,
+    code: 'export default defineComponent({ render: () => null, ...options });',
   },
   {
     name: 'a template with a conditional node',

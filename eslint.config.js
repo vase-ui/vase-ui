@@ -624,57 +624,208 @@ const noEmptyPart = {
     messages: { empty: 'A part must render a node. Move logic with no node to a composable.' },
   },
   create(context) {
+    const { sourceCode } = context;
+    const sfc = sourceCode.parserServices.getDocumentFragment?.();
+    const template = sfc?.children.find((block) => block.name === 'template');
     const returns = new WeakMap();
-    const componentCall = "CallExpression[callee.name='defineComponent']";
-    const options = context.filename.endsWith('.vue')
-      ? `:matches(${componentCall}, ExportDefaultDeclaration) > ObjectExpression`
-      : `${componentCall} > ObjectExpression`;
+    const paths = [];
+    const checks = new Map();
 
-    function option(name) {
-      return `${options} > :matches(Property[computed=false][key.name='${name}'], Property[key.value='${name}'])`;
+    function initializer(id) {
+      for (let scope = sourceCode.getScope(id); scope; scope = scope.upper) {
+        const variable = scope.set.get(id.name);
+        if (!variable) continue;
+        const [def] = variable.defs;
+        if (
+          variable.defs.length !== 1 ||
+          variable.references.some((ref) => ref.isWrite() && !ref.init)
+        ) {
+          break;
+        }
+        if (def.type === 'FunctionName') return def.node;
+        if (def.parent?.kind === 'const' && def.node.id === def.name) return def.node.init;
+        break;
+      }
+      return undefined;
     }
 
-    function returnValues(fn) {
-      return fn.body.type === 'BlockStatement' ? (returns.get(fn) ?? []) : [fn.body];
+    function everyValue(node, test, seen = new Set()) {
+      if (node?.type === 'Identifier') {
+        if (seen.has(node)) return false;
+        const value = initializer(node);
+        // The binding of a const object is fixed, but its component options can change.
+        if (value && value.type !== 'ObjectExpression') {
+          return everyValue(value, test, new Set(seen).add(node));
+        }
+      }
+      if (
+        [
+          'TSAsExpression',
+          'TSSatisfiesExpression',
+          'TSTypeAssertion',
+          'TSNonNullExpression',
+        ].includes(node?.type)
+      ) {
+        return everyValue(node.expression, test, seen);
+      }
+      if (node?.type === 'ConditionalExpression') {
+        return everyValue(node.consequent, test, seen) && everyValue(node.alternate, test, seen);
+      }
+      return test(node);
     }
 
-    function returnsOnlyNull(fn) {
-      if (fn?.type !== 'ArrowFunctionExpression' && fn?.type !== 'FunctionExpression') return false;
-      const values = returnValues(fn);
+    function emptyRender(node) {
+      const values = returns.get(node);
       return (
-        values.length > 0 &&
-        values.every((value) => value?.type === 'Literal' && value.value === null)
+        values?.length > 0 &&
+        values.every((value) =>
+          everyValue(value, (result) => result?.type === 'Literal' && result.value === null),
+        )
       );
     }
 
-    function checkRender(fn) {
-      if (returnsOnlyNull(fn)) context.report({ node: fn, messageId: 'empty' });
+    function emptySetup(node, fallback) {
+      const values = returns.get(node);
+      return (
+        values?.length > 0 &&
+        values.every((value) =>
+          everyValue(value, (result) => {
+            // Vue uses the render option when setup returns bindings or falls through.
+            if (!result || result.type === 'ObjectExpression' || result.type === 'Literal') {
+              return fallback;
+            }
+            return emptyRender(result);
+          }),
+        )
+      );
+    }
+
+    function keyOf(property) {
+      if (property.type === 'SpreadElement') return undefined;
+      if (!property.computed && property.key.type === 'Identifier') return property.key.name;
+      if (property.key.type === 'Literal') return property.key.value;
+      return undefined;
+    }
+
+    function option(object, name) {
+      // A later spread or computed key can replace either option.
+      const property = object.properties.findLast(
+        (entry) => keyOf(entry) === name || keyOf(entry) === undefined,
+      );
+      return property && keyOf(property) === name && property.kind === 'init'
+        ? property.value
+        : property;
+    }
+
+    function emptyComponent(node, hasTemplate = false) {
+      if (node?.type !== 'ObjectExpression') return false;
+      const fallback = !hasTemplate && everyValue(option(node, 'render'), emptyRender);
+      const setup = option(node, 'setup');
+      return setup ? everyValue(setup, (fn) => emptySetup(fn, fallback)) : fallback;
+    }
+
+    function emptyTemplate(program) {
+      if (!sfc) return undefined;
+      if (template) {
+        if (
+          program.templateBody &&
+          !template.startTag.attributes.some(
+            (attr) => attr.key.name === 'src' && attr.value?.value,
+          ) &&
+          template.children.every(
+            (child) => child.type === 'VText' && !/[^\t\n\f\r ]/u.test(child.value),
+          )
+        ) {
+          return template;
+        }
+        return undefined;
+      }
+      const setup = sfc.children.find(
+        (block) =>
+          block.name === 'script' &&
+          block.startTag.attributes.some((attr) => attr.key.name === 'setup'),
+      );
+      const declaration = program.body.find(
+        (node) => node.type === 'ExportDefaultDeclaration',
+      )?.declaration;
+      const options =
+        declaration?.type === 'CallExpression' ? declaration.arguments[0] : declaration;
+      // With inline templates, script setup alone supplies an empty render even with defineOptions.
+      if (setup && !(options?.type === 'ObjectExpression' && option(options, 'render'))) {
+        return setup;
+      }
+      return undefined;
     }
 
     return {
-      Program({ templateBody }) {
-        if (
-          templateBody &&
-          templateBody.children.every((child) => child.type === 'VText' && !child.value.trim()) &&
-          !templateBody.startTag.attributes.some(
-            (attr) => attr.key.name === 'src' && attr.value?.value,
-          )
-        ) {
-          context.report({ node: templateBody, messageId: 'empty' });
-        }
+      onCodePathStart(_path, node) {
+        const values = [];
+        returns.set(node, values);
+        paths.push({ active: 0, values });
+      },
+      onCodePathSegmentStart() {
+        paths.at(-1).active += 1;
+      },
+      onCodePathSegmentEnd() {
+        paths.at(-1).active -= 1;
       },
       ReturnStatement(node) {
-        const fn = context.sourceCode.getScope(node).variableScope.block;
-        if (!returns.has(fn)) returns.set(fn, []);
-        returns.get(fn).push(node.argument);
+        const path = paths.at(-1);
+        if (path.active) path.values.push(node.argument);
       },
-      [`${option('render')} > :function:exit`]: checkRender,
-      ["VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='FunctionalComponent'] > :function:exit"]:
-        checkRender,
-      [`:matches(${option('setup')}, ${componentCall}) > :function:exit`](fn) {
-        const renderers = returnValues(fn);
-        if (renderers.length && renderers.every(returnsOnlyNull)) {
-          context.report({ node: fn, messageId: 'empty' });
+      ':function:exit'(node) {
+        const path = paths.at(-1);
+        if (node.body.type !== 'BlockStatement') path.values.push(node.body);
+        else if (path.active) path.values.push(null);
+      },
+      onCodePathEnd() {
+        paths.pop();
+      },
+      "CallExpression[callee.name='defineComponent']"(call) {
+        const [component, extra] = call.arguments;
+        if (!component) return;
+        checks.set(component, (node) => {
+          const hasTemplate = template && call.parent.type === 'ExportDefaultDeclaration';
+          if (node?.type === 'ObjectExpression') return emptyComponent(node, hasTemplate);
+          const fallback =
+            !hasTemplate &&
+            extra?.type === 'ObjectExpression' &&
+            everyValue(option(extra, 'render'), emptyRender);
+          return emptySetup(node, fallback);
+        });
+      },
+      "CallExpression[callee.name='defineOptions']"(call) {
+        if (!sfc) return;
+        const [options] = call.arguments;
+        if (!options) return;
+        if (!template) checks.set(options, emptyComponent);
+      },
+      ExportDefaultDeclaration(node) {
+        if (sfc) {
+          checks.set(
+            node.declaration,
+            (value) => emptyComponent(value, Boolean(template)) || emptyRender(value),
+          );
+        }
+      },
+      "VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='FunctionalComponent']"(
+        node,
+      ) {
+        if (node.init) checks.set(node.init, emptyRender);
+      },
+      ":matches(TSSatisfiesExpression, TSAsExpression, TSTypeAssertion)[typeAnnotation.typeName.name='FunctionalComponent']"(
+        node,
+      ) {
+        checks.set(node, emptyRender);
+      },
+      'Program:exit'(program) {
+        const empty = emptyTemplate(program);
+        if (empty) {
+          context.report({ node: empty, messageId: 'empty' });
+          return;
+        }
+        for (const [node, test] of checks) {
+          if (everyValue(node, test)) context.report({ node, messageId: 'empty' });
         }
       },
     };
