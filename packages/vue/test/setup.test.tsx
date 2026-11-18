@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { createRenderer, screen, takeReportedMessages, waitSingleFrame } from '#test-utils';
@@ -142,6 +142,82 @@ describe('real pointer between tests', () => {
     await waitSingleFrame();
 
     expect(onPointerover).not.toHaveBeenCalled();
+  });
+});
+
+describe.runIf(server.browser === 'firefox')('validation popup of Firefox between tests', () => {
+  // Vitest runs the tests of a file in order. In each pair, the first test reports an invalid form,
+  // and Firefox opens its validation popup below the input. The element of the second test is at
+  // the place of the popup.
+  const { render } = createRenderer();
+  const SPOT: CSSProperties = {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    width: '200px',
+    height: '100px',
+  };
+  const PLACE_OF_POPUP = { position: { x: 50, y: 45 } };
+
+  async function reportInvalidForm(onPointerdown?: () => void) {
+    await render(
+      <form>
+        {/* A press on this element keeps the focus on the input, so it does not close the popup. */}
+        <div
+          data-testid="spot"
+          style={SPOT}
+          onPointerdown={onPointerdown}
+          onMousedown={(event: MouseEvent) => event.preventDefault()}
+        />
+        <input
+          required
+          data-testid="input"
+          style={{ position: 'fixed', left: '0px', top: '0px' }}
+        />
+        <button type="submit">Submit</button>
+      </form>,
+    );
+    screen.getByRole('button', { name: 'Submit' }).click();
+
+    expect(screen.getByTestId('input')).toHaveFocus();
+  }
+
+  async function countLostPresses(pressCount: number) {
+    const onPointerdown = vi.fn();
+    await render(<div data-testid="spot" style={SPOT} onPointerdown={onPointerdown} />);
+    for (let press = 0; press < pressCount; press += 1) {
+      await userEvent.click(screen.getByTestId('spot'), PLACE_OF_POPUP);
+    }
+    return pressCount - onPointerdown.mock.calls.length;
+  }
+
+  it('reports an invalid form and ends after the popup opens', async () => {
+    const onPointerdown = vi.fn();
+    await reportInvalidForm(onPointerdown);
+
+    // The page gets no press that the open popup takes.
+    let isPopupOpen = false;
+    for (let press = 0; press < 200 && !isPopupOpen; press += 1) {
+      onPointerdown.mockClear();
+      await userEvent.click(screen.getByTestId('spot'), PLACE_OF_POPUP);
+      isPopupOpen = onPointerdown.mock.calls.length === 0;
+    }
+
+    expect(isPopupOpen).toBe(true);
+  });
+
+  it('gets a real press at the place of the open popup of the last test', async () => {
+    expect(await countLostPresses(1)).toBe(0);
+  });
+
+  it('reports an invalid form and ends before the popup opens', async () => {
+    await reportInvalidForm();
+  });
+
+  // Firefox opens the first popup of a window about 200 ms after the report. The presses take
+  // longer.
+  it('gets each real press at the place of the popup that the last test started', async () => {
+    expect(await countLostPresses(40)).toBe(0);
   });
 });
 
