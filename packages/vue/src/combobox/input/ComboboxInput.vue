@@ -162,21 +162,12 @@ const inputOwnsFormValue = computed(() => selectionMode.value === 'none' && !has
 
 // A template can mount the input that replaces this input before it unmounts this input. The
 // input then clears the element of the root only when the root holds its own element.
-let ownInput: HTMLInputElement | null = null;
-let removeFocusListeners: (() => void) | undefined;
+const ownInput = shallowRef<HTMLInputElement | null>(null);
 function setInputElement(element: HTMLElement | null) {
   const input = element as HTMLInputElement | null;
-  // Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
-  // Vue listener stays on the removed input. The function ref thus adds the focus listeners, and
-  // it removes them before Vue removes the input.
-  removeFocusListeners?.();
-  removeFocusListeners =
-    input === null
-      ? undefined
-      : addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout });
   const state = toRaw(store.state);
-  const isOwnInput = state.inputElement === ownInput;
-  ownInput = input;
+  const isOwnInput = input !== null || state.inputElement === ownInput.value;
+  ownInput.value = input;
   if (input === null && !isOwnInput) {
     return;
   }
@@ -191,6 +182,21 @@ function setInputElement(element: HTMLElement | null) {
     inputOwnsFormValue: state.selectionMode === 'none' && !hasPositionerParent,
   });
 }
+
+// Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
+// Vue listener stays on the removed input. The function ref thus adds the focus listeners, and
+// it removes them before Vue removes the input.
+watch(
+  ownInput,
+  (input, _previous, onCleanup) => {
+    if (input) {
+      onCleanup(
+        addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
+      );
+    }
+  },
+  { flush: 'sync' },
+);
 
 // Vue calls the function ref while it hydrates the input, before it hydrates the next parts.
 // A write there can give a later trigger a different `tabindex` and `id` in its first render.

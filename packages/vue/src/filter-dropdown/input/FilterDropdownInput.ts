@@ -37,22 +37,28 @@ export function useFilterDropdownInput(
   const composingValue = shallowRef<string | null>(null);
   let isComposing = false;
 
-  let inputElement: HTMLInputElement | null = null;
-  let removeFocusListeners: (() => void) | undefined;
+  const inputElement = shallowRef<HTMLInputElement | null>(null);
 
   // A template can mount the input that replaces this input before it unmounts this input. The
   // input then clears the focus owner only when the owner is its own element.
   function setInputElement(element: HTMLInputElement | null) {
-    if (element !== null || context.focusOwnerRef.value === inputElement) {
+    if (element !== null || context.focusOwnerRef.value === inputElement.value) {
       context.focusOwnerRef.value = element;
     }
-    inputElement = element;
-    removeFocusListeners?.();
-    removeFocusListeners =
-      element === null
-        ? undefined
-        : addInputFocusListeners(element, { focusin: handleFocusin, focusout: handleFocusout });
+    inputElement.value = element;
   }
+
+  watch(
+    inputElement,
+    (input, _previous, onCleanup) => {
+      if (input) {
+        onCleanup(
+          addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
+        );
+      }
+    },
+    { flush: 'sync' },
+  );
 
   function handleFocusin(event: FocusEvent) {
     context.setInputFocusVisible(true);
@@ -79,7 +85,7 @@ export function useFilterDropdownInput(
   let handledValue: string | undefined;
 
   function syncHandledValue() {
-    handledValue = inputElement?.value;
+    handledValue = inputElement.value?.value;
   }
   onMounted(syncHandledValue);
   watch(() => composingValue.value ?? value.value, syncHandledValue, { flush: 'post' });
@@ -87,13 +93,14 @@ export function useFilterDropdownInput(
   // Vue writes the DOM value only when the part renders. The part does not render when a listener
   // cancels the change or the consumer keeps its value.
   function writeValueToInput() {
-    if (inputElement === null || isComposing) {
+    const input = inputElement.value;
+    if (!input || isComposing) {
       return;
     }
-    if (inputElement.value !== value.value) {
-      inputElement.value = value.value;
+    if (input.value !== value.value) {
+      input.value = value.value;
     }
-    handledValue = inputElement.value;
+    handledValue = input.value;
   }
 
   const compositionTimeout = useTimeout();

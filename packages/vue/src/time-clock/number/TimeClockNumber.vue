@@ -34,7 +34,7 @@ export interface TimeClockNumberProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrating } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -83,16 +83,8 @@ const text = computed(() =>
   }),
 );
 
-let unregister: (() => void) | undefined;
-
-function registerElement(element: HTMLElement | null) {
-  unregister?.();
-  unregister = element ? face?.registerNumber(element, () => props.number) : undefined;
-}
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,
-  ref: registerElement,
   props: (attrs) => [
     {
       'aria-hidden': 'true',
@@ -106,6 +98,16 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
     attrs,
   ],
 });
+
+watch(
+  element,
+  (numberElement, _previous, onCleanup) => {
+    if (numberElement && face) {
+      onCleanup(face.registerNumber(numberElement, () => props.number));
+    }
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element });
 </script>
