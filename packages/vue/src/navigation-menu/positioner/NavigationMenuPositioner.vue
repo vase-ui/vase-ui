@@ -61,6 +61,7 @@ import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
 } from '../root/NavigationMenuRootContext';
+import { positionerSizeStyles } from '../../utils/popups/viewport/popupSizeStyles';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { NavigationMenuPositionerContext } from './NavigationMenuPositionerContext';
 
@@ -85,7 +86,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuPositionerState>;
 }>();
 
-const { open, mounted, positionerElement, floatingRootStore, nested, transitionStatus } =
+const { sizes, open, mounted, positionerElement, floatingRootStore, nested, transitionStatus } =
   useNavigationMenuRootContext();
 const keepMounted = useNavigationMenuPortalContext();
 const nodeId = useNavigationMenuTreeContext();
@@ -197,7 +198,10 @@ watch(
 
 const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
-  styles: positioning.positionerStyles,
+  styles: () => ({
+    ...positioning.positionerStyles.value,
+    ...(!sizes.value.measuring && positionerSizeStyles(sizes.value.positioner)),
+  }),
   transitionStatus,
   ref: createElementSetter(positionerElement, { keepWhileHeld: true }),
   hidden: () => !mounted.value,

@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, CSSProperties, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { ComputedRef, CSSProperties, InjectionKey, Ref, ShallowRef, StyleValue } from 'vue';
 
 /**
  * What `usePopupViewport` gives to `PopupViewportChildren`, the component that renders the
@@ -23,6 +23,8 @@ export interface PopupViewportContext {
   currentContainerRef: ShallowRef<HTMLElement | null>;
   previousContainerRef: ShallowRef<HTMLElement | null>;
 }
+
+export const PopupStyleContext: InjectionKey<() => StyleValue> = Symbol();
 
 export const PopupViewportContext: InjectionKey<PopupViewportContext> = Symbol();
 

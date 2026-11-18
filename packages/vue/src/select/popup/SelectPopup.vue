@@ -45,8 +45,7 @@ export interface SelectPopupProps
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
-import { computed, onScopeDispose } from 'vue';
-import type { CSSProperties } from 'vue';
+import { computed, nextTick, onScopeDispose } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { ownerDocument, ownerWindow } from '../../common/owner';
@@ -70,7 +69,7 @@ import { styleDisableScrollbar, useStyleDisableScrollbar } from '../../utils/sty
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
-import { clearStyles, LIST_FUNCTIONAL_STYLES } from './utils';
+import { LIST_FUNCTIONAL_STYLES } from './utils';
 
 defineOptions({ inheritAttrs: false });
 
@@ -89,8 +88,14 @@ defineSlots<{
 }>();
 
 const store = useSelectRootContext();
-const { side, align, alignItemWithTriggerActive, isPositioned, setControlledAlignItemWithTrigger } =
-  useSelectPositionerContext();
+const {
+  side,
+  align,
+  itemAlignment,
+  alignItemWithTriggerActive,
+  isPositioned,
+  setControlledAlignItemWithTrigger,
+} = useSelectPositionerContext();
 const insideToolbar = useToolbarRootContext(true) !== undefined;
 const direction = useDirection();
 
@@ -100,25 +105,20 @@ const transitionStatus = computed(() => store.select('transitionStatus'));
 
 let reachedMaxHeight = false;
 let initialPlaced = false;
-let originalPositionerStyles: CSSProperties = {};
+let pinnedEdge: 'top' | 'bottom' | null = null;
 
 const scrollArrowFrame = useAnimationFrame();
 
 function handleScroll(scroller: HTMLDivElement) {
   const positionerElement = store.select('positionerElement');
   const popupElement = store.context.popupRef.value;
-  if (!positionerElement || !popupElement || !initialPlaced) {
+  if (!positionerElement || !popupElement || popupElement !== element.value || !initialPlaced) {
     return;
   }
 
-  const isTopPositioned = positionerElement.style.top === '0px';
-  const isBottomPositioned = positionerElement.style.bottom === '0px';
-
-  if (
-    reachedMaxHeight ||
-    !alignItemWithTriggerActive.value ||
-    (!isTopPositioned && !isBottomPositioned)
-  ) {
+  const alignment = itemAlignment.value;
+  const isTopPositioned = pinnedEdge === 'top';
+  if (reachedMaxHeight || !alignItemWithTriggerActive.value || !pinnedEdge || !alignment) {
     store.context.handleScrollArrowVisibility(scroller);
     return;
   }
@@ -143,7 +143,10 @@ function handleScroll(scroller: HTMLDivElement) {
   let nextScrollTop: number | null = null;
 
   const setHeight = (height: number) => {
-    positionerElement.style.height = `${height}px`;
+    itemAlignment.value = {
+      ...alignment,
+      positionerStyle: { ...alignment.positionerStyle, height: `${height}px` },
+    };
   };
 
   const diff = isTopPositioned ? maxScrollTop - scrollTop : scrollTop;
@@ -155,42 +158,41 @@ function handleScroll(scroller: HTMLDivElement) {
       // Consume the remaining scroll in height.
       setHeight(currentHeight + heightDelta);
     }
-    scroller.scrollTop = isTopPositioned ? maxScrollTop : 0;
+    nextScrollTop = isTopPositioned ? Infinity : 0;
     if (maxAvailableHeight - (currentHeight + heightDelta) <= SCROLL_EDGE_TOLERANCE_PX) {
       reachedMaxHeight = true;
     }
-    store.context.handleScrollArrowVisibility(scroller);
-    return;
-  }
+  } else {
+    if (maxAvailableHeight - nextHeight > SCROLL_EDGE_TOLERANCE_PX) {
+      nextScrollTop = isTopPositioned ? Infinity : 0;
+    } else if (!isTopPositioned && scrollTop < maxScrollTop) {
+      const overshoot = currentHeight + diff - maxAvailableHeight;
+      nextScrollTop = scrollTop - (diff - overshoot);
+    }
 
-  if (maxAvailableHeight - nextHeight > SCROLL_EDGE_TOLERANCE_PX) {
-    nextScrollTop = isTopPositioned ? Infinity : 0;
-  } else if (isBottomPositioned && scrollTop < maxScrollTop) {
-    const overshoot = currentHeight + diff - maxAvailableHeight;
-    nextScrollTop = scrollTop - (diff - overshoot);
-  }
-
-  const nextPositionerHeight = Math.ceil(nextHeight);
-
-  if (nextPositionerHeight !== 0) {
-    setHeight(nextPositionerHeight);
-  }
-
-  if (nextScrollTop != null) {
-    // Recompute bounds after resizing (clientHeight likely changed).
-    const target = clamp(nextScrollTop, 0, getMaxScrollTop(scroller));
-
-    // Avoid adjustments that re-trigger scroll events forever.
-    if (Math.abs(scroller.scrollTop - target) > SCROLL_EDGE_TOLERANCE_PX) {
-      scroller.scrollTop = target;
+    const nextPositionerHeight = Math.ceil(nextHeight);
+    if (nextPositionerHeight !== 0) {
+      setHeight(nextPositionerHeight);
+    }
+    if (nextPositionerHeight >= maxAvailableHeight - SCROLL_EDGE_TOLERANCE_PX) {
+      reachedMaxHeight = true;
     }
   }
 
-  if (nextPositionerHeight >= maxAvailableHeight - SCROLL_EDGE_TOLERANCE_PX) {
-    reachedMaxHeight = true;
-  }
-
-  store.context.handleScrollArrowVisibility(scroller);
+  const resized = itemAlignment.value;
+  void nextTick(() => {
+    if (itemAlignment.value !== resized || !open.value || !scroller.isConnected) {
+      return;
+    }
+    if (nextScrollTop != null) {
+      const target = clamp(nextScrollTop, 0, getMaxScrollTop(scroller));
+      const tolerance = diff <= SCROLL_EDGE_TOLERANCE_PX ? 0 : SCROLL_EDGE_TOLERANCE_PX;
+      if (Math.abs(scroller.scrollTop - target) > tolerance) {
+        scroller.scrollTop = target;
+      }
+    }
+    store.context.handleScrollArrowVisibility(scroller);
+  });
 }
 
 // `Select.List` calls the handler for its own scroll.
@@ -208,43 +210,19 @@ const state = computed<SelectPopupState>(() => ({
   align: align.value,
 }));
 
-function recordOriginalPositionerStyles(positionerElement: HTMLElement | null) {
-  if (
-    !positionerElement ||
-    !store.context.popupRef.value ||
-    Object.keys(originalPositionerStyles).length
-  ) {
-    return;
-  }
-
-  originalPositionerStyles = {
-    top: positionerElement.style.top || '0',
-    left: positionerElement.style.left || '0',
-    right: positionerElement.style.right,
-    height: positionerElement.style.height,
-    bottom: positionerElement.style.bottom,
-    minHeight: positionerElement.style.minHeight,
-    maxHeight: positionerElement.style.maxHeight,
-    marginTop: positionerElement.style.marginTop,
-    marginBottom: positionerElement.style.marginBottom,
-  };
-}
-
-function resetPlacementWhileClosed(positionerElement: HTMLElement | null) {
-  if (open.value || alignItemWithTriggerActive.value) {
-    return;
-  }
-
-  initialPlaced = false;
-  reachedMaxHeight = false;
-  clearStyles(positionerElement, originalPositionerStyles);
-}
-
-function placePopup(positionerElement: HTMLElement | null) {
-  const popupElement = store.context.popupRef.value;
+function placePopup(signal: AbortSignal) {
+  const positionerElement = store.select('positionerElement');
+  const popupElement = element.value;
   const triggerElement = store.select('triggerElement');
   const listElement = store.select('listElement');
   const isAligned = alignItemWithTriggerActive.value;
+
+  if (!isAligned) {
+    itemAlignment.value = null;
+    pinnedEdge = null;
+    reachedMaxHeight = false;
+    initialPlaced = false;
+  }
 
   // Wait for Floating UI's first positioning pass before reading DOM geometry.
   // We replace the final coordinates for aligned selects, but still need middleware
@@ -254,6 +232,7 @@ function placePopup(positionerElement: HTMLElement | null) {
     !triggerElement ||
     !positionerElement ||
     !popupElement ||
+    popupElement !== store.context.popupRef.value ||
     // `KeepAlive` takes the trigger out of the document before it calls `onDeactivated`, and this
     // effect can run in that gap. The trigger then has no geometry, so the fallback below would turn
     // the alignment off for the rest of the open. `onActivated` runs this effect again.
@@ -264,8 +243,7 @@ function placePopup(positionerElement: HTMLElement | null) {
     return;
   }
 
-  initialPlaced = true;
-  popupElement.style.removeProperty(SelectPositionerCssVars.transformOrigin);
+  initialPlaced = !isAligned;
 
   if (!isAligned) {
     // The wrapper supplies the scroller: the list owns scrolling once it has mounted, and
@@ -348,89 +326,100 @@ function placePopup(positionerElement: HTMLElement | null) {
 
     const maxRight = viewportWidth - paddingRight;
 
-    positionerElement.style.left = `${clamp(
-      alignedLeft,
-      paddingLeft,
-      maxRight - positionerRect.width,
-    )}px`;
-    positionerElement.style.height = `${height}px`;
-    // `none` (not the invalid `auto`) so the explicit height governs in align mode and isn't
-    // clamped by a `max-height` from user CSS.
-    positionerElement.style.maxHeight = 'none';
-    positionerElement.style.marginTop = `${marginTop}px`;
-    positionerElement.style.marginBottom = `${marginBottom}px`;
-    popupElement.style.height = '100%';
+    const positionerStyle = {
+      left: `${clamp(alignedLeft, paddingLeft, maxRight - positionerRect.width)}px`,
+      height: `${height}px`,
+      maxHeight: 'none',
+      marginTop: `${marginTop}px`,
+      marginBottom: `${marginBottom}px`,
+    };
+    const transformOrigin = textRect
+      ? `50% ${clamp(
+          positionerRect.height > 0
+            ? ((textRect.top + textRect.height / 2 - positionerRect.top) / positionerRect.height) *
+                100
+            : 50,
+          0,
+          100,
+        )}%`
+      : undefined;
+    itemAlignment.value = { popup: popupElement, positionerStyle, transformOrigin };
 
-    const maxScrollTop = getMaxScrollTop(scroller);
-    const isTopPositioned = scrollTop >= maxScrollTop - SCROLL_EDGE_TOLERANCE_PX;
+    // The list scroll range depends on the height that Vue just received.
+    void nextTick(() => {
+      if (signal.aborted || !open.value || !triggerElement.isConnected) {
+        return;
+      }
+      const maxScrollTop = getMaxScrollTop(scroller);
+      const isTopPositioned = scrollTop >= maxScrollTop - SCROLL_EDGE_TOLERANCE_PX;
 
-    if (isTopPositioned) {
-      height = Math.min(viewportHeight, positionerRect.height) - (scrollTop - maxScrollTop);
-    }
+      if (isTopPositioned) {
+        height = Math.min(viewportHeight, positionerRect.height) - (scrollTop - maxScrollTop);
+      }
 
-    // When the trigger is too close to the top or bottom of the viewport, or the minHeight is
-    // reached, we fallback to aligning the popup to the trigger as the UX is poor otherwise.
-    const fallbackToAlignPopupToTrigger =
-      triggerRect.top < triggerCollisionThreshold ||
-      triggerRect.bottom > viewportHeight - triggerCollisionThreshold ||
-      Math.ceil(height) + SCROLL_EDGE_TOLERANCE_PX < Math.min(scrollHeight, minHeight);
+      // When the trigger is too close to the top or bottom of the viewport, or the minHeight is
+      // reached, we fallback to aligning the popup to the trigger as the UX is poor otherwise.
+      const fallbackToAlignPopupToTrigger =
+        triggerRect.top < triggerCollisionThreshold ||
+        triggerRect.bottom > viewportHeight - triggerCollisionThreshold ||
+        Math.ceil(height) + SCROLL_EDGE_TOLERANCE_PX < Math.min(scrollHeight, minHeight);
 
-    // Safari doesn't position the popup correctly when pinch-zoomed.
-    const isPinchZoomed = (win.visualViewport?.scale ?? 1) !== 1 && platform.engine.webkit;
+      // Safari doesn't position the popup correctly when pinch-zoomed.
+      const isPinchZoomed = (win.visualViewport?.scale ?? 1) !== 1 && platform.engine.webkit;
 
-    if (fallbackToAlignPopupToTrigger || isPinchZoomed) {
-      clearStyles(positionerElement, originalPositionerStyles);
-      setControlledAlignItemWithTrigger(false);
-      return;
-    }
+      if (fallbackToAlignPopupToTrigger || isPinchZoomed) {
+        itemAlignment.value = null;
+        setControlledAlignItemWithTrigger(false);
+        return;
+      }
 
-    const initialHeight = Math.max(minHeight, height);
+      const initialHeight = Math.max(minHeight, height);
 
-    if (isTopPositioned) {
-      const topOffset = Math.max(0, viewportHeight - idealHeight);
-      positionerElement.style.top = positionerRect.height >= maxHeight ? '0' : `${topOffset}px`;
-      positionerElement.style.height = `${height}px`;
-      scroller.scrollTop = getMaxScrollTop(scroller);
-    } else {
-      positionerElement.style.bottom = '0';
-      scroller.scrollTop = scrollTop;
-    }
+      const top =
+        positionerRect.height >= maxHeight ? 0 : Math.max(0, viewportHeight - idealHeight);
+      pinnedEdge = isTopPositioned ? (top === 0 ? 'top' : null) : 'bottom';
+      const placed = {
+        popup: popupElement,
+        positionerStyle: {
+          ...positionerStyle,
+          height: `${height}px`,
+          ...(isTopPositioned ? { top: `${top}px` } : { bottom: '0' }),
+        },
+        transformOrigin,
+      };
+      itemAlignment.value = placed;
+      void nextTick(() => {
+        if (
+          signal.aborted ||
+          itemAlignment.value !== placed ||
+          !open.value ||
+          !triggerElement.isConnected
+        ) {
+          return;
+        }
+        initialPlaced = true;
+        scroller.scrollTop = isTopPositioned ? getMaxScrollTop(scroller) : scrollTop;
+        store.context.handleScrollArrowVisibility(scroller);
+      });
 
-    if (textRect) {
-      const popupTop = positionerRect.top;
-      const popupHeight = positionerRect.height;
-      const textCenterY = textRect.top + textRect.height / 2;
+      if (initialHeight === viewportHeight || height >= maxPopupHeight) {
+        reachedMaxHeight = true;
+      }
 
-      const clampedY = clamp(
-        popupHeight > 0 ? ((textCenterY - popupTop) / popupHeight) * 100 : 50,
-        0,
-        100,
-      );
-
-      popupElement.style.setProperty(SelectPositionerCssVars.transformOrigin, `50% ${clampedY}%`);
-    }
-
-    if (initialHeight === viewportHeight || height >= maxPopupHeight) {
-      reachedMaxHeight = true;
-    }
-
-    store.context.handleScrollArrowVisibility(scroller);
-
-    if (
-      store.select('highlightItemOnHover') &&
-      store.select('selectedIndex') === null &&
-      store.select('activeIndex') === null &&
-      store.context.listRef.value[0] != null
-    ) {
-      store.set('activeIndex', 0);
-    }
+      if (
+        store.select('highlightItemOnHover') &&
+        store.select('selectedIndex') === null &&
+        store.select('activeIndex') === null &&
+        store.context.listRef.value[0] != null
+      ) {
+        store.set('activeIndex', 0);
+      }
+    });
   } finally {
     restoreTransformStyles();
   }
 }
 
-// The three effects of Base UI run in its sequence, after the DOM update of a change of any of
-// their sources. Each source of the first two effects is also a source of the third.
 useDomEffect(
   [
     () => open.value,
@@ -441,12 +430,24 @@ useDomEffect(
     () => store.select('highlightItemOnHover'),
     () => direction.value,
     () => isPositioned.value,
+    () => store.context.popupRef.value,
   ],
   () => {
-    const positionerElement = store.select('positionerElement');
-    recordOriginalPositionerStyles(positionerElement);
-    resetPlacementWhileClosed(positionerElement);
-    placePopup(positionerElement);
+    const controller = new AbortController();
+    placePopup(controller.signal);
+    const popup = element.value;
+    return () => {
+      controller.abort();
+      scrollArrowFrame.cancel();
+      if (
+        itemAlignment.value?.popup === popup &&
+        (!popup?.isConnected || store.context.popupRef.value !== popup)
+      ) {
+        itemAlignment.value = null;
+        pinnedEdge = null;
+        reachedMaxHeight = false;
+      }
+    };
   },
 );
 
@@ -510,7 +511,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
           }
           handleScroll(event.currentTarget as HTMLDivElement);
         },
-        style: isAligned ? (hasList ? { height: '100%' } : LIST_FUNCTIONAL_STYLES) : undefined,
+        style: isAligned
+          ? {
+              ...(!hasList && LIST_FUNCTIONAL_STYLES),
+              height: itemAlignment.value?.positionerStyle.height ? '100%' : undefined,
+              [SelectPositionerCssVars.transformOrigin]: itemAlignment.value?.transformOrigin,
+            }
+          : undefined,
         class: !hasList && isAligned ? styleDisableScrollbar.className : undefined,
       },
       getDisabledMountTransitionStyles(transitionStatus.value),
@@ -578,18 +585,21 @@ type TransformStyleProperty = (typeof TRANSFORM_STYLE_RESETS)[number][0];
 
 function unsetTransformStyles(popup: HTMLElement) {
   const { style } = popup;
-  const originalStyles = {} as Record<TransformStyleProperty, string>;
+  const originalStyles = {} as Record<TransformStyleProperty, { value: string; priority: string }>;
 
   for (const [property, value] of TRANSFORM_STYLE_RESETS) {
-    originalStyles[property] = style.getPropertyValue(property);
+    originalStyles[property] = {
+      value: style.getPropertyValue(property),
+      priority: style.getPropertyPriority(property),
+    };
     style.setProperty(property, value, 'important');
   }
 
   return () => {
     for (const [property] of TRANSFORM_STYLE_RESETS) {
-      const originalValue = originalStyles[property];
-      if (originalValue) {
-        style.setProperty(property, originalValue);
+      const { value, priority } = originalStyles[property];
+      if (value) {
+        style.setProperty(property, value, priority);
       } else {
         style.removeProperty(property);
       }

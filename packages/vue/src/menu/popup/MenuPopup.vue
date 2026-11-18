@@ -54,7 +54,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, inject, toRaw, watch } from 'vue';
+import { computed, inject, provide, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -65,6 +65,7 @@ import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -168,6 +169,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     // This listener runs after each other listener of the popup.
     { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
+    { style: store.context.viewportStyles.value?.popup.value },
     {
       id: given('id', props.id) ?? store.select('defaultPopupId'),
       // A rendered `Menu.List` carries the `menu` semantics instead.
@@ -291,6 +293,8 @@ useFloatingFocusManager(
   }),
   element,
 );
+
+provide(PopupStyleContext, () => elementProps().style);
 
 defineExpose({ element });
 </script>

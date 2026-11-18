@@ -1,6 +1,12 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, CSSProperties, InjectionKey, ShallowRef } from 'vue';
 import type { Side, UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
+
+export interface SelectItemAlignment {
+  popup: HTMLElement;
+  positionerStyle: CSSProperties;
+  transformOrigin?: string | undefined;
+}
 
 export interface SelectPositionerContext extends Pick<
   UseAnchorPositioningReturnValue,
@@ -10,6 +16,7 @@ export interface SelectPositionerContext extends Pick<
    * The side of the popup. It is `'none'` while the popup is placed over the trigger.
    */
   side: ComputedRef<Side | 'none'>;
+  itemAlignment: ShallowRef<SelectItemAlignment | null>;
   alignItemWithTriggerActive: ComputedRef<boolean>;
   setControlledAlignItemWithTrigger: (alignItemWithTrigger: boolean) => void;
 }

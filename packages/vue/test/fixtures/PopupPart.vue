@@ -22,8 +22,9 @@ export interface PopupPartProps
 </script>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue';
+import { computed, inject, provide } from 'vue';
 import { useRenderElement } from '../../src/internals/useRenderElement';
+import { PopupStyleContext } from '../../src/utils/popups/viewport/PopupViewportContext';
 import { popupTransitionStateMapping } from '../../src/utils/popups/popupStateMapping';
 import { PopupFixtureContext } from './PopupFixture';
 
@@ -59,10 +60,17 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
-    { id: defaultPopupId.value, role: 'dialog', hidden: mounted.value ? undefined : true },
+    {
+      id: defaultPopupId.value,
+      role: 'dialog',
+      hidden: mounted.value ? undefined : true,
+      style: store.context.viewportStyles.value?.popup.value,
+    },
     attrs,
   ],
 });
+
+provide(PopupStyleContext, () => elementProps().style);
 
 defineExpose({ element });
 </script>

@@ -3,7 +3,6 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import * as NavigationMenuPositionerCssVars from '../positioner/NavigationMenuPositionerCssVars';
 
 export interface NavigationMenuRootState {
   /**
@@ -86,30 +85,10 @@ const blockedReturnFocusReasons = new Set<string>([
   REASONS.outsidePress,
   REASONS.focusOut,
 ]);
-
-function getPositionerFixedSize(positionerElement: HTMLElement) {
-  // Read the last fixed positioner size rather than measuring the popup now:
-  // during a controlled close, the popup can already be in its exit render and
-  // report 0 before the closing transition gets a stable size to animate from.
-  const width =
-    parseFloat(
-      positionerElement.style.getPropertyValue(NavigationMenuPositionerCssVars.positionerWidth),
-    ) || 0;
-  const height =
-    parseFloat(
-      positionerElement.style.getPropertyValue(NavigationMenuPositionerCssVars.positionerHeight),
-    ) || 0;
-
-  if (width <= 0 || height <= 0) {
-    return null;
-  }
-
-  return { width, height };
-}
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
@@ -127,7 +106,6 @@ import {
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../../utils/popups/tree/FloatingTree';
-import { setSharedFixedSize } from '../utils/setSharedFixedSize';
 import {
   NavigationMenuRootContext,
   NavigationMenuTreeContext,
@@ -135,6 +113,7 @@ import {
 } from './NavigationMenuRootContext';
 import type {
   NavigationMenuActivationDirection,
+  NavigationMenuSizes,
   NavigationMenuPopupAutoSizeResetState,
 } from './NavigationMenuRootContext';
 
@@ -187,6 +166,7 @@ let closeReason: NavigationMenuRootChangeEventReason | undefined;
 const rootRef = shallowRef<HTMLElement | null>(null);
 
 const positionerElement = shallowRef<HTMLElement | null>(null);
+const sizes = shallowRef<NavigationMenuSizes>({ popup: null, positioner: null });
 const popupElement = shallowRef<HTMLElement | null>(null);
 const backdropElement = shallowRef<HTMLElement | null>(null);
 const viewportElement = shallowRef<HTMLElement | null>(null);
@@ -250,6 +230,7 @@ const {
     activationDirection.value = null;
     floatingRootStore.value = undefined;
 
+    sizes.value = { popup: null, positioner: null };
     currentContentRef.value = null;
     closeReason = undefined;
   },
@@ -267,30 +248,13 @@ useOpenChangeComplete({
   },
 });
 
-function setClosedPopupFixedSize() {
-  if (open.value) {
-    return;
+watch(open, (isOpen) => {
+  // The exit can already have a zero box. Keep the last target for that frame.
+  const target = sizes.value.positioner;
+  if (!isOpen && target && target.width > 0 && target.height > 0) {
+    sizes.value = { popup: target, positioner: target };
   }
-
-  const positioner = positionerElement.value;
-  const popup = popupElement.value;
-  if (!positioner || !popup) {
-    return;
-  }
-
-  const closeTransitionSize = getPositionerFixedSize(positioner);
-
-  if (!closeTransitionSize) {
-    return;
-  }
-
-  // No cleanup is needed for this fixed size: the inline styles leave the DOM with the popup, and
-  // the next open sizes the popup again.
-  setSharedFixedSize(popup, positioner, closeTransitionSize.width, closeTransitionSize.height);
-}
-
-onMounted(setClosedPopupFixedSize);
-watch([open, popupElement, positionerElement], setClosedPopupFixedSize, { flush: 'post' });
+});
 
 watch(currentValue, () => {
   viewportInert.value = false;
@@ -381,6 +345,7 @@ provide(NavigationMenuRootContext, {
   beforeOutsideRef,
   afterOutsideRef,
   popupAutoSizeResetRef,
+  sizes,
   delay: computed(() => props.delay),
   closeDelay: computed(() => props.closeDelay),
   orientation: computed(() => props.orientation),

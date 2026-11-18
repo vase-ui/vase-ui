@@ -1,4 +1,5 @@
 import { inject } from 'vue';
+import type { Dimensions } from '@floating-ui/utils';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
@@ -7,13 +8,16 @@ import type { NavigationMenuRootChangeEventDetails } from './NavigationMenuRoot.
 
 export type NavigationMenuPopupAutoSizeResetState = {
   abortController: AbortController | null;
-  /**
-   * The value of the item whose trigger scheduled the reset.
-   */
-  owner: any;
+  owner: symbol | null;
 };
 
 export type NavigationMenuActivationDirection = 'left' | 'right' | 'up' | 'down' | null;
+
+export interface NavigationMenuSizes {
+  popup: Dimensions | 'auto' | null;
+  positioner: Dimensions | null;
+  measuring?: boolean;
+}
 
 export interface NavigationMenuRootContext<Value = any> {
   open: ComputedRef<boolean>;
@@ -85,6 +89,7 @@ export interface NavigationMenuRootContext<Value = any> {
    * reset that the previously active trigger scheduled. Code changes it in place.
    */
   popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState;
+  sizes: ShallowRef<NavigationMenuSizes>;
   delay: ComputedRef<number>;
   closeDelay: ComputedRef<number>;
   orientation: ComputedRef<Orientation>;

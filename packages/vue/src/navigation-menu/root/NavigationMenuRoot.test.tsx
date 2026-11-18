@@ -1,3 +1,4 @@
+import { recordStyleProperty } from '../../../test/recordStyleProperty';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -329,6 +330,7 @@ function TestInlineNestedNavigationMenu(
     nestedDefaultValue?: string | number | boolean | null;
     nestedItem1Value?: string | number | boolean;
     keepMountedContent?: boolean;
+    observePopup?: (popup: HTMLElement) => void;
     nestedLinkCloseOnClick?: boolean;
     nestedRootRef?: (instance: RootInstance | null) => void;
     onNestedOpenChangeComplete?: (open: boolean) => void;
@@ -403,7 +405,13 @@ function TestInlineNestedNavigationMenu(
 
       <NavigationMenu.Portal>
         <NavigationMenu.Positioner data-testid="positioner">
-          <NavigationMenu.Popup data-testid="popup-root">
+          <NavigationMenu.Popup
+            data-testid="popup-root"
+            ref={(part) => {
+              const popup = (part as { element?: HTMLElement } | null)?.element;
+              if (popup) props.observePopup?.(popup);
+            }}
+          >
             <NavigationMenu.Viewport />
           </NavigationMenu.Popup>
         </NavigationMenu.Positioner>
@@ -413,11 +421,8 @@ function TestInlineNestedNavigationMenu(
 }
 
 const TestInlineNestedNavigationMenuWithDynamicContent = defineComponent({
-  props: {
-    initialContentStage: { type: Number, default: 0 },
-  },
-  setup(props) {
-    const contentStage = shallowRef(props.initialContentStage);
+  setup() {
+    const contentStage = shallowRef(0);
 
     return () => (
       <NavigationMenu.Root>
@@ -790,16 +795,21 @@ function mockResizeObserver() {
   };
 }
 
-function primeOpenPopupSize(
+async function measureOpenPopup(
   popupRoot: HTMLElement,
   positioner: HTMLElement,
   width: number,
   height: number,
 ) {
-  popupRoot.style.setProperty('--popup-width', 'auto');
-  popupRoot.style.setProperty('--popup-height', 'auto');
-  positioner.style.setProperty('--positioner-width', `${width}px`);
-  positioner.style.setProperty('--positioner-height', `${height}px`);
+  await fireEvent(window, new Event('resize'));
+  await waitFor(() => {
+    expect(getPopupSizeVars(popupRoot, positioner)).toEqual({
+      popupWidth: 'auto',
+      popupHeight: 'auto',
+      positionerWidth: `${width}px`,
+      positionerHeight: `${height}px`,
+    });
+  });
 }
 
 function getPopupSizeVars(popupRoot: HTMLElement, positioner: HTMLElement) {
@@ -3642,10 +3652,17 @@ describe('<NavigationMenu.Root />', () => {
       it('measures the open size with the kept nested default content in the portal', async () => {
         const previousAnimationsDisabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-        const setPropertySpy = vi.spyOn(CSSStyleDeclaration.prototype, 'setProperty');
+        let heights: string[] | undefined;
 
         try {
-          await render(<TestInlineNestedNavigationMenu keepMountedContent />);
+          await render(
+            <TestInlineNestedNavigationMenu
+              keepMountedContent
+              observePopup={(popup) => {
+                heights ??= recordStyleProperty(popup, '--popup-height');
+              }}
+            />,
+          );
 
           await fireEvent.click(screen.getByTestId('trigger-1'));
           await flushMicrotasks();
@@ -3660,20 +3677,13 @@ describe('<NavigationMenu.Root />', () => {
           });
 
           const openHeight = positioner.style.getPropertyValue('--positioner-height');
-          const fixedPopupHeights = setPropertySpy.mock.calls
-            .filter(
-              ([property], index) =>
-                property === '--popup-height' &&
-                setPropertySpy.mock.contexts[index] === popupRoot.style,
-            )
-            .map(([, value]) => value)
-            .filter((value) => value !== 'auto' && value !== '0px');
-
+          const fixedPopupHeights = heights?.filter(
+            (value) => value.endsWith('px') && value !== '0px',
+          );
           expect(openHeight).toBe(getComputedStyle(popupRoot).height);
-          expect(fixedPopupHeights.length).toBeGreaterThan(0);
-          expect(fixedPopupHeights.every((value) => value === openHeight)).toBe(true);
+          expect(fixedPopupHeights?.length).toBeGreaterThan(0);
+          expect(fixedPopupHeights?.every((value) => value === openHeight)).toBe(true);
         } finally {
-          setPropertySpy.mockRestore();
           globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
         }
       });
@@ -3709,7 +3719,7 @@ describe('<NavigationMenu.Root />', () => {
             get: () => popupHeight,
           });
 
-          primeOpenPopupSize(popupRoot, positioner, 250, 220);
+          await measureOpenPopup(popupRoot, positioner, 250, 220);
 
           popupHeight = 300;
           animations.start();
@@ -3770,7 +3780,7 @@ describe('<NavigationMenu.Root />', () => {
             get: () => popupHeight,
           });
 
-          primeOpenPopupSize(popupRoot, positioner, 250, 220);
+          await measureOpenPopup(popupRoot, positioner, 250, 220);
 
           popupHeight = 300;
 
@@ -3792,120 +3802,76 @@ describe('<NavigationMenu.Root />', () => {
       });
 
       it('keeps inline mutation resize interruptible when content updates again mid-transition', async () => {
-        const previousAnimationsDisabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        await render(<TestInlineNestedNavigationMenuWithDynamicContent />);
+        await fireEvent.click(screen.getByTestId('trigger-1'));
+        const popup = screen.getByTestId('popup-root');
+        const positioner = screen.getByTestId('positioner');
+        let height = 120;
+        Object.defineProperty(popup, 'offsetWidth', { configurable: true, get: () => 250 });
+        Object.defineProperty(popup, 'offsetHeight', { configurable: true, get: () => height });
+        await measureOpenPopup(popup, positioner, 250, 120);
 
-        try {
-          await render(
-            <TestInlineNestedNavigationMenuWithDynamicContent initialContentStage={1} />,
-          );
-          const trigger1 = screen.getByTestId('trigger-1');
+        const animations = mockAnimations(popup);
+        animations.start();
+        height = 220;
+        await fireEvent.click(screen.getByTestId('insert-content'));
+        await waitFor(() => {
+          expect(popup.style.getPropertyValue('--popup-height')).toBe('220px');
+        });
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
-
-          const popupRoot = screen.getByTestId('popup-root');
-          const positioner = screen.getByTestId('positioner');
-          const animations = mockAnimations(popupRoot);
-
-          const popupWidth = 250;
-          const popupHeightValues = [190, 260];
-          let popupHeight = 260;
-
-          Object.defineProperty(popupRoot, 'offsetWidth', {
-            configurable: true,
-            get: () => popupWidth,
+        const heights = recordStyleProperty(positioner, '--positioner-height');
+        height = 190;
+        await fireEvent.click(screen.getByTestId('insert-content'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('extra-content-2')).toBeVisible();
+        expect(heights).toContain('190px');
+        height = 260;
+        await animations.finish();
+        await waitFor(() => {
+          expect(getPopupSizeVars(popup, positioner)).toMatchObject({
+            popupHeight: 'auto',
+            positionerHeight: '260px',
           });
-          Object.defineProperty(popupRoot, 'offsetHeight', {
-            configurable: true,
-            get: () => {
-              const nextHeight = popupHeightValues.shift();
-              if (nextHeight != null) {
-                popupHeight = nextHeight;
-              }
-
-              return popupHeight;
-            },
-          });
-
-          popupRoot.style.setProperty('--popup-width', '250px');
-          popupRoot.style.setProperty('--popup-height', '220px');
-          positioner.style.setProperty('--positioner-width', '250px');
-          positioner.style.setProperty('--positioner-height', '220px');
-
-          const setPropertySpy = vi.spyOn(positioner.style, 'setProperty');
-
-          animations.start();
-          await fireEvent.click(screen.getByTestId('insert-content'));
-          await flushMicrotasks();
-
-          expect(screen.getByTestId('extra-content-2')).not.toBe(null);
-          expect(
-            setPropertySpy.mock.calls.some(
-              (call) => call[0] === '--positioner-height' && call[1] === '190px',
-            ),
-          ).toBe(true);
-
-          void animations.finish();
-          await flushMicrotasks();
-
-          await waitFor(() => {
-            expect(getPopupSizeVars(popupRoot, positioner)).toMatchObject({
-              popupHeight: 'auto',
-              positionerHeight: '260px',
-            });
-          });
-
-          setPropertySpy.mockRestore();
-        } finally {
-          globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
-        }
+        });
       });
 
       it('preserves the current size when an interrupted mutation temporarily measures zero', async () => {
-        const originalResizeObserver = globalThis.ResizeObserver;
-        globalThis.ResizeObserver = undefined as unknown as typeof ResizeObserver;
-
+        const restoreObserver = mockResizeObserver();
         try {
-          await render(
-            <TestInlineNestedNavigationMenuWithDynamicContent initialContentStage={1} />,
-          );
+          globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+          await render(<TestInlineNestedNavigationMenuWithDynamicContent />);
           await fireEvent.click(screen.getByTestId('trigger-1'));
-          await flushMicrotasks();
-
-          const popupRoot = screen.getByTestId('popup-root');
+          const popup = screen.getByTestId('popup-root');
           const positioner = screen.getByTestId('positioner');
-          const popupWidths = [250, 0];
-          const popupHeights = [220, 0];
-
-          Object.defineProperty(popupRoot, 'offsetWidth', {
-            configurable: true,
-            get: () => popupWidths.shift() ?? 0,
+          let width = 250;
+          let height = 120;
+          Object.defineProperty(popup, 'offsetWidth', { configurable: true, get: () => width });
+          Object.defineProperty(popup, 'offsetHeight', { configurable: true, get: () => height });
+          await measureOpenPopup(popup, positioner, width, height);
+          const animations = mockAnimations(popup);
+          animations.start();
+          height = 220;
+          await fireEvent.click(screen.getByTestId('insert-content'));
+          await waitFor(() => {
+            expect(popup.style.getPropertyValue('--popup-height')).toBe('220px');
           });
-          Object.defineProperty(popupRoot, 'offsetHeight', {
-            configurable: true,
-            get: () => popupHeights.shift() ?? 0,
-          });
-
-          popupRoot.style.setProperty('--popup-width', '250px');
-          popupRoot.style.setProperty('--popup-height', '220px');
-          positioner.style.setProperty('--positioner-width', '250px');
-          positioner.style.setProperty('--positioner-height', '220px');
 
           await fireEvent.click(screen.getByTestId('insert-content'));
           await flushMicrotasks();
-
+          width = 0;
+          height = 0;
+          await animations.finish();
           await waitFor(() => {
-            expect(popupRoot.style.getPropertyValue('--popup-width')).toBe('auto');
+            expect(getPopupSizeVars(popup, positioner)).toEqual({
+              popupWidth: 'auto',
+              popupHeight: 'auto',
+              positionerWidth: '250px',
+              positionerHeight: '220px',
+            });
           });
-          await waitFor(() => {
-            expect(popupRoot.style.getPropertyValue('--popup-height')).toBe('auto');
-          });
-
-          expect(positioner.style.getPropertyValue('--positioner-width')).toBe('250px');
-          expect(positioner.style.getPropertyValue('--positioner-height')).toBe('220px');
         } finally {
-          globalThis.ResizeObserver = originalResizeObserver;
+          restoreObserver();
         }
       });
 
@@ -3930,10 +3896,7 @@ describe('<NavigationMenu.Root />', () => {
             get: () => popupHeight,
           });
 
-          popupRoot.style.setProperty('--popup-width', 'auto');
-          popupRoot.style.setProperty('--popup-height', 'auto');
-          positioner.style.setProperty('--positioner-width', '675px');
-          positioner.style.setProperty('--positioner-height', '220px');
+          await measureOpenPopup(popupRoot, positioner, 675, 220);
 
           popupWidth = 500;
           popupHeight = 180;
@@ -3986,10 +3949,7 @@ describe('<NavigationMenu.Root />', () => {
             get: () => popupHeight,
           });
 
-          popupRoot.style.setProperty('--popup-width', 'auto');
-          popupRoot.style.setProperty('--popup-height', 'auto');
-          positioner.style.setProperty('--positioner-width', '675px');
-          positioner.style.setProperty('--positioner-height', '220px');
+          await measureOpenPopup(popupRoot, positioner, 675, 220);
 
           popupWidth = 500;
           popupHeight = 180;
@@ -4105,8 +4065,6 @@ describe('<NavigationMenu.Root />', () => {
         const previousAnimationsDisabled = globalThis.VASE_UI_ANIMATIONS_DISABLED;
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-        let popupWidthSpy: ReturnType<typeof vi.spyOn> | undefined;
-
         try {
           function waitForAnimationFrame() {
             return new Promise<void>((resolve) => {
@@ -4180,7 +4138,7 @@ describe('<NavigationMenu.Root />', () => {
 
           nextPanelWidth = 500;
           nextPanelHeight = 180;
-          popupWidthSpy = vi.spyOn(popupRoot.style, 'setProperty');
+          const widths = recordStyleProperty(popupRoot, '--popup-width');
 
           const reopenAnimation = animations.start();
           await fireEvent.mouseEnter(triggerLearn);
@@ -4191,13 +4149,8 @@ describe('<NavigationMenu.Root />', () => {
           await waitForAnimationFrame();
           await flushMicrotasks();
 
-          const popupWidthCalls = (
-            popupWidthSpy.mock.calls as [property: string, value: string, priority?: string][]
-          )
-            .filter((call) => call[0] === '--popup-width')
-            .map((call) => call[1]);
-          const exitingWidthIndex = popupWidthCalls.indexOf('675px');
-          const reopeningWidthIndex = popupWidthCalls.lastIndexOf('500px');
+          const exitingWidthIndex = widths.indexOf('675px');
+          const reopeningWidthIndex = widths.lastIndexOf('500px');
 
           expect(triggerLearn).toHaveAttribute('aria-expanded', 'true');
           expect(positioner.style.getPropertyValue('--positioner-width')).toBe('500px');
@@ -4209,7 +4162,6 @@ describe('<NavigationMenu.Root />', () => {
           await animations.finish(reopenAnimation);
           await flushMicrotasks();
         } finally {
-          popupWidthSpy?.mockRestore();
           globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
         }
       });
@@ -4294,8 +4246,6 @@ describe('<NavigationMenu.Root />', () => {
         const popupRoot = screen.getByTestId('popup-root');
         const positioner = screen.getByTestId('positioner');
 
-        primeOpenPopupSize(popupRoot, positioner, 250, 120);
-
         Object.defineProperty(popupRoot, 'offsetWidth', {
           configurable: true,
           get: () => (screen.queryByTestId('popup-1')?.hasAttribute('data-open') ? 250 : 0),
@@ -4313,6 +4263,7 @@ describe('<NavigationMenu.Root />', () => {
           get: () => 0,
         });
 
+        await measureOpenPopup(popupRoot, positioner, 250, 120);
         await fireEvent.focusOut(trigger1, { relatedTarget: document.body });
         await flushMicrotasks();
 

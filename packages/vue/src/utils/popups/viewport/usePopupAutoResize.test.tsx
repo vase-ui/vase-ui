@@ -10,6 +10,7 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import { recordStyleProperty } from '../../../../test/recordStyleProperty';
 import { createKeptScene, scene } from '../../../../test/fixtures/popupViewportHarness';
 import type {
   ViewportRootInstance,
@@ -45,18 +46,6 @@ interface AnchoringCase {
 
 function readVariable(element: HTMLElement, name: string) {
   return element.style.getPropertyValue(name);
-}
-
-function recordVariable(element: HTMLElement, name: string) {
-  const values = [readVariable(element, name)];
-  const observer = new MutationObserver(() => {
-    const value = readVariable(element, name);
-    if (values.at(-1) !== value) {
-      values.push(value);
-    }
-  });
-  observer.observe(element, { attributes: true, attributeFilter: ['style'] });
-  return { values, stop: () => observer.disconnect() };
 }
 
 // A change of the variable inside one task leaves no trace for a test. The variable of the first
@@ -195,14 +184,13 @@ describe('usePopupAutoResize', () => {
       await renderOpen(payload);
       const popup = screen.getByTestId('popup');
       const positioner = screen.getByTestId('positioner');
-      const widths = recordVariable(popup, '--popup-width');
+      const widths = recordStyleProperty(popup, '--popup-width');
 
       payload.value = 'wide';
 
       await waitFor(() => {
-        expect(widths.values).toEqual(['auto', '120px', '160px', 'auto']);
+        expect(widths).toEqual(['auto', '120px', '160px', 'auto']);
       });
-      widths.stop();
       expect(readVariable(positioner, '--positioner-width')).toBe('160px');
       expect(readVariable(positioner, '--positioner-height')).toBe('60px');
     });
@@ -213,22 +201,21 @@ describe('usePopupAutoResize', () => {
       await renderOpen(payload, () => ({ popup: { style: { transitionDuration: '10s' } } }));
       const popup = screen.getByTestId('popup');
       const positioner = screen.getByTestId('positioner');
-      const widths = recordVariable(popup, '--popup-width');
+      const widths = recordStyleProperty(popup, '--popup-width');
       payload.value = 'wide';
       await waitFor(() => {
-        expect(widths.values).toEqual(['auto', '120px', '160px']);
+        expect(widths).toEqual(['auto', '120px', '160px']);
       });
 
       payload.value = 'wider';
 
       await waitFor(() => {
-        expect(widths.values).toEqual(['auto', '120px', '160px', '200px']);
+        expect(widths).toEqual(['auto', '120px', '160px', '200px']);
       });
       popup.getAnimations().forEach((animation) => animation.finish());
       await waitFor(() => {
-        expect(widths.values).toEqual(['auto', '120px', '160px', '200px', 'auto']);
+        expect(widths).toEqual(['auto', '120px', '160px', '200px', 'auto']);
       });
-      widths.stop();
       expect(readVariable(positioner, '--positioner-width')).toBe('200px');
       expect(readVariable(positioner, '--positioner-height')).toBe('80px');
     });
@@ -297,6 +284,21 @@ describe('usePopupAutoResize', () => {
       });
 
       expectRestored();
+    });
+
+    it('uses the viewport anchor after the consumer removes its inline position', async () => {
+      const position = shallowRef<'relative' | undefined>('relative');
+      await renderOpen(shallowRef('narrow'), () => ({
+        positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+        popup: { style: position.value ? { position: position.value } : {} },
+      }));
+      const { style } = screen.getByTestId('popup');
+      expect(style.position).toBe('relative');
+
+      position.value = undefined;
+      await nextTick();
+      expect(style.position).toBe('absolute');
+      expect(style.bottom).toBe('0px');
     });
 
     it.each([
@@ -425,6 +427,7 @@ describe('usePopupAutoResize', () => {
     it('takes its anchoring styles off the popup before the deactivation hook of a component above it', async () => {
       let popup: HTMLElement | null = null;
       let positionAtDeactivation: string | undefined;
+      const ownPosition = shallowRef(false);
       const Scene = defineComponent({
         setup() {
           onDeactivated(() => {
@@ -435,6 +438,7 @@ describe('usePopupAutoResize', () => {
               root: openRoot,
               triggers: [{ id: 'trigger' }],
               positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+              popup: { style: ownPosition.value ? { position: 'absolute' } : {} },
               content: () => 'Content',
             });
         },
@@ -448,6 +452,13 @@ describe('usePopupAutoResize', () => {
       await nextTick();
 
       expect(positionAtDeactivation).toBe('');
+
+      visible.value = true;
+      ownPosition.value = true;
+      await nextTick();
+      visible.value = false;
+      await nextTick();
+      expect(positionAtDeactivation).toBe('absolute');
     });
 
     it('measures the popup when it comes back after a change of the payload', async () => {
@@ -502,15 +513,14 @@ describe('usePopupAutoResize', () => {
       ));
       await mountWhileHeld();
       const popup = branchElement.value!.querySelector<HTMLElement>('[data-testid="popup"]')!;
-      const widths = recordVariable(popup, '--popup-width');
+      const widths = recordStyleProperty(popup, '--popup-width');
 
       await show();
 
       await waitFor(() => {
         expect(readVariable(screen.getByTestId('positioner'), '--positioner-width')).toBe('120px');
       });
-      widths.stop();
-      expect(widths.values).not.toContain('0px');
+      expect(widths).not.toContain('0px');
     });
 
     it('starts the next resize from the size before the deactivation', async () => {

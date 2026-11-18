@@ -814,33 +814,23 @@ describe('<Select.Popup />', () => {
     async () => {
       const docEl = document.documentElement;
       const previousZoom = docEl.style.zoom;
-      const createRect = (left: number, top: number, width: number, height: number) => ({
-        x: left,
-        y: top,
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-        toJSON: () => ({}),
-      });
-
       try {
         docEl.style.zoom = '0.9';
-
         await render(
-          <div style={{ paddingTop: '100px', paddingLeft: '10px' }}>
+          <div style={{ position: 'absolute', top: `${docEl.clientHeight - 210}px`, left: '10px' }}>
             <Select.Root open defaultValue="item-1">
-              <Select.Trigger data-testid="trigger" style={{ width: '108px', height: '30px' }}>
+              <Select.Trigger style={{ width: '108px', height: '30px' }}>
                 <Select.Value />
               </Select.Trigger>
               <Select.Portal>
                 <Select.Positioner data-testid="positioner">
-                  <Select.Popup data-testid="popup" style={{ maxHeight: '225.538px' }}>
+                  <Select.Popup style={{ maxHeight: '225.538px' }}>
                     <Select.List data-testid="list">
-                      <Select.Item value="item-1">Item 1</Select.Item>
-                      <Select.Item value="item-2">Item 2</Select.Item>
+                      {Array.from({ length: 30 }, (_, i) => (
+                        <Select.Item value={`item-${i + 1}`} style={{ height: '30px' }}>
+                          Item {i + 1}
+                        </Select.Item>
+                      ))}
                     </Select.List>
                   </Select.Popup>
                 </Select.Positioner>
@@ -848,47 +838,24 @@ describe('<Select.Popup />', () => {
             </Select.Root>
           </div>,
         );
-        await flushMicrotasks();
-
         const positioner = screen.getByTestId('positioner');
         const list = screen.getByTestId('list');
-
         await waitFor(() => {
-          expect(positioner).toHaveAttribute('data-side', 'none');
+          expect(positioner.style.bottom).toBe('0px');
         });
+        expect(positioner).toHaveAttribute('data-side', 'none');
+        expect(parseFloat(positioner.style.height)).toBeLessThan(225);
 
-        let scrollTop = 0;
-
-        Object.defineProperty(positioner, 'getBoundingClientRect', {
-          value: () => createRect(10, 0, 108, 202.984375),
-          configurable: true,
-        });
-        Object.defineProperty(list, 'scrollTop', {
-          configurable: true,
-          get: () => scrollTop,
-          set: (value: number) => {
-            scrollTop = value;
-          },
-        });
-        Object.defineProperty(list, 'scrollHeight', {
-          value: 598,
-          configurable: true,
-        });
-        Object.defineProperty(list, 'clientHeight', {
-          value: 226,
-          configurable: true,
-        });
-
-        positioner.style.height = '225.538px';
-        positioner.style.bottom = '0px';
+        list.scrollTop = 100;
+        await fireEvent.scroll(list);
+        expect(positioner.style.height).toBe('226px');
 
         list.scrollTop = 14;
+        const offsetAtZoom = list.scrollTop;
+        expect(offsetAtZoom).toBeGreaterThan(0);
         await fireEvent.scroll(list);
-
-        await waitFor(() => {
-          expect(positioner.style.height).toBe('226px');
-        });
-        expect(scrollTop).toBe(14);
+        expect(list.scrollTop).toBe(offsetAtZoom);
+        expect(positioner.style.height).toBe('226px');
       } finally {
         docEl.style.zoom = previousZoom;
       }

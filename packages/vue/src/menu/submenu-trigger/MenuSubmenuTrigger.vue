@@ -78,6 +78,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
@@ -204,6 +205,7 @@ const { getItemProps, itemRef } = useMenuItem({
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon({ blockPointerEvents: true });
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(store, {
   enabled: () => store.select('hoverEnabled') && props.openOnHover && !isDisabled.value,
   handleClose: () => handleClose,
@@ -282,6 +284,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   props: (attrs) => [
     click.reference,
     hoverProps,
+    { style: hoverStyle.value },
     rootTriggerProps.value,
     // The filterable submenu root replaces the key handler of the generic trigger, because the
     // keys that enter and leave the submenu depend on the orientations of both menus.

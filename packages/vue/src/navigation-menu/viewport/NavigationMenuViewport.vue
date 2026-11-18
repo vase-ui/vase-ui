@@ -27,6 +27,7 @@ import { contains } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
@@ -113,6 +114,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     createElementSetter(shownViewportElement),
   ],
   props: (attrs) => [
+    { style: hoverStyle.value },
     {
       id: viewportId.value,
       onFocusout: handleFocusout,
@@ -122,6 +124,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ],
   children: true,
 });
+const hoverStyle = useHoverPointerStyle(element);
 
 // In a positioner, the two inside focus guards are siblings of the element. Script keeps them
 // there, so the part has one root node. With no positioner, the element holds them.
