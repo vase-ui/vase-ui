@@ -13,6 +13,7 @@ import type { Component } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
+  installPartsInterop,
   nextEndingStyle,
   nextEvent,
   renderOnServer,
@@ -1031,7 +1032,7 @@ describe('usePopupViewport', () => {
       expect(current).toHaveAttribute('data-current', 'true');
       expect(current.textContent).toBe('content');
 
-      const app = createSSRApp(PopupViewportHydration);
+      const app = installPartsInterop(createSSRApp(PopupViewportHydration));
       onTestFinished(() => {
         app.unmount();
         container.remove();

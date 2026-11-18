@@ -426,12 +426,20 @@ describe('usePopupAutoResize', () => {
   describe('KeepAlive', () => {
     it('takes its anchoring styles off the popup before the deactivation hook of a component above it', async () => {
       let popup: HTMLElement | null = null;
-      let positionAtDeactivation: string | undefined;
+      let stylesAtDeactivation: string[] = [];
       const ownPosition = shallowRef(false);
       const Scene = defineComponent({
         setup() {
           onDeactivated(() => {
-            positionAtDeactivation = popup?.style.position;
+            if (popup) {
+              const { style } = popup;
+              stylesAtDeactivation = [
+                style.position,
+                style.bottom,
+                style.left,
+                style.getPropertyPriority('left'),
+              ];
+            }
           });
           return () =>
             scene({
@@ -447,18 +455,20 @@ describe('usePopupAutoResize', () => {
       await render(() => <KeepAlive>{visible.value ? <Scene /> : null}</KeepAlive>);
       popup = screen.getByTestId('popup');
       expect(popup.style.position).toBe('absolute');
+      popup.style.setProperty('left', '0px', 'important');
 
       visible.value = false;
       await nextTick();
 
-      expect(positionAtDeactivation).toBe('');
+      expect(stylesAtDeactivation).toEqual(['', '', '0px', 'important']);
 
       visible.value = true;
       ownPosition.value = true;
       await nextTick();
+      popup.style.setProperty('left', '0px', 'important');
       visible.value = false;
       await nextTick();
-      expect(positionAtDeactivation).toBe('absolute');
+      expect(stylesAtDeactivation).toEqual(['absolute', '', '0px', 'important']);
     });
 
     it('measures the popup when it comes back after a change of the payload', async () => {

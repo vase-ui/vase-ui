@@ -6,6 +6,7 @@ import {
   nextTick,
   onActivated,
   onDeactivated,
+  onMounted,
   shallowRef,
 } from 'vue';
 import type { Ref } from 'vue';
@@ -60,12 +61,17 @@ describe('useDomEffect', () => {
     const calls: string[] = [];
     let phase = 'mount';
     const press = () => target.querySelector('button')?.click();
-    const install = () =>
+    const install = () => {
       useDomEffect([key], () => {
         const button = target.querySelector('button')!;
         connections.push([source.value!.isConnected, button.isConnected]);
         return addEventListener(button, 'click', () => calls.push(phase));
       });
+      onMounted(() => {
+        phase = 'mount';
+        press();
+      });
+    };
     const Branch = defineComponent(() => {
       onDeactivated(() => {
         phase = 'hold';
@@ -87,6 +93,7 @@ describe('useDomEffect', () => {
       );
     });
     await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
+    expect(calls).toContain('mount');
     calls.length = 0;
     connections.length = 0;
     key.value++;

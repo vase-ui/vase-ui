@@ -87,6 +87,13 @@ describe('useOpenChangeComplete', () => {
       expect(onComplete).toHaveBeenCalledTimes(2);
     });
 
+    it('restarts when enabled changes from its default to true', async () => {
+      const onComplete = vi.fn();
+      const { setProps } = await render(<Test onComplete={onComplete} />);
+      await setProps({ enabled: true });
+      expect(onComplete).toHaveBeenCalledTimes(2);
+    });
+
     it('starts no wait while it is disabled, and starts one when it becomes enabled', async () => {
       const onComplete = vi.fn();
 
