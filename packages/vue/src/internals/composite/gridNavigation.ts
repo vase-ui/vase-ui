@@ -1,15 +1,17 @@
 import { toValue } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import type { DisabledIndices } from './listIndex';
-import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from './listIndex';
 import {
+  ARROW_DOWN,
+  ARROW_LEFT,
+  ARROW_RIGHT,
   createGridCellMap,
   getGridCellIndexOfCorner,
   getGridCellIndices,
   getGridColumns,
   getGridNavigatedIndex,
-  isListIndexDisabled,
   isIndexOutOfListBounds,
+  isListIndexDisabled,
 } from './listIndex';
 
 type CompositeGridElementsRef = Readonly<Ref<readonly (HTMLElement | null)[]>>;

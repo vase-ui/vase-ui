@@ -68,8 +68,10 @@ import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
-import { useCompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
+import {
+  useCompositeItem,
+  useCompositeRootContext,
+} from '../../internals/composite/root/useCompositeRoot';
 import { useButton } from '../../internals/use-button/useButton';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';

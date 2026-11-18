@@ -79,8 +79,10 @@ export interface TabsTabProps
 import { computed, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
-import { useCompositeRootContext } from '../../internals/composite/root/useCompositeRoot';
+import {
+  useCompositeItem,
+  useCompositeRootContext,
+} from '../../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';

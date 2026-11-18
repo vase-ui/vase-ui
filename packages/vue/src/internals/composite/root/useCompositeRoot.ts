@@ -24,8 +24,7 @@ import {
   isNativeInput,
   scrollIntoViewIfNeeded,
 } from '../listIndex';
-import type { DisabledIndices } from '../listIndex';
-import type { ModifierKey } from '../listIndex';
+import type { DisabledIndices, ModifierKey } from '../listIndex';
 import { observeRootNode } from '../../observeRootNode';
 import { useCompositeList, useCompositeListItem } from '../list/useCompositeList';
 import type { CompositeMetadata, UseCompositeListItemParameters } from '../list/useCompositeList';

@@ -12,9 +12,8 @@ import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPa
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
 import { DirectionProvider } from '../../../direction-provider';
 import type { TextDirection } from '../../../direction-provider';
-import { useCompositeRootContext } from './useCompositeRoot';
+import { useCompositeRoot, useCompositeRootContext } from './useCompositeRoot';
 import { gridNavigation } from '../gridNavigation';
-import { useCompositeRoot } from './useCompositeRoot';
 
 async function pressKey(item: HTMLElement, key: string) {
   await fireEvent.keyDown(item, { key });
