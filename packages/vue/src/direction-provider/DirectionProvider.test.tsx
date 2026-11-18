@@ -41,6 +41,15 @@ describe('<DirectionProvider />', () => {
     ]);
   });
 
+  it('returns ltr when the direction changes to null', async () => {
+    const { setProps } = await render(<DirectionProviderTest direction="rtl" />);
+    const direction = screen.getByTestId('direction');
+    expect(direction.textContent).toBe('rtl');
+
+    await setProps({ direction: null });
+    expect(direction.textContent).toBe('ltr');
+  });
+
   it('provides the configured direction to descendants', async () => {
     const { setProps } = await render(<DirectionProviderTest direction="rtl" />);
 

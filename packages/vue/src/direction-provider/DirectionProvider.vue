@@ -22,7 +22,7 @@ defineSlots<{ default?: () => unknown }>();
 
 provide(
   DirectionContext,
-  computed(() => props.direction),
+  computed(() => props.direction ?? 'ltr'),
 );
 </script>
 
