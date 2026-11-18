@@ -66,5 +66,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/accordion/item/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/root/AccordionRootContext.ts",
+      "member": "accordionStateAttributesMapping",
+      "witness": "packages/vue/src/accordion/root/AccordionRoot.test.tsx"
+    }
+  ]
 }

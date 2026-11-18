@@ -180,13 +180,11 @@ const state = computed<AccordionRootState<Value>>(() => ({
 }));
 
 provide(AccordionRootContext, {
-  disabled: computed(() => props.disabled),
   handleValueChange,
   hiddenUntilFound: computed(() => props.hiddenUntilFound),
   itemList,
   keepMounted: computed(() => props.keepMounted ?? false),
   state,
-  value: openValues,
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

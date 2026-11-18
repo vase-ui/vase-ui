@@ -53,16 +53,17 @@ export type AccordionItemChangeEventDetails =
 
 <script setup lang="ts">
 import { computed, provide, shallowRef, type ShallowRef } from 'vue';
-import { CollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
-import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
+import { useCollapsibleRoot } from '../../collapsible/root/CollapsibleRootContext';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useAccordionRootContext } from '../root/AccordionRootContext';
+import {
+  accordionStateAttributesMapping,
+  useAccordionRootContext,
+} from '../root/AccordionRootContext';
 import { AccordionItemContext } from './AccordionItemContext';
-import { accordionStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
 
@@ -84,23 +85,17 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionItemState>;
 }>();
 
-const {
-  disabled: contextDisabled,
-  handleValueChange,
-  itemList,
-  state: rootState,
-  value: openValues,
-} = useAccordionRootContext();
+const { handleValueChange, itemList, state: rootState } = useAccordionRootContext();
 
 const fallbackValue = useVaseUiId();
 
 const itemValue = computed(() => props.value ?? fallbackValue.value);
 
-const isDisabled = computed(() => props.disabled || contextDisabled.value);
+const isDisabled = computed(() => props.disabled || rootState.value.disabled);
 
-const isOpen = computed(() => openValues.value.includes(itemValue.value));
+const isOpen = computed(() => rootState.value.value.includes(itemValue.value));
 
-function onOpenChange(nextOpen: boolean, eventDetails: AccordionItemChangeEventDetails) {
+function requestOpen(nextOpen: boolean, eventDetails: AccordionItemChangeEventDetails) {
   emit('openChange', nextOpen, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -110,31 +105,15 @@ function onOpenChange(nextOpen: boolean, eventDetails: AccordionItemChangeEventD
   handleValueChange(itemValue.value, nextOpen, eventDetails);
 }
 
-// The call gives no `element`. The state of the item has no transition status, so the element of
-// the item never has `data-starting-style`. The panel reads its own computed style while its
-// status is `starting`.
-const collapsible = useCollapsibleRoot({
-  open: isOpen,
-  onOpenChange,
-  disabled: isDisabled,
-});
-
-provide(CollapsibleRootContext, {
-  ...collapsible,
-  onOpenChange,
-  state: computed(() => ({
-    open: collapsible.open.value,
-    disabled: collapsible.disabled.value,
-    transitionStatus: collapsible.transitionStatus.value,
-  })),
-});
+// The panel owns the transition attributes. The item has no enter layout to measure.
+const { mounted } = useCollapsibleRoot(isOpen, isDisabled, requestOpen);
 
 const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: itemList });
 
 const state = computed<AccordionItemState>(() => ({
   ...rootState.value,
-  hidden: !isOpen.value && !collapsible.mounted.value,
+  hidden: !isOpen.value && !mounted.value,
   index: index.value,
   disabled: isDisabled.value,
   open: isOpen.value,

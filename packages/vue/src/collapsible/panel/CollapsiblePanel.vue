@@ -46,8 +46,10 @@ import { useRegisteredId } from '../../internals/labelable-provider/useRegistere
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
-import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
+import {
+  collapsibleStateAttributesMapping,
+  useCollapsibleRootContext,
+} from '../root/CollapsibleRootContext';
 import * as CollapsiblePanelCssVars from './CollapsiblePanelCssVars';
 import { useCollapsiblePanel } from './useCollapsiblePanel';
 
@@ -83,13 +85,10 @@ if (process.env.NODE_ENV !== 'production') {
 const {
   defaultPanelId,
   mounted,
-  onOpenChange,
-  open,
+  requestOpen,
   registerPanelId,
   setMounted,
-  setOpen,
-  state,
-  transitionStatus,
+  state: disclosure,
 } = useCollapsibleRootContext();
 
 const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
@@ -114,15 +113,14 @@ const {
   id: () => panelId.value,
   keepMounted: () => props.keepMounted ?? false,
   mounted,
-  onOpenChange,
-  open,
+  requestOpen,
+  open: () => disclosure.value.open,
   setMounted,
-  setOpen,
-  transitionStatus,
+  transitionStatus: () => disclosure.value.transitionStatus,
 });
 
 const panelState = computed<CollapsiblePanelState>(() => ({
-  ...state.value,
+  ...disclosure.value,
   transitionStatus: panelTransitionStatus.value,
 }));
 

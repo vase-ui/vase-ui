@@ -49,8 +49,10 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
-import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
-import { useAccordionRootContext } from '../root/AccordionRootContext';
+import {
+  accordionStateAttributesMapping,
+  useAccordionRootContext,
+} from '../root/AccordionRootContext';
 import * as AccordionPanelCssVars from './AccordionPanelCssVars';
 
 defineOptions({ inheritAttrs: false });
@@ -92,12 +94,10 @@ if (process.env.NODE_ENV !== 'production') {
 const {
   defaultPanelId,
   mounted,
-  onOpenChange,
-  open,
+  requestOpen,
   registerPanelId,
   setMounted,
-  setOpen,
-  transitionStatus,
+  state: disclosure,
 } = useCollapsibleRootContext();
 
 const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
@@ -122,11 +122,10 @@ const {
   id: () => panelId.value,
   keepMounted: isKeptMounted,
   mounted,
-  onOpenChange,
-  open,
+  requestOpen,
+  open: () => disclosure.value.open,
   setMounted,
-  setOpen,
-  transitionStatus,
+  transitionStatus: () => disclosure.value.transitionStatus,
 });
 
 const { state, triggerId } = useAccordionItemContext();

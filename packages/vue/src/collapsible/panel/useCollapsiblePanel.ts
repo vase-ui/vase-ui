@@ -59,7 +59,7 @@ const EMPTY_DIMENSIONS: Dimensions = {
 export function useCollapsiblePanel(
   parameters: UseCollapsiblePanelParameters,
 ): UseCollapsiblePanelReturnValue {
-  const { onOpenChange, setMounted, setOpen } = parameters;
+  const { requestOpen, setMounted } = parameters;
 
   const isOpen = () => toValue(parameters.open);
   const isMounted = () => toValue(parameters.mounted);
@@ -474,7 +474,7 @@ export function useCollapsiblePanel(
     const revealedPanel = event.currentTarget as HTMLElement;
     const eventDetails = createChangeEventDetails(REASONS.none, event);
 
-    onOpenChange(true, eventDetails);
+    requestOpen(true, eventDetails);
 
     if (eventDetails.isCanceled) {
       // The panel must stay hidden. The revert writes `hidden` again, so the content stays
@@ -497,8 +497,6 @@ export function useCollapsiblePanel(
       CollapsiblePanelDataAttributes.startingStyle,
     );
     revealedPanel.removeAttribute(CollapsiblePanelDataAttributes.startingStyle);
-
-    setOpen(true);
 
     // A controlled root can ignore the open. The panel then goes back to the closed state when the
     // browser has measured the match.
@@ -743,13 +741,12 @@ export interface UseCollapsiblePanelParameters {
    * `keepMounted` or `hiddenUntilFound` is enabled.
    */
   mounted: MaybeRefOrGetter<boolean>;
-  onOpenChange: (open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void;
+  requestOpen: (open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void;
   /**
    * Whether the collapsible panel is currently open.
    */
   open: MaybeRefOrGetter<boolean>;
   setMounted: (nextMounted: boolean) => void;
-  setOpen: (nextOpen: boolean) => void;
   transitionStatus: MaybeRefOrGetter<TransitionStatus>;
 }
 

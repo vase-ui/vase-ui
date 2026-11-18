@@ -59,24 +59,19 @@ const stateAttributesMapping: StateAttributesMapping<CollapsibleRootState> = {
   ...transitionStatusMapping,
 };
 
-const {
-  panelId,
-  open,
-  handleTrigger,
-  state: rootState,
-  disabled: contextDisabled,
-} = useCollapsibleRootContext();
+const { panelId, handleTrigger, state: disclosure } = useCollapsibleRootContext();
 
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
-  () => props.disabled || contextDisabled.value || (props.nativeButton && fieldsetDisabled.value),
+  () =>
+    props.disabled || disclosure.value.disabled || (props.nativeButton && fieldsetDisabled.value),
 );
 
 const state = computed<CollapsibleTriggerState>(() => ({
-  ...rootState.value,
+  ...disclosure.value,
   disabled: isDisabled.value,
 }));
 
@@ -89,8 +84,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   state,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
-      'aria-expanded': open.value,
+      'aria-controls': disclosure.value.open ? panelId.value : undefined,
+      'aria-expanded': disclosure.value.open,
       onClick: handleTrigger,
     },
     attrs,

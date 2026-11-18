@@ -8,7 +8,7 @@ import type {
 } from '../../internals/types';
 import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
 import type { AccordionItemState } from '../item/AccordionItem.vue';
-import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
+import { accordionStateAttributesMapping } from '../root/AccordionRootContext';
 
 export interface AccordionTriggerState extends AccordionItemState {}
 
@@ -66,14 +66,15 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionTriggerState>;
 }>();
 
-const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsibleRootContext();
+const { panelId, handleTrigger, state: disclosure } = useCollapsibleRootContext();
 
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
-  () => props.disabled || contextDisabled.value || (props.nativeButton && fieldsetDisabled.value),
+  () =>
+    props.disabled || disclosure.value.disabled || (props.nativeButton && fieldsetDisabled.value),
 );
 
 const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
@@ -100,8 +101,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   state,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
-      'aria-expanded': open.value,
+      'aria-controls': disclosure.value.open ? panelId.value : undefined,
+      'aria-expanded': disclosure.value.open,
       id: triggerId.value,
       onClick: handleTrigger,
     },
