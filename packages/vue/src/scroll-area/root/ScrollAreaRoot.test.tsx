@@ -19,6 +19,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  installPartsInterop,
   isJSDOM,
   nextEvent,
   renderOnServer,
@@ -45,9 +46,12 @@ function getAttributeFlags(element: Element, names: string[]) {
   return Object.fromEntries(names.map((name) => [name, element.hasAttribute(name)]));
 }
 
-async function withMockResizeObserver(run: (notifyResizeObserver: () => void) => Promise<void>) {
+async function withMockResizeObserver(
+  run: (notify: () => void, deliveryFor: (target: Element) => () => void) => Promise<void>,
+) {
   const originalResizeObserver = window.ResizeObserver;
   const observers = new Set<ResizeObserverMock>();
+  const deliveries = new WeakMap<Element, () => void>();
 
   class ResizeObserverMock implements ResizeObserver {
     callback: ResizeObserverCallback;
@@ -56,8 +60,9 @@ async function withMockResizeObserver(run: (notifyResizeObserver: () => void) =>
       this.callback = callback;
     }
 
-    observe() {
+    observe(target: Element) {
       observers.add(this);
+      deliveries.set(target, () => this.callback([], this));
     }
 
     unobserve() {}
@@ -74,10 +79,17 @@ async function withMockResizeObserver(run: (notifyResizeObserver: () => void) =>
   window.ResizeObserver = ResizeObserverMock;
 
   try {
-    await run(() => {
-      expect(observers.size).toBeGreaterThan(0);
-      observers.forEach((observer) => observer.callback([], observer));
-    });
+    await run(
+      () => {
+        expect(observers.size).toBeGreaterThan(0);
+        observers.forEach((observer) => observer.callback([], observer));
+      },
+      (target) => {
+        const deliver = deliveries.get(target);
+        if (!deliver) throw new Error('No observer for this element.');
+        return deliver;
+      },
+    );
   } finally {
     window.ResizeObserver = originalResizeObserver;
   }
@@ -179,6 +191,68 @@ describe('<ScrollArea.Root />', () => {
       expect(
         getComputedStyle(verticalThumb).getPropertyValue('--scroll-area-thumb-height'),
       ).not.toBe('0px');
+    });
+
+    it.each(['viewport', 'content'])('ignores a resize from the previous %s', async (part) => {
+      await withMockResizeObserver(async (_, deliveryFor) => {
+        const tag = shallowRef<'div' | 'section'>('div');
+        await render(() => (
+          <ScrollArea.Root>
+            <ScrollArea.Viewport
+              as={part === 'viewport' ? tag.value : 'div'}
+              data-testid="viewport"
+              style={{ height: '100px' }}
+            >
+              <ScrollArea.Content
+                as={part === 'content' ? tag.value : 'div'}
+                data-testid="content"
+                style={{ height: '50px' }}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        ));
+
+        const previous = deliveryFor(screen.getByTestId(part));
+        previous();
+        tag.value = 'section';
+        await nextTick();
+        const current = deliveryFor(screen.getByTestId(part));
+        current();
+        const viewport = screen.getByTestId('viewport');
+        screen.getByTestId('content').style.height = '300px';
+
+        previous();
+        await nextTick();
+        expect(viewport.tabIndex).toBe(-1);
+        current();
+        await nextTick();
+        expect(viewport.tabIndex).toBe(0);
+      });
+    });
+
+    it('keeps the new scrollbar width when the previous scrollbar leaves', async () => {
+      const previous = shallowRef(true);
+      const replacement = shallowRef(false);
+      await render(() => (
+        <ScrollArea.Root>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100px', height: '100px' }}>
+            <div style={{ width: '300px', height: '300px' }} />
+          </ScrollArea.Viewport>
+          {previous.value && <ScrollArea.Scrollbar style={{ width: '10px' }} />}
+          {replacement.value && <ScrollArea.Scrollbar style={{ width: '20px' }} />}
+          <ScrollArea.Scrollbar orientation="horizontal" style={{ height: '10px' }} />
+          <ScrollArea.Corner data-testid="corner" />
+        </ScrollArea.Root>
+      ));
+      const corner = await screen.findByTestId('corner');
+      expect(corner.style.width).toBe('10px');
+      replacement.value = true;
+      await nextTick();
+      expect(corner.style.width).toBe('20px');
+      previous.value = false;
+      await nextTick();
+      await fireEvent.scroll(screen.getByTestId('viewport'));
+      expect(corner.style.width).toBe('20px');
     });
 
     it('shows scrollbars after mount compute before the first ResizeObserver measurement', async () => {
@@ -1515,7 +1589,7 @@ describe('<ScrollArea.Root />', () => {
       const shadowRoot = host.attachShadow({ mode: 'open' });
       const container = document.createElement('div');
       shadowRoot.append(container);
-      const app = createApp({ render: () => <ScrollArea.Root /> });
+      const app = installPartsInterop(createApp({ render: () => <ScrollArea.Root /> }));
       onTestFinished(() => {
         app.unmount();
         host.remove();
@@ -1600,13 +1674,15 @@ describe('<ScrollArea.Root />', () => {
       );
       const container = frameDocument.createElement('div');
       frameDocument.body.append(container);
-      const app = createApp({
-        render: () => (
-          <CSPProvider nonce="test-nonce">
-            <ScrollArea.Root />
-          </CSPProvider>
-        ),
-      });
+      const app = installPartsInterop(
+        createApp({
+          render: () => (
+            <CSPProvider nonce="test-nonce">
+              <ScrollArea.Root />
+            </CSPProvider>
+          ),
+        }),
+      );
       onTestFinished(() => {
         app.unmount();
       });
@@ -1636,13 +1712,15 @@ describe('<ScrollArea.Root />', () => {
     it('writes the nonce attribute on the style element of the first client render', () => {
       const container = document.createElement('div');
       document.body.append(container);
-      const app = createApp({
-        render: () => (
-          <CSPProvider nonce="test-nonce">
-            <ScrollArea.Root />
-          </CSPProvider>
-        ),
-      });
+      const app = installPartsInterop(
+        createApp({
+          render: () => (
+            <CSPProvider nonce="test-nonce">
+              <ScrollArea.Root />
+            </CSPProvider>
+          ),
+        }),
+      );
       onTestFinished(() => {
         app.unmount();
         container.remove();

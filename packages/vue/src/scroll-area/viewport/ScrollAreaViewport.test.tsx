@@ -134,6 +134,38 @@ describe('<ScrollArea.Viewport />', () => {
       },
     );
 
+    it('ignores an animation from the previous viewport', async () => {
+      vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(() => {});
+      const animation = document.body.animate({ opacity: [1, 1] }, 10000);
+      animation.pause();
+      onTestFinished(() => animation.cancel());
+      const read = vi.spyOn(Element.prototype, 'getAnimations').mockImplementation(function (
+        this: Element,
+      ) {
+        return this.localName === 'section' ? [animation] : [];
+      });
+      const tag = shallowRef<'section' | 'article'>('section');
+      await render(() => (
+        <ScrollArea.Root>
+          <ScrollArea.Viewport as={tag.value} data-testid="viewport" style={{ height: '100px' }}>
+            <div data-testid="content" style={{ height: '50px' }} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      ));
+      const previous = screen.getByTestId('viewport');
+      await waitFor(() => expect(read.mock.contexts).toContain(previous));
+      tag.value = 'article';
+      await nextTick();
+      const viewport = screen.getByTestId('viewport');
+      screen.getByTestId('content').style.height = '300px';
+      animation.finish();
+      await animation.finished;
+      await flushMicrotasks();
+      expect(viewport.tabIndex).toBe(-1);
+      await fireEvent.scroll(viewport);
+      expect(viewport.tabIndex).toBe(0);
+    });
+
     it.each([
       ['no infinite animation', undefined],
       ['infinite iterations', { iterations: Infinity }],
