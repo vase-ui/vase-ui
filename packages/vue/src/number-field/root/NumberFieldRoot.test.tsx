@@ -255,15 +255,13 @@ describe('<NumberField />', () => {
       expect(handleChange.mock.calls[0][0]).toBe(42);
     });
 
-    it('changes the value for a `change` event that has no `input` event', async () => {
+    it('ignores a change event without an input event', async () => {
       const handleChange = vi.fn();
       await render(<NumberFieldBase.Root onValueChange={handleChange} />);
 
       await fireEvent.change(getHiddenInput(), { target: { value: '42' } });
 
-      expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(handleChange.mock.calls[0][0]).toBe(42);
-      expect(handleChange.mock.calls[0][1].event.type).toBe('change');
+      expect(handleChange).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -323,7 +321,7 @@ describe('<NumberField />', () => {
       },
     );
 
-    it('handles a `change` event that has the value of the last handled event, after the parent cleared the value', async () => {
+    it('takes the same number again after the parent clears the value', async () => {
       const handleChange = vi.fn();
       const value = shallowRef<number | null>(null);
       await render(() => (
@@ -338,7 +336,7 @@ describe('<NumberField />', () => {
       await flushMicrotasks();
       expect(getHiddenInput().value).toBe('');
 
-      await fireEvent.change(getHiddenInput(), { target: { value: '42' } });
+      await fireEvent.input(getHiddenInput(), { target: { value: '42' } });
 
       expect(handleChange.mock.calls.map(([next]) => next)).toEqual([42, 42]);
     });
@@ -360,7 +358,7 @@ describe('<NumberField />', () => {
       const handleChange = vi.fn();
       await render(<NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />);
 
-      await fireEvent.change(getHiddenInput(), { target: { value: '' } });
+      await fireEvent.input(getHiddenInput(), { target: { value: '' } });
 
       expect(handleChange.mock.lastCall?.[0]).toBe(null);
       expect(getHiddenInput().value).toBe('');
@@ -518,6 +516,26 @@ describe('<NumberField />', () => {
   });
 
   describe('VUE-81: the state that the input got before the hydration', () => {
+    it('keeps the visible edit when both inputs changed before hydration', async () => {
+      const props = { value: 5 };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(NumberFieldRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(server) {
+          within(server).getByTestId<HTMLInputElement>('input').value = '7';
+          server.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value = '9';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model')).toHaveTextContent('7');
+      expect(fixture.getByTestId('changes').textContent).toBe('7 (input-change)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('7');
+      expect(getHiddenInput().value).toBe('7');
+    });
+
     it('takes the value that a program wrote into the hidden input', async () => {
       const props = { value: 5 };
       const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
@@ -700,7 +718,7 @@ describe('<NumberField />', () => {
         },
       );
 
-      it('handles a `change` event that has the value that the reset replaced', async () => {
+      it('takes the same number again after a native reset', async () => {
         const handleChange = vi.fn();
         await render(
           <form data-testid="form">
@@ -712,7 +730,7 @@ describe('<NumberField />', () => {
         await settleReset();
         expect(getHiddenInput().value).toBe('5');
 
-        await fireEvent.change(getHiddenInput(), { target: { value: '9' } });
+        await fireEvent.input(getHiddenInput(), { target: { value: '9' } });
 
         expect(handleChange.mock.calls.map(([value]) => value)).toEqual([9, 5, 9]);
       });
@@ -3206,7 +3224,7 @@ describe('<NumberField />', () => {
       const hiddenInput = document.querySelector('input[type="number"][name="quantity"]');
 
       expect(hiddenInput).not.toBe(null);
-      await fireEvent.change(hiddenInput!, { target: { value: '42' } });
+      await fireEvent.input(hiddenInput!, { target: { value: '42' } });
 
       expect(onValueChange.mock.calls.length).toBe(1);
       expect(onValueChange.mock.calls[0][0]).toBe(42);
@@ -3227,7 +3245,7 @@ describe('<NumberField />', () => {
       const hiddenInput = document.querySelector('input[type="number"][name="quantity"]');
 
       expect(hiddenInput).not.toBe(null);
-      await fireEvent.change(hiddenInput!, { target: { value: '42' } });
+      await fireEvent.input(hiddenInput!, { target: { value: '42' } });
 
       expect(validate).toHaveBeenCalled();
       expect(validate.mock.calls.every(([value]) => value === 42)).toBe(true);
@@ -3268,7 +3286,7 @@ describe('<NumberField />', () => {
         // A disabled control is not marked invalid.
         expect(input.getAttribute('aria-invalid')).toBe(ariaInvalid);
 
-        await fireEvent.change(hiddenInput, { target: { value: '42' } });
+        await fireEvent.input(hiddenInput, { target: { value: '42' } });
 
         expect(onValueChange).not.toHaveBeenCalled();
         expect(input).toHaveValue('1');
@@ -3300,7 +3318,7 @@ describe('<NumberField />', () => {
 
         expect(hiddenInput).not.toBe(null);
 
-        await fireEvent.change(hiddenInput, { target: { value: '42' } });
+        await fireEvent.input(hiddenInput, { target: { value: '42' } });
 
         expect(onValueChange).not.toHaveBeenCalled();
         expect(input).toHaveValue('1');
@@ -3922,7 +3940,7 @@ describe('<NumberField />', () => {
       const onValueChange = vi.fn();
       await render(<NumberField defaultValue={5} onValueChange={onValueChange} />);
 
-      await fireEvent.change(getHiddenInput(), { target: { value: '' } });
+      await fireEvent.input(getHiddenInput(), { target: { value: '' } });
 
       expect(screen.getByRole('textbox')).toHaveValue('');
       expect(onValueChange.mock.lastCall?.[0]).toBe(null);
@@ -3932,7 +3950,7 @@ describe('<NumberField />', () => {
       const onValueChange = vi.fn();
       await render(<NumberField onValueChange={onValueChange} />);
 
-      await fireEvent.change(getHiddenInput(), { target: { value: '7' } });
+      await fireEvent.input(getHiddenInput(), { target: { value: '7' } });
 
       expect(screen.getByRole('textbox')).toHaveValue('7');
       expect(onValueChange.mock.lastCall?.[0]).toBe(7);
@@ -3947,7 +3965,7 @@ describe('<NumberField />', () => {
         </Field.Root>,
       );
 
-      await fireEvent.change(getHiddenInput(), { target: { value: '7' } });
+      await fireEvent.input(getHiddenInput(), { target: { value: '7' } });
 
       expect(screen.getByRole('textbox')).toHaveValue('');
       expect(validate.mock.lastCall?.[0]).toBe(7);

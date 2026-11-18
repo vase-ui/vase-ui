@@ -1003,7 +1003,6 @@ describe('<OTPField.Input />', () => {
   describe('the text of a slot', () => {
     it.each([
       { name: 'an `input` event', types: ['input'] },
-      { name: 'a `change` event', types: ['change'] },
       { name: 'an `input` and a `change` event', types: ['input', 'change'] },
     ] as const)(
       'takes a code that $name reports for the first slot one time',
@@ -1025,8 +1024,7 @@ describe('<OTPField.Input />', () => {
         inputs[0].focus();
         await flushMicrotasks();
 
-        // A program that fills a form writes the text and sends `input`, `change` or both. No
-        // microtask runs between the events.
+        // The input and change events of an autofill can arrive in one task.
         inputs[0].value = '12a34b56';
         for (const type of types) {
           inputs[0].dispatchEvent(new Event(type, { bubbles: true }));
@@ -1080,7 +1078,7 @@ describe('<OTPField.Input />', () => {
       expect(writes).toEqual([]);
     });
 
-    it('takes a `change` event for the character that the input had before a change of the parent', async () => {
+    it('takes the previous character again after a change of the parent', async () => {
       const value = shallowRef('1');
       const onValueChange = vi.fn();
 
@@ -1101,16 +1099,15 @@ describe('<OTPField.Input />', () => {
 
       expect(firstInput.value).toBe('');
 
-      // A program that fills a form writes the character and sends only `change`.
       firstInput.value = '1';
-      firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+      firstInput.dispatchEvent(new Event('input', { bubbles: true }));
       await flushMicrotasks();
 
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(onValueChange).toHaveBeenLastCalledWith('1', expect.anything());
     });
 
-    it('takes a `change` event for the text that the input had before the end of a composition', async () => {
+    it('takes the same text again after a composition', async () => {
       const onValueChange = vi.fn((_: string, eventDetails: OTPField.Root.ChangeEventDetails) => {
         eventDetails.cancel();
       });
@@ -1130,7 +1127,7 @@ describe('<OTPField.Input />', () => {
       expect(firstInput.value).toBe('');
 
       firstInput.value = '1';
-      firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+      firstInput.dispatchEvent(new Event('input', { bubbles: true }));
       await flushMicrotasks();
 
       expect(onValueChange).toHaveBeenCalledTimes(2);
@@ -1140,7 +1137,7 @@ describe('<OTPField.Input />', () => {
       { name: 'read-only', props: { readOnly: true } },
       { name: 'disabled', props: { disabled: true } },
     ] as const)(
-      'ignores a text that autofill writes two times with `change` into a slot of a $name field',
+      'ignores a text that autofill writes twice with `input` into a slot of a $name field',
       async ({ props }) => {
         const onValueChange = vi.fn();
 
@@ -1150,7 +1147,7 @@ describe('<OTPField.Input />', () => {
 
         async function writeText(text: string) {
           firstInput.value = text;
-          firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+          firstInput.dispatchEvent(new Event('input', { bubbles: true }));
           await flushMicrotasks();
         }
 

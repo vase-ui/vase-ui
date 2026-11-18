@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { platform } from '../../common/platform';
@@ -7,6 +7,7 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
+import { useInputRender } from '../../internals/useInputRender';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import {
@@ -78,27 +79,12 @@ export function useFilterDropdownInput(
     context.setInputFocusVisible(false);
   }
 
-  // The value that the input has after the last event that the part handled, or after the last
-  // write of Vue or of the part.
-  let handledValue: string | undefined;
-
-  function syncHandledValue() {
-    handledValue = inputElement.value?.value;
-  }
-  onMounted(syncHandledValue);
-  watch(() => composingValue.value ?? value.value, syncHandledValue, { flush: 'post' });
-
-  // Vue writes the DOM value only when the part renders. The part does not render when a listener
-  // cancels the change or the consumer keeps its value.
-  function writeValueToInput() {
-    const input = inputElement.value;
-    if (!input || isComposing) {
-      return;
+  const { valueProps, renderValue } = useInputRender();
+  // A write to the input while a composition runs stops the composition.
+  function restoreText() {
+    if (!isComposing) {
+      renderValue();
     }
-    if (input.value !== value.value) {
-      input.value = value.value;
-    }
-    handledValue = input.value;
   }
 
   const compositionTimeout = useTimeout();
@@ -129,35 +115,34 @@ export function useFilterDropdownInput(
     isComposing = false;
     composingValue.value = null;
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    handledValue = nextValue;
     commitValue(nextValue, event);
-    // WebKit sends the last `input` event of a composition after `compositionend`, so the write
+    // WebKit sends the last `input` event of a composition after `compositionend`, so the render
     // waits for the next task.
-    compositionTimeout.start(0, writeValueToInput);
+    compositionTimeout.start(0, restoreText);
   }
 
-  // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-  // value is new.
   function handleInput(event: Event) {
     const nextValue = (event.currentTarget as HTMLInputElement).value;
-    if (!isComposing && nextValue === handledValue) {
-      return;
-    }
-    handledValue = nextValue;
 
     if (isComposing) {
       composingValue.value = nextValue;
       return;
     }
+    const { inputType } = event as InputEvent;
+    if (
+      compositionTimeout.isStarted() &&
+      (inputType === 'insertCompositionText' || inputType === 'insertFromComposition')
+    ) {
+      return;
+    }
     commitValue(nextValue, event);
-    void nextTick(writeValueToInput);
+    restoreText();
   }
 
   const listeners = {
     onCompositionstart: handleCompositionstart,
     onCompositionend: handleCompositionend,
     onInput: handleInput,
-    onChange: handleInput,
     onKeydown() {
       context.setKeyboardModality(true);
     },
@@ -206,7 +191,7 @@ export function useFilterDropdownInput(
           // https://w3c.github.io/aria/#aria-autocomplete
           'aria-autocomplete': undefined,
           'aria-controls': context.listId.value,
-          value: composingValue.value ?? value.value,
+          ...valueProps(composingValue.value ?? value.value),
           ...listeners,
         },
         autocorrect === undefined ? undefined : { autoCorrect: autocorrect },

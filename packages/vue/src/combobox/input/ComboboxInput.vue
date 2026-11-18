@@ -43,8 +43,8 @@ export interface ComboboxInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { isTextControl, useValueBeforeHydration } from '../../common/hydration';
+import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -61,7 +61,8 @@ import { useDeferredServerRender, useLabelableContext } from '../../internals/la
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
-import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
+import { useFormEntryValue } from '../../internals/useFormEntryValue';
+import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -206,35 +207,13 @@ function displayText(value: unknown) {
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-// The value that the input has after the last event that the part handled. A write of Vue or of
-// the part sets it too.
-let handledValue: string | undefined;
+const { valueProps, renderValue } = useInputRender();
 
-function syncHandledValue() {
-  handledValue = (element.value as HTMLInputElement | null)?.value;
-}
-// At the mount the input can hold text that the user typed before the hydration, also in a
-// component in `as`. The last write of Vue, and the server HTML, have the text of the state. The
-// browser removes the line breaks of that text from an input.
-onMounted(() => {
-  const input = element.value;
-  const text = displayText(inputValue.value);
-  handledValue = isTextControl(input) ? sanitizeValue(input, text) : text;
-});
-watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
-
-// Vue writes the DOM value only when the part renders. The part does not render when a listener
-// cancels the change or the consumer keeps its value.
-function writeStateToInput() {
-  const input = element.value as HTMLInputElement | null;
-  if (!input || isComposing) {
-    return;
+// A write to the input while a composition runs stops the composition.
+function restoreText() {
+  if (!isComposing) {
+    renderValue();
   }
-  const text = displayText(inputValue.value);
-  if (input.value !== text) {
-    input.value = text;
-  }
-  handledValue = input.value;
 }
 
 const compositionTimeout = useTimeout();
@@ -251,29 +230,27 @@ function handleCompositionend(event: CompositionEvent) {
   isComposing = false;
   const next = (event.currentTarget as HTMLInputElement).value;
   composingValue.value = null;
-  handledValue = next;
   store.context.setInputValue(next, createChangeEventDetails(REASONS.inputChange, event));
-  // WebKit sends the last `input` event of a composition after `compositionend`, so the write
+  // WebKit sends the last `input` event of a composition after `compositionend`, so the render
   // waits for the next task.
-  compositionTimeout.start(0, writeStateToInput);
+  compositionTimeout.start(0, restoreText);
 }
 
-// React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. Some programs that fill a form send only `change`, and some send both events for
-// one change. WebKit sends the last `input` event of a composition after `compositionend`.
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const value = input.value;
-  if (!isComposing && value === handledValue) {
-    return;
-  }
-  handledValue = value;
-
   const isOpen = open.value;
   const autoHighlightEnabled = Boolean(autoHighlightMode.value);
   // Autofill may not provide `inputType` (Chrome) or may report
   // `insertReplacementText` (Firefox).
   const inputType = (event as InputEvent).inputType;
+  if (
+    !isComposing &&
+    compositionTimeout.isStarted() &&
+    (inputType === 'insertCompositionText' || inputType === 'insertFromComposition')
+  ) {
+    return;
+  }
   const autofillLikeInput = !inputType || inputType === 'insertReplacementText';
   // During composition the input is always considered typed into.
   const shouldOpenOnInput = isComposing || !autofillLikeInput;
@@ -318,7 +295,8 @@ function handleInput(event: Event) {
 
   const inputChangeDetails = createChangeEventDetails(REASONS.inputChange, event);
   store.context.setInputValue(value, inputChangeDetails);
-  void nextTick(writeStateToInput);
+  // A listener can cancel the change, and the consumer can keep its value.
+  restoreText();
 
   if (inputChangeDetails.isCanceled) {
     return;
@@ -559,7 +537,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       store.select('inputProps'),
       store.select('triggerProps', true),
       {
-        ...(writesValue.value ? { value: composingValue.value ?? inputValue.value } : undefined),
+        ...(writesValue.value ? valueProps(composingValue.value ?? inputValue.value) : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
         'aria-labelledby': fieldLabelId.value,
@@ -572,7 +550,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         onInput: handleInput,
-        onChange: handleInput,
         onKeydown: handleKeydown,
       },
       autocorrect === undefined ? undefined : { autoCorrect: autocorrect },

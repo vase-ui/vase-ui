@@ -537,7 +537,7 @@ describe('<Slider.Thumb />', () => {
 
         const slider = screen.getByRole('slider');
         expect(slider).toHaveAttribute('aria-valuenow', '50');
-        await fireEvent.change(slider, { target: { value: '51' } });
+        await fireEvent.input(slider, { target: { value: '51' } });
         expect(handleValueChange.mock.calls.length).toBe(1);
         expect(slider).toHaveAttribute('aria-valuenow', '51');
       });
@@ -555,16 +555,16 @@ describe('<Slider.Thumb />', () => {
         const slider = screen.getByRole('slider');
         expect(slider).toHaveAttribute('aria-valuenow', '50');
 
-        await fireEvent.change(slider, { target: { value: '30' } });
+        await fireEvent.input(slider, { target: { value: '30' } });
         expect(slider).toHaveAttribute('aria-valuenow', '40');
         expect(handleValueChange.mock.calls.length).toBe(1);
-        await fireEvent.change(slider, { target: { value: '30' } });
+        await fireEvent.input(slider, { target: { value: '30' } });
         expect(handleValueChange.mock.calls.length).toBe(1);
 
-        await fireEvent.change(slider, { target: { value: '70' } });
+        await fireEvent.input(slider, { target: { value: '70' } });
         expect(slider).toHaveAttribute('aria-valuenow', '60');
         expect(handleValueChange.mock.calls.length).toBe(2);
-        await fireEvent.change(slider, { target: { value: '70' } });
+        await fireEvent.input(slider, { target: { value: '70' } });
         expect(handleValueChange.mock.calls.length).toBe(2);
       });
 
@@ -588,13 +588,13 @@ describe('<Slider.Thumb />', () => {
         expect(slider).toHaveAttribute('aria-valuenow', '50');
         expect(slider).toHaveAttribute('step', '1e-8');
 
-        await fireEvent.change(slider, { target: { value: '51.1' } });
+        await fireEvent.input(slider, { target: { value: '51.1' } });
         expect(slider).toHaveAttribute('aria-valuenow', '51.1');
 
-        await fireEvent.change(slider, { target: { value: '0.00000005' } });
+        await fireEvent.input(slider, { target: { value: '0.00000005' } });
         expect(slider).toHaveAttribute('aria-valuenow', '5e-8');
 
-        await fireEvent.change(slider, { target: { value: '1e-7' } });
+        await fireEvent.input(slider, { target: { value: '1e-7' } });
         expect(slider).toHaveAttribute('aria-valuenow', '1e-7');
       });
     });
@@ -1835,7 +1835,7 @@ describe('<Slider.Thumb />', () => {
       expect(slider).toHaveAttribute('aria-valuenow', '30');
     });
 
-    it('handles a change event that has no input event before it, after a canceled input event', async () => {
+    it('takes another input event after a canceled edit', async () => {
       const onValueChange = vi.fn((_value: number, details: { cancel: () => void }) => {
         details.cancel();
       });
@@ -1853,9 +1853,8 @@ describe('<Slider.Thumb />', () => {
       await flushMicrotasks();
       onValueChange.mockImplementation(() => {});
 
-      // A program that fills a form can send only `change`.
       slider.value = '55';
-      slider.dispatchEvent(new Event('change', { bubbles: true }));
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
       await flushMicrotasks();
 
       expect(onValueChange).toHaveBeenCalledTimes(2);

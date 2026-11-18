@@ -1,8 +1,10 @@
-import { onBeforeUpdate, onUpdated, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { dispatchTakeEvents, isTextControl } from '../common/hydration';
 import { ownerWindow } from '../common/owner';
+import { sanitizeValue } from './useFormEntryValue';
+import { useInputRender } from './useInputRender';
 import { useKeepAliveState } from './useKeepAliveState';
 
 // `pageshow` comes in the task of `load`, after its listeners. `loadEventEnd` is 0 until then.
@@ -71,57 +73,77 @@ export function useFormRestore(
 }
 
 /**
- * Calls {@link useFormRestore} for a control that takes a restored value through its `input`
- * event. At a restore, an `<input>` or a `<textarea>` whose value is not the value that the part
- * handled last gets the events of {@link dispatchTakeEvents}.
- *
- * While the part waits for its `pageshow` event, as {@link useFormRestore} gives, a render of the
- * part that gives the input its earlier value keeps a value that the part did not handle. Call it in
- * the component that renders the input, because it uses the `onBeforeUpdate` and `onUpdated` hooks
- * of that component.
- * @param input The element of the control.
- * @param getHandledValue Gives the value that the input had after the last event that the part
- * handled, or after the last write of Vue or of the part. The value sanitization of the input type
- * can change the text of the state of the part, so the part does not give that text.
- * @param leaves Passed to {@link dispatchTakeEvents}. `false` for an input that the user cannot
- * focus.
+ * Takes a silent browser restore through the control's input event. Until pageshow, an unrelated
+ * render must leave the browser's text in place. A new model or a refused edit owns the next render.
  */
-export function useFormRestoreAsInput(
+export function useFormRestoreAsInput<Value>(
   input: Readonly<Ref<Element | null>>,
-  getHandledValue: () => string | undefined,
+  getValue: () => Value,
   leaves: boolean,
-): void {
+  uncontrolledText?: () => string | undefined,
+) {
+  const render = useInputRender();
+  const model = computed(getValue);
+  const binding = computed(() => ({ props: render.valueProps(model.value), applied: false }));
   const waitsForPageshow = useFormRestore(input, () => {
     const element = input.value;
-    if (isTextControl(element) && element.value !== getHandledValue()) {
+    if (!isTextControl(element) || element.type === 'hidden') {
+      return;
+    }
+    // A range slider takes its changed thumbs together. A pending render already owns this input.
+    if (model.value !== undefined && !binding.value.applied) {
+      return;
+    }
+    const lastText = model.value === undefined ? uncontrolledText?.() : undefined;
+    const text = String(model.value ?? element.defaultValue);
+    if (
+      lastText !== undefined
+        ? element.value !== lastText
+        : element.value !== text && element.value !== sanitizeValue(element, text)
+    ) {
       dispatchTakeEvents(element, leaves);
     }
   });
 
-  // Chromium restores the form state in a task after the parse, and `pageshow` can come much later.
-  // Vue writes the key `value` at each render, also when the state of the part stays.
-  let unhandled:
-    | {
-        element: HTMLInputElement | HTMLTextAreaElement;
-        value: string;
-        handledValue: string | undefined;
+  const resetTarget = shallowRef<HTMLInputElement | null>(null);
+  watch(
+    [input, resetTarget],
+    ([current, element], [previous]) => {
+      // A replacement input starts with the model, even if the old input held a silent edit.
+      if (current && previous && current !== previous && model.value !== undefined) {
+        render.renderValue();
       }
-    | undefined;
-  onBeforeUpdate(() => {
-    const element = input.value;
-    if (!waitsForPageshow() || !isTextControl(element)) {
-      return;
+      if (element && element === current && model.value !== undefined) {
+        const text = String(model.value ?? '');
+        if (element.defaultValue !== text) {
+          // Vue also sets the value attribute when it binds the restored text, which changes form.reset().
+          element.defaultValue = text;
+        }
+      }
+      resetTarget.value = null;
+    },
+    { flush: 'post' },
+  );
+
+  function valueProps() {
+    const current = binding.value;
+    if (current.applied && waitsForPageshow()) {
+      const element = input.value;
+      const text = String(current.props.value);
+      if (
+        isTextControl(element) &&
+        element.type !== 'hidden' &&
+        element.value !== text &&
+        element.value !== sanitizeValue(element, text)
+      ) {
+        if (element.localName === 'input') {
+          resetTarget.value = element as HTMLInputElement;
+        }
+        return { value: element.value };
+      }
     }
-    const handledValue = getHandledValue();
-    if (element.value !== handledValue) {
-      unhandled = { element, value: element.value, handledValue };
-    }
-  });
-  onUpdated(() => {
-    // A render that gave the input a new value keeps it.
-    if (unhandled && unhandled.element.value === unhandled.handledValue) {
-      unhandled.element.value = unhandled.value;
-    }
-    unhandled = undefined;
-  });
+    current.applied = true;
+    return current.props;
+  }
+  return { valueProps, renderValue: render.renderValue };
 }

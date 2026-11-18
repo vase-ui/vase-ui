@@ -156,7 +156,7 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -184,6 +184,7 @@ import {
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
+import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import {
@@ -563,7 +564,10 @@ const state = computed<OTPFieldRootState>(() => ({
   value: otpValue.value,
 }));
 
+const inputRender = useInputRender();
+
 provide(OTPFieldRootContext, {
+  inputRender,
   activeIndex,
   autoComplete: computed(() => props.autoComplete),
   disabled: isDisabled,
@@ -629,38 +633,8 @@ const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement
   restorable: false,
 });
 
-// The value that the root last saw in the hidden input. The root sets it after each event that it
-// handles, after each write of its own and after each write of Vue.
-let handledHiddenValue: string | undefined;
-
-// Vue writes `value` to an input only when the root renders. The root does not render when a
-// listener cancels the change or when the parent keeps its value. It also does not render when the
-// browser restores the form state of a page, which sends no event to the inputs.
-function writeValueToInputs() {
-  const hiddenInput = hiddenInputElement.value;
-  if (hiddenInput && hiddenInput.value !== otpValue.value) {
-    hiddenInput.value = otpValue.value;
-  }
-  handledHiddenValue = hiddenInput?.value;
-
-  const characters = otpValue.value;
-  inputElements.value.forEach((input, index) => {
-    const slotValue = characters[index] ?? '';
-    if (input && (input as HTMLInputElement).value !== slotValue) {
-      (input as HTMLInputElement).value = slotValue;
-    }
-  });
-}
-
-// Some programs that fill a form send only `change`, and some send both events in one task. The
-// root handles an event only when the input has a new value.
 function handleHiddenInput(event: Event) {
   const rawValue = (event.currentTarget as HTMLInputElement).value;
-  if (rawValue === handledHiddenValue) {
-    return;
-  }
-  handledHiddenValue = rawValue;
-
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
     const [normalizedValue, didRejectCharacters] = normalizeOTPValueWithDetails(
       rawValue,
@@ -684,7 +658,7 @@ function handleHiddenInput(event: Event) {
     }
   }
 
-  void nextTick(writeValueToInputs);
+  inputRender.renderValue();
 }
 
 useFormReset(hiddenInputElement, (event) => {
@@ -717,28 +691,7 @@ function setHiddenInput(input: unknown) {
   hiddenInputElement.value = next;
 }
 
-// Until the take of the hydration, the hidden input can hold a value that the root did not handle.
-watch(
-  hiddenInputElement,
-  (hiddenInput) => {
-    if (hiddenInput) {
-      handledHiddenValue = writesHiddenValue.value ? hiddenInput.value : otpValue.value;
-    }
-  },
-  { flush: 'post' },
-);
-
-useFormRestore(hiddenInputElement, writeValueToInputs);
-
-// Vue writes the value to the hidden input when the value changes. A program can then send a
-// `change` event with the value that the input had before, and the root must handle it.
-watch(
-  otpValue,
-  () => {
-    handledHiddenValue = hiddenInputElement.value?.value;
-  },
-  { flush: 'post' },
-);
+useFormRestore(hiddenInputElement, inputRender.renderValue);
 
 function hiddenInputProps() {
   const validationProps = validation.getValidationProps(isDisabled.value);
@@ -749,7 +702,7 @@ function hiddenInputProps() {
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
     name: inputName.value,
-    ...(writesHiddenValue.value ? { value: otpValue.value } : undefined),
+    ...(writesHiddenValue.value ? inputRender.valueProps(otpValue.value) : undefined),
     autocomplete: props.autoComplete,
     inputmode: resolvedInputMode.value,
     minlength: props.length,
@@ -766,7 +719,6 @@ function hiddenInputProps() {
       focusInput(0);
     },
     onInput: handleHiddenInput,
-    onChange: handleHiddenInput,
   };
 }
 

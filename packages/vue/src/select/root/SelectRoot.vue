@@ -685,31 +685,10 @@ function setInputElement(value: unknown) {
 
 const writesHiddenValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-// The value that the input has after the last event that the root handled. A write of Vue or of
-// the root sets it too.
-let handledValue: string | undefined;
-
-// Vue writes the value to the input only when the root renders. A browser can change the input
-// with no change of the state, such as an autofill. A form would then submit a value that the
-// select does not show.
-function writeValueToInput() {
-  const input = inputElement.value;
-  if (input && input.value !== serializedValue.value) {
-    input.value = serializedValue.value;
-  }
-  handledValue = input?.value;
-}
-
-// Until the take of the hydration, the input can hold a value that the root did not handle.
-onMounted(() => {
-  handledValue = writesHiddenValue.value ? inputElement.value?.value : serializedValue.value;
-});
-watch(
-  serializedValue,
-  () => {
-    handledValue = inputElement.value?.value;
-  },
-  { flush: 'post' },
+const { valueProps, renderValue } = useFormRestoreAsInput(
+  inputElement,
+  () => serializedValue.value,
+  false,
 );
 
 // A browser autofills the hidden input with the value or the text of an item.
@@ -761,11 +740,9 @@ function selectAutofilledItem(
 function handleHiddenInputChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const autofilledValue = input.value;
-  const isNewValue = autofilledValue !== handledValue;
-  handledValue = autofilledValue;
 
-  if (!isNewValue || event.defaultPrevented || isDisabled.value || props.readOnly) {
-    void nextTick(writeValueToInput);
+  if (event.defaultPrevented || isDisabled.value || props.readOnly) {
+    renderValue();
     return;
   }
 
@@ -774,7 +751,7 @@ function handleHiddenInputChange(event: Event) {
   store.set('forceMounted', true);
   void nextTick(() => {
     selectAutofilledItem(input, autofilledValue, eventDetails);
-    void nextTick(writeValueToInput);
+    renderValue();
   });
 }
 
@@ -794,7 +771,6 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-useFormRestoreAsInput(inputElement, () => handledValue, false);
 useFormEntryValue(inputElement, () => serializedValue.value);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
@@ -823,7 +799,7 @@ function inputProps() {
       props.required,
     ),
     autocomplete: props.autoComplete,
-    ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
+    ...(writesHiddenValue.value ? valueProps() : undefined),
     disabled: isDisabled.value,
     required: props.required && !(isMultiple.value && hasSelectedValue.value),
     readonly: props.readOnly,
@@ -839,7 +815,6 @@ function inputProps() {
       } as FocusOptions);
     },
     onInput: handleHiddenInputChange,
-    onChange: handleHiddenInputChange,
   };
 }
 

@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 
 export interface SliderThumbContext {
   /**
@@ -8,13 +8,6 @@ export interface SliderThumbContext {
   inputProps: () => Record<string, any>;
   /** The `ref` setter of the input. The `children` component binds it by name. */
   setInputElement: (value: unknown) => void;
-  /** The input of the thumb. */
-  inputElement: Readonly<Ref<HTMLInputElement | null>>;
-  /**
-   * Gives the value that the input had after the last event that the thumb handled, or after the
-   * last write.
-   */
-  getHandledInputValue: () => string | undefined;
   /**
    * Whether the `children` component renders the script that places the thumbs before the page
    * hydrates.

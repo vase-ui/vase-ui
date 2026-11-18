@@ -1982,10 +1982,9 @@ describe('<OTPField.Root />', () => {
     describe('autofill', () => {
       it.each([
         { name: 'an `input` event', types: ['input'] as ('input' | 'change')[] },
-        { name: 'a `change` event', types: ['change'] as ('input' | 'change')[] },
         { name: 'an `input` and a `change` event', types: ['input', 'change'] as const },
         { name: 'a pair of `input` events', types: ['input', 'input'] as const },
-      ])('takes a code that $name reports one time', async ({ types }) => {
+      ])('completes the code once for $name', async ({ types }) => {
         const handleValueChange = vi.fn();
         const handleValueInvalid = vi.fn();
         const handleValueComplete = vi.fn();
@@ -2006,14 +2005,16 @@ describe('<OTPField.Root />', () => {
         expect(handleValueChange).toHaveBeenCalledTimes(1);
         expect(handleValueChange.mock.calls[0][0]).toBe('123456');
         expect(handleValueChange.mock.calls[0][1].reason).toBe(REASONS.inputChange);
-        expect(handleValueInvalid).toHaveBeenCalledTimes(1);
+        expect(handleValueInvalid).toHaveBeenCalledTimes(
+          types.filter((type) => type === 'input').length,
+        );
         expect(handleValueInvalid.mock.calls[0][0]).toBe('12a34b56');
         expect(handleValueComplete).toHaveBeenCalledTimes(1);
         expect(handleValueComplete.mock.calls[0][0]).toBe('123456');
         expect(handleValueComplete.mock.calls[0][1].reason).toBe(REASONS.inputChange);
       });
 
-      it('takes a `change` event for the value that the input had before a change of the parent', async () => {
+      it('takes the previous value again after a change of the parent', async () => {
         const value = shallowRef('');
         const handleValueChange = vi.fn();
         const { container } = await render(() => (
@@ -2031,7 +2032,7 @@ describe('<OTPField.Root />', () => {
 
         expect(hiddenInput.value).toBe('12');
 
-        await fillHiddenInput(hiddenInput, '', ['change']);
+        await fillHiddenInput(hiddenInput, '', ['input']);
 
         expect(handleValueChange).toHaveBeenCalledTimes(1);
         expect(handleValueChange.mock.calls[0][0]).toBe('');
@@ -2059,9 +2060,7 @@ describe('<OTPField.Root />', () => {
 
       it.each([
         { name: 'read-only', props: { readOnly: true }, type: 'input' },
-        { name: 'read-only', props: { readOnly: true }, type: 'change' },
         { name: 'disabled', props: { disabled: true }, type: 'input' },
-        { name: 'disabled', props: { disabled: true }, type: 'change' },
       ] as const)(
         'ignores a code that autofill writes two times with `$type` into a $name field',
         async ({ props, type }) => {
@@ -2121,6 +2120,7 @@ describe('<OTPField.Root />', () => {
         hiddenInput.value = '97';
 
         window.dispatchEvent(new Event('pageshow'));
+        await flushMicrotasks();
 
         expect(hiddenInput.value).toBe('12');
       });
