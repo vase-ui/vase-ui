@@ -6,7 +6,7 @@ defineProps<{ target: HTMLElement }>();
 <template>
   <Slider.Thumb>
     <template #render="{ props, children }">
-      <div v-bind="props">
+      <div v-bind="props" :ref="props.ref">
         <Teleport :to="target">
           <button>Before input</button>
           <component :is="children" />

@@ -380,6 +380,9 @@
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },
+    "src/utils/popups/interactions/hoverIntent.test.ts": {
+      "fails": {}
+    },
     "test/reportedMessages.test.tsx": {
       "fails": {}
     },

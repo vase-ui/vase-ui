@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KeepAlive, shallowRef } from 'vue';
+import { KeepAlive, shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
@@ -10,11 +10,15 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  isVaporApp,
   screen,
   waitFor,
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
+import VaporConsumer from '../../test/conformanceTests/VaporConsumer.vue';
+import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
+import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
 import CompositeItem from '../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../test/fixtures/CompositeRootPart.vue';
 import SliderInputPortal from '../../test/fixtures/SliderInputPortal.vue';
@@ -108,6 +112,62 @@ describe('owned parts', () => {
     } finally {
       target.remove();
     }
+  });
+
+  it.runIf(isVaporApp)(
+    'focuses a thumb that a Vapor consumer renders in another portal',
+    async () => {
+      const { user } = await render(
+        <Slider.Root defaultValue={50}>
+          <Slider.Label>Volume</Slider.Label>
+          <Slider.Control>
+            <input type="range" aria-label="Other" />
+            <Teleport to="body">
+              <VaporConsumer
+                part={Slider.Thumb}
+                tag="span"
+                form="render"
+                partProps={{}}
+                onPart={() => undefined}
+              />
+            </Teleport>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      await user.click(screen.getByText('Volume'));
+      expect(screen.getByRole('slider', { name: 'Volume' })).toHaveFocus();
+    },
+  );
+
+  it('finds the nearest portal after a part moves through a shadow root', async () => {
+    const innerTarget = shallowRef<ShadowRoot | null>(null);
+    await render(() => (
+      <>
+        <FloatingPortalLite data-testid="outer">
+          <div data-testid="host" />
+        </FloatingPortalLite>
+        <FloatingPortalLite container={innerTarget.value} data-testid="inner">
+          <button>Content</button>
+        </FloatingPortalLite>
+      </>
+    ));
+    const outer = screen.getByTestId('outer');
+    const host = screen.getByTestId('host');
+    const root = host.attachShadow({ mode: 'open' });
+    innerTarget.value = root;
+    await flushMicrotasks();
+    const inner = root.querySelector<HTMLElement>('[data-testid="inner"]');
+    if (!inner) {
+      throw new Error('The inner portal did not mount.');
+    }
+    const content = within(inner).getByRole('button');
+    expect(getNestedPortals(outer)).toEqual([inner]);
+    expect(isPortalOfPart(inner, content)).toBe(true);
+    expect(isPortalOfPart(outer, content)).toBe(false);
+    host.append(content);
+    root.append(document.createElement('slot'));
+    expect(isPortalOfPart(outer, content)).toBe(true);
+    expect(isPortalOfPart(inner, content)).toBe(false);
   });
 
   it('accepts a press only from a registered calendar cell', async () => {
