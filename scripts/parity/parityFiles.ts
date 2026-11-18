@@ -61,9 +61,20 @@ export interface ReturnTypeDifference {
   reason: string;
 }
 
+export interface Relocation {
+  upstream: string;
+  relation: 'merged-into' | 'inlined-into' | 'moved-test';
+  destination: string;
+  member?: string;
+  behavior?: string;
+  witness: string;
+  additional?: { destination: string; member: string }[];
+}
+
 export interface FamilyFile {
   upstreamPaths: string[];
   matchedCommit: string;
+  relocations?: Relocation[];
   exceptions: ExceptionRow[];
   surfaceAdditions: SurfaceAddition[];
   returnTypeDifferences: ReturnTypeDifference[];
@@ -367,16 +378,61 @@ const returnTypeDifference = object({
   reason: nonEmptyString,
 });
 
+const relocation = withRule<Relocation>(
+  object(
+    {
+      upstream: upstreamRootPath,
+      relation: oneOf('merged-into', 'inlined-into', 'moved-test'),
+      destination: nonEmptyString,
+      member: nonEmptyString,
+      behavior: nonEmptyString,
+      witness: nonEmptyString,
+      additional: array(object({ destination: nonEmptyString, member: nonEmptyString }), {
+        nonEmpty: true,
+      }),
+    },
+    ['member', 'behavior', 'additional'],
+  ),
+  (row, place, report) => {
+    if (!row.member && !row.behavior) {
+      report(place, 'name the retained "member" or "behavior".');
+    }
+    const test = isTestFile(row.upstream) || isTypeTestFile(row.upstream);
+    if (test !== (row.relation === 'moved-test')) {
+      report(
+        place,
+        'use "moved-test" for a test or type test and a source relation for a source file.',
+      );
+    }
+    if (test && row.additional) {
+      report(place, 'a moved test has one destination.');
+    }
+    const pairs = new Set([JSON.stringify([row.destination, row.member])]);
+    row.additional?.forEach(({ destination, member }, i) => {
+      const key = JSON.stringify([destination, member]);
+      if (pairs.has(key)) {
+        report(`${place}.additional[${i}]`, 'the row already names this destination and member.');
+      }
+      pairs.add(key);
+    });
+  },
+);
+
 const familyFile = withRule<FamilyFile>(
-  object({
-    upstreamPaths: array(nonEmptyString, { nonEmpty: true }),
-    matchedCommit: sha,
-    exceptions: array(exceptionRow),
-    surfaceAdditions: array(surfaceAddition),
-    returnTypeDifferences: array(returnTypeDifference),
-    notApplicableCommits: array(object({ sha, reason: nonEmptyString })),
-  }),
+  object(
+    {
+      upstreamPaths: array(nonEmptyString, { nonEmpty: true }),
+      matchedCommit: sha,
+      relocations: array(relocation),
+      exceptions: array(exceptionRow),
+      surfaceAdditions: array(surfaceAddition),
+      returnTypeDifferences: array(returnTypeDifference),
+      notApplicableCommits: array(object({ sha, reason: nonEmptyString })),
+    },
+    ['relocations'],
+  ),
   (family, _place, report) => {
+    checkDuplicates(family.relocations ?? [], (row) => row.upstream, 'relocations', report);
     checkDuplicates(family.exceptions, targetKey, 'exceptions', report);
     checkDuplicates(
       family.surfaceAdditions,

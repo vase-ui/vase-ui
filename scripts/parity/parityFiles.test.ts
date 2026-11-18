@@ -47,6 +47,44 @@ test('a correct family file has no problem', () => {
   assert.deepEqual(validateFamilyFile(FILE, makeFamily()), []);
 });
 
+test('a relocation records a behavior or member and each part of a split on one row', () => {
+  const row = {
+    upstream: 'packages/utils/src/point.ts',
+    relation: 'inlined-into',
+    destination: 'packages/vue/src/tooltip/Root.vue',
+    behavior: 'Track the cursor.',
+    witness: 'packages/vue/src/tooltip/Root.test.ts',
+    additional: [{ destination: 'packages/vue/src/tooltip/geometry.ts', member: 'axis' }],
+  };
+  const check = (...relocations: unknown[]) =>
+    validateFamilyFile(FILE, { ...makeFamily(), relocations });
+  assert.deepEqual(check(row), []);
+  assert.match(
+    check({ ...row, additional: [...row.additional, ...row.additional] })[0],
+    /additional\[1\].*already names/,
+  );
+  assert.match(check({ ...row, ...row.additional[0] })[0], /additional\[0\].*already names/);
+  assert.deepEqual(check({ ...row, member: 'point', behavior: 'Track the cursor.' }), []);
+  assert.match(check(row, row)[0], /relocations\[1\].*same thing as relocations\[0\]/);
+  const { behavior, witness, ...rest } = row;
+  assert.match(check({ ...rest, witness })[0], /member.*behavior/);
+  assert.match(check({ ...rest, behavior })[0], /needs the key "witness"/);
+  assert.match(
+    check({ ...row, additional: [{ destination: row.destination }] })[0],
+    /needs the key "member"/,
+  );
+  assert.match(check({ ...row, relation: 'alias' })[0], /merged-into.*inlined-into.*moved-test/);
+  assert.match(check({ ...row, relation: 'moved-test' })[0], /source relation/);
+  assert.match(
+    check({ ...row, upstream: row.upstream.replace('.ts', '.spec.ts') })[0],
+    /moved-test/,
+  );
+  assert.match(
+    check({ ...row, upstream: row.upstream.replace('.ts', '.test.ts'), relation: 'moved-test' })[0],
+    /one destination/,
+  );
+});
+
 for (const kind of ['stateField', 'constant']) {
   test(`a surfaceAdditions row accepts one ${kind}`, () => {
     const family = makeFamily();

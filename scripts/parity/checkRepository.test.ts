@@ -3,11 +3,20 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
+import type { TestContext } from 'node:test';
 import { readTestRows } from './cases.ts';
 import type { TestRow } from './cases.ts';
+import { runParityCheck } from './check.ts';
 import { checkBetter, checkRepository, formatSummary } from './checkRepository.ts';
-import type { BetterRow, FamilyExtract, FamilyFile, UpstreamFile } from './parityFiles.ts';
+import type {
+  BetterRow,
+  FamilyExtract,
+  FamilyFile,
+  Relocation,
+  UpstreamFile,
+} from './parityFiles.ts';
 import { vaseFiles } from './paths.ts';
+import { listVaseFiles, readRepositoryFile } from './repository.ts';
 import type { ParityFiles } from './repository.ts';
 
 const FIRST = 'a'.repeat(40);
@@ -146,6 +155,359 @@ function run(parity: ParityFiles) {
     },
   });
 }
+
+function relocationFixture(t: TestContext) {
+  const root = mkdtempSync(join(tmpdir(), 'parity-relocations-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const parity = makeParity();
+  parity.families = [];
+  function write(path: string, text: string) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  }
+  function family(name: string, extract: Partial<FamilyExtract>, relocations: Relocation[] = []) {
+    parity.families.push({
+      name,
+      family: { ...makeFamily(), relocations },
+      extract: { ...makeExtract(), ...extract },
+      hasExtract: true,
+      hasFamilyFile: true,
+    });
+  }
+  const check = () =>
+    checkRepository({
+      parity,
+      root,
+      files: vaseFiles(listVaseFiles(root)),
+      rowsOf: (path) => readTestRows(path, readRepositoryFile(root, path)),
+      project: () => {
+        throw new Error('No public surface in this fixture.');
+      },
+    });
+  return { root, write, family, check, parity };
+}
+
+const upstreamPoint = 'packages/utils/src/point.ts';
+const pointOwner = 'packages/vue/src/tooltip/point.ts';
+const witness = 'packages/vue/src/tooltip/point.test.ts';
+const merged: Relocation = {
+  upstream: upstreamPoint,
+  relation: 'merged-into',
+  destination: pointOwner,
+  member: 'point',
+  witness,
+};
+
+test('merged sources and an inline split each get one source credit', (t) => {
+  const { root, write, family, check, parity } = relocationFixture(t);
+  const axis = 'packages/utils/src/axis.ts';
+  const cursor = 'packages/utils/src/cursor.ts';
+  const sfc = 'packages/vue/src/tooltip/Root.vue';
+  write(pointOwner, 'export const point = 0, axis = 1;');
+  write(sfc, '<script setup lang="ts">const cursor = 0;</script><template>{{ cursor }}</template>');
+  write(witness, "it('VUE-1 tracks the cursor', () => {});");
+  family('geometry', { sources: [upstreamPoint, axis, cursor] }, [
+    merged,
+    { ...merged, upstream: axis, member: 'axis' },
+    {
+      upstream: cursor,
+      relation: 'inlined-into',
+      destination: sfc,
+      behavior: 'Track the cursor.',
+      witness,
+      additional: [{ destination: pointOwner, member: 'axis' }],
+    },
+  ]);
+  parity.better = [{ ...betterRow('VUE-1'), dueWith: cursor }];
+  const [geometry] = parity.families;
+  write('parity/upstream.json', JSON.stringify(parity.upstream));
+  write('parity/families/geometry.json', JSON.stringify(geometry.family));
+  write('parity/families/geometry.upstream.json', JSON.stringify(geometry.extract));
+  write('parity/better/VUE-1.json', JSON.stringify(parity.better[0]));
+  const { result, files } = runParityCheck(root);
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.families[0].summary.sources.ported, 3);
+  assert.equal(result.better.due, 1);
+  assert.equal(checkBetter(parity.better, files, () => []).summary.due, 1);
+  write(pointOwner, "export const point = 'axis'; // axis\npoint.axis;");
+  assert.deepEqual(
+    check().problems.filter((problem) => problem.includes('has no declaration for "axis"')),
+    [axis, cursor].map(
+      (upstream, i) =>
+        `geometry: relocations[${i + 1}] (${upstream}): ${pointOwner} has no declaration for "axis".`,
+    ),
+  );
+});
+
+test('a relocation needs its pinned upstream file, a concrete destination and a witness test', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  family('geometry', {}, [merged]);
+  const errors = () => check().problems.join('\n');
+  assert.match(errors(), /family extract has no such file/);
+  assert.match(errors(), /destination .*point\.ts does not exist/);
+  assert.match(errors(), /witness .*point\.test\.ts must name a test file/);
+  write(witness, 'export {};');
+  assert.match(errors(), /witness .* has no runnable case or suite call/);
+  write('packages/vue/src/common/point.tsx', 'export {};');
+  assert.match(errors(), /direct counterpart .*point\.tsx exists/);
+});
+
+test('a split can keep a named part at its mapped path', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const direct = 'packages/vue/src/common/point.ts';
+  write(direct, 'export const axis = 1;');
+  write(pointOwner, 'export const point = 0;');
+  write(witness, "it('tracks the cursor', () => {});");
+  const row = { ...merged, additional: [{ destination: direct, member: 'axis' }] };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  assert.deepEqual(check().problems, []);
+  assert.equal(check().families[0].summary.sources.ported, 1);
+  write(direct + 'x', 'export const extra = 0;');
+  assert.match(check().problems.join('\n'), /direct counterpart .*point\.tsx exists/);
+});
+
+test('a runtime source cannot move into a test helper', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const row = { ...merged };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  write(witness, "it('tracks the cursor', () => {});");
+  for (const destination of ['packages/vue/test/point.ts', 'packages/vue/src/point.test.util.ts']) {
+    row.destination = destination;
+    write(destination, 'export const point = 0;');
+    assert.ok(
+      check().problems.some((problem) => problem.includes(`${destination} must be a source`)),
+    );
+  }
+  row.destination = pointOwner;
+  write(pointOwner, 'export const point = 0;');
+  const helper = 'packages/utils/src/test-utils.tsx';
+  family('helpers', { sources: [helper] }, [
+    { ...merged, upstream: helper, destination: 'packages/vue/test/point.ts' },
+  ]);
+  assert.deepEqual(check().problems, []);
+});
+
+test('a behavior needs a runnable witness before its source gets credit', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  write(pointOwner, 'export const point = 0;');
+  const row = { ...merged, behavior: 'Track the cursor.' };
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  write(witness, "describe.skip('pointer', () => { it('tracks', () => {}); }); it.todo('tracks');");
+  assert.match(check().problems.join('\n'), /witness .* has no runnable case or suite call/);
+  assert.equal(check().families[0].summary.sources.ported, 0);
+  row.witness = 'packages/vue/test/point.spec.ts';
+  write(row.witness, 'type Point = number;');
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['test'] }));
+  assert.match(check().problems.join('\n'), /witness .* must cover the retained behavior/);
+});
+
+test('a compiled template type test can witness a retained member', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const template = 'packages/vue/test/geometry.spec.vue';
+  write(pointOwner, 'export class Position { constructor(readonly point: number) {} }');
+  write(
+    template,
+    `<script setup lang="ts">import type { Position } from '../src/tooltip/point'; defineProps<{ point: Position['point'] }>();</script>`,
+  );
+  family('geometry', { sources: [upstreamPoint] }, [{ ...merged, witness: template }]);
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['test'] }));
+  assert.deepEqual(check().problems, []);
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['src'] }));
+  assert.match(check().problems.join('\n'), /witness .* must cover the retained behavior or type/);
+});
+
+test('a member in either SFC script counts and a reference in the template does not', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const destination = 'packages/vue/src/tooltip/Root.vue';
+  const row = { ...merged, relation: 'inlined-into' as const, destination, member: 'Axis' };
+  write(
+    destination,
+    [
+      '<script lang="ts">export type Axis = number;</script>',
+      '<script setup lang="ts">const point: Axis = 1; const axes = { ["point-axis"]: point };</script>',
+      '<template><span>{{ point }} {{ absent }}</span></template>',
+    ].join('\n'),
+  );
+  write(witness, "it('tracks the cursor', () => {});");
+  family('geometry', { sources: [upstreamPoint] }, [row]);
+  assert.deepEqual(check().problems, []);
+  row.member = 'point';
+  assert.deepEqual(check().problems, []);
+  row.member = 'point-axis';
+  assert.deepEqual(check().problems, []);
+  row.member = 'absent';
+  assert.ok(
+    check().problems.some((problem) => problem.endsWith('has no declaration for "absent".')),
+  );
+});
+
+test('a relocation has one upstream owner and cannot redirect through another relocation', (t) => {
+  const { family, check, write } = relocationFixture(t);
+  const axis = 'packages/utils/src/axis.ts';
+  write(witness, "it('tracks the cursor', () => {});");
+  family('a', { sources: [upstreamPoint, axis] }, [
+    { ...merged, destination: 'packages/vue/src/common/axis.ts' },
+    { ...merged, upstream: axis, destination: 'packages/vue/src/common/point.ts' },
+  ]);
+  family('b', { sources: [upstreamPoint] }, [merged]);
+  const problems = check().problems;
+  assert.ok(
+    problems.includes(`b: ${upstreamPoint} also belongs to a. Keep one family per upstream file.`),
+  );
+  for (const path of ['packages/vue/src/common/axis.ts', 'packages/vue/src/common/point.ts']) {
+    assert.ok(problems.some((problem) => problem.includes(`destination ${path} does not exist`)));
+  }
+});
+
+test('a moved type test must belong to the type test project', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const upstream = 'packages/utils/src/point.spec.tsx';
+  const destination = 'packages/vue/test/geometry.spec.ts';
+  const row: Relocation = {
+    upstream,
+    relation: 'moved-test',
+    destination,
+    behavior: 'Check the point type.',
+    witness: destination,
+  };
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['test'] }));
+  write(destination, 'type Point = number;');
+  family('geometry', { typeTests: [upstream] }, [row]);
+  assert.deepEqual(check().problems, []);
+  assert.equal(check().families[0].summary.typeTests.ported, 1);
+  write('packages/vue/tsconfig.test.json', JSON.stringify({ include: ['src'] }));
+  assert.ok(
+    check().problems.some((problem) =>
+      problem.endsWith(`the test project does not include ${destination}.`),
+    ),
+  );
+  write(witness, "it('tracks the cursor', () => {});");
+  row.destination = witness;
+  assert.ok(
+    check().problems.some((problem) => problem.endsWith(`${witness} must be a type test.`)),
+  );
+});
+
+test('two families can share a test file but each occurrence belongs to one upstream suite', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const a = 'packages/utils/src/a.test.tsx';
+  const b = 'packages/utils/src/b.test.ts';
+  const destination = 'packages/vue/src/common/a.test.ts';
+  const port = (describe: string[], title: string) => ({ describe, title });
+  const shared = port(['shared'], 'fires');
+  family('a', { cases: [{ file: a, rows: [port(['A'], 'opens'), shared] }] });
+  family('b', { cases: [{ file: b, rows: [port(['B'], 'opens'), shared] }] }, [
+    {
+      upstream: b,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Open B.',
+      witness: destination,
+    },
+  ]);
+  const cases = [
+    "describe('B', () => { it('opens', () => {}); it('local case', () => {}); });",
+    "describe('shared', () => { it('fires', () => {}); it('fires', () => {}); });",
+    "describe('A', () => { it('opens', () => {}); });",
+  ].join('\n');
+  write(destination, cases);
+  const result = check();
+  assert.deepEqual(result.problems, []);
+  assert.deepEqual(
+    result.families.map(({ summary }) => [summary.cases.matched, summary.rowsWithoutUpstream]),
+    [
+      [2, 0],
+      [2, 1],
+    ],
+  );
+  write(destination, cases.replace("it('fires', () => {}); ", ''));
+  assert.ok(
+    check().problems.some((problem) =>
+      problem.includes(`uncovered case "shared > fires" in ${b}:`),
+    ),
+  );
+  write(
+    destination,
+    cases.replace("describe('B', () => { it('opens'", "describe('B', () => { it('opens later'"),
+  );
+  assert.ok(
+    check().problems.some((problem) => problem.includes(`uncovered case "B > opens" in ${b}:`)),
+  );
+});
+
+test('families that share a title keep their own engine conditions and exceptions', (t) => {
+  const { write, family, check, parity } = relocationFixture(t);
+  const a = 'packages/utils/src/a.test.ts';
+  const b = 'packages/utils/src/b.test.ts';
+  const destination = 'packages/vue/src/common/b.test.ts';
+  const portable = { describe: ['point'], title: 'tracks' };
+  const guarded = { ...portable, conditions: ['skipIf(isWebKit)'] };
+  family('a', { cases: [{ file: a, rows: [portable] }] }, [
+    {
+      upstream: a,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Track A.',
+      witness: destination,
+    },
+  ]);
+  family('b', { cases: [{ file: b, rows: [guarded] }] });
+  write(
+    destination,
+    "describe('point', () => { it.skipIf(isWebKit)('tracks', () => {}); it('tracks', () => {}); });",
+  );
+  assert.deepEqual(check().problems, []);
+  write(destination, "describe('point', () => { it.skipIf(isWebKit)('tracks', () => {}); });");
+  const { problems } = check();
+  assert.equal(problems.length, 1);
+  assert.ok(problems[0].includes(`uncovered case "point > tracks" in ${a}`), problems[0]);
+  const firstFamily = parity.families[0].family as FamilyFile;
+  firstFamily.exceptions.push({
+    upstream: a,
+    ...portable,
+    kind: 'not-applicable',
+    reason: 'The first suite checks a React hook.',
+  });
+  const result = check();
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.families[0].summary.cases['not-applicable'], 1);
+  assert.equal(result.families[1].summary.cases.matched, 1);
+  firstFamily.exceptions = [
+    {
+      upstream: a,
+      ...portable,
+      kind: 'engine',
+      engine: 'webkit',
+      link: 'https://example.com/issue',
+      reason: 'The first suite skips WebKit.',
+    },
+  ];
+  write(
+    destination,
+    "describe('point', () => { it('tracks', () => {}); it.skipIf(isWebKit)('tracks', () => {}); });",
+  );
+  assert.deepEqual(check().problems, []);
+  assert.equal(check().families[0].summary.cases.engine.webkit, 1);
+});
+
+test('a moved browser suite cannot become a Node test', (t) => {
+  const { write, family, check } = relocationFixture(t);
+  const upstream = 'packages/utils/src/point.test.ts';
+  const destination = 'packages/vue/test/point.node.test.ts';
+  write(destination, "it('tracks', () => {});");
+  family('point', { cases: [{ file: upstream, rows: [{ describe: [], title: 'tracks' }] }] }, [
+    {
+      upstream,
+      relation: 'moved-test',
+      destination,
+      behavior: 'Track the cursor.',
+      witness: destination,
+    },
+  ]);
+  assert.ok(
+    check().problems.some((problem) => problem.endsWith(`${destination} must be a browser test.`)),
+  );
+});
 
 test('a family with no problem gives a summary line and makes no project', () => {
   const result = run(makeParity());

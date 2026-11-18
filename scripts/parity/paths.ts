@@ -1,4 +1,4 @@
-import { matchesGlob } from 'node:path';
+import { extname, matchesGlob } from 'node:path';
 
 const MAPPED_ROOTS = [
   { upstream: 'packages/react/src/', vase: 'packages/vue/src/' },
@@ -16,6 +16,7 @@ export const VASE_ROOTS = [VASE_SOURCE_ROOT, 'packages/vue/test'];
 export interface VaseFiles {
   paths: ReadonlySet<string>;
   folders: ReadonlySet<string>;
+  relocations?: ReadonlyMap<string, string[]>;
 }
 
 export function vaseFiles(paths: Iterable<string>): VaseFiles {
@@ -64,6 +65,10 @@ function mappedPath(upstreamPath: string): string | undefined {
 }
 
 export function counterparts(upstreamPath: string, files: VaseFiles): string[] {
+  return files.relocations?.get(upstreamPath) ?? directCounterparts(upstreamPath, files);
+}
+
+export function directCounterparts(upstreamPath: string, files: VaseFiles): string[] {
   const mapped = mappedPath(upstreamPath);
   if (mapped === undefined) {
     return [];
@@ -75,6 +80,29 @@ export function counterparts(upstreamPath: string, files: VaseFiles): string[] {
   const isTest = isTestFile(upstreamPath) || isTypeTestFile(upstreamPath);
   const extensions = isTest ? ['.ts', '.tsx'] : ['.ts', '.tsx', '.vue'];
   return extensions.map((extension) => stem + extension).filter((path) => files.paths.has(path));
+}
+
+export function relocationKind(path: string): string {
+  if (isTestFile(path)) {
+    return /\.node\.test\.tsx?$/.test(path) ? 'node test' : 'browser test';
+  }
+  if (isTypeTestFile(path)) {
+    return 'type test';
+  }
+  if (/\.(test|spec)\.vue$/.test(path)) {
+    return 'test SFC';
+  }
+  if (isDeclarationFile(path)) {
+    return 'declaration';
+  }
+  if (isScriptFile(path) || path.endsWith('.vue')) {
+    return /^packages\/(react|vue)\/test\//.test(path) ||
+      /\.(test|spec)\.[^/]+$/.test(path) ||
+      /\/test-utils\.tsx?$/.test(path)
+      ? 'test helper'
+      : 'source';
+  }
+  return extname(path);
 }
 
 export function hasCounterpart(upstreamPath: string, files: VaseFiles): boolean {

@@ -50,6 +50,15 @@ interface IndexedRow {
   target: Target;
 }
 
+function caseExceptions(family: FamilyFile): IndexedRow[] {
+  return family.exceptions.flatMap((row, index) => {
+    const target = targetOf(row);
+    return target && target.type !== 'entry' && target.type !== 'prop'
+      ? [{ row, index, target }]
+      : [];
+  });
+}
+
 const fileTally = (total: number): FileTally => ({
   total,
   ported: 0,
@@ -138,24 +147,337 @@ function addedConditions(upstreamRow: TestRow, vaseRow: TestRow): string[] {
   return (vaseRow.conditions ?? []).flatMap(conditionTerms).filter((term) => !upstream.has(term));
 }
 
-function pairRows(upstreamRows: TestRow[], vaseRows: TestRow[]) {
-  const pool = new Map<string, TestRow[]>();
-  for (const row of vaseRows) {
-    const key = keyOf(row, 'vase');
-    pool.set(key, [...(pool.get(key) ?? []), row]);
-  }
-  const pairs: [TestRow, TestRow][] = [];
-  const unmatched: TestRow[] = [];
-  for (const row of upstreamRows) {
-    const found = pool.get(keyOf(row, 'upstream'))?.shift();
-    if (found) {
-      pairs.push([row, found]);
-    } else {
-      unmatched.push(row);
+type UpstreamSuite = FamilyExtract['cases'][number];
+
+interface SuiteMatch {
+  suite: UpstreamSuite;
+  exceptions: IndexedRow[];
+  paths: string[];
+  rows: ({ path: string; row: TestRow } | undefined)[];
+  unpaired: number;
+  titleProblems: string[];
+  ambiguous?: string[];
+}
+
+interface RowPool {
+  path: string;
+  rows: TestRow[];
+  claims: RowClaim[];
+  candidates: RowClaim[];
+  exceptions: Set<IndexedRow>;
+  extraOwner: SuiteMatch;
+}
+
+interface RowClaim {
+  owner: SuiteMatch;
+  index: number;
+  order: number;
+  key: string;
+  sequence: RowClaim[];
+  omission?: IndexedRow;
+  engine?: IndexedRow;
+  choices: RowPool[];
+}
+
+function reserveRow(claim: RowClaim, visited: Set<RowPool>): boolean {
+  for (const pool of claim.choices) {
+    if (pool.claims.length < pool.rows.length) {
+      pool.claims.push(claim);
+      return true;
     }
   }
-  const unpaired = [...pool.values()].reduce((total, rows) => total + rows.length, 0);
-  return { pairs, unmatched, unpaired };
+  // A split helper can use another file when this suite needs its last occurrence.
+  for (const pool of claim.choices) {
+    if (visited.has(pool)) {
+      continue;
+    }
+    visited.add(pool);
+    for (let index = pool.claims.length - 1; index >= 0; index -= 1) {
+      const prior = pool.claims[index];
+      if (prior.choices.length > 1 && reserveRow(prior, visited)) {
+        pool.claims[index] = claim;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function coverForPort(claim: RowClaim, port?: TestRow): IndexedRow | true | undefined {
+  if (!port) {
+    return claim.omission;
+  }
+  return addedConditions(claim.owner.suite.rows[claim.index], port).length ? claim.engine : true;
+}
+
+function alignSharedRows(pools: RowPool[], required: IndexedRow[]): void {
+  const sequences = new Set(
+    pools.flatMap((pool) => pool.candidates.map((claim) => claim.sequence)),
+  );
+  const claims = [...sequences].flat();
+  const original = pools.map((pool) => pool.claims);
+  const reserved = new Map<RowClaim, TestRow>();
+  for (const pool of pools) {
+    pool.claims.forEach((claim, i) => reserved.set(claim, pool.rows[i]));
+  }
+  const misses = claims.length - reserved.size;
+  const covers = claims.map((claim) => coverForPort(claim, reserved.get(claim)));
+  const problems =
+    covers.filter((cover) => !cover).length +
+    required.filter((row) => !covers.includes(row)).length;
+  if (!problems) {
+    return;
+  }
+  const usable = pools.reduce(
+    (total, pool) =>
+      total +
+      pool.rows.filter((port) => pool.candidates.some((claim) => coverForPort(claim, port))).length,
+    0,
+  );
+  const minimum =
+    Math.max(0, misses - claims.filter((claim) => claim.omission).length) +
+    Math.max(0, reserved.size - usable);
+  if (minimum >= problems) {
+    return;
+  }
+
+  // Separate upstream files have no common order. Keep the maximum number of matches and
+  // each file's duplicate order when a guard or an exception distinguishes the occurrences.
+  const queues = [...sequences].map((items) => ({ items, next: 0 }));
+  const unused = new Set(required);
+  const refused = new Set<string>();
+  for (const pool of pools) {
+    pool.claims = [];
+  }
+  function align(remaining: number, omissions: number, budget: number): boolean {
+    if (remaining === 0) {
+      return omissions === 0 && unused.size <= budget;
+    }
+    const state = [
+      budget,
+      ...queues.map((queue) => queue.next),
+      ...pools.map((pool) => pool.claims.length),
+      ...required.map((row) => unused.has(row)),
+    ].join(',');
+    if (refused.has(state)) {
+      return false;
+    }
+    const key = queues.find((queue) => queue.next < queue.items.length)?.items[0].key;
+    for (const queue of queues) {
+      const claim = queue.items[queue.next];
+      if (!claim || claim.key !== key) {
+        continue;
+      }
+      for (const pool of [...claim.choices, undefined]) {
+        const port = pool?.rows[pool.claims.length];
+        if (pool ? !port : omissions === 0) {
+          continue;
+        }
+        const cover = coverForPort(claim, port);
+        const cost = cover ? 0 : 1;
+        if (cost > budget) {
+          continue;
+        }
+        const used = cover && cover !== true && unused.delete(cover);
+        queue.next += 1;
+        pool?.claims.push(claim);
+        if (align(remaining - 1, omissions - (pool ? 0 : 1), budget - cost)) {
+          return true;
+        }
+        pool?.claims.pop();
+        queue.next -= 1;
+        if (used) {
+          unused.add(cover);
+        }
+      }
+    }
+    refused.add(state);
+    return false;
+  }
+  for (let budget = minimum; budget < problems; budget += 1) {
+    if (align(claims.length, misses, budget)) {
+      return;
+    }
+  }
+  pools.forEach((pool, i) => {
+    pool.claims = original[i];
+  });
+}
+
+function describePaths(titles: string[]): string[] {
+  return titles.map((_, i) => JSON.stringify(titles.slice(0, titles.length - i)));
+}
+
+export function matchCases(
+  families: { family: FamilyFile; extract: FamilyExtract }[],
+  vase: VaseTree,
+): Map<UpstreamSuite, SuiteMatch> {
+  const matches = new Map<UpstreamSuite, SuiteMatch>();
+  const destinations = new Map<string, SuiteMatch[]>();
+  for (const { family, extract } of families) {
+    const exceptions = caseExceptions(family);
+    for (const suite of extract.cases) {
+      const paths = counterparts(suite.file, vase.files).filter((path) => !path.endsWith('.vue'));
+      const match: SuiteMatch = {
+        suite,
+        exceptions,
+        paths,
+        rows: [],
+        unpaired: 0,
+        titleProblems: [],
+      };
+      matches.set(suite, match);
+      if (paths.length > 1 && !vase.files.relocations?.has(suite.file)) {
+        match.ambiguous = paths;
+        continue;
+      }
+      for (const path of paths) {
+        destinations.set(path, [...(destinations.get(path) ?? []), match]);
+      }
+    }
+  }
+
+  const pools = new Map<string, Map<string, RowPool>>();
+  for (const [path, owners] of destinations) {
+    const rows = vase.rowsOf(path);
+    const upstream = owners.flatMap(({ suite }) => suite.rows);
+    owners[0].titleProblems.push(...checkTitleNames(path, rows, upstream));
+    const blocks = new Map<string, SuiteMatch>();
+    if (owners.length > 1) {
+      for (const owner of owners) {
+        for (const row of owner.suite.rows) {
+          for (const block of describePaths(
+            row.describe.map((title) => toVaseName(title, 'title')),
+          )) {
+            if (!blocks.has(block)) {
+              blocks.set(block, owner);
+            }
+          }
+        }
+      }
+    }
+    const byKey = new Map<string, RowPool>();
+    for (const row of rows) {
+      const key = keyOf(row, 'vase');
+      const pool = byKey.get(key);
+      if (pool) {
+        pool.rows.push(row);
+        continue;
+      }
+      const extraOwner =
+        describePaths(row.describe)
+          .map((block) => blocks.get(block))
+          .find(Boolean) ?? owners[0];
+      byKey.set(key, {
+        path,
+        rows: [row],
+        claims: [],
+        candidates: [],
+        exceptions: new Set(),
+        extraOwner,
+      });
+    }
+    pools.set(path, byKey);
+  }
+
+  let order = 0;
+  const used = new Set<IndexedRow>();
+  for (const owner of matches.values()) {
+    if (owner.ambiguous) {
+      continue;
+    }
+    const sequences = new Map<string, RowClaim[]>();
+    for (const [index, row] of owner.suite.rows.entries()) {
+      const key = keyOf(row, 'upstream');
+      const choices = owner.paths.flatMap((path) => pools.get(path)?.get(key) ?? []);
+      const omission = coveringRow(
+        owner.exceptions,
+        owner.suite.file,
+        row,
+        (kind) => kind !== 'engine',
+      );
+      if (!choices.length) {
+        if (omission) {
+          used.add(omission);
+        }
+        continue;
+      }
+      const engine = coveringRow(
+        owner.exceptions,
+        owner.suite.file,
+        row,
+        (kind) => kind === 'engine',
+      );
+      const sequence = sequences.get(key) ?? [];
+      sequences.set(key, sequence);
+      const claim = { owner, index, order: order++, key, sequence, omission, engine, choices };
+      sequence.push(claim);
+      for (const pool of choices) {
+        pool.candidates.push(claim);
+        if (omission) {
+          pool.exceptions.add(omission);
+        }
+        if (engine && pool.rows.some((port) => addedConditions(row, port).length)) {
+          pool.exceptions.add(engine);
+        }
+      }
+      reserveRow(claim, new Set());
+    }
+  }
+  const all = [...pools.values()].flatMap((byKey) => [...byKey.values()]);
+  const remaining = new Set<RowPool>();
+  const byException = new Map<IndexedRow, RowPool[]>();
+  for (const pool of all) {
+    pool.claims.sort((a, b) => a.order - b.order);
+    if (
+      pool.candidates.every(
+        (claim) => claim.choices.length === 1 && claim.sequence === pool.candidates[0].sequence,
+      )
+    ) {
+      pool.candidates.forEach((claim, i) => {
+        const cover = coverForPort(claim, pool.rows[i]);
+        if (cover && cover !== true) {
+          used.add(cover);
+        }
+      });
+      continue;
+    }
+    remaining.add(pool);
+    for (const row of pool.exceptions) {
+      const peers = byException.get(row) ?? [];
+      peers.push(pool);
+      byException.set(row, peers);
+    }
+  }
+  for (const first of remaining) {
+    const connected = new Set([first]);
+    const required = new Set<IndexedRow>();
+    for (const pool of connected) {
+      remaining.delete(pool);
+      for (const claim of pool.candidates) {
+        for (const choice of claim.choices) {
+          connected.add(choice);
+        }
+      }
+      // A block or file exception needs one witness among all the titles it covers.
+      for (const row of pool.exceptions) {
+        if (!used.has(row) && !required.has(row)) {
+          required.add(row);
+          for (const peer of byException.get(row) ?? []) {
+            connected.add(peer);
+          }
+        }
+      }
+    }
+    alignSharedRows([...connected], [...required]);
+  }
+  for (const pool of all) {
+    pool.claims.forEach(({ owner, index }, i) => {
+      owner.rows[index] = { path: pool.path, row: pool.rows[i] };
+    });
+    pool.extraOwner.unpaired += pool.rows.length - pool.claims.length;
+  }
+  return matches;
 }
 
 function targetExists(target: Target, extract: FamilyExtract): boolean {
@@ -183,17 +505,13 @@ export function checkFamily(
   family: FamilyFile,
   extract: FamilyExtract,
   vase: VaseTree,
+  matches = matchCases([{ family, extract }], vase),
 ): FamilyResult {
   const problems: string[] = [];
   const problem = (message: string): void => {
     problems.push(`${name}: ${message}`);
   };
-  const rows: IndexedRow[] = family.exceptions.flatMap((row, index) => {
-    const target = targetOf(row);
-    return target && target.type !== 'entry' && target.type !== 'prop'
-      ? [{ row, index, target }]
-      : [];
-  });
+  const rows = caseExceptions(family);
   const used = new Set<number>();
   const reported = new Set<number>();
   const where = (item: IndexedRow): string => `exceptions[${item.index}] (${labelOf(item.target)})`;
@@ -260,48 +578,45 @@ export function checkFamily(
     (item) => item.target.type === 'file' && isTypeTestFile(item.row.upstream),
   );
 
-  for (const { file, rows: upstreamRows } of extract.cases) {
+  for (const suite of extract.cases) {
+    const { file, rows: upstreamRows } = suite;
+    const match = matches.get(suite) as SuiteMatch;
     for (const row of upstreamRows) {
       (isSuiteRow(row) ? summary.suiteCalls : summary.cases).total += 1;
     }
-    const candidates = counterparts(file, vase.files).filter((path) => !path.endsWith('.vue'));
-    if (candidates.length > 1) {
-      problem(`${file}: ${candidates.join(' and ')} both match. Delete one of them.`);
+    if (match.ambiguous) {
+      problem(`${file}: ${match.ambiguous.join(' and ')} both match. Delete one of them.`);
       continue;
     }
-    let vaseRows: TestRow[] = [];
-    if (candidates.length === 1) {
-      vaseRows = vase.rowsOf(candidates[0]);
-      problems.push(...checkTitleNames(candidates[0], vaseRows, upstreamRows));
-    }
-    const { pairs, unmatched, unpaired } = pairRows(upstreamRows, vaseRows);
-    summary.rowsWithoutUpstream += unpaired;
-    for (const [upstreamRow, vaseRow] of pairs) {
+    problems.push(...match.titleProblems);
+    summary.rowsWithoutUpstream += match.unpaired;
+    for (const [index, upstreamRow] of upstreamRows.entries()) {
       const tally = isSuiteRow(upstreamRow) ? summary.suiteCalls : summary.cases;
+      const port = match.rows[index];
+      if (!port) {
+        const cover = coveringRow(rows, file, upstreamRow, (kind) => kind !== 'engine');
+        if (!cover) {
+          problem(
+            `uncovered ${describesRow(upstreamRow)} in ${file}: Vase UI has no row for it. Port it, or add an exception row.`,
+          );
+        } else {
+          used.add(cover.index);
+          tally[cover.row.kind as CoveredKind] += 1;
+        }
+        continue;
+      }
       tally.matched += 1;
-      const added = addedConditions(upstreamRow, vaseRow);
+      const added = addedConditions(upstreamRow, port.row);
       if (added.length > 0) {
         const cover = coveringRow(rows, file, upstreamRow, (kind) => kind === 'engine');
         if (!cover) {
           problem(
-            `added condition on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
+            `added condition on ${describesRow(port.row)} in ${port.path}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
           );
         } else {
           used.add(cover.index);
           tally.engine[cover.row.engine as Engine] += 1;
         }
-      }
-    }
-    for (const row of unmatched) {
-      const tally = isSuiteRow(row) ? summary.suiteCalls : summary.cases;
-      const cover = coveringRow(rows, file, row, (kind) => kind !== 'engine');
-      if (!cover) {
-        problem(
-          `uncovered ${describesRow(row)} in ${file}: Vase UI has no row for it. Port it, or add an exception row.`,
-        );
-      } else {
-        used.add(cover.index);
-        tally[cover.row.kind as CoveredKind] += 1;
       }
     }
   }
