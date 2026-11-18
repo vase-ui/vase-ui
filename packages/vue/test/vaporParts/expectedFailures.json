@@ -319,6 +319,9 @@
     "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
       "fails": {}
     },
+    "test/disclosurePanels.test.tsx": {
+      "fails": {}
+    },
     "test/modelOwnership.test.tsx": {
       "fails": {}
     },
