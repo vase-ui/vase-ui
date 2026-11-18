@@ -111,16 +111,23 @@ describe('<Slider.Indicator />', () => {
     });
 
     it.each([
-      { name: 'a single thumb', defaultValue: 30, start: '34%', size: '' },
-      { name: 'a range', defaultValue: [25, 75], start: '30%', size: '40%' },
+      { name: 'a single thumb', props: { defaultValue: 30 }, start: '34%', size: '', end: '' },
+      { name: 'a range', props: { defaultValue: [25, 75] }, start: '30%', size: '40%', end: '' },
+      {
+        name: 'a styled range',
+        props: { defaultValue: [25, 75], indicatorStyle: '--end-position: 12px' },
+        start: '30%',
+        size: '40%',
+        end: '12px',
+      },
     ])(
       'places the indicator of $name with the script, before the app starts',
-      async ({ defaultValue, start, size }) => {
-        const client = await render(<SliderIndicatorHydration defaultValue={defaultValue} />);
+      async ({ props, start, size, end }) => {
+        const client = await render(<SliderIndicatorHydration {...props} />);
         const clientRect = client.getByTestId('indicator').getBoundingClientRect();
         client.unmount();
 
-        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, { defaultValue });
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
         const container = document.createElement('div');
         document.body.append(container);
         onTestFinished(() => container.remove());
@@ -137,7 +144,7 @@ describe('<Slider.Indicator />', () => {
           indicator.style.getPropertyValue('--start-position'),
           indicator.style.getPropertyValue('--relative-size'),
         ]).toEqual(['', start, size]);
-        expect(indicator.style.getPropertyValue('--end-position')).toBe('');
+        expect(indicator.style.getPropertyValue('--end-position')).toBe(end);
       },
     );
 
