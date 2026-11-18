@@ -33,5 +33,21 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/avatar/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/avatar/root/AvatarRootContext.ts",
+      "member": "avatarStateAttributesMapping",
+      "witness": "packages/vue/src/avatar/root/AvatarRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/useImageLoadingStatus.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/avatar/image/AvatarImage.vue",
+      "behavior": "Track the image request and release its handlers on replacement or removal.",
+      "witness": "packages/vue/src/avatar/image/AvatarImage.test.tsx"
+    }
+  ]
 }

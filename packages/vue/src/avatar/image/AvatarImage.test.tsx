@@ -3,6 +3,7 @@ import { createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import { Avatar } from '@vase-ui/vue/avatar';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -200,6 +201,36 @@ describe('<Avatar.Image />', () => {
       images.at(-1)?.onload?.();
       await nextTick();
       expect(change.mock.calls).toEqual([['loading'], ['loaded']]);
+    });
+
+    it('replaces a held image request when its policy changes and releases it on unmount', async () => {
+      const { images } = installImageMock();
+      const policy = shallowRef<'origin' | 'no-referrer'>('origin');
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Avatar.Root>
+          <Avatar.Image alt="Profile" src="avatar.png" referrerpolicy={policy.value} />
+          <Avatar.Fallback>JD</Avatar.Fallback>
+        </Avatar.Root>
+      ));
+      const { unmount } = await render(<HeldBranch />);
+      await mountWhileHeld();
+      const first = images[0];
+      expect(first.referrerPolicy).toBe('origin');
+
+      policy.value = 'no-referrer';
+      await nextTick();
+      const second = images[1];
+      expect(second.referrerPolicy).toBe('no-referrer');
+      expect(first.onload).toBeNull();
+      expect(first.onerror).toBeNull();
+      second.onload?.();
+      await show();
+      expect(screen.getByRole('img', { name: 'Profile' })).toHaveAttribute('src', 'avatar.png');
+      expect(screen.queryByText('JD')).toBeNull();
+
+      unmount();
+      expect(second.onload).toBeNull();
+      expect(second.onerror).toBeNull();
     });
 
     it('fires when the image loads', async () => {

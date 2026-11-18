@@ -18,8 +18,7 @@ export interface AvatarImageProps
       WithVaseUIEvent<ImgHTMLAttributes>,
       'crossorigin' | 'referrerpolicy' | 'sizes' | 'src' | 'srcset'
     > {
-  // The part reads these five attributes to load the image before it renders the element.
-  // The Vue documentation says that `$attrs` is not reactive, so each of them is a declared prop.
+  // The preload must track these attributes before the element exists.
   /**
    * The URL of the image.
    */
@@ -60,7 +59,7 @@ export interface AvatarImageProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, onUpdated, watch } from 'vue';
+import { computed, onMounted, onUnmounted, onUpdated, shallowRef, watch, watchEffect } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
@@ -68,9 +67,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
-import { useAvatarRootContext } from '../root/AvatarRootContext';
-import { avatarStateAttributesMapping } from '../root/stateAttributesMapping';
-import { useImageLoadingStatus } from './useImageLoadingStatus';
+import { avatarStateAttributesMapping, useAvatarRootContext } from '../root/AvatarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -93,20 +90,59 @@ defineSlots<{
 }>();
 
 const { setImageLoadingStatus: setRootImageLoadingStatus } = useAvatarRootContext();
-const [imageLoadingStatus, setImageLoadingStatus] = useImageLoadingStatus(
-  () => props.src,
-  () => ({
-    crossOrigin: props.crossorigin,
-    referrerPolicy: props.referrerpolicy,
-    sizes: props.sizes,
-    srcSet: props.srcset,
-  }),
-  () => !props.keepMounted,
-);
-
+const imageLoadingStatus = shallowRef<ImageLoadingStatus>('idle');
 const isVisible = computed(() => imageLoadingStatus.value === 'loaded');
-// The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.
-// The image has an enter transition, so the composable needs the element.
+
+function readStatus(image: HTMLImageElement): ImageLoadingStatus {
+  if (!image.complete) {
+    return 'loading';
+  }
+  return image.naturalWidth > 0 ? 'loaded' : 'error';
+}
+
+onMounted(() => {
+  watchEffect((onCleanup) => {
+    if (props.keepMounted) {
+      return;
+    }
+    const { src, srcset, sizes, crossorigin, referrerpolicy } = props;
+    if (!src && !srcset) {
+      imageLoadingStatus.value = 'error';
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => {
+      imageLoadingStatus.value = 'loaded';
+    };
+    image.onerror = () => {
+      imageLoadingStatus.value = 'error';
+    };
+    onCleanup(() => {
+      image.onload = null;
+      image.onerror = null;
+    });
+
+    // The browser needs the request options before the first source.
+    if (referrerpolicy) {
+      image.referrerPolicy = referrerpolicy;
+    }
+    image.crossOrigin = crossorigin ?? null;
+    if (sizes) {
+      image.sizes = sizes;
+    }
+    if (srcset) {
+      image.srcset = srcset;
+    }
+    if (src) {
+      image.src = src;
+    }
+
+    // A cached replacement must not start an exit transition.
+    imageLoadingStatus.value = readStatus(image);
+  });
+});
+
 const { mounted, setMounted, transitionStatus } = useTransitionStatus(
   isVisible,
   false,
@@ -117,8 +153,7 @@ const { mounted, setMounted, transitionStatus } = useTransitionStatus(
 
 const state = computed<AvatarImageState>(() => ({
   imageLoadingStatus: imageLoadingStatus.value,
-  // With `keepMounted`, the element stays in the DOM. An exit transition would play and then
-  // reverse when the status clears. `data-loading` and `data-error` show that state.
+  // A kept image stays in place through an error or a new request.
   transitionStatus:
     props.keepMounted && transitionStatus.value === 'ending' ? undefined : transitionStatus.value,
 }));
@@ -127,40 +162,29 @@ function definedProps(values: Record<string, string | undefined>) {
   return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined));
 }
 
-function getRenderedStatusProps() {
-  if (!props.keepMounted) {
-    return undefined;
-  }
-
-  return {
-    // A `keepMounted` element exists before the image loads, so the not-loaded states need data
-    // attributes. The default mode must not set them while the element animates out.
-    'data-loading': imageLoadingStatus.value === 'loading' ? '' : undefined,
-    'data-error': imageLoadingStatus.value === 'error' ? '' : undefined,
-    // Until the image can show, the fallback gives the accessible name. Without `aria-hidden`,
-    // assistive technology would get both names, also from the server HTML.
-    'aria-hidden': imageLoadingStatus.value !== 'loaded' || undefined,
-    onLoad() {
-      setImageLoadingStatus('loaded');
-    },
-    onError() {
-      setImageLoadingStatus('error');
-    },
-  };
-}
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   AvatarImageState,
   HTMLImageElement
 >('img', props, {
   state,
   props: (attrs) => [
-    getRenderedStatusProps(),
+    props.keepMounted
+      ? {
+          'data-loading': imageLoadingStatus.value === 'loading' ? '' : undefined,
+          'data-error': imageLoadingStatus.value === 'error' ? '' : undefined,
+          // The fallback supplies the accessible name until the image loads.
+          'aria-hidden': !isVisible.value || undefined,
+          onLoad() {
+            imageLoadingStatus.value = 'loaded';
+          },
+          onError() {
+            imageLoadingStatus.value = 'error';
+          },
+        }
+      : undefined,
     definedProps({ crossorigin: props.crossorigin, referrerpolicy: props.referrerpolicy }),
     attrs,
-    // Safari and Firefox start the fetch when `src` is set. They ignore a `loading`, `sizes` or
-    // `srcset` that comes later. Vue sets the attributes in key order, so the source props
-    // come last, with `src` as the last key.
+    // Safari and Firefox start the request at `src`. Vue applies these keys in order.
     definedProps({ sizes: props.sizes, srcset: props.srcset, src: props.src }),
   ],
   stateAttributesMapping,
@@ -178,10 +202,8 @@ useOpenChangeComplete({
 });
 
 watch(imageLoadingStatus, (status) => {
-  if (status !== 'idle') {
-    emit('loadingStatusChange', status);
-    setRootImageLoadingStatus(status);
-  }
+  emit('loadingStatusChange', status);
+  setRootImageLoadingStatus(status);
 });
 
 onUnmounted(() => setRootImageLoadingStatus('idle'));
@@ -189,10 +211,7 @@ onUnmounted(() => setRootImageLoadingStatus('idle'));
 let isFirstRead = true;
 let lastRead: unknown[] | undefined;
 
-// With `keepMounted`, the status comes from the rendered element. Its `load` event can fire
-// before the hydration, and its image can be cached.
-// The hooks run after each DOM update of the part. A `#render` element has a source of its own,
-// so no prop shows that the source changed.
+// A render slot can change its own source or finish a request before hydration.
 function readRenderedImage() {
   if (!props.keepMounted) {
     lastRead = undefined;
@@ -204,13 +223,11 @@ function readRenderedImage() {
 
   const image = element.value;
   if (!image) {
-    // The `#render` element did not give the ref to the part. Its own `load` and `error` events
-    // are then the only source of the status. Do not overwrite a status that they set.
+    // A slot without a ref reports its status through load and error events.
     return;
   }
 
-  // A render that changes no source must not read again. The read could replace a status that a
-  // `load` event set with the state of an image that the browser did not load yet.
+  // An unrelated patch must preserve the last load or error event.
   const read = [
     image,
     image.getAttribute('src'),
@@ -224,20 +241,12 @@ function readRenderedImage() {
   }
   lastRead = read;
 
-  if (!image.complete) {
-    setImageLoadingStatus('loading');
-    return;
-  }
-
-  const status = image.naturalWidth > 0 ? 'loaded' : 'error';
-  // The browser already painted an image that is complete at the first read. It must not animate
-  // in again. The sync watcher of `useTransitionStatus` runs in each write. A status write first
-  // would set `'starting'`. Mounting first sets a stale `'ending'` instead. The state hides that
-  // value with `keepMounted`, and the composable clears it in the next frame.
+  const status = readStatus(image);
+  // The browser already painted a complete image. Skip its first enter transition.
   if (status === 'loaded' && isInitialRead) {
     setMounted(true);
   }
-  setImageLoadingStatus(status);
+  imageLoadingStatus.value = status;
 }
 
 onMounted(readRenderedImage);

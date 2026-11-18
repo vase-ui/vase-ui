@@ -1,9 +1,8 @@
-import type { Mock } from 'vitest';
-import { vi, expect, describe, beforeEach, afterEach, it } from 'vitest';
-import { computed, defineComponent, onMounted, shallowRef, toValue } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import { vi, expect, describe, beforeEach, afterEach, it, onTestFinished } from 'vitest';
+import { defineComponent, shallowRef } from 'vue';
 import { Avatar } from '@vase-ui/vue/avatar';
 import {
+  createHeldBranch,
   describeConformance,
   createRenderer,
   flushMicrotasks,
@@ -11,37 +10,22 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import { useImageLoadingStatus } from '../image/useImageLoadingStatus';
-import type { ImageLoadingStatus } from '../root/AvatarRoot.vue';
 
-vi.mock('../image/useImageLoadingStatus');
-
-// The mock keeps the contract of the composable. The status is `'idle'` until the mount, and the
-// part reports only a change of the status.
-function mockLoadingStatus(getStatus: (src: string | undefined) => ImageLoadingStatus) {
-  (useImageLoadingStatus as Mock).mockImplementation(
-    (src: MaybeRefOrGetter<string | undefined>) => {
-      const isMounted = shallowRef(false);
-      onMounted(() => {
-        isMounted.value = true;
-      });
-      return [computed(() => (isMounted.value ? getStatus(toValue(src)) : 'idle')), () => {}];
+function stubImage(complete: boolean, naturalWidth: number) {
+  vi.stubGlobal(
+    'Image',
+    class {
+      complete = complete;
+      naturalWidth = naturalWidth;
     },
   );
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
 }
 
 describe('<Avatar.Fallback />', () => {
   const { render } = createRenderer();
-
-  beforeEach(() => {
-    // The global `vi.resetAllMocks()` teardown clears the implementation, and the component
-    // destructures the hook's return value, so every test needs a stub in place.
-    mockLoadingStatus(() => 'idle');
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
 
   describeConformance(<Avatar.Fallback />, () => ({
     render: (node) => {
@@ -51,11 +35,11 @@ describe('<Avatar.Fallback />', () => {
   }));
 
   it('should not render the children if the image loaded', async () => {
-    mockLoadingStatus(() => 'loaded');
+    stubImage(true, 1);
 
     await render(
       <Avatar.Root>
-        <Avatar.Image />
+        <Avatar.Image src="avatar.png" />
         <Avatar.Fallback data-testid="fallback" />
       </Avatar.Root>,
     );
@@ -64,22 +48,22 @@ describe('<Avatar.Fallback />', () => {
   });
 
   it('should render the fallback if the image fails to load', async () => {
-    mockLoadingStatus(() => 'error');
+    stubImage(true, 0);
+    const change = vi.fn();
 
     await render(
       <Avatar.Root>
-        <Avatar.Image />
+        <Avatar.Image src="avatar.png" onLoadingStatusChange={change} />
         <Avatar.Fallback>AC</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('AC')).not.toBe(null);
-    });
+    expect(change).toHaveBeenCalledWith('error');
+    expect(screen.getByText('AC')).toBeVisible();
   });
 
   it('shows the fallback when a loaded image is unmounted', async () => {
-    mockLoadingStatus(() => 'loaded');
+    stubImage(true, 1);
 
     const Test = defineComponent(() => {
       const showImage = shallowRef(true);
@@ -142,9 +126,28 @@ describe('<Avatar.Fallback />', () => {
       expect(screen.queryByText('AC')).not.toBe(null);
     });
 
-    it('shows the fallback immediately when delay is 0', async () => {
-      mockLoadingStatus(() => 'error');
+    it('restarts the delay when it changes while KeepAlive holds the fallback', async () => {
+      const delay = shallowRef(100);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Avatar.Root>
+          <Avatar.Fallback delay={delay.value}>JD</Avatar.Fallback>
+        </Avatar.Root>
+      ));
+      await renderFakeTimers(<HeldBranch />);
+      await mountWhileHeld();
+      vi.advanceTimersByTime(50);
+      delay.value = 200;
+      await flushMicrotasks();
+      vi.advanceTimersByTime(50);
+      await show();
+      expect(screen.queryByText('JD')).toBeNull();
 
+      vi.advanceTimersByTime(150);
+      await flushMicrotasks();
+      expect(screen.getByText('JD')).toBeVisible();
+    });
+
+    it('shows the fallback immediately when delay is 0', async () => {
       await renderFakeTimers(
         <Avatar.Root>
           <Avatar.Image />
@@ -157,8 +160,6 @@ describe('<Avatar.Fallback />', () => {
     });
 
     it('shows the fallback when delay changes to 0', async () => {
-      mockLoadingStatus(() => 'error');
-
       function Test(props: { delay?: number }) {
         return (
           <Avatar.Root>
@@ -178,8 +179,6 @@ describe('<Avatar.Fallback />', () => {
     });
 
     it('keeps the fallback visible when delay changes from undefined to a number', async () => {
-      mockLoadingStatus(() => 'error');
-
       function Test(props: { delay?: number }) {
         return (
           <Avatar.Root>
@@ -199,8 +198,6 @@ describe('<Avatar.Fallback />', () => {
     });
 
     it('keeps the fallback visible across a number -> undefined -> number delay change', async () => {
-      mockLoadingStatus(() => 'error');
-
       function Test(props: { delay?: number }) {
         return (
           <Avatar.Root>
@@ -226,7 +223,8 @@ describe('<Avatar.Fallback />', () => {
   });
 
   it('keeps fallback mounted and image unmounted while the image is loading', async () => {
-    mockLoadingStatus((src) => (src ? 'loading' : 'error'));
+    stubImage(false, 0);
+    const change = vi.fn();
 
     const Test = defineComponent(() => {
       const showImage = shallowRef(false);
@@ -242,7 +240,11 @@ describe('<Avatar.Fallback />', () => {
             Show image
           </button>
           <Avatar.Root>
-            <Avatar.Image data-testid="image" src={showImage.value ? 'avatar.png' : undefined} />
+            <Avatar.Image
+              data-testid="image"
+              src={showImage.value ? 'avatar.png' : undefined}
+              onLoadingStatusChange={change}
+            />
             <Avatar.Fallback data-testid="fallback">AC</Avatar.Fallback>
           </Avatar.Root>
         </div>
@@ -256,6 +258,7 @@ describe('<Avatar.Fallback />', () => {
 
     await user.click(screen.getByText('Show image'));
 
+    expect(change).toHaveBeenLastCalledWith('loading');
     expect(screen.queryByTestId('image')).toBe(null);
     expect(screen.getByTestId('fallback')).not.toBe(null);
   });
@@ -268,7 +271,7 @@ describe('<Avatar.Fallback />', () => {
     it('keeps only one of image or fallback mounted when switching to image', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      mockLoadingStatus((src) => (src ? 'loaded' : 'error'));
+      stubImage(true, 1);
 
       const style = `
         @keyframes test-exit {
