@@ -1098,7 +1098,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - A `NavigationMenu.Positioner` that mounts open has `data-instant` until a 0 ms timer ends. When the positioner mounts in a held branch, that timer starts at the activation.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
-- Bind `positionerStyles` on the positioner. For item alignment, `Select.Positioner` binds `positionerCssVars` with its own coordinates. The size middleware waits for Vue to apply the variables before it measures the box again.
+- Bind `positionerStyles` on the positioner. For item alignment, `Select.Positioner` binds `positionerCssVars` with its own coordinates. The size middleware waits for Vue to apply the variables before it measures the box again. When the switch from fixed to absolute positioning changes the offset parent, Floating UI computes the coordinates again before paint.
 - `Select.Popup` records the pinned edge when it aligns an item. It reads the new scroll range after the positioner applies its height.
 - The Navigation Menu root holds the popup size and the target size of the positioner. Each part binds its own dimensions.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.

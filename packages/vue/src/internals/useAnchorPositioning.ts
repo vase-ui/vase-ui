@@ -13,6 +13,7 @@ import {
   flip,
   limitShift,
   offset,
+  platform as domPlatform,
   shift as floatingShift,
   size,
   useFloating,
@@ -634,6 +635,27 @@ export function useAnchorPositioning(
     [middlewareData, floatingIsPositioned],
     () => {
       isPositioned.value = floatingIsPositioned.value && open() !== false;
+    },
+    { flush: 'sync' },
+  );
+
+  // Switching from fixed to absolute can change the origin of the measured coordinates.
+  watch(
+    isPositioned,
+    async (positioned) => {
+      const element = floating.value;
+      if (!positioned || !element || positionMethod.value !== 'absolute') {
+        return;
+      }
+      const parent = await domPlatform.getOffsetParent?.(element);
+      await nextTick();
+      if (
+        floating.value === element &&
+        reference.value &&
+        parent !== (await domPlatform.getOffsetParent?.(element))
+      ) {
+        update();
+      }
     },
     { flush: 'sync' },
   );

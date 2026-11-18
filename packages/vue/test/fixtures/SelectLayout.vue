@@ -16,7 +16,9 @@ function property(style: StyleValue, key: string) {
   <DirectionProvider direction="rtl">
     <div dir="rtl" style="position: absolute; top: 150px; left: 100px">
       <Select.Root :open="open" default-value="two" :modal="false">
-        <Select.Trigger :style="{ width: width + 'px' }"><Select.Value /></Select.Trigger>
+        <Select.Trigger data-testid="trigger" :style="{ width: width + 'px' }">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
         <Select.Positioner :align-item-with-trigger="aligned" align="start">
           <template #render="{ props }">
             <div
@@ -30,7 +32,9 @@ function property(style: StyleValue, key: string) {
               <Select.Popup data-testid="popup">
                 <Select.List>
                   <Select.Item value="one"><Select.ItemText>One</Select.ItemText></Select.Item>
-                  <Select.Item value="two"><Select.ItemText>Two</Select.ItemText></Select.Item>
+                  <Select.Item value="two"
+                    ><Select.ItemText data-testid="selected">Two</Select.ItemText></Select.Item
+                  >
                 </Select.List>
               </Select.Popup>
             </div>

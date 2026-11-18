@@ -30,9 +30,24 @@ it.each([true, false])(
     await render(() => <SelectLayout open={open.value} aligned={aligned} width={width.value} />);
     const positioner = screen.getByTestId('positioner');
 
+    function expectPlacement() {
+      const trigger = screen.getByTestId('trigger').getBoundingClientRect();
+      if (aligned) {
+        const value = screen.getByTestId('value').getBoundingClientRect();
+        const item = screen.getByTestId('selected').getBoundingClientRect();
+        expect(Math.abs(item.right - value.right)).toBeLessThan(1);
+        expect(Math.abs(item.top + item.height / 2 - value.top - value.height / 2)).toBeLessThan(1);
+      } else {
+        const box = positioner.getBoundingClientRect();
+        expect(Math.abs(box.right - trigger.right)).toBeLessThan(1);
+        expect(Math.abs(box.top - trigger.bottom)).toBeLessThan(1);
+      }
+    }
+
     open.value = true;
     await waitSingleFrame();
 
+    expectPlacement();
     expect(positioner.dataset.side).toBe(aligned ? 'none' : 'bottom');
     expect(parseFloat(positioner.dataset.width ?? '')).toBeGreaterThan(100);
     expect(positioner.dataset.width).toBe(positioner.style.getPropertyValue('--anchor-width'));
@@ -54,6 +69,7 @@ it.each([true, false])(
     width.value = 240;
     open.value = true;
     await waitSingleFrame();
+    expectPlacement();
     expect(positioner).not.toHaveAttribute('hidden');
     expect(parseFloat(positioner.dataset.width ?? '')).toBeGreaterThan(200);
     expect(positioner.dataset.width).toBe(positioner.style.getPropertyValue('--anchor-width'));
