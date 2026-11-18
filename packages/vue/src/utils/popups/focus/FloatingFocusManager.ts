@@ -103,10 +103,12 @@ export interface FloatingFocusManagerProps {
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus. The return also skips elements in this popup when it closes and
-   * elements in closed popups below it. When the element is in the closed floating element of a
-   * disabled focus manager above, the return element of that focus manager replaces it, because
-   * that focus manager returns no focus at its unmount. The same rule applies to the new element.
+   * it, cannot take the focus. The return skips targets in this popup while it is closed and in
+   * closed popups below it. It follows DOM parents and shadow hosts to check containment. For a
+   * non-tabbable target, it uses the first eligible tabbable descendant, or the target itself if
+   * it has none. When the element is in the closed floating element of a disabled focus manager
+   * above, the return element of that focus manager replaces it, because that focus manager returns
+   * no focus at its unmount. The same rule applies to the new element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -305,8 +307,8 @@ function getFirstTabbableElement(
   return tabbable(container, isInClosedPopup)[0] ?? container;
 }
 
-// A detached element, a hidden element, or an element in a closed popup cannot take the focus.
-// A substitute for a connected target must respect a focus change in the same update.
+// The return skips detached elements, hidden elements and elements in closed popups.
+// A substitute for a connected target must preserve focus that the closing update moved.
 function findReturnElement(
   candidates: (Element | null | undefined)[],
   isInClosedPopup: (element: Element) => boolean,

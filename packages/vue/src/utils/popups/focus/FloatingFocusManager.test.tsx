@@ -224,7 +224,6 @@ function getInsideGuards(root: ParentNode = document) {
 
 type TargetRef = ShallowRef<HTMLElement | null>;
 
-// These actions open or close the popup without a user event.
 function captureStore() {
   let store: PopupStore | undefined;
   return {

@@ -1842,7 +1842,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `portalOwnPropsTests`: the test of each portal part that renders `FloatingPortal` and does not set `inPlace` (`VUE-135`). `Dialog.Portal` sets `inPlace`, so `DialogPortal.test.tsx` has a case of its own with `portal-owner-role`.
   - `dialogRootSharedTests`: the tests of the roots of Dialog and Alert Dialog.
   - `fieldsetDisabledTests`: the test of each native button part that reads `useFieldsetDisabled` (`VUE-112`).
-  - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup that closes in the same update as a popup in it, before that popup, or alone (`BUG-5519`). The suite also checks that a popup with no trigger returns focus to an element outside it at close (`BUG-6037`).
+  - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup that closes in the same update as a popup in it, before that popup, or alone (`BUG-5519`). The `BUG-6037` cases check that a popup with no trigger returns focus to the earlier menu trigger at close.
   - `hiddenInputSizeTests`: the test of a part with a hidden input that has no `name`.
   - `hiddenInputTypeTests`: the test of a part with a hidden input that `getHiddenInputType` types.
   - `heldMountFormResetTests`: the test of each family whose part calls `useFormReset`. `RadioGroup.test.tsx` calls it for `Radio.Root`, which follows a reset only in a group.

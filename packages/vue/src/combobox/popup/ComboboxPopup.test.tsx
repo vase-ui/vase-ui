@@ -364,7 +364,7 @@ describe('<Combobox.Popup />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const open = shallowRef(false);
       const onOpenChangeComplete = vi.fn();
-      // The trigger can read typeahead labels from items after the list unmounts.
+      // These labels let the trigger use typeahead without keeping the list mounted.
       const items = ['one'];
       let focusAtExitStart: Element | null = null;
       await render(() => (
