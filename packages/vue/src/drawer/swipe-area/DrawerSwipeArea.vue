@@ -421,6 +421,13 @@ const swipe = useSwipeDismiss({
   onCancel: finishSwipeInteraction,
 });
 
+watch(open, (isOpen) => {
+  if (!isOpen && swipeActive.value && openedBySwipe) {
+    finishSwipeInteraction();
+    swipe.reset();
+  }
+});
+
 watch(enabled, (isEnabled) => {
   if (isEnabled) {
     return;

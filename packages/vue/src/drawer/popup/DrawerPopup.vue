@@ -429,6 +429,16 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
 });
 
 watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      swipe?.cancelHeldPopup(element.value);
+    }
+  },
+  { flush: 'sync' },
+);
+
+watch(
   [element, mounted, nestedDrawerOpen, isHeld],
   ([popup, isMounted, , held], _previous, onCleanup) => {
     if (held) {

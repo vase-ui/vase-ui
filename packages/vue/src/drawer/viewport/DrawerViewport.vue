@@ -841,6 +841,9 @@ const swipe = useSwipeDismiss({
     return settleOnSnapPoint(closestSnapPoint);
   },
   onDismiss(event) {
+    // The default threshold can dismiss without a velocity sample.
+    gesturePopup = popupRef.value;
+    swipeRelease.value ??= { strength: null };
     applySwipeProgress(0, false, false);
 
     const dismissEventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
@@ -1011,7 +1014,7 @@ useDomEffect(
 );
 
 function applyRestingSnapPointProgress() {
-  if (isHeld.value || !snapPointRange.value || swipe.swiping.value) {
+  if (isHeld.value || swipe.swiping.value || openingSwipe.value) {
     return;
   }
 
@@ -1019,7 +1022,7 @@ function applyRestingSnapPointProgress() {
 }
 
 watch(
-  [frontmostHeight, nested, open, snapPointProgress, snapPointRange, swipe.swiping],
+  [frontmostHeight, nested, open, openingSwipe, snapPointProgress, swipe.swiping],
   applyRestingSnapPointProgress,
 );
 
@@ -1037,15 +1040,14 @@ function resetGesture() {
 }
 
 watch(open, resetGesture, { flush: 'sync' });
-watch([popupRef, store.context.keptPopupRef], ([popup, keptPopup]) => {
-  // A held popup keeps its element. An unmounted popup can still release through the viewport.
-  if (
-    viewportGesture.value === gesture &&
-    gesturePopup &&
-    (popup ? popup !== gesturePopup : keptPopup === gesturePopup)
-  ) {
-    clearSwipeRelease();
-    swipe.reset();
+function cancelPopupGesture() {
+  clearSwipeRelease();
+  swipe.reset();
+}
+
+watch(popupRef, (popup) => {
+  if (popup && gesturePopup && popup !== gesturePopup) {
+    cancelPopupGesture();
   }
 });
 
@@ -1053,6 +1055,11 @@ const gesture: DrawerViewportContext = {
   swiping: swipe.swiping,
   getDragStyles: swipe.getDragStyles,
   release: swipeRelease,
+  cancelHeldPopup(popup) {
+    if (popup && popup === gesturePopup) {
+      cancelPopupGesture();
+    }
+  },
   getProgress: () => backdropProgress,
   height: backdropHeight,
 };

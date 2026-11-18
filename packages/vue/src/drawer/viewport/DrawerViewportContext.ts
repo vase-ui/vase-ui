@@ -5,6 +5,7 @@ export interface DrawerViewportContext {
   swiping: Readonly<Ref<boolean>>;
   getDragStyles: () => CSSProperties;
   getProgress: () => number;
+  cancelHeldPopup: (popup: HTMLElement | null) => void;
   height: Readonly<Ref<number>>;
   release: Readonly<Ref<{ strength: number | null } | null>>;
 }

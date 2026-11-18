@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, shallowRef, watch } from 'vue';
 import { userEvent } from 'vitest/browser';
 import {
   createRenderer,
@@ -17,8 +17,6 @@ import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
-import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
-import type { DrawerProviderContext } from '../provider/DrawerProviderContext';
 import DrawerSwipeAreaHydration from './DrawerSwipeAreaHydration.test.vue';
 
 const eventUtilsMockState = vi.hoisted(() => ({ forceVirtualClick: false }));
@@ -545,22 +543,80 @@ describe('<Drawer.SwipeArea />', () => {
     );
   });
 
-  it('cancels an active opening gesture when the swipe area becomes disabled', async () => {
-    let timerAfterChangeRan = false;
-    let providerContext: DrawerProviderContext | undefined;
-    const cleanupPhases: boolean[] = [];
-
-    const ProviderContextCapture = defineComponent({
-      setup() {
-        providerContext = useDrawerProviderContext();
-        return () => null;
+  it('ends the opening gesture when a controlled drawer closes before release', async () => {
+    const open = shallowRef(false);
+    await render(() => (
+      <Drawer.Root open={open.value} onOpenChange={(value) => (open.value = value)} modal={false}>
+        <Drawer.SwipeArea data-testid="area" />
+        <Drawer.Portal keepMounted>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup" style={{ height: '100px' }} />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    await swipeUp(screen.getByTestId('area'), 100, 40, {
+      async beforeRelease() {
+        expect(popup).toHaveAttribute('data-swiping');
+        open.value = false;
+        await flushMicrotasks();
+        expect(popup).not.toHaveAttribute('data-swiping');
+        expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+        open.value = true;
+        await flushMicrotasks();
+        expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
       },
     });
+    expect(open.value).toBe(true);
+  });
 
+  it('gives the indent the resting snap progress after a swipe opens the drawer', async () => {
+    await render(
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        <Drawer.Root snapPoints={['100px', '200px']} modal={false}>
+          <Drawer.SwipeArea data-testid="area" />
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport style={{ height: '200px' }}>
+              <Drawer.Popup style={{ height: '200px' }} />
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </Drawer.Provider>,
+    );
+    await swipeUp(screen.getByTestId('area'), 200, 60);
+    expect(screen.getByTestId('backdrop').style.getPropertyValue('--drawer-swipe-progress')).toBe(
+      '1',
+    );
+    const indent = screen.getByTestId('indent');
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('1');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('200px');
+  });
+
+  it('cancels an active opening gesture when the swipe area becomes disabled', async () => {
     const disabled = shallowRef(false);
+    const samples: string[] = [];
+    const Probe = defineComponent(() => {
+      watch(
+        disabled,
+        () => {
+          samples.push(
+            screen.getByTestId('indent').style.getPropertyValue('--drawer-swipe-progress'),
+          );
+        },
+        { flush: 'post' },
+      );
+      return () => null;
+    });
     await render(() => (
       <Drawer.Provider>
-        <ProviderContextCapture />
+        <Drawer.Indent data-testid="indent">
+          <Probe />
+        </Drawer.Indent>
         <Drawer.Root>
           <Drawer.SwipeArea
             data-testid="swipe-area"
@@ -606,30 +662,16 @@ describe('<Drawer.SwipeArea />', () => {
     const popup = screen.getByTestId('popup');
     expect(popup).toHaveAttribute('data-swiping', '');
 
-    const originalSetVisualState = providerContext!.visualStateStore.set;
-    providerContext!.visualStateStore.set = (state) => {
-      if (state.swipeProgress === 0) {
-        cleanupPhases.push(!timerAfterChangeRan);
-      }
-      originalSetVisualState(state);
-    };
-
-    try {
-      setTimeout(() => {
-        timerAfterChangeRan = true;
-      });
-      disabled.value = true;
-      await flushMicrotasks();
-      expect(cleanupPhases.at(-1)).toBe(true);
-      expect(screen.getByTestId('popup')).not.toHaveAttribute('data-swiping');
-      expect(swipeArea).toHaveAttribute('data-disabled', '');
-
-      await pressOutside();
-
-      expect(screen.queryByTestId('popup')).toBe(null);
-    } finally {
-      providerContext!.visualStateStore.set = originalSetVisualState;
-    }
+    expect(
+      Number(screen.getByTestId('indent').style.getPropertyValue('--drawer-swipe-progress')),
+    ).toBeGreaterThan(0);
+    disabled.value = true;
+    await flushMicrotasks();
+    expect(samples).toEqual(['0']);
+    expect(popup).not.toHaveAttribute('data-swiping');
+    expect(swipeArea).toHaveAttribute('data-disabled', '');
+    await pressOutside();
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('keeps the drawer open when the release click follows a mid-gesture disable', async () => {

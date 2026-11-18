@@ -192,6 +192,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
   let hasStationarySample = false;
   let lastDragVelocity: Point = { x: 0, y: 0 };
   let lastProgressDetails: SwipeProgressDetailsInternal | null = null;
+
   function readSwipeThresholdDefault() {
     const value = toValue(options.swipeThreshold);
     return Math.max(0, typeof value === 'number' ? value : DEFAULT_SWIPE_THRESHOLD);
