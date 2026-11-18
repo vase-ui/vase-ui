@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, h, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
@@ -13,6 +13,7 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+import { createSlotHost } from '../../../test/fixtures/slotHost';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
@@ -48,6 +49,37 @@ function listPlaceOfTrigger(host: Element) {
 
 describe('useTriggerFocusGuards', () => {
   const { render } = createRenderer();
+
+  it('VUE-138: exits through the trigger guard from a field in the popup slot', async () => {
+    const field = document.createElement('input');
+    const root = createSlotHost(field);
+    const reasons: string[] = [];
+    await render(
+      <>
+        <Popover.Root
+          open
+          triggerId="trigger"
+          modal={false}
+          onOpenChange={(_open, details) => reasons.push(details.reason)}
+        >
+          <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
+          <Popover.Portal container={root}>
+            <Popover.Positioner>
+              <Popover.Popup initialFocus={field}>{h('slot')}</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <button>After</button>
+      </>,
+    );
+    await waitFor(() => expect(field).toHaveFocus());
+
+    const guard = screen.getByRole('button', { name: 'Toggle' }).nextElementSibling as HTMLElement;
+    guard.focus();
+    await flushMicrotasks();
+    expect(reasons).toEqual([REASONS.focusOut]);
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+  });
 
   // The cases press Tab with `userEvent` of `vitest/browser`. A native Tab runs a microtask
   // checkpoint between the blur of the trigger and the focus of the guard, and a synthetic event
