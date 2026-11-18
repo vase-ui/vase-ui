@@ -1,43 +1,17 @@
-import type { HTMLProps } from '../../internals/types';
-import { usePopupInteractionProps } from './popupStoreUtils';
-import type { PopupStoreState, PopupTriggerDataStore } from './store';
+import type { HTMLAttributes } from 'vue';
+import { bindPopupParts } from './popupBindings';
+import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 
-type TestState = PopupStoreState<unknown> & {
-  itemProps: HTMLProps;
-};
-
-type TestStore = PopupTriggerDataStore<TestState>;
-
-function useTypeTests(store: TestStore, props: HTMLProps) {
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    popupProps: props,
-    itemProps: props,
-  }));
-
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    popupProps: props,
-    // @ts-expect-error The store requires a defined item prop bag.
-    itemProps: undefined,
-  }));
-
-  // @ts-expect-error All three common popup prop bags are required.
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    itemProps: props,
-  }));
-
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    popupProps: props,
-    // @ts-expect-error Additional store fields must use their declared value type.
-    itemProps: 'invalid',
-  }));
+function useTypeTests(
+  store: PopupTriggerDataStore<PopupStoreState<unknown>>,
+  props: HTMLAttributes,
+) {
+  bindPopupParts(store, { trigger: () => props, popup: () => props });
+  bindPopupParts(store, { trigger: () => props, inactiveTrigger: () => props, popup: () => props });
+  // @ts-expect-error A trigger needs a popup.
+  bindPopupParts(store, { trigger: () => props });
+  // @ts-expect-error A popup must supply attributes.
+  bindPopupParts(store, { trigger: () => props, popup: () => 'invalid' });
 }
 
 void useTypeTests;

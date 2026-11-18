@@ -33,13 +33,12 @@ export interface TooltipArrowProps
 </script>
 
 <script setup lang="ts">
-import { popupStoreSelectors } from '../../utils/popups/store';
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 

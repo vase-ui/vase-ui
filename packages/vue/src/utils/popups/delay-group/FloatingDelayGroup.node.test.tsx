@@ -3,12 +3,12 @@ import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NOOP } from '../../../common/empty';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import { useClientPoint } from '../interactions/useClientPoint';
-import { useFocus } from '../interactions/useFocus';
+import { useTestCursor } from '../../../../test/fixtures/tooltipCursor';
+import { useTriggerFocus as useFocus } from '../usePopupTrigger';
 import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
 import type { Delay } from '../types';
-import { useDelayGroup } from './FloatingDelayGroup';
+import { useDelayGroup } from '../../../tooltip/root/TooltipRootContext';
 
 // The store of a module is the store of a handle that no root controls. Each request shares it.
 const sharedStore = Object.assign(getEmptyRootStore(), { closeForSibling: NOOP });
@@ -22,7 +22,7 @@ describe('useDelayGroup on a server', () => {
         const group = useDelayGroup(sharedStore, { open: true });
         const hoverProps = useHoverTriggerInteraction(sharedStore, { delay: group.delay });
         const focusProps = useFocus(sharedStore);
-        const clientPointProps = useClientPoint(sharedStore);
+        const clientPointProps = useTestCursor(sharedStore);
         useHoverPopupInteraction(sharedStore);
         return () => (
           <button

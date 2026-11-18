@@ -4,7 +4,7 @@ import type { REASONS } from '../../src/internals/reasons';
 import {
   createInitialPopupStoreState,
   createPopupStoreContext,
-} from '../../src/utils/popups/store';
+} from '../../src/utils/popups/usePopupRoot';
 import {
   ValuePopupStore,
   valuePopupSelectors,

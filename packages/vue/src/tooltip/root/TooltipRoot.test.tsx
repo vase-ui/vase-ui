@@ -19,7 +19,7 @@ import {
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
-import { OPEN_DELAY } from '../utils/constants';
+import { OPEN_DELAY } from './TooltipRootContext';
 import TooltipHydration from './TooltipHydration.test.vue';
 
 type Details = Tooltip.Root.ChangeEventDetails;

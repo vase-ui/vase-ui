@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
-import type { PopupOpenChangeEventDetails } from '../../utils/popups/store';
+import type { PopupOpenChangeEventDetails } from '../../utils/popups/usePopupRoot';
 
 export interface ContextMenuAnchor {
   getBoundingClientRect: () => DOMRect;

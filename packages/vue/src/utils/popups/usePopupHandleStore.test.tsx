@@ -18,7 +18,7 @@ import {
 import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
 import PopupHandleHydration from './PopupHandleHydration.test.vue';
 import PopupHandleLateTriggerHydration from './PopupHandleLateTriggerHydration.test.vue';
-import { usePopupHandleStore } from './usePopupHandleStore';
+import { usePopupHandleStore } from './usePopupTrigger';
 
 const HYDRATION_FIXTURE = 'src/utils/popups/PopupHandleHydration.test.vue';
 

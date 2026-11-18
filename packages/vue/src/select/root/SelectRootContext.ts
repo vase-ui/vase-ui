@@ -1,12 +1,13 @@
+import type { useSingleAnchorPopupRoot } from '../../utils/popups/usePopupRoot';
 import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
 import type { SelectStore } from '../store';
 
-export type SelectRootContext = SelectStore;
+export type SelectRootContext = ReturnType<typeof useSingleAnchorPopupRoot<SelectStore>>;
 
 export const SelectRootContext: InjectionKey<SelectRootContext> = Symbol();
 
-export function useSelectRootContext(): SelectRootContext {
+export function useSelectRootOwner(): SelectRootContext {
   const store = inject(SelectRootContext, undefined);
   if (store === undefined) {
     throw new Error(
@@ -14,4 +15,8 @@ export function useSelectRootContext(): SelectRootContext {
     );
   }
   return store;
+}
+
+export function useSelectRootContext(): SelectStore {
+  return useSelectRootOwner().store;
 }

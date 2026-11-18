@@ -45,13 +45,15 @@ export interface TooltipPositionerProps
 </script>
 
 <script setup lang="ts">
-import { popupStoreSelectors } from '../../utils/popups/store';
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
-import { useTooltipPortalContext } from '../portal/TooltipPortalContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
-import { TooltipPositionerContext } from './TooltipPositionerContext';
+import {
+  useTooltipPortalContext,
+  useTooltipRootContext,
+  TooltipPositionerContext,
+} from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 

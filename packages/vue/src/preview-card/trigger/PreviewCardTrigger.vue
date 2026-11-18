@@ -46,17 +46,19 @@ export interface PreviewCardTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef } from 'vue';
+import { computed } from 'vue';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useFocus } from '../../utils/popups/interactions/useFocus';
+import {
+  useTriggerFocus,
+  usePopupTrigger,
+  useTriggerOwner,
+} from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
-import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 import type { PreviewCardHandleStore } from '../store/PreviewCardStore';
 
@@ -74,32 +76,24 @@ defineSlots<{
 }>();
 
 const rootStore = usePreviewCardRootContext(true);
-const handleStore = usePopupHandleStore(() => props.handle);
-if (rootStore === undefined && props.handle === undefined) {
-  throw new Error(
-    'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',
-  );
-}
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
-const store = computed<PreviewCardHandleStore<any>>(() => handleStore.value ?? rootStore!);
+const store = useTriggerOwner<PreviewCardHandleStore<unknown>>(
+  rootStore,
+  () => props.handle,
+  'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',
+);
 
 const thisTriggerId = useVaseUiId(() => props.id);
-const isTriggerActive = computed(() => store.value.select('isTriggerActive', thisTriggerId.value));
-const isOpenedByThisTrigger = computed(() =>
-  store.value.select('isOpenedByTrigger', thisTriggerId.value),
-);
 
-const triggerElement = shallowRef<Element | null>(null);
-
-const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
-  thisTriggerId,
-  store,
-  () => ({ payload: props.payload, closeDelay: props.closeDelay }),
-);
-
-const rootTriggerProps = computed(() =>
-  store.value.select('triggerProps', isMountedByThisTrigger.value),
-);
+const {
+  registerTrigger,
+  bindings: rootTriggerProps,
+  isOpenedByThisTrigger,
+  isTriggerActive,
+  element: triggerElement,
+} = usePopupTrigger(thisTriggerId, store, () => ({
+  payload: props.payload,
+  closeDelay: props.closeDelay,
+}));
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon();
@@ -114,7 +108,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
-const focusProps = useFocus(store, { delay: () => props.delay });
+const focusProps = useTriggerFocus(store, { delay: () => props.delay });
 
 const inlineRectTriggerProps = getInlineRectTriggerProps(
   () => store.value.context.inlineRectCoordsRef,
@@ -125,12 +119,7 @@ const state = computed<PreviewCardTriggerState>(() => ({ open: isOpenedByThisTri
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
   state,
-  ref: [
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
     hoverProps,

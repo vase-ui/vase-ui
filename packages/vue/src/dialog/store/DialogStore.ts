@@ -1,20 +1,20 @@
 import { shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { NOOP } from '../../common/empty';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
-import { NullStore } from '../../utils/popups/NullStore';
 import {
+  NullStore,
   BasePopupStore,
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
 import type {
   PopupStoreContext,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
 import type { DialogRootChangeEventDetails } from '../root/DialogRoot.vue';
 
 export type State<Payload> = PopupStoreState<Payload> & {

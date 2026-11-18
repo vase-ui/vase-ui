@@ -11,32 +11,32 @@ import {
 import type { PropType } from 'vue';
 import { createHeldBranch, createRenderer, screen } from '#test-utils';
 import { NOOP } from '../../common/empty';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from './usePopupTrigger';
 import type { HTMLProps } from '../../internals/types';
-import { NullStore } from './NullStore';
 import {
-  createDefaultInitialFocus,
-  usePopupInteractionProps,
-  useTriggerDataForwarding,
-  useTriggerRegistration,
-} from './popupStoreUtils';
-import { BasePopupHandle } from './popupHandle';
-import { PopupTriggerMap } from './popupTriggerMap';
-import {
+  NullStore,
+  PopupTriggerMap,
   BasePopupStore,
   createInitialPopupStoreState,
   createPopupOpenState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from './store';
+} from './usePopupRoot';
+import { usePopupTrigger, useTriggerRegistration, usePopupHandleStore } from './usePopupTrigger';
+import {
+  createDefaultInitialFocus,
+  bindPopupParts,
+  popupBindings,
+  triggerBindings,
+} from './popupBindings';
+import { BasePopupHandle } from './popupHandle';
 import type {
   PopupOpenChangeEventDetails,
   PopupStoreContext,
   PopupStoreSelectors,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from './store';
-import { usePopupHandleStore } from './usePopupHandleStore';
+} from './usePopupRoot';
 import {
   createTestPopupStore,
   TestForwardedTrigger,
@@ -58,11 +58,11 @@ const PopupInteractionPropsTest = defineComponent({
     popupProps: { type: Object as PropType<HTMLProps>, required: true },
   },
   setup(props) {
-    usePopupInteractionProps(props.store, () => ({
-      activeTriggerProps: props.activeTriggerProps,
-      inactiveTriggerProps: props.inactiveTriggerProps,
-      popupProps: props.popupProps,
-    }));
+    bindPopupParts(props.store, {
+      trigger: () => props.activeTriggerProps,
+      inactiveTrigger: () => props.inactiveTriggerProps,
+      popup: () => props.popupProps,
+    });
 
     return () => null;
   },
@@ -72,7 +72,7 @@ const PopupInteractionPropsTest = defineComponent({
 const RegisteredTrigger = defineComponent({
   props: { id: { type: String, required: true }, store: storeProp, payload: null },
   setup(props, { slots }) {
-    const { registerTrigger } = useTriggerDataForwarding(
+    const { registerTrigger } = usePopupTrigger(
       () => props.id,
       () => props.store,
       () => ({ payload: props.payload }),
@@ -140,7 +140,7 @@ const DetachedTrigger = defineComponent({
   },
   setup(props, { slots }) {
     const handleStore = usePopupHandleStore(() => props.handle);
-    const { registerTrigger } = useTriggerDataForwarding(
+    const { registerTrigger } = usePopupTrigger(
       () => props.id,
       () => handleStore.value!,
       () => ({ payload: props.payload }),
@@ -909,18 +909,18 @@ describe('usePopupInteractionProps', () => {
       />,
     );
 
-    expect(store.state.activeTriggerProps).toBe(activeTriggerProps);
-    expect(store.state.inactiveTriggerProps).toBe(inactiveTriggerProps);
-    expect(store.state.popupProps).toBe(popupProps);
+    expect(triggerBindings(store, true)).toBe(activeTriggerProps);
+    expect(triggerBindings(store, false)).toBe(inactiveTriggerProps);
+    expect(popupBindings(store)).toBe(popupProps);
 
     unmount();
 
-    expect(store.state.activeTriggerProps).not.toBe(activeTriggerProps);
-    expect(store.state.activeTriggerProps).toEqual({});
-    expect(store.state.inactiveTriggerProps).not.toBe(inactiveTriggerProps);
-    expect(store.state.inactiveTriggerProps).toEqual({});
-    expect(store.state.popupProps).not.toBe(popupProps);
-    expect(store.state.popupProps).toEqual({});
+    expect(triggerBindings(store, true)).not.toBe(activeTriggerProps);
+    expect(triggerBindings(store, true)).toEqual({});
+    expect(triggerBindings(store, false)).not.toBe(inactiveTriggerProps);
+    expect(triggerBindings(store, false)).toEqual({});
+    expect(popupBindings(store)).not.toBe(popupProps);
+    expect(popupBindings(store)).toEqual({});
   });
 
   it('writes the props again when a source of the getter changes', async () => {
@@ -937,12 +937,12 @@ describe('usePopupInteractionProps', () => {
         popupProps={other}
       />,
     );
-    expect(store.state.activeTriggerProps).toBe(first);
+    expect(triggerBindings(store, true)).toBe(first);
 
     await setProps({ activeTriggerProps: second });
 
-    expect(store.state.activeTriggerProps).toBe(second);
-    expect(store.state.popupProps).toBe(other);
+    expect(triggerBindings(store, true)).toBe(second);
+    expect(popupBindings(store)).toBe(other);
   });
 
   it('writes the props in setup, so a part below the root gets them in its first render', async () => {
@@ -951,18 +951,14 @@ describe('usePopupInteractionProps', () => {
     const seen: unknown[] = [];
 
     const Reader = defineComponent(() => {
-      const props = computed(() => store.select('popupProps'));
+      const props = computed(() => popupBindings(store));
       return () => {
         seen.push(props.value);
         return null;
       };
     });
     const Root = defineComponent(() => {
-      usePopupInteractionProps(store, () => ({
-        activeTriggerProps: popupProps,
-        inactiveTriggerProps: popupProps,
-        popupProps,
-      }));
+      bindPopupParts(store, { trigger: () => popupProps, popup: () => popupProps });
       return () => <Reader />;
     });
 

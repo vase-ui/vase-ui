@@ -7,7 +7,7 @@ import { getDelay } from '../interactions/useHoverShared';
 import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
 import type { Delay } from '../types';
-import { provideFloatingDelayGroup, useDelayGroup } from './FloatingDelayGroup';
+import { provideFloatingDelayGroup, useDelayGroup } from '../../../tooltip/root/TooltipRootContext';
 
 type DelayGroup = ReturnType<typeof useDelayGroup>;
 

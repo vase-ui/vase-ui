@@ -3,7 +3,7 @@ import { platform } from '../../common/platform';
 import { closest, contains } from '../../common/shadowDom';
 import { tooltipTriggers } from './registeredParts';
 import { FOCUSABLE_ATTRIBUTE, TYPEABLE_SELECTOR } from './constants';
-import type { PopupTriggerMap } from './popupTriggerMap';
+import type { PopupTriggerMap } from './usePopupRoot';
 
 export function isTargetInsideEnabledTrigger(
   target: EventTarget | null,

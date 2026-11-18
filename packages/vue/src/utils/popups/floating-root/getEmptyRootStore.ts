@@ -1,7 +1,6 @@
 import { NOOP } from '../../../common/empty';
 import { createEventEmitter } from '../createEventEmitter';
-import { NullStore } from '../NullStore';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { NullStore, PopupTriggerMap } from '../usePopupRoot';
 import type { PositioningInteractionStore } from '../types';
 import { floatingRootStoreSelectors } from './FloatingRootStore';
 import type { FloatingRootState, FloatingRootStoreContext } from './FloatingRootStore';

@@ -291,12 +291,18 @@
         "useToastLabelPart > <Toast.Title /> > drops aria-labelledby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive"
       }
     },
+    "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
+      "fails": {}
+    },
     "src/tooltip/positioner/TooltipPositioner.test.tsx": {
       "fails": {
         "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
         "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
         "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
+    },
+    "src/tooltip/root/TooltipOwner.test.tsx": {
+      "fails": {}
     },
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
@@ -316,19 +322,16 @@
     "src/utils/useSwipeDismiss.test.tsx": {
       "fails": {}
     },
-    "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
+    "test/modelOwnership.test.tsx": {
       "fails": {}
     },
-    "test/modelOwnership.test.tsx": {
+    "test/popupLayout.test.tsx": {
       "fails": {}
     },
     "test/reportedMessages.test.tsx": {
       "fails": {}
     },
     "test/testApp.test.tsx": {
-      "fails": {}
-    },
-    "test/popupLayout.test.tsx": {
       "fails": {}
     },
     "test/vaporParts/vaporParts.test.tsx": {

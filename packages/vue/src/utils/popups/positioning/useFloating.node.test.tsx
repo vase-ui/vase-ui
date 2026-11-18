@@ -3,7 +3,7 @@ import { computed, defineComponent, shallowRef } from 'vue';
 import type { Placement } from '@floating-ui/vue';
 import { renderToString } from 'vue/server-renderer';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import { provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { useVaseUIFloating } from './useFloating';

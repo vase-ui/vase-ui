@@ -5,7 +5,7 @@ import { AnimationFrame } from '../../common/useAnimationFrame';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import type { PopupTriggerMap } from './popupTriggerMap';
+import type { PopupTriggerMap } from './usePopupRoot';
 
 const triggerStores = new WeakMap<object, () => unknown>();
 

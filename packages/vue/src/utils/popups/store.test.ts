@@ -8,8 +8,12 @@ import {
   createPopupStoreContext,
   getHoverPopupInstantType,
   popupStoreSelectors,
-} from './store';
-import type { PopupOpenChangeEventDetails, PopupStoreContext, PopupStoreState } from './store';
+} from './usePopupRoot';
+import type {
+  PopupOpenChangeEventDetails,
+  PopupStoreContext,
+  PopupStoreState,
+} from './usePopupRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 

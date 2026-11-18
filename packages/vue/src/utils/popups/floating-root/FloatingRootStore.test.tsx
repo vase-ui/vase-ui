@@ -3,7 +3,7 @@ import { defineComponent, nextTick } from 'vue';
 import { createRenderer } from '#test-utils';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import { FloatingRootStore } from './FloatingRootStore';
 
 function createStore(options: Partial<ConstructorParameters<typeof FloatingRootStore>[0]> = {}) {

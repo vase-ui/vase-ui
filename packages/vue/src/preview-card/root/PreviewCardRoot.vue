@@ -69,8 +69,7 @@ export type PreviewCardRootChangeEventDetails =
 import { provide, watch } from 'vue';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import { usePopupRoot } from '../../utils/popups/popupRoot';
-import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
+import { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { provideFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { PreviewCardStore } from '../store/PreviewCardStore';
 import { PreviewCardRootContext, usePreviewCardRootContext } from './PreviewCardContext';
@@ -116,6 +115,8 @@ defineSlots<{
 
 const {
   store,
+  bindParts,
+  triggerId: activeId,
   open: isOpen,
   payload,
   actions,
@@ -138,18 +139,14 @@ const {
   },
 );
 
-watch([isOpen, () => store.select('activeTriggerId')], ([openNow, activeTriggerId]) => {
+watch([isOpen, activeId], ([openNow, activeTriggerId]) => {
   if (openNow && activeTriggerId == null) {
     store.set('payload', undefined);
   }
 });
 
 const dismiss = useDismiss(store, { externalTree: tree });
-usePopupInteractionProps(store, () => ({
-  activeTriggerProps: dismiss.reference,
-  inactiveTriggerProps: dismiss.trigger,
-  popupProps: dismiss.floating,
-}));
+bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
 
 provide(PreviewCardRootContext, store);
 

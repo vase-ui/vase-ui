@@ -64,6 +64,7 @@ export interface MenuSubmenuTriggerProps
 </script>
 
 <script setup lang="ts">
+import { triggerBindings } from '../../utils/popups/popupBindings';
 import { submenuTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, onUpdated, shallowRef, watch, type ShallowRef } from 'vue';
@@ -79,11 +80,10 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import { useTriggerPress, useTriggerRegistration } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
@@ -220,7 +220,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   guardStaleOpen: true,
 });
 
-const click = useClick(store, {
+const click = useTriggerPress(store, {
   enabled: () => !isDisabled.value,
   event: 'mousedown',
   // Without toggling, TalkBack users cannot close the submenu to reach the next parent menu
@@ -233,7 +233,7 @@ const click = useClick(store, {
   stickIfOpen: () => props.openOnHover,
 });
 
-const rootTriggerProps = computed(() => store.select('triggerProps', true));
+const rootTriggerProps = computed(() => triggerBindings(store, true));
 
 // Arrow keys open the submenu through list navigation without dispatching a click, so
 // `openMethod` stays null there; Enter and Space do dispatch one and report `keyboard`.
@@ -277,7 +277,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   props: (attrs) => [
     commonProps.value,
     { onMouseenter },
-    click.reference,
+    click,
     hoverProps,
     { style: hoverStyle.value },
     rootTriggerProps.value,

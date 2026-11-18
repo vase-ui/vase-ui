@@ -1,7 +1,9 @@
-import { computed, getCurrentScope, onScopeDispose, shallowRef, watch } from 'vue';
-import type { HTMLAttributes } from 'vue';
+import { computed, getCurrentScope, onScopeDispose, watch } from 'vue';
+import type { InteractionType } from './usePopupTrigger';
+import { FOCUSABLE_ATTRIBUTE } from './constants';
+import type { HTMLAttributes, Ref } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
-import type { PopupStoreState, PopupTriggerDataStore } from './store';
+import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 
 type Store = Pick<PopupTriggerDataStore<PopupStoreState<unknown>>, 'state' | 'update'>;
 
@@ -25,19 +27,21 @@ export function bindPopupParts(store: Store, parts: PopupParts) {
   const trigger = computed(parts.trigger);
   const inactive = parts.inactiveTrigger ? computed(parts.inactiveTrigger) : trigger;
   const popup = computed(parts.popup);
-  const exposed = shallowRef(false);
+  let exposed = false;
   bindings.set(store, {
     trigger(active) {
-      if (exposed.value) {
-        return active ? store.state.activeTriggerProps : store.state.inactiveTriggerProps;
-      }
-      return active ? trigger.value : inactive.value;
+      const value = active ? store.state.activeTriggerProps : store.state.inactiveTriggerProps;
+      return exposed ? value : active ? trigger.value : inactive.value;
     },
-    popup: () => (exposed.value ? store.state.popupProps : popup.value),
+    popup() {
+      const value = store.state.popupProps;
+      return exposed ? value : popup.value;
+    },
     expose() {
-      if (exposed.value) {
+      if (exposed) {
         return;
       }
+      exposed = true;
       // Only a handle reader needs writable copies of these three public fields.
       scope?.run(() => {
         watch(
@@ -48,12 +52,11 @@ export function bindPopupParts(store: Store, parts: PopupParts) {
           { immediate: true },
         );
       });
-      exposed.value = true;
     },
   });
   onScopeDispose(() => {
     bindings.delete(store);
-    if (exposed.value) {
+    if (exposed) {
       store.update({
         activeTriggerProps: EMPTY_OBJECT,
         inactiveTriggerProps: EMPTY_OBJECT,
@@ -76,4 +79,19 @@ export function popupBindings(store: Pick<Store, 'state'>) {
 
 export function exposePopupBindings(store: object) {
   bindings.get(store)?.expose();
+}
+
+export const FOCUSABLE_POPUP_PROPS = {
+  tabindex: -1,
+  [FOCUSABLE_ATTRIBUTE]: '',
+} satisfies HTMLAttributes & Record<typeof FOCUSABLE_ATTRIBUTE, string>;
+
+/**
+ * Gives the default `initialFocus` function of a popup. After a touch, it focuses the popup itself.
+ * Android then does not open the virtual keyboard. iOS does not need this step. After any other
+ * input, it uses the default focus.
+ */
+export function createDefaultInitialFocus(popupRef: Readonly<Ref<HTMLElement | null>>) {
+  return (interactionType: InteractionType) =>
+    interactionType === 'touch' ? popupRef.value : true;
 }

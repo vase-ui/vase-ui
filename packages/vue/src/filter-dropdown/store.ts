@@ -1,6 +1,6 @@
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
-import { NullStore } from '../utils/popups/NullStore';
-import { ReactiveStore } from '../utils/popups/ReactiveStore';
+import { NullStore } from '../utils/popups/usePopupRoot';
+import { ReactiveStore } from '../utils/popups/handleStoreAdapter';
 
 export type State = {
   visibleItemIds: ReadonlySet<symbol> | null;

@@ -1,24 +1,24 @@
 import { shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { NOOP } from '../../common/empty';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { Timeout } from '../../common/useTimeout';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import { REASONS } from '../../internals/reasons';
-import { NullStore } from '../../utils/popups/NullStore';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
+  NullStore,
   BasePopupStore,
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import type {
   PopupStoreContext,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
 import type {
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
@@ -50,7 +50,7 @@ type Context = PopupStoreContext<PopoverRootChangeEventDetails> & {
   registerDescriptionId: RegisterId;
 };
 
-const selectors = {
+export const selectors = {
   ...popupStoreSelectors,
   disabled: (state: State<unknown>) => state.disabled,
   // `trigger-change` is for a popup that moves between triggers, so it has a meaning only while

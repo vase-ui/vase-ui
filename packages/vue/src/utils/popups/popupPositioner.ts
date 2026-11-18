@@ -15,8 +15,8 @@ import type { AdaptiveOriginMiddleware } from './positioning/adaptiveOriginConst
 import { useVaseUIFloating } from './positioning/useFloating';
 import type { UseFloatingOptions } from './positioning/useFloating';
 import { usePositioner } from './positioning/usePositioner';
-import type { ReactiveStore } from './ReactiveStore';
-import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
+import type { ReactiveStore } from './handleStoreAdapter';
+import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './usePopupRoot';
 import type { PositioningInteractionStore } from './types';
 
 /**

@@ -21,8 +21,7 @@ export interface TooltipProviderProps {
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
-import { provideFloatingDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
-import { TooltipProviderContext } from './TooltipProviderContext';
+import { provideFloatingDelayGroup, TooltipProviderContext } from '../root/TooltipRootContext';
 
 const props = withDefaults(defineProps<TooltipProviderProps>(), {
   delay: undefined,

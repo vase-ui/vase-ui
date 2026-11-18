@@ -39,6 +39,36 @@ describe('Tooltip popup owner', () => {
     expect(handle.store.select('isOpenedByTrigger', 'second')).toBe(true);
     await nextTick();
     expect(handle.store.state.payload).toBe('Second');
+    expect(screen.getByRole('button', { name: 'First' })).not.toHaveAttribute('data-popup-open');
+    expect(screen.getByRole('button', { name: 'Second' })).toHaveAttribute('data-popup-open');
+  });
+
+  it('keeps a detached trigger closed when the parent refuses its request', async () => {
+    const handle = Tooltip.createHandle();
+    const change = vi.fn();
+    await render(
+      <>
+        <Tooltip.Trigger handle={handle} id="refused">
+          Trigger
+        </Tooltip.Trigger>
+        <Tooltip.Root handle={handle} open={false} onOpenChange={change}>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>Hint</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </>,
+    );
+    handle.open('refused');
+    await nextTick();
+    expect(change).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({ reason: 'imperative-action' }),
+    );
+    expect(handle.isOpen).toBe(false);
+    expect(screen.getByRole('button')).not.toHaveAttribute('data-popup-open');
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('reads the current trigger action after a handle write', async () => {

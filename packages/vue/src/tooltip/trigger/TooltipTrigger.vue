@@ -77,22 +77,26 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
+import {
+  useDelayGroup,
+  useTooltipProviderContext,
+  OPEN_DELAY,
+  useTooltipRootContext,
+} from '../root/TooltipRootContext';
 import { isMouseLikePointerType } from '../../utils/popups/event';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useFocus } from '../../utils/popups/interactions/useFocus';
+import {
+  useTriggerFocus,
+  usePopupTrigger,
+  useTriggerOwner,
+} from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { getDelay } from '../../utils/popups/interactions/useHoverShared';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { triggerBindings } from '../../utils/popups/popupBindings';
-import { popupStoreSelectors } from '../../utils/popups/store';
-import { useTooltipProviderContext } from '../provider/TooltipProviderContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
-import type { TooltipHandleStore } from '../store/TooltipStore';
-import { OPEN_DELAY } from '../utils/constants';
+import type { TooltipHandleStore } from '../root/TooltipRootContext';
 import * as TooltipTriggerDataAttributes from './TooltipTriggerDataAttributes';
 
 defineOptions({ inheritAttrs: false });
@@ -114,10 +118,10 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TooltipTriggerState>;
 }>();
 
-const store = useTriggerOwner<TooltipHandleStore<Payload>>(
+const store = useTriggerOwner<TooltipHandleStore<unknown>>(
   useTooltipRootContext(true)?.store,
   () => props.handle,
-  'Tooltip',
+  'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`. Without a root the trigger has no tooltip to open. Put the trigger inside <Tooltip.Root>, or pass a `handle`.',
 );
 const thisTriggerId = useVaseUiId(() => props.id);
 const {
@@ -126,6 +130,8 @@ const {
   isMountedByThisTrigger,
   isTriggerActive,
   isOpenedByThisTrigger,
+  open: popupOpen,
+  requestOpen,
 } = usePopupTrigger(thisTriggerId, store, () => ({
   payload: props.payload,
   closeOnClick: props.closeOnClick,
@@ -142,7 +148,7 @@ function writeIsInstantPhase() {
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useFieldsetDisabled(triggerElement);
 const slots = useSlots();
 // The part has no element in a server render and in the first client render. The default tag
 // then gives the answer, so the server HTML follows `Fieldset.Root`.
@@ -212,7 +218,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   shouldOpen: () => !isNestedTriggerHovered,
 });
 
-const focusProps = useFocus(store, { enabled: () => !isDisabled.value });
+const focusProps = useTriggerFocus(store, { enabled: () => !isDisabled.value });
 
 function handleNestedTriggerHover(event: MouseEvent) {
   const currentStore = store.value;
@@ -223,10 +229,10 @@ function handleNestedTriggerHover(event: MouseEvent) {
   // Close only a tooltip that hover opened. A tooltip that another interaction opened stays open.
   if (
     nestedTriggerHovered &&
-    popupStoreSelectors.open(currentStore.state) &&
+    popupOpen.value &&
     currentStore.state.openChangeReason === REASONS.triggerHover
   ) {
-    currentStore.setOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
+    requestOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
     return;
   }
 
@@ -236,17 +242,13 @@ function handleNestedTriggerHover(event: MouseEvent) {
     trigger &&
     closestInEventPath(event, (node) => node === trigger) &&
     !isDisabled.value &&
-    !popupStoreSelectors.open(currentStore.state) &&
+    !popupOpen.value &&
     // The hover composable also accepts an empty pointer type for a sequence of mouse events.
     isMouseLikePointerType(pointerType)
   ) {
     const open = () => {
-      if (
-        !isNestedTriggerHovered &&
-        !isDisabled.value &&
-        !popupStoreSelectors.open(store.value.state)
-      ) {
-        store.value.setOpen(
+      if (!isNestedTriggerHovered && !isDisabled.value && !popupOpen.value) {
+        requestOpen(
           true,
           createChangeEventDetails(REASONS.triggerHover, event, trigger ?? undefined),
         );
@@ -303,7 +305,7 @@ function setPointerType(event: PointerEvent) {
 }
 
 function cancelPendingOpen(event: MouseEvent | PointerEvent) {
-  if (props.closeOnClick && !popupStoreSelectors.open(store.value.state)) {
+  if (props.closeOnClick && !popupOpen.value) {
     store.value.cancelPendingOpen(event);
   }
 }

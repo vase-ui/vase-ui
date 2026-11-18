@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { createRenderer, fireEvent, screen, useTestInteractions, waitFor } from '#test-utils';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
-import { useClick } from './useClick';
+import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { useListNavigation } from './useListNavigation';
 
 vi.mock('../../../common/platform', async () => {

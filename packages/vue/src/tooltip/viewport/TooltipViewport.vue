@@ -33,8 +33,7 @@ import {
   popupViewportStateMapping,
   usePopupViewport,
 } from '../../utils/popups/viewport/usePopupViewport';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 

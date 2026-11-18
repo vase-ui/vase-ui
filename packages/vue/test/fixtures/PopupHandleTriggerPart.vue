@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
-import { usePopupHandleStore } from '../../src/utils/popups/usePopupHandleStore';
+import { usePopupHandleStore } from '../../src/utils/popups/usePopupTrigger';
 import { PopupHandleFixtureContext } from './PopupHandleFixture';
 import type { PopupHandleFixture } from './PopupHandleFixture';
 

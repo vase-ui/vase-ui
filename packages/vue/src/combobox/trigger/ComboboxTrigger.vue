@@ -54,6 +54,8 @@ export interface ComboboxTriggerProps
 </script>
 
 <script setup lang="ts">
+import { selectors as comboboxSelectors } from '../store';
+import { triggerBindings } from '../../utils/popups/popupBindings';
 import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
@@ -76,11 +78,11 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { stopEvent } from '../../utils/popups/event';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
-import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
+import { useComboboxInputValueContext, useComboboxRootOwner } from '../root/ComboboxRootContext';
 import { useListEmpty, usePopupSide } from '../utils/parts';
 import { triggerStateAttributesMapping } from '../utils/stateAttributesMapping';
 
@@ -112,15 +114,14 @@ const { labelId: fieldLabelId } = useLabelableContext();
 // The trigger binds the id of a label and the ids of the messages of a field, which can come after
 // it. `Combobox.Label` registers its id with the root, so the trigger defers also with no field.
 useDeferredServerRender();
-const store = useComboboxRootContext();
+const { store, open: isOpen, requestOpen } = useComboboxRootOwner();
 const inputValue = useComboboxInputValueContext();
 
-const selectionMode = computed(() => store.select('selectionMode'));
-const comboboxDisabled = computed(() => store.select('disabled'));
-const isReadOnly = computed(() => store.select('readOnly'));
-const isOpen = computed(() => store.select('open'));
-const inputInsidePopup = computed(() => store.select('inputInsidePopup'));
-const hasSelectedValue = computed(() => store.select('hasSelectedValue'));
+const selectionMode = computed(() => store.state.selectionMode);
+const comboboxDisabled = computed(() => store.state.disabled);
+const isReadOnly = computed(() => store.state.readOnly);
+const inputInsidePopup = computed(() => store.state.inputInsidePopup);
+const hasSelectedValue = computed(() => comboboxSelectors.hasSelectedValue(store.state));
 const isDisabled = computed(
   () => Boolean(fieldDisabled.value) || comboboxDisabled.value || props.disabled,
 );
@@ -133,7 +134,7 @@ useLabelableId({
   id: () => (inputInsidePopup.value ? props.id : undefined),
 });
 const triggerId = computed(() =>
-  inputInsidePopup.value ? (given('id', props.id) ?? store.select('id')) : given('id', props.id),
+  inputInsidePopup.value ? (given('id', props.id) ?? store.state.id) : given('id', props.id),
 );
 
 // An element with no id has an empty `id`, and the trigger then has no `aria-controls`.
@@ -141,7 +142,9 @@ const ariaControls = computed(() => {
   if (!isOpen.value) {
     return undefined;
   }
-  const id = inputInsidePopup.value ? store.select('popupId') : store.select('listElementId');
+  const id = inputInsidePopup.value
+    ? comboboxSelectors.popupId(store.state)
+    : store.state.listElementId;
   return id || undefined;
 });
 
@@ -160,8 +163,8 @@ const typeahead = useTypeahead(store.interactions, {
     !comboboxDisabled.value &&
     selectionMode.value === 'single',
   listRef: store.context.labelsRef,
-  activeIndex: () => store.select('activeIndex'),
-  selectedIndex: () => store.select('selectedIndex'),
+  activeIndex: () => store.state.activeIndex,
+  selectedIndex: () => store.state.selectedIndex,
   // A click never selects a disabled item, so typeahead skips it too. Only a mounted item has a
   // disabled state: the labels of `items` exist while no item is mounted.
   disabledIndices: (index) => {
@@ -176,7 +179,7 @@ const typeahead = useTypeahead(store.interactions, {
   },
 });
 
-const click = useClick(store.interactions, {
+const click = useTriggerPress(store.interactions, {
   enabled: () => !comboboxDisabled.value,
   event: 'mousedown',
   // A Combobox never opens on hover or focus, so a press always toggles it, even when a key
@@ -232,7 +235,7 @@ function handleMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
-  store.setOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
+  requestOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
 }
 
 onScopeDispose(removeMouseUpListener);
@@ -269,8 +272,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   ref: setTriggerElement,
   stateAttributesMapping: triggerStateAttributesMapping,
   props: (attrs) => [
-    store.select('triggerProps', true),
-    click.reference,
+    triggerBindings(store, true),
+    click,
     typeahead.reference,
     {
       id: triggerId.value,
@@ -279,7 +282,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       'aria-expanded': isOpen.value,
       'aria-haspopup': inputInsidePopup.value ? 'dialog' : 'listbox',
       'aria-controls': ariaControls.value,
-      'aria-required': inputInsidePopup.value ? store.select('required') || undefined : undefined,
+      'aria-required': inputInsidePopup.value ? store.state.required || undefined : undefined,
       // Only valid alongside the `combobox` role; without it the trigger is a plain button, and
       // the `Combobox.Input` outside the popup already carries `aria-readonly`.
       'aria-readonly': inputInsidePopup.value ? isReadOnly.value || undefined : undefined,
@@ -349,7 +352,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onKeydown(event: KeyboardEvent) {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           stopEvent(event);
-          store.setOpen(true, createChangeEventDetails(REASONS.listNavigation, event));
+          requestOpen(true, createChangeEventDetails(REASONS.listNavigation, event));
           store.context.inputRef.value?.focus();
         }
       },

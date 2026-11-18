@@ -42,6 +42,7 @@ export interface SelectPopupProps
 </script>
 
 <script setup lang="ts">
+import { popupBindings } from '../../utils/popups/popupBindings';
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
@@ -491,7 +492,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     const hasList = store.select('listElement') !== null;
     const isAligned = alignItemWithTriggerActive.value;
     return [
-      store.select('popupProps'),
+      popupBindings(store),
       {
         ...listProps.value,
         onKeydown(event: VaseUIEvent<KeyboardEvent>) {

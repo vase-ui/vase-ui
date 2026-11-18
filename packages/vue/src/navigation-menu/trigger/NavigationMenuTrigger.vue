@@ -114,7 +114,7 @@ import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings'
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
@@ -308,9 +308,9 @@ const hoverProps = useHoverTriggerInteraction(floatingRootStore, {
   getHandleCloseContext: getInlineHandleCloseContext,
 });
 
-// The handler of `useClick` runs after the handler of this part, which can already have changed the
+// The handler of `useTriggerPress` runs after the handler of this part, which can already have changed the
 // item. A press of another trigger would close the menu if `toggle` read the new item.
-const click = useClick(floatingRootStore, {
+const click = useTriggerPress(floatingRootStore, {
   enabled: interactionsEnabled,
   stickIfOpen,
   toggle: () => renderedIsActiveItem,
@@ -464,7 +464,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   props: (attrs) => [
     compositeItem.attributes.value,
     compositeItem.events,
-    click.reference,
+    click,
     hoverProps,
     { style: hoverStyle.value },
     dismissProps?.value?.reference,

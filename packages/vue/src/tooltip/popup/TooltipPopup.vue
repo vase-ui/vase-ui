@@ -34,8 +34,8 @@ export interface TooltipPopupProps
 </script>
 
 <script setup lang="ts">
-import { popupBindings } from '../../utils/popups/popupBindings';
-import { popupStoreSelectors } from '../../utils/popups/store';
+import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { computed, provide } from 'vue';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -44,9 +44,7 @@ import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportCont
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 

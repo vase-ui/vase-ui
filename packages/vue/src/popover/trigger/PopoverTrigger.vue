@@ -65,6 +65,7 @@ export interface PopoverTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { selectors as popoverSelectors } from '../store/PopoverStore';
 import { clickTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, shallowRef } from 'vue';
@@ -77,16 +78,18 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import {
+  useTriggerPress,
+  useTriggerModality,
+  usePopupTrigger,
+  useTriggerOwner,
+} from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
-import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
 import {
   pressableTriggerOpenStateMapping,
   triggerOpenStateMapping,
 } from '../../utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
-import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
 import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import type { PopoverHandleStore } from '../store/PopoverStore';
@@ -112,42 +115,40 @@ defineSlots<{
 }>();
 
 const rootStore = usePopoverRootContext(true);
-const handleStore = usePopupHandleStore(() => props.handle);
-if (rootStore === undefined && props.handle === undefined) {
-  throw new Error(
-    'Vase UI: <Popover.Trigger> must be inside <Popover.Root>, or it must have a `handle`. Without a root the trigger has no popover to open. Put the trigger inside <Popover.Root>, or pass a `handle`.',
-  );
-}
-// The store of a detached trigger changes when a root attaches to its handle.
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
-const store = computed<PopoverHandleStore<any>>(() => handleStore.value ?? rootStore!);
+const store = useTriggerOwner<PopoverHandleStore<unknown>>(
+  rootStore,
+  () => props.handle,
+  'Vase UI: <Popover.Trigger> must be inside <Popover.Root>, or it must have a `handle`. Without a root the trigger has no popover to open. Put the trigger inside <Popover.Root>, or pass a `handle`.',
+);
 
 const triggerId = useVaseUiId(() => props.id);
-const isTriggerActive = computed(() => store.value.select('isTriggerActive', triggerId.value));
-const isOpenedByThisTrigger = computed(() =>
-  store.value.select('isOpenedByTrigger', triggerId.value),
-);
 const isPressOpenedByThisTrigger = computed(() =>
-  store.value.select('isPressOpenedByTrigger', triggerId.value),
+  popoverSelectors.isPressOpenedByTrigger(store.value.state, triggerId.value),
 );
-const popupId = computed(() => store.value.select('triggerPopupId', triggerId.value));
-const isTouchPressOpen = computed(() => store.value.select('isTouchPressOpen', props.openOnHover));
-const hasFocusGuards = computed(() => store.value.select('hasTriggerFocusGuards', triggerId.value));
+const isTouchPressOpen = computed(() =>
+  popoverSelectors.isTouchPressOpen(store.value.state, props.openOnHover),
+);
+const hasFocusGuards = computed(() =>
+  popoverSelectors.hasTriggerFocusGuards(store.value.state, triggerId.value),
+);
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
-const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
-  triggerId,
-  store,
-  () => ({
-    payload: props.payload,
-    disabled: isDisabled.value,
-    openOnHover: props.openOnHover,
-    closeDelay: props.closeDelay,
-  }),
-);
+const {
+  registerTrigger,
+  bindings: rootTriggerProps,
+  open: popupOpen,
+  isOpenedByThisTrigger,
+  isTriggerActive,
+  popupId,
+} = usePopupTrigger(triggerId, store, () => ({
+  payload: props.payload,
+  disabled: isDisabled.value,
+  openOnHover: props.openOnHover,
+  closeDelay: props.closeDelay,
+}));
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon();
@@ -164,14 +165,9 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
-const click = useClick(store, { stickIfOpen: () => store.value.context.stickIfOpen });
-const interactionTypeProps = useOpenMethodTriggerProps(
-  () => store.value.select('open'),
-  (interactionType) => store.value.set('openMethod', interactionType),
-);
-
-const rootTriggerProps = computed(() =>
-  store.value.select('triggerProps', isMountedByThisTrigger.value),
+const click = useTriggerPress(store, { stickIfOpen: () => store.value.context.stickIfOpen });
+const interactionTypeProps = useTriggerModality(popupOpen, (interactionType) =>
+  store.value.set('openMethod', interactionType),
 );
 
 const stateAttributesMapping: StateAttributesMapping<PopoverTriggerState> = {
@@ -198,7 +194,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   ref: registerTrigger,
   stateAttributesMapping,
   props: (attrs) => [
-    click.reference,
+    click,
     hoverProps,
     { style: hoverStyle.value },
     rootTriggerProps.value,

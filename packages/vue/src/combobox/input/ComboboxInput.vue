@@ -43,6 +43,7 @@ export interface ComboboxInputProps
 </script>
 
 <script setup lang="ts">
+import { triggerBindings } from '../../utils/popups/popupBindings';
 import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
@@ -534,7 +535,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
 
     return [
       store.select('inputProps'),
-      store.select('triggerProps', true),
+      triggerBindings(store, true),
       {
         ...(writesValue.value ? valueProps(composingValue.value ?? inputValue.value) : undefined),
         'aria-readonly': readOnly.value || undefined,

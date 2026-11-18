@@ -1,3 +1,4 @@
+import { bindPopupParts } from '../../utils/popups/popupBindings';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -477,6 +478,9 @@ describe('<Dialog.Root />', () => {
       setup() {
         useDialogInteractions({
           store: childStore,
+          open: computed(() => childStore.select('open')),
+          mounted: computed(() => childStore.state.mounted),
+          bindParts: (parts) => bindPopupParts(childStore, parts),
           parentContext: parentStore.context,
           isDrawer: true,
         });

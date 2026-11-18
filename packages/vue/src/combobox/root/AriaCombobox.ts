@@ -1,3 +1,4 @@
+import { selectors as comboboxSelectors, ComboboxStore, selectors } from '../store';
 import {
   computed,
   inject,
@@ -67,21 +68,20 @@ import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { navigateUniformGrid } from '../../internals/composite/gridNavigation';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
-import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
-import { getPopupTransitionElement, useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
-  FOCUSABLE_POPUP_PROPS,
-  usePopupInteractionProps,
-} from '../../utils/popups/popupStoreUtils';
-import { createInitialPopupStoreState, createPopupStoreContext } from '../../utils/popups/store';
+  getPopupTransitionElement,
+  useSingleAnchorPopupRoot,
+  createInitialPopupStoreState,
+  createPopupStoreContext,
+} from '../../utils/popups/usePopupRoot';
+import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { isScrollableY } from '../../utils/scrollable';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { findCollectionItem } from '../items/itemCollection';
 import type { ComboboxItemCollection, ItemCollection } from '../items/itemCollection';
-import { ComboboxStore, selectors } from '../store';
 import type { State as StoreState } from '../store';
 import {
   ComboboxDerivedItemsContext,
@@ -462,8 +462,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const id = useLabelableId({
     id: () => props.id,
-    element: () =>
-      store.select('inputInsidePopup') ? store.select('triggerElement') : inputRef.value,
+    element: () => (store.state.inputInsidePopup ? store.state.triggerElement : inputRef.value),
   });
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
@@ -658,7 +657,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const selectionEventRef = shallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>(null);
   const openPressRef = shallowRef<MouseEvent | null>(null);
 
-  const { store, open, transitionStatus, actions } = useSingleAnchorPopupRoot(
+  const owner = useSingleAnchorPopupRoot(
     props,
     (initialState, defaultPopupId) =>
       new ComboboxStore(
@@ -747,6 +746,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       getTransitionElement,
     },
   );
+  const { store, open, transitionStatus, actions, requestOpen, bindParts } = owner;
   // A function of `setup` reads the current props, so the root assigns each command one time. A
   // part that renders in the same pass as the root then calls the real command.
   store.context.handleUnmount = handleUnmount;
@@ -898,8 +898,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     return stringifyAsValue(value, props.itemToStringValue);
   });
 
-  const inline = computed(() => store.select('inline'));
-  const inputInsidePopup = computed(() => store.select('inputInsidePopup'));
+  const inline = computed(() => store.state.inline);
+  const inputInsidePopup = computed(() => store.state.inputInsidePopup);
   const inputMatchesSelectedValue = computed(
     () => single.value && !inputInsidePopup.value && inputValue.value === selectedLabelString.value,
   );
@@ -908,7 +908,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const isHydrating = useIsHydrating();
 
   useRegisterFieldControl(
-    computed(() => (inputInsidePopup.value ? store.select('triggerElement') : inputRef.value)),
+    computed(() => (inputInsidePopup.value ? store.state.triggerElement : inputRef.value)),
     id,
     () => fieldRawValue.value,
     () => fieldStringValue.value,
@@ -1246,7 +1246,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const href = closest(targetEl, 'a')?.getAttribute('href');
     if (href) {
       if (href.startsWith('#')) {
-        store.setOpen(false, eventDetails);
+        requestOpen(false, eventDetails);
       }
       return;
     }
@@ -1282,14 +1282,14 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           pendingQueryHighlight.toggledValue = itemValue;
         }
       } else {
-        store.setOpen(false, eventDetails);
+        requestOpen(false, eventDetails);
       }
     } else {
       setSelectedValue(itemValue, eventDetails);
       if (eventDetails.isCanceled) {
         return;
       }
-      store.setOpen(false, eventDetails);
+      requestOpen(false, eventDetails);
     }
   }
 
@@ -1542,8 +1542,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
-  const activeIndex = computed(() => store.select('activeIndex'));
-  const selectedIndex = computed(() => store.select('selectedIndex'));
+  const activeIndex = computed(() => store.state.activeIndex);
+  const selectedIndex = computed(() => store.state.selectedIndex);
 
   // The dependencies of each block, from its last run.
   const lastHighlightDependencies = new Map<string, readonly unknown[]>();
@@ -1574,7 +1574,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         inline.value,
         open.value,
         // The resolved popup of an inline list is the dialog around its positioner.
-        inline.value ? store.select('positionerElement') : null,
+        inline.value ? comboboxSelectors.positionerElement(store.state) : null,
         // Reruns the effect when the query changes without affecting the deps above, such as
         // clearing the input when no items are filtered out (individually rendered items).
         inputValue.value,
@@ -1713,9 +1713,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   // An inline list is permanently expanded (see `ComboboxStore.interactions`).
   const expanded = computed(() => open.value || inline.value);
-  const inputElement = computed(() => store.select('inputElement'));
+  const inputElement = computed(() => store.state.inputElement);
   // An element with no id has an empty `id`, and the input then has no `aria-controls`.
-  const listElementId = computed(() => store.select('listElementId') || undefined);
+  const listElementId = computed(() => store.state.listElementId || undefined);
   // During SSR and initial hydration, the input ref is not available yet.
   // Assume an input-like control so combobox ARIA attributes are present.
   const shouldTreatAsInput = computed(
@@ -1745,7 +1745,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // `readOnly` locks the value, not the interaction: the popup opens and can be browsed.
   // Value changes stay blocked in `ComboboxItem`, `ComboboxInput`'s keydown, `ComboboxTrigger`'s
   // typeahead, the clear/remove parts, and the hidden input's autofill handler.
-  const click = useClick(store.interactions, {
+  const click = useTriggerPress(store.interactions, {
     enabled: () => !disabled.value && (props.openOnInputClick ?? true),
     event: 'mousedown-only',
     toggle: false,
@@ -1780,7 +1780,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const listNavigation = useListNavigation(store.interactions, {
     enabled: () => !disabled.value,
-    activeItemId: () => store.select('highlightedItemId'),
+    activeItemId: () => comboboxSelectors.highlightedItemId(store.state),
     listRef,
     activeIndex,
     selectedIndex,
@@ -1832,7 +1832,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         },
       },
       dismiss.reference,
-      click.reference,
+      click,
       role.value,
     ),
   );
@@ -1856,43 +1856,49 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   // The call writes the state at once, so each part reads it in its first render. It then writes
   // one time for each flush in which a source changed.
-  usePopupInteractionProps(store, () => ({
-    id: id.value,
-    labelId: labelId.value,
-    selectedValue: selectedValue.value,
-    items: storeItems.value as readonly any[] | undefined,
-    inline: inlineProp.value,
-    popupProps,
-    listProps: listProps.value,
-    inputProps: inputProps.value,
-    activeTriggerProps: triggerProps,
-    inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
-    itemRoot: itemRoot.value,
-    openMethod: openMethod.value,
-    selectionMode: selectionMode.value,
-    name: name.value,
-    form: props.form,
-    disabled: disabled.value,
-    readOnly: readOnly.value,
-    required: required.value,
-    grid: grid.value,
-    virtualized: props.virtualized ?? false,
-    openOnInputClick: props.openOnInputClick ?? true,
-    itemToStringLabel: itemToStringLabel.value,
-    modal: props.modal ?? false,
-    autoHighlight: autoHighlightMode.value,
-    isItemEqualToValue: isItemEqualToValue.value,
-    submitOnItemClick: props.submitOnItemClick ?? false,
-    hasInputValue: hasInputValue.value,
-    // The input part writes `inputInsidePopup` in `onMounted`. The getter reads that key, so this
-    // key follows in the next write. Until the root is mounted, it keeps the value of the first
-    // state, because a server calls no `onMounted`.
-    inputOwnsFormValue:
-      selectionMode.value === 'none' &&
-      (isHydrating.value || inlineProp.value || !inputInsidePopup.value),
-  }));
+  bindParts({
+    trigger: () => triggerProps,
+    inactiveTrigger: () => EMPTY_OBJECT,
+    popup: () => popupProps,
+  });
+  watch(
+    () => ({
+      id: id.value,
+      labelId: labelId.value,
+      selectedValue: selectedValue.value,
+      items: storeItems.value as readonly any[] | undefined,
+      inline: inlineProp.value,
+      listProps: listProps.value,
+      inputProps: inputProps.value,
+      itemRoot: itemRoot.value,
+      openMethod: openMethod.value,
+      selectionMode: selectionMode.value,
+      name: name.value,
+      form: props.form,
+      disabled: disabled.value,
+      readOnly: readOnly.value,
+      required: required.value,
+      grid: grid.value,
+      virtualized: props.virtualized ?? false,
+      openOnInputClick: props.openOnInputClick ?? true,
+      itemToStringLabel: itemToStringLabel.value,
+      modal: props.modal ?? false,
+      autoHighlight: autoHighlightMode.value,
+      isItemEqualToValue: isItemEqualToValue.value,
+      submitOnItemClick: props.submitOnItemClick ?? false,
+      hasInputValue: hasInputValue.value,
+      // The input part writes `inputInsidePopup` in `onMounted`. The getter reads that key, so this
+      // key follows in the next write. Until the root is mounted, it keeps the value of the first
+      // state, because a server calls no `onMounted`.
+      inputOwnsFormValue:
+        selectionMode.value === 'none' &&
+        (isHydrating.value || inlineProp.value || !inputInsidePopup.value),
+    }),
+    (values) => store.update(values),
+    { immediate: true },
+  );
 
-  provide(ComboboxRootContext, store);
+  provide(ComboboxRootContext, owner);
   provide(ComboboxHasItemsContext, hasItems);
   provide(ComboboxDerivedItemsContext, {
     hasItems,
@@ -1911,7 +1917,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const hasMultipleSelection = computed(
     () => multiple.value && Array.isArray(selectedValue.value) && selectedValue.value.length > 0,
   );
-  const inputOwnsFormValue = computed(() => store.select('inputOwnsFormValue'));
+  const inputOwnsFormValue = computed(() => store.state.inputOwnsFormValue);
   const hiddenInputName = computed(() =>
     multiple.value || (selectionMode.value === 'none' && inputOwnsFormValue.value)
       ? undefined
