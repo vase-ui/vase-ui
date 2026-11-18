@@ -29,8 +29,15 @@ export interface NavigationMenuRootContext<Value = any> {
    * The `id` of `popupElement`. The root follows each change of the attribute.
    */
   popupElementId: Readonly<Ref<string | undefined>>;
-  /** The trigger uses positioned interactions while the positioner exists, even when held. */
+  /**
+   * The positioner element, also while `KeepAlive` holds it. `null` means that the menu has no
+   * positioner. The trigger of an open menu then has no click interaction.
+   */
   positionerElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The backdrop element, also while `KeepAlive` holds it. Its animations end an open change of the
+   * root while the popup and the positioner give no element.
+   */
   backdropElement: ShallowRef<HTMLElement | null>;
   /**
    * The viewport element, also while `KeepAlive` holds it. In a positioner,
@@ -45,7 +52,10 @@ export interface NavigationMenuRootContext<Value = any> {
    * The `id` of `shownViewportElement`. The root follows each change of the attribute.
    */
   viewportElementId: Readonly<Ref<string | undefined>>;
-  /** `NavigationMenu.Content` stays in this inner element while `KeepAlive` holds an inline viewport. */
+  /**
+   * The element between the inside guards of an inline viewport, also while `KeepAlive` holds the
+   * viewport. `NavigationMenu.Content` teleports into it.
+   */
   viewportTargetElement: ShallowRef<HTMLElement | null>;
   /**
    * The direction of the last switch between two items while the menu is open, or `null`.

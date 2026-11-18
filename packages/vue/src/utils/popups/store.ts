@@ -151,7 +151,9 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
    */
   readonly popupRef: ShallowRef<HTMLElement | null>;
   /**
-   * A ref to the element of the backdrop part.
+   * A ref to the element of the backdrop part, also while `KeepAlive` holds the part. Its animations
+   * end an open change while the popup and the positioner give no element. A popup that mounts in a
+   * held branch gives none, so its close needs the held backdrop to end.
    */
   readonly backdropRef: ShallowRef<HTMLElement | null>;
   /**

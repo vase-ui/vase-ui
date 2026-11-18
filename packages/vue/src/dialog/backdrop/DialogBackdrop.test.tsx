@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -217,6 +218,37 @@ describe('<Dialog.Backdrop />', () => {
     await fireEvent.pointerDown(backdrop, { pointerType: 'mouse', button: 0 });
     await fireEvent.click(backdrop, { detail: 1 });
     expect(screen.queryByRole('dialog')).toBe(null);
+  });
+
+  it('ends a close while KeepAlive holds a popup and a backdrop that mounted in the held branch', async () => {
+    const handleOpenChangeComplete = vi.fn();
+    const open = shallowRef(true);
+    let store!: DialogStore<unknown>;
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(
+      () => [<Dialog.Backdrop key="backdrop" />, <Dialog.Popup key="popup" />],
+      { renderBranch: (part) => part },
+    );
+    await render(() => (
+      <Dialog.Root open={open.value} onOpenChangeComplete={handleOpenChangeComplete}>
+        <DialogStoreProbe
+          onStore={(value) => {
+            store = value;
+          }}
+        />
+        <Dialog.Portal>
+          <HeldBranch />
+        </Dialog.Portal>
+      </Dialog.Root>
+    ));
+    await mountWhileHeld();
+    expect(store.context.popupRef.value).toBe(null);
+    expect(store.context.backdropRef.value?.isConnected).toBe(false);
+
+    open.value = false;
+
+    await waitFor(() => {
+      expect(handleOpenChangeComplete).toHaveBeenCalledWith(false);
+    });
   });
 
   describe('server render', () => {
