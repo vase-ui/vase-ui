@@ -50,8 +50,7 @@ export function usePickerPopup(): PickerPopup {
 /**
  * Gives the first of `elements` in the order of the document. A part that mounts later still has
  * its place in the document, so the order of the registrations does not decide. An element that
- * is not in the document does not count: `KeepAlive` keeps a focus target that it holds
- * registered, and such an element cannot take the focus.
+ * is not in the document cannot take focus.
  */
 export function getFirstInDocument<T extends Element>(
   elements: (T | null | undefined)[],

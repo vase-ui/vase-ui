@@ -88,10 +88,7 @@ export interface DateTimeFieldContext {
   pasteText: (text: string, event: ClipboardEvent) => void;
   /** Gives the focus to the segment after `from`, or to the segment before it when `direction` is -1. */
   moveFocus: (from: HTMLInputElement, direction: 1 | -1) => void;
-  registerSegment: (
-    element: HTMLInputElement,
-    type: Readonly<Ref<EditableSegmentType>>,
-  ) => () => void;
+  registerSegment: (element: HTMLInputElement, getType: () => EditableSegmentType) => () => void;
   /** A part that shows a literal, an era or a time zone name gives its element and its place in the layout. */
   registerLiteral: (element: HTMLElement, index: number) => void;
   unregisterLiteral: (element: HTMLElement) => void;

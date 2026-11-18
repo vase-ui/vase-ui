@@ -254,7 +254,7 @@ const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMe
   metadata: thumbMetadata,
 });
 
-const thumbIndex = computed(() => (!range.value ? 0 : (props.index ?? compositeIndex.value)));
+const thumbIndex = computed(() => (range.value ? compositeIndex.value : 0));
 const last = computed(() => thumbIndex.value === sliderValues.value.length - 1);
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A thumb that has no index yet has no value, and `valueToPercent` then gives `NaN`, as in Base UI.
 const thumbValue = computed(() => sliderValues.value[thumbIndex.value]!);

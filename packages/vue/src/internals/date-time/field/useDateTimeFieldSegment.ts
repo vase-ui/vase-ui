@@ -101,7 +101,7 @@ export function useDateTimeFieldSegment(
     [elementRef, isHeld],
     ([element, held], _previous, onCleanup) => {
       if (element && !held) {
-        onCleanup(context.registerSegment(element, type));
+        onCleanup(context.registerSegment(element, () => type.value));
       }
     },
     { flush: 'sync' },

@@ -9,7 +9,7 @@ import {
   toValue,
   watch,
 } from 'vue';
-import type { MaybeRefOrGetter, Ref } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { clamp } from '../../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
@@ -618,9 +618,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   // The segments in the order of the document, because a part can render them in a wrapper.
-  const segmentElements = shallowReactive(
-    new Map<HTMLInputElement, Readonly<Ref<EditableSegmentType>>>(),
-  );
+  const segmentElements = shallowReactive(new Map<HTMLInputElement, () => EditableSegmentType>());
   function getOrderedSegments(connectedOnly = false) {
     return [...segmentElements.keys()]
       .filter((element) => !connectedOnly || element.isConnected)
@@ -648,7 +646,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     const ordered = getOrderedSegments(true);
     const emptyType = editableTypes.value.find((type) => numbers.value[type] === undefined);
     focusSegment(
-      ordered.find((element) => segmentElements.get(element)?.value === emptyType) ?? ordered[0],
+      ordered.find((element) => segmentElements.get(element)?.() === emptyType) ?? ordered[0],
     );
   }
 
@@ -1025,10 +1023,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     spin,
     pasteText,
     moveFocus,
-    registerSegment(element, type) {
-      segmentElements.set(element, type);
+    registerSegment(element, getType) {
+      segmentElements.set(element, getType);
       return () => {
-        if (segmentElements.get(element) === type) {
+        if (segmentElements.get(element) === getType) {
           segmentElements.delete(element);
         }
       };
