@@ -37,7 +37,7 @@ export interface TimePickerClockProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, useTemplateRef, watch } from 'vue';
 import {
   PickerClockOwner,
   providePickerControl,
@@ -53,6 +53,7 @@ import type {
   TimeClockRootViewChangeEventDetails,
 } from '../../time-clock/root/TimeClockRoot.vue';
 import { nextView } from '../../time-clock/utils/clockViews';
+import { useControlled } from '../../common/useControlled';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
 
@@ -110,14 +111,19 @@ providePickerControl(PickerClockOwner);
 
 // The clock commits a view and shows the next view, so the picker follows the view to know the
 // last commit.
-const shownView = shallowRef<TimeClockView>(props.defaultView ?? 'hour');
-const currentView = computed(() => props.view ?? shownView.value);
+const initialView = props.defaultView ?? 'hour';
+const currentView = useControlled<TimeClockView>({
+  controlled: () => props.view,
+  default: () => initialView,
+  name: 'TimePicker.Clock',
+  state: 'view',
+});
 // A clock in a popup that mounts at each open starts at its first view. The part thus gives the
 // view to `TimeClock.Root`, and it shows the first view again each time that a popup that stays
 // mounted opens.
 watch(popup.open, (open) => {
   if (open) {
-    shownView.value = props.defaultView ?? 'hour';
+    currentView.value = props.defaultView ?? 'hour';
   }
 });
 const isLastView = computed(
@@ -146,7 +152,7 @@ function handleViewChange(next: TimeClockView, details: TimeClockRootViewChangeE
 }
 
 function handleViewUpdate(next: TimeClockView) {
-  shownView.value = next;
+  currentView.value = next;
   emit('update:view', next);
 }
 

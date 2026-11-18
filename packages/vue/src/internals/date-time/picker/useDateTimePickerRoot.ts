@@ -43,7 +43,7 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
 }
 
 export interface UseDateTimePickerRootParameters<Value, Details extends { isCanceled: boolean }> {
-  /** The name of the root part, for the messages about a change from controlled to uncontrolled. */
+  /** The root name for the warning when its default value changes. */
   part: string;
   value: MaybeRefOrGetter<Value | null | undefined>;
   defaultValue: MaybeRefOrGetter<Value | null | undefined>;
@@ -76,7 +76,7 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
 export function useDateTimePickerRoot<Value, Details extends { isCanceled: boolean }>(
   parameters: UseDateTimePickerRootParameters<Value, Details>,
 ): DateTimePickerContext<Value, Details> {
-  const [value, setValue] = useControlled<Value | null>({
+  const value = useControlled<Value | null>({
     controlled: () => toValue(parameters.value),
     default: () => toValue(parameters.defaultValue) ?? null,
     name: parameters.part,
@@ -112,7 +112,7 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
       return;
     }
     parameters.updateValue(next);
-    setValue(next);
+    value.value = next;
   }
 
   // The field roots get the value of a reset with the next render, so the count comes first.

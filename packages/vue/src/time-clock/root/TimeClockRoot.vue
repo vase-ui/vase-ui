@@ -271,12 +271,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 const formatLocale = useFormatLocale(() => props.locale);
 
-const [currentValue, setValue] = useControlled<Value | null>({
+const currentValue = useControlled<Value | null>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? null,
   name: 'TimeClock',
 });
-const [currentView, setViewState] = useControlled<TimeClockView>({
+const currentView = useControlled<TimeClockView>({
   controlled: () => props.view,
   default: () => props.defaultView ?? 'hour',
   name: 'TimeClock',
@@ -351,7 +351,7 @@ function changeTime(
     return null;
   }
   emit('update:value', next);
-  setValue(next);
+  currentValue.value = next;
   return next;
 }
 
@@ -416,7 +416,7 @@ function setView(newView: TimeClockView, details: TimeClockRootViewChangeEventDe
     return;
   }
   emit('update:view', newView);
-  setViewState(newView);
+  currentView.value = newView;
 }
 
 function commit(details: TimeClockRootCommitEventDetails) {

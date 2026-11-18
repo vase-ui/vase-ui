@@ -1173,6 +1173,28 @@ describe('<Tabs.Root />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('initial');
     });
 
+    it('selects a fallback for a missing tab only after the parent releases the value', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <Tabs.Root defaultValue="a" onValueChange={onValueChange}>
+          <Tabs.List>
+            <Tabs.Tab value="a">A</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+      const tab = screen.getByRole('tab');
+      await setProps({ value: 'missing' });
+      expect(tab).toHaveAttribute('aria-selected', 'false');
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      await setProps({ value: undefined });
+      expect(tab).toHaveAttribute('aria-selected', 'true');
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith(
+        'a',
+        expect.objectContaining({ reason: 'missing' }),
+      );
+    });
+
     it('does not call onValueChange when a controlled selected tab becomes disabled', async () => {
       const handleChange = vi.fn();
       const TestComponent = defineComponent(

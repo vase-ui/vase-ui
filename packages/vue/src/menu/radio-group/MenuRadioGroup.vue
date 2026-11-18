@@ -73,7 +73,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuRadioGroupState>;
 }>();
 
-const [checkedValue, setValueUnwrapped] = useControlled({
+const checkedValue = useControlled({
   controlled: () => props.value,
   default: () => props.defaultValue,
   name: 'MenuRadioGroup',
@@ -92,7 +92,7 @@ function setValue(newValue: any, eventDetails: MenuRadioGroupChangeEventDetails)
   }
 
   emit('update:value', newValue);
-  setValueUnwrapped(newValue);
+  checkedValue.value = newValue;
 }
 
 const isDisabled = computed(() => props.disabled);

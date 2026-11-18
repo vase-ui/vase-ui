@@ -11,7 +11,7 @@ import {
 } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
-import { useControlled } from '../../common/useControlled';
+import { useControlledDefault } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -80,7 +80,7 @@ type PopupRootStore = ReactiveStore<
 
 export interface UsePopupRootOptions<Store extends PopupRootStore> {
   /**
-   * The name of the component, for the warning about a change between controlled and uncontrolled.
+   * The component name for the warning when a default prop changes.
    */
   name: string;
   /**
@@ -164,29 +164,27 @@ export function usePopupRoot<Store extends PopupRootStore>(
   createStore: CreatePopupRootStore<Store>,
   options: UsePopupRootOptions<Store>,
 ) {
-  const store = usePopupRootStore(
-    {
-      open: props.defaultOpen ?? false,
-      openProp: props.open,
-      activeTriggerId: props.defaultTriggerId ?? null,
-      triggerIdProp: props.triggerId,
-    },
-    createStore,
-    options,
-  );
-  usePopupRootOpenState(store, props, options.name);
-
-  // This call gives the same two warnings for `triggerId`.
-  useControlled({
+  const defaultTriggerId = useControlledDefault({
     controlled: () => props.triggerId,
     default: () => props.defaultTriggerId,
     name: options.name,
     state: 'triggerId',
   });
+  const store = usePopupRootStore(
+    props,
+    { activeTriggerId: defaultTriggerId ?? null, triggerIdProp: props.triggerId },
+    createStore,
+    options,
+  );
   watch(
     () => props.triggerId,
     (triggerId) => {
-      if (triggerId !== undefined) {
+      if (triggerId === undefined) {
+        store.update({
+          activeTriggerId: store.select('activeTriggerId'),
+          triggerIdProp: undefined,
+        });
+      } else {
         store.set('triggerIdProp', triggerId);
       }
     },
@@ -308,16 +306,11 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
   options: UseSingleAnchorPopupRootOptions<Store>,
 ) {
   const store = usePopupRootStore(
-    {
-      open: props.defaultOpen ?? false,
-      openProp: props.open,
-      activeTriggerId: null,
-      triggerIdProp: undefined,
-    },
+    props,
+    { activeTriggerId: null, triggerIdProp: undefined },
     createStore,
     options,
   );
-  usePopupRootOpenState(store, props, options.name);
 
   const open = computed(() => store.select('open'));
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(store, open, () =>
@@ -332,11 +325,21 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
  * part, and keeps `nested` current.
  */
 function usePopupRootStore<Store extends PopupRootStore>(
-  initialState: PopupRootInitialState,
+  props: Pick<PopupRootProps, 'open' | 'defaultOpen'>,
+  trigger: Pick<PopupRootInitialState, 'activeTriggerId' | 'triggerIdProp'>,
   createStore: CreatePopupRootStore<Store>,
-  options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
+  options: Pick<UsePopupRootOptions<Store>, 'name' | 'onOpenChange' | 'onOpenChangeComplete'>,
 ) {
-  const store = createStore(initialState, useVaseUiId().value);
+  const defaultOpen = useControlledDefault({
+    controlled: () => props.open,
+    default: () => props.defaultOpen,
+    name: options.name,
+    state: 'open',
+  });
+  const store = createStore(
+    { ...trigger, open: defaultOpen ?? false, openProp: props.open },
+    useVaseUiId().value,
+  );
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;
 
@@ -349,39 +352,23 @@ function usePopupRootStore<Store extends PopupRootStore>(
     { immediate: true },
   );
 
-  return store;
-}
-
-/**
- * Follows the `open` prop of a popup root.
- */
-function usePopupRootOpenState(
-  store: PopupRootStore,
-  props: Pick<PopupRootProps, 'open' | 'defaultOpen'>,
-  name: string,
-) {
-  // The store holds the state. This call only gives two warnings: a change between controlled and
-  // uncontrolled, and a change of the default of an uncontrolled root.
-  useControlled({
-    controlled: () => props.open,
-    default: () => props.defaultOpen,
-    name,
-    state: 'open',
-  });
-
   // A controlled root holds its last request in `state.open`, and a close through the prop does
   // not reset it. After the reset, a `true` at the unmount is a request that came later.
   watch(
     () => props.open,
-    (open) => {
+    (open, previous) => {
       if (open === false) {
         store.update({ openProp: false, open: false });
-      } else if (open !== undefined) {
-        store.set('openProp', open);
+      } else if (open === true) {
+        store.set('openProp', true);
+      } else if (previous !== undefined) {
+        store.update({ openProp: undefined, open: previous });
       }
     },
     { immediate: true },
   );
+
+  return store;
 }
 
 /**

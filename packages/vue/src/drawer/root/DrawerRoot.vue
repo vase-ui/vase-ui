@@ -232,7 +232,7 @@ const resolvedDefaultSnapPoint = computed(() =>
   props.defaultSnapPoint !== undefined ? props.defaultSnapPoint : (props.snapPoints?.[0] ?? null),
 );
 
-const [activeSnapPoint, setActiveSnapPointUnwrapped] = useControlled<DrawerSnapPoint | null>({
+const activeSnapPoint = useControlled<DrawerSnapPoint | null>({
   controlled: () => props.snapPoint,
   default: () => resolvedDefaultSnapPoint.value,
   name: 'Drawer',
@@ -255,7 +255,7 @@ function setActiveSnapPoint(
     return;
   }
 
-  setActiveSnapPointUnwrapped(nextSnapPoint);
+  activeSnapPoint.value = nextSnapPoint;
   emit('update:snapPoint', nextSnapPoint);
 }
 

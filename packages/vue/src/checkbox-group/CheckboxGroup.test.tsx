@@ -175,44 +175,17 @@ describe('<CheckboxGroup />', () => {
       expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
     });
 
-    it('treats a controlled value that becomes undefined as an empty array', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const App = defineComponent(() => {
-        const value = shallowRef<string[] | undefined>(['red']);
-        return () => (
-          <>
-            <CheckboxGroup value={value.value}>
-              <Checkbox.Root value="red" data-testid="red" />
-            </CheckboxGroup>
-            <button
-              type="button"
-              onClick={() => {
-                value.value = undefined;
-              }}
-            >
-              Clear
-            </button>
-          </>
-        );
-      });
-
-      try {
-        await render(<App />);
-
-        expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'true');
-
-        await fireEvent.click(screen.getByText('Clear'));
-
-        expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'false');
-        expect(consoleError).toHaveBeenCalledExactlyOnceWith(
-          expect.stringMatching(
-            /^Vase UI: A component is changing the controlled value state of CheckboxGroup to be uncontrolled\./,
-          ),
-        );
-      } finally {
-        consoleError.mockRestore();
-      }
+    it('keeps the last selection when the parent releases the value', async () => {
+      const { setProps } = await render(
+        <CheckboxGroup value={['red']}>
+          <Checkbox.Root value="red" data-testid="red" />
+        </CheckboxGroup>,
+      );
+      const red = screen.getByTestId('red');
+      await setProps({ value: undefined });
+      expect(red).toHaveAttribute('aria-checked', 'true');
+      await fireEvent.click(red);
+      expect(red).toHaveAttribute('aria-checked', 'false');
     });
   });
 

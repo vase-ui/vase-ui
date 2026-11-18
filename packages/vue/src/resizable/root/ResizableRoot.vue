@@ -312,7 +312,7 @@ const state = computed<ResizableRootState>(() => ({
 }));
 
 // The layout that the user or the app asked for: the `layout` prop, or the layout of the last change.
-const [input, setInput] = useControlled<ResizableRootLayoutSnapshot>({
+const input = useControlled<ResizableRootLayoutSnapshot>({
   // `undefined` makes the root uncontrolled, so only `null` becomes a layout with no entries. The ref
   // of `useCookie` of Nuxt is `null` after the removal of the cookie.
   controlled: () => (props.layout === null ? EMPTY_OBJECT : props.layout),
@@ -688,7 +688,7 @@ function changeLayout(
     return undefined;
   }
   emit('update:layout', next);
-  setInput(next);
+  input.value = next;
   return next;
 }
 

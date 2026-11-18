@@ -122,7 +122,7 @@ const clearFieldError = useClearFieldError(fieldName);
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 
-const [groupValue, setGroupValueState] = useControlled<string[]>({
+const groupValue = useControlled<string[]>({
   // A consumer can change a reactive array in place. The copy reads each item, so such a change
   // gives the group a new value, and the checkboxes, the field state and the validation follow it.
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
@@ -140,7 +140,7 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
   }
 
   emit('update:value', nextValue);
-  setGroupValueState(nextValue);
+  groupValue.value = nextValue;
 }
 
 const parent = useCheckboxGroupParent({

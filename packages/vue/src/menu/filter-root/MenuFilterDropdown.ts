@@ -53,7 +53,7 @@ export function provideMenuFilterDropdown(
   const keyboardOpen = computed(() => store.select('keyboardOpen'));
   const disabled = computed(() => store.select('disabled'));
 
-  const [value, setValue] = useControlled({
+  const value = useControlled({
     controlled: params.value,
     default: () => params.defaultValue() ?? '',
     name: 'MenuFilterProvider',
@@ -66,7 +66,7 @@ export function provideMenuFilterDropdown(
   ) {
     params.onValueChange(nextValue, eventDetails);
     if (!eventDetails.isCanceled) {
-      setValue(nextValue);
+      value.value = nextValue;
     }
   }
 

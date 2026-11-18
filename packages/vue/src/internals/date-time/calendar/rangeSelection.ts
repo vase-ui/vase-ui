@@ -172,7 +172,7 @@ export function useRangeSelection(
   emit: RangeSelectionEmit,
   host?: RangeCalendarHost,
 ): RangeSelection {
-  const [value, setValue] = useControlled<RangeInput>({
+  const value = useControlled<RangeInput>({
     controlled: () => props.value,
     default: () => props.defaultValue ?? EMPTY_RANGE,
     name: 'RangeCalendar',
@@ -319,7 +319,7 @@ export function useRangeSelection(
       return false;
     }
     emit('update:value', next);
-    setValue(next);
+    value.value = next;
     previewDate.value = null;
     return true;
   }

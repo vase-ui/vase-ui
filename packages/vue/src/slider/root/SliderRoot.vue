@@ -317,7 +317,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 
 // The internal value is potentially unsorted, e.g. to support frozen arrays
 // https://github.com/mui/material-ui/pull/28472
-const [valueUnwrapped, setValueUnwrapped] = useControlled<number | readonly number[]>({
+const valueUnwrapped = useControlled<number | readonly number[]>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? props.min,
   name: 'Slider',
@@ -443,7 +443,7 @@ function setValue(newValue: number | number[], details: SliderRootChangeEventDet
   lastChangeReasonRef.value = details.reason;
 
   emit('update:value', newValue as Value extends number ? number : Value);
-  setValueUnwrapped(newValue);
+  valueUnwrapped.value = newValue;
 
   return true;
 }

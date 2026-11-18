@@ -602,7 +602,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     return multiple.value ? (defaultValue ?? EMPTY_ARRAY) : defaultValue;
   }
 
-  const [selectedValue, setSelectedValueUnwrapped] = useControlled<any>({
+  const selectedValue = useControlled<any>({
     // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
     controlled: () =>
       multiple.value && props.selectedValue === null ? EMPTY_ARRAY : props.selectedValue,
@@ -632,7 +632,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       ? stringifyValueLabel(selectedValue.value)
       : '';
 
-  const [inputValue, setInputValueUnwrapped] = useControlled<ComboboxInputElementValue>({
+  const inputValue = useControlled<ComboboxInputElementValue>({
     controlled: () => props.inputValue,
     default: () => initialDefaultInputValue,
     name: 'Combobox',
@@ -1044,7 +1044,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       pendingQueryHighlight = { hasQuery: false, selection: true };
     }
 
-    setInputValueUnwrapped(next);
+    inputValue.value = next;
   }
 
   function handleInterruptedReopen(isInputChange: boolean) {
@@ -1215,7 +1215,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (eventDetails.isCanceled) {
       return;
     }
-    setSelectedValueUnwrapped(nextValue);
+    selectedValue.value = nextValue;
     fillInput(nextValue, eventDetails);
   }
 

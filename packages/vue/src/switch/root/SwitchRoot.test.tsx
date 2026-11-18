@@ -72,6 +72,44 @@ describe('<Switch.Root />', () => {
     createComponent: (props) => <Switch.Root {...props} />,
   });
 
+  describe('VUE-141: ownership of checked', () => {
+    it('refuses a click with only the checked prop', async () => {
+      await render(<Switch.Root checked />);
+      const control = screen.getByRole('switch');
+      await fireEvent.click(control);
+      expect(control).toHaveAttribute('aria-checked', 'true');
+      expect(getInput()).toBeChecked();
+    });
+
+    it('accepts local writes when a wrapper forwards undefined and its listener', async () => {
+      const Wrapper = defineComponent(
+        (props: { checked?: boolean | undefined }, { emit }) =>
+          () => (
+            <Switch.Root
+              checked={props.checked}
+              onUpdate:checked={(value) => emit('update:checked', value)}
+            />
+          ),
+        { props: ['checked'], emits: ['update:checked'] },
+      );
+      const onUpdate = vi.fn();
+      const { setProps } = await render(<Wrapper onUpdate:checked={onUpdate} />);
+      const control = screen.getByRole('switch');
+      await fireEvent.click(control);
+      expect(control).toHaveAttribute('aria-checked', 'true');
+      await setProps({ checked: false });
+      await fireEvent.click(control);
+      expect(control).toHaveAttribute('aria-checked', 'false');
+      expect(getInput()).not.toBeChecked();
+
+      await setProps({ checked: undefined });
+      expect(control).toHaveAttribute('aria-checked', 'false');
+      await fireEvent.click(control);
+      expect(getInput()).toBeChecked();
+      expect(onUpdate.mock.calls).toEqual([[true], [true], [true]]);
+    });
+  });
+
   describe('hidden input size', () => {
     it('keeps the 1px size in the next render of the switch', async () => {
       const { container } = await render(<Switch.Root required />);

@@ -263,7 +263,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   });
 
   const isMonthValue = computed(() => views?.isMonthValue.value === true);
-  const [viewState, setViewState] = useControlled<CalendarView | undefined>({
+  const viewState = useControlled<CalendarView | undefined>({
     controlled: () => views?.props.view,
     default: () => views?.props.defaultView,
     name: 'Calendar',
@@ -317,7 +317,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     max: props.maxDate && monthOfDate(toGridDate(props.maxDate)),
   }));
 
-  const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth | undefined>({
+  const monthState = useControlled<Temporal.PlainYearMonth | undefined>({
     controlled: () => props.month,
     default: () => props.defaultMonth,
     name,
@@ -346,7 +346,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
         ),
   );
 
-  const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
+  const focusedDateState = useControlled<Temporal.PlainDate | null>({
     controlled: () => props.focusedDate,
     default: () => props.defaultFocusedDate ?? null,
     name,
@@ -542,7 +542,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       return false;
     }
     emit('update:month', month);
-    setMonthState(month);
+    monthState.value = month;
     return true;
   }
 
@@ -590,7 +590,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       return false;
     }
     emit('update:focusedDate', date);
-    setFocusedDateState(date);
+    focusedDateState.value = date;
     return true;
   }
 
@@ -837,7 +837,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       return false;
     }
     views.emit('update:view', next);
-    setViewState(next);
+    viewState.value = next;
     return true;
   }
 

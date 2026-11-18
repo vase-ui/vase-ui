@@ -126,7 +126,7 @@ const groupDisabled = computed(
     props.disabled,
 );
 
-const [groupValue, setValueState] = useControlled<readonly Value[]>({
+const groupValue = useControlled<readonly Value[]>({
   // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
   controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
@@ -158,7 +158,7 @@ function setGroupValue(
   }
 
   emit('update:value', newGroupValue);
-  setValueState(newGroupValue);
+  groupValue.value = newGroupValue;
 }
 
 const state = computed<ToggleGroupState>(() => ({

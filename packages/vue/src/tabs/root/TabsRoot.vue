@@ -161,14 +161,14 @@ defineSlots<{
 const hasExplicitDefaultValue = props.defaultValue !== undefined;
 const initialDefaultValue = hasExplicitDefaultValue ? props.defaultValue : 0;
 
-const [activeTabValue, setValue] = useControlled<TabsTabValue>({
+const activeTabValue = useControlled<TabsTabValue>({
   controlled: () => props.value,
   default: () => (props.defaultValue === undefined ? 0 : props.defaultValue),
   name: 'Tabs',
   state: 'value',
 });
 
-const isControlled = props.value !== undefined;
+const isControlled = computed(() => props.value !== undefined);
 
 // An implicit selection is an automatic change too, so the root emits it one time when the tabs
 // register. An explicit `defaultValue` is the choice of the consumer.
@@ -263,7 +263,7 @@ function onValueChange(newValue: TabsTabValue, eventDetails: TabsRootChangeEvent
   }
 
   emit('update:value', newValue);
-  setValue(newValue);
+  activeTabValue.value = newValue;
 }
 
 function notifyAutomaticValueChange(nextValue: TabsTabValue, reason: TabsRootChangeEventReason) {
@@ -286,7 +286,7 @@ function commitAutomaticValueChange(
   previousValue = fallbackValue;
   tabActivationDirection.value = 'none';
   // The write comes before the listener, so that a listener that throws cannot stop it.
-  setValue(fallbackValue);
+  activeTabValue.value = fallbackValue;
   notifyAutomaticValueChange(fallbackValue, reason);
   // The initial notification is done only after the listener returns.
   shouldNotifyInitialValueChange = false;
@@ -294,7 +294,7 @@ function commitAutomaticValueChange(
 
 // A controlled root keeps the exact value of the parent, also when that tab is disabled or missing.
 function run() {
-  if (isControlled) {
+  if (isControlled.value) {
     return;
   }
 
@@ -364,12 +364,12 @@ function run() {
 }
 
 onMounted(run);
-watch([tabMap, activeTabValue], run, { flush: 'post' });
+watch([tabMap, activeTabValue, isControlled], run, { flush: 'post' });
 
 // A server cannot tell which tab the implicit default `0` names, so that value chooses no tab. The
 // first enabled tab then takes the tab stop of the server HTML.
 const hasChosenTab = computed(
-  () => activeTabValue.value != null && (isControlled || hasExplicitDefaultValue),
+  () => activeTabValue.value != null && (isControlled.value || hasExplicitDefaultValue),
 );
 
 // The panels register their elements in this list, to get their `data-index`.

@@ -56,7 +56,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, GenericOpenPartState>;
 }>();
 
-const [open, setOpen] = useControlled({
+const open = useControlled({
   controlled: () => props.open,
   default: () => props.defaultOpen,
   name: 'GenericOpenPart',
@@ -73,7 +73,7 @@ function handleClick(event: MouseEvent) {
     return;
   }
   emit('update:open', nextOpen);
-  setOpen(nextOpen);
+  open.value = nextOpen;
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

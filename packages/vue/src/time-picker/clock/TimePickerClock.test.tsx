@@ -227,6 +227,18 @@ describe('<TimePicker.Clock />', () => {
       });
     });
 
+    it('keeps the last view after a refused request and a release', async () => {
+      const { setProps } = await renderClock({ closeOnSelect: false }, { view: 'hour' });
+      await pressAt(90);
+      const clock = screen.getByTestId('clock');
+      expect(clock).toHaveAttribute('data-view', 'hour');
+
+      await setProps({ clockProps: {} });
+      expect(clock).toHaveAttribute('data-view', 'hour');
+      await pressAt(180);
+      expect(clock).toHaveAttribute('data-view', 'minute');
+    });
+
     it('takes the view and the steps of the consumer', async () => {
       await renderClock({}, { defaultView: 'minute', minuteStep: 15 });
 
