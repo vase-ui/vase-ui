@@ -5,11 +5,12 @@ import expectations from './expectedFailures.json' with { type: 'json' };
 
 declare module 'vitest' {
   interface TaskMeta {
-    vaporExpectation?: { cause: string; fails: boolean };
+    vaporExpectation?: { name: string; fails: boolean };
   }
 }
 
 const files: Record<string, { fails: Record<string, string> }> = expectations.files;
+const onMinor = import.meta.env.MODE === 'vue-minor';
 
 // A suite can create a fixture vnode while Vitest collects its cases.
 afterAll(checkFragmentChildren());
@@ -46,10 +47,9 @@ beforeAll(({}, file) => {
   }
   for (const [name, cause] of Object.entries(fails)) {
     for (const task of cases.get(name) ?? []) {
-      task.fails = true;
-      if (import.meta.env.MODE === 'vue-minor') {
-        task.fails = cause !== 'vue-16301';
-        task.meta.vaporExpectation = { cause, fails: task.fails };
+      task.fails = !onMinor || cause !== 'vue-16301';
+      if (onMinor) {
+        task.meta.vaporExpectation = { name, fails: task.fails };
       }
     }
   }
