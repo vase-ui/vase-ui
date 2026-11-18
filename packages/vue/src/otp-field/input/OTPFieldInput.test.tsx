@@ -71,6 +71,56 @@ describe('<OTPField.Input />', () => {
     return fireEvent(target, pasteEvent);
   }
 
+  it('VUE-144: keeps a supplementary character in one slot during entry, paste and deletion', async () => {
+    const complete = vi.fn();
+    await render(
+      <OTPField.Root length={2} validationType="none" name="code" onValueComplete={complete}>
+        <OTPField.Input />
+        <OTPField.Input />
+      </OTPField.Root>,
+    );
+    const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
+    first.focus();
+    await fireEvent.input(first, { target: { value: '𠮷' } });
+    expect(first).toHaveValue('𠮷');
+    expect(first.maxLength).toBeGreaterThanOrEqual('𠮷𠮷'.length);
+    expect(second).toHaveValue('');
+    expect(second).toHaveFocus();
+    expect(complete).not.toHaveBeenCalled();
+
+    await pasteText(second, 'A');
+    expect(first).toHaveValue('𠮷');
+    expect(second).toHaveValue('A');
+    expect(complete.mock.calls.map(([value]) => value)).toEqual(['𠮷A']);
+
+    await fireEvent.keyDown(first, { key: 'Delete' });
+    expect(first).toHaveValue('A');
+    expect(second).toHaveValue('');
+  });
+
+  it('keeps the value and field state when native events are prevented', async () => {
+    const change = vi.fn();
+    await render(
+      <Field.Root data-testid="field">
+        <OTPField.Root length={1} defaultValue="1" onValueChange={change}>
+          <OTPField.Input />
+        </OTPField.Root>
+      </Field.Root>,
+    );
+    const input = screen.getByRole<HTMLInputElement>('textbox');
+    const field = screen.getByTestId('field');
+    for (const type of ['focusin', 'focusout', 'input']) {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      event.preventDefault();
+      if (type === 'input') input.value = '2';
+      await fireEvent(input, event);
+      expect(field).not.toHaveAttribute('data-focused');
+    }
+    expect(field).not.toHaveAttribute('data-touched');
+    expect(input).toHaveValue('1');
+    expect(change).not.toHaveBeenCalled();
+  });
+
   it('renders one textbox per slot', async () => {
     await render(<OTPFieldTest />);
 

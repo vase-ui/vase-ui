@@ -71,6 +71,8 @@ defineSlots<{
 
 const {
   activeIndex,
+  characters,
+  nativeMaxLength,
   focusInput,
   queueFocusInput,
   controlId,
@@ -108,7 +110,7 @@ const writesValue = useValueBeforeHydration(props, () => element.value, { restor
 const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: inputList });
 
-const slotValue = computed(() => state.value.value[index.value] ?? '');
+const slotValue = computed(() => characters.value[index.value] ?? '');
 const inputState = computed<OTPFieldInputState>(() => ({
   ...state.value,
   value: slotValue.value,
@@ -203,7 +205,7 @@ function commitValue(
     (writesValue.value || activeElement(ownerDocument(input)) === input)
   ) {
     queueFocusInput(
-      Math.min(index.value + nextDigits.length, state.value.length - 1),
+      Math.min(index.value + Array.from(nextDigits).length, state.value.length - 1),
       committedValue,
     );
   }
@@ -212,7 +214,7 @@ function commitValue(
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
 
-  if (!state.value.disabled && !state.value.readOnly) {
+  if (!event.defaultPrevented && !state.value.disabled && !state.value.readOnly) {
     if (composingValue.value != null) {
       composingValue.value = input.value;
     } else {
@@ -235,7 +237,7 @@ function handleKeydown(event: KeyboardEvent) {
   const input = event.currentTarget as HTMLInputElement;
   const firstIndex = 0;
   const lastIndex = Math.max(state.value.length - 1, firstIndex);
-  const endTargetIndex = Math.min(state.value.value.length, lastIndex);
+  const endTargetIndex = Math.min(characters.value.length, lastIndex);
   const hasBoundaryModifier = (event.ctrlKey || event.metaKey) && !event.altKey;
   const isRtl = direction.value === 'rtl';
   const previousKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
@@ -292,7 +294,7 @@ function handleKeydown(event: KeyboardEvent) {
   const inputValue = input.value;
   const fullSelection = input.selectionStart === 0 && input.selectionEnd === inputValue.length;
 
-  if (event.key.length === 1 && fullSelection && slotValue.value === event.key) {
+  if (slotValue.value !== '' && fullSelection && slotValue.value === event.key) {
     stopEvent(event);
     if (index.value < state.value.length - 1) {
       focusInput(index.value + 1);
@@ -367,7 +369,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props
         enterkeyhint: slotIndex === state.value.length - 1 ? 'done' : 'next',
         // Only the first slot has a maximum length, so that a password manager shows no bubble at a
         // later input.
-        maxlength: slotIndex === 0 ? state.value.length : undefined,
+        maxlength: slotIndex === 0 ? nativeMaxLength.value : undefined,
         tabindex: activeIndex.value === slotIndex ? 0 : -1,
         disabled: state.value.disabled ? '' : undefined,
         form: options.form,
@@ -386,7 +388,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('input', props
           focusInput(slotIndex);
         },
         onFocusin(event: FocusEvent) {
-          if (state.value.disabled) {
+          if (event.defaultPrevented || state.value.disabled) {
             return;
           }
 

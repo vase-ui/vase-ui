@@ -15,6 +15,8 @@ import type {
 export interface OTPFieldRootContext {
   inputRender: ReturnType<typeof useInputRender>;
   activeIndex: ComputedRef<number>;
+  characters: ComputedRef<string[]>;
+  nativeMaxLength: ComputedRef<number>;
   focusInput: (index: number) => void;
   queueFocusInput: (index: number, value: string) => void;
   controlId: ComputedRef<string | undefined>;
@@ -133,7 +135,8 @@ export function normalizeOTPValueWithDetails(
 
   if (normalizeValue) {
     const customNormalizedValue = normalizeValue(normalizedValue);
-    didRejectCharacters ||= normalizedValue.length > customNormalizedValue.length;
+    didRejectCharacters ||=
+      Array.from(normalizedValue).length > Array.from(customNormalizedValue).length;
     normalizedValue = applyOTPValidation(customNormalizedValue, validation);
     didRejectCharacters ||= customNormalizedValue.length > normalizedValue.length;
   }
@@ -170,21 +173,13 @@ export function replaceOTPValue(
   normalizeValue?: (value: string) => string,
 ) {
   const normalizedValue = normalizeOTPValue(nextValue, length, validationType, normalizeValue);
-  const prefix = currentValue.slice(0, index);
-  const suffix = currentValue.slice(index + normalizedValue.length);
-
-  return normalizeOTPValue(
-    `${prefix}${normalizedValue}${suffix}`,
-    length,
-    validationType,
-    normalizeValue,
-  );
+  const characters = Array.from(currentValue);
+  characters.splice(index, Array.from(normalizedValue).length, normalizedValue);
+  return normalizeOTPValue(characters.join(''), length, validationType, normalizeValue);
 }
 
 export function removeOTPCharacter(currentValue: string, index: number) {
-  if (index < 0 || index >= currentValue.length) {
-    return currentValue;
-  }
-
-  return `${currentValue.slice(0, index)}${currentValue.slice(index + 1)}`;
+  const characters = Array.from(currentValue);
+  if (index >= 0) characters.splice(index, 1);
+  return characters.join('');
 }

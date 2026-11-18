@@ -155,7 +155,7 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watch, watchPostEffect } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch, watchPostEffect } from 'vue';
 import { clamp } from '../../common/clamp';
 import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -312,15 +312,20 @@ const hasValidLength = computed(() => Number.isInteger(props.length) && props.le
 const otpValue = computed(() =>
   normalizeOTPValue(valueUnwrapped.value, props.length, props.validationType, props.normalizeValue),
 );
+const characters = computed(() => Array.from(otpValue.value));
 const filled = computed(() => otpValue.value !== '');
+// Native length limits count UTF-16 code units. An unrestricted slot can need two.
+const nativeMaxLength = computed(() =>
+  props.validationType === 'none' ? props.length * 2 : props.length,
+);
 
-const focusedIndex = shallowRef(Math.min(otpValue.value.length, props.length - 1));
+const focusedIndex = shallowRef(Math.min(characters.value.length, props.length - 1));
 const focused = shallowRef(false);
 
 const activeIndex = computed(() =>
   focused.value
     ? Math.min(focusedIndex.value, Math.max(props.length - 1, 0))
-    : Math.min(otpValue.value.length, props.length - 1),
+    : Math.min(characters.value.length, props.length - 1),
 );
 
 watch(filled, setFilled, { immediate: true });
@@ -333,10 +338,16 @@ const inputList = useCompositeList({
 if (process.env.NODE_ENV !== 'production') {
   watch(
     [() => inputList.map.value.size, () => props.length],
-    ([count, length]) => {
-      if (!hasValidLength.value || count === 0 || count === length) {
-        return;
-      }
+    async ([count, length], _, onCleanup) => {
+      if (!hasValidLength.value || count === 0 || count === length) return;
+
+      // The list publishes slot additions and removals during the same post-flush phase.
+      let stale = false;
+      onCleanup(() => {
+        stale = true;
+      });
+      await nextTick();
+      if (stale) return;
 
       warn(
         '<OTPField.Root> `length` must match the number of rendered ' +
@@ -431,12 +442,12 @@ useValueChanged(otpValue, () => {
 
   if (
     focusedElement &&
-    getConnectedInputs().indexOf(focusedElement as HTMLInputElement) > otpValue.value.length
+    getConnectedInputs().indexOf(focusedElement as HTMLInputElement) > characters.value.length
   ) {
-    focusInput(otpValue.value.length);
+    focusInput(characters.value.length);
     // Slots may not have their updated indexes yet when leading slots unmount, so sync the
     // tab stop with the redirect target directly.
-    focusedIndex.value = otpValue.value.length;
+    focusedIndex.value = characters.value.length;
   }
 
   const queuedComplete = pendingCompleteValue;
@@ -454,12 +465,13 @@ function setValue(nextValue: string, details: OTPFieldRootChangeEventDetails) {
     props.validationType,
     props.normalizeValue,
   );
+  const nextComplete = Array.from(normalizedValue).length === length;
   const canComplete =
     details.reason === REASONS.inputChange || details.reason === REASONS.inputPaste;
   const completeEventDetails =
     canComplete &&
-    normalizedValue.length === length &&
-    (otpValue.value.length !== length || details.reason === REASONS.inputPaste)
+    nextComplete &&
+    (characters.value.length !== length || details.reason === REASONS.inputPaste)
       ? createGenericEventDetails(details.reason, details.event)
       : null;
 
@@ -485,7 +497,7 @@ function setValue(nextValue: string, details: OTPFieldRootChangeEventDetails) {
       value: normalizedValue,
       eventDetails: completeEventDetails,
     };
-  } else if (normalizedValue.length !== length) {
+  } else if (!nextComplete) {
     pendingCompleteValue = null;
   }
 
@@ -497,8 +509,8 @@ function reportValueInvalid(invalidValue: string, details: OTPFieldRootInvalidEv
 }
 
 function handleInputFocus(index: number, event: FocusEvent) {
-  if (index > otpValue.value.length) {
-    focusInput(Math.min(otpValue.value.length, props.length - 1));
+  if (index > characters.value.length) {
+    focusInput(Math.min(characters.value.length, props.length - 1));
     return;
   }
 
@@ -507,7 +519,7 @@ function handleInputFocus(index: number, event: FocusEvent) {
 }
 
 function handleInputBlur(event: FocusEvent) {
-  if (contains(element.value, event.relatedTarget as Element | null)) {
+  if (event.defaultPrevented || contains(element.value, event.relatedTarget as Element | null)) {
     return;
   }
 
@@ -522,7 +534,7 @@ function handleInputBlur(event: FocusEvent) {
 
 const state = computed<OTPFieldRootState>(() => ({
   ...fieldState.value,
-  complete: otpValue.value.length === props.length,
+  complete: characters.value.length === props.length,
   disabled: isDisabled.value,
   filled: filled.value,
   focused: focused.value,
@@ -537,6 +549,8 @@ const inputRender = useInputRender();
 provide(OTPFieldRootContext, {
   inputRender,
   activeIndex,
+  characters,
+  nativeMaxLength,
   options: props,
   focusInput,
   queueFocusInput,
@@ -613,7 +627,7 @@ function handleHiddenInput(event: Event) {
 
     // The event of the take of the hydration comes with no action of the user, so the focus stays.
     if (committedValue != null && committedValue !== '' && writesHiddenValue.value) {
-      queueFocusInput(committedValue.length - 1, committedValue);
+      queueFocusInput(Array.from(committedValue).length - 1, committedValue);
     }
   }
 
@@ -665,8 +679,8 @@ defineExpose({ element });
     :name="inputName"
     :autocomplete="props.autoComplete"
     :inputmode="resolvedInputMode"
-    :minlength="props.length"
-    :maxlength="props.length"
+    :minlength="props.length + otpValue.length - characters.length"
+    :maxlength="nativeMaxLength"
     :pattern="validationConfig?.getRootPattern(props.length)"
     :disabled="isDisabled"
     :readonly="props.readOnly"

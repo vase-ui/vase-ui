@@ -22,6 +22,7 @@ import {
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  takeReportedMessages,
   within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
@@ -1238,9 +1239,6 @@ describe('<OTPField.Root />', () => {
 
         expect(lastInput).toHaveFocus();
 
-        // The slot-count dev warning lags one commit behind a runtime `length` change.
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
         await setProps({ length: 3, value: '' });
 
         const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
@@ -1249,9 +1247,6 @@ describe('<OTPField.Root />', () => {
         expect(inputs[0]).toHaveFocus();
         expect(inputs[0]).toHaveAttribute('tabindex', '0');
         expect(inputs[2]).toHaveAttribute('tabindex', '-1');
-        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
-          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={3}` but rendered 6 inputs.',
-        );
       });
 
       it('keeps focus on a slot that is still reachable after a controlled value shrinks', async () => {
@@ -2808,10 +2803,6 @@ describe('<OTPField.Root />', () => {
     });
 
     it('is kept when a previously focused slot unmounts after focus moves to a sibling', async () => {
-      // The registry count trails `length` by a render, so a slot removal can report a
-      // mismatch that never reaches the DOM.
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
       function TestCase(props: { firstMounted?: boolean }) {
         const { firstMounted = true } = props;
         return (
@@ -2825,30 +2816,23 @@ describe('<OTPField.Root />', () => {
         );
       }
 
-      try {
-        const { setProps } = await render(<TestCase />);
-        const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
+      const { setProps } = await render(<TestCase />);
+      const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
 
-        first.focus();
-        await flushMicrotasks();
-        second.focus();
-        await flushMicrotasks();
+      first.focus();
+      await flushMicrotasks();
+      second.focus();
+      await flushMicrotasks();
 
-        expect(second).toHaveFocus();
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-        expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
+      expect(second).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
+      expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
 
-        await setProps({ firstMounted: false });
+      await setProps({ firstMounted: false });
 
-        expect(second).toHaveFocus();
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-        expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
-        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
-          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={2}` but rendered 3 inputs.',
-        );
-      } finally {
-        warnSpy.mockRestore();
-      }
+      expect(second).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
+      expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
     });
 
     it('is removed when the focused slot unmounts but its field remains', async () => {
@@ -2943,6 +2927,23 @@ describe('<OTPField.Root />', () => {
     expect(screen.getByTestId('after-root')).toHaveFocus();
     const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
     expect(inputs.map((input) => input.value)).toEqual(['1', '2', '']);
+  });
+
+  it('VUE-145: accepts a length change that adds or removes the matching slots', async () => {
+    const length = shallowRef(1);
+    await render(() => (
+      <OTPFieldBase.Root length={length.value}>
+        {Array.from({ length: length.value }, (_, index) => (
+          <OTPFieldBase.Input key={index} />
+        ))}
+      </OTPFieldBase.Root>
+    ));
+    for (const count of [3, 2]) {
+      length.value = count;
+      await flushMicrotasks();
+      expect(screen.getAllByRole('textbox')).toHaveLength(count);
+    }
+    expect(takeReportedMessages()).toEqual([]);
   });
 
   it('warns when length does not match the rendered input count', async () => {
