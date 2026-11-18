@@ -630,6 +630,10 @@ const noEmptyPart = {
       ? `:matches(${componentCall}, ExportDefaultDeclaration) > ObjectExpression`
       : `${componentCall} > ObjectExpression`;
 
+    function option(name) {
+      return `${options} > :matches(Property[computed=false][key.name='${name}'], Property[key.value='${name}'])`;
+    }
+
     function returnValues(fn) {
       return fn.body.type === 'BlockStatement' ? (returns.get(fn) ?? []) : [fn.body];
     }
@@ -664,10 +668,10 @@ const noEmptyPart = {
         if (!returns.has(fn)) returns.set(fn, []);
         returns.get(fn).push(node.argument);
       },
-      [`${options} > Property[key.name='render'] > :function:exit`]: checkRender,
+      [`${option('render')} > :function:exit`]: checkRender,
       ["VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='FunctionalComponent'] > :function:exit"]:
         checkRender,
-      [`:matches(${options} > Property[key.name='setup'], ${componentCall}) > :function:exit`](fn) {
+      [`:matches(${option('setup')}, ${componentCall}) > :function:exit`](fn) {
         const renderers = returnValues(fn);
         if (renderers.length && renderers.every(returnsOnlyNull)) {
           context.report({ node: fn, messageId: 'empty' });

@@ -945,6 +945,10 @@ const reported = [
   })),
   ...[
     ['a null render method', 'export default defineComponent({ render() { return null; } });'],
+    [
+      'a quoted null render method',
+      "export default defineComponent({ 'render'() { return null; } });",
+    ],
     ['a null render from setup', 'export default defineComponent({ setup: () => () => null });'],
     [
       'a render with two null returns',
@@ -1218,6 +1222,12 @@ export function useSize(element: Readonly<Ref<Element | null>>, resize: ResizeOb
     };
   },
 });`,
+  },
+  {
+    name: 'a computed method beside a visible renderer',
+    file: `${SRC}/DialogContent.ts`,
+    code: `const render = 'placeholder';
+export default defineComponent({ [render]() { return null; }, render: () => h('span') });`,
   },
   {
     name: 'a setup that can return a visible renderer',
