@@ -25,38 +25,20 @@ export function useMediaQuery(
   options: MaybeRefOrGetter<useMediaQuery.Options>,
 ): Readonly<Ref<boolean>> {
   const getQuery = () => toValue(query).replace(/^@media( ?)/m, '');
+  const getDefaultMatches = () => toValue(options).defaultMatches ?? false;
+  const getMatchMedia = () => {
+    const { matchMedia = getWindowMatchMedia() } = toValue(options);
+    return matchMedia;
+  };
 
-  function getOptions() {
-    const {
-      defaultMatches = false,
-      matchMedia = getWindowMatchMedia(),
-      ssrMatchMedia = null,
-      noSsr = false,
-    } = toValue(options);
-    return { defaultMatches, matchMedia, ssrMatchMedia, noSsr };
-  }
+  const { noSsr, ssrMatchMedia } = toValue(options);
+  const initialMatchMedia = noSsr ? (getMatchMedia() ?? ssrMatchMedia) : ssrMatchMedia;
+  const matches = shallowRef(initialMatchMedia?.(getQuery()).matches ?? getDefaultMatches());
 
-  function getInitialMatches() {
-    const { defaultMatches, matchMedia, ssrMatchMedia, noSsr } = getOptions();
-
-    if (noSsr && matchMedia) {
-      return matchMedia(getQuery()).matches;
-    }
-
-    if (ssrMatchMedia !== null) {
-      return ssrMatchMedia(getQuery()).matches;
-    }
-
-    return defaultMatches;
-  }
-
-  // The first client render must equal the server HTML, so `onMounted` reads the real value.
-  const matches = shallowRef(getInitialMatches());
   onMounted(() => {
-    // A getter can return a new options object on each call. Watch its members.
-    // The default flush runs before the render, so a new query renders the component one time.
+    // A new options object can describe the same subscription.
     watch(
-      [getQuery, () => getOptions().matchMedia, () => getOptions().defaultMatches],
+      [getQuery, getMatchMedia, getDefaultMatches],
       ([media, matchMedia, defaultMatches], _previous, onCleanup) => {
         if (matchMedia === null) {
           matches.value = defaultMatches;
