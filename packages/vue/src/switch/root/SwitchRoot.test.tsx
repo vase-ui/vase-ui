@@ -76,9 +76,20 @@ describe('<Switch.Root />', () => {
     it('refuses a click with only the checked prop', async () => {
       await render(<Switch.Root checked />);
       const control = screen.getByRole('switch');
+      expect(control).toHaveAttribute('aria-checked', 'true');
       await fireEvent.click(control);
       expect(control).toHaveAttribute('aria-checked', 'true');
       expect(getInput()).toBeChecked();
+    });
+
+    it('warns about a new default after release and keeps the checked value', async () => {
+      const { setProps } = await render(<Switch.Root checked defaultChecked />);
+      await setProps({ checked: undefined, defaultChecked: false });
+
+      expect(getInput()).toBeChecked();
+      expect(takeReportedMessages()).toEqual([
+        expect.stringContaining('changing the default checked state of an uncontrolled Switch'),
+      ]);
     });
 
     it('accepts local writes when a wrapper forwards undefined and its listener', async () => {
