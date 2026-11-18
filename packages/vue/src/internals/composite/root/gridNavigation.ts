@@ -134,7 +134,6 @@ export function gridNavigation(
       },
     );
 
-    // The navigated cell is never empty.
-    return cellMap[cellIndex] as number;
+    return cellMap[cellIndex] ?? highlightedIndex;
   };
 }
