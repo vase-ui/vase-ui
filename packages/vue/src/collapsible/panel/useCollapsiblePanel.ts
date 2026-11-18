@@ -79,6 +79,7 @@ export function useCollapsiblePanel(
   // Some open paths skip the motion, but the status of the root changes in a later frame. The
   // panel stays idle until then, so its data attributes and its size match the open state.
   const forcePanelIdle = shallowRef(false);
+  // eslint-disable-next-line no-restricted-syntax -- The next panel measurement must restore the temporary style first.
   let pendingTemporaryStyleRestore: (() => void) | null = null;
   // Vue writes each key of the rendered style again on each render. A temporary inline style that
   // the code writes to the DOM is also in this record. The part merges the record after the style

@@ -1044,6 +1044,7 @@ export function useDismiss(
     // bubble. A capture listener for `load` on each document finds a frame that loads while the
     // popup is open.
     function listenInFrames() {
+      // eslint-disable-next-line no-restricted-syntax -- This effect replaces its frame listeners when a frame loads.
       let stopListening = NOOP;
 
       function listen() {

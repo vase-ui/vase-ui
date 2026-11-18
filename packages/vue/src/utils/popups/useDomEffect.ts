@@ -17,6 +17,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
  * Call it in `setup`.
  */
 export function useDomEffect(sources: WatchSource[], run: () => (() => void) | void): void {
+  // eslint-disable-next-line no-restricted-syntax -- This helper owns the cleanup across the mount, the post flush and the hold hook.
   let cleanup: (() => void) | undefined;
   const { isHeld } = useKeepAliveState();
 

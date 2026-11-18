@@ -61,7 +61,9 @@ export function observeRootNode(
 ): () => void {
   let root: Node | undefined;
   let attachedRoot: Document | ShadowRoot | undefined;
+  // eslint-disable-next-line no-restricted-syntax -- The DOM observer moves this subscription in the mutation microtask.
   let stopAttached: (() => void) | undefined;
+  // eslint-disable-next-line no-restricted-syntax -- The DOM observer follows the detached tree in the same microtask.
   let stopDetached: (() => void) | undefined;
 
   function updateObservers() {
@@ -109,7 +111,8 @@ export function followRootNode(
   effect: (root: Node) => (() => void) | undefined,
 ): () => void {
   let root = element.getRootNode();
-  let cleanup = effect(root);
+  // eslint-disable-next-line no-restricted-syntax -- This DOM helper releases the previous root subscription in the mutation microtask.
+  let cleanup: (() => void) | undefined = effect(root);
   const stop = observeRootNode(element, () => {
     const next = element.getRootNode();
     if (next !== root) {

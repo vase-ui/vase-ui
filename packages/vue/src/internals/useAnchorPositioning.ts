@@ -570,6 +570,7 @@ export function useAnchorPositioning(
     };
   };
 
+  // eslint-disable-next-line no-restricted-syntax -- The mount callback of `useFloating` owns the auto-update subscription.
   let restartAutoUpdate: (() => void) | undefined;
 
   // `useFloating` computes a position in a sync watcher for each option that changes. One write
