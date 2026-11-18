@@ -109,7 +109,13 @@
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },
+    "src/internals/useAnimationsFinished.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useFormReset.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useInitialLiveRegionTextMutation.test.tsx": {
       "fails": {}
     },
     "src/internals/useInputRender.test.tsx": {
@@ -118,7 +124,13 @@
     "src/internals/useItemRegistry.test.tsx": {
       "fails": {}
     },
+    "src/internals/useOpenChangeComplete.test.tsx": {
+      "fails": {}
+    },
     "src/internals/useRenderElement.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useTransitionStatus.test.tsx": {
       "fails": {}
     },
     "src/internals/withoutPropsOf.test.ts": {
@@ -262,6 +274,9 @@
     "src/utils/popups/interactions/hoverIntent.test.ts": {
       "fails": {}
     },
+    "src/utils/popups/useDomEffect.test.tsx": {
+      "fails": {}
+    },
     "src/utils/styles.test.tsx": {
       "fails": {}
     },
@@ -271,13 +286,13 @@
     "test/modelOwnership.test.tsx": {
       "fails": {}
     },
+    "test/popupLayout.test.tsx": {
+      "fails": {}
+    },
     "test/reportedMessages.test.tsx": {
       "fails": {}
     },
     "test/testApp.test.tsx": {
-      "fails": {}
-    },
-    "test/popupLayout.test.tsx": {
       "fails": {}
     },
     "test/vaporParts/vaporParts.test.tsx": {
