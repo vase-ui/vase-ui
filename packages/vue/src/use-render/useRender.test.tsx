@@ -462,23 +462,20 @@ describe('<UseRenderPart />', () => {
   });
 
   it('gives the render slot live state for the class, style and content', async () => {
+    const slot = vi.fn(({ props, state }: { props: HTMLProps; state: UseRenderPartState }) => (
+      <div
+        {...props}
+        class={state.active ? 'active-class' : 'inactive-class'}
+        style={{ color: state.active ? 'red' : 'blue' }}
+      >
+        active: {String(state.active)}
+      </div>
+    ));
     const { container, setProps } = await render(
-      <UseRenderPart
-        active
-        v-slots={{
-          render: ({ props, state }: { props: HTMLProps; state: UseRenderPartState }) => (
-            <div
-              {...props}
-              class={state.active ? 'active-class' : 'inactive-class'}
-              style={{ color: state.active ? 'red' : 'blue' }}
-            >
-              active: {String(state.active)}
-            </div>
-          ),
-        }}
-      />,
+      <UseRenderPart active v-slots={{ render: slot }} />,
     );
 
+    expect(slot).toHaveBeenCalledTimes(1);
     const element = container.firstElementChild as HTMLElement;
     expect(element).toHaveClass('active-class');
     expect(element.style.color).toBe('red');
@@ -486,6 +483,7 @@ describe('<UseRenderPart />', () => {
     expect(element).toHaveTextContent('active: true');
 
     await setProps({ active: false });
+    expect(slot).toHaveBeenCalledTimes(2);
     expect(element).toHaveClass('inactive-class');
     expect(element.style.color).toBe('blue');
     expect(element).not.toHaveAttribute('data-active');

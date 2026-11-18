@@ -72,7 +72,7 @@ export type GenericComponent = /* @vue-ignore */ (props: any, ...args: any[]) =>
 /**
  * Props shared by all Vase UI parts that render an element.
  */
-export interface VaseUIComponentProps<_State = {}> {
+export interface VaseUIComponentProps<_State> {
   /**
    * Replaces the element of the part with a different tag or component.
    * To give the element props or children of its own, use the `#render` slot.
