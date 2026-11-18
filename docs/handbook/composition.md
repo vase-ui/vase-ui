@@ -123,7 +123,7 @@ A value of `false` makes these props controlled:
 
 A defined model prop gives the parent control, even without an update listener. With `v-model:open`, a parent can take control after mount by setting its ref to `true` or `false`.
 
-When the parent sets the prop to `undefined`, the part keeps the last value and accepts local changes. A wrapper can forward `undefined` with an update listener and still leave the part in control.
+When the parent sets one of these Boolean props to `undefined`, the part keeps the last value and accepts local changes. A wrapper can forward `undefined` with an update listener and still leave the part in control.
 
 ### A default of true
 

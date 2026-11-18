@@ -153,9 +153,8 @@ export function getPopupTransitionElement(store: PopupRootStore) {
  * the composable then follows `open` and `triggerId`.
  * @param createStore Makes the store one time. The store belongs to the root, and the handle
  * attaches to it.
- * A prop that the store also holds, such as `disabled`, goes into the first state here, and one
- * `watch` writes each later change. A server runs no `watch`, so the server HTML has the first
- * state.
+ * Initialize each store prop, such as `disabled`, for the server render. Watch the prop for later
+ * changes.
  * @param options What differs between the popup roots.
  * @returns The store, the state that the root renders, and the actions that the part exposes.
  */
@@ -352,8 +351,8 @@ function usePopupRootStore<Store extends PopupRootStore>(
     { immediate: true },
   );
 
-  // A controlled root holds its last request in `state.open`, and a close through the prop does
-  // not reset it. After the reset, a `true` at the unmount is a request that came later.
+  // Reset the last open request on a controlled close. An open request during the exit can then
+  // keep its trigger when the popup unmounts.
   watch(
     () => props.open,
     (open, previous) => {
