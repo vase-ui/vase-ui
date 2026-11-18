@@ -11,11 +11,10 @@ export interface SelectListProps
 </script>
 
 <script setup lang="ts">
-import { toRaw } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, stateElementTarget } from '../../utils/popups/createElementSetter';
 import { styleDisableScrollbar } from '../../utils/styles';
 import { LIST_FUNCTIONAL_STYLES } from '../popup/utils';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -34,20 +33,12 @@ const store = useSelectRootContext();
 const { alignItemWithTriggerActive } = useSelectPositionerContext();
 const state: SelectListState = EMPTY_OBJECT;
 
-let listElement: HTMLElement | null = null;
-
-function setListElement(list: HTMLElement | null) {
-  // A compiled template can mount a new list before it unmounts the old one. The old one then
-  // must not clear the element of the new one.
-  if (list !== null || toRaw(store.state).listElement === listElement) {
-    store.set('listElement', list as HTMLDivElement | null);
-  }
-  listElement = list;
-}
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  SelectListState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: useKeepAliveElementRef(setListElement),
+  ref: createElementSetter(stateElementTarget(store, 'listElement')),
   props: (attrs) => [
     {
       id: `${store.select('id')}-list`,

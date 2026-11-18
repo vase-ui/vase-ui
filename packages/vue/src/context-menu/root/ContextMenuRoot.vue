@@ -25,10 +25,13 @@ export type ContextMenuRootChangeEventDetails = MenuRootChangeEventDetails;
 import { provide, shallowRef, useTemplateRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import MenuRoot from '../../menu/root/MenuRoot.vue';
 import { MenuRootContext } from '../../menu/root/MenuRootContext';
 import { ContextMenuRootContext } from './ContextMenuRootContext';
 import type { ContextMenuAnchor } from './ContextMenuRootContext';
+
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ContextMenuRootProps>(), {
   defaultOpen: false,
@@ -116,6 +119,7 @@ defineExpose<ContextMenuRootActions>({
 <template>
   <MenuRoot
     ref="menuRoot"
+    v-bind="withoutPropsOf($attrs, MenuRoot)"
     :default-open="props.defaultOpen"
     :open="props.open"
     :highlight-item-on-hover="props.highlightItemOnHover"

@@ -31,8 +31,8 @@ const MESSAGES = {
     'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
   renderSlotCall:
     'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
-  portalAttrs:
-    'An attribute can set a prop that only the internal portal declares. Bind `withoutPropsOf($attrs, FloatingPortal)` or `withoutPropsOf($attrs, FloatingPortalLite)` before the props of the part.',
+  wrapperAttrs:
+    'An attribute can set a prop that only the inner part declares. Bind `withoutPropsOf($attrs, <the part that the tag renders>)` before the props of the wrapper. To accept a prop of the inner part, declare it on the wrapper.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
   defineComponent:
@@ -67,6 +67,8 @@ const MESSAGES = {
     '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
   watchPostEffect:
     "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
+  popupElementWrite:
+    'A part that writes this key itself does not follow `KeepAlive`, and it can clear the element of a part that replaced it. Give `popupElementTarget(store)` or `stateElementTarget(store, key)` to `createElementSetter`.',
   keepAliveHook:
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
@@ -367,6 +369,11 @@ const ELEMENT_PROPS_SLOT_TAG =
   "VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.argument.name='props'] CallExpression[callee.name='elementProps'])";
 
 const RESTRICTED_TEMPLATE_SYNTAX = [
+  {
+    selector:
+      "VElement[rawName=/^[A-Z]/] > VStartTag :not(CallExpression[callee.name='withoutPropsOf']) > Identifier[name='$attrs']",
+    message: MESSAGES.wrapperAttrs,
+  },
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
   {
     // A start tag has only its attributes below it, so the descendant form is exact.
@@ -734,25 +741,28 @@ export default defineConfig([
     },
   },
   {
-    files: ['packages/vue/src/*/portal/*.vue'],
-    ignores: TEST_FILES,
-    rules: {
-      'vue/no-restricted-syntax': [
-        'error',
-        ...RESTRICTED_TEMPLATE_SYNTAX,
-        {
-          selector:
-            ":not(CallExpression[callee.name='withoutPropsOf']) > Identifier[name='$attrs']",
-          message: MESSAGES.portalAttrs,
-        },
-      ],
-    },
-  },
-  {
     files: ['packages/vue/src/**/*.vue'],
     ignores: TEST_FILES,
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX_IN_VUE_FILES] },
   },
+  ...[
+    ['ts', RESTRICTED_SYNTAX],
+    ['vue', RESTRICTED_SYNTAX_IN_VUE_FILES],
+  ].map(([extension, syntax]) => ({
+    files: [`packages/vue/src/**/*.${extension}`],
+    ignores: [...TEST_FILES, 'packages/vue/src/utils/popups/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...syntax,
+        {
+          selector:
+            "CallExpression[callee.object.name='store'][callee.computed=false][callee.property.name='set'][arguments.0.value=/^(popupElement|listElement)$/]",
+          message: MESSAGES.popupElementWrite,
+        },
+      ],
+    },
+  })),
   {
     files: ['packages/vue/src/**/*.tsx'],
     ignores: TEST_FILES,

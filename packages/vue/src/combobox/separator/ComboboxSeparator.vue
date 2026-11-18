@@ -24,6 +24,7 @@ export interface ComboboxSeparatorProps
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import ListboxSeparator from '../../utils/listbox-separator/ListboxSeparator.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -49,12 +50,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <ListboxSeparator v-if="$slots.render" ref="separator" v-bind="{ ...$attrs, ...props }">
+  <ListboxSeparator
+    v-if="$slots.render"
+    ref="separator"
+    v-bind="{ ...withoutPropsOf($attrs, ListboxSeparator), ...props }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </ListboxSeparator>
-  <ListboxSeparator v-else ref="separator" v-bind="{ ...$attrs, ...props }">
+  <ListboxSeparator
+    v-else
+    ref="separator"
+    v-bind="{ ...withoutPropsOf($attrs, ListboxSeparator), ...props }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

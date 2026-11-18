@@ -22,6 +22,18 @@ import InputHydration from './InputHydration.test.vue';
 describe('<Input />', () => {
   const { render } = createRenderer();
 
+  it('uses its id for the input and its field label', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label>Address</Field.Label>
+        <Input id="address" />
+      </Field.Root>,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Address' })).toHaveAttribute('id', 'address');
+    expect(screen.getByText('Address')).toHaveAttribute('for', 'address');
+  });
+
   describeConformance(<Input />, () => ({
     refInstanceof: window.HTMLInputElement,
     render,

@@ -136,8 +136,11 @@ import { computed, provide, useTemplateRef } from 'vue';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { TimePickerRootContext } from './TimePickerRootContext';
+
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimePickerRootProps<Value>>(), {
   open: undefined,
@@ -248,6 +251,7 @@ defineExpose<TimePickerRootActions>({
 <template>
   <PopoverRoot
     ref="popover"
+    v-bind="withoutPropsOf($attrs, PopoverRoot)"
     :open="props.open"
     :default-open="props.defaultOpen"
     :modal="props.modal"

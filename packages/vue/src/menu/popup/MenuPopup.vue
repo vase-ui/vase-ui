@@ -68,7 +68,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
+import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { MenuFilterImplContext, useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
@@ -157,21 +157,12 @@ const state = computed<MenuPopupState>(() => ({
   instant: store.select('instantType'),
 }));
 
-let popupElement: HTMLElement | null = null;
-
-function setPopupElement(popup: HTMLElement | null) {
-  // A compiled template can mount a new popup before it unmounts the old one. The old popup
-  // then must not clear the element of the new one.
-  if (popup !== null || toRaw(store.state).popupElement === popupElement) {
-    store.context.popupRef.value = popup;
-    store.set('popupElement', popup);
-  }
-  popupElement = popup;
-}
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  MenuPopupState,
+  HTMLElement
+>('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement),
+  ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.

@@ -18,6 +18,7 @@ import { useTemplateRef } from 'vue';
 import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { useDateRangePickerField } from '../utils/useDateRangePickerField';
 import type { DateFieldActions } from '../utils/useDateRangePickerField';
 
@@ -59,14 +60,19 @@ defineExpose({
   <DateFieldRoot
     v-if="$slots.render"
     ref="field"
-    v-bind="fieldProps()"
+    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </DateFieldRoot>
-  <DateFieldRoot v-else ref="field" v-bind="fieldProps()" @value-change="handleValueChange">
+  <DateFieldRoot
+    v-else
+    ref="field"
+    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
+    @value-change="handleValueChange"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

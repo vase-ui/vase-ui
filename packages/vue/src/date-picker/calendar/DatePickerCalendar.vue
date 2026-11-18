@@ -34,7 +34,7 @@ export interface DatePickerCalendarProps extends Omit<
 
 <script setup lang="ts">
 import { isElement } from '@floating-ui/utils/dom';
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
 import { closest, getTarget } from '../../common/shadowDom';
 import {
@@ -48,6 +48,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 import type {
@@ -103,7 +104,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerCalendarState>;
 }>();
 
-const attrs = useAttrs();
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
@@ -190,14 +190,14 @@ const calendarHandlers = {
 // `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
 // default value gives the kind of a new value, the same kind as for the field.
-function calendarProps() {
+function calendarProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   const valueProps: Record<string, any> = {
     value: picker.value.value,
     defaultValue: picker.template.value,
   };
   return {
-    ...mergeProps(calendarHandlers, givenAttributes(attrs)),
+    ...mergeProps(calendarHandlers, givenAttributes(attributes)),
     ...props,
     ...valueProps,
     minDate: root.minDate,
@@ -224,14 +224,19 @@ defineExpose({
   <CalendarRoot
     v-if="$slots.render"
     ref="calendar"
-    v-bind="calendarProps()"
+    v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
     @value-change="handleValueChange"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </CalendarRoot>
-  <CalendarRoot v-else ref="calendar" v-bind="calendarProps()" @value-change="handleValueChange">
+  <CalendarRoot
+    v-else
+    ref="calendar"
+    v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
+    @value-change="handleValueChange"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

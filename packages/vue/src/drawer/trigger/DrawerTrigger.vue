@@ -39,6 +39,7 @@ import { computed, useTemplateRef } from 'vue';
 import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 
 defineOptions({ inheritAttrs: false });
 
@@ -70,12 +71,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <DialogTrigger v-if="$slots.render" ref="trigger" v-bind="{ ...$attrs, ...props }">
+  <DialogTrigger
+    v-if="$slots.render"
+    ref="trigger"
+    v-bind="{ ...withoutPropsOf($attrs, DialogTrigger), ...props }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </DialogTrigger>
-  <DialogTrigger v-else ref="trigger" v-bind="{ ...$attrs, ...props }">
+  <DialogTrigger
+    v-else
+    ref="trigger"
+    v-bind="{ ...withoutPropsOf($attrs, DialogTrigger), ...props }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

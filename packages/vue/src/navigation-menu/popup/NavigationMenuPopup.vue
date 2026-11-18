@@ -49,7 +49,6 @@ import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useElementId } from '../../utils/popups/useElementId';
-import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
@@ -97,10 +96,13 @@ const originSideStyle = computed<CSSProperties | undefined>(() => {
   };
 });
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('nav', props, {
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
+  NavigationMenuPopupState,
+  HTMLElement
+>('nav', props, {
   state,
   stateAttributesMapping: popupTransitionStateMapping,
-  ref: useKeepAliveElementRef(createElementSetter(popupElement)),
+  ref: createElementSetter(popupElement),
   props: (attrs) => [
     {
       id: popupId.value,

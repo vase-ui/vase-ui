@@ -17,6 +17,18 @@ const startCells = () =>
 describe('<DateRangePicker.Calendar />', () => {
   const { render } = createRenderer();
 
+  it('keeps focus on the trigger with an auto-focus attribute', async () => {
+    const { user } = await renderPicker(
+      { defaultOpen: false, popupProps: { initialFocus: false } },
+      { 'auto-focus': '' },
+    );
+    const trigger = screen.getByTestId('trigger');
+    await user.click(trigger);
+
+    await screen.findByRole('grid');
+    expect(trigger).toHaveFocus();
+  });
+
   describeConformance(<DateRangePicker.Calendar today={today()} />, () => ({
     refInstanceof: window.HTMLDivElement,
     render(node) {
