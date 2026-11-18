@@ -253,7 +253,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 | Exposed `element` | Gives the DOM element through a template ref. | `ref` |
 
 - `docs/handbook/composition.md` gives the rules of the `#render` slot for a consumer. A development build shows a warning for a slot that gives the part no element, and for `as` together with `#render`. `useRenderElement` makes these checks.
-- A disabled `Fieldset.Root` passes `disabled: true` to a render slot or component. It binds an empty `disabled` attribute on its own DOM element.
+- A disabled `Fieldset.Root` passes `disabled: true` to its render slot or component, including a component selected by name. A tag gets an empty `disabled` attribute.
 - Select a state with its `data-*` attribute in CSS. To calculate a class or style from state, bind it on the element in the `#render` slot.
 - A part whose declarations must win over the `style` attribute gives them to `useRenderElement` as `overridingStyle`. `Collapsible.Panel` does this. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
@@ -1670,7 +1670,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An action of a part that needs the registrations of other parts runs in a `watch` of `shown`. In its own hook, the parts before it are still held and give no value. `useLabelableId` does this for a control with no id: it takes the default id of the provider again.
 - The active control of a field is the last control of its registry that gives a registration. A control registers again when its `id`, its `name`, its value or `enabled` changes, as the effect of Base UI does. When the active control goes away, the field uses the control that was active before it and is still there. Base UI has no control then.
 - A field gives no value to its form while it has no active control. `fields` of the form context then does not list the field, so a form does not validate it, submit its value or focus its control. A form finds the first invalid control by the position of the controls in the document, as Base UI does.
-- A control with one input gives that input to its field with `useFieldInput()` of `src/internals/field-register-control`. It does not write `validation.inputRef`. It does not use `validation.inputRef` to know whether `KeepAlive` holds it, because that ref can name the input of a held control. When the last input goes, the field validates the input before it that is still there (`VUE-83`). The JSDoc and the comments of `useRegisterFieldControl` and `useFieldInput` give the rules under `KeepAlive` and the sequence of the registrations.
+- When `validation.registeredInputs` is empty, native validation uses the last input from `useFieldInput()`. A control releases its input before a parent deactivation hook can validate the field. The previous visible input takes its place (`VUE-83`). Inputs from the same activation return in document order.
 - The registry of a composite is different: it holds elements and sorts them by their position in the document. See [Composite](#composite).
 
 ### What stays from Base UI

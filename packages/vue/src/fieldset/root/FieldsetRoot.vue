@@ -22,7 +22,7 @@ export interface FieldsetRootProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, resolveDynamicComponent } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
@@ -43,6 +43,7 @@ const outerDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => outerDisabled.value || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
 
+const target = computed(() => resolveDynamicComponent(props.as));
 const { labelId, labelRoot, getAriaLabelledBy } = useLabelId();
 
 provide(FieldsetRootContext, {
@@ -54,7 +55,7 @@ provide(FieldsetRootContext, {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('fieldset', props, {
   state,
   props: (attrs) => {
-    const disabled = slots.render !== undefined || typeof props.as !== 'string' ? true : '';
+    const disabled = slots.render !== undefined || typeof target.value !== 'string' ? true : '';
     return [
       {
         'aria-labelledby': getAriaLabelledBy(attrs),
@@ -70,7 +71,7 @@ defineExpose({ element });
 
 <template>
   <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <component :is="target" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
 </template>
