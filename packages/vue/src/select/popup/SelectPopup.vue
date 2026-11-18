@@ -112,7 +112,7 @@ const scrollArrowFrame = useAnimationFrame();
 function handleScroll(scroller: HTMLDivElement) {
   const positionerElement = store.select('positionerElement');
   const popupElement = store.context.popupRef.value;
-  if (!positionerElement || !popupElement || !initialPlaced) {
+  if (!positionerElement || !popupElement || popupElement !== element.value || !initialPlaced) {
     return;
   }
 
@@ -158,29 +158,25 @@ function handleScroll(scroller: HTMLDivElement) {
       // Consume the remaining scroll in height.
       setHeight(currentHeight + heightDelta);
     }
-    scroller.scrollTop = isTopPositioned ? maxScrollTop : 0;
+    nextScrollTop = isTopPositioned ? Infinity : 0;
     if (maxAvailableHeight - (currentHeight + heightDelta) <= SCROLL_EDGE_TOLERANCE_PX) {
       reachedMaxHeight = true;
     }
-    store.context.handleScrollArrowVisibility(scroller);
-    return;
-  }
+  } else {
+    if (maxAvailableHeight - nextHeight > SCROLL_EDGE_TOLERANCE_PX) {
+      nextScrollTop = isTopPositioned ? Infinity : 0;
+    } else if (!isTopPositioned && scrollTop < maxScrollTop) {
+      const overshoot = currentHeight + diff - maxAvailableHeight;
+      nextScrollTop = scrollTop - (diff - overshoot);
+    }
 
-  if (maxAvailableHeight - nextHeight > SCROLL_EDGE_TOLERANCE_PX) {
-    nextScrollTop = isTopPositioned ? Infinity : 0;
-  } else if (!isTopPositioned && scrollTop < maxScrollTop) {
-    const overshoot = currentHeight + diff - maxAvailableHeight;
-    nextScrollTop = scrollTop - (diff - overshoot);
-  }
-
-  const nextPositionerHeight = Math.ceil(nextHeight);
-
-  if (nextPositionerHeight !== 0) {
-    setHeight(nextPositionerHeight);
-  }
-
-  if (nextPositionerHeight >= maxAvailableHeight - SCROLL_EDGE_TOLERANCE_PX) {
-    reachedMaxHeight = true;
+    const nextPositionerHeight = Math.ceil(nextHeight);
+    if (nextPositionerHeight !== 0) {
+      setHeight(nextPositionerHeight);
+    }
+    if (nextPositionerHeight >= maxAvailableHeight - SCROLL_EDGE_TOLERANCE_PX) {
+      reachedMaxHeight = true;
+    }
   }
 
   const resized = itemAlignment.value;
@@ -190,7 +186,8 @@ function handleScroll(scroller: HTMLDivElement) {
     }
     if (nextScrollTop != null) {
       const target = clamp(nextScrollTop, 0, getMaxScrollTop(scroller));
-      if (Math.abs(scroller.scrollTop - target) > SCROLL_EDGE_TOLERANCE_PX) {
+      const tolerance = diff <= SCROLL_EDGE_TOLERANCE_PX ? 0 : SCROLL_EDGE_TOLERANCE_PX;
+      if (Math.abs(scroller.scrollTop - target) > tolerance) {
         scroller.scrollTop = target;
       }
     }
