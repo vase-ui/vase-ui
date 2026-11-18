@@ -33,7 +33,12 @@ import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
 import type { ValuePopupFixtureDetails } from '../../../test/fixtures/ValuePopupFixture';
-import { useImplicitActiveTrigger, usePopupRootSync, useSingleAnchorPopupRoot } from './popupRoot';
+import {
+  getPopupTransitionElement,
+  useImplicitActiveTrigger,
+  usePopupRootSync,
+  useSingleAnchorPopupRoot,
+} from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -103,6 +108,25 @@ const ImplicitTriggerUnmountTest = defineComponent({
         </>
       ) : null;
   },
+});
+
+describe('getPopupTransitionElement', () => {
+  it('gives the kept popup element while the popup, the positioner and the backdrop give no element', () => {
+    const store = new ValuePopupFixtureStore();
+    const popup = document.createElement('div');
+    store.context.keptPopupRef.value = popup;
+
+    expect(getPopupTransitionElement(store)).toBe(popup);
+  });
+
+  it('gives a backdrop element before the kept popup element', () => {
+    const store = new ValuePopupFixtureStore();
+    const backdrop = document.createElement('div');
+    store.context.keptPopupRef.value = document.createElement('div');
+    store.context.backdropRef.value = backdrop;
+
+    expect(getPopupTransitionElement(store)).toBe(backdrop);
+  });
 });
 
 describe('useImplicitActiveTrigger', () => {
