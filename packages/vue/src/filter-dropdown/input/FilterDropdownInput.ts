@@ -233,7 +233,7 @@ export function useFilterDropdownInput(
  * @internal
  */
 export function addInputFocusListeners(
-  input: HTMLInputElement,
+  input: HTMLElement,
   listeners: Record<'focusin' | 'focusout', (event: FocusEvent) => void>,
 ): () => void {
   const removers = (['focusin', 'focusout'] as const).map((type) =>

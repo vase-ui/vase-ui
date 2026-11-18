@@ -162,12 +162,13 @@ const inputOwnsFormValue = computed(() => selectionMode.value === 'none' && !has
 
 // A template can mount the input that replaces this input before it unmounts this input. The
 // input then clears the element of the root only when the root holds its own element.
-const ownInput = shallowRef<HTMLInputElement | null>(null);
+// A reactive read of the old element in this ref setter would subscribe the Vapor render to it.
+let ownInput: HTMLInputElement | null = null;
 function setInputElement(element: HTMLElement | null) {
   const input = element as HTMLInputElement | null;
   const state = toRaw(store.state);
-  const isOwnInput = input !== null || state.inputElement === ownInput.value;
-  ownInput.value = input;
+  const isOwnInput = state.inputElement === ownInput;
+  ownInput = input;
   if (input === null && !isOwnInput) {
     return;
   }
@@ -182,21 +183,6 @@ function setInputElement(element: HTMLElement | null) {
     inputOwnsFormValue: state.selectionMode === 'none' && !hasPositionerParent,
   });
 }
-
-// Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
-// Vue listener stays on the removed input. The function ref thus adds the focus listeners, and
-// it removes them before Vue removes the input.
-watch(
-  ownInput,
-  (input, _previous, onCleanup) => {
-    if (input) {
-      onCleanup(
-        addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
-      );
-    }
-  },
-  { flush: 'sync' },
-);
 
 // Vue calls the function ref while it hydrates the input, before it hydrates the next parts.
 // A write there can give a later trigger a different `tabindex` and `id` in its first render.
@@ -598,6 +584,21 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   },
   stateAttributesMapping: triggerStateAttributesMapping,
 });
+
+// Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
+// Vue listener stays on the removed input. The sync watcher removes the native listeners before
+// Vue removes the input.
+watch(
+  element,
+  (input, _previous, onCleanup) => {
+    if (input) {
+      onCleanup(
+        addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
+      );
+    }
+  },
+  { flush: 'sync' },
+);
 
 useFormEntryValue(element, () => displayText(inputValue.value));
 

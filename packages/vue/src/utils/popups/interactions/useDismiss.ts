@@ -1134,24 +1134,26 @@ export function useDismiss(
       },
       { immediate: true, flush: 'post' },
     );
+    // The hold ends the gesture. Its inside marker lasts until the next update or activation.
     watch(
-      isHeld,
-      (held, _previous, onCleanup) => {
-        if (held) {
-          // The hold ends the gesture. Its inside marker lasts until the next update or activation.
-          onCleanup(
-            watch(
-              listenerSources,
-              ([store], _previousSources, onMarkerCleanup) => {
-                resetSession();
-                onMarkerCleanup(() => clearInsideComponentTree(store));
-              },
-              { immediate: true, flush: 'post' },
-            ),
-          );
+      () => (isHeld.value ? getStore() : null),
+      (heldStore, _previous, onCleanup) => {
+        if (heldStore) {
+          resetSession();
+          onCleanup(() => clearInsideComponentTree(heldStore));
         }
       },
       { immediate: true, flush: 'sync' },
+    );
+    watch(
+      listenerSources,
+      ([store]) => {
+        if (isHeld.value) {
+          clearInsideComponentTree(store);
+          resetSession();
+        }
+      },
+      { flush: 'post' },
     );
   });
   useDomEffect(listenerSources, listenToDocument);
