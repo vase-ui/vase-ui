@@ -114,6 +114,7 @@ import type { ElementSiblings } from '../../utils/popups/focus/useElementSibling
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
@@ -294,6 +295,7 @@ const handleClose = computed(() =>
   safePolygon({ blockPointerEvents: shouldBlockSafePolygonPointerEvents.value, getScope }),
 );
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(floatingRootStore, {
   enabled: hoverInteractionsEnabled,
   move: false,
@@ -493,6 +495,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     compositeProps.value,
     click.reference,
     hoverProps,
+    { style: hoverStyle.value },
     dismissProps?.value?.reference,
     {
       // The popup reads this id from the element for its name.

@@ -10,7 +10,6 @@ import { useFloatingTree } from '../tree/FloatingTree';
 import { useDomEffect } from '../useDomEffect';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { Delay, PopupInteractionStore } from '../types';
-import { useHoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';
 import type { HoverIntent, HoverIntentTriggerOptions } from './hoverIntent';
 import { isHoverOpenEvent } from './useHoverShared';
@@ -200,7 +199,7 @@ export function useHoverTriggerInteraction(
     }
   }
 
-  const listeners: Omit<HTMLProps, 'ref'> = {
+  return {
     onPointerdown: setPointerType,
     onPointerenter: setPointerType,
     onMouseenter(event: MouseEvent) {
@@ -233,17 +232,6 @@ export function useHoverTriggerInteraction(
         intent.value.onTriggerMouseEnter(event, options);
       }
       intent.value.onTriggerMouseMove(event, options);
-    },
-  };
-
-  if (typeof window === 'undefined' || props.triggerElement === undefined) {
-    return listeners;
-  }
-  const hoverStyle = useHoverPointerStyle(props.triggerElement);
-  return {
-    ...listeners,
-    get style() {
-      return hoverStyle.value;
     },
   };
 }

@@ -52,6 +52,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
@@ -103,6 +104,7 @@ const rootTriggerProps = computed(() =>
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon();
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(store, {
   mouseOnly: true,
   move: false,
@@ -132,6 +134,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('a', 
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
     hoverProps,
+    { style: hoverStyle.value },
     focusProps,
     rootTriggerProps.value,
     inlineRectTriggerProps,

@@ -258,12 +258,10 @@ useCompositeList({
         scrollDownArrowVisible: false,
       });
 
-      if (itemAlignment.value) {
-        itemAlignment.value = {
-          ...itemAlignment.value,
-          positionerStyle: { ...itemAlignment.value.positionerStyle, height: undefined },
-        };
-      }
+      itemAlignment.value &&= {
+        ...itemAlignment.value,
+        positionerStyle: { ...itemAlignment.value.positionerStyle, height: undefined },
+      };
     }
   },
 });

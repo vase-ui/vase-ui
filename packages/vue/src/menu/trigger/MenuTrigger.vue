@@ -83,6 +83,7 @@ import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
+import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
@@ -290,6 +291,7 @@ const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpe
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon({ blockPointerEvents: !isInMenubar });
 
+const hoverStyle = useHoverPointerStyle(triggerElement);
 const hoverProps = useHoverTriggerInteraction(store, {
   enabled: () =>
     (props.openOnHover ?? parentMenubarHasSubmenuOpen.value) &&
@@ -393,6 +395,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     focusProps,
     click.reference,
     hoverProps,
+    { style: hoverStyle.value },
     rootTriggerProps.value,
     {
       'aria-haspopup': 'menu',
