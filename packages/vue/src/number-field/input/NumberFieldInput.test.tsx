@@ -1891,6 +1891,7 @@ describe('<NumberField.Input />', () => {
     );
 
     const input = screen.getByRole('textbox');
+    expect(input).toHaveValue(new Intl.NumberFormat().format(NaN));
     input.focus();
     await flushMicrotasks();
     await fireEvent.focusOut(input);

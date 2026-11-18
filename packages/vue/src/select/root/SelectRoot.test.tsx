@@ -8391,7 +8391,7 @@ describe('<Select.Root />', () => {
       expect(screen.getByTestId('value')).toHaveTextContent('sans');
     });
 
-    it('follows the value prop of a controlled root', async () => {
+    it('follows modelValue on a controlled root', async () => {
       const value = shallowRef('sans');
       await render(() => (
         <Select.Root modelValue={value.value}>

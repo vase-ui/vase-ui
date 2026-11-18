@@ -2402,7 +2402,7 @@ describe('<CheckboxGroup />', () => {
     );
   });
 
-  describe('VUE-35: a controlled `value` that the consumer changes in place', () => {
+  describe('VUE-35: a model array that the consumer changes in place', () => {
     it('gives the checkboxes, the state of the field and the validation the new value', async () => {
       const validate = vi.fn((value: unknown) =>
         (value as string[]).includes('banana') ? 'error' : null,

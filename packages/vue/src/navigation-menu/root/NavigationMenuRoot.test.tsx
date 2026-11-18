@@ -4585,7 +4585,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.getByTestId('icon-2')).toHaveAttribute('data-popup-open');
     });
 
-    it('opens the item of the value prop, and follows a change of it', async () => {
+    it('opens the item named by modelValue and follows changes to it', async () => {
       const { setProps } = await render(
         <NavigationMenu.Root modelValue="item-1">{renderIcons()}</NavigationMenu.Root>,
       );
@@ -4652,7 +4652,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.getByTestId('icon')).toHaveAttribute('data-popup-open');
     });
 
-    it('stays uncontrolled when the value prop is absent', async () => {
+    it('stays uncontrolled when modelValue is absent', async () => {
       const { root } = await renderMenu();
       expect(screen.getByTestId('icon')).toHaveAttribute('data-popup-open');
 

@@ -814,7 +814,7 @@ describe('<Accordion.Root />', () => {
       const onValueChange = vi.fn();
 
       await render(
-        <Accordion.Root modelValue={[]} onValueChange={onValueChange}>
+        <Accordion.Root modelValue={[]} defaultValue={[0]} onValueChange={onValueChange}>
           <Accordion.Item
             value={0}
             onOpenChange={(nextOpen, eventDetails) => {
@@ -833,6 +833,7 @@ describe('<Accordion.Root />', () => {
 
       const trigger = screen.getByRole('button');
 
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
       await fireEvent.click(trigger);
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');

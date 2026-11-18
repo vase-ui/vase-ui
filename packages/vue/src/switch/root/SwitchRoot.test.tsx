@@ -73,7 +73,7 @@ describe('<Switch.Root />', () => {
   });
 
   describe('VUE-141: ownership of checked', () => {
-    it('refuses a click with only the checked prop', async () => {
+    it('refuses a click with only the modelValue prop', async () => {
       await render(<Switch.Root modelValue />);
       const control = screen.getByRole('switch');
       expect(control).toHaveAttribute('aria-checked', 'true');
