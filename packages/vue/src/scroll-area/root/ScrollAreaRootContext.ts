@@ -93,7 +93,7 @@ export function useScrollAreaScrollbarContext(): ScrollAreaScrollbarContext {
   return context;
 }
 
-export type ScrollAreaViewportContext = () => void;
+export type ScrollAreaViewportContext = (firstDelivery: boolean) => void;
 
 export const ScrollAreaViewportContext: InjectionKey<ScrollAreaViewportContext> = Symbol();
 

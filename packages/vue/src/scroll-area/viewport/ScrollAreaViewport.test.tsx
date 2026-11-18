@@ -165,7 +165,7 @@ describe('<ScrollArea.Viewport />', () => {
       await render(() => (
         <ScrollArea.Root>
           <ScrollArea.Viewport as={tag.value} data-testid="viewport" style={{ height: '100px' }}>
-            <div data-testid="content" style={{ height: '50px' }} />
+            <div data-testid="content" />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       ));

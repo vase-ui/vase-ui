@@ -136,22 +136,30 @@ const waitForAnimationsTimeout = useTimeout();
 let programmaticScroll = true;
 const lastMeasuredViewportMetrics: [number, number, number, number] = [NaN, NaN, NaN, NaN];
 
-function computeThumbPosition() {
-  const viewportEl = viewportElement.value;
+function computeThumbPosition(firstDelivery = false) {
+  const viewportEl = activeViewport.value;
+  if (!viewportEl) return;
   const scrollbarYEl = scrollbarYElement.value;
   const scrollbarXEl = scrollbarXElement.value;
   const thumbYEl = thumbYElement.value;
   const thumbXEl = thumbXElement.value;
   const cornerEl = cornerElement.value;
 
-  if (!viewportEl) {
-    return;
-  }
-
   const scrollableContentHeight = viewportEl.scrollHeight;
   const scrollableContentWidth = viewportEl.scrollWidth;
   const viewportHeight = viewportEl.clientHeight;
   const viewportWidth = viewportEl.clientWidth;
+  // A first delivery repeats the mount only while the measured dimensions still match.
+  if (
+    firstDelivery &&
+    lastMeasuredViewportMetrics[0] === viewportHeight &&
+    lastMeasuredViewportMetrics[1] === scrollableContentHeight &&
+    lastMeasuredViewportMetrics[2] === viewportWidth &&
+    lastMeasuredViewportMetrics[3] === scrollableContentWidth
+  ) {
+    return;
+  }
+
   const scrollTop = viewportEl.scrollTop;
   const scrollLeft = viewportEl.scrollLeft;
   const isFirstMeasurement = Number.isNaN(lastMeasuredViewportMetrics[0]);
@@ -301,11 +309,10 @@ function handleUserInteraction() {
   programmaticScroll = false;
 }
 
-function handleViewportScroll() {
+function handleViewportScroll(event: Event) {
   // A listener of the consumer runs before this listener. It can unmount the viewport.
-  if (!viewportElement.value) {
-    return;
-  }
+  const viewport = activeViewport.value;
+  if (!viewport || viewport !== event.currentTarget) return;
 
   computeThumbPosition();
 
@@ -314,8 +321,8 @@ function handleViewportScroll() {
   // So in touch modality, each scroll is a user scroll.
   if (touchModality.value || !programmaticScroll) {
     handleScroll({
-      x: viewportElement.value.scrollLeft,
-      y: viewportElement.value.scrollTop,
+      x: viewport.scrollLeft,
+      y: viewport.scrollTop,
     });
   }
 
@@ -454,46 +461,38 @@ watch(
 registerElement('viewportElement', element);
 
 const { isHeld, shown } = useKeepAliveState();
+const activeViewport = computed(() =>
+  !isHeld.value && element.value === viewportElement.value ? element.value : null,
+);
+
 watch(
   [
-    viewportElement,
+    activeViewport,
     scrollbarXElement,
     scrollbarYElement,
     thumbXElement,
     thumbYElement,
     cornerElement,
+    () => cornerSize.width,
+    () => cornerSize.height,
+    () => state.value.hasOverflowX,
+    () => state.value.hasOverflowY,
     direction,
     overflowEdgeThreshold,
     shown,
   ],
-  () => {
-    if (element.value && viewportElement.value === element.value && !isHeld.value) {
-      computeThumbPosition();
-    }
-  },
+  () => computeThumbPosition(),
   { flush: 'post' },
 );
 
-useResizeObserver(element, (_entries, _observer, firstDelivery) => {
-  const viewport = element.value;
-  if (!viewport || viewport !== viewportElement.value) return;
-  // The first delivery can follow a size change since the mount.
-  if (
-    firstDelivery &&
-    lastMeasuredViewportMetrics[0] === viewport.clientHeight &&
-    lastMeasuredViewportMetrics[1] === viewport.scrollHeight &&
-    lastMeasuredViewportMetrics[2] === viewport.clientWidth &&
-    lastMeasuredViewportMetrics[3] === viewport.scrollWidth
-  ) {
-    return;
-  }
-  computeThumbPosition();
+useResizeObserver(activeViewport, (_entries, _observer, firstDelivery) => {
+  computeThumbPosition(firstDelivery);
 });
 
 watch(
-  [element, isHeld, shown],
-  ([viewport, held], _, onCleanup) => {
-    if (!viewport || held) return;
+  [activeViewport, shown],
+  ([viewport], _, onCleanup) => {
+    if (!viewport) return;
     removeCSSVariableInheritance();
     // The browser sends no enter event when a viewport appears under the pointer.
     if (viewport.matches(':hover')) markHovered();

@@ -31,10 +31,7 @@ defineSlots<{
 }>();
 
 const computeThumbPosition = useScrollAreaViewportContext();
-const { hasMeasuredScrollbar, viewportState } = useScrollAreaRootContext();
-
-// One read, on purpose: the value of the first render.
-const computeOnInitialResize = hasMeasuredScrollbar.value;
+const { viewportState } = useScrollAreaRootContext();
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: viewportState,
@@ -43,7 +40,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 });
 
 useResizeObserver(element, (_entries, _observer, firstDelivery) => {
-  if (!firstDelivery || computeOnInitialResize) computeThumbPosition();
+  computeThumbPosition(firstDelivery);
 });
 
 defineExpose({ element });

@@ -207,7 +207,6 @@ describe('<ScrollArea.Root />', () => {
               <ScrollArea.Content
                 as={part === 'content' ? tag.value : 'div'}
                 data-testid="content"
-                style={{ height: '50px' }}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -218,7 +217,6 @@ describe('<ScrollArea.Root />', () => {
         tag.value = 'section';
         await nextTick();
         const current = deliveryFor(screen.getByTestId(part));
-        current();
         const viewport = screen.getByTestId('viewport');
         screen.getByTestId('content').style.height = '300px';
 
@@ -231,17 +229,76 @@ describe('<ScrollArea.Root />', () => {
       });
     });
 
+    it.each([
+      ['vertical', 'y', 'height'],
+      ['horizontal', 'x', 'width'],
+    ] as const)(
+      'resizes a mounted %s track after its overflow attribute changes',
+      async (orientation, axis, size) => {
+        await withMockResizeObserver(async (notify) => {
+          await render(
+            <ScrollArea.Root style={{ width: '100px', height: '100px' }}>
+              <style>{`.sizing-track:not([data-has-overflow-${axis}]) { display: none }`}</style>
+              <ScrollArea.Viewport style={{ width: '100%', height: '100%' }}>
+                <div data-testid="content" />
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar keepMounted orientation={orientation} class="sizing-track">
+                <ScrollArea.Thumb data-testid="thumb" />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>,
+          );
+          notify();
+          screen.getByTestId('content').style[size] = '200px';
+          notify();
+          await nextTick();
+          expect(getComputedStyle(screen.getByTestId('thumb'))[size]).toBe('50px');
+        });
+      },
+    );
+
+    it('ignores content and scroll events from a viewport that lost its registration', async () => {
+      await withMockResizeObserver(async (_, deliveryFor) => {
+        const showNext = shallowRef(false);
+        await render(() => (
+          <ScrollArea.Root>
+            <ScrollArea.Viewport data-testid="previous" style={{ height: '100px' }}>
+              <ScrollArea.Content data-testid="previous-content" />
+            </ScrollArea.Viewport>
+            {showNext.value && (
+              <ScrollArea.Viewport data-testid="current" style={{ height: '100px' }}>
+                <div data-testid="content" />
+              </ScrollArea.Viewport>
+            )}
+          </ScrollArea.Root>
+        ));
+        const resizePrevious = deliveryFor(screen.getByTestId('previous-content'));
+        resizePrevious();
+        showNext.value = true;
+        await nextTick();
+        const current = screen.getByTestId('current');
+        screen.getByTestId('content').style.height = '300px';
+        resizePrevious();
+        await fireEvent.scroll(screen.getByTestId('previous'));
+        expect(current.tabIndex).toBe(-1);
+        deliveryFor(current)();
+        await nextTick();
+        expect(current.tabIndex).toBe(0);
+      });
+    });
+
     it('keeps the new scrollbar width when the previous scrollbar leaves', async () => {
       const previous = shallowRef(true);
       const replacement = shallowRef(false);
       await render(() => (
-        <ScrollArea.Root>
+        <ScrollArea.Root style={{ width: '100px', height: '100px' }}>
           <ScrollArea.Viewport data-testid="viewport" style={{ width: '100px', height: '100px' }}>
-            <div style={{ width: '300px', height: '300px' }} />
+            <div style={{ width: '200px', height: '200px' }} />
           </ScrollArea.Viewport>
           {previous.value && <ScrollArea.Scrollbar style={{ width: '10px' }} />}
           {replacement.value && <ScrollArea.Scrollbar style={{ width: '20px' }} />}
-          <ScrollArea.Scrollbar orientation="horizontal" style={{ height: '10px' }} />
+          <ScrollArea.Scrollbar orientation="horizontal" style={{ height: '10px' }}>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
           <ScrollArea.Corner data-testid="corner" />
         </ScrollArea.Root>
       ));
@@ -250,6 +307,7 @@ describe('<ScrollArea.Root />', () => {
       replacement.value = true;
       await nextTick();
       expect(corner.style.width).toBe('20px');
+      expect(screen.getByTestId('thumb').offsetWidth).toBe(40);
       previous.value = false;
       await nextTick();
       await fireEvent.scroll(screen.getByTestId('viewport'));
