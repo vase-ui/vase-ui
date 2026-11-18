@@ -93,7 +93,7 @@ export function useCollapsiblePanel(
   // Vue writes each key of the rendered style again on each render. A temporary inline style that
   // the code writes to the DOM is also in this record. The part merges the record after the style
   // of the consumer, so a render does not put the value of the consumer back.
-  const temporaryStyle = shallowReactive<TemporaryStyle>({});
+  const temporaryStyle: TemporaryStyle = shallowReactive({});
 
   const runOnceCloseAnimationsFinish = useAnimationsFinished(() => panel);
 
