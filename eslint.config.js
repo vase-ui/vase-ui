@@ -319,7 +319,7 @@ const RESTRICTED_SYNTAX = [
   },
   {
     selector:
-      "VariableDeclaration[kind='let'] > VariableDeclarator[init.type='MemberExpression'][init.object.name='isHeld'][init.property.name='value']",
+      "VariableDeclaration[kind='let'] > VariableDeclarator > MemberExpression.init[object.name='isHeld']:matches([computed=false][property.name='value'], [computed=true][property.value='value'])",
     message: MESSAGES.heldCopy,
   },
   {

@@ -97,6 +97,13 @@ const reported = [
     hint: 'as a source',
   },
   {
+    name: 'a copy of the held state with a string key',
+    file: `${SRC}/useSample.ts`,
+    code: "let held = isHeld['value'];",
+    ruleId: 'no-restricted-syntax',
+    hint: 'as a source',
+  },
+  {
     name: 'a direct popup element write in a part',
     file: `${SRC}/DialogPopup.vue`,
     code: docsSfc("store.set('popupElement', element);"),
@@ -1137,6 +1144,7 @@ const passed = [
       'a value other than the held state',
       'export let latestValues = values.value;\nlatestValues = [];',
     ],
+    ['a dynamic key on the held ref', 'export let entry = isHeld[value];\nentry = next;'],
   ].map(([name, code]) => ({ name, file: `${SRC}/useSample.ts`, code: `${code}\n` })),
   {
     name: 'a release in a test',
