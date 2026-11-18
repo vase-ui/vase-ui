@@ -139,6 +139,7 @@ function isTouchLikeEvent(event: SwipeDismissEvent) {
 
 export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismissReturnValue {
   const { movementCssVars } = options;
+  const { isHeld } = useKeepAliveState();
 
   const directionState = computed(() => {
     const directions = toValue(options.directions);
@@ -192,7 +193,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
   }
 
   function isEnabled() {
-    return toValue(options.enabled);
+    return !isHeld.value && toValue(options.enabled);
   }
 
   function setSwiping(nextSwiping: boolean) {
@@ -901,13 +902,11 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     };
   }
 
-  // `KeepAlive` removes the element from the document, and the browser then releases the pointer
-  // capture. No `pointerup` comes to the element after that.
-  const { isHeld } = useKeepAliveState();
+  // The pointer can be released outside the cached element before the next activation.
   watch(
     isHeld,
     (held) => {
-      if (held && swiping.value) {
+      if (held && (pendingSwipe || swiping.value)) {
         reset();
       }
     },

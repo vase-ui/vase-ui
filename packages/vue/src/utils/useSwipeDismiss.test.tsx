@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, Fragment, onDeactivated, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   fireEvent,
   firePointer,
@@ -2812,8 +2813,38 @@ describe('useSwipeDismiss: refs and options', () => {
 describe('useSwipeDismiss: KeepAlive', () => {
   const { render } = createRenderer();
 
+  it('VUE-5: requires a new press after a pending swipe goes into KeepAlive', async () => {
+    const canStart = vi.fn(() => false);
+    const onSwipingChange = vi.fn();
+    const onDismiss = vi.fn();
+    const { OptionsBox } = createSwipeBox({ canStart, onSwipingChange, onDismiss });
+    const { HeldBranch, hide, show } = createHeldBranch(() => <OptionsBox />, { mounted: true });
+    await render(<HeldBranch />);
+    const element = screen.getByTestId('el');
+
+    await fireEvent.pointerDown(element, { button: 0, buttons: 1, pointerId: 1 });
+    expect(canStart).toHaveBeenCalledOnce();
+    await hide();
+    canStart.mockReturnValue(true);
+    await show();
+    await fireEvent.pointerMove(element, { buttons: 1, pointerId: 1, clientY: 60 });
+    expect(onSwipingChange).not.toHaveBeenCalled();
+
+    await hide();
+    await dragWithPointer(element, 'down', 60);
+    await releasePointer(element, 'down', 60);
+    expect(onSwipingChange).not.toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    await show();
+    await dragWithPointer(element, 'down', 60);
+    await releasePointer(element, 'down', 60);
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
   it('ends a swipe before a release in a deactivation hook', async () => {
     const onDismiss = vi.fn();
+    const onDeactivate = vi.fn();
     const shown = shallowRef(true);
     const Box = defineComponent(() => {
       const element = shallowRef<HTMLDivElement | null>(null);
@@ -2825,6 +2856,7 @@ describe('useSwipeDismiss: KeepAlive', () => {
         onDismiss,
       });
       onDeactivated(() => {
+        onDeactivate(swipe.swiping.value);
         element.value?.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }));
       });
       return () => <div ref={element} data-testid="el" {...swipe.pointerProps} />;
@@ -2834,6 +2866,7 @@ describe('useSwipeDismiss: KeepAlive', () => {
     await dragWithPointer(element, 'down', 60);
     shown.value = false;
     await flushMicrotasks();
+    expect(onDeactivate).toHaveBeenCalledWith(false);
     expect(onDismiss).not.toHaveBeenCalled();
   });
 

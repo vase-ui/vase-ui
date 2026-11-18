@@ -52,6 +52,33 @@ describe('owned parts', () => {
     expect(registry.has(second)).toBe(false);
   });
 
+  it('keeps the current owner when an earlier getter returns the same element', async () => {
+    const registry = new WeakMap<Element, () => string>();
+    const node = document.createElement('button');
+    const first = shallowRef<{ element: Element | null }>({ element: node });
+    const second = shallowRef<Element | null>(null);
+    const Owner = defineComponent(() => {
+      useElementRegistration(
+        registry,
+        () => first.value.element,
+        () => 'first',
+      );
+      useElementRegistration(registry, second, () => 'second');
+      return () => <span />;
+    });
+    const { unmount } = await render(<Owner />);
+    expect(registry.get(node)?.()).toBe('first');
+    second.value = node;
+    expect(registry.get(node)?.()).toBe('second');
+
+    first.value = { element: node };
+    expect(registry.get(node)?.()).toBe('second');
+    first.value = { element: null };
+    expect(registry.get(node)?.()).toBe('second');
+    unmount();
+    expect(registry.has(node)).toBe(false);
+  });
+
   it('VUE-54: keeps one tab stop when the active item moves and another item takes its index', async () => {
     const names = shallowRef(['First', 'Active', 'Last']);
     const active = shallowRef('Active');

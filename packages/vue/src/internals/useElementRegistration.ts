@@ -1,4 +1,4 @@
-import { toValue, watchSyncEffect } from 'vue';
+import { toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from './useKeepAliveState';
 
@@ -9,15 +9,18 @@ export function useElementRegistration<T>(
   read: () => T,
 ) {
   const { isHeld } = useKeepAliveState();
-  watchSyncEffect((onCleanup) => {
-    const node = toValue(element);
-    if (node && !isHeld.value) {
-      registry.set(node, read);
-      onCleanup(() => {
-        if (registry.get(node) === read) {
-          registry.delete(node);
-        }
-      });
-    }
-  });
+  watch(
+    () => (isHeld.value ? null : toValue(element)),
+    (node, _previous, onCleanup) => {
+      if (node) {
+        registry.set(node, read);
+        onCleanup(() => {
+          if (registry.get(node) === read) {
+            registry.delete(node);
+          }
+        });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
 }
