@@ -286,6 +286,21 @@ describe('usePopupAutoResize', () => {
       expectRestored();
     });
 
+    it('uses the viewport anchor after the consumer removes its inline position', async () => {
+      const position = shallowRef<'relative' | undefined>('relative');
+      await renderOpen(shallowRef('narrow'), () => ({
+        positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+        popup: { style: position.value ? { position: position.value } : {} },
+      }));
+      const { style } = screen.getByTestId('popup');
+      expect(style.position).toBe('relative');
+
+      position.value = undefined;
+      await nextTick();
+      expect(style.position).toBe('absolute');
+      expect(style.bottom).toBe('0px');
+    });
+
     it.each([
       { name: 'after the popup opens', changesContent: false },
       { name: 'after a change of the content', changesContent: true },
@@ -412,6 +427,7 @@ describe('usePopupAutoResize', () => {
     it('takes its anchoring styles off the popup before the deactivation hook of a component above it', async () => {
       let popup: HTMLElement | null = null;
       let positionAtDeactivation: string | undefined;
+      const ownPosition = shallowRef(false);
       const Scene = defineComponent({
         setup() {
           onDeactivated(() => {
@@ -422,6 +438,7 @@ describe('usePopupAutoResize', () => {
               root: openRoot,
               triggers: [{ id: 'trigger' }],
               positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+              popup: { style: ownPosition.value ? { position: 'absolute' } : {} },
               content: () => 'Content',
             });
         },
@@ -435,6 +452,13 @@ describe('usePopupAutoResize', () => {
       await nextTick();
 
       expect(positionAtDeactivation).toBe('');
+
+      visible.value = true;
+      ownPosition.value = true;
+      await nextTick();
+      visible.value = false;
+      await nextTick();
+      expect(positionAtDeactivation).toBe('absolute');
     });
 
     it('measures the popup when it comes back after a change of the payload', async () => {

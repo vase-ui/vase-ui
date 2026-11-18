@@ -34,10 +34,11 @@ export interface PreviewCardPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, provide } from 'vue';
 import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -85,6 +86,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     attrs,
   ],
 });
+
+provide(PopupStyleContext, () => elementProps().style);
 
 defineExpose({ element });
 </script>

@@ -59,13 +59,14 @@ export interface PopoverPopupProps
 
 <script setup lang="ts">
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { computed, watch } from 'vue';
+import { computed, provide, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -186,6 +187,8 @@ useFloatingFocusManager(
   }),
   element,
 );
+
+provide(PopupStyleContext, () => elementProps().style);
 
 defineExpose({ element });
 </script>

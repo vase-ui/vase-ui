@@ -1,4 +1,13 @@
-import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  normalizeStyle,
+  onMounted,
+  shallowRef,
+  toValue,
+  watch,
+} from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
 import { EMPTY_OBJECT } from '../../../common/empty';
@@ -10,6 +19,7 @@ import { useDomEffect } from '../useDomEffect';
 import { getCssDimensions } from '../../getCssDimensions';
 import * as CommonPositionerCssVars from '../positioning/CommonPositionerCssVars';
 import { popupSizeStyles, positionerSizeStyles } from './popupSizeStyles';
+import { PopupStyleContext } from './PopupViewportContext';
 
 /**
  * Allows the element to automatically resize based on its content while supporting animations.
@@ -36,6 +46,7 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   const anchoringStyles = computed(() =>
     getPopupAnchoringStyles(toValue(parameters.side), toValue(parameters.direction)),
   );
+  const readPopupStyle = inject(PopupStyleContext, undefined);
   // An ancestor's deactivation hook reads the detached popup before Vue can patch its style.
   useDomEffect(
     [() => toValue(parameters.popupElement), () => toValue(parameters.mounted), anchoringStyles],
@@ -44,15 +55,18 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
       if (!popup || !toValue(parameters.mounted)) {
         return undefined;
       }
-      const anchors = Object.entries(anchoringStyles.value).filter(
-        ([key]) => !popup.style.getPropertyValue(key),
-      );
-      for (const [key, value] of anchors) {
-        popup.style.setProperty(key, value);
-      }
+      const anchors = Object.entries(anchoringStyles.value);
       return () => {
+        if (!isHeld.value || !anchors.length) {
+          return;
+        }
+        const rendered = normalizeStyle([readPopupStyle?.()]);
         for (const [key, value] of anchors) {
-          if (popup.style.getPropertyValue(key) === value) {
+          if (
+            !(typeof rendered === 'object' && rendered[key] != null) &&
+            popup.style.getPropertyValue(key) === value &&
+            !popup.style.getPropertyPriority(key)
+          ) {
             popup.style.removeProperty(key);
           }
         }
@@ -129,7 +143,10 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   );
 
   return {
-    popup: computed(() => popupSizeStyles(popupSize.value)),
+    popup: computed(() => ({
+      ...(active.value && anchoringStyles.value),
+      ...popupSizeStyles(popupSize.value),
+    })),
     positioner: computed(() => positionerSizeStyles(positionerSize.value)),
   };
 }
