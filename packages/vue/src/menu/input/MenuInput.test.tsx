@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type { HTMLProps } from '../../internals/types';
@@ -15,7 +15,7 @@ import {
 describe('<Menu.Input />', () => {
   const { render } = createRenderer();
 
-  it('keeps the new input focused after a focusout from its previous element', async () => {
+  it('tracks focus only on the current search input', async () => {
     const key = shallowRef(0);
     const Inputs = defineComponent(() => {
       const { store } = useMenuRootContext(false);
@@ -36,12 +36,23 @@ describe('<Menu.Input />', () => {
     const old = screen.getByRole('searchbox');
     key.value++;
     await nextTick();
-    screen.getByRole('searchbox').focus();
+    const input = screen.getByRole('searchbox');
+    input.focus();
     await nextTick();
+    expect(input).toHaveFocus();
     expect(screen.getByRole('status')).toHaveTextContent('true');
 
-    old.dispatchEvent(new FocusEvent('focusout'));
+    document.body.append(old);
+    onTestFinished(() => old.remove());
+    old.focus();
     await nextTick();
+    expect(old).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('false');
+
+    old.addEventListener('focusout', () => input.focus(), { capture: true, once: true });
+    old.blur();
+    await nextTick();
+    expect(input).toHaveFocus();
     expect(screen.getByRole('status')).toHaveTextContent('true');
   });
 

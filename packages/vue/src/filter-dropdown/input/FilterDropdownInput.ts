@@ -8,6 +8,7 @@ import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import {
   useFilterDropdownItemContext,
   useFilterDropdownRootContext,
@@ -38,13 +39,10 @@ export function useFilterDropdownInput(
   let isComposing = false;
 
   const inputElement = shallowRef<HTMLInputElement | null>(null);
+  const setFocusOwner = createElementSetter(context.focusOwnerRef, { keepWhileHeld: true });
 
-  // A template can mount the input that replaces this input before it unmounts this input. The
-  // input then clears the focus owner only when the owner is its own element.
   function setInputElement(element: HTMLInputElement | null) {
-    if (element !== null || context.focusOwnerRef.value === inputElement.value) {
-      context.focusOwnerRef.value = element;
-    }
+    setFocusOwner(element);
     inputElement.value = element;
   }
 

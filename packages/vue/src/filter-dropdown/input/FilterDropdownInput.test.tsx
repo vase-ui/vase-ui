@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
 import { createRenderer, fireEvent, screen } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
@@ -26,10 +26,22 @@ describe('useFilterDropdownInput', () => {
     key.value++;
     await nextTick();
     const input = screen.getByRole('searchbox');
-    await fireEvent.focusIn(input);
+    input.focus();
+    await nextTick();
+    expect(input).toHaveFocus();
     expect(input).toHaveAttribute('data-highlighted');
 
-    await fireEvent.focusOut(old);
+    document.body.append(old);
+    onTestFinished(() => old.remove());
+    old.focus();
+    await nextTick();
+    expect(old).toHaveFocus();
+    expect(input).not.toHaveAttribute('data-highlighted');
+
+    old.addEventListener('focusout', () => input.focus(), { capture: true, once: true });
+    old.blur();
+    await nextTick();
+    expect(input).toHaveFocus();
     expect(input).toHaveAttribute('data-highlighted');
   });
 
