@@ -6,10 +6,12 @@ import {
   createRenderer,
   describeConformance,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
   waitFor,
+  within,
 } from '#test-utils';
 import SliderIndicatorHydration from './SliderIndicatorHydration.test.vue';
 
@@ -114,6 +116,10 @@ describe('<Slider.Indicator />', () => {
     ])(
       'places the indicator of $name with the script, before the app starts',
       async ({ defaultValue, start, size }) => {
+        const client = await render(<SliderIndicatorHydration defaultValue={defaultValue} />);
+        const clientRect = client.getByTestId('indicator').getBoundingClientRect();
+        client.unmount();
+
         const serverHtml = await renderOnServer(HYDRATION_FIXTURE, { defaultValue });
         const container = document.createElement('div');
         document.body.append(container);
@@ -121,14 +127,33 @@ describe('<Slider.Indicator />', () => {
         // `innerHTML` does not run a script. A fragment of a range does.
         container.append(document.createRange().createContextualFragment(serverHtml));
 
-        const indicator = container.querySelector<HTMLElement>('[data-testid="indicator"]')!;
+        const indicator = within(container).getByTestId('indicator');
+        const rect = indicator.getBoundingClientRect();
 
+        expect(rect.left).toBe(clientRect.left);
+        expect(rect.width).toBe(clientRect.width);
         expect([
           indicator.style.visibility,
           indicator.style.getPropertyValue('--start-position'),
           indicator.style.getPropertyValue('--relative-size'),
         ]).toEqual(['', start, size]);
+        expect(indicator.style.getPropertyValue('--end-position')).toBe('');
       },
     );
+
+    it('preserves a custom property set on the indicator before hydration', async () => {
+      const props = { defaultValue: [25, 75] };
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(SliderIndicatorHydration, {
+        serverHtml,
+        props,
+        before(root) {
+          within(root).getByTestId('indicator').style.setProperty('--end-position', '12px');
+        },
+      });
+
+      const indicator = within(container).getByTestId('indicator');
+      expect(indicator.style.getPropertyValue('--end-position')).toBe('12px');
+    });
   });
 });
