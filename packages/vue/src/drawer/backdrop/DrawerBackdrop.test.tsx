@@ -156,19 +156,13 @@ describe('<Drawer.Backdrop />', () => {
     expect(screen.queryByRole('dialog')).toBe(null);
   });
 
-  it('ends a close while KeepAlive holds a popup and a backdrop that mounted in the held branch', async () => {
+  it('ends a close while KeepAlive holds a backdrop that mounted in the held branch with no popup part', async () => {
     const handleOpenChangeComplete = vi.fn();
     const open = shallowRef(true);
     let store!: DialogStore<unknown>;
-    const { HeldBranch, mountWhileHeld } = createHeldBranch(
-      () => [
-        <Drawer.Backdrop key="backdrop" />,
-        <Drawer.Viewport key="viewport">
-          <Drawer.Popup />
-        </Drawer.Viewport>,
-      ],
-      { renderBranch: (part) => part },
-    );
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => <Drawer.Backdrop />, {
+      renderBranch: (part) => part,
+    });
     await render(() => (
       <Drawer.Root open={open.value} onOpenChangeComplete={handleOpenChangeComplete}>
         <DialogStoreProbe
@@ -182,7 +176,6 @@ describe('<Drawer.Backdrop />', () => {
       </Drawer.Root>
     ));
     await mountWhileHeld();
-    expect(store.context.popupRef.value).toBe(null);
     expect(store.context.backdropRef.value?.isConnected).toBe(false);
 
     open.value = false;

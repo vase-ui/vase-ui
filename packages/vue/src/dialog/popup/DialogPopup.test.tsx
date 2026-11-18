@@ -905,7 +905,41 @@ describe('<Dialog.Popup />', () => {
     expect(screen.queryByTestId('popup')).toBe(null);
   });
 
-  describe('BUG-5519: the close of a popup that has a popup in it', () => {
+  it.each([
+    { name: 'the checked radio', checked: true },
+    { name: 'the first unchecked radio', checked: false },
+  ])(
+    'BUG-6037: returns focus to the remaining radio when the closed popup holds $name',
+    async ({ checked }) => {
+      const container = shallowRef<HTMLDivElement | null>(null);
+      const { user } = await render(() => (
+        <Dialog.Root
+          defaultOpen
+          modal={false}
+          onOpenChange={(_open, details) => details.preventUnmountOnClose()}
+        >
+          <div ref={container}>
+            <Dialog.Portal disabled>
+              <Dialog.Popup finalFocus={container}>
+                <input type="radio" name="choice" checked={checked} aria-label="Inside" />
+              </Dialog.Popup>
+            </Dialog.Portal>
+            <input type="radio" name="choice" aria-label="Outside" />
+            <button>After</button>
+          </div>
+        </Dialog.Root>
+      ));
+      const popup = screen.getByRole('dialog');
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Inside' })).toHaveFocus());
+
+      await user.keyboard('{Escape}');
+
+      expect(popup).toHaveAttribute('data-closed');
+      expect(screen.getByRole('radio', { name: 'Outside' })).toHaveFocus();
+    },
+  );
+
+  describe('the return of the focus when the popup closes', () => {
     nestedPopupCloseTests({ parts: Dialog, wrapPopup: (popup) => popup, render });
   });
 

@@ -83,6 +83,19 @@ describe('<ContextMenu.Root />', () => {
   });
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+          <ContextMenu.Portal keepMounted={keepMounted}>{content}</ContextMenu.Portal>
+        </ContextMenu.Root>
+      ),
+      createPopup: () => (
+        <ContextMenu.Positioner>
+          <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>
+        </ContextMenu.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <ContextMenu.Trigger>Open</ContextMenu.Trigger>

@@ -198,8 +198,10 @@ export function focusable(container: Element) {
 
 // A browser visits an element with a positive `tabindex` first. This list keeps the order of the
 // document for it, as Base UI does.
-export function tabbable(container: Element) {
-  const candidates = focusable(container);
+export function tabbable(container: Element, exclude?: (element: Element) => boolean) {
+  const elements = focusable(container);
+  // Only the remaining radios determine the tab stop for a group.
+  const candidates = exclude ? elements.filter((element) => !exclude(element)) : elements;
   return candidates.filter(
     (element) => getTabIndex(element) >= 0 && isTabbableRadio(element, candidates),
   );
