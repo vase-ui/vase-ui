@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import {
   createApp,
   defineComponent,
+  isReactive,
   isRef,
   KeepAlive,
   nextTick,
@@ -1203,17 +1204,16 @@ describe('<ScrollArea.Root />', () => {
   describe.skipIf(isJSDOM)('context stability', () => {
     it('does not re-render parts on scroll when the corner size is unchanged', async () => {
       let updateCount = 0;
-      // The render function reads each ref of the context, so the probe renders again when one of
-      // them changes.
       const ContextProbe = defineComponent(() => {
         const context = useScrollAreaRootContext();
         onUpdated(() => {
           updateCount += 1;
         });
         return () => {
-          Object.values(context)
-            .filter(isRef)
-            .forEach((field) => field.value);
+          for (const field of Object.values(context)) {
+            if (isRef(field)) void field.value;
+            else if (isReactive(field)) Object.values(field);
+          }
           return null;
         };
       });
