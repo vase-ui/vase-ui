@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, defineComponent, Fragment, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, Fragment, onDeactivated, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import {
   createRenderer,
@@ -2611,6 +2611,36 @@ describe('useSwipeDismiss: shared swipe math', () => {
 describe('useSwipeDismiss: refs and options', () => {
   const { render } = createRenderer();
 
+  it('uses the current release callback for a swipe already in progress', async () => {
+    const onDismiss = vi.fn();
+    const onRelease = shallowRef<() => boolean>(() => true);
+    const Box = defineComponent(() => {
+      const element = shallowRef<HTMLDivElement | null>(null);
+      const swipe = useSwipeDismiss({
+        enabled: true,
+        directions: ['down'],
+        elementRef: element,
+        movementCssVars: { x: '--x', y: '--y' },
+        get onRelease() {
+          return onRelease.value;
+        },
+        onDismiss,
+      });
+      return () => <div ref={element} data-testid="el" {...swipe.pointerProps} />;
+    });
+    await render(<Box />);
+    const element = screen.getByTestId('el');
+    await dragWithPointer(element, 'down', 60);
+    onRelease.value = () => false;
+    await releasePointer(element, 'down', 60);
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    await dragWithPointer(element, 'down', 10);
+    onRelease.value = () => true;
+    await releasePointer(element, 'down', 10);
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
   it('gives the swiping state, the direction and the dismissal as refs', async () => {
     const { OptionsBox, getSwipe } = createSwipeBox({});
     await render(<OptionsBox />);
@@ -2781,6 +2811,31 @@ describe('useSwipeDismiss: refs and options', () => {
 
 describe('useSwipeDismiss: KeepAlive', () => {
   const { render } = createRenderer();
+
+  it('ends a swipe before a release in a deactivation hook', async () => {
+    const onDismiss = vi.fn();
+    const shown = shallowRef(true);
+    const Box = defineComponent(() => {
+      const element = shallowRef<HTMLDivElement | null>(null);
+      const swipe = useSwipeDismiss({
+        enabled: true,
+        directions: ['down'],
+        elementRef: element,
+        movementCssVars: { x: '--x', y: '--y' },
+        onDismiss,
+      });
+      onDeactivated(() => {
+        element.value?.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }));
+      });
+      return () => <div ref={element} data-testid="el" {...swipe.pointerProps} />;
+    });
+    await render(() => <KeepAlive>{shown.value ? <Box /> : null}</KeepAlive>);
+    const element = screen.getByTestId('el');
+    await dragWithPointer(element, 'down', 60);
+    shown.value = false;
+    await flushMicrotasks();
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
 
   it('VUE-5: ends a swipe when KeepAlive deactivates the element', async () => {
     const onDismiss = vi.fn();
