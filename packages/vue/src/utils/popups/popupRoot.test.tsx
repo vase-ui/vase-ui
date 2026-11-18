@@ -110,7 +110,7 @@ const ImplicitTriggerUnmountTest = defineComponent({
   },
 });
 
-describe('getPopupTransitionElement', () => {
+describe('VUE-137: getPopupTransitionElement', () => {
   it('gives the kept popup element while the popup, the positioner and the backdrop give no element', () => {
     const store = new ValuePopupFixtureStore();
     const popup = document.createElement('div');

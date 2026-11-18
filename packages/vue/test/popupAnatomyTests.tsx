@@ -40,7 +40,7 @@ export interface PendingPositionerTestProps {
 export interface PopupAnatomyTestConfig {
   /** The parts for an open change while `KeepAlive` holds the popup. */
   held: {
-    /** Put `content` inside the portal. Give `keepMounted` to the portal and omit the backdrop. */
+    /** Put `content` inside the portal without a backdrop. Pass `keepMounted` if the portal accepts it. */
     createRoot: (props: PopupAnatomyTestProps & { keepMounted: boolean }) => VNode;
     /** Give the popup `data-testid="popup"`. Include its positioner if the root has one. */
     createPopup: () => VNode;

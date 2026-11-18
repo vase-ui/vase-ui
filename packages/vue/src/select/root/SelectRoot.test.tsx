@@ -93,12 +93,12 @@ describe('<Select.Root />', () => {
   popupAnatomyTests({
     held: {
       keepsPopupAfterClose: true,
-      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+      createRoot: ({ open, onOpenChangeComplete, content }) => (
         <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
           <Select.Trigger>
             <Select.Value />
           </Select.Trigger>
-          <Select.Portal keepMounted={keepMounted}>{content}</Select.Portal>
+          <Select.Portal>{content}</Select.Portal>
         </Select.Root>
       ),
       createPopup: () => (
