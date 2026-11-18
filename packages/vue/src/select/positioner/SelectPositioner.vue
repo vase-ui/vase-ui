@@ -41,7 +41,6 @@ export interface SelectPositionerProps
 
 <script setup lang="ts">
 import { computed, onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
-import type { CSSProperties } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -54,14 +53,10 @@ import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
-import { clearStyles } from '../popup/utils';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectPositionerContext } from './SelectPositionerContext';
 
-// While the popup places the selected item over the trigger, the style is only `position: fixed`.
-// The popup writes `left`, `top` or `bottom`, `height`, `max-height` and the margins to the
-// positioner element. Vue keeps these declarations, because this style has none of those keys.
-const FIXED: CSSProperties = { position: 'fixed' };
+import type { SelectItemAlignment } from './SelectPositionerContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -175,13 +170,18 @@ function writePopupSide() {
 onMounted(writePopupSide);
 watch(positioning.side, writePopupSide);
 
+const itemAlignment = shallowRef<SelectItemAlignment | null>(null);
 let positionerElement: HTMLElement | null = null;
 
 const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
   styles: () =>
     alignItemWithTriggerActive.value
-      ? { ...FIXED, ...positioning.positionerCssVars.value }
+      ? {
+          position: 'fixed',
+          ...positioning.positionerCssVars.value,
+          ...itemAlignment.value?.positionerStyle,
+        }
       : positioning.positionerStyles.value,
   transitionStatus: () => store.select('transitionStatus'),
   ref(positioner) {
@@ -258,9 +258,12 @@ useCompositeList({
         scrollDownArrowVisible: false,
       });
 
-      const stylesToClear: CSSProperties = { height: '' };
-      clearStyles(positionerElement, stylesToClear);
-      clearStyles(store.context.popupRef.value, stylesToClear);
+      if (itemAlignment.value) {
+        itemAlignment.value = {
+          ...itemAlignment.value,
+          positionerStyle: { ...itemAlignment.value.positionerStyle, height: undefined },
+        };
+      }
     }
   },
 });
@@ -277,6 +280,7 @@ provide(SelectPositionerContext, {
   arrowStyles: positioning.arrowStyles,
   isPositioned: positioning.isPositioned,
   side: renderedSide,
+  itemAlignment,
   alignItemWithTriggerActive,
   setControlledAlignItemWithTrigger(alignItemWithTrigger) {
     controlledAlignItemWithTrigger.value = alignItemWithTrigger;

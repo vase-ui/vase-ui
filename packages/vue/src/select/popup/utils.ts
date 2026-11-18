@@ -1,11 +1,3 @@
-import type { CSSProperties } from 'vue';
-
-export function clearStyles(element: HTMLElement | null, originalStyles: CSSProperties) {
-  if (element) {
-    Object.assign(element.style, originalStyles);
-  }
-}
-
 export const LIST_FUNCTIONAL_STYLES = {
   position: 'relative',
   maxHeight: '100%',
