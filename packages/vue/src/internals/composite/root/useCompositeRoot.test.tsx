@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, reactive, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -109,6 +109,27 @@ describe('useCompositeRoot', () => {
     await flushMicrotasks();
 
     expect(root).toHaveAttribute('data-highlighted-index', '1');
+  });
+
+  it('moves the tab stop when the disabled index list changes in place', async () => {
+    const disabledIndices = reactive<number[]>([]);
+    const { user } = await render(
+      <CompositeRoot disabledIndices={disabledIndices}>
+        <CompositeItem as="button">First</CompositeItem>
+        <CompositeItem as="button">Second</CompositeItem>
+      </CompositeRoot>,
+    );
+    const first = screen.getByRole('button', { name: 'First' });
+    const second = screen.getByRole('button', { name: 'Second' });
+    expect(first.tabIndex).toBe(0);
+
+    disabledIndices.push(0);
+    await flushMicrotasks();
+
+    expect(first.tabIndex).toBe(-1);
+    expect(second.tabIndex).toBe(0);
+    await user.tab();
+    expect(second).toHaveFocus();
   });
 
   it('reads a grid configuration that changes after the mount', async () => {

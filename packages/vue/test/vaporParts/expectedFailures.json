@@ -106,6 +106,15 @@
     "src/internals/checkedInputProps.test.tsx": {
       "fails": {}
     },
+    "src/internals/composite/item/useCompositeItem.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/composite/list/CompositeList.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/composite/root/useCompositeRoot.test.tsx": {
+      "fails": {}
+    },
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },

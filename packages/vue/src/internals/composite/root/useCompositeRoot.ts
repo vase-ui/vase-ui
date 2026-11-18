@@ -1,15 +1,7 @@
-import {
-  computed,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  toValue,
-  useId,
-  watch,
-} from 'vue';
+import { computed, provide, shallowRef, toValue, useId, watch, watchPostEffect } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
+import { useIsHydrated } from '../../../common/hydration';
 import { isElementDisabled } from '../../../common/isElementDisabled';
 import { contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
@@ -50,17 +42,15 @@ import type { CompositeGridNavigator } from './gridNavigation';
 export function useCompositeRoot<Metadata>(
   params: UseCompositeRootParameters<Metadata>,
 ): UseCompositeRootReturnValue {
-  // Base UI gives `direction` as a parameter. A handler here reads it when a key comes, so a change
-  // of `DirectionProvider` applies.
   const direction = useDirection();
   const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
-  let rootElement: HTMLElement | null = null;
+  const rootElement = shallowRef<HTMLElement | null>(null);
+  const mounted = useIsHydrated();
+
   let hasSetDefaultIndex = false;
   let hasGivenInitialTabStop = false;
   let highlightedElement: HTMLElement | null = null;
-  let tabStopObserver: MutationObserver | null = null;
-  let canHaveUnmountedTabStop = true;
   let lastActiveItem: HTMLElement | null = null;
 
   const id = useId();
@@ -77,16 +67,13 @@ export function useCompositeRoot<Metadata>(
     return toValue(params.orientation) ?? 'both';
   }
 
-  // The setter writes the state only when the root is uncontrolled. Base UI writes no state when
-  // the root has a callback. No Base UI part gives the callback without `highlightedIndex`, so
-  // this difference changes no part.
   function onHighlightedIndexChange(index: number, shouldScrollIntoView = false) {
     highlightedElement = elementsRef.value[index] ?? null;
     params.onHighlightedIndexChange?.(index);
     highlightedIndex.value = index;
     if (shouldScrollIntoView) {
       const newActiveItem = elementsRef.value[index];
-      scrollIntoViewIfNeeded(rootElement, newActiveItem, direction.value, getOrientation());
+      scrollIntoViewIfNeeded(rootElement.value, newActiveItem, direction.value, getOrientation());
     }
   }
 
@@ -134,24 +121,14 @@ export function useCompositeRoot<Metadata>(
 
     if (activeIndex !== -1) {
       onHighlightedIndexChange(activeIndex);
-    } else if (isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)) {
-      // The default item is disabled, so it must not hold the tab stop. The browser removes a
-      // native disabled element from the tab order, and an `aria-disabled` element must not be the
-      // entry point. The tab stop moves to the first enabled item. If each item is disabled, the
-      // index stays.
-      const firstEnabledIndex = findNonDisabledListIndex(elements, { disabledIndices });
-      if (!isIndexOutOfListBounds(elements, firstEnabledIndex)) {
-        onHighlightedIndexChange(firstEnabledIndex);
-      }
+    } else {
+      ensureEnabledIndex(disabledIndices);
     }
 
     lastActiveItem = readActiveItem(elementsRef.value).item;
-    // The first map also starts the search. Base UI keeps the tab stop on an active item that
-    // cannot get focus, such as a checked radio that is a disabled native button. The Tab key then
-    // skips the composite.
     moveTabStopToActiveItem();
 
-    scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
+    scrollIntoViewIfNeeded(rootElement.value, activeItem, direction.value, getOrientation());
   }
 
   function itemDisabled(index: number) {
@@ -191,18 +168,12 @@ export function useCompositeRoot<Metadata>(
 
   function hasFocus() {
     return (
-      rootElement?.matches(':focus-within') === true ||
+      rootElement.value?.matches(':focus-within') === true ||
       elementsRef.value.some((item) => item?.matches(':focus-within'))
     );
   }
 
-  // A reset of a form and a controlled value change the active item while the composite does not
-  // have the focus. The tab stop then moves to the active item, so the Tab key enters the
-  // composite on that item, as it does for a native radio group. If the change leaves no active
-  // item that can hold the tab stop, the tab stop moves to the first item that can hold it, as the
-  // APG radio pattern says for a group with no checked radio. While the composite has the focus,
-  // the highlight stays on the item that the user chose, and the keys continue from it.
-  // Base UI moves the tab stop to the active item only in `Tabs.Tab`.
+  // Outside the composite, Tab should return to the active item. Inside it, keep the user's highlight.
   function moveTabStopToActiveItem() {
     const elements = elementsRef.value;
     // `KeepAlive` empties the list. The map of the next activation starts the move again.
@@ -215,7 +186,7 @@ export function useCompositeRoot<Metadata>(
     // stop while it can get focus, as at the first map.
     const hasChanged = activeItem.item !== lastActiveItem;
     // An active item that leaves the list is a removal, and `onMapChange` has already moved the
-    // tab stop for it, as in Base UI.
+    // tab stop for it.
     const isRemoval = lastActiveItem !== null && !elements.includes(lastActiveItem);
     lastActiveItem = activeItem.item;
 
@@ -238,8 +209,7 @@ export function useCompositeRoot<Metadata>(
   }
 
   // An item that the keys skip must not be the entry point. The active item is the exception while
-  // it can get focus. The Tab key then enters a Radio Group on its checked radio also when that
-  // radio is disabled, as in Base UI.
+  // it can get focus. Tab can then enter a radio group on its checked radio.
   function moveTabStopOffSkippedItem(
     elements: readonly (HTMLElement | null)[],
     activeIndex: number,
@@ -267,7 +237,10 @@ export function useCompositeRoot<Metadata>(
   // keys skip that item.
   function onFocusout(event: FocusEvent) {
     const next = event.relatedTarget as Element | null;
-    if (contains(rootElement, next) || elementsRef.value.some((item) => contains(item, next))) {
+    if (
+      contains(rootElement.value, next) ||
+      elementsRef.value.some((item) => contains(item, next))
+    ) {
       return;
     }
 
@@ -289,43 +262,23 @@ export function useCompositeRoot<Metadata>(
     },
   });
 
-  function run() {
-    const disabledIndices = toValue(params.disabledIndices);
-    // `disabledIndices` can arrive after the first map, for example when a parent derives it from
-    // the metadata in the map. The tab stop at index 0 can then be on a disabled item, and the
-    // composite has no tab stop. The check moves the tab stop to the first enabled item.
-    // It runs only when `disabledIndices` has a value, the root is uncontrolled and the first map
-    // is done. The item registrations supply the default when the root gives no indexes.
-    if (
-      disabledIndices == null ||
-      toValue(params.highlightedIndex) != null ||
-      !hasSetDefaultIndex
-    ) {
-      return;
-    }
+  function ensureEnabledIndex(disabledIndices: DisabledIndices) {
     const elements = elementsRef.value;
     if (isListIndexDisabled(elements, highlightedIndex.value, disabledIndices)) {
-      const firstEnabledIndex = findNonDisabledListIndex(elements, { disabledIndices });
-      if (!isIndexOutOfListBounds(elements, firstEnabledIndex)) {
-        onHighlightedIndexChange(firstEnabledIndex);
+      const first = findNonDisabledListIndex(elements, { disabledIndices });
+      if (!isIndexOutOfListBounds(elements, first)) {
+        onHighlightedIndexChange(first);
       }
     }
   }
 
-  onMounted(run);
-  // The check reads `elementsRef`, so the list of elements is a source. Under `KeepAlive`, the
-  // items register again in `onActivated`, and the list sorts in a later post-flush job. A check
-  // that runs before that sort reads an empty list, so it must run again after the sort.
-  watch(
-    [
-      () => toValue(params.disabledIndices),
-      () => toValue(params.highlightedIndex),
-      highlightedIndex,
-      elementsRef,
-    ],
-    run,
-    { flush: 'post' },
-  );
+  // A parent can derive disabled indexes from the map after the items register.
+  watchPostEffect(() => {
+    const disabledIndices = toValue(params.disabledIndices);
+    if (disabledIndices != null && toValue(params.highlightedIndex) == null) {
+      ensureEnabledIndex(disabledIndices);
+    }
+  });
 
   function wrappedOnLoop(event: KeyboardEvent, prevIndex: number, nextIndex: number) {
     if (!params.onLoop) {
@@ -345,7 +298,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    if (!rootElement) {
+    if (!rootElement.value) {
       return;
     }
 
@@ -458,37 +411,13 @@ export function useCompositeRoot<Metadata>(
   // selection in the input, and the next arrow key can move focus.
   function onFocusin(event: FocusEvent) {
     const target = getTarget(event);
-    if (!rootElement || target == null || !isNativeInput(target)) {
+    if (!rootElement.value || target == null || !isNativeInput(target)) {
       return;
     }
     target.setSelectionRange(0, target.value.length);
   }
 
-  // This function gives the tab stop of the server HTML and of the first client render. An item
-  // keeps that tab stop until the item is mounted. The function gives `true` to at most one
-  // caller, in the order of the `setup` calls.
-  // A server writes the HTML of an item right after the `setup` of that item. It does not know the
-  // items that come later, so it cannot find the first enabled item of the document.
-  // The order of `setup` is the order of the document, with the exceptions that the comment in
-  // `useCompositeListItem` lists. Two exceptions are usual.
-  // - An item below a component with an async `setup`. A server runs the `setup` of that item
-  //   after the items that follow it. The tab stop can then be on a later enabled item until the
-  //   first sort after the mount.
-  // - An item in an async component that a module makes one time, such as a lazy component of
-  //   Nuxt. After its first render, a server has loaded the component and runs its `setup` in the
-  //   order of the document. A browser has not loaded it when the page hydrates, so it runs that
-  //   `setup` after the later items. The server and the browser then give the tab stop to
-  //   different items. The item gives `data-allow-mismatch` while it hydrates, so Vue reports no
-  //   mismatch. After the mount, Vue writes the `tabindex` again and the DOM follows the
-  //   highlighted index.
-  // An item that is mounted after its root keeps the `tabindex` of the server HTML until its own
-  // mount. While the server HTML has the tab stop on such an item, the mounted items do not take the
-  // tab stop. The list then has one tab stop.
-  // The server HTML has no tab stop in three cases.
-  // - `hasActiveItem` is `true` and no item is active.
-  // - Each item is disabled.
-  // - The root is controlled, the highlighted index is above 0, and no enabled item has that index
-  //   or a higher index.
+  // The server emits each item before it knows the DOM order of later async children.
   function takeInitialTabStop(index: number, active: boolean, disabled: boolean) {
     if (hasGivenInitialTabStop) {
       return false;
@@ -502,50 +431,39 @@ export function useCompositeRoot<Metadata>(
     return isTabStop;
   }
 
-  // The server HTML can give the tab stop to an item that is mounted after its root. That item can
-  // have no `setup` yet, so only the DOM tells the root. Each item that hydrates has an attribute
-  // with the id of its root. Thus an item of a nested composite and an element of the consumer do
-  // not count.
-  // Limit: the search covers the element of the root only. The root does not find an item whose
-  // element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab
-  // stop, the list can have two tab stops until the item is mounted.
-  // The first check runs in a post-flush job. That job runs after the renders that the mounted
-  // hooks queue, so each mounted item has already removed its attribute. A check in `onMounted`
-  // would be too early.
-  function updateUnmountedTabStop() {
-    if (!rootElement || !canHaveUnmountedTabStop) {
-      return;
-    }
+  // Wait for the mounted items to clear their server markers in their first patch.
+  const stopTabStopWatch = watch(
+    [() => (mounted.value ? rootElement.value : null), elementsRef],
+    ([root], _previous, onCleanup) => {
+      if (!root) {
+        hasUnmountedTabStop.value = false;
+        return;
+      }
 
-    const hasTabStop = Array.from(
-      rootElement.querySelectorAll(`[${HYDRATING_COMPOSITE_ITEM}]`),
-    ).some(
-      (element) =>
-        element.getAttribute(HYDRATING_COMPOSITE_ITEM) === id &&
-        element.getAttribute('tabindex') === '0',
-    );
-    hasUnmountedTabStop.value = hasTabStop;
+      const updateTabStop = () => {
+        const pending = Array.from(
+          root.querySelectorAll(`[${HYDRATING_COMPOSITE_ITEM}][tabindex="0"]`),
+        ).some((item) => item.getAttribute(HYDRATING_COMPOSITE_ITEM) === id);
+        hasUnmountedTabStop.value = pending;
+        if (!pending) {
+          // After the last server tab stop clears, the registry owns the tab stop.
+          stopTabStopWatch();
+        }
+        return pending;
+      };
 
-    if (hasTabStop) {
-      if (!tabStopObserver && typeof MutationObserver === 'function') {
-        tabStopObserver = new MutationObserver(updateUnmountedTabStop);
-        tabStopObserver.observe(rootElement, {
-          attributes: true,
+      if (updateTabStop() && typeof MutationObserver === 'function') {
+        const observer = new MutationObserver(updateTabStop);
+        observer.observe(root, {
           attributeFilter: [HYDRATING_COMPOSITE_ITEM],
           childList: true,
           subtree: true,
         });
+        onCleanup(() => observer.disconnect());
       }
-    } else {
-      // Only a server can write the attribute with a tab stop, so no element can come later.
-      tabStopObserver?.disconnect();
-      tabStopObserver = null;
-      canHaveUnmountedTabStop = false;
-    }
-  }
-
-  watch(elementsRef, updateUnmountedTabStop, { flush: 'post' });
-  onScopeDispose(() => tabStopObserver?.disconnect());
+    },
+    { flush: 'post' },
+  );
 
   watch(
     () =>
@@ -590,7 +508,7 @@ export function useCompositeRoot<Metadata>(
   // A teleported item belongs to the composite, but its native events can miss the root.
   function fromDetachedItem<E extends Event>(handle: (event: E) => void) {
     return (event: E) => {
-      if (rootElement && !event.composedPath().includes(rootElement)) {
+      if (rootElement.value && !event.composedPath().includes(rootElement.value)) {
         handle(event);
       }
     };
@@ -609,7 +527,7 @@ export function useCompositeRoot<Metadata>(
     },
     takeInitialTabStop,
     id,
-    hasUnmountedTabStop: computed(() => hasUnmountedTabStop.value),
+    hasUnmountedTabStop,
   });
 
   return {
@@ -617,7 +535,7 @@ export function useCompositeRoot<Metadata>(
     elementsRef,
     itemMap: list.map,
     rootRef(element) {
-      rootElement = element;
+      rootElement.value = element;
     },
     highlightedIndex,
   };
@@ -739,10 +657,7 @@ export interface UseCompositeRootParameters<Metadata> {
    */
   onMapChange?: ((newMap: Map<Element, CompositeMetadata<Metadata>>) => void) | undefined;
   /**
-   * Tells the root that an item is active. The tab stop of the server HTML is then the first active
-   * item. If no item is active, the server HTML has no tab stop. Set it only when the root knows
-   * that an item is active. Base UI does not have this parameter. Its server HTML has
-   * `tabindex="-1"` on each item.
+   * Reserve the server tab stop for the first active item. If none is active, all items have `tabindex="-1"`.
    */
   hasActiveItem?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
