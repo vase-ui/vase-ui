@@ -1,6 +1,6 @@
 import { computed, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { FilterDropdownRootChangeEventDetails } from './FilterDropdownRootContext';
 

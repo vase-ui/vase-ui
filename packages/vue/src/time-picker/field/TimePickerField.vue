@@ -32,7 +32,7 @@ export interface TimePickerFieldProps extends Omit<
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { givenAttributes } from '../../internals/givenAttributes';

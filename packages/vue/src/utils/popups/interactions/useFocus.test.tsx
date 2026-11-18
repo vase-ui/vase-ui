@@ -3,8 +3,8 @@ import { KeepAlive, Teleport, computed, defineComponent, shallowRef } from 'vue'
 import type { PropType } from 'vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { platform } from '../../../common/platform';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createAttribute } from '../createAttribute';

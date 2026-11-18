@@ -1,6 +1,6 @@
 import type { Placement, VirtualElement } from '@floating-ui/vue';
 import type { HTMLAttributes, ShallowRef } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
 import type { FloatingTreeStore } from './tree/FloatingTreeStore';

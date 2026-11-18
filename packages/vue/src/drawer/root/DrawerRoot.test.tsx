@@ -22,7 +22,7 @@ import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAt
 import * as Dialog from '../../dialog/index.parts';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as DrawerTriggerDataAttributes from '../../dialog/trigger/DialogTriggerDataAttributes';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';

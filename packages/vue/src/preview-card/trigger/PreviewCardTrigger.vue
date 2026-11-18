@@ -47,7 +47,7 @@ export interface PreviewCardTriggerProps<Payload = unknown>
 
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, shallowRef } from 'vue';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';

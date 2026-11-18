@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { REASONS } from '../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
 

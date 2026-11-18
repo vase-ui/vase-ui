@@ -22,7 +22,7 @@ import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible } from '../../../internals/composite/listIndex';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../../internals/constants';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';

@@ -3,7 +3,7 @@ import { KeepAlive, computed, defineComponent, nextTick, onMounted, shallowRef, 
 import type { PropType, ShallowRef } from 'vue';
 import type { Placement, VirtualElement } from '@floating-ui/vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks } from '#test-utils';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { useDismiss } from '../interactions/useDismiss';
 import { PopupTriggerMap } from '../popupTriggerMap';

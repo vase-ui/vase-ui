@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import HiddenInputControl from './HiddenInputControl.vue';
 
 const inputId = useVaseUiId();

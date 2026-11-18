@@ -605,7 +605,7 @@ describe('<Accordion.Root />', () => {
     );
   });
 
-  it('allows onMouseUp to call preventBaseUIHandler on the trigger', async () => {
+  it('allows onMouseUp to call preventVaseUIHandler on the trigger', async () => {
     await render(
       <Accordion.Root>
         <Accordion.Item value={0}>
@@ -727,7 +727,7 @@ describe('<Accordion.Root />', () => {
     );
   });
 
-  describe('BaseUIChangeEventDetails', () => {
+  describe('VaseUIChangeEventDetails', () => {
     it('onOpenChange cancel() prevents opening while uncontrolled', async () => {
       const onValueChange = vi.fn();
 

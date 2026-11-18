@@ -2,7 +2,7 @@ import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { given } from '../givenAttributes';
 import { NOOP } from '../noop';
-import { useVaseUiId } from '../useBaseUiId';
+import { useVaseUiId } from '../useVaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';

@@ -45,7 +45,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useElementId } from '../../utils/popups/useElementId';

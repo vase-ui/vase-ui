@@ -1,7 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed } from 'vue';
 import { createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { MenuStore, createNullMenuStore } from './MenuStore';
 

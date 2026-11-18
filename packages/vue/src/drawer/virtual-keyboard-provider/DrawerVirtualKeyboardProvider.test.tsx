@@ -1089,7 +1089,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     expect(labelClickEvents).toHaveLength(0);
   });
 
-  it('focuses a keyboard input with data-base-ui-swipe-ignore without starting drawer swipe', async () => {
+  it('focuses a keyboard input with data-vase-ui-swipe-ignore without starting drawer swipe', async () => {
     await render(
       <Drawer.Root open modal={false}>
         <Drawer.VirtualKeyboardProvider>

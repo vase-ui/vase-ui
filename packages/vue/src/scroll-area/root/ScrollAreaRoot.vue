@@ -88,7 +88,7 @@ import type { Component } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import type { HTMLProps, Orientation } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useStyleDisableScrollbar } from '../../utils/styles';

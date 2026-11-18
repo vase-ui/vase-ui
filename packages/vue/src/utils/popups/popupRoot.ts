@@ -12,10 +12,10 @@ import {
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { useControlled } from '../../common/useControlled';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';

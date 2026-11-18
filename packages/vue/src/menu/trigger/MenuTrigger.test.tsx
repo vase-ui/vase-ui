@@ -582,8 +582,8 @@ describe('<Menu.Trigger />', () => {
     expect(screen.queryByRole('menu')).not.toBe(null);
   });
 
-  describe('preventBaseUIHandler', () => {
-    it('prevents opening the menu with a mouse when `preventBaseUIHandler` is called in onMouseDown', async () => {
+  describe('preventVaseUIHandler', () => {
+    it('prevents opening the menu with a mouse when `preventVaseUIHandler` is called in onMouseDown', async () => {
       const { user } = await render(
         <Menu.Root>
           <Menu.Trigger onMousedown={(event) => event.preventVaseUIHandler()} />
@@ -603,7 +603,7 @@ describe('<Menu.Trigger />', () => {
       expect(screen.queryByRole('menu', { hidden: false })).toBe(null);
     });
 
-    it('prevents opening the menu with keyboard when `preventBaseUIHandler` is called in onClick', async () => {
+    it('prevents opening the menu with keyboard when `preventVaseUIHandler` is called in onClick', async () => {
       const { user } = await render(
         <Menu.Root>
           <Menu.Trigger onClick={(event) => event.preventVaseUIHandler()} />

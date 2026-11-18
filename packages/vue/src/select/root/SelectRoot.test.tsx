@@ -35,7 +35,7 @@ import {
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
 import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';

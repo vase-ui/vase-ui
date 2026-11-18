@@ -3,7 +3,7 @@ import type { ComponentPublicInstance, HTMLAttributes, VNode } from 'vue';
 export type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from '../internals/createBaseUIEventDetails';
+} from '../internals/createVaseUIEventDetails';
 
 /**
  * The attributes and listeners that a part gives to its element, and the `ref` setter of the part.

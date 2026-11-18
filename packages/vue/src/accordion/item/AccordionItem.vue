@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { AccordionRootState } from '../root/AccordionRoot.vue';
@@ -58,7 +58,7 @@ import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionRootContext } from '../root/AccordionRootContext';
 import { AccordionItemContext } from './AccordionItemContext';

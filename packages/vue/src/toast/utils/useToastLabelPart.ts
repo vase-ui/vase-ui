@@ -1,7 +1,7 @@
 import { computed, onBeforeUpdate, shallowRef, useSlots } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useToastRootContext } from '../root/ToastRootContext';
 import { isRenderableNode } from './isRenderableNode';
 

@@ -5,7 +5,7 @@ import { ownerDocument } from '../../../common/owner';
 import { platform } from '../../../common/platform';
 import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
-import { createChangeEventDetails } from '../../createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { fieldValidityMapping } from '../../field-constants';
 import { useSetFieldFocused } from '../../field-root-context/useSetFieldFocused';

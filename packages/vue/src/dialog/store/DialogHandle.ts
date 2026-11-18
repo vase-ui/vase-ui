@@ -1,4 +1,4 @@
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { BasePopupHandle } from '../../utils/popups/popupHandle';
 import { createNullDialogStore } from './DialogStore';

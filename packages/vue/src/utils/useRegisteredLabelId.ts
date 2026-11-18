@@ -3,7 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { given } from '../internals/givenAttributes';
 import { useReferencedId } from '../internals/labelable-provider/useRegisteredId';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';
 
 export type LabelIdSetter = (

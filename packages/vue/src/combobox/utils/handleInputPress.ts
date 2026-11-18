@@ -1,6 +1,6 @@
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { MaybeVaseUIEvent } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
 import { isInteractiveElement } from '../../utils/popups/element';

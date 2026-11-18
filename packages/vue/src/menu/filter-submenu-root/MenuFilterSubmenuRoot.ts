@@ -2,7 +2,7 @@ import { isHTMLElement } from '@floating-ui/utils/dom';
 import { provide } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';

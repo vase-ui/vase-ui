@@ -12,7 +12,7 @@ import {
   getNextListIndex,
   isIndexOutOfListBounds,
 } from '../../../internals/composite/listIndex';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP } from '../constants';

@@ -1,5 +1,5 @@
 import { computed, provide, shallowRef, watch } from 'vue';
-import { useVaseUiId } from '../useBaseUiId';
+import { useVaseUiId } from '../useVaseUiId';
 import { LabelableContext, useLabelableContext } from './LabelableContext';
 import { createIdRegistry } from './createIdRegistry';
 import { createLabelIdRegistry } from './createLabelIdRegistry';

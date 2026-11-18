@@ -185,10 +185,10 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 | `packages/utils/src`          | `packages/vue/src/common`   |
 | `packages/react/test`         | `packages/vue/test`         |
 
-- Folder, file and part names are the same as upstream: `dialog/root/DialogRoot.vue`.
-- The counterpart of an upstream file is the file at the mapped path with the same name. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
+- Use the upstream folder, file and part names with the Vase UI form of the library name.
+- The counterpart of an upstream file is the file at the mapped path. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
 - The counterpart of an upstream folder is the folder at the mapped path.
-- A file keeps the `BaseUi` or `BaseUI` of its upstream name, because `pnpm parity:check` finds a counterpart by its path: `useBaseUiId.ts`, `createBaseUIEventDetails.ts`. The names in the file change: `useVaseUiId`, `VaseUIChangeEventDetails`.
+- `pnpm parity:check` maps `useBaseUiId.ts` to `useVaseUiId.ts` and `createBaseUIEventDetails.ts` to `createVaseUIEventDetails.ts`. The rule also applies to paths under `docs/demos`.
 - The vocabulary is that of upstream's `GLOSSARY.md`: Popup, Root, Trigger, Anchor, Positioner.
 - A family is one upstream folder.
 - State attributes (`data-open`) and CSS variables keep upstream's names and values. Upstream CSS then works with no change.
@@ -682,7 +682,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
-- A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
+- A file of `utils` that Base UI has keeps its mapped path, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
 
 ### Vapor mode
 
@@ -1434,7 +1434,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
 - An internal root component of Base UI that more than one root part renders also becomes a composable. `useMenuRoot` does the work of `MenuRootInternal` for `Menu.Root` and `Menu.SubmenuRoot`. `useAriaCombobox` does the work of `AriaCombobox`. A root part gives it a view of its props, with one getter for each prop. A spread of the props reads each prop, so each `computed` that reads the view would run again for a change of any prop.
 - A value that Base UI reads from the state of another store only in the first render, with `useRefWithInit` or a `useState` initializer, is a constant of `setup` that reads `toRaw` of that state. `useMenuRoot` reads the transition status and the `instantType` of the parent menu of a submenu in this way.
-- An internal part of Base UI that public parts wrap also becomes a composable. Its file is a `.ts` file at the mapped path, with the upstream file name. `filter-dropdown/input/FilterDropdownInput.ts` exports `useFilterDropdownInput`.
+- An internal part of Base UI that public parts wrap also becomes a composable. Its file is a `.ts` file at the mapped path. `filter-dropdown/input/FilterDropdownInput.ts` exports `useFilterDropdownInput`.
 - The composable returns what the part has of the state, the function ref and the `props` function. The public part gives them to its own `useRenderElement`. A wrapper SFC would have to forward `as`, the `#render` slot, the attributes and `element`.
 - Base UI can read the text of children that it does not render, such as the label of an item that the filter hides. A slot is a function that a render must call.
 - Do not call a slot in `setup`, in a lifecycle hook or in a watcher. A call in `setup` or in a hook makes Vue warn that the slot runs outside the render function.
@@ -1615,7 +1615,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 ### How to port a test
 
-A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. `pnpm parity:check` finds the ported case of a Base UI case by these titles. It does not read the body of a case.
+A ported test uses the mapped path. Its `describe` and `it` titles use the upstream text with the Vase UI form of the library name. For example, `preventBaseUIHandler` becomes `preventVaseUIHandler`, and `Base UI handler` becomes `Vase UI handler`. `pnpm parity:check` identifies each case by its path and titles. A test title of our own can name the upstream project as "Base UI".
 
 - A ported case asserts each behavior that the Base UI case asserts. It can assert more.
 - The body of a ported case can have a better form than the body of the Base UI case. A better form never asserts less.
@@ -1794,7 +1794,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
-- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
+- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
@@ -2036,7 +2036,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 | Upstream thing | Counterpart in Vase UI |
 | --- | --- |
 | A source file or a type test | The file at the mapped path. See [Layout and names](#layout-and-names). |
-| A test case | A case in the test file at the mapped path, with the same `describe` titles and the same title. |
+| A test case | A case at the mapped path with the titles from [How to port a test](#how-to-port-a-test). |
 | A call of a shared suite, such as `describeConformance(…)` | The same call in the same `describe` block. |
 | An entry of a `types.md`, and each row of its props table | The export of the family, and the prop, emit, slot or exposed member that [API convention](#api-convention) gives. |
 
@@ -2183,7 +2183,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The name says what the demo shows, in the fewest words, as "Undo notifications" and "Nested submenus" do. The first demo of the Toast page keeps the default name. Base UI gives these parts no `aria-label` in its demos. A demo that names such a part thus has one attribute more than its Base UI file.
 - VitePress does not add the base path of the site to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
-- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
+- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the mapped path in `docs/demos/<family>`.
 - A Base UI demo can import a library from npm, such as `match-sorter` or `@tanstack/react-virtual`. The Vue demo imports the same library, or its Vue counterpart, such as `@tanstack/vue-virtual`. Add it to the `devDependencies` of `docs/package.json` with an exact version: `pnpm --filter @vase-ui/docs add -D <name>@<version>`. Then commit `pnpm-lock.yaml`. The demo test of the package resolves the library from `docs/node_modules`.
 - Where the library has no Vue release, the page documents a Vue library in its place. The Forms page documents VeeValidate in the place of React Hook Form.
 - The Vue library of a demo can need an element that the Base UI demo does not have. `VUE_DEMO_EXTRA_CLASSES` in `scripts/docs/upstreamDemos.ts` then names the element and each class string that the Vue folder has more than its row, with the reason.

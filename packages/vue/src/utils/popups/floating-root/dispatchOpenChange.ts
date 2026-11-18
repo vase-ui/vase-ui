@@ -1,4 +1,4 @@
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
 import { isClickLikeEvent } from '../event';
 import type { PopupInteractionContext } from '../types';

@@ -27,7 +27,7 @@ import {
 import * as Combobox from '../../combobox/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import * as Menu from '../../menu/index.parts';
@@ -1099,7 +1099,7 @@ describe('<Popover.Root />', () => {
       );
     });
 
-    describe('BaseUIChangeEventDetails', () => {
+    describe('VaseUIChangeEventDetails', () => {
       it('onOpenChange cancel() prevents closing from a close press without changing the trigger', async () => {
         let closePressTriggerId: string | undefined;
 
