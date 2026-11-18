@@ -1,8 +1,22 @@
 import { Checkbox } from '@vase-ui/vue/checkbox';
-import { expect, it } from 'vitest';
+import { expect, it, TestRunner } from 'vitest';
+import type { RunnerTestCase } from 'vitest';
 import { createCommentVNode, Fragment, h } from 'vue';
 import { isVaporParts } from '#test-utils';
 import expectations from './expectedFailures.json' with { type: 'json' };
+
+let collectionError: unknown;
+try {
+  h(Fragment, [undefined]);
+} catch (error) {
+  collectionError = error;
+}
+
+it.runIf(isVaporParts)('rejects an empty Fragment child during test collection', () => {
+  expect(collectionError).toMatchObject({
+    message: expect.stringContaining('A Fragment has an empty child'),
+  });
+});
 
 it('compiles a part as a Vapor component only in the project of the Vapor parts', () => {
   expect((Checkbox.Root as { __vapor?: boolean }).__vapor === true).toBe(isVaporParts);
@@ -16,6 +30,20 @@ it.runIf(isVaporParts).each([
 ])('rejects a Fragment with $name as a child', ({ child }) => {
   expect(() => h(Fragment, [h('span'), child])).toThrow('A Fragment has an empty child');
 });
+
+it.runIf(isVaporParts)(
+  'reports an empty Fragment child even in a case with an expected failure',
+  () => {
+    const task = TestRunner.getCurrentTest<RunnerTestCase>();
+    task.fails = true;
+    try {
+      expect(() => h(Fragment, [null])).toThrow('A Fragment has an empty child');
+      expect(task.fails).toBe(false);
+    } finally {
+      task.fails = false;
+    }
+  },
+);
 
 it('accepts a comment vnode for an empty branch of a Fragment', () => {
   const children = [h('span'), createCommentVNode()];
