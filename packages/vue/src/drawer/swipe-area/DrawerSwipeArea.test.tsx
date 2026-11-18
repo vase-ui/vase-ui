@@ -1785,6 +1785,31 @@ describe('<Drawer.SwipeArea />', () => {
     expect(swipeArea).toHaveAttribute('data-open', '');
   });
 
+  it('releases the capture listeners when a swipe area unmounts after release', async () => {
+    const shown = shallowRef(true);
+    let store!: DialogStore<unknown>;
+    await render(() => (
+      <Drawer.Root>
+        <DialogStoreProbe onStore={(value) => (store = value)} />
+        {shown.value && <Drawer.SwipeArea data-testid="area" />}
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    await swipeUp(screen.getByTestId('area'), 120, 40);
+    expect(store.context.outsidePressEnabledRef.value).toBe(false);
+    shown.value = false;
+    await flushMicrotasks();
+    expect(store.context.outsidePressEnabledRef.value).toBe(true);
+
+    store.context.outsidePressEnabledRef.value = false;
+    await fireEvent.pointerDown(document.body);
+    expect(store.context.outsidePressEnabledRef.value).toBe(false);
+  });
+
   it('lets an outside press close the drawer after it unmounts during a gesture', async () => {
     const shown = shallowRef(true);
     await render(() => (

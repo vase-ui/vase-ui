@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createSSRApp, defineComponent } from 'vue';
+import { createSSRApp, defineComponent, provide } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
@@ -16,6 +16,7 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import { TabsListContext, useTabsListContext } from '../list/TabsListContext';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { script as generatedPrehydrationScript } from './prehydrationScript.min';
 import TabsIndicatorHydration from './TabsIndicatorHydration.test.vue';
@@ -42,6 +43,31 @@ describe('<Tabs.Indicator />', () => {
     refInstanceof: window.HTMLSpanElement,
     testRenderPropWith: 'div',
   }));
+
+  it('releases its update listener when the indicator unmounts', async () => {
+    const listeners = new Set<() => void>();
+    const Indicator = defineComponent(() => {
+      provide(TabsListContext, {
+        ...useTabsListContext(),
+        registerIndicatorUpdateListener(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      });
+      return () => <Tabs.Indicator />;
+    });
+    const { unmount } = await render(
+      <Tabs.Root>
+        <Tabs.List>
+          <Indicator />
+        </Tabs.List>
+      </Tabs.Root>,
+    );
+    expect(listeners.size).toBe(1);
+
+    unmount();
+    expect(listeners.size).toBe(0);
+  });
 
   it('exposes null active tab state when the selected value has no matching tab', async () => {
     const indicatorStates: Tabs.Indicator.State[] = [];

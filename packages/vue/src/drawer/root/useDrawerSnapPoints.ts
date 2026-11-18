@@ -1,11 +1,10 @@
-import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
+import { computed, shallowRef } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { getComputedStyle } from '@floating-ui/utils/dom';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
-import { NOOP } from '../../internals/noop';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useDrawerRootContext } from './DrawerRootContext';
 import type { DrawerRootContext, DrawerSnapPoint } from './DrawerRootContext';
 
@@ -119,16 +118,7 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
   // `KeepAlive` can take the viewport out of the document with the part, and the viewport then has
   // no layout. The observer thus stops while the part is held, and the part measures again at the
   // activation.
-  const { isHeld } = useKeepAliveState();
-  let disconnect = NOOP;
-
-  function observeViewport() {
-    disconnect();
-    disconnect = NOOP;
-    if (isHeld.value) {
-      return;
-    }
-
+  useDomEffect([viewportElement], () => {
     const element = viewportElement.value;
     measureViewportHeight(element);
 
@@ -138,15 +128,8 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
 
     const resizeObserver = new ResizeObserver(() => measureViewportHeight(element));
     resizeObserver.observe(element);
-    disconnect = () => resizeObserver.disconnect();
-  }
-
-  onMounted(observeViewport);
-  watch(viewportElement, observeViewport, { flush: 'post' });
-
-  watch(isHeld, observeViewport, { flush: 'sync' });
-
-  onScopeDispose(() => disconnect());
+    return () => resizeObserver.disconnect();
+  });
 
   const resolvedSnapPoints = computed<ResolvedDrawerSnapPoint[]>(() => {
     const points = snapPoints.value;

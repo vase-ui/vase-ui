@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished } from 'vitest';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type { HTMLProps } from '../../internals/types';
+import { useMenuRootContext } from '../root/MenuRootContext';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -13,6 +14,47 @@ import {
 
 describe('<Menu.Input />', () => {
   const { render } = createRenderer();
+
+  it('tracks focus only on the current search input', async () => {
+    const key = shallowRef(0);
+    const Inputs = defineComponent(() => {
+      const { store } = useMenuRootContext(false);
+      return () => (
+        <>
+          <Menu.Input key={key.value} />
+          <output>{String(store.state.inputFocused)}</output>
+        </>
+      );
+    });
+    await render(
+      <Menu.FilterProvider>
+        <Menu.Root>
+          <Inputs />
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+    const old = screen.getByRole('searchbox');
+    key.value++;
+    await nextTick();
+    const input = screen.getByRole('searchbox');
+    input.focus();
+    await nextTick();
+    expect(input).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('true');
+
+    document.body.append(old);
+    onTestFinished(() => old.remove());
+    old.focus();
+    await nextTick();
+    expect(old).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('false');
+
+    old.addEventListener('focusout', () => input.focus(), { capture: true, once: true });
+    old.blur();
+    await nextTick();
+    expect(input).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('true');
+  });
 
   describe('VUE-111: aria-activedescendant follows the id of the highlighted item', () => {
     async function renderOpenMenu(renderItems: () => VNode[]) {

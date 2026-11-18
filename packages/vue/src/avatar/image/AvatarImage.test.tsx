@@ -179,6 +179,29 @@ describe('<Avatar.Image />', () => {
   });
 
   describe('prop: onLoadingStatusChange', () => {
+    it('ignores the load of an image that the source replaced', async () => {
+      const { images } = installImageMock();
+      const src = shallowRef('first.png');
+      const change = vi.fn();
+      await render(() => (
+        <Avatar.Root>
+          <Avatar.Image src={src.value} onLoadingStatusChange={change} />
+        </Avatar.Root>
+      ));
+      const first = images[0];
+      expect(first.src).toBe('first.png');
+
+      src.value = 'second.png';
+      await nextTick();
+      first.onload?.();
+      await nextTick();
+      expect(change.mock.calls).toEqual([['loading']]);
+
+      images.at(-1)?.onload?.();
+      await nextTick();
+      expect(change.mock.calls).toEqual([['loading'], ['loaded']]);
+    });
+
     it('fires when the image loads', async () => {
       const imageMock = installImageMock();
       const onLoadingStatusChange = vi.fn();
