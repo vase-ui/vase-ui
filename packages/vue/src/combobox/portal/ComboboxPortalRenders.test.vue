@@ -4,10 +4,10 @@ import { Combobox } from '@vase-ui/vue/combobox';
 defineProps<{
   items: string[];
   sideOffset: number;
-  onPositionerRender: () => undefined;
-  onPopupRender: () => undefined;
-  onListRender: () => undefined;
-  onItemRender: () => undefined;
+  onPositionerRender: () => void;
+  onPopupRender: () => void;
+  onListRender: () => void;
+  onItemRender: () => void;
 }>();
 </script>
 

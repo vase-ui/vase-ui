@@ -5,7 +5,7 @@ import PlainPart from '../../../../test/fixtures/PlainPart.vue';
 // `#render` slot.
 defineProps<{
   active: boolean;
-  onInnerRender: () => undefined;
+  onInnerRender: () => void;
 }>();
 </script>
 

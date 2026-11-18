@@ -450,7 +450,9 @@ describe('<UseRenderPart />', () => {
 
     keys.value = ['second', 'first'];
     await nextTick();
-    expect([...container.querySelectorAll('[data-key]')]).toEqual([secondElement, firstElement]);
+    const reordered = container.querySelectorAll('[data-key]');
+    expect(reordered[0]).toBe(secondElement);
+    expect(reordered[1]).toBe(firstElement);
     expect(firstPart.element).toBe(firstElement);
     expect(second.value!.element).toBe(secondElement);
 
@@ -459,6 +461,19 @@ describe('<UseRenderPart />', () => {
     expect(firstPart.element).toBeNull();
     expect(first.value).toBeNull();
     expect(second.value!.element).toBe(secondElement);
+  });
+
+  it('gives the default slot the current state', async () => {
+    const { container, setProps } = await render(
+      <UseRenderPart
+        active
+        v-slots={{ default: ({ state }: { state: UseRenderPartState }) => String(state.active) }}
+      />,
+    );
+    const element = container.firstElementChild;
+    expect(element).toHaveTextContent('true');
+    await setProps({ active: false });
+    expect(element).toHaveTextContent('false');
   });
 
   it('gives the render slot live state for the class, style and content', async () => {

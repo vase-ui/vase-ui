@@ -5,8 +5,8 @@ import * as TimePicker from '../index.parts';
 defineProps<{
   hasRenderSlot: boolean;
   active: boolean;
-  onPartRender: () => undefined;
-  onInnerRender: () => undefined;
+  onPartRender: () => void;
+  onInnerRender: () => void;
 }>();
 </script>
 

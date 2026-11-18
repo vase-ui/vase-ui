@@ -1,11 +1,13 @@
-import type { HTMLProps } from '@vase-ui/vue/types';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import type {
   TimeClockDayPeriodProps,
   TimeClockFaceNumber,
+  TimeClockHandState,
+  TimeClockNumberState,
   TimeClockRootProps,
   TimeClockRootState,
   TimeClockView,
+  TimeClockViewTriggerState,
 } from '@vase-ui/vue/time-clock';
 import { expectType } from '#test-utils';
 
@@ -108,33 +110,39 @@ export const face = (
   <TimeClock.Face
     as="section"
     lang="fr"
-    v-slots={{
-      default: ({ state }: { state: TimeClock.Face.State }) => (
-        <span class={{ dragging: state.dragging }} />
-      ),
-    }}
+    v-slots={
+      {
+        default: ({ state }) => <span class={{ dragging: state.dragging }} />,
+      } satisfies Pick<InstanceType<typeof TimeClock.Face>['$slots'], 'default'>
+    }
     onKeydown={(event) => event.preventVaseUIHandler()}
   />
 );
 export const hand = (
   <TimeClock.Hand
-    v-slots={{
-      render: ({ props, state }: { props: HTMLProps; state: TimeClock.Hand.State }) => {
-        expectType<boolean, typeof state.inner>(state.inner);
-        expectType<boolean, typeof state.betweenNumbers>(state.betweenNumbers);
-        return <div {...props} />;
-      },
-    }}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockHandState, typeof state>(state);
+          expectType<boolean, typeof state.inner>(state.inner);
+          expectType<boolean, typeof state.betweenNumbers>(state.betweenNumbers);
+          return <div {...props} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.Hand>['$slots'], 'render'>
+    }
   />
 );
 export const number = (
   <TimeClock.Number
     number={{ value: 3, inner: false } satisfies TimeClockFaceNumber}
-    v-slots={{
-      render: ({ props, state }: { props: HTMLProps; state: TimeClock.Number.State }) => (
-        <div {...props} class={{ selected: state.selected }} />
-      ),
-    }}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockNumberState, typeof state>(state);
+          return <div {...props} class={{ selected: state.selected }} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.Number>['$slots'], 'render'>
+    }
   />
 );
 export const dayPeriod = (
@@ -143,11 +151,14 @@ export const dayPeriod = (
 export const viewTrigger = (
   <TimeClock.ViewTrigger
     view="minute"
-    v-slots={{
-      render: ({ props, state }: { props: HTMLProps; state: TimeClock.ViewTrigger.State }) => (
-        <button {...props} class={{ active: state.active }} />
-      ),
-    }}
+    v-slots={
+      {
+        render: ({ props, state }) => {
+          expectType<TimeClockViewTriggerState, typeof state>(state);
+          return <button {...props} class={{ active: state.active }} />;
+        },
+      } satisfies Pick<InstanceType<typeof TimeClock.ViewTrigger>['$slots'], 'render'>
+    }
   />
 );
 export const dayPeriodProps: TimeClockDayPeriodProps = { value: 'am' };

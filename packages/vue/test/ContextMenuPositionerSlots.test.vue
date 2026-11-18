@@ -5,8 +5,8 @@ import PlainPart from './fixtures/PlainPart.vue';
 defineProps<{
   hasRenderSlot: boolean;
   active: boolean;
-  onPartRender: () => undefined;
-  onInnerRender: () => undefined;
+  onPartRender: () => void;
+  onInnerRender: () => void;
 }>();
 </script>
 

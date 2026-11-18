@@ -12,8 +12,8 @@ defineProps<{
   portalProps?: Record<string, unknown>;
   hasRenderSlot: boolean;
   active: boolean;
-  onOuterRender: () => undefined;
-  onInnerRender: () => undefined;
+  onOuterRender: () => void;
+  onInnerRender: () => void;
 }>();
 </script>
 

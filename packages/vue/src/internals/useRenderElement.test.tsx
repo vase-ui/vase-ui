@@ -289,6 +289,29 @@ describe('useRenderElement', () => {
   });
 
   describe('prop: render', () => {
+    it.runIf(isVaporApp)(
+      'calls a virtual DOM slot once per render of its bindings in a Vapor part',
+      async () => {
+        const title = shallowRef('First');
+        const report = vi.fn();
+        const slot = vi.fn(({ props }: { props: HTMLProps }) => (
+          <span {...props}>{props.title}</span>
+        ));
+        const { container } = await render(() => (
+          <VaporPart report={report} title={title.value} v-slots={{ render: slot }} />
+        ));
+        const element = container.querySelector('span');
+        expect(slot).toHaveBeenCalledTimes(1);
+        expect(element).toHaveTextContent('First');
+        expect(report).toHaveBeenCalledExactlyOnceWith(element);
+
+        title.value = 'Second';
+        await nextTick();
+        expect(slot).toHaveBeenCalledTimes(2);
+        expect(element).toHaveTextContent('Second');
+      },
+    );
+
     it('accepts render as a function that receives props and state', async () => {
       const renderCalls: [HTMLProps, ActiveState][] = [];
       const renderFn: ComponentRenderFn<HTMLProps, ActiveState> = ({ props, state }) => {
@@ -485,15 +508,10 @@ describe('useRenderElement', () => {
   });
 
   describe('EMPTY_OBJECT mutation safety', () => {
-    // This test verifies that the hook doesn't attempt to mutate EMPTY_OBJECT
-    // which would throw a TypeError in strict mode since it's frozen.
     const MinimalComponent = defineComponent(
       (props: VaseUIComponentProps<Record<string, never>>, { slots, expose }) => {
-        // Using EMPTY_OBJECT as state and no additional props simulates the edge case
-        // where mergeObjects might return undefined and fall back to EMPTY_OBJECT
         const { element, elementProps } = useRenderElement('div', props, {
           state: EMPTY_OBJECT,
-          // No props passed - relies on stateProps which will be {}
         });
         expose({ element });
         return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
