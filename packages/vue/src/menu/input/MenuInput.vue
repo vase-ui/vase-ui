@@ -31,6 +31,7 @@ export interface MenuInputProps
 </script>
 
 <script setup lang="ts">
+import { watch } from 'vue';
 import {
   addInputFocusListeners,
   useFilterDropdownInput,
@@ -76,19 +77,9 @@ const input = useFilterDropdownInput({
   },
 });
 
-let removeFocusListeners: (() => void) | undefined;
-
 // A change of the element covers the removal of the input without a blur event.
 function setInputFocused(element: HTMLInputElement | null) {
-  removeFocusListeners?.();
   store.set('inputFocused', element !== null && activeElement(ownerDocument(element)) === element);
-  removeFocusListeners =
-    element === null
-      ? undefined
-      : addInputFocusListeners(element, {
-          focusin: () => store.set('inputFocused', true),
-          focusout: () => store.set('inputFocused', false),
-        });
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
@@ -96,6 +87,21 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   ref: [input.ref, setInputFocused],
   props: (attrs) => input.props(mergeProps<'input'>({ onKeydown: handleKeydown }, attrs)),
 });
+
+watch(
+  element,
+  (input, _previous, onCleanup) => {
+    if (input) {
+      onCleanup(
+        addInputFocusListeners(input, {
+          focusin: () => store.set('inputFocused', true),
+          focusout: () => store.set('inputFocused', false),
+        }),
+      );
+    }
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element });
 </script>

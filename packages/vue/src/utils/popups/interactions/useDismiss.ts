@@ -1,5 +1,5 @@
 import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
-import type { InjectionKey, MaybeRefOrGetter } from 'vue';
+import type { InjectionKey, MaybeRefOrGetter, WatchSource } from 'vue';
 import {
   getComputedStyle,
   getParentNode,
@@ -26,6 +26,7 @@ import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeChildren } from '../tree/nodes';
 import type { DismissElementProps, PopupInteractionStore } from '../types';
+import { useDomEffect } from '../useDomEffect';
 
 type PressType = 'intentional' | 'sloppy';
 type PressTypes = PressType | { mouse: PressType; touch: PressType };
@@ -279,7 +280,7 @@ export function useDismiss(
 
   const cancelDismissOnEndTimeout = useTimeout();
   const clearInsideComponentTreeTimeout = useTimeout();
-  // Outlives the runs of `update`, so a pending reset can't leave `compositionEndPending` stuck.
+  // A change of document listeners must let a pending composition reset finish.
   const compositionTimeout = useTimeout();
   const preventedPressSuppressionTimeout = useTimeout();
 
@@ -336,20 +337,35 @@ export function useDismiss(
   // that popup before the popup above checks the press.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
-  function clearInsideComponentTree() {
-    clearInsideComponentTreeTimeout.clear();
-    if (getStore().context.insideComponentTree) {
-      getStore().context.insideComponentTree = false;
+  let markedStore: PopupInteractionStore | undefined;
+  function clearInsideComponentTree(store = getStore()) {
+    if (markedStore === store) {
+      clearInsideComponentTreeTimeout.clear();
+      markedStore = undefined;
+    }
+    store.context.insideComponentTree &&= false;
+  }
+
+  // A press can reach a new store before the post-flush watcher subscribes to it.
+  function clearMarkedStore() {
+    if (markedStore) {
+      clearInsideComponentTree(markedStore);
     }
   }
+  onScopeDispose(clearMarkedStore);
 
   function markInsideComponentTree() {
     parent?.markInsideComponentTree();
-    if (!isEnabled() || !getStore().select('open')) {
+    const store = getStore();
+    if (!isEnabled() || !store.select('open')) {
       return;
     }
-    getStore().context.insideComponentTree = true;
-    clearInsideComponentTreeTimeout.start(0, clearInsideComponentTree);
+    if (markedStore !== store) {
+      clearMarkedStore();
+    }
+    markedStore = store;
+    store.context.insideComponentTree = true;
+    clearInsideComponentTreeTimeout.start(0, clearMarkedStore);
   }
 
   // The portal of this popup can hold its backdrop and its other parts outside the popup element.
@@ -527,7 +543,7 @@ export function useDismiss(
   watch(() => getStore().select('open'), takeLayer);
 
   // A close and an open in one flush never show `open === false` to a watcher, so only
-  // `openchange` can observe that session boundary. `update` covers the other changes.
+  // `openchange` can observe that session boundary. The listener effect covers the other changes.
   function handleOpenChange(details: FloatingUIOpenChangeDetails) {
     // Only the closing half ends the session: `setOpen(true)` on an already-open
     // element (hovering an inactive trigger) must not drop a press mid-gesture.
@@ -546,47 +562,20 @@ export function useDismiss(
     compositionEndPending = false;
     currentPointerType = '';
     touchState = null;
+    cancelDismissOnEndTimeout.clear();
+    compositionTimeout.clear();
   }
 
-  // The store whose `openchange` event the composable listens to.
-  let listenedStore: PopupInteractionStore | undefined;
-
-  function listenToStore() {
-    const nextStore = getStore();
-    if (nextStore === listenedStore) {
-      return;
-    }
-
-    if (listenedStore) {
-      listenedStore.context.events.off('openchange', handleOpenChange);
-      // After the move, no listener of this composable clears the marker of the last store. A set
-      // marker makes the next outside press of that store count as inside.
-      listenedStore.context.insideComponentTree &&= false;
-    }
-    listenedStore = nextStore;
-    nextStore.context.events.on('openchange', handleOpenChange);
-  }
-
-  const { isHeld } = useKeepAliveState();
-  let cleanup: (() => void) | undefined;
-
-  function update() {
-    cleanup?.();
-    cleanup = undefined;
-    listenToStore();
-
-    const open = getStore().select('open');
-    if (isHeld.value || !open || !isEnabled()) {
-      // Reset here, not in the cleanup, which also runs when a source changes mid-gesture.
-      if (!open || isHeld.value) {
+  function listenToDocument() {
+    const store = getStore();
+    const open = store.select('open');
+    if (!open || !isEnabled()) {
+      // A source can change mid-gesture. Only a close or a hold ends the session.
+      if (!open) {
         resetSession();
-        cancelDismissOnEndTimeout.clear();
-        compositionTimeout.clear();
       }
-      // The marker is not cleared in the cleanup of the listeners, which can run mid-press when
-      // a source changes. In a closed shadow root, the marker is the only inside-press signal.
-      cleanup = clearInsideComponentTree;
-      return;
+      // A closed shadow root has no other inside-press signal. Keep the marker during a press.
+      return () => clearInsideComponentTree(store);
     }
 
     const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = getBubbles();
@@ -1066,6 +1055,7 @@ export function useDismiss(
     // bubble. A capture listener for `load` on each document finds a frame that loads while the
     // popup is open.
     function listenInFrames() {
+      // eslint-disable-next-line no-restricted-syntax -- This effect replaces its frame listeners when a frame loads.
       let stopListening = NOOP;
 
       function listen() {
@@ -1118,7 +1108,7 @@ export function useDismiss(
       listenInFrames(),
     );
 
-    cleanup = () => {
+    return () => {
       unsubscribe();
       preventedPressSuppressionTimeout.clear();
       resetPressStartState();
@@ -1126,39 +1116,63 @@ export function useDismiss(
     };
   }
 
-  watch(
-    [
-      getStore,
-      () => getStore().select('open'),
-      isEnabled,
-      () => ownerDocument(getStore().select('positionerElement')),
-      isEscapeKeyEnabled,
-      () => getBubbles().escapeKey,
-      () => getBubbles().outsidePress,
-      tree,
-    ],
-    update,
-    { flush: 'post' },
-  );
-
+  const { isHeld } = useKeepAliveState();
   const getPositionerElement = () => getStore().select('positionerElement');
-  let removePositionerBelow: (() => void) | undefined;
+  const listenerSources: [typeof getStore, ...WatchSource[]] = [
+    getStore,
+    () => getStore().select('open'),
+    isEnabled,
+    () => ownerDocument(getStore().select('positionerElement')),
+    isEscapeKeyEnabled,
+    () => getBubbles().escapeKey,
+    () => getBubbles().outsidePress,
+    tree,
+  ];
 
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
   onMounted(() => {
-    getPositionerElementGetters().add(getPositionerElement);
-    removePositionerBelow = parent?.addElementBelow(getPositionerElement);
-    update();
+    const getters = getPositionerElementGetters();
+    getters.add(getPositionerElement);
+    onScopeDispose(() => getters.delete(getPositionerElement));
+    if (parent) {
+      onScopeDispose(parent.addElementBelow(getPositionerElement));
+    }
+    watch(
+      getStore,
+      (store, _previous, onCleanup) => {
+        store.context.events.on('openchange', handleOpenChange);
+        onCleanup(() => {
+          store.context.events.off('openchange', handleOpenChange);
+          // A marker left on the previous store would count its next outside press as inside.
+          store.context.insideComponentTree &&= false;
+        });
+      },
+      { immediate: true, flush: 'post' },
+    );
+    // The hold ends the gesture. Its inside marker lasts until the next update or activation.
+    watch(
+      () => (isHeld.value ? getStore() : null),
+      (heldStore, _previous, onCleanup) => {
+        if (heldStore) {
+          resetSession();
+          onCleanup(() => clearInsideComponentTree(heldStore));
+        }
+      },
+      { immediate: true, flush: 'sync' },
+    );
+    watch(
+      listenerSources,
+      ([store]) => {
+        if (isHeld.value) {
+          clearInsideComponentTree(store);
+          resetSession();
+        }
+      },
+      { flush: 'post' },
+    );
   });
-  watch(isHeld, update, { flush: 'sync' });
-  onScopeDispose(() => {
-    removePositionerBelow?.();
-    getPositionerElementGetters().delete(getPositionerElement);
-    listenedStore?.context.events.off('openchange', handleOpenChange);
-    cleanup?.();
-    clearInsideComponentTree();
-  });
+  useDomEffect(listenerSources, listenToDocument, isHeld);
 
   const reference: DismissElementProps['reference'] = {
     onKeydown: closeOnEscapeKeyDown,

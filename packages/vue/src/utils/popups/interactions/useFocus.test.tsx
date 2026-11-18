@@ -8,6 +8,7 @@ import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEv
 import { REASONS } from '../../../internals/reasons';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createAttribute } from '../createAttribute';
+import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { useFocus } from './useFocus';
 import type { UseFocusProps } from './useFocus';
@@ -46,6 +47,28 @@ describe('useFocus', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('opens on focus after Escape closes the previous store', async () => {
+    const changed = shallowRef(false);
+    const opened = vi.fn();
+    let previous!: FloatingRootStore;
+    const App = defineComponent(() => {
+      const input = shallowRef<HTMLInputElement | null>(null);
+      previous = useFloatingRootStore({ elements: { anchor: input } });
+      const next = useFloatingRootStore({ elements: { anchor: input }, onOpenChange: opened });
+      const handlers = useFocus(() => (changed.value ? next : previous));
+      return () => <input ref={input} {...handlers} />;
+    });
+    await render(<App />);
+    changed.value = true;
+    await flushMicrotasks();
+    previous.context.events.emit('openchange', { open: false, reason: REASONS.escapeKey });
+    screen.getByRole('textbox').focus();
+    expect(opened).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({ reason: REASONS.triggerFocus }),
+    );
   });
 
   it('does not reopen when focus is restored after leaving the tab', async () => {

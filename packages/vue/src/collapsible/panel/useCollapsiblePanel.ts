@@ -1,4 +1,13 @@
-import { computed, nextTick, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onScopeDispose,
+  reactive,
+  shallowRef,
+  toValue,
+  watch,
+} from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -11,6 +20,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { isFiniteAnimation } from '../../utils/getFiniteAnimations';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { CollapsibleRootChangeEventDetails } from '../root/CollapsibleRoot.vue';
 import * as CollapsiblePanelDataAttributes from './CollapsiblePanelDataAttributes';
 
@@ -78,11 +88,12 @@ export function useCollapsiblePanel(
   // Some open paths skip the motion, but the status of the root changes in a later frame. The
   // panel stays idle until then, so its data attributes and its size match the open state.
   const forcePanelIdle = shallowRef(false);
+  // eslint-disable-next-line no-restricted-syntax -- The next panel measurement must restore the temporary style first.
   let pendingTemporaryStyleRestore: (() => void) | null = null;
   // Vue writes each key of the rendered style again on each render. A temporary inline style that
   // the code writes to the DOM is also in this record. The part merges the record after the style
   // of the consumer, so a render does not put the value of the consumer back.
-  const temporaryStyle = shallowRef<TemporaryStyle | undefined>();
+  const temporaryStyle = reactive<TemporaryStyle>({});
 
   const runOnceCloseAnimationsFinish = useAnimationsFinished(() => panel);
 
@@ -119,7 +130,7 @@ export function useCollapsiblePanel(
   }
 
   const recordTemporaryStyle: RecordTemporaryStyle = (declarations) => {
-    temporaryStyle.value = { ...temporaryStyle.value, ...declarations };
+    Object.assign(temporaryStyle, declarations);
 
     let isRecorded = true;
     return () => {
@@ -128,11 +139,9 @@ export function useCollapsiblePanel(
       }
       isRecorded = false;
 
-      const remaining = { ...temporaryStyle.value };
       for (const property of Object.keys(declarations)) {
-        delete remaining[property];
+        delete temporaryStyle[property];
       }
-      temporaryStyle.value = Object.keys(remaining).length > 0 ? remaining : undefined;
     };
   };
 
@@ -160,11 +169,7 @@ export function useCollapsiblePanel(
     });
   }
 
-  // `KeepAlive` keeps the state of a held part. The effects below do not run for a held panel,
-  // because the element is out of the document and its computed style is empty.
   const { isHeld } = useKeepAliveState();
-  let cleanupSizeEffect: (() => void) | undefined;
-  let cleanupCloseEffect: (() => void) | undefined;
 
   // If `KeepAlive` deactivates an open panel with a keyframe animation, the next reveal must not
   // play the open animation again.
@@ -184,14 +189,7 @@ export function useCollapsiblePanel(
     forcePanelIdle.value = false;
   });
 
-  function runSizeEffect() {
-    cleanupSizeEffect?.();
-    cleanupSizeEffect = undefined;
-
-    if (isHeld.value) {
-      return;
-    }
-
+  function runSizeEffect(): (() => void) | void {
     const open = isOpen();
     const mounted = isMounted();
     const transitionStatus = getTransitionStatus();
@@ -246,8 +244,7 @@ export function useCollapsiblePanel(
         setDimensions(getDimensions(panel));
 
         if (!skipNextOpen) {
-          cleanupSizeEffect = restoreLayoutStyles;
-          return;
+          return restoreLayoutStyles;
         }
 
         const restoreTransitionDuration = setTemporaryStyle(
@@ -258,8 +255,7 @@ export function useCollapsiblePanel(
         );
         setPendingTemporaryStyleRestore(restoreTransitionDuration);
         forcePanelIdle.value = true;
-        cleanupSizeEffect = restoreLayoutStyles;
-        return;
+        return restoreLayoutStyles;
       }
 
       setDimensions(getDimensions(panel));
@@ -325,10 +321,12 @@ export function useCollapsiblePanel(
     }
   }
 
-  onMounted(runSizeEffect);
-  watch([isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus], runSizeEffect, {
-    flush: 'post',
-  });
+  // A held panel is outside the document, so its computed style is empty.
+  useDomEffect(
+    [isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus],
+    runSizeEffect,
+    isHeld,
+  );
 
   useOpenChangeComplete({
     enabled: () => isOpen() && isMounted() && panelTransitionStatus.value === 'idle',
@@ -365,13 +363,6 @@ export function useCollapsiblePanel(
   // the animations.
   // See https://github.com/mui/base-ui/issues/3099
   function runCloseEffect() {
-    cleanupCloseEffect?.();
-    cleanupCloseEffect = undefined;
-
-    if (isHeld.value) {
-      return;
-    }
-
     if (isOpen() || !isMounted() || panelTransitionStatus.value !== 'ending') {
       return;
     }
@@ -389,14 +380,13 @@ export function useCollapsiblePanel(
       runOnceCloseAnimationsFinish(completeClose, abortController.signal);
     });
 
-    cleanupCloseEffect = () => {
+    return () => {
       AnimationFrame.cancel(endingStyleFrame);
       abortController.abort();
     };
   }
 
-  onMounted(runCloseEffect);
-  watch([isMounted, isOpen, panelTransitionStatus], runCloseEffect, { flush: 'post' });
+  useDomEffect([isMounted, isOpen, panelTransitionStatus], runCloseEffect, isHeld);
 
   // The close effect reads the animations of the panel two frames after the ending style. A late
   // frame can end a keyframe exit before that read, and the panel then has its open style again.
@@ -523,8 +513,6 @@ export function useCollapsiblePanel(
     isHeld,
     (held) => {
       if (!held) {
-        runSizeEffect();
-        runCloseEffect();
         // The browser removes `hidden` in the task of `beforematch`, after the listeners. A hold
         // in that task comes before that removal, so the revert of a reveal that the hold stopped
         // runs here and not at the hold.
@@ -532,10 +520,6 @@ export function useCollapsiblePanel(
         return;
       }
 
-      cleanupSizeEffect?.();
-      cleanupSizeEffect = undefined;
-      cleanupCloseEffect?.();
-      cleanupCloseEffect = undefined;
       markActivityResumeAnimationSuppressed();
       restorePendingTemporaryStyle();
     },
@@ -575,11 +559,7 @@ export function useCollapsiblePanel(
     { flush: 'sync' },
   );
 
-  onScopeDispose(() => {
-    cleanupSizeEffect?.();
-    cleanupCloseEffect?.();
-    restorePendingTemporaryStyle();
-  });
+  onScopeDispose(restorePendingTemporaryStyle);
 
   const props = computed(() => ({
     ...(shouldPersistHiddenTransitionStyles.value
@@ -603,7 +583,9 @@ export function useCollapsiblePanel(
     shouldRender: computed(
       () => toValue(parameters.keepMounted) || isHiddenUntilFound() || isMounted() || isOpen(),
     ),
-    temporaryStyle: computed(() => temporaryStyle.value),
+    temporaryStyle: computed(() =>
+      Object.keys(temporaryStyle).length > 0 ? { ...temporaryStyle } : undefined,
+    ),
     transitionStatus: panelTransitionStatus,
     width: computed(() => renderedDimensions.value.width),
   };

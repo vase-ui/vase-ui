@@ -362,6 +362,7 @@ export function useListNavigation(
   let previousOpen = store.select('open');
   let forceSyncFocus = false;
   let forceScrollIntoView = false;
+  // eslint-disable-next-line no-restricted-syntax -- A blur or a hold cancels the queued focus request.
   let cancelQueuedFocus: (() => void) | null = null;
 
   const focusFrame = useAnimationFrame();

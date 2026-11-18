@@ -570,6 +570,7 @@ export function useAnchorPositioning(
     };
   };
 
+  // eslint-disable-next-line no-restricted-syntax -- The mount callback of `useFloating` owns the auto-update subscription.
   let restartAutoUpdate: (() => void) | undefined;
 
   // `useFloating` computes a position in a sync watcher for each option that changes. One write
@@ -610,7 +611,8 @@ export function useAnchorPositioning(
     whileElementsMounted(referenceElement, floatingElement, updatePosition) {
       const start = () =>
         autoUpdate(referenceElement, floatingElement, updatePosition, getAutoUpdateOptions());
-      let stop = start();
+      // eslint-disable-next-line no-restricted-syntax -- The same mount callback must stop the latest auto-update after an option change.
+      let stop: () => void = start();
       restartAutoUpdate = () => {
         stop();
         stop = start();

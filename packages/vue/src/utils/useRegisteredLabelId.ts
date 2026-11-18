@@ -1,34 +1,28 @@
-import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { given } from '../internals/givenAttributes';
+import { createIdRegistry } from '../internals/labelable-provider/createIdRegistry';
+import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { useReferencedId } from '../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../internals/useVaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';
 
-export type LabelIdSetter = (
-  next: string | undefined | ((current: string | undefined) => string | undefined),
-) => void;
-
-interface ShownLabel {
-  id: () => string | undefined;
-  element: () => Element | null | undefined;
+interface RootLabel {
+  id: string;
+  element: Element | null | undefined;
 }
 
 /** What a label needs from its root. `useLabelId` makes it. */
 export interface LabelIdRoot {
-  setLabelId: LabelIdSetter;
+  /** Registers the id and the element of a label with the root. */
+  registerLabel: RegisterId<RootLabel>;
   defaultLabelId: ComputedRef<string>;
   isMounted: () => boolean;
-  /**
-   * Queues a label that `KeepAlive` shows. The root names the last queued label in the document,
-   * one time for each flush.
-   */
-  show: (label: ShownLabel) => void;
 }
 
 export interface UseLabelIdReturnValue {
-  /** The id of the label that the root has now. */
+  /** The id of the last label in the document that has one. */
   labelId: ComputedRef<string | undefined>;
   labelRoot: LabelIdRoot;
   /**
@@ -39,7 +33,8 @@ export interface UseLabelIdReturnValue {
 }
 
 /**
- * The root of a part with a label calls it.
+ * The root of a part with a label calls it. The root names the last label in the document that has
+ * an id. Before a label has an element, it counts in the order of the registrations.
  *
  * A server writes the attributes of the root before the `setup` of a label inside the root. A
  * deferral of the root moves its attributes and that `setup` together, so the label cannot register
@@ -53,62 +48,41 @@ export interface UseLabelIdReturnValue {
 export function useLabelId(): UseLabelIdReturnValue {
   const defaultLabelId = useVaseUiId();
   const isHydrating = useIsHydrating();
-  const registeredId = shallowRef<string | undefined>();
+  const { ids: labels, registerId: registerLabel } = createIdRegistry<RootLabel>();
   let isMounted = false;
 
   onMounted(() => {
     isMounted = true;
   });
 
-  const setLabelId: LabelIdSetter = (next) => {
-    registeredId.value = typeof next === 'function' ? next(registeredId.value) : next;
-  };
-
-  const shownLabels = new Set<ShownLabel>();
-  const showCount = shallowRef(0);
-
-  // React runs the effects of a branch that `Activity` shows in tree order, so the last label of
-  // the branch wins. `KeepAlive` runs the hooks from the last part to the first part, and a label
-  // that mounted later can be before the other labels.
-  watch(showCount, () => {
-    let lastElement: Element | undefined;
-    let lastId: string | undefined;
-    for (const label of shownLabels) {
-      const element = label.element();
-      const id = label.id();
+  const labelId = computed(() => {
+    let last: RootLabel | undefined;
+    for (const label of labels.value) {
       if (
-        element &&
-        id !== undefined &&
-        (!lastElement ||
-          lastElement.compareDocumentPosition(element) & element.DOCUMENT_POSITION_FOLLOWING)
+        !last?.element ||
+        !label.element ||
+        last.element.compareDocumentPosition(label.element) &
+          label.element.DOCUMENT_POSITION_FOLLOWING
       ) {
-        lastElement = element;
-        lastId = id;
+        last = label;
       }
     }
-    shownLabels.clear();
-    if (lastId !== undefined) {
-      registeredId.value = lastId;
-    }
+    return last?.id;
   });
 
   function getAriaLabelledBy(attrs: Record<string, unknown>) {
-    if (registeredId.value !== undefined || !isHydrating.value || hasAriaLabel(attrs)) {
-      return registeredId.value;
+    if (labelId.value !== undefined || !isHydrating.value || hasAriaLabel(attrs)) {
+      return labelId.value;
     }
     return defaultLabelId.value;
   }
 
   return {
-    labelId: computed(() => registeredId.value),
+    labelId,
     labelRoot: {
-      setLabelId,
+      registerLabel,
       defaultLabelId,
       isMounted: () => isMounted,
-      show(label) {
-        shownLabels.add(label);
-        showCount.value += 1;
-      },
     },
     getAriaLabelledBy,
   };
@@ -120,12 +94,15 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
 }
 
 /**
- * The label calls it. It gives the id of the label to the root.
- * A label of the first render of the root gives the id that it binds, for the server HTML and the
- * hydration. From the mount on, the label gives the `id` that `element` has now (see
- * `useReferencedId`), and no id while that `id` is empty.
- * A label that changes its id replaces only its own id in the root.
- * When `KeepAlive` holds the label, the root does not have the id until the activation.
+ * The label calls it in `setup`. It registers the label with the root.
+ *
+ * While the root is not mounted, the label registers in `setup`, for the server HTML and the
+ * hydration. After the root is mounted, the label registers in `onMounted`. Before that hook, the
+ * label has no element, so the root cannot read its place in the document.
+ *
+ * From the mount on, the label gives the `id` that `element` has now (see `useReferencedId`). It
+ * gives no id while `KeepAlive` holds it or while that `id` is empty.
+ *
  * @param idProp The `id` of the consumer. It wins over `defaultLabelId` of the root.
  * @param root The `labelRoot` that `useLabelId` returns.
  * @param element The element of the label.
@@ -136,44 +113,26 @@ export function useRegisteredLabelId(
   root: LabelIdRoot,
   element: MaybeRefOrGetter<Element | null | undefined>,
 ): ComputedRef<string> {
-  const { setLabelId } = root;
   const id = computed(() => given('id', toValue(idProp)) ?? root.defaultLabelId.value);
-  const { isHeld, shown } = useKeepAliveState();
+  const { isHeld } = useKeepAliveState();
   const referencedId = useReferencedId(() => id.value, element);
+  const source = Symbol();
 
-  // The server HTML and the hydration need the id from the first render of the root.
-  const writesInSetup = !root.isMounted();
-  if (writesInSetup) {
-    setLabelId(id.value);
+  const register = () => {
+    root.registerLabel(source, () => {
+      const referenced = isHeld.value ? undefined : referencedId.value;
+      return referenced === undefined ? undefined : { id: referenced, element: toValue(element) };
+    });
+  };
+
+  if (root.isMounted()) {
+    onMounted(register);
+  } else {
+    register();
   }
 
-  onMounted(() => {
-    const mountedId = referencedId.value;
-    if (!writesInSetup && !isHeld.value && mountedId !== undefined) {
-      setLabelId(mountedId);
-    }
-  });
-
-  // The root picks one label for each flush. With the default flush, the pick would run between
-  // the watchers of two labels.
-  watch(
-    shown,
-    () => {
-      root.show({ id: () => referencedId.value, element: () => toValue(element) });
-    },
-    { flush: 'sync' },
-  );
-
-  watch([referencedId, isHeld], ([nextId, held], [previousId, wasHeld]) => {
-    if (held) {
-      setLabelId((current) => (current === previousId ? undefined : current));
-    } else if (!wasHeld) {
-      setLabelId((current) => (current === previousId ? nextId : current));
-    }
-  });
-
   onScopeDispose(() => {
-    setLabelId((current) => (current === referencedId.value ? undefined : current));
+    root.registerLabel(source, undefined);
   });
 
   return id;

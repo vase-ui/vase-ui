@@ -70,11 +70,11 @@ function takeSharedStyle(
  */
 export function useStyleDisableScrollbar(element: MaybeRefOrGetter<Element | null>): void {
   const csp = useCSPContext();
+  // eslint-disable-next-line no-restricted-syntax -- Take the new use before the previous release so the style count stays above zero.
   let giveBack: (() => void) | undefined;
 
   function update() {
     const target = toValue(element);
-    // Take the new use before the old use goes, so that the count does not go through zero.
     const next =
       target && !csp.value.disableStyleElements
         ? followRootNode(target, (root) =>

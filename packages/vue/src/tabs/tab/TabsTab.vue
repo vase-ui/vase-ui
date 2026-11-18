@@ -159,15 +159,6 @@ const { getButtonProps, buttonRef } = useButton({
   focusableWhenDisabled: true,
 });
 
-let unobserveTabElement: (() => void) | null = null;
-
-// The ref callback and not an effect: the observer follows the element when `as` or the `#render`
-// slot changes the element.
-function observeTabElement(element: HTMLElement | null) {
-  unobserveTabElement?.();
-  unobserveTabElement = element ? registerTabResizeObserverElement(element) : null;
-}
-
 let isNavigating = false;
 
 // Keeps the highlighted item in sync with the active tab when the value changes outside the list.
@@ -272,7 +263,7 @@ const state = computed<TabsTabState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
-  ref: [compositeRef, buttonRef, observeTabElement],
+  ref: [compositeRef, buttonRef],
   props: (attrs) => [
     compositeProps.value,
     {
@@ -293,6 +284,17 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   ],
   stateAttributesMapping: tabsStateAttributesMapping,
 });
+
+// The observer follows the element when `as` or the `#render` slot changes it.
+watch(
+  element,
+  (tab, _previous, onCleanup) => {
+    if (tab) {
+      onCleanup(registerTabResizeObserverElement(tab));
+    }
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element });
 </script>

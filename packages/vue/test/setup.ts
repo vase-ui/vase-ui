@@ -47,6 +47,35 @@ if (typeof document !== 'undefined') {
     { capture: true },
   );
 
+  // A Firefox validation popup can take real presses in the next test. Firefox listens for blur
+  // after it focuses the invalid control. It misses the blur if the control redirects focus, as a
+  // radio's hidden input does. Removing a focused control can also leave the popup open.
+  // A native invalid event in a shadow root or a nested frame does not reach this window.
+  let hadInvalidEvent = false;
+  if (server.browser === 'firefox') {
+    window.addEventListener(
+      'invalid',
+      (event) => {
+        if (event.isTrusted) {
+          hadInvalidEvent = true;
+        }
+      },
+      { capture: true },
+    );
+  }
+
+  // Firefox follows the new control, so its blur closes even a popup that has yet to appear.
+  function closeValidationPopup() {
+    const input = document.createElement('input');
+    input.required = true;
+    document.body.append(input);
+    input.reportValidity();
+    input.blur();
+    input.remove();
+    // reportValidity() fired another trusted invalid event.
+    hadInvalidEvent = false;
+  }
+
   // Whether a browser gives a pointer lock to the page of a test depends on the engine and on the
   // platform. With a lock, Firefox puts a second pointer in the page. The move below does not take
   // that pointer off the page, and it gives hover events to each later test file of the page.
@@ -111,14 +140,17 @@ if (typeof document !== 'undefined') {
   // delays a timer by 4 ms or more when timers nest more than five deep, so a delayed timer that
   // the test set in an earlier task can run in the next test. Vitest runs the `onTestFinished`
   // hooks after the `afterEach` hooks and in reverse order. This hook is the second that a test
-  // registers, after the hook of `failOnReportedMessages`. The wait for the commands, the pointer
-  // move and the wait for a timer then run after each unmount and before the check of the
-  // messages. A command can put the pointer in the page, so the move comes after the wait for the
-  // commands.
+  // registers, after the hook of `failOnReportedMessages`. The wait for the commands, the close of
+  // the validation popup, the pointer move and the wait for a timer then run after each unmount
+  // and before the check of the messages. A command can put the pointer in the page, so the move
+  // comes after the wait for the commands.
   beforeEach(() => {
     onTestFinished(async () => {
       endedTestCount += 1;
       await Promise.allSettled(runningCommands);
+      if (hadInvalidEvent) {
+        closeValidationPopup();
+      }
       if (isPointerInPage) {
         isPointerInPage = false;
         // A point outside the page.

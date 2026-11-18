@@ -1,7 +1,6 @@
-import { onScopeDispose, toValue, watch } from 'vue';
+import { onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
-import { NOOP } from '../common/empty';
 import { ownerWindow } from '../common/owner';
 import { useInterval } from '../common/useInterval';
 import { useTimeout } from '../common/useTimeout';
@@ -91,8 +90,42 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
   let isTouchingButton = false;
   let ignoreClick = false;
   let pointerType = '';
-  let unsubscribeFromGlobalContextMenu: () => void = NOOP;
-  let unsubscribeFromGlobalPointerUp: () => void = NOOP;
+  const autoChangeWindow = shallowRef<Window | null>(null);
+  const pressWindow = shallowRef<Window | null>(null);
+
+  // A touch just outside the element can open the context menu.
+  watch(
+    autoChangeWindow,
+    (win, _previous, onCleanup) => {
+      if (win) {
+        onCleanup(addEventListener(win, 'contextmenu', (event) => event.preventDefault()));
+      }
+    },
+    { flush: 'sync' },
+  );
+
+  // `stopAutoChange` keeps the release listener. A hold at a boundary still calls `onStop`.
+  watch(
+    pressWindow,
+    (win, _previous, onCleanup) => {
+      if (win) {
+        onCleanup(
+          addEventListener(
+            win,
+            'pointerup',
+            (event) => {
+              pressWindow.value = null;
+              isPressed = false;
+              stopAutoChange();
+              onStop?.(event);
+            },
+            { once: true },
+          ),
+        );
+      }
+    },
+    { flush: 'sync' },
+  );
 
   function isDisabled() {
     return toValue(parameters.disabled);
@@ -102,7 +135,7 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
     intentionalTouchCheckTimeout.clear();
     startTickTimeout.clear();
     tickInterval.clear();
-    unsubscribeFromGlobalContextMenu();
+    autoChangeWindow.value = null;
     movesAfterTouch = 0;
   }
 
@@ -116,25 +149,8 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
 
     const win = ownerWindow(element);
 
-    // A touch that is slightly outside the element can still open the context menu.
-    unsubscribeFromGlobalContextMenu = addEventListener(win, 'contextmenu', (event) => {
-      event.preventDefault();
-    });
-
-    // `stopAutoChange` keeps this listener. A hold that stops at a boundary, when a tick returns
-    // `false`, then still calls `onStop` on release. A new listener replaces the old one, so a
-    // `mouseleave` and `mouseenter` during a hold do not call `onStop` more than once.
-    unsubscribeFromGlobalPointerUp();
-    unsubscribeFromGlobalPointerUp = addEventListener(
-      win,
-      'pointerup',
-      (event) => {
-        isPressed = false;
-        stopAutoChange();
-        onStop?.(event);
-      },
-      { once: true },
-    );
+    autoChangeWindow.value = win;
+    pressWindow.value = win;
 
     if (!tick(triggerNativeEvent)) {
       stopAutoChange();
@@ -153,7 +169,7 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
   function release() {
     isPressed = false;
     stopAutoChange();
-    unsubscribeFromGlobalPointerUp();
+    pressWindow.value = null;
   }
 
   onScopeDispose(release);

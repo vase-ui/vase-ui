@@ -122,6 +122,7 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   // `KeepAlive` takes the elements out of the document, where they have no layout. A measurement
   // then gives a size of 0.
   const { isHeld } = useKeepAliveState();
+  // eslint-disable-next-line no-restricted-syntax -- The mount and the post flush can see the same elements and must share one measurement.
   let cleanup: (() => void) | undefined;
 
   function stop() {

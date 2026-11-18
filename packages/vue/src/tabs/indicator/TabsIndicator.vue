@@ -220,16 +220,12 @@ const isHydrating = useIsHydrating();
 // The list calls the listener when its size or the size of a tab changes. The measurement reads the
 // count, so each call measures again.
 const updateCount = shallowRef(0);
-let unregisterUpdateListener: (() => void) | undefined;
-
 onMounted(() => {
-  unregisterUpdateListener = registerIndicatorUpdateListener(() => {
-    updateCount.value += 1;
-  });
-});
-
-onScopeDispose(() => {
-  unregisterUpdateListener?.();
+  onScopeDispose(
+    registerIndicatorUpdateListener(() => {
+      updateCount.value += 1;
+    }),
+  );
 });
 
 const measurement = computed<ActiveTabMeasurement | null>(() => {

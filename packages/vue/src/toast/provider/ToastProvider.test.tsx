@@ -246,6 +246,27 @@ describe('<Toast.Provider />', () => {
       return { probe, rendered };
     }
 
+    it('resumes the timer before a nested provider subscribes to its manager again', async () => {
+      const manager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      const { rendered } = renderKept(manager, visible);
+      await rendered;
+      const onClose = vi.fn();
+      manager.add({ title: 'Saved', timeout: 1000, onClose });
+      visible.value = false;
+      await nextTick();
+
+      const subscribe = manager[' subscribe'];
+      vi.spyOn(manager, ' subscribe').mockImplementationOnce((listener) => {
+        vi.advanceTimersByTime(1000);
+        return subscribe(listener);
+      });
+      visible.value = true;
+      await nextTick();
+
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+
     it('does not listen to the manager while it is deactivated, and listens again after it', async () => {
       const manager = Toast.createToastManager();
       const visible = shallowRef(true);

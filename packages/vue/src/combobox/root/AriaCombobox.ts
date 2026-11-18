@@ -1077,23 +1077,22 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // frame after the press, and the press can end before that frame. Thus the next press clears the
   // event, not the release. The input opens its popup in the handler of its press, and a bubble
   // listener on the window then gets that press too. Thus the listener is in the capture phase.
-  let removeOpenPressListener: (() => void) | null = null;
+  watch(
+    openPressRef,
+    (press, _previous, onCleanup) => {
+      if (press) {
+        onCleanup(
+          addEventListener(ownerWindow(getTarget(press)), 'mousedown', clearOpenPress, {
+            capture: true,
+          }),
+        );
+      }
+    },
+    { flush: 'sync' },
+  );
 
   function clearOpenPress() {
-    removeOpenPressListener?.();
-    removeOpenPressListener = null;
     openPressRef.value = null;
-  }
-
-  function keepOpenPress(press: MouseEvent) {
-    clearOpenPress();
-    openPressRef.value = press;
-    removeOpenPressListener = addEventListener(
-      ownerWindow(getTarget(press)),
-      'mousedown',
-      clearOpenPress,
-      { capture: true },
-    );
   }
 
   onScopeDispose(clearOpenPress);
@@ -1139,7 +1138,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
 
     if (nextOpen && eventDetails.event?.type === 'mousedown') {
-      keepOpenPress(eventDetails.event as MouseEvent);
+      openPressRef.value = eventDetails.event as MouseEvent;
     }
 
     if (nextOpen && closeQuery.value !== null) {

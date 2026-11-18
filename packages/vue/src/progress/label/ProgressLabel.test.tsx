@@ -126,6 +126,26 @@ describe('<Progress.Label />', () => {
     expect(seen).toEqual(['label-a', null, null, 'label-b', null, 'label-b']);
   });
 
+  it('VUE-131: names the label that is left when the last label goes away', async () => {
+    const showB = shallowRef(true);
+    const App = defineComponent(() => () => (
+      <Progress.Root value={40}>
+        <Progress.Label id="label-a">A</Progress.Label>
+        {showB.value ? <Progress.Label id="label-b">B</Progress.Label> : null}
+      </Progress.Root>
+    ));
+
+    await render(<App />);
+    const progressbar = screen.getByRole('progressbar');
+    expect(progressbar).toHaveAttribute('aria-labelledby', 'label-b');
+
+    showB.value = false;
+    await flushMicrotasks();
+
+    expect(progressbar).toHaveAttribute('aria-labelledby', 'label-a');
+    expect(screen.getByRole('progressbar', { name: 'A' })).toBe(progressbar);
+  });
+
   it('throws a descriptive error when rendered outside <Progress.Root>', async () => {
     await expect(render(<Progress.Label />)).rejects.toThrow(
       'Vase UI: A part of Progress must be inside <Progress.Root>. Without a root the part has no value and no status to show. Put the part inside <Progress.Root>.',

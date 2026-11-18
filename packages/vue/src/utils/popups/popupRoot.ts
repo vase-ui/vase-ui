@@ -214,6 +214,7 @@ export function usePopupRoot<Store extends PopupRootStore>(
   // branch, and a branch that Vue drops never runs it.
   const isActive = shallowRef(false);
   let attachedHandle: PopupRootStoreHandle<Store> | undefined;
+  // eslint-disable-next-line no-restricted-syntax -- The handle attaches before child mount hooks, detaches at a held mount and can attach in the activation hook.
   let detachStore: (() => void) | undefined;
   function setAttachedHandle(handle: PopupRootStoreHandle<Store> | undefined) {
     if (handle === attachedHandle) {

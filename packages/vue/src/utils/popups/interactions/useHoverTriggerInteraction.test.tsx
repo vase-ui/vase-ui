@@ -24,6 +24,24 @@ describe('useHoverTriggerInteraction', () => {
     await flushMicrotasks();
   }
 
+  it('ignores a close from the store after the hover trigger unmounts', async () => {
+    let store!: FloatingRootStore;
+    const Trigger = defineComponent(() => {
+      store = useFloating().context.rootStore;
+      useHoverTriggerInteraction(store);
+      return () => null;
+    });
+    const { unmount } = await render(<Trigger />);
+    const cancel = vi.spyOn(getHoverIntent(store), 'cancel');
+    store.context.events.emit('openchange', { open: false });
+    expect(cancel).toHaveBeenCalledOnce();
+
+    unmount();
+    cancel.mockClear();
+    store.context.events.emit('openchange', { open: false });
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
   it('updates the handleClose options during render', async () => {
     const block = shallowRef(false);
     let store!: FloatingRootStore;
@@ -693,6 +711,28 @@ describe('useHoverTriggerInteraction', () => {
 
       await tick(1000);
       expect(calls).toEqual([]);
+    });
+
+    it('keeps a pending open when a disabled trigger moves to the same store', async () => {
+      const enabled = shallowRef(true);
+      const moved = shallowRef(false);
+      const opened = vi.fn();
+      const App = defineComponent(() => {
+        const first = useFloating().context.rootStore;
+        const second = useFloating({ onOpenChange: opened }).context.rootStore;
+        useHoverTriggerInteraction(() => (moved.value ? second : first), { enabled });
+        const hover = useHoverTriggerInteraction(second, { delay: 500 });
+        return () => <button {...hover}>Other trigger</button>;
+      });
+      await render(<App />);
+      await enter(screen.getByRole('button'));
+      expect(opened).not.toHaveBeenCalled();
+
+      enabled.value = false;
+      moved.value = true;
+      await flushMicrotasks();
+      await tick(500);
+      expect(opened).toHaveBeenCalledOnce();
     });
 
     it.each([

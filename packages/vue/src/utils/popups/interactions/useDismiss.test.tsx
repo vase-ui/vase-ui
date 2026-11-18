@@ -379,6 +379,37 @@ const App = defineComponent({
 describe('useDismiss', () => {
   const { render } = createRenderer();
 
+  it('treats a child positioner as outside after its dismissal scope unmounts', async () => {
+    const childElement = shallowRef<HTMLElement | null>(null);
+    const active = shallowRef(true);
+    const change = vi.fn();
+    const Child = defineComponent(() => {
+      useDismiss(useFloatingRootStore({ elements: { positionerElement: childElement } }));
+      return () => null;
+    });
+    const Parent = defineComponent(() => {
+      useDismiss(useFloatingRootStore({ open: true, onOpenChange: change }));
+      return () => (active.value ? <Child /> : null);
+    });
+    await render(() => (
+      <>
+        <button ref={childElement}>Child</button>
+        <Parent />
+      </>
+    ));
+    const child = screen.getByRole('button');
+    await fireEvent.pointerDown(child, { pointerType: 'mouse' });
+    expect(change).not.toHaveBeenCalled();
+
+    active.value = false;
+    await nextTick();
+    await fireEvent.pointerDown(child, { pointerType: 'mouse' });
+    expect(change).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.outsidePress }),
+    );
+  });
+
   describe('default options', () => {
     it('registers outside press touch listeners as passive', async () => {
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
@@ -3464,6 +3495,35 @@ describe('useDismiss', () => {
 
       expect(offA).toHaveBeenCalledWith('openchange', expect.any(Function));
       expect(onB).toHaveBeenCalledWith('openchange', offA.mock.calls[0][1]);
+    });
+
+    it('clears a press in the new store when the owner unmounts before the next flush', async () => {
+      const { current, stores, Popup } = renderSwitchingStores();
+      const { unmount } = await render(<Popup />);
+
+      current.value = 'b';
+      screen.getByTestId('popup').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(stores.b.context.insideComponentTree).toBe(true);
+      unmount();
+
+      expect(stores.b.context.insideComponentTree).toBe(false);
+    });
+
+    it('dismisses on the next outside press after a press in the new store before the flush', async () => {
+      const enabled = shallowRef(false);
+      const { current, stores, changes, Popup } = renderSwitchingStores({ enabled });
+      await render(<Popup />);
+
+      current.value = 'b';
+      enabled.value = true;
+      screen.getByTestId('popup').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(stores.b.context.insideComponentTree).toBe(true);
+      await wait(0);
+      await fireEvent.pointerDown(document.body, mouse);
+
+      expect(changes).toEqual([
+        { store: 'b', open: false, reason: REASONS.outsidePress, eventType: 'pointerdown' },
+      ]);
     });
 
     it('clears the inside marker of the last store, so that its next outside press closes it', async () => {
