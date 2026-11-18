@@ -201,9 +201,6 @@ export function useFieldValidation(
       return computedState;
     }
 
-    // A field can own several inputs (such as a checkbox or radio group), but only the last-mounted
-    // one wins the shared `inputRef`. Validate against the registry instead so every input counts;
-    // `inputRef` is the fallback only when no inputs are registered.
     function resolveRepresentativeInput() {
       return registeredInputs.size > 0
         ? findRepresentativeInput(registeredInputs, formElementRef.value)

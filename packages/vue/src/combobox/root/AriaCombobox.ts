@@ -1294,7 +1294,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function requestSubmit() {
-    // Not `validation.inputRef`: outside a Field, every control shares it.
+    // A field can contain other controls. Submit the form that owns this combobox.
     const formElement = hiddenInputElement.value?.form ?? toRaw(store.state).inputElement?.form;
     if (formElement && typeof formElement.requestSubmit === 'function') {
       formElement.requestSubmit();
