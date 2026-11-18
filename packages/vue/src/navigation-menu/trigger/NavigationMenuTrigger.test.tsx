@@ -1,3 +1,4 @@
+import { recordStyleProperty } from '../../../test/recordStyleProperty';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType, VNodeChild } from 'vue';
@@ -199,14 +200,6 @@ const TestActiveItemDropsTrigger = defineComponent({
     );
   },
 });
-
-function getPopupWidthCalls(calls: [property: string, value: string, priority?: string][]) {
-  return calls.filter((call) => call[0] === '--popup-width').map((call) => call[1]);
-}
-
-function getPositionerWidthCalls(calls: [property: string, value: string, priority?: string][]) {
-  return calls.filter((call) => call[0] === '--positioner-width').map((call) => call[1]);
-}
 
 type ViewportRenderSlotProps = Parameters<
   NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
@@ -1826,21 +1819,12 @@ describe('<NavigationMenu.Trigger />', () => {
     await user.hover(screen.getByRole('button', { name: 'Product' }));
 
     const popupRoot = await screen.findByTestId('popup-root');
-    const setPropertySpy = vi.spyOn(popupRoot.style, 'setProperty');
-    const getWidthCallsSince = (startIndex = 0) =>
-      getPopupWidthCalls(
-        setPropertySpy.mock.calls.slice(startIndex) as [
-          property: string,
-          value: string,
-          priority?: string,
-        ][],
-      );
+    const widths = recordStyleProperty(popupRoot, '--popup-width');
 
     await waitFor(() => {
-      expect(popupRoot.style.getPropertyValue('--popup-width')).toBe('700px');
+      expect(widths).toContain('700px');
     });
-
-    const callsBeforeSolutionsHover = setPropertySpy.mock.calls.length;
+    const beforeSwitch = widths.length;
 
     await user.hover(screen.getByRole('button', { name: 'Solutions' }));
 
@@ -1849,7 +1833,7 @@ describe('<NavigationMenu.Trigger />', () => {
     });
 
     await waitFor(() => {
-      expect(getWidthCallsSince(callsBeforeSolutionsHover)).toContain('500px');
+      expect(widths.slice(beforeSwitch)).toContain('500px');
     });
 
     await waitFor(() => {
@@ -1857,11 +1841,9 @@ describe('<NavigationMenu.Trigger />', () => {
     });
 
     // Once the switch has settled, Product's stale size must not have been applied after Solutions'.
-    const popupWidthCallsAfterSwitch = getWidthCallsSince(callsBeforeSolutionsHover);
+    const popupWidthCallsAfterSwitch = widths.slice(beforeSwitch);
     const solutionsWidthIndex = popupWidthCallsAfterSwitch.indexOf('500px');
     expect(popupWidthCallsAfterSwitch.slice(solutionsWidthIndex + 1)).not.toContain('700px');
-
-    setPropertySpy.mockRestore();
   });
 
   it('does not let interrupted mutation resizing reapply popup sizes after a later switch', async () => {
@@ -1875,18 +1857,10 @@ describe('<NavigationMenu.Trigger />', () => {
       return screen.findByTestId('popup-root');
     });
     const positioner = popupRoot.parentElement as HTMLElement;
-    const setPositionerPropertySpy = vi.spyOn(positioner.style, 'setProperty');
-    const getPositionerWidthCallsSince = (startIndex = 0) =>
-      getPositionerWidthCalls(
-        setPositionerPropertySpy.mock.calls.slice(startIndex) as [
-          property: string,
-          value: string,
-          priority?: string,
-        ][],
-      );
-
+    const widths = recordStyleProperty(positioner, '--positioner-width');
+    const popupWidths = recordStyleProperty(popupRoot, '--popup-width');
     await waitFor(() => {
-      expect(popupRoot.style.getPropertyValue('--popup-width')).toBe('700px');
+      expect(popupWidths).toContain('700px');
     });
 
     let popupWidth = 700;
@@ -1901,24 +1875,17 @@ describe('<NavigationMenu.Trigger />', () => {
       get: () => popupHeight,
     });
 
-    popupRoot.style.setProperty('--popup-width', '700px');
-    popupRoot.style.setProperty('--popup-height', '420px');
-
     popupWidth = 760;
     popupHeight = 460;
     await user.click(screen.getByRole('button', { name: 'Expand Product' }));
 
     await waitFor(() => {
-      expect(
-        setPositionerPropertySpy.mock.calls.some(
-          (call) => call[0] === '--positioner-width' && call[1] === '760px',
-        ),
-      ).toBe(true);
+      expect(widths).toContain('760px');
     });
 
     popupWidth = 500;
     popupHeight = 320;
-    const callsBeforeSolutionsHover = setPositionerPropertySpy.mock.calls.length;
+    const beforeSwitch = widths.length;
 
     await user.hover(screen.getByRole('button', { name: 'Solutions' }));
 
@@ -1927,7 +1894,7 @@ describe('<NavigationMenu.Trigger />', () => {
     });
 
     await waitFor(() => {
-      expect(getPositionerWidthCallsSince(callsBeforeSolutionsHover)).toContain('500px');
+      expect(widths.slice(beforeSwitch)).toContain('500px');
     });
 
     await waitFor(() => {
@@ -1936,11 +1903,9 @@ describe('<NavigationMenu.Trigger />', () => {
 
     // Once the switch has settled, the interrupted 760px resize must not have been applied after
     // Solutions' size.
-    const positionerWidthCallsAfterSwitch = getPositionerWidthCallsSince(callsBeforeSolutionsHover);
+    const positionerWidthCallsAfterSwitch = widths.slice(beforeSwitch);
     const solutionsWidthIndex = positionerWidthCallsAfterSwitch.indexOf('500px');
     expect(positionerWidthCallsAfterSwitch.slice(solutionsWidthIndex + 1)).not.toContain('760px');
-
-    setPositionerPropertySpy.mockRestore();
   });
 
   it.skipIf(isJSDOM)(

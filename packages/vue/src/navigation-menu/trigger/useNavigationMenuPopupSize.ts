@@ -1,4 +1,5 @@
-import { watch } from 'vue';
+import { nextTick, watch } from 'vue';
+import type { Dimensions } from '@floating-ui/utils';
 import type { ComputedRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerWindow } from '../../common/owner';
@@ -7,10 +8,7 @@ import * as TransitionStatusDataAttributes from '../../internals/TransitionStatu
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
-import * as NavigationMenuPopupCssVars from '../popup/NavigationMenuPopupCssVars';
-import * as NavigationMenuPositionerCssVars from '../positioner/NavigationMenuPositionerCssVars';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { setSharedFixedSize } from '../utils/setSharedFixedSize';
 
 const DEFAULT_SIZE = { width: 0, height: 0 };
 
@@ -28,6 +26,7 @@ export function useNavigationMenuPopupSize(
   const {
     open,
     mounted,
+    sizes,
     popupElement,
     positionerElement,
     transitionStatus,
@@ -63,30 +62,61 @@ export function useNavigationMenuPopupSize(
     cancelAutoSizeReset();
   });
 
-  function setAutoSizes(element: HTMLElement) {
-    element.style.setProperty(NavigationMenuPopupCssVars.popupWidth, 'auto');
-    element.style.setProperty(NavigationMenuPopupCssVars.popupHeight, 'auto');
+  function ownsPopup(popup: HTMLElement, positioner: HTMLElement) {
+    return (
+      open.value &&
+      isActiveItem.value &&
+      popupElement.value === popup &&
+      positionerElement.value === positioner &&
+      popup.isConnected
+    );
   }
 
-  function clearFixedSizes(popup: HTMLElement, positioner: HTMLElement) {
-    popup.style.removeProperty(NavigationMenuPopupCssVars.popupWidth);
-    popup.style.removeProperty(NavigationMenuPopupCssVars.popupHeight);
-    positioner.style.removeProperty(NavigationMenuPositionerCssVars.positionerWidth);
-    positioner.style.removeProperty(NavigationMenuPositionerCssVars.positionerHeight);
-  }
-
-  function scheduleAutoSizeReset(popup: HTMLElement) {
+  function measure(
+    popup: HTMLElement,
+    positioner: HTMLElement,
+    commit: (size: Dimensions) => void,
+  ) {
+    if (!ownsPopup(popup, positioner)) {
+      return;
+    }
     cancelAutoSizeReset(true);
+    const previous = sizes.value;
+    const measurement = { ...previous, measuring: true };
+    sizes.value = measurement;
+    void nextTick(() => {
+      if (sizes.value !== measurement) {
+        return;
+      }
+      sizes.value = { popup: previous.popup, positioner: previous.positioner };
+      if (ownsPopup(popup, positioner)) {
+        commit(getCssDimensions(popup));
+      }
+    });
+  }
 
+  function commitTarget(popup: HTMLElement, positioner: HTMLElement, target: Dimensions) {
+    if (!ownsPopup(popup, positioner)) {
+      return;
+    }
+    cancelAutoSizeReset(true);
+    sizes.value = { popup: target, positioner: target };
     const abortController = new AbortController();
     popupAutoSizeResetRef.abortController = abortController;
     popupAutoSizeResetRef.owner = itemValue.value;
 
-    runOnceAnimationsFinish(() => {
-      popupAutoSizeResetRef.abortController = null;
-      popupAutoSizeResetRef.owner = null;
-      setAutoSizes(popup);
-    }, abortController.signal);
+    void nextTick(() => {
+      if (abortController.signal.aborted) {
+        return;
+      }
+      runOnceAnimationsFinish(() => {
+        popupAutoSizeResetRef.abortController = null;
+        popupAutoSizeResetRef.owner = null;
+        if (ownsPopup(popup, positioner)) {
+          sizes.value = { popup: 'auto', positioner: target };
+        }
+      }, abortController.signal);
+    });
   }
 
   function handleValueChange(
@@ -95,75 +125,33 @@ export function useNavigationMenuPopupSize(
     currentWidth: number,
     currentHeight: number,
   ) {
-    cancelAutoSizeReset(true);
-
-    clearFixedSizes(popup, positioner);
-
-    const { width, height } = getCssDimensions(popup);
-    const measuredWidth = width || prevSize.width;
-    const measuredHeight = height || prevSize.height;
-
-    if (currentHeight === 0 || currentWidth === 0) {
-      currentWidth = measuredWidth;
-      currentHeight = measuredHeight;
-    }
-
-    popup.style.setProperty(NavigationMenuPopupCssVars.popupWidth, `${currentWidth}px`);
-    popup.style.setProperty(NavigationMenuPopupCssVars.popupHeight, `${currentHeight}px`);
-    positioner.style.setProperty(
-      NavigationMenuPositionerCssVars.positionerWidth,
-      `${measuredWidth}px`,
-    );
-    positioner.style.setProperty(
-      NavigationMenuPositionerCssVars.positionerHeight,
-      `${measuredHeight}px`,
-    );
-
-    sizeFrame.request(() => {
-      if (!isActiveItem.value) {
-        return;
-      }
-
-      popup.style.setProperty(NavigationMenuPopupCssVars.popupWidth, `${measuredWidth}px`);
-      popup.style.setProperty(NavigationMenuPopupCssVars.popupHeight, `${measuredHeight}px`);
-
-      scheduleAutoSizeReset(popup);
+    measure(popup, positioner, ({ width, height }) => {
+      const target = { width: width || prevSize.width, height: height || prevSize.height };
+      const previous =
+        currentWidth && currentHeight ? { width: currentWidth, height: currentHeight } : target;
+      sizes.value = { popup: previous, positioner: target };
+      sizeFrame.request(() => commitTarget(popup, positioner, target));
     });
   }
 
   function handleInterruptedMutationResize(
     popup: HTMLElement,
     positioner: HTMLElement,
-    currentWidth: number,
-    currentHeight: number,
+    current: Dimensions,
   ) {
     sizeFrame.cancel();
     mutationFrame.cancel();
     cancelAutoSizeReset(true);
-
-    if (currentWidth === 0 || currentHeight === 0) {
+    if (!current.width || !current.height || !ownsPopup(popup, positioner)) {
       return;
     }
 
-    setSharedFixedSize(popup, positioner, currentWidth, currentHeight);
-
+    sizes.value = { popup: current, positioner: current };
     mutationFrame.request(() => {
       mutationFrame.request(() => {
-        clearFixedSizes(popup, positioner);
-
-        const { width, height } = getCssDimensions(popup);
-        const measuredWidth = width || currentWidth;
-        const measuredHeight = height || currentHeight;
-
-        setSharedFixedSize(popup, positioner, currentWidth, currentHeight);
-
-        sizeFrame.request(() => {
-          if (!isActiveItem.value) {
-            return;
-          }
-
-          setSharedFixedSize(popup, positioner, measuredWidth, measuredHeight);
-          scheduleAutoSizeReset(popup);
+        measure(popup, positioner, ({ width, height }) => {
+          const target = { width: width || current.width, height: height || current.height };
+          sizeFrame.request(() => commitTarget(popup, positioner, target));
         });
       });
     });
@@ -171,39 +159,16 @@ export function useNavigationMenuPopupSize(
 
   function syncCurrentSize(popup: HTMLElement, positioner: HTMLElement) {
     sizeFrame.cancel();
-    cancelAutoSizeReset(true);
-
-    clearFixedSizes(popup, positioner);
-
-    const { width, height } = getCssDimensions(popup);
-
-    if (width === 0 || height === 0) {
-      return;
-    }
-
-    prevSize = { width, height };
-    setAutoSizes(popup);
-    positioner.style.setProperty(NavigationMenuPositionerCssVars.positionerWidth, `${width}px`);
-    positioner.style.setProperty(NavigationMenuPositionerCssVars.positionerHeight, `${height}px`);
-  }
-
-  function getMutationBaseline(popup: HTMLElement) {
-    const popupWidth = popup.style.getPropertyValue(NavigationMenuPopupCssVars.popupWidth);
-    const popupHeight = popup.style.getPropertyValue(NavigationMenuPopupCssVars.popupHeight);
-    const isResizing =
-      popupWidth !== '' && popupWidth !== 'auto' && popupHeight !== '' && popupHeight !== 'auto';
-
-    if (!isResizing) {
-      return { size: prevSize, syncPositioner: false };
-    }
-
-    return {
-      size: {
-        width: popup.offsetWidth || prevSize.width,
-        height: popup.offsetHeight || prevSize.height,
-      },
-      syncPositioner: true,
-    };
+    measure(popup, positioner, (size) => {
+      if (size.width && size.height) {
+        prevSize = size;
+        if (sizes.value.positioner === null) {
+          commitTarget(popup, positioner, size);
+        } else {
+          sizes.value = { popup: 'auto', positioner: size };
+        }
+      }
+    });
   }
 
   watch(open, (isOpen) => {
@@ -289,14 +254,15 @@ export function useNavigationMenuPopupSize(
           return;
         }
 
-        const { size, syncPositioner } = getMutationBaseline(popup);
-
-        if (syncPositioner) {
-          handleInterruptedMutationResize(popup, positioner, size.width, size.height);
+        if (sizes.value.popup && sizes.value.popup !== 'auto') {
+          handleInterruptedMutationResize(popup, positioner, {
+            width: popup.offsetWidth || prevSize.width,
+            height: popup.offsetHeight || prevSize.height,
+          });
           return;
         }
 
-        handleValueChange(popup, positioner, size.width, size.height);
+        handleValueChange(popup, positioner, prevSize.width, prevSize.height);
       });
 
       mutationObserver.observe(observedElement, {
