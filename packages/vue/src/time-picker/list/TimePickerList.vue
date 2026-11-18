@@ -98,7 +98,7 @@ const hasSelectedItem = computed(() => {
 const {
   props: compositeProps,
   rootRef,
-  elementsRef,
+  itemMap,
 } = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
@@ -125,7 +125,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-usePickerFocusTarget(() => findOptionToFocus(elementsRef.value));
+usePickerFocusTarget(() => findOptionToFocus(itemMap.value));
 
 defineExpose({ element });
 </script>

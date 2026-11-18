@@ -80,7 +80,6 @@ import { computed, onMounted, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -274,7 +273,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       onClick,
       onFocusin,
       onPointerdown,
-      [ACTIVE_COMPOSITE_ITEM]: active.value ? '' : undefined,
       onKeydownCapture() {
         isNavigating = true;
       },

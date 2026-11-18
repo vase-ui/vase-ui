@@ -1,8 +1,12 @@
-import { computed, toValue, watch } from 'vue';
+import { computed, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { useCompositeListContext } from './CompositeListContext';
-import type { CompositeListContextValue, CompositeListRegistration } from './CompositeListContext';
+import type {
+  CompositeItemState,
+  CompositeListContextValue,
+  CompositeListRegistration,
+} from './CompositeListContext';
 
 /**
  * Registers a list item and gives it its index (DOM position) in the list that
@@ -37,6 +41,7 @@ export function useCompositeListItem<Metadata>(
 
   const registration: CompositeListRegistration<Metadata> = {
     metadata: params.metadata,
+    itemState: params.itemState,
     index: params.index,
     label: params.label,
     textRef: params.textRef,
@@ -54,6 +59,8 @@ export function useCompositeListItem<Metadata>(
     return (element ? map?.get(element)?.index : undefined) ?? guess;
   });
 
+  let held = false;
+
   function ref(node: HTMLElement | null) {
     // Vue calls a function ref again on each patch.
     if (!context || node === element) {
@@ -61,12 +68,12 @@ export function useCompositeListItem<Metadata>(
     }
 
     if (element) {
-      context.unregister(element);
+      context.unregister(element, registration);
     }
 
     element = node;
 
-    if (node) {
+    if (node && !held) {
       context.register(node, registration);
     }
   }
@@ -89,25 +96,32 @@ export function useCompositeListItem<Metadata>(
     // `KeepAlive` removes the element from the document and calls no ref callback.
     watch(
       isHeld,
-      (held) => {
+      (nextHeld) => {
+        held = nextHeld;
         if (!element) {
           return;
         }
 
         if (held) {
-          context.unregister(element);
+          context.unregister(element, registration);
         } else {
           context.register(element, registration);
         }
       },
-      { flush: 'sync' },
+      { flush: 'sync', immediate: true },
     );
+    onScopeDispose(() => {
+      if (element) {
+        context.unregister(element, registration);
+      }
+    });
   }
 
   return { ref, index };
 }
 
 export interface UseCompositeListItemParameters<Metadata> {
+  itemState?: CompositeItemState | undefined;
   /**
    * The list that the item registers with. The default is the nearest list that a
    * `useCompositeList` above the item provides. The item reads it one time, in `setup`.

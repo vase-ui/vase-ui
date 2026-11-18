@@ -1,5 +1,6 @@
 import { toValue } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
+import type { DisabledIndices } from '../listIndex';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from '../composite';
 import {
   createGridCellMap,
@@ -44,7 +45,7 @@ export interface CompositeGridNavigationState {
   orientation: 'horizontal' | 'vertical' | 'both';
   loopFocus: boolean;
   onLoop?: CompositeGridOnLoop | undefined;
-  disabledIndices?: number[] | undefined;
+  disabledIndices?: DisabledIndices | undefined;
   rtl: boolean;
 }
 
@@ -106,10 +107,9 @@ export function gridNavigation(
         // An empty cell is disabled, so the navigation cannot land in it.
         disabledIndices: getGridCellIndices(
           [
-            ...(disabledIndices ??
-              elementsRef.value.map((_, index) =>
-                isListIndexDisabled(elementsRef.value, index) ? index : undefined,
-              )),
+            ...elementsRef.value.map((_, index) =>
+              isListIndexDisabled(elementsRef.value, index, disabledIndices) ? index : undefined,
+            ),
             undefined,
           ],
           cellMap,

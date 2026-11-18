@@ -24,7 +24,11 @@ export function useCompositeItem<Metadata>(
     onHighlightedIndexChange,
     takeInitialTabStop,
   } = useCompositeRootContext();
-  const { ref, index } = useCompositeListItem({ metadata: params.metadata });
+  const { ref, index } = useCompositeListItem({
+    metadata: params.metadata,
+    index: params.index,
+    itemState: params,
+  });
   const isHydrating = useIsHydrating();
 
   const initialTabStop = takeInitialTabStop(
@@ -86,23 +90,14 @@ export function useCompositeItem<Metadata>(
 
 export interface UseCompositeItemParameters<Metadata> extends Pick<
   UseCompositeListItemParameters<Metadata>,
-  'metadata'
+  'metadata' | 'index'
 > {
-  /**
-   * Whether the item is active, such as the checked radio or the selected tab. Base UI does not
-   * have this parameter. The composable reads it one time, in `setup`. When the root has
-   * `hasActiveItem`, the first active item has the tab stop in the server HTML. Give it when the
-   * part writes `data-composite-item-active`. The part still writes the attribute itself.
-   */
+  /** Whether the item is active, such as a checked radio. */
   active?: MaybeRefOrGetter<boolean | undefined> | undefined;
-  /**
-   * Whether the item cannot hold the first tab stop. Base UI does not have this parameter. The
-   * composable reads it one time, in `setup`. When the root has no `hasActiveItem`, the tab stop
-   * of the server HTML is the first item that can hold it. That item is not disabled and is at or
-   * after the highlighted index of the root. Give it when the part writes a disabled attribute.
-   * The part still writes the attribute itself.
-   */
+  /** Whether the item is disabled. */
   disabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /** Whether the picker option is selected. */
+  selected?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
 export interface UseCompositeItemReturnValue {

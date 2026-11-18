@@ -73,14 +73,11 @@ describe('Composite', () => {
 
   const IndexedItem = defineComponent(
     (props: { index: number; active?: boolean | undefined; testId: string }) => {
-      const { ref } = useCompositeListItem({ index: () => props.index });
-      return () => (
-        <div
-          ref={bindRef(ref)}
-          data-testid={props.testId}
-          data-composite-item-active={props.active ? '' : undefined}
-        />
-      );
+      const { ref } = useCompositeListItem({
+        index: () => props.index,
+        itemState: { active: () => props.active },
+      });
+      return () => <div ref={bindRef(ref)} data-testid={props.testId} />;
     },
     { props: ['index', 'active', 'testId'] },
   );
@@ -1214,7 +1211,7 @@ describe('Composite', () => {
           <CompositeRoot>
             <CompositeItem data-testid="1" />
             <CompositeItem data-testid="2" />
-            <CompositeItem data-testid="3" data-composite-item-active="" />
+            <CompositeItem data-testid="3" active />
             {props.showLast && <CompositeItem data-testid="4" />}
           </CompositeRoot>
         ),

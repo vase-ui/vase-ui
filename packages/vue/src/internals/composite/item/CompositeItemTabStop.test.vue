@@ -23,7 +23,6 @@ function itemProps(id: string) {
   return {
     'data-testid': id,
     active: isActive,
-    'data-composite-item-active': isActive ? '' : undefined,
     disabled: isDisabled,
     'aria-disabled': isDisabled ? ('true' as const) : undefined,
   };

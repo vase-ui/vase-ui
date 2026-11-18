@@ -10,7 +10,8 @@ export interface CompositeItemPartProps
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /** The metadata that the list publishes with the item. */
   metadata?: Record<string, unknown> | undefined;
-  /** Whether the item is active. The part does not write `data-composite-item-active`. */
+  index?: number | undefined;
+  /** Whether the item is active. */
   active?: boolean | undefined;
   /** Whether the item cannot hold the first tab stop. The part does not write a disabled attribute. */
   disabled?: boolean | undefined;
@@ -36,6 +37,7 @@ const state: CompositeItemPartState = EMPTY_OBJECT;
 
 const { compositeProps, compositeRef } = useCompositeItem({
   metadata: () => props.metadata,
+  index: () => props.index,
   active: () => props.active,
   disabled: () => props.disabled,
 });

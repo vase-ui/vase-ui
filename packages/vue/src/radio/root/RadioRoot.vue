@@ -93,7 +93,6 @@ import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
@@ -349,7 +348,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
       'aria-checked': checked.value,
       'aria-label': given('aria-label', props.ariaLabel),
       'aria-labelledby': ariaLabelledBy.value,
-      [ACTIVE_COMPOSITE_ITEM]: checked.value ? '' : undefined,
       // Only a fully disabled group leaves the tab order. A single disabled radio keeps the
       // composite tab index.
       ...(group?.disabled.value && { tabindex: -1 }),
