@@ -68,7 +68,31 @@ const REF_HINT = 'before the element is in the document';
 const RENDER_SLOT_HINT = 'usesRenderSlot()';
 const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 
+const INPUT_SYNC_SAMPLES = [
+  ['a native input write', '(event.target as HTMLInputElement).value = text;', 'Vue value binding'],
+  [
+    'a native textarea write',
+    '(event.target as HTMLTextAreaElement).value = text;',
+    'Vue value binding',
+  ],
+  ['a checked write', 'input.checked = true;', 'restoreChecked'],
+  ['an indeterminate write', 'input.indeterminate = false;', 'restoreChecked'],
+  [
+    'a handled input value',
+    'const handledHiddenValue = input.value; read(handledHiddenValue);',
+    'second copy',
+  ],
+  ['a handled input text', 'const handledText = input.value; read(handledText);', 'second copy'],
+];
+
 const reported = [
+  ...INPUT_SYNC_SAMPLES.map(([name, code, hint]) => ({
+    name,
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc(code),
+    ruleId: 'no-restricted-syntax',
+    hint,
+  })),
   ...[
     ['an optional release', 'let release: (() => void) | undefined;'],
     ['a void release', 'let release: (() => void) | void;'],
@@ -1133,6 +1157,11 @@ const reported = [
 ];
 
 const passed = [
+  ...INPUT_SYNC_SAMPLES.map(([name, code]) => ({
+    name: `${name} in a test`,
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code,
+  })),
   ...[
     ['a constant release', 'export const release: () => void = start();'],
     ['a function with a result', 'export let read: (() => string) | null = null;\nread = getText;'],

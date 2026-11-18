@@ -1,6 +1,8 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Ref } from 'vue';
+import { Field } from '@vase-ui/vue/field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -35,8 +37,8 @@ function createRestorable(onRestore: (event?: PageTransitionEvent) => void) {
 function createRestorableInput(leaves: boolean) {
   return defineComponent(() => {
     const input = shallowRef<HTMLInputElement | null>(null);
-    useFormRestoreAsInput(input, () => 'handled', leaves);
-    return () => renderInput(input);
+    const { valueProps } = useFormRestoreAsInput(input, () => 'handled', leaves);
+    return () => h('input', { ...valueProps(), 'data-testid': 'input', ref: input });
   });
 }
 
@@ -340,6 +342,57 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
 describe('VUE-81: a render before the page show', () => {
   const { render } = createRenderer();
 
+  it.each([
+    { name: 'Field.Control', family: 'field-default', inputName: 'name' },
+    { name: 'Toolbar.Input', family: 'toolbar-default', inputName: 'filter' },
+  ] as const)('takes only a silent edit of uncontrolled $name', async ({ family, inputName }) => {
+    const { container } = await render(<FormRestoreRender family={family} revision={0} />);
+    const [input] = getInputs(container, inputName);
+    input!.value = 'typed';
+    input!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await flushMicrotasks();
+    const events = recordInputEvents(container);
+
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual([]);
+
+    input!.value = input!.defaultValue;
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual(LEAVES);
+  });
+
+  it.each([
+    { name: 'Field.Control', Part: Field.Control, Root: Field.Root },
+    { name: 'Toolbar.Input', Part: Toolbar.Input, Root: Toolbar.Root },
+  ])('starts a replacement $name with its own value', async ({ Part, Root }) => {
+    mockPageBeforeLoad();
+    const tag = shallowRef<'input' | 'textarea'>('input');
+    const { container } = await render(() => (
+      <Root>
+        <Part as={tag.value} aria-label="controlled" value="model" />
+        <Part as={tag.value} aria-label="uncontrolled" defaultValue="default" />
+      </Root>
+    ));
+    const controlled = screen.getByLabelText<HTMLInputElement>('controlled');
+    const uncontrolled = screen.getByLabelText<HTMLInputElement>('uncontrolled');
+    uncontrolled.value = 'typed';
+    uncontrolled.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await flushMicrotasks();
+    controlled.value = 'restored';
+
+    tag.value = 'textarea';
+    await flushMicrotasks();
+    const events = recordInputEvents(container);
+    expect(screen.getByLabelText('controlled')).toHaveValue('model');
+    expect(screen.getByLabelText('uncontrolled')).toHaveValue('default');
+
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await flushMicrotasks();
+    expect(events).toEqual([]);
+  });
+
   it.each(RESTORED_FAMILIES)(
     'takes the value that the browser restored into $name',
     async ({ family, inputName, written, model, changes, events }) => {
@@ -416,19 +469,14 @@ describe('useFormRestoreAsInput before the page show', () => {
   function createStatefulInput(value: Ref<string>, revision: Ref<number>) {
     return defineComponent(() => {
       const input = shallowRef<HTMLInputElement | null>(null);
-      let handledValue: string | undefined;
-      useFormRestoreAsInput(input, () => handledValue, false);
+      const { valueProps } = useFormRestoreAsInput(input, () => value.value, false);
       return () =>
         h('input', {
-          value: value.value,
+          ...valueProps(),
           'data-revision': revision.value,
           'data-testid': 'input',
           ref: (element) => {
             input.value = element as HTMLInputElement | null;
-            handledValue = input.value?.value;
-          },
-          onInput: (event: Event) => {
-            handledValue = (event.currentTarget as HTMLInputElement).value;
           },
         });
     });
@@ -455,6 +503,32 @@ describe('useFormRestoreAsInput before the page show', () => {
     await flushMicrotasks();
 
     expect(input).toHaveValue('loaded');
+    expect(events).toEqual([]);
+  });
+
+  it('keeps the native reset value through a render before pageshow', async () => {
+    const showPage = mockPageBeforeLoad();
+    const value = shallowRef('server');
+    const revision = shallowRef(0);
+    const Control = createStatefulInput(value, revision);
+    const { container } = await render(
+      <form>
+        <Control />
+      </form>,
+    );
+    const input = screen.getByTestId<HTMLInputElement>('input');
+    const events = recordInputEvents(container);
+    input.value = 'restored';
+
+    revision.value += 1;
+    await flushMicrotasks();
+    expect(input.value).toBe('restored');
+    expect(input.defaultValue).toBe('server');
+
+    input.form!.reset();
+    showPage();
+    await flushMicrotasks();
+    expect(input.value).toBe('server');
     expect(events).toEqual([]);
   });
 

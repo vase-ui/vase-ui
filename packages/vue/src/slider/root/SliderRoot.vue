@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
@@ -509,10 +509,8 @@ function handleInputChange(valueInput: number, index: number, event: KeyboardEve
 
   if (changedInputs) {
     // A listener can cancel the change, and a parent that controls the slider can keep its value.
-    void nextTick(() => {
-      changedInputs.taken.forEach((thumbInput) => {
-        thumbInput.writeValue();
-      });
+    changedInputs.taken.forEach((thumbInput) => {
+      thumbInput.restoreValue();
     });
   }
 }

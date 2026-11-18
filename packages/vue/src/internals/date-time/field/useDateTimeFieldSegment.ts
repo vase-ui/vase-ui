@@ -1,4 +1,4 @@
-import { computed, nextTick, shallowRef, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, CSSProperties, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating, useValueBeforeHydration } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
@@ -6,6 +6,7 @@ import { platform } from '../../../common/platform';
 import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
+import { useInputRender } from '../../useInputRender';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { fieldValidityMapping } from '../../field-constants';
@@ -189,14 +190,7 @@ export function useDateTimeFieldSegment(
     typeText(actual.startsWith(expected) ? actual.slice(expected.length) : actual, event);
   }
 
-  // Vue writes `value` to the input only when it renders. A text that the user typed natively stays
-  // in the input when the number does not change, so the segment writes its text again.
-  function writeTextToInput() {
-    const expected = composingText.value ?? view.value.text;
-    if (writesValue.value && elementRef.value && elementRef.value.value !== expected) {
-      elementRef.value.value = expected;
-    }
-  }
+  const { valueProps, renderValue } = useInputRender();
 
   function handleKeydown(event: KeyboardEvent) {
     // A browser gives real key names, such as `Backspace`, to the keydown events of a composition.
@@ -299,8 +293,7 @@ export function useDateTimeFieldSegment(
         commitNativeText(input.value, event);
       }
     }
-    // The wait starts after the change, so that it ends after the flush of a parent that takes it.
-    void nextTick(writeTextToInput);
+    renderValue();
   }
 
   function handlePaste(event: ClipboardEvent) {
@@ -317,12 +310,7 @@ export function useDateTimeFieldSegment(
     context.pasteText(text, event);
   }
 
-  watch(
-    () => context.resetCount.value,
-    () => {
-      void nextTick(writeTextToInput);
-    },
-  );
+  watch(() => context.resetCount.value, renderValue);
 
   const props = computed(() => {
     const { text, id } = view.value;
@@ -332,7 +320,7 @@ export function useDateTimeFieldSegment(
       role: 'spinbutton',
       autocomplete: 'off',
       spellcheck: 'false',
-      ...(writesValue.value ? { value: composingText.value ?? text } : undefined),
+      ...(writesValue.value ? valueProps(composingText.value ?? text) : undefined),
       ...getSegmentAttributes(type.value, view.value),
       'aria-required': context.required.value || undefined,
       'aria-invalid': !context.disabled.value && context.invalid.value ? true : undefined,
@@ -383,7 +371,7 @@ export function useDateTimeFieldSegment(
         if (!context.disabled.value && !context.readOnly.value) {
           commitNativeText((event.currentTarget as HTMLInputElement).value, event);
         }
-        void nextTick(writeTextToInput);
+        renderValue();
       },
     };
   });

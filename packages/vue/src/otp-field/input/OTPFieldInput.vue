@@ -32,7 +32,7 @@ export interface OTPFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
+import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
@@ -82,6 +82,7 @@ const {
   mask,
   pattern,
   reportValueInvalid,
+  inputRender,
   readOnly,
   required,
   normalizeValue,
@@ -108,24 +109,7 @@ const writesValue = useValueBeforeHydration(props, () => element.value, { restor
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
 
-// The value that the input had after the last event that the part handled, and after the last
-// write of the part or of Vue. A `change` event for that value is not new.
-let handledValue: string | undefined;
-
-// Vue writes `value` to the input only when the part renders. The part does not render when the
-// character of its slot stays the same: the root refused the text, a listener canceled the change,
-// or the parent kept its value. The input then keeps the text that the user typed.
-function writeSlotValueToInput() {
-  const input = element.value as HTMLInputElement | null;
-  if (!input) {
-    return;
-  }
-  const expectedValue = composingValue.value ?? slotValue.value;
-  if (input.value !== expectedValue) {
-    input.value = expectedValue;
-  }
-  handledValue = input.value;
-}
+const { valueProps, renderValue } = inputRender;
 
 if (process.env.NODE_ENV !== 'production') {
   const attrs = useAttrs();
@@ -185,8 +169,11 @@ function commitValue(
           createChangeEventDetails(REASONS.inputClear, event),
         );
       } else if (slotValue.value !== '') {
-        input.value = slotValue.value;
-        input.select();
+        // Vue writes the character back at the render, and that write clears the selection.
+        renderValue();
+        void nextTick(() => {
+          input.select();
+        });
       }
     }
     return;
@@ -216,7 +203,6 @@ function commitValue(
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  handledValue = input.value;
 
   if (!disabled.value && !readOnly.value) {
     if (composingValue.value != null) {
@@ -226,16 +212,9 @@ function handleInput(event: Event) {
     }
   }
 
-  // The wait starts after the change, so that it ends after the flush of a parent that takes the
-  // character. A write before that flush would put the old character in the input.
-  void nextTick(writeSlotValueToInput);
-}
-
-// Some programs that fill a form send only `change`.
-function handleChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledValue) {
-    handleInput(event);
-  }
+  // The root can refuse the text, a listener can cancel the change and the parent can keep its
+  // value. The character of the slot then stays, and no render follows.
+  renderValue();
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -368,7 +347,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     return [
       {
         id: getInputId(slotIndex),
-        ...(writesValue.value ? { value: composingValue.value ?? slotValue.value } : undefined),
+        ...(writesValue.value ? valueProps(composingValue.value ?? slotValue.value) : undefined),
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
@@ -431,7 +410,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
           }
         },
         onInput: handleInput,
-        onChange: handleChange,
         onKeydown: handleKeydown,
         onPaste: handlePaste,
       },
@@ -439,16 +417,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     ];
   },
 });
-
-// Vue writes the value to the input when the character of the slot changes. A program can then send
-// a `change` event with the value that the input had before, and the part must handle it.
-watch(
-  [slotValue, composingValue],
-  () => {
-    handledValue = (element.value as HTMLInputElement | null)?.value;
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

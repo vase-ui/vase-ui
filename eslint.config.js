@@ -77,6 +77,9 @@ const MESSAGES = {
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
+  checkedInput: 'Use `restoreChecked` for a native click that changes an equal checked binding.',
+  inputValueWrite: 'Restore the input through its Vue value binding.',
+  handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
     '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
   groupBy:
@@ -351,6 +354,20 @@ const RESTRICTED_SYNTAX = [
     selector:
       "BinaryExpression[operator='instanceof']:matches([right.object.name='Temporal'], [right.object.property.name='Temporal'])",
     message: MESSAGES.temporalInstanceof,
+  },
+  {
+    selector:
+      'AssignmentExpression > MemberExpression.left[computed=false][property.name=/^(checked|indeterminate)$/]',
+    message: MESSAGES.checkedInput,
+  },
+  {
+    selector:
+      'AssignmentExpression > MemberExpression.left[computed=false][property.name="value"] > TSAsExpression.object:has(TSTypeReference[typeName.name=/^HTML(Input|TextArea)Element$/])',
+    message: MESSAGES.inputValueWrite,
+  },
+  {
+    selector: 'VariableDeclarator[id.name=/^handled\\w*(Value|Text)$/]',
+    message: MESSAGES.handledInput,
   },
   { selector: "CallExpression[callee.name='defineModel']", message: MESSAGES.defineModel },
   { selector: 'VariableDeclaration[kind=/using$/]', message: MESSAGES.resourceManagement },
