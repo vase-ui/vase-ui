@@ -13,7 +13,10 @@ export function useResizeObserver(
 ): void {
   useObserver(
     targets,
-    () => ({ ...toValue(options) }),
+    () => {
+      const box = toValue(options)?.box;
+      return box === undefined ? {} : { box };
+    },
     (view, isCurrent) => {
       if (!view.ResizeObserver) return undefined;
       let first = true;
