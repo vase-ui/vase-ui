@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, shallowRef, toValue } from 'vue';
+import { computed, onBeforeUnmount, shallowReactive, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { getFirstInDocument } from './usePickerPopup';
@@ -16,19 +16,17 @@ export interface PickerPartElements {
 
 /** A picker root creates one registry for each kind of part that gives it an element. */
 export function createPickerPartElements(): PickerPartElements {
-  const getters = shallowRef<(() => HTMLElement | null)[]>([]);
+  const getters = shallowReactive(new Set<() => HTMLElement | null>());
   const first = computed(() => {
-    const elements = getters.value.map((get) => get());
+    const elements = Array.from(getters, (get) => get());
     // An app can mount in an element that it adds to the document later. Vue reports no such
     // move, so the registry gives the element from the mount on.
     return getFirstInDocument(elements) ?? elements.find((element) => element !== null) ?? null;
   });
 
   function add(element: () => HTMLElement | null) {
-    getters.value = [...getters.value, element];
-    return () => {
-      getters.value = getters.value.filter((get) => get !== element);
-    };
+    getters.add(element);
+    return () => getters.delete(element);
   }
 
   return { first, add };
