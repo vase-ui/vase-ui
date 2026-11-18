@@ -103,7 +103,11 @@ const closeOnSelect = computed(() => picker.props.closeOnSelect ?? false);
 // A 24-hour cycle has no day period.
 const isRendered = computed(() => props.unit !== 'dayPeriod' || hourCycle.value === 12);
 
-const { props: compositeProps, rootRef } = useCompositeRoot({
+const {
+  props: compositeProps,
+  rootRef,
+  elementsRef,
+} = useCompositeRoot({
   orientation: 'vertical',
   enableHomeAndEndKeys: true,
   hasActiveItem: () => selectedValue.value !== null && values.value.includes(selectedValue.value),
@@ -142,7 +146,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-usePickerFocusTarget(() => findOptionToFocus(element.value));
+usePickerFocusTarget(() => findOptionToFocus(elementsRef.value));
 
 defineExpose({ element });
 </script>
