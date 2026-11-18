@@ -42,8 +42,8 @@ defineSlots<{
 
 const state: TooltipPortalState = EMPTY_OBJECT;
 
-const store = useTooltipRootContext();
-const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
+const { store } = useTooltipRootContext();
+const shouldRender = computed(() => store.state.mounted || props.keepMounted);
 
 provide(
   TooltipPortalContext,

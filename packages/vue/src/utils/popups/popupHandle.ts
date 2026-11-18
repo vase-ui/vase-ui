@@ -1,3 +1,4 @@
+import { exposePopupBindings } from './popupBindings';
 import { hasInjectionContext, inject, markRaw, shallowRef } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -5,6 +6,13 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { PopupTriggerMap } from './popupTriggerMap';
+
+const triggerStores = new WeakMap<object, () => unknown>();
+
+export function readTriggerStore<Store>(handle: PopupHandleStoreProvider<Store>): Store {
+  const read = triggerStores.get(handle);
+  return read ? (read() as Store) : handle.store;
+}
 
 /**
  * The minimal store contract that a popup handle gives to a detached trigger.
@@ -125,6 +133,7 @@ export class BasePopupHandle<
     // A consumer can put the handle in `ref()`, `reactive()`, `readonly()` or the `data` option. A
     // method that reads a private member throws a `TypeError` on a proxy of the handle.
     markRaw(this);
+    triggerStores.set(this, () => this.#attachedStoreRef.value ?? this.fallbackStore);
   }
 
   /**
@@ -151,7 +160,9 @@ export class BasePopupHandle<
    * @internal
    */
   get store(): HandleStore {
-    return this.#attachedStoreRef.value ?? this.fallbackStore;
+    const store = this.#attachedStoreRef.value ?? this.fallbackStore;
+    exposePopupBindings(store);
+    return store;
   }
 
   /**

@@ -83,7 +83,7 @@ import { mergeProps } from '../../merge-props';
 import { useClientPoint } from '../../utils/popups/interactions/useClientPoint';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
-import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
+import { popupStoreSelectors } from '../../utils/popups/store';
 import { TooltipStore } from '../store/TooltipStore';
 import type { State as TooltipStoreState } from '../store/TooltipStore';
 import { TooltipRootContext } from './TooltipRootContext';
@@ -124,13 +124,7 @@ defineSlots<{
   default(props: { payload: Payload | undefined }): unknown;
 }>();
 
-const {
-  store,
-  open: isOpen,
-  payload,
-  transitionStatus,
-  actions,
-} = usePopupRoot(
+const owner = usePopupRoot(
   props,
   (initialState, defaultPopupId) =>
     new TooltipStore<Payload>(
@@ -159,6 +153,8 @@ const {
   },
 );
 
+const { store, open: isOpen, payload, triggerId, requestOpen, transitionStatus, actions } = owner;
+
 watch(
   [() => props.disabled, () => props.trackCursorAxis, () => props.disableHoverablePopup],
   ([disabled, trackCursorAxis, disableHoverablePopup]) =>
@@ -166,12 +162,12 @@ watch(
 );
 
 function closeWhileDisabled() {
-  if (store.select('open') && props.disabled) {
-    store.setOpen(false, createChangeEventDetails(REASONS.disabled));
+  if (popupStoreSelectors.open(store.state) && props.disabled) {
+    requestOpen(false, createChangeEventDetails(REASONS.disabled));
   }
 }
 onMounted(closeWhileDisabled);
-watch([() => store.select('open'), () => props.disabled], closeWhileDisabled);
+watch([() => popupStoreSelectors.open(store.state), () => props.disabled], closeWhileDisabled);
 
 // Animations are instant in two cases: an open in the instant phase of a delay group, where the
 // tooltip of an adjacent trigger opens at once, and a close with the reason `none`, for example
@@ -181,9 +177,9 @@ let previousInstantType: TooltipStoreState<Payload>['instantType'] | null = null
 watch(
   [
     transitionStatus,
-    () => store.select('isInstantPhase'),
-    () => store.select('lastOpenChangeReason'),
-    () => store.select('instantType'),
+    () => store.state.isInstantPhase,
+    () => store.state.openChangeReason,
+    () => store.state.instantType,
   ],
   ([status, isInstantPhase, lastOpenChangeReason, instantType]) => {
     if (
@@ -201,7 +197,7 @@ watch(
   },
 );
 
-watch([isOpen, () => store.select('activeTriggerId')], ([openNow, triggerId]) => {
+watch([isOpen, triggerId], ([openNow, triggerId]) => {
   if (openNow && triggerId == null) {
     store.set('payload', undefined);
   }
@@ -209,20 +205,16 @@ watch([isOpen, () => store.select('activeTriggerId')], ([openNow, triggerId]) =>
 
 const dismiss = useDismiss(store, {
   enabled: () => !props.disabled,
-  referencePress: () => store.select('closeOnClick'),
+  referencePress: () => store.state.closeOnClick,
 });
 const clientPoint = useClientPoint(store, {
   enabled: () => !props.disabled && props.trackCursorAxis !== 'none',
   axis: () => (props.trackCursorAxis === 'none' ? undefined : props.trackCursorAxis),
 });
 const triggerProps = mergeProps(clientPoint, dismiss.reference);
-usePopupInteractionProps(store, () => ({
-  activeTriggerProps: triggerProps,
-  inactiveTriggerProps: triggerProps,
-  popupProps: dismiss.floating,
-}));
+owner.bindParts({ trigger: () => triggerProps, popup: () => dismiss.floating });
 
-provide(TooltipRootContext, store);
+provide(TooltipRootContext, owner);
 
 defineExpose(actions);
 </script>

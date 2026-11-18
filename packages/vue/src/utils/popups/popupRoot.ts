@@ -19,6 +19,7 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { bindPopupParts } from './popupBindings';
 import { HeldRootCallContext } from './popupHandle';
 import type { ReactiveStore } from './ReactiveStore';
 import { canClaimOpenPopup, popupStoreSelectors } from './store';
@@ -183,7 +184,9 @@ export function usePopupRoot<Store extends PopupRootStore>(
           activeTriggerId: previous ?? null,
           triggerIdProp: undefined,
           openedWithoutTrigger:
-            previous === null ? store.select('open') : store.state.openedWithoutTrigger,
+            previous === null
+              ? popupStoreSelectors.open(store.state)
+              : store.state.openedWithoutTrigger,
         });
       } else if (triggerId === null) {
         store.update({ triggerIdProp: null, activeTriggerElement: null });
@@ -193,8 +196,8 @@ export function usePopupRoot<Store extends PopupRootStore>(
     },
   );
 
-  const open = computed(() => !toValue(options.disabled) && store.select('open'));
-  const payload = computed(() => store.select('payload') as Store['state']['payload']);
+  const open = computed(() => !toValue(options.disabled) && popupStoreSelectors.open(store.state));
+  const payload = computed(() => store.state.payload as Store['state']['payload']);
 
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(
     store,
@@ -289,7 +292,19 @@ export function usePopupRoot<Store extends PopupRootStore>(
     { flush: 'sync' },
   );
 
-  return { store, open, mounted, payload, transitionStatus, actions };
+  return {
+    store,
+    open,
+    mounted,
+    payload,
+    transitionStatus,
+    actions,
+    triggerId: computed(() => popupStoreSelectors.activeTriggerId(store.state)),
+    trigger: computed(() => popupStoreSelectors.activeTriggerElement(store.state)),
+    popup: computed(() => store.state.popupElement),
+    requestOpen: store.setOpen as Store['setOpen'],
+    bindParts: (parts: Parameters<typeof bindPopupParts>[1]) => bindPopupParts(store, parts),
+  };
 }
 
 /**
@@ -315,12 +330,20 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
     options,
   );
 
-  const open = computed(() => store.select('open'));
+  const open = computed(() => popupStoreSelectors.open(store.state));
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(store, open, () =>
     (options.getTransitionElement ?? getPopupTransitionElement)(store),
   );
 
-  return { store, open, mounted, transitionStatus, actions };
+  return {
+    store,
+    open,
+    mounted,
+    transitionStatus,
+    actions,
+    requestOpen: store.setOpen as Store['setOpen'],
+    bindParts: (parts: Parameters<typeof bindPopupParts>[1]) => bindPopupParts(store, parts),
+  };
 }
 
 /**
@@ -389,7 +412,7 @@ function usePopupRootTransitions(
   const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
     open,
     ref: transitionElement,
-    preventUnmountOnClose: () => store.select('preventUnmountingOnClose'),
+    preventUnmountOnClose: () => store.state.preventUnmountingOnClose,
     setPreventUnmountOnClose: (preventUnmountOnClose) =>
       store.set('preventUnmountingOnClose', preventUnmountOnClose),
     animateInitialOpen,
@@ -414,7 +437,7 @@ function usePopupRootTransitions(
   // The open wait follows the open state of the store, as `openChange` does, and not the `open` of
   // a disabled root. A disabled root that stays mounted thus reports no second open completion when
   // it shows again.
-  const storeOpen = () => store.select('open');
+  const storeOpen = () => popupStoreSelectors.open(store.state);
   // `openCompleted` resets at a close, where the open wait does nothing. The result thus does not
   // depend on the order of the watchers.
   watch(storeOpen, (isOpen) => {
@@ -593,10 +616,10 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
   onMounted(runWhileActive);
   watch(
     [
-      () => target.select('open'),
-      () => target.select('triggerCount'),
-      () => target.select('activeTriggerId'),
-      () => target.select('activeTriggerElement'),
+      () => popupStoreSelectors.open(target.state),
+      () => popupStoreSelectors.triggerCount(target.state),
+      () => popupStoreSelectors.activeTriggerId(target.state),
+      () => popupStoreSelectors.activeTriggerElement(target.state),
       isHeld,
     ],
     runWhileActive,

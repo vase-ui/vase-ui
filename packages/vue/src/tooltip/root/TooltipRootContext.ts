@@ -1,8 +1,11 @@
 import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
+import type { usePopupRoot } from '../../utils/popups/popupRoot';
 import type { TooltipStore } from '../store/TooltipStore';
 
-export type TooltipRootContext<Payload = unknown> = TooltipStore<Payload>;
+export type TooltipRootContext<Payload = unknown> = ReturnType<
+  typeof usePopupRoot<TooltipStore<Payload>>
+>;
 
 export const TooltipRootContext: InjectionKey<TooltipRootContext<any>> = Symbol();
 
