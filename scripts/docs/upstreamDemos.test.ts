@@ -345,7 +345,7 @@ function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
       ['upstream.json', sha256('record')],
       ['vee-validate/tailwind/index.vue', sha256('vue')],
     ]),
-    vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A], form: [FORM_CLASS] }]]),
+    vueClasses: new Map([['vee-validate/tailwind', { Field: [CLASS_A], form: [FORM_CLASS] }]]),
     vueVariants: new Map(),
     ...overrides,
   };
@@ -353,6 +353,22 @@ function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
 
 test('a demo with another name in Base UI has no problem when its Vue folder has the name that the map gives', () => {
   assert.deepEqual(checkDemos([makeFormsFamily()], ENTRY_POINTS), []);
+});
+
+test('a demo named constructor keeps its folder when another demo has an entry point', () => {
+  const family = makeFormsFamily({
+    record: {
+      commit: COMMIT,
+      upstream: FORMS_DEMOS,
+      files: {
+        'constructor/tailwind/index.tsx': sha256('tailwind'),
+        'other/tailwind/index.tsx': sha256('other'),
+      },
+      entryPoints: { other: ['toggle'] },
+    },
+    files: new Map([['constructor/tailwind/index.vue', sha256('vue')]]),
+  });
+  assert.deepEqual(checkDemos([family], ENTRY_POINTS), []);
 });
 
 test('the check names the Vue folder of a demo that has another name in Base UI', () => {
@@ -365,7 +381,7 @@ test('the check names the Vue folder of a demo that has another name in Base UI'
   ]);
   assert.deepEqual(
     checkDemos(
-      [makeFormsFamily({ vueClasses: new Map([['react-hook-form/tailwind', {}]]) })],
+      [makeFormsFamily({ vueClasses: new Map([['vee-validate/tailwind', {}]]) })],
       ENTRY_POINTS,
     ),
     [
@@ -377,7 +393,7 @@ test('the check names the Vue folder of a demo that has another name in Base UI'
 test('the Vue demo of another library has the class string of the element that it needs, one time, on that element', () => {
   const withForm = (form: string[]): DemoFamily =>
     makeFormsFamily({
-      vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A], form }]]),
+      vueClasses: new Map([['vee-validate/tailwind', { Field: [CLASS_A], form }]]),
     });
   const problem = (differences: string): string =>
     `docs/demos/handbook-forms/vee-validate/tailwind has classes that differ from Base UI. ${differences} Copy each class string from the Base UI file to the same element. Do not change it.`;
@@ -388,7 +404,7 @@ test('the Vue demo of another library has the class string of the element that i
     problem(`form: extra "${FORM_CLASS}".`),
   ]);
   const onAnotherElement = makeFormsFamily({
-    vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A, FORM_CLASS] }]]),
+    vueClasses: new Map([['vee-validate/tailwind', { Field: [CLASS_A, FORM_CLASS] }]]),
   });
   assert.deepEqual(checkDemos([onAnotherElement], ENTRY_POINTS), [
     problem(`Field: extra "${FORM_CLASS}". form: absent "${FORM_CLASS}".`),
@@ -635,7 +651,9 @@ test('the demo record keeps upstream paths and both Vue variants use the Vase UI
     [`${folder}/tailwind/index.vue`]: '<template><span class="px-2">Save</span></template>',
   });
   const families = loadDemoFamilies(root);
-  assert.deepEqual(families[0].vueClasses.get(`${demo}/tailwind`), { span: ['px-2'] });
+  assert.deepEqual(families[0].vueClasses.get('prevent-vase-ui-handler/tailwind'), {
+    span: ['px-2'],
+  });
   assert.deepEqual(checkDemos(families, ENTRY_POINTS), []);
 });
 
@@ -756,7 +774,7 @@ test('the class strings of a demo with another name in Base UI come from the Vue
       '<template><div class="a b" /></template>\n',
   });
   const family = loadDemoFamilies(root).find(({ name }) => name === 'handbook-forms');
-  assert.deepEqual(family?.vueClasses, new Map([['react-hook-form/tailwind', { div: ['a b'] }]]));
+  assert.deepEqual(family?.vueClasses, new Map([['vee-validate/tailwind', { div: ['a b'] }]]));
 });
 
 test('the first difference between the Vue variants of a demo comes with the family, for each demo that has both', () => {

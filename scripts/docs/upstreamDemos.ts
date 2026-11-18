@@ -26,13 +26,8 @@ import { docsFolderGlobs } from './upstreamDocs.ts';
 const CSS_MODULES_FOLDER = 'css-modules';
 const TAILWIND_FOLDER = 'tailwind';
 
-/**
- * The name of a Vue folder of a demo, by family, when it is not the name of the Base UI folder. The
- * library of such a demo has no Vue release, so the Vue demo uses another library.
- */
-const VUE_DEMO_NAMES: Record<string, Record<string, string> | undefined> = {
-  'handbook-forms': { 'react-hook-form': 'vee-validate' },
-};
+// The Forms page teaches VeeValidate with the demo that uses React Hook Form upstream.
+const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate']]);
 
 /**
  * The class strings that the Vue folder of a demo has and its row of `classes` lacks, by family, by
@@ -97,10 +92,8 @@ export interface DemoFamily {
   /** The SHA-256 of each file under `docs/demos/<family>`, by its path from that folder. */
   files: Map<string, string>;
   /**
-   * The class strings of the `.vue` and `.ts` files in the Vue folder of each key of
-   * `record.classes`, by that key and then by element name. A key whose Vue folder has no such file
-   * is not in the map. A component of Vase UI's own has no record, so its keys are its Tailwind
-   * folders, such as `hero/tailwind`.
+   * The class strings by Vue folder and element name. A recorded folder contributes a row when
+   * it has a `.vue` or `.ts` file. For a component of Vase UI's own, the folders are its Tailwind demos.
    */
   vueClasses: Map<string, ClassRow>;
   /**
@@ -152,7 +145,7 @@ function sortedUnique(names: string[]): string[] {
 
 function vueDemoPath(family: string, upstreamPath: string): string {
   const [demo, ...rest] = upstreamPath.split('/');
-  return toVaseName([VUE_DEMO_NAMES[family]?.[demo] ?? demo, ...rest].join('/'));
+  return toVaseName([VUE_DEMO_NAMES.get(`${family}/${demo}`) ?? demo, ...rest].join('/'));
 }
 
 /** The strings of `strings` that `other` does not have. A repeated string counts as often as it repeats. */
@@ -372,6 +365,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
+    const imports = new Map(Object.entries(record.entryPoints ?? {}));
     for (const path of Object.keys(record.files)) {
       const match = /^(.+)\/(css-modules|tailwind)\/index\.tsx$/.exec(path);
       if (match === null) {
@@ -379,9 +373,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
       const [, demo, variant] = match;
       const vueFile = `${vueDemoPath(name, demo)}/${variant}/index.vue`;
-      const waits = (record.entryPoints?.[demo] ?? []).some(
-        (entryPoint) => !entryPoints.has(entryPoint),
-      );
+      const waits = imports.get(demo)?.some((entryPoint) => !entryPoints.has(entryPoint));
       if (!files.has(vueFile) && !waits) {
         const kind = variant === TAILWIND_FOLDER ? 'Tailwind demo' : 'demo';
         problems.push(
@@ -390,7 +382,8 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
     }
     for (const [key, row] of Object.entries(record.classes ?? {})) {
-      const vueRow = vueClasses.get(key);
+      const path = vueDemoPath(name, key);
+      const vueRow = vueClasses.get(path);
       if (vueRow === undefined) {
         continue;
       }
@@ -398,7 +391,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       const differences = rowDifferences(expected, vueRow);
       if (differences.length > 0) {
         problems.push(
-          `${folder}/${vueDemoPath(name, key)} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,
+          `${folder}/${path} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,
         );
       }
     }
@@ -544,12 +537,11 @@ function readDemoFiles(directory: string): DemoFile[] {
     : [];
 }
 
-/** The class row of the Vue folder of each folder in `keys`. */
-function readVueClasses(name: string, folder: string, keys: string[]): Map<string, ClassRow> {
+function readVueClasses(folder: string, paths: string[]): Map<string, ClassRow> {
   return new Map(
-    keys.flatMap((key): [string, ClassRow][] => {
-      const files = readDemoFiles(join(folder, vueDemoPath(name, key)));
-      return files.length === 0 ? [] : [[key, classRowOfVue(files)]];
+    paths.flatMap((path): [string, ClassRow][] => {
+      const files = readDemoFiles(join(folder, path));
+      return files.length === 0 ? [] : [[path, classRowOfVue(files)]];
     }),
   );
 }
@@ -599,9 +591,10 @@ export function loadDemoFamilies(root: string): DemoFamily[] {
       record,
       files,
       vueClasses: readVueClasses(
-        name,
         folder,
-        own ? tailwindFolders(files) : Object.keys(record?.classes ?? {}),
+        own
+          ? tailwindFolders(files)
+          : Object.keys(record?.classes ?? {}).map((key) => vueDemoPath(name, key)),
       ),
       vueVariants: readVueVariants(folder),
     };
