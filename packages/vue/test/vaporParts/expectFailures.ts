@@ -1,8 +1,28 @@
-import { beforeAll } from 'vitest';
+import { afterAll, beforeAll } from 'vitest';
+import { Fragment, transformVNodeArgs } from 'vue';
 import type { RunnerTask, RunnerTestCase } from 'vitest';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
 const files: Record<string, { fails: Record<string, string> }> = expectations.files;
+
+// A Vapor slot reads the children of a virtual DOM Fragment before Vue normalizes them.
+beforeAll(() => {
+  transformVNodeArgs((args) => {
+    const [type, , children] = args;
+    if (type === Fragment && Array.isArray(children)) {
+      for (const child of children) {
+        if (child == null || typeof child === 'boolean') {
+          throw new Error('A Fragment has an empty child. Omit the child or use a comment vnode.');
+        }
+      }
+    }
+    return args;
+  });
+});
+
+afterAll(() => {
+  transformVNodeArgs();
+});
 
 /** The titles of the suites of a case and its own title, with ` > ` between them. */
 function nameOf(task: RunnerTask): string {

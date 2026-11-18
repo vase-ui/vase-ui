@@ -1,10 +1,25 @@
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { expect, it } from 'vitest';
+import { createCommentVNode, Fragment, h } from 'vue';
 import { isVaporParts } from '#test-utils';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
 it('compiles a part as a Vapor component only in the project of the Vapor parts', () => {
   expect((Checkbox.Root as { __vapor?: boolean }).__vapor === true).toBe(isVaporParts);
+});
+
+it.runIf(isVaporParts).each([
+  { name: 'null', child: null },
+  { name: 'undefined', child: undefined },
+  { name: 'false', child: false },
+  { name: 'true', child: true },
+])('rejects a Fragment with $name as a child', ({ child }) => {
+  expect(() => h(Fragment, [h('span'), child])).toThrow('A Fragment has an empty child');
+});
+
+it('accepts a comment vnode for an empty branch of a Fragment', () => {
+  const children = [h('span'), createCommentVNode()];
+  expect(h(Fragment, children).children).toEqual(children);
 });
 
 it('each expected failure names a cause of the list', () => {
