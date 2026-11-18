@@ -626,7 +626,8 @@ function inputProps() {
       onClick: onInputClick,
       element: () => element.value,
     }),
-    // A parent keeps the input style for its name, but the form must omit its value.
+    // The style follows the name of the checkbox. The parent checkbox has no name, so the form
+    // does not get it.
     ...(props.parent ? { name: undefined } : undefined),
     ...(props.value !== undefined
       ? { value: (group ? isChecked.value && props.value : props.value) || '' }

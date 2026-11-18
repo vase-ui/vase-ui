@@ -127,7 +127,8 @@ const valueSync = useInputValueSync(
   () => state.value.inputValue,
 );
 
-// A paste puts the caret after the new text. The browser would put it at the end of the input.
+// After a paste, the part moves the caret behind the pasted text. The write of the text puts the
+// caret at the end of the input.
 function writeTextToInput() {
   const input = inputRef.value;
   if (!input) {
