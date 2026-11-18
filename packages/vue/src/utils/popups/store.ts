@@ -151,9 +151,14 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
    */
   readonly popupRef: ShallowRef<HTMLElement | null>;
   /**
+   * The popup element, also while `KeepAlive` holds the part. `getPopupTransitionElement` uses it
+   * when the popup, positioner and backdrop give no element.
+   */
+  readonly keptPopupRef: ShallowRef<HTMLElement | null>;
+  /**
    * A ref to the element of the backdrop part, also while `KeepAlive` holds the part. Its animations
-   * end an open change while the popup and the positioner give no element. The popup of a Dialog
-   * that mounts in a held branch gives none, so its close needs the held backdrop to end.
+   * end an open change while the popup and the positioner give no element. This also lets a
+   * backdrop that first mounts in a held branch end a close on its own.
    */
   readonly backdropRef: ShallowRef<HTMLElement | null>;
   /**
@@ -181,6 +186,7 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
 export function createPopupStoreContext() {
   return {
     popupRef: shallowRef<HTMLElement | null>(null),
+    keptPopupRef: shallowRef<HTMLElement | null>(null),
     backdropRef: shallowRef<HTMLElement | null>(null),
     triggerElements: new PopupTriggerMap(),
     onOpenChange: undefined,

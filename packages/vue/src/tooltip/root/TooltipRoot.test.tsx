@@ -128,6 +128,19 @@ describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
 
   popupAnatomyTests({
+    held: {
+      createRoot: ({ open, onOpenChangeComplete, keepMounted, content }) => (
+        <Tooltip.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+          <Tooltip.Trigger>Open</Tooltip.Trigger>
+          <Tooltip.Portal keepMounted={keepMounted}>{content}</Tooltip.Portal>
+        </Tooltip.Root>
+      ),
+      createPopup: () => (
+        <Tooltip.Positioner>
+          <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>
+        </Tooltip.Positioner>
+      ),
+    },
     createComponent: ({ open, onOpenChangeComplete, content }) => (
       <Tooltip.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
         <Tooltip.Trigger>Open</Tooltip.Trigger>

@@ -36,24 +36,27 @@ describe('useVaseUiId', () => {
     expect(id).not.toBe(otherId);
   });
 
-  it('VUE-93: gives the generated id for an empty override', async () => {
+  it.each([
+    { name: 'an empty override', blank: '' },
+    { name: 'an override of white space only', blank: '\n\t ' },
+  ])('VUE-93: gives the generated id for $name', async ({ blank }) => {
     const { setProps } = await render(<IdComponent />);
     const generatedId = screen.getByTestId('id').id;
 
-    await setProps({ id: '' });
+    await setProps({ id: blank });
     expect(screen.getByTestId('id')).toHaveAttribute('id', generatedId);
 
     await setProps({ id: 'custom' });
     expect(screen.getByTestId('id')).toHaveAttribute('id', 'custom');
 
-    await setProps({ id: '' });
+    await setProps({ id: blank });
     expect(screen.getByTestId('id')).toHaveAttribute('id', generatedId);
   });
 
-  it('VUE-93: keeps an override of white space only, as Base UI does', async () => {
-    await render(<IdComponent id=" " />);
+  it('VUE-93: keeps an override that has white space beside other characters', async () => {
+    await render(<IdComponent id=" a b " />);
 
-    expect(screen.getByTestId('id')).toHaveAttribute('id', ' ');
+    expect(screen.getByTestId('id')).toHaveAttribute('id', ' a b ');
   });
 
   it('follows a change of the override', async () => {

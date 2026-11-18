@@ -7,25 +7,30 @@ import type { PopupStoreState, PopupTriggerDataStore } from './store';
 /** A ref or a store entry that holds the element of a part. */
 export interface ElementTarget {
   value: HTMLElement | null;
+  /**
+   * Receives the element even when the part mounts in a branch that `KeepAlive` holds.
+   * Supply this target only for a reader that needs the held element.
+   */
+  kept?: ElementTarget | undefined;
 }
 
 /**
  * Makes the `ref` setter of a part that gives its element to a target of its root. Call it in
  * `setup`. The setter takes an element or a component that exposes `element`.
  *
- * The setter clears the target only while the target holds the element of its own part. The target
- * gets `null` while `KeepAlive` holds the part, and the element again at the activation. A part
- * that mounts in a held branch gives no element until its activation.
+ * The setter clears a target only if it still holds this part's element. By default, the part
+ * releases `value` during a hold and gives it the current element at activation.
  *
- * With `keepWhileHeld`, the target keeps the element while `KeepAlive` holds the part. Set it only
- * when a reader of the target needs the element of a held part.
+ * The optional `kept` target receives the element even when the part mounts in a held branch.
+ * Set `keepWhileHeld` when a reader of `value` needs the element during the hold.
  */
 export function createElementSetter(
   target: ElementTarget,
   { keepWhileHeld = false }: { keepWhileHeld?: boolean | undefined } = {},
-) {
+): (value: Element | ComponentPublicInstance | null) => void {
   const element = shallowRef<HTMLElement | null>(null);
   const isHeld = keepWhileHeld ? undefined : useKeepAliveState().isHeld;
+  const setKept = target.kept && createElementSetter(target.kept, { keepWhileHeld: true });
 
   watch(
     () => (isHeld?.value ? null : element.value),
@@ -46,8 +51,10 @@ export function createElementSetter(
     { flush: 'sync' },
   );
 
-  return (value: Element | ComponentPublicInstance | null) => {
-    element.value = resolveElement(value) as HTMLElement | null;
+  return (value) => {
+    const given = resolveElement(value) as HTMLElement | null;
+    element.value = given;
+    setKept?.(given);
   };
 }
 
@@ -66,11 +73,12 @@ export function stateElementTarget<Key extends string>(
   };
 }
 
-/** Makes the target of a popup part. It writes `popupRef` of the context and the key `popupElement`. */
+/** Makes the targets for the popup element of the store and for the transition of a held popup. */
 export function popupElementTarget(
   store: PopupTriggerDataStore<PopupStoreState<unknown>>,
 ): ElementTarget {
   return {
+    kept: store.context.keptPopupRef,
     get value() {
       return toRaw(store.state).popupElement;
     },
