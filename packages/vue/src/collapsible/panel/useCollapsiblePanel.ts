@@ -11,6 +11,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { isFiniteAnimation } from '../../utils/getFiniteAnimations';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { CollapsibleRootChangeEventDetails } from '../root/CollapsibleRoot.vue';
 import * as CollapsiblePanelDataAttributes from './CollapsiblePanelDataAttributes';
 
@@ -162,10 +163,6 @@ export function useCollapsiblePanel(
 
   // `KeepAlive` keeps the state of a held part. The effects below do not run for a held panel,
   // because the element is out of the document and its computed style is empty.
-  const { isHeld } = useKeepAliveState();
-  let cleanupSizeEffect: (() => void) | undefined;
-  let cleanupCloseEffect: (() => void) | undefined;
-
   // If `KeepAlive` deactivates an open panel with a keyframe animation, the next reveal must not
   // play the open animation again.
   function markActivityResumeAnimationSuppressed() {
@@ -185,13 +182,6 @@ export function useCollapsiblePanel(
   });
 
   function runSizeEffect() {
-    cleanupSizeEffect?.();
-    cleanupSizeEffect = undefined;
-
-    if (isHeld.value) {
-      return;
-    }
-
     const open = isOpen();
     const mounted = isMounted();
     const transitionStatus = getTransitionStatus();
@@ -246,8 +236,7 @@ export function useCollapsiblePanel(
         setDimensions(getDimensions(panel));
 
         if (!skipNextOpen) {
-          cleanupSizeEffect = restoreLayoutStyles;
-          return;
+          return restoreLayoutStyles;
         }
 
         const restoreTransitionDuration = setTemporaryStyle(
@@ -258,8 +247,7 @@ export function useCollapsiblePanel(
         );
         setPendingTemporaryStyleRestore(restoreTransitionDuration);
         forcePanelIdle.value = true;
-        cleanupSizeEffect = restoreLayoutStyles;
-        return;
+        return restoreLayoutStyles;
       }
 
       setDimensions(getDimensions(panel));
@@ -325,10 +313,7 @@ export function useCollapsiblePanel(
     }
   }
 
-  onMounted(runSizeEffect);
-  watch([isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus], runSizeEffect, {
-    flush: 'post',
-  });
+  useDomEffect([isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus], runSizeEffect);
 
   useOpenChangeComplete({
     enabled: () => isOpen() && isMounted() && panelTransitionStatus.value === 'idle',
@@ -365,13 +350,6 @@ export function useCollapsiblePanel(
   // the animations.
   // See https://github.com/mui/base-ui/issues/3099
   function runCloseEffect() {
-    cleanupCloseEffect?.();
-    cleanupCloseEffect = undefined;
-
-    if (isHeld.value) {
-      return;
-    }
-
     if (isOpen() || !isMounted() || panelTransitionStatus.value !== 'ending') {
       return;
     }
@@ -389,14 +367,14 @@ export function useCollapsiblePanel(
       runOnceCloseAnimationsFinish(completeClose, abortController.signal);
     });
 
-    cleanupCloseEffect = () => {
+    return () => {
       AnimationFrame.cancel(endingStyleFrame);
       abortController.abort();
     };
   }
 
-  onMounted(runCloseEffect);
-  watch([isMounted, isOpen, panelTransitionStatus], runCloseEffect, { flush: 'post' });
+  useDomEffect([isMounted, isOpen, panelTransitionStatus], runCloseEffect);
+  const { isHeld } = useKeepAliveState();
 
   // The close effect reads the animations of the panel two frames after the ending style. A late
   // frame can end a keyframe exit before that read, and the panel then has its open style again.
@@ -523,8 +501,6 @@ export function useCollapsiblePanel(
     isHeld,
     (held) => {
       if (!held) {
-        runSizeEffect();
-        runCloseEffect();
         // The browser removes `hidden` in the task of `beforematch`, after the listeners. A hold
         // in that task comes before that removal, so the revert of a reveal that the hold stopped
         // runs here and not at the hold.
@@ -532,10 +508,6 @@ export function useCollapsiblePanel(
         return;
       }
 
-      cleanupSizeEffect?.();
-      cleanupSizeEffect = undefined;
-      cleanupCloseEffect?.();
-      cleanupCloseEffect = undefined;
       markActivityResumeAnimationSuppressed();
       restorePendingTemporaryStyle();
     },
@@ -575,11 +547,7 @@ export function useCollapsiblePanel(
     { flush: 'sync' },
   );
 
-  onScopeDispose(() => {
-    cleanupSizeEffect?.();
-    cleanupCloseEffect?.();
-    restorePendingTemporaryStyle();
-  });
+  onScopeDispose(restorePendingTemporaryStyle);
 
   const props = computed(() => ({
     ...(shouldPersistHiddenTransitionStyles.value

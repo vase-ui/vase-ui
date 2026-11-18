@@ -18,6 +18,7 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
+import { useDomEffect } from '../useDomEffect';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isEventTargetWithin, isRootElement } from '../element';
@@ -336,10 +337,10 @@ export function useDismiss(
   // that popup before the popup above checks the press.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
-  function clearInsideComponentTree() {
+  function clearInsideComponentTree(store = getStore()) {
     clearInsideComponentTreeTimeout.clear();
-    if (getStore().context.insideComponentTree) {
-      getStore().context.insideComponentTree = false;
+    if (store.context.insideComponentTree) {
+      store.context.insideComponentTree = false;
     }
   }
 
@@ -527,7 +528,7 @@ export function useDismiss(
   watch(() => getStore().select('open'), takeLayer);
 
   // A close and an open in one flush never show `open === false` to a watcher, so only
-  // `openchange` can observe that session boundary. `update` covers the other changes.
+  // `openchange` can observe that session boundary. The listener effect covers the other changes.
   function handleOpenChange(details: FloatingUIOpenChangeDetails) {
     // Only the closing half ends the session: `setOpen(true)` on an already-open
     // element (hovering an inactive trigger) must not drop a press mid-gesture.
@@ -548,45 +549,22 @@ export function useDismiss(
     touchState = null;
   }
 
-  // The store whose `openchange` event the composable listens to.
-  let listenedStore: PopupInteractionStore | undefined;
-
-  function listenToStore() {
-    const nextStore = getStore();
-    if (nextStore === listenedStore) {
-      return;
-    }
-
-    if (listenedStore) {
-      listenedStore.context.events.off('openchange', handleOpenChange);
-      // After the move, no listener of this composable clears the marker of the last store. A set
-      // marker makes the next outside press of that store count as inside.
-      listenedStore.context.insideComponentTree &&= false;
-    }
-    listenedStore = nextStore;
-    nextStore.context.events.on('openchange', handleOpenChange);
+  function endSession() {
+    resetSession();
+    cancelDismissOnEndTimeout.clear();
+    compositionTimeout.clear();
   }
 
-  const { isHeld } = useKeepAliveState();
-  let cleanup: (() => void) | undefined;
-
-  function update() {
-    cleanup?.();
-    cleanup = undefined;
-    listenToStore();
-
-    const open = getStore().select('open');
-    if (isHeld.value || !open || !isEnabled()) {
-      // Reset here, not in the cleanup, which also runs when a source changes mid-gesture.
-      if (!open || isHeld.value) {
-        resetSession();
-        cancelDismissOnEndTimeout.clear();
-        compositionTimeout.clear();
+  function listenToDocument() {
+    const store = getStore();
+    const open = store.select('open');
+    if (!open || !isEnabled()) {
+      // A source can change mid-gesture. Only a close or a hold ends the session.
+      if (!open) {
+        endSession();
       }
-      // The marker is not cleared in the cleanup of the listeners, which can run mid-press when
-      // a source changes. In a closed shadow root, the marker is the only inside-press signal.
-      cleanup = clearInsideComponentTree;
-      return;
+      // A closed shadow root has no other inside-press signal. Keep the marker during a press.
+      return () => clearInsideComponentTree(store);
     }
 
     const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = getBubbles();
@@ -1118,7 +1096,7 @@ export function useDismiss(
       listenInFrames(),
     );
 
-    cleanup = () => {
+    return () => {
       unsubscribe();
       preventedPressSuppressionTimeout.clear();
       resetPressStartState();
@@ -1126,7 +1104,28 @@ export function useDismiss(
     };
   }
 
-  watch(
+  const getPositionerElement = () => getStore().select('positionerElement');
+  let removePositionerBelow: (() => void) | undefined;
+
+  // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
+  // listener to a document or to a store that a module shares.
+  onMounted(() => {
+    getPositionerElementGetters().add(getPositionerElement);
+    removePositionerBelow = parent?.addElementBelow(getPositionerElement);
+    watch(
+      getStore,
+      (store, _previous, onCleanup) => {
+        store.context.events.on('openchange', handleOpenChange);
+        onCleanup(() => {
+          store.context.events.off('openchange', handleOpenChange);
+          // A marker left on the previous store would count its next outside press as inside.
+          clearInsideComponentTree(store);
+        });
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
+  useDomEffect(
     [
       getStore,
       () => getStore().select('open'),
@@ -1137,27 +1136,23 @@ export function useDismiss(
       () => getBubbles().outsidePress,
       tree,
     ],
-    update,
-    { flush: 'post' },
+    listenToDocument,
   );
 
-  const getPositionerElement = () => getStore().select('positionerElement');
-  let removePositionerBelow: (() => void) | undefined;
-
-  // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
-  // listener to a document or to a store that a module shares.
-  onMounted(() => {
-    getPositionerElementGetters().add(getPositionerElement);
-    removePositionerBelow = parent?.addElementBelow(getPositionerElement);
-    update();
-  });
-  watch(isHeld, update, { flush: 'sync' });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        endSession();
+        clearInsideComponentTree();
+      }
+    },
+    { flush: 'sync' },
+  );
   onScopeDispose(() => {
     removePositionerBelow?.();
     getPositionerElementGetters().delete(getPositionerElement);
-    listenedStore?.context.events.off('openchange', handleOpenChange);
-    cleanup?.();
-    clearInsideComponentTree();
   });
 
   const reference: DismissElementProps['reference'] = {

@@ -10,6 +10,7 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
+import { useDomEffect } from '../useDomEffect';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isTargetInsideEnabledTrigger, isTypeableElement, matchesFocusVisible } from '../element';
@@ -54,7 +55,6 @@ export function useFocus(
   // The element that the last `focusin` event reached: the trigger of this composable. `KeepAlive`
   // closes the popup only when this element is the anchor of the store.
   let lastFocusedTrigger: Element | null = null;
-  const { isHeld } = useKeepAliveState();
   let disposed = false;
 
   // As in Base UI, one timer serves the open request of a focus and the check of a focus out. The
@@ -81,14 +81,7 @@ export function useFocus(
     keyboardModality = false;
   }
 
-  let stopWindowListeners: (() => void) | undefined;
-  function listenToWindow() {
-    stopWindowListeners?.();
-    stopWindowListeners = undefined;
-    if (isHeld.value) {
-      return;
-    }
-
+  useDomEffect([enabled, currentStore], () => {
     const win = ownerWindow(currentStore().select('anchorElement'));
     // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
     // enabled only while a menu of the menubar is open, so it would miss the press that opened the
@@ -99,8 +92,7 @@ export function useFocus(
       trackModality && addEventListener(win, 'pointerdown', onWindowPointerdown, true),
     );
     if (!enabled()) {
-      stopWindowListeners = stopTrackingModality;
-      return;
+      return stopTrackingModality;
     }
 
     // If the reference was focused and the user left the tab/window, and the
@@ -119,14 +111,8 @@ export function useFocus(
       }
     }
 
-    stopWindowListeners = mergeCleanups(
-      addEventListener(win, 'blur', onWindowBlur),
-      stopTrackingModality,
-    );
-  }
-  onMounted(listenToWindow);
-  watch([enabled, currentStore], listenToWindow, { flush: 'post' });
-  onScopeDispose(() => stopWindowListeners?.());
+    return mergeCleanups(addEventListener(win, 'blur', onWindowBlur), stopTrackingModality);
+  });
 
   // A dismissal by Escape or by a press of the trigger leaves the focus on the trigger. The same
   // focus must not open the popup again.
@@ -155,13 +141,13 @@ export function useFocus(
   watch([enabled, () => currentStore().context.events], listenToOpenChange);
   onScopeDispose(() => stopListeningToOpenChange?.());
 
+  const { isHeld } = useKeepAliveState();
   // `KeepAlive` takes the focused trigger out of the document. Firefox and WebKit send no
   // `focusout` for it. A popup that focus opened would then stay open after the activation, with
   // no focus on its trigger.
   watch(
     isHeld,
     (held) => {
-      listenToWindow();
       if (!held) {
         return;
       }
