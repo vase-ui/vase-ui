@@ -142,10 +142,49 @@ type UpstreamSuite = FamilyExtract['cases'][number];
 
 interface SuiteMatch {
   suite: UpstreamSuite;
+  paths: string[];
   rows: ({ path: string; row: TestRow } | undefined)[];
   unpaired: number;
   titleProblems: string[];
   ambiguous?: string[];
+}
+
+interface RowPool {
+  path: string;
+  rows: TestRow[];
+  claims: RowClaim[];
+  extraOwner: SuiteMatch;
+}
+
+interface RowClaim {
+  owner: SuiteMatch;
+  index: number;
+  order: number;
+  choices: RowPool[];
+}
+
+function reserveRow(claim: RowClaim, visited: Set<RowPool>): boolean {
+  for (const pool of claim.choices) {
+    if (pool.claims.length < pool.rows.length) {
+      pool.claims.push(claim);
+      return true;
+    }
+  }
+  // A split helper can use another file when this suite needs its last occurrence.
+  for (const pool of claim.choices) {
+    if (visited.has(pool)) {
+      continue;
+    }
+    visited.add(pool);
+    const index = pool.claims.findLastIndex(
+      (prior) => prior.choices.length > 1 && reserveRow(prior, visited),
+    );
+    if (index >= 0) {
+      pool.claims[index] = claim;
+      return true;
+    }
+  }
+  return false;
 }
 
 function describePaths(titles: string[]): string[] {
@@ -159,9 +198,9 @@ export function matchCases(
   const matches = new Map<UpstreamSuite, SuiteMatch>();
   const destinations = new Map<string, SuiteMatch[]>();
   for (const suite of suites) {
-    const match: SuiteMatch = { suite, rows: [], unpaired: 0, titleProblems: [] };
-    matches.set(suite, match);
     const paths = counterparts(suite.file, vase.files).filter((path) => !path.endsWith('.vue'));
+    const match: SuiteMatch = { suite, paths, rows: [], unpaired: 0, titleProblems: [] };
+    matches.set(suite, match);
     if (paths.length > 1 && !vase.files.relocations?.has(suite.file)) {
       match.ambiguous = paths;
       continue;
@@ -171,21 +210,15 @@ export function matchCases(
     }
   }
 
+  const pools = new Map<string, Map<string, RowPool>>();
   for (const [path, owners] of destinations) {
     const rows = vase.rowsOf(path);
-    const pool = Map.groupBy(rows, (row) => keyOf(row, 'vase'));
     const upstream = owners.flatMap(({ suite }) => suite.rows);
     owners[0].titleProblems.push(...checkTitleNames(path, rows, upstream));
     const blocks = new Map<string, SuiteMatch>();
-    for (const owner of owners) {
-      owner.suite.rows.forEach((row, index) => {
-        if (!owner.rows[index]) {
-          const found = pool.get(keyOf(row, 'upstream'))?.shift();
-          if (found) {
-            owner.rows[index] = { path, row: found };
-          }
-        }
-        if (owners.length > 1) {
+    if (owners.length > 1) {
+      for (const owner of owners) {
+        for (const row of owner.suite.rows) {
           for (const block of describePaths(
             row.describe.map((title) => toVaseName(title, 'title')),
           )) {
@@ -194,16 +227,38 @@ export function matchCases(
             }
           }
         }
-      });
-    }
-    for (const remaining of pool.values()) {
-      if (remaining.length) {
-        const owner =
-          describePaths(remaining[0].describe)
-            .map((block) => blocks.get(block))
-            .find(Boolean) ?? owners[0];
-        owner.unpaired += remaining.length;
       }
+    }
+    const byKey = new Map<string, RowPool>();
+    for (const [key, occurrences] of Map.groupBy(rows, (row) => keyOf(row, 'vase'))) {
+      const extraOwner =
+        describePaths(occurrences[0].describe)
+          .map((block) => blocks.get(block))
+          .find(Boolean) ?? owners[0];
+      byKey.set(key, { path, rows: occurrences, claims: [], extraOwner });
+    }
+    pools.set(path, byKey);
+  }
+
+  let order = 0;
+  for (const owner of matches.values()) {
+    if (owner.ambiguous) {
+      continue;
+    }
+    for (const [index, row] of owner.suite.rows.entries()) {
+      const key = keyOf(row, 'upstream');
+      const choices = owner.paths.flatMap((path) => pools.get(path)?.get(key) ?? []);
+      reserveRow({ owner, index, order: order++, choices }, new Set());
+    }
+  }
+  for (const byKey of pools.values()) {
+    for (const pool of byKey.values()) {
+      pool.claims
+        .sort((a, b) => a.order - b.order)
+        .forEach(({ owner, index }, i) => {
+          owner.rows[index] = { path: pool.path, row: pool.rows[i] };
+        });
+      pool.extraOwner.unpaired += pool.rows.length - pool.claims.length;
     }
   }
   return matches;

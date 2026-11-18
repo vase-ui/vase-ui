@@ -215,7 +215,9 @@ function resolveRelocations(
   function compiled(path: string): boolean {
     if (!typeTests) {
       const folder = join(root, 'packages/vue');
-      const config = ts.readConfigFile(join(folder, 'tsconfig.test.json'), ts.sys.readFile);
+      const config = ts.readConfigFile(join(folder, 'tsconfig.test.json'), (file) =>
+        ts.sys.readFile(file),
+      );
       typeTests = new Set(
         config.error ? [] : ts.parseJsonConfigFileContent(config.config, ts.sys, folder).fileNames,
       );

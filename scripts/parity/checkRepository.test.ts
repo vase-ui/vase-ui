@@ -6,6 +6,7 @@ import { after, test } from 'node:test';
 import type { TestContext } from 'node:test';
 import { readTestRows } from './cases.ts';
 import type { TestRow } from './cases.ts';
+import { runParityCheck } from './check.ts';
 import { checkBetter, checkRepository, formatSummary } from './checkRepository.ts';
 import type {
   BetterRow,
@@ -183,7 +184,7 @@ function relocationFixture(t: TestContext) {
         throw new Error('No public surface in this fixture.');
       },
     });
-  return { write, family, check, parity };
+  return { root, write, family, check, parity };
 }
 
 const upstreamPoint = 'packages/utils/src/point.ts';
@@ -198,7 +199,7 @@ const merged: Relocation = {
 };
 
 test('merged sources and an inline split each get one source credit', (t) => {
-  const { write, family, check, parity } = relocationFixture(t);
+  const { root, write, family, check, parity } = relocationFixture(t);
   const axis = 'packages/utils/src/axis.ts';
   const cursor = 'packages/utils/src/cursor.ts';
   const sfc = 'packages/vue/src/tooltip/Root.vue';
@@ -218,11 +219,16 @@ test('merged sources and an inline split each get one source credit', (t) => {
     },
   ]);
   parity.better = [{ ...betterRow('VUE-1'), dueWith: cursor }];
-  const result = check();
+  const [geometry] = parity.families;
+  write('parity/upstream.json', JSON.stringify(parity.upstream));
+  write('parity/families/geometry.json', JSON.stringify(geometry.family));
+  write('parity/families/geometry.upstream.json', JSON.stringify(geometry.extract));
+  write('parity/better/VUE-1.json', JSON.stringify(parity.better[0]));
+  const { result, files } = runParityCheck(root);
   assert.deepEqual(result.problems, []);
   assert.equal(result.families[0].summary.sources.ported, 3);
   assert.equal(result.better.due, 1);
-  assert.equal(checkBetter(parity.better, result.files, () => []).summary.due, 1);
+  assert.equal(checkBetter(parity.better, files, () => []).summary.due, 1);
   write(pointOwner, "export const point = 'axis'; // axis\npoint.axis;");
   assert.deepEqual(
     check().problems.filter((problem) => problem.includes('has no declaration for "axis"')),

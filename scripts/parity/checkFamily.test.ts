@@ -435,6 +435,29 @@ test('a split suite helper can retain cases in more than one source file', () =>
   assert.equal(result.summary.rowsWithoutUpstream, 1);
 });
 
+test('a split helper leaves a shared occurrence for a suite with only one destination', () => {
+  const file = 'packages/react/test/shared.tsx';
+  const other = 'packages/react/test/keyboard.ts';
+  const pointer = 'packages/vue/test/pointer.ts';
+  const keyboard = 'packages/vue/test/keyboard.ts';
+  const options = {
+    extract: makeExtract({
+      sources: [file, other],
+      cases: [
+        { file, rows: [first] },
+        { file: other, rows: [first] },
+      ],
+    }),
+    paths: [keyboard, pointer],
+    relocations: new Map([[file, [keyboard, pointer]]]),
+    rows: { [keyboard]: [first], [pointer]: [first] },
+  };
+  const result = run([], options);
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.summary.cases.matched, 2);
+  assert.equal(result.summary.rowsWithoutUpstream, 0);
+});
+
 const SOURCE = 'packages/utils/src/clamp.ts';
 const sourceExtract = makeExtract({ sources: [SOURCE], cases: [] });
 
