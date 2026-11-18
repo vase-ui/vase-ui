@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -8,6 +9,7 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
@@ -152,6 +154,42 @@ describe('<Drawer.Backdrop />', () => {
     await fireEvent.pointerDown(backdrop, { pointerType: 'mouse', button: 0 });
     await fireEvent.click(backdrop, { detail: 1 });
     expect(screen.queryByRole('dialog')).toBe(null);
+  });
+
+  it('ends a close while KeepAlive holds a popup and a backdrop that mounted in the held branch', async () => {
+    const handleOpenChangeComplete = vi.fn();
+    const open = shallowRef(true);
+    let store!: DialogStore<unknown>;
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(
+      () => [
+        <Drawer.Backdrop key="backdrop" />,
+        <Drawer.Viewport key="viewport">
+          <Drawer.Popup />
+        </Drawer.Viewport>,
+      ],
+      { renderBranch: (part) => part },
+    );
+    await render(() => (
+      <Drawer.Root open={open.value} onOpenChangeComplete={handleOpenChangeComplete}>
+        <DialogStoreProbe
+          onStore={(value) => {
+            store = value;
+          }}
+        />
+        <Drawer.Portal>
+          <HeldBranch />
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    await mountWhileHeld();
+    expect(store.context.popupRef.value).toBe(null);
+    expect(store.context.backdropRef.value?.isConnected).toBe(false);
+
+    open.value = false;
+
+    await waitFor(() => {
+      expect(handleOpenChangeComplete).toHaveBeenCalledWith(false);
+    });
   });
 
   describe('server render', () => {
