@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { useFloatingRootStore } from '../../src/utils/popups/floating-root/useFloatingRootStore';
 import { useFloatingFocusManager } from '../../src/utils/popups/focus/FloatingFocusManager';
 

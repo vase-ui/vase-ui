@@ -4,7 +4,7 @@ import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/f
 import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type {
   PopoverRootActions,
   PopoverRootChangeEventDetails,

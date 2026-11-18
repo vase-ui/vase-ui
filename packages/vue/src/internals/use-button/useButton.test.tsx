@@ -670,7 +670,7 @@ describe('useButton', () => {
       expect(handleReset).toHaveBeenCalledTimes(1);
     });
 
-    it('does not click composite buttons when keydown calls preventBaseUIHandler', async () => {
+    it('does not click composite buttons when keydown calls preventVaseUIHandler', async () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(
@@ -699,7 +699,7 @@ describe('useButton', () => {
       expect(handleClick).toHaveBeenCalledTimes(0);
     });
 
-    it('does not click non-composite buttons when keydown/keyup calls preventBaseUIHandler', async () => {
+    it('does not click non-composite buttons when keydown/keyup calls preventVaseUIHandler', async () => {
       const handleClick = vi.fn();
 
       const TestButton = defineComponent(

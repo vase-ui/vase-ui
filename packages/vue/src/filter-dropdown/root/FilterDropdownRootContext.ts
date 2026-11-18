@@ -1,6 +1,6 @@
 import { computed, inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { REASONS } from '../../internals/reasons';
 import type { FilterDropdownStore } from '../store';
 

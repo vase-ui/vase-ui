@@ -19,7 +19,7 @@ import {
 } from '../../../test/fixtures/MenuParentFixture';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { createAttribute } from '../../utils/popups/createAttribute';
 

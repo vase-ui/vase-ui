@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { TooltipHandle } from '../store/TooltipHandle';
 
@@ -77,7 +77,7 @@ export type TooltipRootChangeEventDetails =
 
 <script setup lang="ts" generic="Payload = unknown">
 import { onMounted, provide, watch } from 'vue';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
 import { useClientPoint } from '../../utils/popups/interactions/useClientPoint';

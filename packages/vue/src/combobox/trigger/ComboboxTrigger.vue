@@ -59,7 +59,7 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { given } from '../../internals/givenAttributes';

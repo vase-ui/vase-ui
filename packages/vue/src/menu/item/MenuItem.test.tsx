@@ -124,7 +124,7 @@ describe('<Menu.Item />', () => {
     },
   );
 
-  it('allows onMouseDown to call preventBaseUIHandler', async () => {
+  it('allows onMouseDown to call preventVaseUIHandler', async () => {
     await render(
       <Menu.Root open>
         <Menu.Portal>
@@ -138,8 +138,9 @@ describe('<Menu.Item />', () => {
     );
 
     const item = screen.getByRole('menuitem');
-
-    await fireEvent.mouseDown(item);
+    const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    await fireEvent(item, event);
+    expect(event).toHaveProperty('vaseUIHandlerPrevented', true);
   });
 
   it('perf: does not rerender menu items unnecessarily', async ({ skip }) => {
@@ -339,7 +340,7 @@ describe('<Menu.Item />', () => {
     },
   );
 
-  it('does not close the menu when onClick prevents Base UI handler', async () => {
+  it('does not close the menu when onClick prevents Vase UI handler', async () => {
     const onClick = vi.fn((event) => event.preventVaseUIHandler());
     const { user } = await render(
       <Menu.Root>

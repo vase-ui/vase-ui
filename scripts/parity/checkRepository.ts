@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { isSuiteRow } from './cases.ts';
+import { checkTitleNames, isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { checkFamily } from './checkFamily.ts';
 import type { FamilySummary, FileTally, RowTally } from './checkFamily.ts';
@@ -10,6 +10,7 @@ import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
 import { hasCounterpart, isTestFile, matchesAny, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import {
+  checkPathNames,
   extractCommand,
   extractFile,
   familyFile,
@@ -146,12 +147,14 @@ function checkHiddenProps(files: VaseFiles, root: string): string[] {
 
 export function checkRepository(input: CheckInput): CheckResult {
   const { parity, files, root } = input;
-  const problems = [...parity.problems];
+  const problems = [...parity.problems, ...checkPathNames(root)];
   const families: FamilyReport[] = [];
 
   // One refused file must not hide the other problems. It gives one problem and has no rows.
   const refused = new Set<string>();
+  const readTests = new Set<string>();
   const rowsOf = (path: string): TestRow[] => {
+    readTests.add(path);
     if (refused.has(path)) {
       return [];
     }
@@ -213,12 +216,13 @@ export function checkRepository(input: CheckInput): CheckResult {
     );
   }
 
-  const better = checkBetter(parity.better, files, () =>
-    [...files.paths]
-      .filter(isTestFile)
-      .sort()
-      .flatMap((path) => rowsOf(path)),
-  );
+  const tests = [...files.paths].filter(isTestFile).sort();
+  for (const path of tests) {
+    if (!readTests.has(path)) {
+      problems.push(...checkTitleNames(path, rowsOf(path)));
+    }
+  }
+  const better = checkBetter(parity.better, files, () => tests.flatMap(rowsOf));
   problems.push(...better.problems);
   problems.push(...checkHiddenProps(files, root));
   return { problems, families, better: better.summary };

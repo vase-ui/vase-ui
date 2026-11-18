@@ -31,7 +31,7 @@ import { Main as Navigation } from '../../../../test/floating-ui-tests/Navigatio
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { platform } from '../../../common/platform';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useClick } from '../interactions/useClick';

@@ -9,7 +9,7 @@ import {
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Tooltip from '../../tooltip/index.parts';
 import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';

@@ -108,7 +108,7 @@ describe('<Fieldset.Root />', () => {
     expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
   });
 
-  it('passes disabled to rendered Base UI roots', async () => {
+  it('passes disabled to rendered Vase UI roots', async () => {
     await render(
       <div>
         <Fieldset.Root

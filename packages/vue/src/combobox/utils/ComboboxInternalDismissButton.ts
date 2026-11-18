@@ -1,7 +1,7 @@
 import { computed, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 

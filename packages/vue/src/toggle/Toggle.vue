@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ButtonHTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { REASONS } from '../internals/reasons';
 import type { NativeButtonProps, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
 
@@ -54,10 +54,10 @@ import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../internals/composite/item/useCompositeItem';
-import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useButton } from '../internals/use-button';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useToggleGroupContext } from '../toggle-group/ToggleGroupContext';

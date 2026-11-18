@@ -619,7 +619,7 @@ describe('<Drawer.Viewport />', () => {
     );
   });
 
-  it('allows clicks on non-interactive elements without data-base-ui-swipe-ignore', async () => {
+  it('allows clicks on non-interactive elements without data-vase-ui-swipe-ignore', async () => {
     const handleClick = vi.fn();
     const handleOpenChange = vi.fn();
 
@@ -655,7 +655,7 @@ describe('<Drawer.Viewport />', () => {
     expect(backdrop).not.toHaveAttribute('data-swiping');
   });
 
-  it('does not start touch swipes from elements with data-base-ui-swipe-ignore', async () => {
+  it('does not start touch swipes from elements with data-vase-ui-swipe-ignore', async () => {
     const handleOpenChange = vi.fn();
 
     await render(
@@ -687,7 +687,7 @@ describe('<Drawer.Viewport />', () => {
     expect(handleOpenChange).not.toHaveBeenCalled();
   });
 
-  describe('data-base-ui-swipe-ignore axis values', () => {
+  describe('data-vase-ui-swipe-ignore axis values', () => {
     async function renderAxisDrawer(
       swipeDirection: 'down' | 'right',
       children: VNodeChild,

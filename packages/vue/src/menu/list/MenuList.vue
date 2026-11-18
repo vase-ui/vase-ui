@@ -19,7 +19,7 @@ export interface MenuListProps
 import { EMPTY_OBJECT } from '../../common/empty';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { createElementSetter, stateElementTarget } from '../../utils/popups/createElementSetter';
 import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';

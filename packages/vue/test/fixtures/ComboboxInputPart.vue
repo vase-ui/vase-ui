@@ -4,7 +4,7 @@ import {
   useComboboxInputValueContext,
   useComboboxRootContext,
 } from '../../src/combobox/root/ComboboxRootContext';
-import { createChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { REASONS } from '../../src/internals/reasons';
 import { mergeProps } from '../../src/merge-props';
 

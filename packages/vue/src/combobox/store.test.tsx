@@ -13,7 +13,7 @@ import {
 } from '#test-utils';
 import { actOnElement } from '../../test/fixtures/actOnElement';
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
-import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { defaultItemEquality } from '../internals/itemEquality';
 import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';

@@ -57,7 +57,7 @@ export interface MenuPopupProps
 import { computed, inject, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';

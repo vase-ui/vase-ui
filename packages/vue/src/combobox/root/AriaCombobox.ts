@@ -22,11 +22,11 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import type {
   VaseUIChangeEventDetails,
   VaseUIHighlightEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';

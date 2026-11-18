@@ -10,7 +10,7 @@ import {
   popupStoreSelectors,
 } from './store';
 import type { PopupOpenChangeEventDetails, PopupStoreContext, PopupStoreState } from './store';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 
 function createState(state: Partial<PopupStoreState<unknown>>) {

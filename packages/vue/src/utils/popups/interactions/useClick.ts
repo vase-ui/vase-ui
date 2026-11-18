@@ -3,7 +3,7 @@ import type { MaybeRefOrGetter } from 'vue';
 import { getTarget } from '../../../common/shadowDom';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import { useTimeout } from '../../../common/useTimeout';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { isTypeableElement } from '../element';

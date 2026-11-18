@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Layout } from '../utils/layout';
@@ -198,7 +198,7 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';

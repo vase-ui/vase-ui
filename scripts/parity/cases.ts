@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { toVaseName } from './paths.ts';
 
 export interface CaseRow {
   describe: string[];
@@ -16,6 +17,60 @@ export type TestRow = CaseRow | SuiteRow;
 
 export function isSuiteRow(row: TestRow): row is SuiteRow {
   return 'suite' in row;
+}
+
+export function titlesOf(row: TestRow): string[] {
+  return isSuiteRow(row) ? row.describe : [...row.describe, row.title];
+}
+
+type TitleKind = 'describe' | 'case';
+
+function visitTitles(
+  rows: TestRow[],
+  visit: (parents: string[], title: string, kind: TitleKind) => void,
+): void {
+  for (const row of rows) {
+    row.describe.forEach((title, index) => visit(row.describe.slice(0, index), title, 'describe'));
+    if (!isSuiteRow(row)) {
+      visit(row.describe, row.title, 'case');
+    }
+  }
+}
+
+export function portedTitleName(upstreamRows: TestRow[]) {
+  const key = (parents: string[], title: string, kind: TitleKind) =>
+    JSON.stringify([
+      kind,
+      parents.map((part) => toVaseName(part, 'title')),
+      toVaseName(title, 'title'),
+    ]);
+  const spaced = new Set<string>();
+  visitTitles(upstreamRows, (parents, title, kind) => {
+    if (title.includes('Base UI') || title.includes('Vase UI')) {
+      spaced.add(key(parents, title, kind));
+    }
+  });
+  return (parents: string[], title: string, kind: TitleKind): string => {
+    // A title of our own can cite Base UI, even if a ported block uses the same words.
+    const ported = title.includes('Base UI') && spaced.has(key(parents, title, kind));
+    return toVaseName(title, ported ? 'title' : 'path');
+  };
+}
+
+export function checkTitleNames(
+  path: string,
+  rows: TestRow[],
+  upstreamRows: TestRow[] = [],
+): string[] {
+  const nameOf = portedTitleName(upstreamRows);
+  const problems = new Set<string>();
+  visitTitles(rows, (parents, title, kind) => {
+    const name = nameOf(parents, title, kind);
+    if (name !== title) {
+      problems.add(`${path}: use "${name}" for the test title "${title}".`);
+    }
+  });
+  return [...problems];
 }
 
 interface Declaration {

@@ -13,7 +13,7 @@ export interface FilterDropdownPopupPartProps extends /* @vue-ignore */ WithVase
 <script setup lang="ts">
 import { useAttrs } from 'vue';
 import { useFilterDropdownRootContext } from '../../src/filter-dropdown/root/FilterDropdownRootContext';
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import { useMenuFilterPopup } from '../../src/menu/filter-root/useMenuFilterPopup';
 import { mergeProps } from '../../src/merge-props';
 

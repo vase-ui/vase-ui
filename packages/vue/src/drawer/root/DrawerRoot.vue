@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { DrawerHandle } from '../handle';
 import type {
@@ -152,7 +152,7 @@ import { NOOP } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useControlled } from '../../common/useControlled';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';

@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
@@ -78,7 +78,7 @@ import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
-import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { useRegisterFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
@@ -86,7 +86,7 @@ import { useFormContext } from '../internals/form-context';
 import { given } from '../internals/givenAttributes';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useVaseUiId';
 import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';

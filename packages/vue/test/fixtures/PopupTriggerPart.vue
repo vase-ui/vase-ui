@@ -27,9 +27,9 @@ export interface PopupTriggerPartProps
 
 <script setup lang="ts">
 import { computed, inject } from 'vue';
-import { createChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { REASONS } from '../../src/internals/reasons';
-import { useVaseUiId } from '../../src/internals/useBaseUiId';
+import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../src/utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../src/utils/popups/popupStoreUtils';

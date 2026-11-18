@@ -123,7 +123,7 @@ describe('<Dialog.Close />', () => {
     expect(handleOpenChange.mock.calls[1][0]).toBe(false);
   });
 
-  it('does not close the dialog when the Base UI click handler is prevented', async () => {
+  it('does not close the dialog when the Vase UI click handler is prevented', async () => {
     const handleOpenChange = vi.fn();
 
     const { user } = await render(

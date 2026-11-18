@@ -55,7 +55,7 @@ import {
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';

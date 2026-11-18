@@ -6,7 +6,7 @@ description: A utility to merge multiple sets of Vue props. It handles event han
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
-import DemoMergePropsPreventBaseUiHandler from '../demos/merge-props/prevent-base-ui-handler/css-modules/index.vue';
+import DemoMergePropsPreventVaseUiHandler from '../demos/merge-props/prevent-vase-ui-handler/css-modules/index.vue';
 </script>
 
 # mergeProps
@@ -46,14 +46,14 @@ When you use the `#render` slot, you bind `props` on your own element. To add li
 In this demo, a click does not change the Toggle while `locked` is `true`:
 
 <DemoFrame>
-  <DemoMergePropsPreventBaseUiHandler />
+  <DemoMergePropsPreventVaseUiHandler />
 </DemoFrame>
 
 ::: code-group
 
-<<< ../demos/merge-props/prevent-base-ui-handler/css-modules/index.vue
+<<< ../demos/merge-props/prevent-vase-ui-handler/css-modules/index.vue
 
-<<< ../demos/merge-props/prevent-base-ui-handler/css-modules/index.module.css
+<<< ../demos/merge-props/prevent-vase-ui-handler/css-modules/index.module.css
 
 :::
 

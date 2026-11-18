@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { REASONS } from '../../src/internals/reasons';
 import type {
   ComponentRenderFn,
@@ -33,7 +33,7 @@ export interface GenericPartProps<Value>
 <script setup lang="ts" generic="Value">
 import { computed } from 'vue';
 import { useControlled } from '../../src/common/useControlled';
-import { createChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 
 defineOptions({ inheritAttrs: false });

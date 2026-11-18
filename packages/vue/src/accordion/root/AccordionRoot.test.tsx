@@ -605,7 +605,7 @@ describe('<Accordion.Root />', () => {
     );
   });
 
-  it('allows onMouseUp to call preventBaseUIHandler on the trigger', async () => {
+  it('allows onMouseUp to call preventVaseUIHandler on the trigger', async () => {
     await render(
       <Accordion.Root>
         <Accordion.Item value={0}>
@@ -620,8 +620,9 @@ describe('<Accordion.Root />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Trigger 1' });
-
-    await fireEvent.mouseUp(trigger);
+    const event = new MouseEvent('mouseup', { bubbles: true, cancelable: true });
+    await fireEvent(trigger, event);
+    expect(event).toHaveProperty('vaseUIHandlerPrevented', true);
   });
 
   describe.skipIf(isJSDOM)('keyboard interactions', () => {
@@ -727,7 +728,7 @@ describe('<Accordion.Root />', () => {
     );
   });
 
-  describe('BaseUIChangeEventDetails', () => {
+  describe('VaseUIChangeEventDetails', () => {
     it('onOpenChange cancel() prevents opening while uncontrolled', async () => {
       const onValueChange = vi.fn();
 

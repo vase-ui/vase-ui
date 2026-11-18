@@ -1,9 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { counterparts, hasCounterpart, matchesAny, vaseFiles } from './paths.ts';
+import { counterparts, hasCounterpart, matchesAny, toVaseName, vaseFiles } from './paths.ts';
 
 const counterpartRules: { name: string; upstream: string; files: string[]; expected: string[] }[] =
   [
+    {
+      name: 'a folder and a file take the Vase UI form of each name',
+      upstream: 'packages/react/src/base-ui/useBaseUiId.ts',
+      files: ['packages/vue/src/vase-ui/useVaseUiId.ts'],
+      expected: ['packages/vue/src/vase-ui/useVaseUiId.ts'],
+    },
     {
       name: 'a utils source file maps to common',
       upstream: 'packages/utils/src/clamp.ts',
@@ -78,6 +84,18 @@ for (const { name, upstream, files, expected } of counterpartRules) {
     assert.equal(hasCounterpart(upstream, vaseFiles(files)), expected.length > 0);
   });
 }
+
+test('the name map preserves case and maps the words Base UI only in titles', () => {
+  const text = 'BaseUI BaseUi baseUI baseUi base-ui Base UI BASE_UI Baseui data-base-ui-open';
+  assert.equal(
+    toVaseName(text),
+    'VaseUI VaseUi vaseUI vaseUi vase-ui Base UI BASE_UI Baseui data-vase-ui-open',
+  );
+  assert.equal(
+    toVaseName(text, 'title'),
+    'VaseUI VaseUi vaseUI vaseUi vase-ui Vase UI BASE_UI Baseui data-vase-ui-open',
+  );
+});
 
 test('matchesAny reads * as one folder, ** as many folders, and a parenthesis as itself', () => {
   assert.equal(matchesAny('packages/utils/src/a.ts', ['packages/utils/src/**']), true);

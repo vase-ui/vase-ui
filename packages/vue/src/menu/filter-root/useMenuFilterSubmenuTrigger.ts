@@ -5,7 +5,7 @@ import { useEnhancedClickHandler } from '../../common/useEnhancedClickHandler';
 import { useFilterDropdownItem } from '../../filter-dropdown/item/useFilterDropdownItem';
 import type { UseFilterDropdownItemParameters } from '../../filter-dropdown/item/useFilterDropdownItem';
 import { useFilterContextForList } from '../../filter-dropdown/root/FilterDropdownRootContext';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';
 import { isVirtualPointerEvent } from '../../utils/popups/event';

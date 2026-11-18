@@ -4,7 +4,7 @@ import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+} from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';

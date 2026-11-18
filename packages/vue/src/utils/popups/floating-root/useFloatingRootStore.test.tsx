@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { createRenderer } from '#test-utils';
-import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { provideFloatingNode } from '../tree/FloatingTree';
 import { useFloatingRootStore } from './useFloatingRootStore';

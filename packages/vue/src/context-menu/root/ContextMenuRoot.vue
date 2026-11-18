@@ -23,7 +23,7 @@ export type ContextMenuRootChangeEventDetails = MenuRootChangeEventDetails;
 
 <script setup lang="ts">
 import { provide, shallowRef, useTemplateRef } from 'vue';
-import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import MenuRoot from '../../menu/root/MenuRoot.vue';

@@ -5,7 +5,7 @@ import type {
   AriaComboboxState,
 } from '../../combobox/root/AriaCombobox';
 import type { ComboboxInputElementValue } from '../../combobox/root/ComboboxRootContext';
-import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { Group } from '../../internals/resolveValueLabel';
 
 export interface AutocompleteRootProps<ItemValue = any> extends Omit<
