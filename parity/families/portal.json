@@ -22,6 +22,13 @@
       "title": "allows refs as containers",
       "kind": "not-applicable",
       "reason": "Vue templates unwrap refs. The to prop takes the target value. PopupPortal.spec.tsx checks the public type."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["$name container resolution"],
+      "title": "keeps content connected when an indicator exit removes the container in the same checkpoint",
+      "kind": "not-applicable",
+      "reason": "The case uses `Checkbox.Indicator`, which is cut, as the element whose exit animation removes the container."
     }
   ],
   "surfaceAdditions": [],

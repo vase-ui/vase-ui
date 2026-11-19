@@ -20,7 +20,7 @@ const emit = defineEmits<{
   'update:modelValue': [checked: boolean];
   'update:indeterminate': [indeterminate: false];
 }>();
-defineSlots<{
+const slots = defineSlots<{
   element?(scope: {
     props: Record<string, unknown>;
     elementRef: (target: unknown) => void;
@@ -136,7 +136,8 @@ watch(
 );
 
 useFieldControl(field, element, {
-  id: () => elementId.value,
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,
@@ -150,7 +151,7 @@ watch(
       group.addCheckbox({
         value,
         get id() {
-          return elementId.value;
+          return (slots.element && el.id) || elementId.value;
         },
         element: el,
         get disabled() {

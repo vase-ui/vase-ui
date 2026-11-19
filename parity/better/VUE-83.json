@@ -1,8 +1,0 @@
-{
-  "id": "VUE-83",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/control/FieldControl.tsx#L119"
-  ],
-  "behavior": "When the control that gave the last input of a field unmounts, or `KeepAlive` holds it, the field validates the input before it that is still there. Base UI then validates no input until another control attaches its input.",
-  "dueWith": "packages/react/src/field/control/FieldControl.tsx"
-}

@@ -4,7 +4,14 @@
     "docs/src/app/(docs)/react/components/toolbar/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Switch"],
+      "kind": "not-applicable",
+      "reason": "`Switch` is one native `<input type=\"checkbox\" role=\"switch\">`. A `Toolbar.Button` renders a `<button>`, and a button cannot hold an input."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

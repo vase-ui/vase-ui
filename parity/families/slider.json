@@ -47,6 +47,97 @@
       "prop": "tabIndex",
       "kind": "not-applicable",
       "reason": "The part declares this prop as `tabindex`, the name of the attribute in the types of Vue. The prop has a row in `surfaceAdditions`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "describe": ["<Slider.Root />", "Field"],
+      "title": "[data-focused]",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "describe": ["<Slider.Root />", "Field", "[data-focused] without a blur event"],
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Value",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Indicator",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Track",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Thumb",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Control",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Label",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderControlDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderThumbDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderTrackDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderValueDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     }
   ],
   "surfaceAdditions": [

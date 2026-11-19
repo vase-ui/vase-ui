@@ -9,7 +9,7 @@ import type { FieldLabelProps, FieldLabelState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<FieldLabelProps>();
-defineSlots<{
+const slots = defineSlots<{
   default?(scope: { state: FieldLabelState }): unknown;
   element?(scope: {
     props: Record<string, unknown>;
@@ -30,8 +30,9 @@ const native = computed(() => !element.value || element.value.localName === 'lab
 
 onUnmounted(
   field.addLabel({
+    // The `element` slot can give the element another `id`.
     get id() {
-      return elementId.value;
+      return (slots.element && element.value?.id) || elementId.value;
     },
     get native() {
       return native.value;

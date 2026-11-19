@@ -4,7 +4,7 @@ import RadioChoices from '../../test/fixtures/RadioChoices.vue';
 import { hydrate, renderOnServer } from '../../test/render';
 
 describe('server render and hydration', () => {
-  test('the server HTML has the role, the checked radio, the names and values; the tab stop stays the checked radio', async () => {
+  test('VUE-2: the server HTML has the role, the checked radio, the names and values; the tab stop stays the checked radio', async () => {
     const props = {
       group: { name: 'storage', defaultValue: 'hdd' },
       items: [{ key: 'ssd' }, { key: 'hdd' }, { key: 'off', attrs: { disabled: true } }],

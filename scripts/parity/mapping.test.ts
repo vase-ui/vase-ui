@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { expectedSurface, normalizeDefault } from './mapping.ts';
+import { acceptElementSlot, expectedSurface, normalizeDefault } from './mapping.ts';
 import type { PropRow, SurfaceFile, SurfacePart } from './typesMd.ts';
 
 function row(
@@ -223,6 +223,26 @@ test('expectedSurface refuses an actionsRef row with no Actions block anywhere',
     message:
       /docs\/sample\/types\.md: "Part" has the row "actionsRef", but it has no Actions block/,
   });
+});
+
+test('acceptElementSlot maps the row render to the slot element of a part with no prop as', () => {
+  const part = makePart([row('render')], { tag: 'input' });
+  const expected = expectedSurface(part, makeFile(part));
+  acceptElementSlot(expected, { props: new Map(), slots: new Map([['element', {}]]) });
+  assert.deepEqual([...expected.props.keys()], []);
+  assert.deepEqual([...expected.slots.keys()], ['element']);
+  assert.deepEqual([...expected.exposed.keys()], ['element']);
+});
+
+test('acceptElementSlot keeps the prop as and the slot render of a part with the prop as', () => {
+  const part = makePart([row('render')], { tag: 'div' });
+  const expected = expectedSurface(part, makeFile(part));
+  acceptElementSlot(expected, {
+    props: new Map([['as', {}]]),
+    slots: new Map([['element', {}]]),
+  });
+  assert.deepEqual([...expected.props.keys()], ['as']);
+  assert.deepEqual([...expected.slots.keys()], ['render', 'default']);
 });
 
 const defaults: [string, string | null, string | null][] = [

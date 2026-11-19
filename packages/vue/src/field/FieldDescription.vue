@@ -9,7 +9,7 @@ import type { FieldDescriptionProps, FieldDescriptionState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<FieldDescriptionProps>();
-defineSlots<{
+const slots = defineSlots<{
   default?(scope: { state: FieldDescriptionState }): unknown;
   element?(scope: {
     props: Record<string, unknown>;
@@ -26,8 +26,9 @@ const elementId = computed(() => givenId(props.id) ?? generatedId);
 
 onUnmounted(
   field.addDescriber({
+    // The `element` slot can give the element another `id`.
     get id() {
-      return elementId.value;
+      return (slots.element && element.value?.id) || elementId.value;
     },
     shown: true,
   }),

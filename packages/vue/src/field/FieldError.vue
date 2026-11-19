@@ -9,7 +9,7 @@ import type { FieldErrorProps, FieldErrorState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<FieldErrorProps>();
-defineSlots<{
+const slots = defineSlots<{
   default?(scope: { state: FieldErrorState }): unknown;
   element?(scope: {
     props: Record<string, unknown>;
@@ -33,8 +33,9 @@ const messages = computed(() =>
 
 onUnmounted(
   field.addDescriber({
+    // The `element` slot can give the element another `id`.
     get id() {
-      return elementId.value;
+      return (slots.element && element.value?.id) || elementId.value;
     },
     get shown() {
       return shows.value;

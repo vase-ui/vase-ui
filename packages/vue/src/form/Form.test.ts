@@ -343,7 +343,7 @@ describe('validation at a submit', () => {
 });
 
 describe('errors', () => {
-  test('a field is invalid while errors has its name; the form follows changes in place', async () => {
+  test('VUE-13: a field is invalid while errors has its name; the form follows changes in place', async () => {
     const errors = reactive<Record<string, string | string[]>>({ email: 'Taken.', other: 'None.' });
     const { field, input } = await mountForm({
       form: { errors },

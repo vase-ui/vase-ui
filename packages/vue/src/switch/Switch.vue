@@ -18,7 +18,7 @@ const emit = defineEmits<{
   checkedChange: [checked: boolean, details: SwitchChangeEventDetails];
   'update:modelValue': [checked: boolean];
 }>();
-defineSlots<{
+const slots = defineSlots<{
   element?(scope: {
     props: Record<string, unknown>;
     elementRef: (target: unknown) => void;
@@ -59,7 +59,8 @@ const state = computed<SwitchState>(() => ({
 }));
 
 useFieldControl(field, element, {
-  id: () => elementId.value,
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,

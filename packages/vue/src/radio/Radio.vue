@@ -12,7 +12,7 @@ import type { RadioProps, RadioState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<RadioProps<Value>>();
-defineSlots<{
+const slots = defineSlots<{
   element?(scope: {
     props: Record<string, unknown>;
     elementRef: (target: unknown) => void;
@@ -101,7 +101,8 @@ watch(
 
 // A `Field.Item` names the radio with its label.
 useFieldControl(field, element, {
-  id: () => elementId.value,
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
   name: () => undefined,
   disabled: () => isDisabled.value,
   readOnly: () => isReadonly.value,

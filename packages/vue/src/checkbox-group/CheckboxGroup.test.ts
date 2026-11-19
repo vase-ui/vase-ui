@@ -113,7 +113,7 @@ describe('the group', () => {
     expect(group.modelValue).toEqual(['gala']);
   });
 
-  test('a controlled group shows its prop again, follows a change in place, and null is empty', async () => {
+  test('VUE-35: a controlled group shows its prop again, follows a change in place, and null is empty', async () => {
     const log: string[] = [];
     const group = groupModel(log, null, false);
     const { box, checked } = await mountGroup({ group, items: apples('fuji', 'gala') });
@@ -162,7 +162,7 @@ describe('the group', () => {
     expect(checked()).toEqual([]);
   });
 
-  test('a checkbox with no value keeps its own state, a value with no checkbox stays, and a checkbox emits only for its press', async () => {
+  test('VUE-42: a checkbox with no value keeps its own state, a value with no checkbox stays, and a checkbox emits only for its press', async () => {
     const log: string[] = [];
     const group = groupModel(log, ['fuji', 'pink']);
     const items = reactive<Item[]>([
@@ -273,6 +273,29 @@ describe('the parent checkbox', () => {
     box('all').click();
     await settle();
     expect(checked()).toEqual(['fuji']);
+  });
+
+  test('VUE-153: a disabled child keeps its state after another child with its value unmounts', async () => {
+    const items = reactive<Item[]>([
+      parent,
+      { key: 'gala1', value: 'gala', attrs: { disabled: true } },
+      { key: 'gala2', value: 'gala' },
+      { key: 'pink', value: 'pink' },
+    ]);
+    const { box, checked } = await mountGroup({
+      group: { allValues: ['gala', 'pink'], defaultValue: ['gala'] },
+      items,
+    });
+    items.splice(2, 1);
+    await nextTick();
+    box('all').click();
+    await settle();
+    expect(checked()).toContain('gala1');
+    expect(box('pink').checked).toBe(true);
+    box('all').click();
+    await settle();
+    expect(checked()).toContain('gala1');
+    expect(box('pink').checked).toBe(false);
   });
 
   test('emits its new state, has no name, and names its children in aria-controls in the order of allValues', async () => {
@@ -446,7 +469,7 @@ describe('in a field', () => {
     expect(box('pink')).toHaveFocus();
   });
 
-  test('a Form focuses the first checkbox in the document, also one that mounts later', async () => {
+  test('VUE-78: a Form focuses the first checkbox in the document, also one that mounts later', async () => {
     const items = reactive<Item[]>(apples('gala', 'pink'));
     const { box, submit } = await mountGroup({
       items,

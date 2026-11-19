@@ -3,32 +3,177 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/field/description/FieldDescription.test.tsx",
-      "describe": ["<Field.Description />"],
-      "title": "does not register an empty description id",
+      "upstream": "packages/react/src/field/control/FieldControlDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/description/FieldDescriptionDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/error/FieldErrorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/item/FieldItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/label/FieldLabelDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/field/description/FieldDescription.test.tsx",
-      "reason": "An empty `id` counts as no `id` (`VUE-93`). The description then has the generated id, and the control names it in `aria-describedby` after the id of the consumer. The case `VUE-93: registers the generated id of a description with an empty id` asserts it."
+      "test": "packages/vue/src/input/Input.field.test.ts",
+      "reason": "`Input` is the control of a field, under one name (rule 8.10). `Input.field.test.ts` tests the value, the state and the validation of a field with an `Input`."
+    },
+    {
+      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
+      "describe": ["<Field.Control />", "[data-focused]"],
+      "kind": "not-applicable",
+      "reason": "The part has no state field `focused` and no `data-focused`. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/field/description/FieldDescription.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "`Field.test.ts` tests the id of the description and the `aria-describedby` of the control."
+    },
+    {
+      "upstream": "packages/react/src/field/error/FieldError.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "`Field.test.ts` tests when the error shows, `match`, the messages and the error in `<Transition>`."
+    },
+    {
+      "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.test.ts",
+      "reason": "A `Field.Item` gives one checkbox of a group a label, a description and its own disabled state. `CheckboxGroup.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/field/label/FieldLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "`Field.test.ts` tests the id of the label, `for`, a label that is not a `<label>`, and a label around the control."
+    },
+    {
+      "upstream": "packages/react/src/field/label/FieldLabel.test.tsx",
+      "describe": ["<Field.Label />", "control selection"],
+      "kind": "not-applicable",
+      "reason": "A field has one control, as a native label has one labeled control. The control that mounted last is the control. The better way is one `Field.Root` for each control."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.react17.test.tsx",
       "kind": "not-applicable",
-      "reason": "The file tests the paths for React 17. It mocks `SafeReact`, so that React has no `useId` and no `captureOwnerStack`. Vue `useId` gives the ids, and Vue has no owner stack."
+      "reason": "The file tests the id of React 17, which has no `useId`. Vue gives each part an id with `useId`."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
-      "title": "does not set `aria-labelledby` during SSR when Field.Label is absent",
       "kind": "replaced",
-      "test": "packages/vue/src/field/root/FieldRoot.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case with the same title renders a select in a field with no label, and asserts that the server HTML of the trigger has no `aria-labelledby`."
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "`Field.test.ts` tests the validation, the modes, the debounce, the states, the template ref and the form of the field."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "custom validity ownership"],
+      "kind": "not-applicable",
+      "reason": "The field owns the custom validity of its control. The better way is `validate`, `invalid` or the `errors` of the form, which also show the message in `Field.Error`."
+    },
+    {
+      "upstream": "packages/react/src/field/validity/FieldValidity.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "The default slot of `Field.Root` gives the validity, the errors, the value and the first value. `Field.test.ts` tests the slot."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Root",
-      "prop": "actionsRef",
       "kind": "not-applicable",
-      "reason": "A React ref prop. The part exposes `validate()`, and the case \"validates the field when the `validate` method is called\" tests it. `pnpm parity:check` cannot read that member, because vue-component-meta leaves out an exposed member that has the name of a prop, and `validate` is also a prop."
+      "reason": "The state has no `focused` (rule 8.15). A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own. `v-model:dirty` and `v-model:touched` replace `dirty` and `touched`, and the template ref has `validate()`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Item",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused` (rule 8.15). A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Description",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Label",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused` (rule 8.15). The label reads its element after the mount, so it needs no `nativeLabel`: a `<label>` names the control with `for`, and another element with `aria-labelledby`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Error",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused` (rule 8.15) and no `transitionStatus`: a `<Transition>` around `Field.Error` gives the animation (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Control",
+      "kind": "not-applicable",
+      "reason": "`Field.Control` is cut. `Input` is this part, under one name (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "Validity",
+      "kind": "not-applicable",
+      "reason": "`Field.Validity` is cut. The default slot of `Field.Root` gives the validity, the errors, the value and the first value."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldControlDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldDescriptionDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldErrorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldLabelDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
+      "entry": "FieldRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
@@ -39,31 +184,6 @@
     }
   ],
   "surfaceAdditions": [
-    {
-      "entry": "Control",
-      "prop": "modelValue",
-      "reason": "The part reads `modelValue` to find out that it is controlled, so it is a declared prop. Base UI reads it from the native attributes of the input, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Control",
-      "emit": "update:modelValue",
-      "reason": "The part has the prop `modelValue`, so `v-model` needs this emit. `types.md` has no row `value`, so the check expects no such emit."
-    },
-    {
-      "entry": "Control",
-      "prop": "id",
-      "reason": "The part gives `id` to the labelable provider and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the input."
-    },
-    {
-      "entry": "Control",
-      "prop": "name",
-      "reason": "The part registers `name` with the field and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the input."
-    },
-    {
-      "entry": "Control",
-      "prop": "disabled",
-      "reason": "The part reads `disabled` for the state and for the registration, so it is a declared prop. Base UI reads it from the native attributes of the input."
-    },
     {
       "entry": "Error",
       "prop": "id",
@@ -78,17 +198,104 @@
       "entry": "Description",
       "prop": "id",
       "reason": "The part gives `id` to the labelable provider as the id of a message and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the p."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:dirty",
+      "reason": "`v-model:dirty` controls the dirty state. Base UI takes the `dirty` prop and has no event for the change."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:touched",
+      "reason": "`v-model:touched` controls the touched state. Base UI takes the `touched` prop and has no event for the change."
     }
   ],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/field/control/FieldControl.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/input/Input.vue",
+      "behavior": "`Input` is the control of a field: the field gets its value, its state and its validation.",
+      "witness": "packages/vue/src/input/Input.field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/description/FieldDescription.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldDescription.vue",
+      "behavior": "The description gives its id to the `aria-describedby` of the control.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/error/FieldError.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldError.vue",
+      "behavior": "The error shows the messages of the field while the field is invalid.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/parts.ts",
+      "behavior": "The parts of the namespace `Field`.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/item/FieldItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldItem.vue",
+      "behavior": "An item gives one control of a group a label, a description and its own disabled state.",
+      "witness": "packages/vue/src/checkbox-group/CheckboxGroup.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/item/FieldItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldItem.vue",
+      "behavior": "The item gives its control a field of its own through `fieldKey`.",
+      "witness": "packages/vue/src/checkbox-group/CheckboxGroup.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/label/FieldLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldLabel.vue",
+      "behavior": "The label names the control with `for`, or with `aria-labelledby` when it is not a `<label>`.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The field holds the value, the state and the validation of its control.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/root/useFieldValidation.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The field runs the native check, then `validate`, at the moments of its mode.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
       "upstream": "packages/react/src/field/utils/getCombinedFieldValidityData.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/internals/field-root-context/FieldRootContext.ts",
-      "member": "getCombinedFieldValidityData",
-      "witness": "packages/vue/src/field/validity/FieldValidity.test.tsx"
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The validity of the field joins the native failures and the result of `validate`.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/validity/FieldValidity.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The default slot of `Field.Root` gives the validity, the errors, the value and the first value.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/field/control/FieldControl.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/input/Input.spec.tsx",
+      "behavior": "The types of the template ref and the listeners of `Input`.",
+      "witness": "packages/vue/src/input/Input.spec.tsx"
     }
   ]
 }

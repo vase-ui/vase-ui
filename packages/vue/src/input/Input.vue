@@ -19,7 +19,7 @@ const emit = defineEmits<{
   valueChange: [value: string, details: InputChangeEventDetails];
   'update:modelValue': [value: string];
 }>();
-defineSlots<{
+const slots = defineSlots<{
   element?(scope: {
     props: Record<string, unknown>;
     elementRef: (target: unknown) => void;
@@ -70,7 +70,8 @@ useFormReset(element, () => {
 });
 
 useFieldControl(field, element, {
-  id: () => elementId.value,
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,

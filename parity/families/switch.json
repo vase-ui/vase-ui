@@ -6,49 +6,87 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "extra props"],
-      "title": "prefers a render element's `aria-label` over an associated label",
+      "upstream": "packages/react/src/switch/index.parts.ts",
       "kind": "not-applicable",
-      "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
+      "reason": "The family has one part, and `index.ts` exports it. No namespace holds the parts."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRootContext.ts",
+      "kind": "not-applicable",
+      "reason": "The context gives the state of the switch to `Switch.Thumb`, which is cut. The `element` slot gives the state."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/switch/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes its data attributes itself. A native state, such as `checked`, has a CSS pseudo-class and no data attribute."
+    },
+    {
+      "upstream": "packages/react/src/switch/thumb/SwitchThumb.tsx",
+      "kind": "not-applicable",
+      "reason": "`Switch.Thumb` is cut. An element of the developer beside the input (`:checked + .thumb`), or the `element` slot with `state`, gives the thumb."
+    },
+    {
+      "upstream": "packages/react/src/switch/thumb/SwitchThumbDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Form"],
-      "title": "preserves Field validation props through canceled changes, submit, and reset",
       "kind": "replaced",
-      "test": "packages/vue/src/switch/root/SwitchRoot.test.tsx",
-      "reason": "The last lines of the case say that a native reset does not change the switch. Vase UI resets an uncontrolled switch to `defaultChecked` (`BUG-6206`). The case \"preserves Field validation props through canceled changes, submit, and a native reset\" has the other assertions of the upstream case and the reset of Vase UI. The block \"BUG-6206: a native reset\" tests the reset of a switch in a form."
-    }
-  ],
-  "surfaceAdditions": [
-    {
-      "entry": "Root",
-      "prop": "ariaLabel",
-      "reason": "The part reads `aria-label` to find out if a label names the switch, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "test": "packages/vue/src/switch/Switch.test.ts",
+      "reason": "`Switch` is one native `<input type=\"checkbox\" role=\"switch\">`. `Switch.test.ts` tests the value, the read-only and disabled states, the required state, the form, the field and the label."
     },
     {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "prop: inputRef"],
+      "kind": "not-applicable",
+      "reason": "The `element` of the template ref is the input, so the part has no `inputRef`."
+    },
+    {
+      "upstream": "packages/react/src/switch/thumb/SwitchThumb.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests `Switch.Thumb`, which is cut."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
       "entry": "Root",
-      "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to find out if a label names the switch, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "kind": "not-applicable",
+      "reason": "`Switch` is the part: one `<input type=\"checkbox\" role=\"switch\">` (rules 8.1, 8.3). The flat types `SwitchProps`, `SwitchState` and `SwitchChangeEventReason` replace the namespace types. `readonly` replaces `readOnly`. `value` and `form` are plain attributes, and the `element` of the template ref replaces `inputRef`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
+      "entry": "Thumb",
+      "kind": "not-applicable",
+      "reason": "`Switch.Thumb` is cut. An element of the developer beside the input, or the `element` slot with `state`, gives the thumb."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
+      "entry": "SwitchRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
+      "entry": "SwitchThumbDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
+  "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/switch/root/SwitchRootContext.ts",
+      "upstream": "packages/react/src/switch/root/SwitchRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/switch/root/SwitchRoot.vue",
-      "member": "SwitchRootContext",
-      "witness": "packages/vue/src/switch/thumb/SwitchThumb.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/switch/stateAttributesMapping.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/switch/root/SwitchRoot.vue",
-      "member": "stateAttributesMapping",
-      "witness": "packages/vue/src/switch/root/SwitchRoot.test.tsx"
+      "destination": "packages/vue/src/switch/Switch.vue",
+      "behavior": "The switch is one native input that holds the checked state, the form value and the state of the field.",
+      "witness": "packages/vue/src/switch/Switch.test.ts"
     }
   ]
 }

@@ -65,19 +65,39 @@
       "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
     },
     {
+      "upstream": "packages/react/src/radio-group/RadioGroupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
-      "describe": ["<RadioGroup />", "Form"],
-      "title": "excludes a radio disabled through an ancestor <fieldset disabled> to match native form data",
       "kind": "replaced",
-      "test": "packages/vue/src/radio-group/RadioGroup.test.tsx",
-      "reason": "The case asserts `{ choice: null }` in the values of `onFormSubmit`. A disabled `<fieldset>` disables the group in Vase UI, and the form leaves the field out, as it does for a field in a disabled `Fieldset.Root` (VUE-112). The case \"leaves a group in a disabled fieldset out of the form values\" of the block `VUE-112: a disabled fieldset` asserts `{}` and the same native form data."
+      "test": "packages/vue/src/radio-group/RadioGroup.test.ts",
+      "reason": "`RadioGroup.test.ts` tests the value, the arrow keys, the tab stop, the read-only and disabled states, the fieldset, the form and the field of the group, with native radios."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "RadioGroup",
+      "kind": "not-applicable",
+      "reason": "`readonly` replaces `readOnly`, in the props and in the state. The state has no `focused` (rule 8.15). A template ref on a `Radio` has its input, so the group has no `inputRef`. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` and `required` have no default of their own."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "RadioGroupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "RadioGroup",
-      "prop": "id",
-      "reason": "The part gives `id` to the field as the id of its control and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "prop": "readonly",
+      "reason": "The native name of the attribute. A read-only group stays in the tab order, and the user cannot change its value."
+    },
+    {
+      "entry": "RadioGroup",
+      "stateField": "readonly",
+      "reason": "The state has the name of the prop."
     }
   ],
   "returnTypeDifferences": [],
@@ -86,9 +106,9 @@
     {
       "upstream": "packages/react/src/radio-group/RadioGroupContext.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/radio-group/radioContext.ts",
-      "member": "RadioGroupContext",
-      "witness": "packages/vue/src/radio-group/RadioGroup.test.tsx"
+      "destination": "packages/vue/src/radio-group/radio.ts",
+      "member": "radioGroupKey",
+      "witness": "packages/vue/src/radio-group/RadioGroup.test.ts"
     }
   ]
 }

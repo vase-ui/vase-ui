@@ -264,6 +264,16 @@
       "kind": "replaced",
       "test": "packages/vue/src/common/useControlled.test.tsx",
       "reason": "VUE-141 (B3): When the parent releases the prop, the part keeps the last value and accepts a local write."
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
+      "kind": "not-applicable",
+      "reason": "A checkbox is a native input, so Enter in it submits its form natively, with the default button of the form. No part finds the submitter."
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
+      "kind": "not-applicable",
+      "reason": "The file tests `getDefaultFormSubmitter`, which no part needs: the browser submits the form at Enter in a native checkbox."
     }
   ],
   "surfaceAdditions": [],
@@ -276,20 +286,6 @@
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useEnhancedClickHandler",
       "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
-    },
-    {
-      "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.vue",
-      "member": "getDefaultFormSubmitter",
-      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
-    },
-    {
-      "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx",
-      "behavior": "Enter activates the first submit button of the form.",
-      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
     }
   ]
 }

@@ -50,6 +50,37 @@
       "kind": "replaced",
       "test": "packages/vue/src/select/group-label/SelectGroupLabel.test.tsx",
       "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "Field"],
+      "title": "[data-focused]",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "Field", "[data-focused] without a blur event"],
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Trigger",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Label",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     }
   ],
   "surfaceAdditions": [

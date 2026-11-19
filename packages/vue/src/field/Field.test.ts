@@ -5,6 +5,7 @@ import type { InputChangeEventDetails } from '@vase-ui/vue/input';
 import { vModel } from '../../test/attrs';
 import { dataAttributes, recordValidate, leave } from '../../test/field';
 import ErrorInTransition from '../../test/fixtures/ErrorInTransition.vue';
+import FieldElementIds from '../../test/fixtures/FieldElementIds.vue';
 import FieldPartsReplaced from '../../test/fixtures/FieldPartsReplaced.vue';
 import FieldSlots from '../../test/fixtures/FieldSlots.vue';
 import FieldsInForm from '../../test/fixtures/FieldsInForm.vue';
@@ -218,7 +219,7 @@ describe('a disabled field', () => {
 });
 
 describe('the label', () => {
-  test('has an id, and names the control by the id of the control', async () => {
+  test('VUE-23: has an id that follows the prop, and names the control by the id of the control', async () => {
     const label = reactive({ id: '' });
     const input = reactive({ id: 'first' });
     const parts = await mountField({ label, input });
@@ -245,6 +246,18 @@ describe('the label', () => {
     const input = root.querySelector('input')!;
     expect(input).toHaveAttribute('aria-labelledby', label.id);
     await userEvent.click(label);
+    expect(input).toHaveFocus();
+  });
+
+  test('VUE-118: the element slot gives the ids, and the label, the control and the description follow them', async () => {
+    const { root } = mount(FieldElementIds);
+    await nextTick();
+    await nextTick();
+    const input = root.querySelector('input')!;
+    expect(root.querySelector('label')).toHaveAttribute('for', 'own-input');
+    expect(input).toHaveAttribute('aria-labelledby', 'own-span');
+    expect(input).toHaveAttribute('aria-describedby', 'own-description');
+    await userEvent.click(root.querySelector('span')!);
     expect(input).toHaveFocus();
   });
 
