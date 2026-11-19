@@ -134,6 +134,51 @@ describe('<PreviewCard.Trigger />', () => {
       expect(onOpenChange).not.toHaveBeenCalled();
     });
 
+    it('VUE-158: closes the old corridor when the open prop closes a kept popup', async () => {
+      const open = shallowRef(false);
+      await render(() => (
+        <PreviewCard.Root open={open.value} onOpenChange={(value) => (open.value = value)}>
+          <PreviewCard.Trigger
+            href="#preview"
+            delay={0}
+            closeDelay={0}
+            style={{
+              position: 'fixed',
+              left: '100px',
+              top: '120px',
+              width: '100px',
+              height: '100px',
+            }}
+          >
+            Link
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal keepMounted>
+            <PreviewCard.Positioner side="right" sideOffset={100} data-testid="positioner">
+              <PreviewCard.Popup style={{ width: '100px', height: '200px' }} />
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>
+      ));
+      const link = screen.getByRole('link', { name: 'Link' });
+      await enter(link);
+      await flushMicrotasks();
+      const anchor = link.getBoundingClientRect();
+      const popup = screen.getByTestId('positioner').getBoundingClientRect();
+      expect(popup.left).toBeGreaterThan(anchor.right);
+      await fireEvent.mouseLeave(link, {
+        clientX: anchor.right,
+        clientY: anchor.top + anchor.height / 2,
+      });
+      await fireEvent.mouseMove(document, { clientX: popup.left - 5, clientY: popup.bottom - 10 });
+      open.value = false;
+      await flushMicrotasks();
+      expect(link).not.toHaveAttribute('data-popup-open');
+      await enter(link);
+      expect(link).toHaveAttribute('data-popup-open');
+      await tick(50);
+      expect(link).toHaveAttribute('data-popup-open');
+    });
+
     it('stays open while the pointer crosses the gap to the card, and closes when it moves away', async () => {
       await render(
         <PreviewCard.Root>

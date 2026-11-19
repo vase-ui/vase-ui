@@ -48,6 +48,7 @@ function isPointInQuadrilateral(
 
 /**
  * The bridge covers the gap between the nearest edges. The polygon also permits diagonal travel.
+ * @see https://floating-ui.com/docs/useHover#safepolygon
  */
 export function safePolygon(
   side: Side,

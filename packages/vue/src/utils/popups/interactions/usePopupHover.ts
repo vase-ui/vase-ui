@@ -954,14 +954,23 @@ function bindHoverPopup(
   const parentId = useFloatingParentNodeId();
   const childClosedTimeout = useTimeout();
 
-  function settleIntent() {
-    if (open.value) {
-      intent.value.cancelPendingOpen();
-    } else {
-      intent.value.reset();
-    }
-  }
-  onMounted(() => watch([intent, open], settleIntent, { immediate: true, flush: 'post' }));
+  onMounted(() => {
+    watch(
+      [intent, open],
+      ([session, isOpen], [previousSession, wasOpen]) => {
+        if (isOpen) {
+          session.cancelPendingOpen();
+        } else {
+          // A controlled close can keep the popup mounted without emitting an open change.
+          if (session === previousSession && wasOpen) {
+            session.cancel();
+          }
+          session.reset();
+        }
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
 
   // The store owns the intent, and the triggers use it too. This part stops what is in flight when
   // it unmounts, when its store changes and when `KeepAlive` deactivates it.

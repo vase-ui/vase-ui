@@ -236,6 +236,19 @@
       "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
       "member": "enterPopup",
       "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/safePolygon.ts",
+      "member": "safePolygon",
+      "witness": "packages/vue/src/utils/popups/interactions/safePolygon.test.ts",
+      "additional": [
+        {
+          "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
+          "member": "trackHoverPolygon"
+        }
+      ]
     }
   ]
 }
