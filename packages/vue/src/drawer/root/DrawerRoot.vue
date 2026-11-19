@@ -158,7 +158,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDialogRoot } from '../../dialog/root/useDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
-import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
+import type { DrawerViewportContext } from './DrawerRootContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';
 
 const props = withDefaults(defineProps<DrawerRootProps<Payload>>(), {

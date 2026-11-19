@@ -3,8 +3,7 @@ import { createSSRApp, defineComponent, provide, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import * as Drawer from '../index.parts';
 import { DrawerProviderContext } from '../provider/DrawerProviderContext';
-import { useDrawerRootContext } from './DrawerRootContext';
-import { useDrawerSnapPoints } from './useDrawerSnapPoints';
+import { useDrawerRootContext, useDrawerSnapPoints } from './DrawerRootContext';
 
 // With `android` set, a root that made its close watcher in `setup` would read `window` here.
 vi.mock('../../common/platform', async () => {

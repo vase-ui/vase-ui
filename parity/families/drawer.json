@@ -74,5 +74,42 @@
       "reason": "`Drawer.Handle` is the class `DrawerHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/drawer/content/drawerContentAttribute.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.ts",
+      "member": "drawerContents",
+      "witness": "packages/vue/src/drawer/content/DrawerContent.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/useDrawerSnapPoints.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.ts",
+      "member": "useDrawerSnapPoints",
+      "witness": "packages/vue/src/drawer/root/DrawerRootContext.snapPoints.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewportContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.ts",
+      "member": "DrawerViewportContext",
+      "witness": "packages/vue/src/drawer/viewport/DrawerViewport.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.ts",
+      "member": "DrawerVirtualKeyboardContext",
+      "witness": "packages/vue/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/useDrawerSnapPoints.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.test.ts",
+      "behavior": "Snap distance, overshoot and nearest-point ties.",
+      "witness": "packages/vue/src/drawer/root/DrawerRootContext.test.ts"
+    }
+  ]
 }

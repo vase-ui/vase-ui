@@ -11,7 +11,7 @@ import {
   waitFor,
 } from '#test-utils';
 import * as Drawer from '../index.parts';
-import { useDrawerVirtualKeyboardContext } from './DrawerVirtualKeyboardContext';
+import { useDrawerVirtualKeyboardContext } from '../root/DrawerRootContext';
 
 const platformMock = vi.hoisted(() => ({ android: false }));
 

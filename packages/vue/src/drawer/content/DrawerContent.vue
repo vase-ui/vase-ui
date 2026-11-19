@@ -16,7 +16,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { drawerContents, DRAWER_CONTENT_ATTRIBUTE } from './drawerContentAttribute';
+import { drawerContents, DRAWER_CONTENT_ATTRIBUTE } from '../root/DrawerRootContext';
 
 defineOptions({ inheritAttrs: false });
 

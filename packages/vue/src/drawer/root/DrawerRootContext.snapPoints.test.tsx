@@ -1,13 +1,11 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, onScopeDispose, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import * as Drawer from '../index.parts';
-import { useDrawerRootContext } from './DrawerRootContext';
-import type { DrawerSnapPoint } from './DrawerRootContext';
-import { useDrawerSnapPoints } from './useDrawerSnapPoints';
-import type { UseDrawerSnapPointsReturnValue } from './useDrawerSnapPoints';
+import { useDrawerRootContext, useDrawerSnapPoints } from './DrawerRootContext';
+import type { DrawerSnapPoint, UseDrawerSnapPointsReturnValue } from './DrawerRootContext';
 
 const SnapPointProbe = defineComponent({
   setup() {
@@ -121,6 +119,27 @@ function nextAnimationFrame() {
 
 describe('Drawer snap point composition', () => {
   const { render } = createRenderer();
+
+  it('measures one viewport for its popup and swipe snap points', async () => {
+    const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+    onTestFinished(() => observe.mockRestore());
+    await render(
+      <Drawer.Root open modal={false} snapPoints={[0.5]}>
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport" style={{ height: '400px' }}>
+            <Drawer.Popup data-testid="popup" style={{ height: '300px' }} />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+    const viewport = screen.getByTestId('viewport');
+    await waitFor(() => {
+      expect(screen.getByTestId('popup').style.getPropertyValue('--drawer-snap-point-offset')).toBe(
+        '100px',
+      );
+    });
+    expect(observe.mock.calls.filter(([target]) => target === viewport)).toHaveLength(1);
+  });
 
   it('resolves supported units, filters invalid values, clamps heights, and keeps the last duplicate', async () => {
     const previousFontSize = document.documentElement.style.fontSize;

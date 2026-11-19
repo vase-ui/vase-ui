@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { closestSnapPointIndex, getSnapPointSwipeMovement } from './useDrawerSnapPoints';
+import { closestSnapPointIndex, getSnapPointSwipeMovement } from './DrawerRootContext';
 
 describe('getSnapPointSwipeMovement', () => {
   it('returns the raw movement when the drag does not overshoot the open edge', () => {

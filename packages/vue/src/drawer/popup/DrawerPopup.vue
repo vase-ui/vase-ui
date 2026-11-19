@@ -171,9 +171,12 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
-import { useDrawerRootContext } from '../root/DrawerRootContext';
-import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
-import { useDrawerViewportContext } from '../viewport/DrawerViewportContext';
+import {
+  getSnapPointSwipeMovement,
+  useDrawerRootContext,
+  useDrawerSnapPoints,
+  useDrawerViewportContext,
+} from '../root/DrawerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -214,7 +217,7 @@ const focusManagerDisabled = computed(() => !open.value);
 
 const swipe = useDrawerViewportContext();
 useDialogPortalContext();
-const { snapPoints, activeSnapPoint, activeSnapPointOffset } = useDrawerSnapPoints();
+const { snapPoints, activeSnapPoint, activeSnapPointOffset } = useDrawerSnapPoints(swipe);
 
 const nestedDrawerOpen = computed(() => nestedOpenDrawerCount.value > 0);
 const swiping = computed(() => swipe?.swiping.value ?? false);

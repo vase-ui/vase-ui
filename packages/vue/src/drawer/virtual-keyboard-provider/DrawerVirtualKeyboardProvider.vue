@@ -259,7 +259,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import * as DrawerViewportCssVars from '../viewport/DrawerViewportCssVars';
-import { DrawerVirtualKeyboardContext } from './DrawerVirtualKeyboardContext';
+import { DrawerVirtualKeyboardContext } from '../root/DrawerRootContext';
 
 defineSlots<{ default?: () => unknown }>();
 

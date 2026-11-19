@@ -11,7 +11,7 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { ScrollAxis } from '../../utils/scrollable';
 import type { SwipeDirection } from '../../utils/useSwipeDismiss';
-import { drawerContents } from '../content/drawerContentAttribute';
+import { drawerContents } from '../root/DrawerRootContext';
 
 export interface DrawerViewportState {
   /**
@@ -269,16 +269,15 @@ import type { UseSwipeDismissProgressDetails } from '../../utils/useSwipeDismiss
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
 import * as DrawerPopupCssVars from '../popup/DrawerPopupCssVars';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
-import { useDrawerRootContext } from '../root/DrawerRootContext';
-import type { DrawerSnapPoint } from '../root/DrawerRootContext';
 import {
+  DrawerViewportContext,
+  useDrawerRootContext,
+  useDrawerVirtualKeyboardContext,
   closestSnapPointIndex,
   getSnapPointSwipeMovement,
   useDrawerSnapPoints,
-} from '../root/useDrawerSnapPoints';
-import type { ResolvedDrawerSnapPoint } from '../root/useDrawerSnapPoints';
-import { useDrawerVirtualKeyboardContext } from '../virtual-keyboard-provider/DrawerVirtualKeyboardContext';
-import { DrawerViewportContext } from './DrawerViewportContext';
+} from '../root/DrawerRootContext';
+import type { DrawerSnapPoint, ResolvedDrawerSnapPoint } from '../root/DrawerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -304,6 +303,7 @@ const {
   openingSwipe,
 } = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
+const viewportSnapPoints = useDrawerSnapPoints();
 const {
   snapPoints,
   resolvedSnapPoints,
@@ -311,7 +311,7 @@ const {
   activeSnapPointOffset,
   setActiveSnapPoint,
   popupHeight,
-} = useDrawerSnapPoints();
+} = viewportSnapPoints;
 
 const open = computed(() => store.select('open'));
 const mounted = computed(() => store.select('mounted'));
@@ -1031,6 +1031,7 @@ watch(popupRef, (popup) => {
 });
 
 const gesture: DrawerViewportContext = {
+  snapPoints: viewportSnapPoints,
   swiping: swipe.swiping,
   getDragStyles: swipe.getDragStyles,
   release: swipeRelease,
