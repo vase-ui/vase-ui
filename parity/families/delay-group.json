@@ -11,7 +11,14 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
       "member": "provideFloatingDelayGroup",
-      "witness": "packages/vue/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx"
+      "witness": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx",
+      "member": "Group",
+      "witness": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx"
     }
   ]
 }

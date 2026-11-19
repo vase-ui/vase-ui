@@ -35,11 +35,9 @@ export interface ToastPositionerProps
 import { isElement } from '@floating-ui/utils/dom';
 import { computed, provide, shallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
-import { POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { usePositioner } from '../../utils/popups/positioning/usePositioner';
+import { usePositioner, usePopupPlacement } from '../../utils/popups/usePopupPositioner';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import * as ToastRootCssVars from '../root/ToastRootCssVars';
 import { ToastPositionerContext } from './ToastPositionerContext';
@@ -86,21 +84,11 @@ const anchorElement = computed(() => {
 const domIndex = computed(() => store.select('toastIndex', props.toast.id));
 const visibleIndex = computed(() => store.select('toastVisibleIndex', props.toast.id));
 
-const positioning = useAnchorPositioning({
-  anchor: () => anchorElement.value,
-  positionMethod: () => resolve('positionMethod'),
+const positioning = usePopupPlacement(resolve, {
+  anchor: anchorElement,
   mounted: true,
   side: () => resolve('side') ?? 'top',
-  sideOffset: () => resolve('sideOffset'),
-  align: () => resolve('align') ?? 'center',
-  alignOffset: () => resolve('alignOffset'),
-  collisionBoundary: () => resolve('collisionBoundary'),
-  collisionPadding: () => resolve('collisionPadding'),
-  sticky: () => resolve('sticky'),
-  arrowPadding: () => resolve('arrowPadding'),
-  disableAnchorTracking: () => resolve('disableAnchorTracking'),
   keepMounted: true,
-  collisionAvoidance: () => resolve('collisionAvoidance') ?? POPUP_COLLISION_AVOIDANCE,
   positionerElement,
 });
 

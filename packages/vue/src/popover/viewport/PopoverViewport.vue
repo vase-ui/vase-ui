@@ -24,15 +24,10 @@ export interface PopoverViewportProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
-import { useRenderElement } from '../../internals/useRenderElement';
 import PopupViewportChildren from '../../utils/popups/viewport/PopupViewportChildren.vue';
-import {
-  popupViewportStateMapping,
-  usePopupViewport,
-} from '../../utils/popups/viewport/usePopupViewport';
+import { usePopupViewport } from '../../utils/popups/viewport/usePopupViewport';
 import { usePopoverPositionerContext } from '../positioner/PopoverPositionerContext';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 
@@ -48,22 +43,14 @@ defineSlots<{
   render(props: { props: HTMLProps; state: PopoverViewportState; children: Component }): unknown;
 }>();
 
-const store = usePopoverRootContext();
+const { store } = usePopoverRootContext();
 const positioner = usePopoverPositionerContext();
 
-const { state: viewportState } = usePopupViewport({ store, side: positioner.side });
-
-const state = computed<PopoverViewportState>(() => ({
-  activationDirection: viewportState.value.activationDirection,
-  transitioning: viewportState.value.transitioning,
-  instant: store.select('instantType'),
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  stateAttributesMapping: popupViewportStateMapping,
-  children: true,
-});
+const { element, elementProps, setRef, usesRenderSlot, state } = usePopupViewport(
+  props,
+  store,
+  positioner.side,
+);
 
 defineExpose({ element });
 </script>

@@ -16,7 +16,7 @@ import {
   watch,
 } from 'vue';
 import type { HTMLAttributes, ShallowRef, MaybeRefOrGetter, Ref } from 'vue';
-import type { usePopupAutoResize } from './viewport/usePopupAutoResize';
+import type { usePopupAutoResize } from './viewport/usePopupViewport';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createEventEmitter } from './createEventEmitter';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';

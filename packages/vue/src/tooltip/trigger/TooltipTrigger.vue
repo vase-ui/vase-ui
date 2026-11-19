@@ -84,12 +84,12 @@ import {
   useTooltipRootContext,
 } from '../root/TooltipRootContext';
 import { isMouseLikePointerType } from '../../utils/popups/event';
-import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import {
+  usePopupHover,
+  getDelay,
+  useHoverPointerStyle,
+} from '../../utils/popups/interactions/usePopupHover';
 import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
-import { getDelay } from '../../utils/popups/interactions/useHoverShared';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { triggerBindings } from '../../utils/popups/popupBindings';
 import type { TooltipHandleStore } from '../root/TooltipRootContext';
@@ -192,21 +192,19 @@ function detectNestedTriggerHover(event: MouseEvent) {
 
   isNestedTriggerHovered = nestedTriggerHovered;
   if (nestedTriggerHovered) {
-    getHoverIntent(store.value).cancelPendingOpen();
+    hover.session.value.cancelPendingOpen();
     nestedTriggerOpenTimeout.clear();
   }
   return nestedTriggerHovered;
 }
 
-const hoverablePopupClose = safePolygon();
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(store, {
+const hover = usePopupHover(store);
+const hoverProps = hover.trigger({
   enabled: () => !isDisabled.value,
   mouseOnly: true,
   move: false,
-  handleClose: () =>
-    !disableHoverablePopup.value && trackCursorAxis.value !== 'both' ? hoverablePopupClose : null,
+  safePolygon: () => !disableHoverablePopup.value && trackCursorAxis.value !== 'both',
   restMs: getOpenDelay,
   delay: () => {
     if (props.closeDelay == null && delayGroup.hasProvider) {

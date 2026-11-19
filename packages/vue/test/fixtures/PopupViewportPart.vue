@@ -18,15 +18,11 @@ export interface PopupViewportPartProps
 </script>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue';
+import { inject } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../src/internals/types';
-import { useRenderElement } from '../../src/internals/useRenderElement';
 import PopupViewportChildren from '../../src/utils/popups/viewport/PopupViewportChildren.vue';
-import {
-  popupViewportStateMapping,
-  usePopupViewport,
-} from '../../src/utils/popups/viewport/usePopupViewport';
+import { usePopupViewport } from '../../src/utils/popups/viewport/usePopupViewport';
 import { PopupFixtureContext, PopupFixturePositionerContext } from './PopupFixture';
 
 defineOptions({ inheritAttrs: false });
@@ -44,19 +40,11 @@ if (store === undefined || positioner === undefined) {
   throw new Error('Vase UI: <PopupViewportPart> must be inside <PopupPositionerPart>.');
 }
 
-const { state: viewportState } = usePopupViewport({ store, side: positioner.side });
-
-const state = computed<PopupViewportPartState>(() => ({
-  activationDirection: viewportState.value.activationDirection,
-  transitioning: viewportState.value.transitioning,
-  instant: store.select('instantType'),
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  stateAttributesMapping: popupViewportStateMapping,
-  children: true,
-});
+const { element, elementProps, setRef, usesRenderSlot, state } = usePopupViewport(
+  props,
+  store,
+  positioner.side,
+);
 
 defineExpose({ element });
 </script>

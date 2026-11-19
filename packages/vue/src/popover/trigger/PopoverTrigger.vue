@@ -77,10 +77,8 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import {
   pressableTriggerOpenStateMapping,
   triggerOpenStateMapping,
@@ -109,7 +107,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverTriggerState>;
 }>();
 
-const rootStore = usePopoverRootContext(true);
+const rootStore = usePopoverRootContext(true)?.store;
 const store = useTriggerOwner<PopoverHandleStore<unknown>>(
   rootStore,
   () => props.handle,
@@ -146,15 +144,12 @@ const {
   closeDelay: props.closeDelay,
 }));
 
-// The handlers that one safe polygon makes share its timer, so each trigger has its own.
-const handleClose = safePolygon();
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(store, {
+const hoverProps = usePopupHover(store).trigger({
   enabled: () => !isDisabled.value && props.openOnHover && !isTouchPressOpen.value,
   mouseOnly: true,
   move: false,
-  handleClose: () => handleClose,
+  safePolygon: true,
   restMs: () => props.delay,
   delay: () => ({ close: props.closeDelay }),
   triggerElement,

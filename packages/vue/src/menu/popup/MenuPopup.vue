@@ -70,7 +70,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
-import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
+import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
@@ -139,7 +139,7 @@ const parentHandoff = inject(MenuFilterImplContext, null)?.useParentHandoff(
   virtualFocus,
 );
 
-useHoverPopupInteraction(store, {
+usePopupHover(store).popup({
   enabled: () => {
     const parentType = store.select('parent').type;
     return (

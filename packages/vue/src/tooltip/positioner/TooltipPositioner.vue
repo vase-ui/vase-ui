@@ -48,7 +48,7 @@ export interface TooltipPositionerProps
 import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { usePopupPositioner } from '../../utils/popups/popupPositioner';
+import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
 import {
   useTooltipPortalContext,
   useTooltipRootContext,
@@ -80,7 +80,7 @@ const { store } = useTooltipRootContext();
 const keepMounted = useTooltipPortalContext();
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning } =
-  usePopupPositioner<TooltipPositionerState>(store, props, {
+  usePopupPositioner<TooltipPositionerState>(props, store, {
     keepMounted,
     state: () => ({
       instant: store.state.trackCursorAxis !== 'none' ? 'tracking-cursor' : store.state.instantType,

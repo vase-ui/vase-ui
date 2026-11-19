@@ -47,7 +47,7 @@ defineSlots<{
 }>();
 
 const { open, transitionStatus } = useNavigationMenuRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles } =
+const { createArrowRef, side, align, arrowUncentered, arrowStyles } =
   useNavigationMenuPositionerContext();
 
 const state = computed<NavigationMenuArrowState>(() => ({
@@ -60,7 +60,7 @@ const state = computed<NavigationMenuArrowState>(() => ({
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: popupStateMapping,
-  ref: arrowRef,
+  ref: createArrowRef(),
   props: (attrs) => [
     { style: arrowStyles.value, 'aria-hidden': true },
     getDisabledMountTransitionStyles(transitionStatus.value),

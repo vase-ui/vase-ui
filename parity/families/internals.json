@@ -369,6 +369,13 @@
       "destination": "packages/vue/src/internals/field-register-control.ts",
       "member": "useRegisterFieldControl",
       "witness": "packages/vue/src/internals/field-register-control/useRegisterFieldControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/useTriggerSwitchTransition.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
+      "member": "useTriggerSwitchTransition",
+      "witness": "packages/vue/src/utils/popups/usePopupPositioner.triggerSwitch.test.tsx"
     }
   ]
 }

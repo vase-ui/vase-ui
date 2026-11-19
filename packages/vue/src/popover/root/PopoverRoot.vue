@@ -133,13 +133,7 @@ defineSlots<{
 // above it starts a tree, also when a part of another popup family is above it.
 const tree = usePopoverRootContext(true) === undefined ? provideFloatingTree() : undefined;
 
-const {
-  store,
-  bindParts,
-  open: isOpen,
-  payload,
-  actions,
-} = usePopupRoot(
+const owner = usePopupRoot(
   props,
   (initialState, defaultPopupId) =>
     new PopoverStore<Payload>({ ...initialState, modal: props.modal }, defaultPopupId),
@@ -157,6 +151,7 @@ const {
     },
   },
 );
+const { store, bindParts, open: isOpen, payload, actions } = owner;
 
 onScopeDispose(store.context.stickIfOpenTimeout.clear);
 
@@ -201,7 +196,7 @@ watch(
   },
 );
 
-provide(PopoverRootContext, store);
+provide(PopoverRootContext, owner);
 
 defineExpose(actions);
 </script>

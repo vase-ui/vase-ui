@@ -276,6 +276,7 @@ const TestLateArrow = defineComponent({
       positionerElement,
     });
 
+    const setArrow = positioning.createArrowRef();
     return () => (
       <>
         <div
@@ -309,7 +310,7 @@ const TestLateArrow = defineComponent({
         >
           {arrowMounted.value && (
             <div
-              ref={(element) => positioning.arrowRef(element as Element | null)}
+              ref={(element) => setArrow(element as Element | null)}
               data-testid="arrow"
               style={{ ...positioning.arrowStyles.value, width: '10px', height: '5px' }}
             />
@@ -998,6 +999,7 @@ describe('useAnchorPositioning', () => {
           positionerElement,
           defaultAnchor: trigger,
         });
+        const setArrow = positioning.createArrowRef();
         return () => (
           <div
             ref={positionerElement}
@@ -1007,7 +1009,7 @@ describe('useAnchorPositioning', () => {
           >
             {showArrow.value && (
               <div
-                ref={(element) => positioning.arrowRef(element as Element | null)}
+                ref={(element) => setArrow(element as Element | null)}
                 data-testid="arrow"
                 style={{
                   ...positioning.arrowStyles.value,
@@ -1068,6 +1070,7 @@ describe('useAnchorPositioning', () => {
             },
           },
         });
+        const setArrow = positioning.createArrowRef();
         return () => (
           <div
             ref={positionerElement}
@@ -1075,7 +1078,7 @@ describe('useAnchorPositioning', () => {
           >
             {showArrow.value && (
               <div
-                ref={(element) => positioning.arrowRef(element as Element | null)}
+                ref={(element) => setArrow(element as Element | null)}
                 data-testid="arrow"
                 style={{
                   ...positioning.arrowStyles.value,

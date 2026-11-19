@@ -1,0 +1,9 @@
+{
+  "id": "VUE-158",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/safePolygon.ts#L437",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/hoverIntent.ts#L139-L147"
+  ],
+  "behavior": "A close cancels the timer for the previous pointer corridor. A user can close a popup and hover its trigger again before that timer expires. Base UI can close the new popup with the old timer.",
+  "dueWith": "packages/react/src/utils/popups/interactions/safePolygon.ts"
+}

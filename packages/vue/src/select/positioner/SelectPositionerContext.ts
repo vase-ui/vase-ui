@@ -10,7 +10,7 @@ export interface SelectItemAlignment {
 
 export interface SelectPositionerContext extends Pick<
   UseAnchorPositioningReturnValue,
-  'align' | 'arrowRef' | 'arrowUncentered' | 'arrowStyles' | 'isPositioned'
+  'align' | 'createArrowRef' | 'arrowUncentered' | 'arrowStyles' | 'isPositioned'
 > {
   /**
    * The side of the popup. It is `'none'` while the popup is placed over the trigger.

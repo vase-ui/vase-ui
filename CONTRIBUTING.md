@@ -762,7 +762,6 @@ When a mount hook and a watcher call the same function, check whether one watche
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
 - Keep the range of `@floating-ui/utils` at the release that Base UI resolves at the tracked commit. Choose the range of `@floating-ui/vue` so that it uses the `@floating-ui/dom` of the `@floating-ui/react-dom` that Base UI resolves. The middleware is then the same: `@floating-ui/vue` 2.0 and `@floating-ui/react-dom` 2.1 depend on `@floating-ui/dom` 1.8.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
-- A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
@@ -1103,7 +1102,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - A function that a render function, a ref callback or the cleanup of a `watch` calls reads `toRaw(store.state)`. That read adds no dependency. Vue runs the cleanup of a part in the render of its parent when the part unmounts. The write methods of a store read the state in this way.
 - Read the effective `open` ref, also in a handler. A controlled root can hold a different request in its shallow state. On release, the open state takes the last value of the prop.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
-- A store, the trigger map and the hover intent have ECMAScript private members, such as `#openSession`. A method that reads or writes a private member throws a `TypeError` when it runs on a reactive proxy of such an object. Give a store to other code with `provide`, a `shallowRef`, a `computed` or a prop. Do not put a store, or an object that holds one, in `ref()`, `reactive()` or `readonly()`.
+- A store, the trigger map and the hover session have ECMAScript private members, such as `#openSession`. A method that reads or writes a private member throws a `TypeError` when it runs on a reactive proxy of such an object. Give a store to other code with `provide`, a `shallowRef`, a `computed` or a prop. Do not put a store, or an object that holds one, in `ref()`, `reactive()` or `readonly()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
 - A root attaches its store to its handle in one `watch` with a callback and `flush: 'post'`. The source of the `watch` is `undefined` while a flag is `false`. `setup` sets the flag directly after the `watch` call, so the first run is a post-flush job of the mount. `attachStore` returns the function that detaches the store. The root keeps that function, and calls it when it detaches or attaches to another handle.
 - The first run comes before the `onMounted` hook of each part below the root, so such a hook can call the handle. Vue holds that run for a root in a pending `<Suspense>` branch, and a branch that Vue drops never attaches (`VUE-64`).
@@ -1170,19 +1169,20 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 
 ### Popup positioning
 
-The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in `src/utils/popups/positioning`.
+The placement owner is `src/utils/popups/usePopupPositioner.ts`. Its anchor measurements and middleware are in `src/internals/useAnchorPositioning.ts`.
 
-- A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
-- `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
+- Call `usePopupPositioner(props, store, options)` with the reactive props of the part. It returns the element bindings, placement, open state and mounted state.
+- Supply family placement rules in `options.positioning`. These options can include a tree and a node ID.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
 - Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - A `NavigationMenu.Positioner` that mounts open has `data-instant` until a 0 ms timer ends. When the positioner mounts in a held branch, that timer starts at the activation.
-- A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
+- Select, Navigation Menu and Toast use `usePopupPlacement` and `usePositioner` directly. Each part supplies its own size or item policy.
 - Bind `positionerStyles` on the positioner. For item alignment, `Select.Positioner` binds `positionerCssVars` with its own coordinates. The size middleware waits for Vue to apply the variables before it measures the box again. When the switch from fixed to absolute positioning changes the offset parent, Floating UI computes the coordinates again before paint.
 - `Select.Popup` records the pinned edge when it aligns an item. It reads the new scroll range after the positioner applies its height.
 - The Navigation Menu root holds the popup size and the target size of the positioner. Each part binds its own dimensions. When the active item changes, its trigger measures the previous content before Vue patches it.
-- A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
+- Provide the placement to the popup and arrow. Each arrow calls `createArrowRef()` once. An old arrow releases only its own element (`VUE-160`).
+- Menu, Combobox, Popover and Preview Card use `usePopupArrow` for the arrow state and decorative element bindings.
 - The positioning context is `store.context.positioning`. The JSDoc of `PopupPositioningContext` in `utils/popups/types.ts` gives its members, and the comments of `useVaseUIFloating` say when the composable writes it.
 - `useVaseUIFloating` writes the context in `onBeforeMount`, unless `KeepAlive` holds the part. A server render thus writes nothing, and each part below a positioner that is not held finds the context in `setup`.
 - The composable removes its context from the store and from the node when the part unmounts, and while `KeepAlive` holds the part. A part that mounts in a held branch writes its context at the activation (`VUE-43`). The composable never removes the context of another positioner. The tree hides the context of a node while its own part is deactivated, and from a mount of that part in a held branch to its activation.
@@ -1191,8 +1191,8 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 
 The viewport of a popup, in `src/utils/popups/viewport`, shows the old content while the popup moves to another trigger.
 
-- A viewport part calls `usePopupViewport({ store, side })` in `setup` and gets `state`.
-- The template of `PopupViewportChildren.vue` gives the two containers. The comments of `usePopupViewport.ts` and `usePopupAutoResize.ts` give the clone of the old content and the resize (`VUE-88`).
+- Call `usePopupViewport(props, store, side)` for the element bindings, activation direction, transition state and instant type.
+- `PopupViewportChildren.vue` renders both containers. `usePopupViewport` measures the new content and keeps a copy of the old content (`VUE-88`).
 - The viewport waits for its own enter phase after the DOM patch. An animation wait on a consumer marker observes the attribute on its element.
 - The viewport publishes the measured dimensions for the popup and positioner to bind. The popup binds the anchor edges for its side. Deactivation clears the viewport’s edges before ancestor hooks run. Temporary styles expose both intrinsic sizes in one layout read.
 - When the viewport detects a KeepAlive hold, it stops measuring and ends the current morph. A live popup releases the size bindings of its held viewport. A detached popup keeps its last dimensions. The active viewport publishes its bindings again when it returns. A viewport that detects the hold at mount first measures on activation. See [Vapor mode](#vapor-mode) for held mounts in compiled parts.
@@ -1260,18 +1260,18 @@ Trigger press, focus and modality actions live in `src/utils/popups/usePopupTrig
 
 - A trigger composable returns one plain object of listeners. It makes the object one time, in `setup`. Each listener returns while the composable is not enabled.
 - The part puts the object in the `props` of `useRenderElement`, before its own props and `attrs`. A listener of the consumer then runs first, and `event.preventVaseUIHandler()` stops the handler of the composable. A native listener of Base UI cannot be stopped.
-- A composable reads the hover intent in a `computed`. A server render reads it in no hook. It thus makes no intent and adds no listener to a store that all requests share.
-- A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
+- The trigger and popup share one `usePopupHover` session per popup owner. A server render creates no session.
+- Each trigger releases only its own pending hover when it leaves, changes owner, becomes disabled or enters a KeepAlive hold (`VUE-159`).
 - In Safari on a Mac, `useTriggerFocus` records the last input of the window, a key or a pointer press (`VUE-67`). Its window listeners for this record run while `KeepAlive` does not hold the trigger, also while the trigger is not enabled. A trigger of a menubar gets enabled only after the press that opened its menu, and it must know that press.
-- Hover triggers, positioners and Navigation Menu scopes bind their pointer styles. A submenu releases its parent menu before the next pointer event in the same input. On the document body or an external scope, the hover intent restores the prior inline value and priority.
-- A trigger that blocks pointer events itself, as `NavigationMenuTrigger.vue` does, calls `restoreOutsidePointerEvents()` of the hover intent at each change of `open`, when it unmounts and when `KeepAlive` deactivates it.
-- `useHoverTriggerInteraction` adds the element of its trigger to the hover intent while the composable is enabled and `KeepAlive` does not hold the trigger. These elements are the hover triggers of the popup (`VUE-94`).
+- Hover triggers, positioners and Navigation Menu scopes bind their pointer styles. A submenu releases its parent menu before the next pointer event in the same input. On the document body or an external scope, the hover session restores the prior inline value and priority.
+- A trigger that blocks pointer events itself, as `NavigationMenuTrigger.vue` does, calls `restoreOutsidePointerEvents()` of the hover session at each change of `open`, when it unmounts and when `KeepAlive` deactivates it.
+- `usePopupHover(store).trigger(policy)` registers the trigger for pointer access while active (`VUE-94`).
 - Of the triggers that open on hover, only `NavigationMenuTrigger.vue` reads `:hover` in `onMounted` (`VUE-7`). The trigger reads `:hover` there because a browser sends no enter event for a pointer that is already over it when the hydration ends. When the trigger matches, hover is enabled and the menu is closed, it calls `onMouseenter` and then `onMousemove` of its hover props, each with a new event. The first call lets a move open the popup. The second call starts the rest timer. Under `KeepAlive`, the trigger reads `:hover` again when `isHeld` becomes `false`, after a deactivation and at the first activation of a trigger that mounted in a held branch. This follows the `KeepAlive` rules of [What differs from the React source](#what-differs-from-the-react-source). `Tooltip.Trigger`, `PreviewCard.Trigger` and `Menu.Trigger` keep the behavior of Base UI. They pass `move: false` and read no `:hover`. A pointer that is already over one of them when the hydration ends opens no popup until it enters the trigger again.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
-- `useHoverPopupInteraction` takes `store` as a store, a ref or a getter, because a part can get its store after `setup`. A change of the store runs each effect of the part again for the new store. `NavigationMenu.List` gives a getter, because the root points at the store of the active trigger.
-- A popup part gives `useHoverPopupInteraction` the close delay of the store as a getter. The trigger that owns the popup writes its `closeDelay` to the store. `preview-card/popup/PreviewCardPopup.vue` is the model.
-- A trigger part makes its own `safePolygon()` in `setup`, because the handlers of one safe polygon share one timer. It gives the result to `handleClose` in a getter or a ref, because `toValue` calls a function.
-- A popup part stops its own timer and the timers of the hover intent. It also gives back the pointer events that the intent blocked. It does both when it unmounts, when its store changes, and when `KeepAlive` deactivates it.
+- Pass a store getter to `usePopupHover` when ownership can change. `NavigationMenu.List` follows the active trigger this way.
+- Pass the current close delay to `usePopupHover(store).popup(policy)` as a getter.
+- Set `safePolygon` in the trigger policy to protect diagonal travel. A close cancels the corridor, including a change to the `open` prop of a kept popup (`VUE-158`).
+- The popup releases the document listener, timers and outside pointer block on removal, owner change or deactivation.
 - While `KeepAlive` holds a popup part, the part blocks no pointer events and has no listener on its positioner element.
 - `useTooltipCursor` has no window listener while `KeepAlive` holds the part, also when the part mounts in a held branch.
 
@@ -1553,7 +1553,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The reference of `useFloating` is `null` before the mount, while the popup is not mounted, and while `KeepAlive` holds the popup, also from a mount in a held branch to the activation. `useFloating` then starts no `autoUpdate` and computes no position. The first pass after the activation gives the position of a popup that mounts in a shown branch.
 - Write the anchor to a `shallowRef` that the reference reads, in a `watch` with `flush: 'post'`. A getter of the consumer can read the DOM of the render.
 - `useAnchorPositioning` is the only caller of `useFloating`. Its comments give the reasons for the `computed` of the reference, for its options and for the flush of each watcher.
-- A function ref of a composable reads no ref in the render, because the render then depends on that ref. Where the function ref must start work that depends on a ref, it reads the ref in a `queueMicrotask` callback. `arrowRef` of `useAnchorPositioning` does this.
+- A function ref of a composable reads no ref in the render, because the render then depends on that ref. Where the function ref must start work that depends on a ref, it reads the ref in a `queueMicrotask` callback. The arrow setter from `createArrowRef` reads the position this way.
 - The check for a rectangle must refuse a component. The ref of a component with no `expose` also gives its props. A component that has `width` and `height` props then has the names of a rectangle. A rectangle has no `nodeType` and no `$props`, and its `x`, `y`, `width` and `height` are numbers.
 
 #### Preserve event and update order
@@ -1604,7 +1604,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it. `Toggle` does this for `type` and `form`: `const { form, type, ...elementAttrs } = attrs`.
 - Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - Bind `hidden="until-found"` on a closed searchable panel. An accepted page match clears the start style before the browser measures the text. If the panel stays closed, restore the matched element even if Vue has replaced it. A cached panel needs its closed attributes before the parent activation hook.
-- Bind listeners on the part's own element through its props. The element in the render slot then receives them too. `Collapsible.Panel` binds `onBeforematch`. `NavigationMenu.Positioner` attaches its two focus capture listeners to the resolved element because `usePositioner` takes no element props.
+- Bind listeners on the part's own element through its props. The element in the render slot then receives them too. `Collapsible.Panel` binds `onBeforematch`. `NavigationMenu.Positioner` binds both focus listeners in the capture phase.
 - A listener that must cancel a browser default needs a non-passive listener. Vue attaches an ordinary element listener without a passive option. Browsers default wheel listeners to passive on the window, document, root element and body.
 - Give a passive listener the `Passive` suffix, as in `onTouchstartPassive` on `Slider.Control`. Vue passes that option to the browser.
 - Use a passive touch listener when the handler permits the browser default. The browser can then start a scroll without waiting for the handler. `usePressAndHold` binds `onTouchstartPassive`.

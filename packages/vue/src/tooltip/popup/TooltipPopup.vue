@@ -42,7 +42,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
-import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
+import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
@@ -61,7 +61,7 @@ const { side, align } = useTooltipPositionerContext();
 const open = computed(() => popupStoreSelectors.open(store.state));
 const transitionStatus = computed(() => popupStoreSelectors.transitionStatus(store.state));
 
-useHoverPopupInteraction(store, {
+usePopupHover(store).popup({
   enabled: () => !store.state.disabled,
   closeDelay: () => store.state.closeDelay,
 });

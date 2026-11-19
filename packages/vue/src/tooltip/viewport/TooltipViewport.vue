@@ -24,15 +24,10 @@ export interface TooltipViewportProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
-import { useRenderElement } from '../../internals/useRenderElement';
 import PopupViewportChildren from '../../utils/popups/viewport/PopupViewportChildren.vue';
-import {
-  popupViewportStateMapping,
-  usePopupViewport,
-} from '../../utils/popups/viewport/usePopupViewport';
+import { usePopupViewport } from '../../utils/popups/viewport/usePopupViewport';
 import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -50,19 +45,11 @@ defineSlots<{
 const { store } = useTooltipRootContext();
 const positioner = useTooltipPositionerContext();
 
-const { state: viewportState } = usePopupViewport({ store, side: positioner.side });
-
-const state = computed<TooltipViewportState>(() => ({
-  activationDirection: viewportState.value.activationDirection,
-  transitioning: viewportState.value.transitioning,
-  instant: store.state.instantType,
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  stateAttributesMapping: popupViewportStateMapping,
-  children: true,
-});
+const { element, elementProps, setRef, usesRenderSlot, state } = usePopupViewport(
+  props,
+  store,
+  positioner.side,
+);
 
 defineExpose({ element });
 </script>
