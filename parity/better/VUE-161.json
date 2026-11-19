@@ -1,5 +1,5 @@
 {
-  "id": "VUE-158",
+  "id": "VUE-161",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tabs/tab/TabsTab.tsx#L154-L176"
   ],

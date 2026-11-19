@@ -165,18 +165,21 @@ describe('<Tabs.Tab />', () => {
       (props: {
         onValueChange?: (value: Tabs.Tab.Value, eventDetails: Tabs.Root.ChangeEventDetails) => void;
         disabledSecond?: boolean;
+        hideSecond?: boolean;
       }) =>
         () => (
           <Tabs.Root defaultValue={0} onValueChange={props.onValueChange}>
             <Tabs.List activateOnFocus>
               <Tabs.Tab value={0}>One</Tabs.Tab>
-              <Tabs.Tab value={1} disabled={props.disabledSecond}>
-                Two
-              </Tabs.Tab>
+              {!props.hideSecond && (
+                <Tabs.Tab value={1} disabled={props.disabledSecond}>
+                  Two
+                </Tabs.Tab>
+              )}
             </Tabs.List>
           </Tabs.Root>
         ),
-      { props: ['onValueChange', 'disabledSecond'] },
+      { props: ['onValueChange', 'disabledSecond', 'hideSecond'] },
     );
 
     it('does not re-commit the value when the active tab is pressed', async () => {
@@ -252,15 +255,16 @@ describe('<Tabs.Tab />', () => {
       expect(secondTab).toHaveAttribute('aria-selected', 'true');
     });
 
-    it('VUE-158: removes both document listeners when a tab unmounts during a secondary press', async () => {
-      const { unmount } = await render(<TwoTabs />);
+    it('VUE-161: removes both document listeners when a tab unmounts during a secondary press', async () => {
+      const { setProps } = await render(<TwoTabs />);
       const tab = screen.getByRole('tab', { name: 'Two' });
       const doc = tab.ownerDocument;
       const add = vi.spyOn(doc, 'addEventListener');
       const remove = vi.spyOn(doc, 'removeEventListener');
 
       tab.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
-      unmount();
+      await setProps({ hideSecond: true });
+      expect(screen.getByRole('tab')).toHaveTextContent('One');
 
       for (const type of ['pointerup', 'pointercancel']) {
         const listeners = add.mock.calls.filter(([name]) => name === type);
