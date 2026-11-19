@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ToastStore, selectors } from './store';
-import type { ToastObject } from './useToastManager';
+import { ToastStore, selectors } from './ToastProviderContext';
+import type { ToastObject } from '../useToastManager';
 
 function createStore(toasts: ToastObject<any>[]) {
   return new ToastStore({

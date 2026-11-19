@@ -29,8 +29,8 @@ import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import type { ToastManager } from '../createToastManager';
 import { Toast } from '@vase-ui/vue/toast';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
-import type { ToastStore } from '../store';
-import { List, Button, ToastWithDialog } from '../utils/test-utils';
+import type { ToastStore } from '../provider/ToastProviderContext';
+import { List, Button, ToastWithDialog } from '../../../test/toastTestUtils';
 import ToastViewportHydration from './ToastViewportHydration.test.vue';
 import ToastViewportScoped from './ToastViewportScoped.test.vue';
 

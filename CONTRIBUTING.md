@@ -1332,7 +1332,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 
 ### Toast store
 
-The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+The toasts of one `Toast.Provider` are in a `ToastStore`. The provider owns the store in `src/toast/provider/ToastProviderContext.ts`.
 
 - `ToastStore` is a `ReactiveStore`, and the rules of [Popup store](#popup-store) for a `ReactiveStore` apply to it.
 - A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
@@ -1908,7 +1908,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
-- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
+- Export upstream test components from a TypeScript module at the mapped path. Toast exports its fixtures from `packages/vue/test/toastTestUtils.ts`. Within `src`, use a `.test.vue` file for each test component. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.

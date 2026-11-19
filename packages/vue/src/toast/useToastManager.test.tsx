@@ -11,10 +11,10 @@ import {
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Toast } from '@vase-ui/vue/toast';
 import { ToastContext } from './provider/ToastProviderContext';
-import { ToastStore } from './store';
+import { ToastStore } from './provider/ToastProviderContext';
 import { useToastManager } from './useToastManager';
 import type { UseToastManagerReturnValue } from './useToastManager';
-import { List } from './utils/test-utils';
+import { List } from '../../test/toastTestUtils';
 
 function createStore() {
   return new ToastStore({

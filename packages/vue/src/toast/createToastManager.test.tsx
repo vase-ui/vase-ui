@@ -10,7 +10,7 @@ import {
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManager } from './createToastManager';
 import type { ToastObject } from './useToastManager';
-import { List } from './utils/test-utils';
+import { List } from '../../test/toastTestUtils';
 
 async function tickAsync(ms: number) {
   await vi.advanceTimersByTimeAsync(ms);

@@ -34,13 +34,12 @@ export interface ToastPositionerProps
 <script setup lang="ts">
 import { isElement } from '@floating-ui/utils/dom';
 import { computed, provide, shallowRef } from 'vue';
-import { EMPTY_OBJECT } from '../../common/empty';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { usePositioner, usePopupPlacement } from '../../utils/popups/usePopupPositioner';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import * as ToastRootCssVars from '../root/ToastRootCssVars';
-import { ToastPositionerContext } from './ToastPositionerContext';
+import { ToastPositionerContext } from '../provider/ToastProviderContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -66,12 +65,7 @@ const store = useToastProviderContext();
 function resolve<Key extends keyof ToastManagerPositionerProps>(
   key: Key,
 ): ToastManagerPositionerProps[Key] {
-  const value = props[key];
-  if (value !== undefined) {
-    return value;
-  }
-  const positionerProps: ToastManagerPositionerProps = props.toast.positionerProps ?? EMPTY_OBJECT;
-  return positionerProps[key];
+  return props[key] !== undefined ? props[key] : props.toast.positionerProps?.[key];
 }
 
 const positionerElement = shallowRef<HTMLElement | null>(null);

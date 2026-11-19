@@ -17,8 +17,6 @@ export function createToastManager<Data extends object = any>(): ToastManager<Da
   }
 
   return {
-    // This should be private aside from ToastProvider needing to access it.
-    // https://x.com/drosenwasser/status/1816947740032872664
     ' subscribe': function subscribe(listener: (data: ToastManagerEvent) => void) {
       listeners.add(listener);
       return () => {

@@ -1,24 +1,21 @@
-import { computed, onBeforeUpdate, shallowRef, useSlots } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import { computed, useSlots } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useToastRootContext } from '../root/ToastRootContext';
-import { isRenderableNode } from './isRenderableNode';
 
 /**
- * Tells if the consumer gives the part a default slot.
- * `$slots` is not reactive. A parent that adds or removes the slot renders the part again, so the
- * part reads the slots again before each render.
+ * Tells if a value of a label has content to show. A function counts, because it returns the
+ * content of the label.
  */
-export function useHasDefaultSlot(): Readonly<Ref<boolean>> {
-  const slots = useSlots();
-  const hasDefaultSlot = shallowRef(slots.default !== undefined);
-
-  onBeforeUpdate(() => {
-    hasDefaultSlot.value = slots.default !== undefined;
-  });
-
-  return hasDefaultSlot;
+export function isRenderableNode(node: unknown): boolean {
+  if (node == null || typeof node === 'boolean' || node === '') {
+    return false;
+  }
+  if (Array.isArray(node)) {
+    return node.some(isRenderableNode);
+  }
+  return true;
 }
 
 /**
@@ -32,21 +29,19 @@ export function useToastLabelPart(
   element: MaybeRefOrGetter<Element | null | undefined>,
 ): {
   labelId: ComputedRef<string>;
-  rendered: ComputedRef<boolean>;
+  hasContent: () => boolean;
   state: ComputedRef<{ type: string | undefined }>;
 } {
   const { toast, registerTitleId, registerDescriptionId } = useToastRootContext();
   const register = part === 'title' ? registerTitleId : registerDescriptionId;
 
   const labelId = useVaseUiId(idProp);
-  const hasDefaultSlot = useHasDefaultSlot();
+  const slots = useSlots();
 
-  // A part cannot read what its `#render` slot renders, so that content does not count. Base UI
-  // also counts the children of the element of `render`.
-  const rendered = computed(() => hasDefaultSlot.value || isRenderableNode(toast.value[part]));
+  const hasContent = () => slots.default !== undefined || isRenderableNode(toast.value[part]);
   const state = computed(() => ({ type: toast.value.type }));
 
-  useRegisteredId(() => (rendered.value ? labelId.value : undefined), register, element);
+  useRegisteredId(() => labelId.value, register, element);
 
-  return { labelId, rendered, state };
+  return { labelId, hasContent, state };
 }

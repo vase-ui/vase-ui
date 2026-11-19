@@ -16,7 +16,7 @@ import {
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManagerAddOptions } from '../useToastManager';
-import { List, Button, ToastWithDialog } from '../utils/test-utils';
+import { List, Button, ToastWithDialog } from '../../../test/toastTestUtils';
 import { toastRootStateAttributesMapping } from './ToastRoot.vue';
 
 const toast: Toast.Root.ToastObject = {

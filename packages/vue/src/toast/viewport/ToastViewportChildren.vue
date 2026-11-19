@@ -2,7 +2,7 @@
 import { markChildrenMounted } from '../../internals/useRenderElement';
 import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
 import ToastLabelContent from '../utils/ToastLabelContent.vue';
-import { useToastViewportContext } from './ToastViewportContext';
+import { useToastViewportContext } from '../provider/ToastProviderContext';
 
 defineSlots<{
   default?(): unknown;

@@ -10,7 +10,7 @@ import {
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
-import { List, Button } from '../utils/test-utils';
+import { List, Button } from '../../../test/toastTestUtils';
 
 describe('<Toast.Action />', () => {
   const { render } = createRenderer();

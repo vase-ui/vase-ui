@@ -38,7 +38,7 @@ defineSlots<{
   render(props: { props: HTMLProps; state: ToastDescriptionState; children: Component }): unknown;
 }>();
 
-const { labelId, rendered, state } = useToastLabelPart(
+const { labelId, hasContent, state } = useToastLabelPart(
   () => props.id,
   'description',
   () => element.value,
@@ -55,8 +55,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="rendered && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastDescriptionChildren" />
-  <component :is="as" v-else-if="rendered" v-bind="elementProps()" :ref="setRef">
+  <slot v-if="hasContent() && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastDescriptionChildren" />
+  <component :is="as" v-else-if="hasContent()" v-bind="elementProps()" :ref="setRef">
     <ToastDescriptionChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ToastDescriptionChildren>
   </component>
 </template>

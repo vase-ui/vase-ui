@@ -8,7 +8,7 @@ import {
   waitForLaterMillisecond,
 } from '#test-utils';
 import { Toast } from '@vase-ui/vue/toast';
-import { List, Button } from '../utils/test-utils';
+import { List, Button } from '../../../test/toastTestUtils';
 
 describe('<Toast.Close />', () => {
   const { render } = createRenderer();

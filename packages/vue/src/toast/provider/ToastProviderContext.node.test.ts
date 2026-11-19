@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computed, watch, watchEffect } from 'vue';
-import { ToastStore, selectors } from './store';
+import { ToastStore, selectors } from './ToastProviderContext';
 
 function createStore() {
   return new ToastStore({

@@ -4,7 +4,7 @@ import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import type { ToastManager } from '../createToastManager';
 import { Toast } from '@vase-ui/vue/toast';
-import type { ToastStore } from '../store';
+import type { ToastStore } from './ToastProviderContext';
 import { useToastProviderContext } from './ToastProviderContext';
 
 describe('<Toast.Provider />', () => {

@@ -21,6 +21,8 @@ export interface ToastContentProps
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
+import { useResizeObserver } from '../../common/useResizeObserver';
+import { useMutationObserver } from '../../common/useMutationObserver';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -44,35 +46,19 @@ const state = computed<ToastContentState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, { state });
 
-// `KeepAlive` takes the element of a held content out of the document. The element then has no
-// layout, so the height stays as it was until the content is active again.
 const { isHeld } = useKeepAliveState();
-
 watch(
   [element, isHeld],
-  ([node, held], _previous, onCleanup) => {
-    if (held) {
-      return;
-    }
-
-    recalculateHeight();
-
-    if (!node || typeof ResizeObserver !== 'function' || typeof MutationObserver !== 'function') {
-      return;
-    }
-
-    const resizeObserver = new ResizeObserver(() => recalculateHeight());
-    const mutationObserver = new MutationObserver(() => recalculateHeight());
-
-    resizeObserver.observe(node);
-    mutationObserver.observe(node, { childList: true, subtree: true, characterData: true });
-
-    onCleanup(() => {
-      resizeObserver.disconnect();
-      mutationObserver.disconnect();
-    });
+  ([, held]) => {
+    if (!held) recalculateHeight();
   },
   { flush: 'post' },
+);
+useResizeObserver(element, recalculateHeight);
+useMutationObserver(
+  element,
+  { childList: true, subtree: true, characterData: true },
+  recalculateHeight,
 );
 
 defineExpose({ element });

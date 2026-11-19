@@ -34,8 +34,7 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastRootContext } from '../root/ToastRootContext';
-import { isRenderableNode } from '../utils/isRenderableNode';
-import { useHasDefaultSlot } from '../utils/useToastLabelPart';
+import { isRenderableNode } from '../utils/useToastLabelPart';
 import ToastActionChildren from './ToastActionChildren.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -50,19 +49,17 @@ if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Toast.Action');
 }
 
-defineSlots<{
+const slots = defineSlots<{
   default(props: { state: ToastActionState }): unknown;
   render(props: { props: HTMLProps; state: ToastActionState; children: Component }): unknown;
 }>();
 
 const { toast } = useToastRootContext();
-const hasDefaultSlot = useHasDefaultSlot();
 
-// The content of `actionProps` wins over the default slot, as in Base UI.
-const rendered = computed(() => {
+function hasContent() {
   const content = toast.value.actionProps?.children;
-  return content === undefined ? hasDefaultSlot.value : isRenderableNode(content);
-});
+  return content === undefined ? slots.default !== undefined : isRenderableNode(content);
+}
 
 const state = computed<ToastActionState>(() => ({ type: toast.value.type }));
 
@@ -85,8 +82,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="rendered && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
-  <component :is="as" v-else-if="rendered" v-bind="elementProps()" :ref="setRef">
+  <slot v-if="hasContent() && usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastActionChildren" />
+  <component :is="as" v-else-if="hasContent()" v-bind="elementProps()" :ref="setRef">
     <ToastActionChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ToastActionChildren>
   </component>
 </template>

@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { isRenderableNode } from './isRenderableNode';
+import { isRenderableNode } from './useToastLabelPart';
 
 describe('isRenderableNode', () => {
   it('treats renderable primitives as content', () => {

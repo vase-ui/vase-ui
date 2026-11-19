@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
+import ToastTextList from './ToastTextList.vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Toast } from '@vase-ui/vue/toast';
-import type { ToastManager } from '../createToastManager';
+import type { ToastManager } from '../../src/toast/createToastManager';
 
 defineProps<{
   manager: ToastManager;

@@ -11,7 +11,7 @@ import {
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastLabel } from '../useToastManager';
-import { List, Button } from './test-utils';
+import { List, Button } from '../../../test/toastTestUtils';
 
 interface LabelPartCase {
   name: string;

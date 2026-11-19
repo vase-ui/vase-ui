@@ -1,4 +1,3 @@
-import { computed } from 'vue';
 import type { ButtonHTMLAttributes, ComputedRef, Ref, VNodeChild } from 'vue';
 import type { Side, UseAnchorPositioningSharedParameters } from '../internals/useAnchorPositioning';
 import { useToastProviderContext } from './provider/ToastProviderContext';
@@ -10,7 +9,7 @@ export function useToastManager<Data extends object = any>(): UseToastManagerRet
   const store = useToastProviderContext();
 
   return {
-    toasts: computed(() => store.select('toasts')),
+    toasts: store.toasts,
     add: store.addToast,
     close: store.closeToast,
     update: store.updateToast,

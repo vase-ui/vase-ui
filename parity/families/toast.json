@@ -155,5 +155,63 @@
       "reason": "`setup` runs one time, so a plain array does not follow a change of the toasts. `toasts` of the result is thus a `ComputedRef` of the array. The source of Base UI returns `UseToastManagerReturnValue<Data>`, and its `types.md` prints the type argument as `{}`."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider/ToastProviderContext.ts",
+      "member": "ToastPositionerContext",
+      "witness": "packages/vue/src/toast/arrow/ToastArrow.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/toast/store.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider/ToastProviderContext.ts",
+      "member": "ToastStore",
+      "witness": "packages/vue/src/toast/provider/ToastProviderContext.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/store.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/toast/provider/ToastProviderContext.test.ts",
+      "witness": "packages/vue/src/toast/provider/ToastProviderContext.test.ts",
+      "behavior": "Checks toast order, updates, and timer expiry."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/focusVisible.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/element.ts",
+      "member": "matchesFocusVisible",
+      "witness": "packages/vue/src/toast/viewport/ToastViewport.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/isRenderableNode.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/utils/useToastLabelPart.ts",
+      "member": "isRenderableNode",
+      "witness": "packages/vue/src/toast/utils/useToastLabelPart.content.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/toast/utils/useToastLabelPart.content.test.ts",
+      "witness": "packages/vue/src/toast/utils/useToastLabelPart.content.test.ts",
+      "behavior": "Checks empty content, zero, and nested arrays."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/resolvePromiseOptions.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider/ToastProviderContext.ts",
+      "member": "resolvePromiseOptions",
+      "witness": "packages/vue/src/toast/useToastManager.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/test-utils.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/test/toastTestUtils.ts",
+      "witness": "packages/vue/src/toast/root/ToastRoot.test.tsx",
+      "behavior": "Supplies the toast list and add button for browser cases."
+    }
+  ]
 }

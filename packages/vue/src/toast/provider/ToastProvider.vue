@@ -29,8 +29,7 @@ import { provide, watch } from 'vue';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import type { ToastManagerEvent } from '../createToastManager';
-import { ToastStore } from '../store';
-import { ToastContext } from './ToastProviderContext';
+import { ToastContext, ToastStore } from './ToastProviderContext';
 
 const props = withDefaults(defineProps<ToastProviderProps>(), { timeout: 5000, limit: 3 });
 

@@ -28,7 +28,7 @@ export interface ToastArrowProps
 import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useToastPositionerContext } from '../positioner/ToastPositionerContext';
+import { useToastPositionerContext } from '../provider/ToastProviderContext';
 
 defineOptions({ inheritAttrs: false });
 

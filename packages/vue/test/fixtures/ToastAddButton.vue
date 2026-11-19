@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useToastManager } from '../useToastManager';
+import { useToastManager } from '../../src/toast/useToastManager';
 
 const { add } = useToastManager();
 

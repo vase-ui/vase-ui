@@ -136,7 +136,7 @@ let isFirstPointerMove = false;
 const domIndex = computed(() => store.select('toastIndex', props.toast.id));
 const visibleIndex = computed(() => store.select('toastVisibleIndex', props.toast.id));
 const offsetY = computed(() => store.select('toastOffsetY', props.toast.id));
-const expanded = computed(() => store.select('expanded'));
+const { expanded } = store;
 
 const state = computed<ToastRootState>(() => ({
   transitionStatus: props.toast.transitionStatus,
@@ -164,7 +164,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         'aria-modal': false,
         'aria-labelledby': namedByDescription ? descriptionId.value : titleId.value,
         'aria-describedby': namedByDescription ? undefined : descriptionId.value,
-        'aria-hidden': highPriority && !store.select('focused') ? true : undefined,
+        'aria-hidden': highPriority && !store.state.focused ? true : undefined,
         onPointerdown: swiping ? handlePointerdown : undefined,
         onPointermove: swiping ? handlePointermove : undefined,
         onPointerup: swiping ? handleSwipeEnd : undefined,
@@ -306,7 +306,7 @@ function handlePointerdown(event: PointerEvent) {
     swipeCancelBaseline = dragStartPos;
     initialTransform.value = getElementTransform(rootElement);
     dragOffset.value = { x: initialTransform.value.x, y: initialTransform.value.y };
-    store.set('hovering', true);
+    store.setHovering(true);
     isRealSwipe = false;
     lockedDirection = null;
     isFirstPointerMove = true;
