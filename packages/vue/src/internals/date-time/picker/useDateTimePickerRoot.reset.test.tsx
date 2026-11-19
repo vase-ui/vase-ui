@@ -11,7 +11,7 @@ import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
 import type { DateTimeFieldChangeEventDetails } from '../field/DateTimeFieldContext';
 import type { TemporalValue } from '../temporal';
-import { recordResetListeners } from './test-utils';
+import { recordResetListeners } from '../../../../test/internalsTestUtils';
 import { useDateTimePickerRoot } from './useDateTimePickerRoot';
 
 type End = 'start' | 'end';
@@ -25,32 +25,26 @@ const EMPTY: Ends = [null, null];
 // timeouts, and the picker takes the reset one time.
 const PickerOfTwoFields = defineComponent({
   setup() {
-    const picker = useDateTimePickerRoot<Ends, DateTimeFieldChangeEventDetails>({
-      part: 'PickerOfTwoFields',
-      disabled: false,
-      value: () => undefined,
-      defaultValue: () => EMPTY,
-      fallback: () => EMPTY,
-      closeOnSelect: () => undefined,
-      hasTime: () => false,
-      valueChange: NOOP,
-      updateValue: NOOP,
-    });
+    const picker = useDateTimePickerRoot<Ends, Ends, DateTimeFieldChangeEventDetails>(
+      {},
+      {
+        name: 'PickerOfTwoFields',
+        empty: EMPTY,
+        templateOf: (range) => range,
+        fallback: EMPTY,
+        valueChange: NOOP,
+        updateValue: NOOP,
+      },
+    );
 
     const probes: Record<End, ShallowRef<Probe | null>> = {
       start: shallowRef(null),
       end: shallowRef(null),
     };
-    let lastReset: Event | undefined;
     for (const probe of Object.values(probes)) {
       useFormReset(
         computed(() => probe.value?.context.hiddenInputElement.value ?? null),
-        (event) => {
-          if (event !== lastReset) {
-            lastReset = event;
-            picker.reset(createChangeEventDetails(REASONS.none, event));
-          }
-        },
+        (event) => picker.reset(createChangeEventDetails(REASONS.none, event)),
       );
     }
 
@@ -60,12 +54,12 @@ const PickerOfTwoFields = defineComponent({
         <DateTimeFieldProbe
           ref={probes[end]}
           locale="en-US"
-          modelValue={(picker.value.value ?? EMPTY)[index] ?? null}
+          modelValue={picker.value.value[index]}
           onValueChange={(
             value: TemporalValue | null,
             details: DateTimeFieldChangeEventDetails,
           ) => {
-            const [start, last] = picker.value.value ?? EMPTY;
+            const [start, last] = picker.value.value;
             picker.commit(end === 'start' ? [value, last] : [start, value], details);
           }}
         />

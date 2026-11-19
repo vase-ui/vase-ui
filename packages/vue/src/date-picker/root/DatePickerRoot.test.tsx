@@ -5,6 +5,7 @@ import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
+  fireEvent,
   flushMicrotasks,
   popupConformanceTests,
   screen,
@@ -15,7 +16,7 @@ import {
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import DatePickerAnatomy from './DatePickerAnatomy.test.vue';
-import { createPartRef } from './test-utils';
+import { createPartRef } from '../../../test/date-pickerTestUtils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const today = () => day('2026-11-14');
@@ -578,6 +579,40 @@ describe('<DatePicker.Root />', () => {
         'true',
       );
       expect(selectedCells()).toHaveLength(1);
+    });
+
+    it('commits composed text once to the open calendar and the form', async () => {
+      const update = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <DatePickerAnatomy
+            open
+            name="day"
+            defaultValue={day('2026-11-18')}
+            locale="en-US"
+            popupProps={{ initialFocus: false }}
+            onUpdate:modelValue={update}
+          />
+        </form>,
+      );
+      const popup = await screen.findByRole('dialog');
+      const form = screen.getByTestId<HTMLFormElement>('form');
+      const input = segmentOf(container, 'day');
+      input.focus();
+      await fireEvent.compositionStart(input);
+      await fireEvent.input(input, { target: { value: '2' } });
+      await fireEvent.input(input, { target: { value: '23' } });
+
+      expect(update).not.toHaveBeenCalled();
+      expect(new FormData(form).get('day')).toBe('2026-11-18');
+      expect(selectedCells()).toEqual([dayButton('2026-11-18').closest('[data-date]')]);
+
+      await fireEvent.compositionEnd(input, { data: '23' });
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(new FormData(form).get('day')).toBe('2026-11-23');
+      expect(selectedCells()).toEqual([dayButton('2026-11-23').closest('[data-date]')]);
+      expect(screen.getByRole('dialog')).toBe(popup);
     });
 
     it('follows a new value of a controlled picker in the field, the calendar and the trigger', async () => {

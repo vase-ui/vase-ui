@@ -90,10 +90,6 @@ defineSlots<{
 const picker = useDateRangePickerRootContext();
 const popup = usePickerPopup();
 
-// This part renders `RangeCalendar.Root` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `RangeCalendar.Root` dynamic. Vue then renders `RangeCalendar.Root` again each time this part
-// renders.
 const calendar = useTemplateRef<{
   element: HTMLElement | null;
   focus: (date?: DateValue) => void;
@@ -152,7 +148,7 @@ const calendarHandlers = {
 function calendarProps(attributes: Record<string, unknown>) {
   const root = picker.props;
   const valueProps: Record<string, any> = {
-    modelValue: picker.range.value,
+    modelValue: picker.value.value,
     defaultValue: [picker.template.value, picker.template.value],
   };
   return {

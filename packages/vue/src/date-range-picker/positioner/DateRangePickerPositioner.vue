@@ -51,7 +51,7 @@ const picker = useDateRangePickerRootContext();
 // With one field only, the popup lines up with that field. With no field, the positioner has no
 // anchor and uses the trigger.
 const fieldsAnchor = computed(() => {
-  const start = picker.startFields.first.value;
+  const start = picker.fields.first.value;
   const end = picker.endFields.first.value;
   if (!start || !end) {
     return start ?? end;
@@ -80,10 +80,6 @@ const fieldsAnchor = computed(() => {
 });
 const anchorOf = () => toValue(props.anchor) ?? fieldsAnchor.value;
 
-// This part renders `Popover.Positioner` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Positioner` dynamic. Vue then renders `Popover.Positioner` again each time this part
-// renders. It also renders again each part in that slot that has slot content.
 const positioner = useTemplateRef<{ element: HTMLElement | null }>('positioner');
 const element = computed(() => positioner.value?.element ?? null);
 

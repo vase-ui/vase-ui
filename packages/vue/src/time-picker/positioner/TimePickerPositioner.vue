@@ -50,10 +50,6 @@ const picker = useTimePickerRootContext();
 // With no `anchor` and no field, the positioner has no anchor and uses the trigger.
 const anchorOf = () => toValue(props.anchor) ?? picker.fields.first.value;
 
-// This part renders `Popover.Positioner` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Positioner` dynamic. Vue then renders `Popover.Positioner` again each time this part
-// renders. It also renders again each part in that slot that has slot content.
 const positioner = useTemplateRef<{ element: HTMLElement | null }>('positioner');
 const element = computed(() => positioner.value?.element ?? null);
 

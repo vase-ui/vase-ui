@@ -48,7 +48,6 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import TimeClockRoot from '../../time-clock/root/TimeClockRoot.vue';
 import type {
-  TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
   TimeClockRootViewChangeEventDetails,
 } from '../../time-clock/root/TimeClockRoot.vue';
@@ -101,9 +100,6 @@ defineSlots<{
 const picker = useTimePickerRootContext();
 const popup = usePickerPopup();
 
-// This part renders `TimeClock.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeClock.Root` dynamic. Vue then renders `TimeClock.Root` again each time this part renders.
 const clock = useTemplateRef<{ element: HTMLElement | null }>('clock');
 const element = computed(() => clock.value?.element ?? null);
 
@@ -129,10 +125,6 @@ watch(popup.open, (open) => {
 const isLastView = computed(
   () => nextView(currentView.value, picker.props.granularity ?? 'minute') === undefined,
 );
-
-function handleValueChange(value: TimePickerRootValue, details: TimeClockRootChangeEventDetails) {
-  picker.commit(value, details);
-}
 
 // The last commit sets the whole time, so it closes the popup when a selection does.
 function handleValueCommitted(
@@ -188,7 +180,7 @@ defineExpose({ element });
     v-if="$slots.render"
     ref="clock"
     v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
     @value-committed="handleValueCommitted"
     @view-change="handleViewChange"
     @update:view="handleViewUpdate"
@@ -201,7 +193,7 @@ defineExpose({ element });
     v-else
     ref="clock"
     v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
     @value-committed="handleValueCommitted"
     @view-change="handleViewChange"
     @update:view="handleViewUpdate"

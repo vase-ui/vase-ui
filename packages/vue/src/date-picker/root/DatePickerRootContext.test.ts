@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { kindOf } from '../../internals/date-time/temporal';
-import { createPickerTemplate, hasTime } from './pickerTemplate';
+import { createPickerTemplate, hasTime } from './DatePickerRootContext';
 
 describe('createPickerTemplate', () => {
   it.each([

@@ -14,9 +14,9 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
+import { recordResetListeners } from '../../../test/internalsTestUtils';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
-import { createPartRef } from '../root/test-utils';
+import { createPartRef } from '../../../test/date-pickerTestUtils';
 
 const day = Temporal.PlainDate.from('2026-11-14');
 

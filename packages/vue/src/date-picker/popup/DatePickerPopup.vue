@@ -25,7 +25,7 @@ export interface DatePickerPopupProps extends PopoverPopupProps {
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { usePickerInitialFocus } from '../../internals/date-time/picker/usePickerPopup';
+import { usePickerInitialFocus } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
@@ -52,10 +52,6 @@ defineSlots<{
 
 const pickerInitialFocus = usePickerInitialFocus(() => props.initialFocus);
 
-// This part renders `Popover.Popup` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Popup` dynamic. Vue then renders `Popover.Popup` again each time this part renders. It
-// also renders again each part in that slot that has slot content.
 const popup = useTemplateRef<{ element: HTMLElement | null }>('popup');
 const element = computed(() => popup.value?.element ?? null);
 

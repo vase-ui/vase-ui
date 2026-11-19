@@ -17,9 +17,9 @@ import {
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
-import { createPartRef } from '../../date-picker/root/test-utils';
+import { createPartRef } from '../../../test/date-pickerTestUtils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
-import { pointOnFace } from '../../time-clock/utils/test-utils';
+import { pointOnFace } from '../../../test/time-clockTestUtils';
 import TimePickerAnatomy from './TimePickerAnatomy.test.vue';
 
 const time = (text: string) => Temporal.PlainTime.from(text);

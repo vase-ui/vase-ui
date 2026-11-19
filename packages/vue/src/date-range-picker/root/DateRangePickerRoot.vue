@@ -151,17 +151,17 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 </script>
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
-import { computed, provide, useTemplateRef } from 'vue';
-import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
-import { createPickerPartElements } from '../../internals/date-time/picker/usePickerPartElement';
-import { assertTemporal } from '../../internals/date-time/temporal';
+import { provide, useTemplateRef } from 'vue';
+import {
+  useDateTimePickerRoot,
+  createPickerPartElements,
+} from '../../internals/date-time/picker/useDateTimePickerRoot';
+import { assertTemporal, today } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
-import { createRangeTemplate, firstEnd } from './rangeTemplate';
-
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
@@ -232,45 +232,29 @@ assertTemporal('DateRangePicker.Root');
 
 const EMPTY_RANGE: DateRangePickerRange = [null, null];
 
-const fallbackEnd = computed(
-  () => props.referenceDate ?? createRangeTemplate(props.granularity, props.timeZone),
-);
-
-const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootChangeEventDetails>({
-  part: 'DateRangePicker',
-  value: () => props.modelValue,
-  defaultValue: () => props.defaultValue ?? EMPTY_RANGE,
-  fallback: () => [fallbackEnd.value, fallbackEnd.value],
-  closeOnSelect: () => props.closeOnSelect,
-  disabled: () => props.disabled,
-  // The popup has no part for a time, so no range keeps the popup open by default.
-  hasTime: () => false,
-  isEmpty: (range) => range[0] === null && range[1] === null,
+const picker = useDateTimePickerRoot<
+  DateRangePickerRange,
+  DateValue,
+  DateRangePickerRootChangeEventDetails
+>(props, {
+  name: 'DateRangePicker',
+  empty: EMPTY_RANGE,
+  templateOf: ([start, end]) => start ?? end,
+  fallback() {
+    if (props.referenceDate) {
+      return props.referenceDate;
+    }
+    const date = today(props.timeZone);
+    return props.granularity === undefined || props.granularity === 'day'
+      ? date
+      : date.toPlainDateTime();
+  },
   valueChange: (range, details) =>
     emit('valueChange', range as DateRangePickerRootValue<Value>, details),
   updateValue: (range) => emit('update:modelValue', range as DateRangePickerRootValue<Value>),
 });
 
-// The two fields of one form hear the same `reset` event, and the picker has one value.
-let lastResetEvent: Event | undefined;
-
-provide(DateRangePickerRootContext, {
-  range: computed(() => picker.value.value ?? EMPTY_RANGE),
-  template: computed(() => firstEnd(picker.template.value) ?? fallbackEnd.value),
-  commit: picker.commit,
-  reset(details) {
-    if (details.event !== lastResetEvent) {
-      lastResetEvent = details.event;
-      picker.reset(details);
-    }
-  },
-  closeOnSelect: picker.closeOnSelect,
-  startFields: picker.fields,
-  endFields: createPickerPartElements(),
-  triggers: picker.triggers,
-  props,
-  disabled: picker.disabled,
-});
+provide(DateRangePickerRootContext, { ...picker, endFields: createPickerPartElements(), props });
 
 const popover = useTemplateRef<DateRangePickerRootActions>('popover');
 

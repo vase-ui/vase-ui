@@ -17,7 +17,7 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
+import { recordResetListeners } from '../../../test/internalsTestUtils';
 import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);

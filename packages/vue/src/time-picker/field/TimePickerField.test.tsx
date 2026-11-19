@@ -14,8 +14,8 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import { createPartRef } from '../../date-picker/root/test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
+import { createPartRef } from '../../../test/date-pickerTestUtils';
+import { recordResetListeners } from '../../../test/internalsTestUtils';
 import TimePickerAnatomy from '../root/TimePickerAnatomy.test.vue';
 
 const time = Temporal.PlainTime.from('14:30');

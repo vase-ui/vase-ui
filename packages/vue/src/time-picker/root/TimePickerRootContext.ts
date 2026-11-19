@@ -8,6 +8,7 @@ import type {
 } from './TimePickerRoot.vue';
 
 export interface TimePickerRootContext extends DateTimePickerContext<
+  TimePickerRootValue | null,
   TimePickerRootValue,
   TimePickerRootChangeEventDetails
 > {

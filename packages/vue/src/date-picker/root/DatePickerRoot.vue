@@ -144,15 +144,13 @@ export interface DatePickerRootProps<
 </script>
 
 <script setup lang="ts" generic="Value extends DatePickerRootValue = DatePickerRootValue">
-import { computed, provide, useTemplateRef } from 'vue';
+import { provide, useTemplateRef } from 'vue';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
-import { DatePickerRootContext } from './DatePickerRootContext';
-import { createPickerTemplate, hasTime } from './pickerTemplate';
-
+import { DatePickerRootContext, createPickerTemplate, hasTime } from './DatePickerRootContext';
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DatePickerRootProps<Value>>(), {
@@ -219,18 +217,16 @@ defineSlots<{
 
 assertTemporal('DatePicker.Root');
 
-const fallback = computed(
-  () =>
+const picker = useDateTimePickerRoot<
+  DatePickerRootValue | null,
+  DatePickerRootValue,
+  DatePickerRootChangeEventDetails
+>(props, {
+  name: 'DatePicker',
+  empty: null,
+  templateOf: (value) => value,
+  fallback: () =>
     props.referenceDate ?? createPickerTemplate(props.granularity, props.calendar, props.timeZone),
-);
-
-const picker = useDateTimePickerRoot<DatePickerRootValue, DatePickerRootChangeEventDetails>({
-  part: 'DatePicker',
-  value: () => props.modelValue,
-  defaultValue: () => props.defaultValue,
-  fallback,
-  closeOnSelect: () => props.closeOnSelect,
-  disabled: () => props.disabled,
   hasTime,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
   updateValue: (value) => emit('update:modelValue', value as Value | null),

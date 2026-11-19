@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
-import { createPartRef } from '../root/test-utils';
+import { createPartRef } from '../../../test/date-pickerTestUtils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const today = () => day('2026-11-14');

@@ -47,10 +47,6 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
-import type {
-  DatePickerRootChangeEventDetails,
-  DatePickerRootValue,
-} from '../root/DatePickerRoot.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -103,9 +99,6 @@ defineSlots<{
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
-// This part renders `Calendar.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Calendar.Root` dynamic. Vue then renders `Calendar.Root` again each time this part renders.
 const calendar = useTemplateRef<{
   element: HTMLElement | null;
   focus: (date?: DateValue) => void;
@@ -117,13 +110,6 @@ providePickerControl(PickerCalendarOwner, (event) => {
     popup.closeAfterSelection(event);
   }
 });
-
-function handleValueChange(
-  value: DatePickerRootValue | null,
-  details: DatePickerRootChangeEventDetails,
-) {
-  picker.commit(value, details);
-}
 
 const calendarHandlers = {
   onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => {
@@ -184,7 +170,7 @@ defineExpose({
     v-if="$slots.render"
     ref="calendar"
     v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -194,7 +180,7 @@ defineExpose({
     v-else
     ref="calendar"
     v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

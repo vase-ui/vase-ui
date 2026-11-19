@@ -33,17 +33,13 @@ export interface DatePickerTimeFieldProps extends Omit<
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
-import { isKind } from '../../internals/date-time/temporal';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
+import { useDatePickerRootContext, hasTime } from '../root/DatePickerRootContext';
+import type { DatePickerRootValue } from '../root/DatePickerRoot.vue';
+
 import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
-import { useDatePickerRootContext } from '../root/DatePickerRootContext';
-import { hasTime } from '../root/pickerTemplate';
-import type {
-  DatePickerRootChangeEventDetails,
-  DatePickerRootValue,
-} from '../root/DatePickerRoot.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -69,23 +65,13 @@ provide(FieldRootContext, null);
 provideLabelableContext();
 
 function toTimeValue(value: DatePickerRootValue | null) {
-  return isKind(value, 'dateTime') || isKind(value, 'zonedDateTime') ? value : null;
+  return hasTime(value) ? value : null;
 }
 
 const value = computed(() => toTimeValue(picker.value.value));
 const template = computed(() => toTimeValue(picker.template.value));
 const referenceDate = computed(() => toTimeValue(picker.props.referenceDate ?? null) ?? undefined);
 
-function handleValueChange(
-  next: Temporal.PlainDateTime | Temporal.ZonedDateTime | null,
-  details: DatePickerRootChangeEventDetails,
-) {
-  picker.commit(next, details);
-}
-
-// This part renders `TimeField.Root` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeField.Root` dynamic. Vue then renders `TimeField.Root` again each time this part renders.
 const field = useTemplateRef<{
   element: HTMLElement | null;
   inputElement: HTMLInputElement | null;
@@ -126,7 +112,7 @@ defineExpose({
     v-if="$slots.render"
     ref="field"
     v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -136,7 +122,7 @@ defineExpose({
     v-else
     ref="field"
     v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

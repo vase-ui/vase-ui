@@ -20,7 +20,7 @@ export interface DatePickerTriggerProps extends Omit<
 import { computed, useAttrs, useTemplateRef } from 'vue';
 import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
-import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
+import { usePickerPartElement } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DatePickerRootValue } from '../root/DatePickerRoot.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -81,17 +81,10 @@ const label = computed(() => {
   return value === null ? 'Choose date' : `Change date, ${describe(value)}`;
 });
 
-// This part renders `Popover.Trigger` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Trigger` dynamic. Vue then renders `Popover.Trigger` again each time this part renders.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 
 usePickerPartElement(picker.triggers, element);
-
-function triggerProps() {
-  return { ...props, disabled: isDisabled.value, 'aria-label': label.value };
-}
 
 defineExpose({ element });
 </script>
@@ -100,7 +93,9 @@ defineExpose({ element });
   <PopoverTrigger
     v-if="$slots.render"
     ref="trigger"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...props }"
+    :disabled="isDisabled"
+    :aria-label="label"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -109,7 +104,9 @@ defineExpose({ element });
   <PopoverTrigger
     v-else
     ref="trigger"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...props }"
+    :disabled="isDisabled"
+    :aria-label="label"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

@@ -212,15 +212,15 @@ const referenceTime = computed(() =>
   props.referenceDate === undefined ? new Temporal.PlainTime() : toPlainTime(props.referenceDate),
 );
 
-const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEventDetails>({
-  part: 'TimePicker',
-  value: () => props.modelValue,
-  defaultValue: () => props.defaultValue,
+const picker = useDateTimePickerRoot<
+  TimePickerRootValue | null,
+  TimePickerRootValue,
+  TimePickerRootChangeEventDetails
+>(props, {
+  name: 'TimePicker',
+  empty: null,
+  templateOf: (value) => value,
   fallback: () => props.referenceDate ?? new Temporal.PlainTime(),
-  closeOnSelect: () => props.closeOnSelect,
-  disabled: () => props.disabled,
-  // A pick sets the time itself, so no value keeps the popup open by default.
-  hasTime: () => false,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
   updateValue: (value) => emit('update:modelValue', value as Value | null),
 });

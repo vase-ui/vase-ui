@@ -1,14 +1,18 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, shallowRef } from 'vue';
 import { useDateTimePickerRoot } from './useDateTimePickerRoot';
-import type { DateTimePickerContext } from './useDateTimePickerRoot';
 
 interface Details {
   isCanceled: boolean;
+  event: Event;
   reason: string;
 }
 
-const details = (isCanceled = false): Details => ({ isCanceled, reason: 'test' });
+const details = (isCanceled = false): Details => ({
+  isCanceled,
+  event: new Event('test'),
+  reason: 'test',
+});
 
 // The composable gives a context to the parts below the root, so it runs in the `setup` of a part.
 function runInSetup<Result>(setup: () => Result): Result {
@@ -38,18 +42,25 @@ function createPicker(
   const value = shallowRef(options.value);
   const updateValue = vi.fn();
   const valueChange = options.valueChange ?? vi.fn();
-  const picker: DateTimePickerContext<string, Details> = runInSetup(() =>
-    useDateTimePickerRoot<string, Details>({
-      part: 'Picker',
-      disabled: false,
-      value: value,
-      defaultValue: () => options.defaultValue,
-      fallback: 'fallback',
-      closeOnSelect: () => options.closeOnSelect,
-      hasTime: options.hasTime ?? (() => false),
-      valueChange,
-      updateValue,
-    }),
+  const picker = runInSetup(() =>
+    useDateTimePickerRoot<string | null, string, Details>(
+      {
+        get modelValue() {
+          return value.value;
+        },
+        defaultValue: options.defaultValue,
+        closeOnSelect: options.closeOnSelect,
+      },
+      {
+        name: 'Picker',
+        empty: null,
+        templateOf: (candidate) => candidate,
+        fallback: 'fallback',
+        hasTime: options.hasTime ?? (() => false),
+        valueChange,
+        updateValue,
+      },
+    ),
   );
   return { picker, value, valueChange, updateValue };
 }
@@ -187,23 +198,25 @@ describe('useDateTimePickerRoot', () => {
 // A range with no end is a value, but it gives no kind to a new value.
 describe('useDateTimePickerRoot with a value that can be empty', () => {
   type Range = readonly [string | null, string | null];
-  const isEmpty = (range: Range) => range[0] === null && range[1] === null;
-
   function createRangePicker(options: { value?: Range; defaultValue?: Range } = {}) {
     const value = shallowRef(options.value);
     const picker = runInSetup(() =>
-      useDateTimePickerRoot<Range, Details>({
-        part: 'RangePicker',
-        disabled: false,
-        value,
-        defaultValue: () => options.defaultValue,
-        fallback: ['fallback', 'fallback'],
-        closeOnSelect: () => undefined,
-        hasTime: () => false,
-        isEmpty,
-        valueChange: vi.fn(),
-        updateValue: vi.fn(),
-      }),
+      useDateTimePickerRoot<Range, string, Details>(
+        {
+          get modelValue() {
+            return value.value;
+          },
+          defaultValue: options.defaultValue,
+        },
+        {
+          name: 'RangePicker',
+          empty: [null, null],
+          templateOf: ([start, end]) => start ?? end,
+          fallback: 'fallback',
+          valueChange: vi.fn(),
+          updateValue: vi.fn(),
+        },
+      ),
     );
     return { picker, value };
   }
@@ -214,19 +227,19 @@ describe('useDateTimePickerRoot with a value that can be empty', () => {
       defaultValue: ['default', 'default'],
     });
 
-    expect(picker.template.value).toEqual(['default', 'default']);
+    expect(picker.template.value).toBe('default');
   });
 
   it('takes the fallback for the template while the value and the default value are empty', () => {
     const { picker } = createRangePicker({ value: [null, null], defaultValue: [null, null] });
 
-    expect(picker.template.value).toEqual(['fallback', 'fallback']);
+    expect(picker.template.value).toBe('fallback');
   });
 
   it('is the value while it has one end', () => {
     const { picker } = createRangePicker({ value: ['start', null] });
 
-    expect(picker.template.value).toEqual(['start', null]);
+    expect(picker.template.value).toBe('start');
   });
 
   it('keeps the last value that had an end after the value becomes empty', () => {
@@ -234,6 +247,6 @@ describe('useDateTimePickerRoot with a value that can be empty', () => {
 
     value.value = [null, null];
 
-    expect(picker.template.value).toEqual(['start', 'end']);
+    expect(picker.template.value).toBe('start');
   });
 });

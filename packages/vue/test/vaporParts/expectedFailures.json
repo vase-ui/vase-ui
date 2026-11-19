@@ -136,6 +136,9 @@
     "src/internals/date-time/field/useDateTimeFieldRoot.registration.test.tsx": {
       "fails": {}
     },
+    "src/internals/date-time/picker/useDateTimePickerRoot.field.test.tsx": {
+      "fails": {}
+    },
     "src/internals/field-register-control/useFieldControl.test.tsx": {
       "fails": {}
     },

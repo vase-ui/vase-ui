@@ -31,22 +31,15 @@ export interface TimePickerFieldProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
-import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { useTemplateRef } from 'vue';
+import { usePickerField } from '../../internals/date-time/picker/useDateTimePickerRoot';
+import type { PickerFieldActions } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { givenAttributes } from '../../internals/givenAttributes';
-import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useFormReset } from '../../internals/useFormReset';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
 import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import type {
-  TimePickerRootChangeEventDetails,
-  TimePickerRootValue,
-} from '../root/TimePickerRoot.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -58,49 +51,8 @@ defineSlots<{
 }>();
 
 const picker = useTimePickerRootContext();
-const popup = usePickerPopup();
-
-interface TimeFieldActions {
-  element: HTMLElement | null;
-  inputElement: HTMLInputElement | null;
-  clear: () => void;
-}
-
-// This part renders `TimeField.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeField.Root` dynamic. Vue then renders `TimeField.Root` again each time this part renders.
-const field = useTemplateRef<TimeFieldActions>('field');
-const element = computed(() => field.value?.element ?? null);
-const inputElement = computed(() => field.value?.inputElement ?? null);
-
-usePickerPartElement(picker.fields, element);
-
-// The field holds the input of the form, so it hears about the reset.
-useFormReset(inputElement, (event) => {
-  picker.reset(createChangeEventDetails(REASONS.none, event));
-});
-
-function handleKeydown(event: KeyboardEvent) {
-  if (
-    event.altKey &&
-    event.key === 'ArrowDown' &&
-    !event.defaultPrevented &&
-    !picker.disabled.value &&
-    !picker.readOnly.value
-  ) {
-    event.preventDefault();
-    popup.openByKey(event);
-  }
-}
-
-function handleValueChange(
-  value: TimePickerRootValue | null,
-  details: TimePickerRootChangeEventDetails,
-) {
-  picker.commit(value, details);
-}
-
-const fieldHandlers = { onKeydown: handleKeydown };
+const field = useTemplateRef<PickerFieldActions>('field');
+const { element, inputElement, fieldHandlers } = usePickerField(field, picker.fields, picker);
 
 function fieldProps(attributes: Record<string, unknown>) {
   const root = picker.props;
@@ -139,7 +91,7 @@ defineExpose({
     v-if="$slots.render"
     ref="field"
     v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -149,7 +101,7 @@ defineExpose({
     v-else
     ref="field"
     v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
-    @value-change="handleValueChange"
+    @value-change="picker.commit"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

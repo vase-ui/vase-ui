@@ -6,8 +6,12 @@ import type {
   DatePickerRootProps,
   DatePickerRootValue,
 } from './DatePickerRoot.vue';
+import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { isKind, today, yearMonthInCalendar } from '../../internals/date-time/temporal';
+import type { DateValue } from '../../internals/date-time/temporal';
 
 export interface DatePickerRootContext extends DateTimePickerContext<
+  DatePickerRootValue | null,
   DatePickerRootValue,
   DatePickerRootChangeEventDetails
 > {
@@ -18,7 +22,6 @@ export interface DatePickerRootContext extends DateTimePickerContext<
 export const DatePickerRootContext: InjectionKey<DatePickerRootContext> = Symbol();
 
 export function useDatePickerRootContext(): DatePickerRootContext {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(DatePickerRootContext, undefined);
   if (context === undefined) {
     throw new Error(
@@ -27,4 +30,25 @@ export function useDatePickerRootContext(): DatePickerRootContext {
   }
 
   return context;
+}
+
+export function createPickerTemplate(
+  granularity: DateTimeFieldGranularity | undefined,
+  calendar: string | undefined,
+  timeZone: string | undefined,
+): DateValue | Temporal.PlainYearMonth {
+  const date = today(timeZone);
+  if (granularity === 'month') {
+    const isoMonth = date.toPlainYearMonth();
+    return calendar === undefined || yearMonthInCalendar(isoMonth, calendar)
+      ? isoMonth
+      : date.withCalendar(calendar).toPlainYearMonth();
+  }
+  return granularity === undefined || granularity === 'day' ? date : date.toPlainDateTime();
+}
+
+export function hasTime(
+  value: DatePickerRootValue | null,
+): value is Temporal.PlainDateTime | Temporal.ZonedDateTime {
+  return isKind(value, 'dateTime') || isKind(value, 'zonedDateTime');
 }

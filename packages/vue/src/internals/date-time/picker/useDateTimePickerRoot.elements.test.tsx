@@ -8,7 +8,7 @@ import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { recordVueWarnings } from '../../../../test/reportedMessages';
-import { createPickerPartElements, usePickerPartElement } from './usePickerPartElement';
+import { createPickerPartElements, usePickerPartElement } from './useDateTimePickerRoot';
 
 describe('createPickerPartElements', () => {
   function mountElements() {

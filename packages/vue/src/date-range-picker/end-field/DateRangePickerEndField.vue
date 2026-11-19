@@ -19,8 +19,8 @@ import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import { useDateRangePickerField } from '../utils/useDateRangePickerField';
-import type { DateFieldActions } from '../utils/useDateRangePickerField';
+import { useDateRangePickerField } from '../root/DateRangePickerRootContext';
+import type { PickerFieldActions } from '../../internals/date-time/picker/useDateTimePickerRoot';
 
 defineOptions({ inheritAttrs: false });
 
@@ -37,10 +37,7 @@ defineSlots<{
 // of the `Field` still reach it.
 provideLabelableContext();
 
-// This part renders `DateField.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `DateField.Root` dynamic. Vue then renders `DateField.Root` again each time this part renders.
-const field = useTemplateRef<DateFieldActions>('field');
+const field = useTemplateRef<PickerFieldActions>('field');
 const { element, inputElement, handleValueChange, fieldProps } = useDateRangePickerField(
   'end',
   field,

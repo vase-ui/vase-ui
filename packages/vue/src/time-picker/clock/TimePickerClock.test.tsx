@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
-import { pointOnFace } from '../../time-clock/utils/test-utils';
+import { pointOnFace } from '../../../test/time-clockTestUtils';
 import TimePickerAnatomy from '../root/TimePickerAnatomy.test.vue';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
