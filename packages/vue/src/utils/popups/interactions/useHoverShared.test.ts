@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getDelay, getRestMs, isClickLikeOpenEvent, isHoverOpenEvent } from './useHoverShared';
+import { getDelay, isClickLikeOpenEvent, isHoverOpenEvent } from './usePopupHover';
 
 describe('getDelay', () => {
   it('gives a number for the open delay and for the close delay', () => {
@@ -35,8 +35,8 @@ describe('getDelay', () => {
 
 describe('getRestMs', () => {
   it('gives a number, and calls a function', () => {
-    expect(getRestMs(50)).toBe(50);
-    expect(getRestMs(() => 70)).toBe(70);
+    expect(getDelay(50, 'open')).toBe(50);
+    expect(getDelay(() => 70, 'open')).toBe(70);
   });
 });
 

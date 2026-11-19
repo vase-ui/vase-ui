@@ -2,17 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import { safePolygon } from './safePolygon';
-import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
+import { usePopupHover } from './usePopupHover';
 
 // The store of a module is the store of a handle that no root controls. Each request shares it.
 const sharedStore = getEmptyRootStore();
 
 const Trigger = defineComponent({
   setup() {
-    const hoverProps = useHoverTriggerInteraction(sharedStore, {
+    const hoverProps = usePopupHover(sharedStore).trigger({
       delay: 500,
-      handleClose: () => safePolygon(),
+      safePolygon: true,
     });
     return () => <button {...hoverProps} />;
   },

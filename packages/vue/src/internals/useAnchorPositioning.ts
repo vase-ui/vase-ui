@@ -6,7 +6,16 @@ import type {
   MaybeRefOrGetter,
   Ref,
 } from 'vue';
-import { getAlignment, getSide, getSideAxis } from '@floating-ui/utils';
+import {
+  getAlignment,
+  getSide,
+  getSideAxis,
+  clamp,
+  evaluate,
+  getAlignmentAxis,
+  getAxisLength,
+  getPaddingObject,
+} from '@floating-ui/utils';
 import type { Rect } from '@floating-ui/utils';
 import {
   autoUpdate,
@@ -30,14 +39,18 @@ import { areArraysEqual } from '../common/areArraysEqual';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { useDirection } from './direction-context/DirectionContext';
 import { resolveElement } from './resolveElement';
-import { arrow } from '../utils/popups/positioning/arrow';
-import { hide } from '../utils/popups/positioning/hideMiddleware';
-import { DEFAULT_SIDES } from '../utils/popups/positioning/adaptiveOriginConstants';
-import * as CommonPositionerCssVars from '../utils/popups/positioning/CommonPositionerCssVars';
+import { DEFAULT_SIDES } from '../utils/popups/positioning/adaptiveOriginMiddleware';
 import { useKeepAliveState } from './useKeepAliveState';
 
-const AVAILABLE_WIDTH_VAR = CommonPositionerCssVars.availableWidth;
-const AVAILABLE_HEIGHT_VAR = CommonPositionerCssVars.availableHeight;
+export const positionerVars = {
+  availableWidth: '--available-width',
+  availableHeight: '--available-height',
+  anchorWidth: '--anchor-width',
+  anchorHeight: '--anchor-height',
+  transformOrigin: '--transform-origin',
+  positionerWidth: '--positioner-width',
+  positionerHeight: '--positioner-height',
+} as const;
 
 function getLogicalSide(sideParam: Side, renderedSide: PhysicalSide, isRtl: boolean): Side {
   const isLogicalSideParam = sideParam === 'inline-start' || sideParam === 'inline-end';
@@ -662,28 +675,31 @@ export function useAnchorPositioning(
 
   // An arrow that mounts or unmounts after the popup has a position does not resize the
   // positioner, so the position must be computed again.
-  const arrowRef = (element: Element | null) => {
-    // Vue calls a function ref again on each patch.
-    if (element === arrowElement) {
-      return;
-    }
-    arrowElement = element;
-    // Vue calls this function in a render, so the render must not depend on `isPositioned`. The
-    // read is in the microtask. The microtask runs after the flush, so an anchor that changed in
-    // the same flush is registered first.
-    queueMicrotask(() => {
-      if (isPositioned.value) {
-        update();
-      }
-    });
-  };
+  function createArrowRef() {
+    let previous: Element | null = null;
+    return (element: Element | null) => {
+      if (element === previous) return;
+      const ownsArrow = previous === arrowElement;
+      previous = element;
+      if (!element && !ownsArrow) return;
+      arrowElement = element;
+      // Vue calls this function in a render, so the render must not depend on `isPositioned`. The
+      // read is in the microtask. The microtask runs after the flush, so an anchor that changed in
+      // the same flush is registered first.
+      queueMicrotask(() => {
+        if (isPositioned.value) {
+          update();
+        }
+      });
+    };
+  }
 
   const positionerCssVars = computed<CSSProperties>(() => ({
-    [AVAILABLE_WIDTH_VAR]: availableWidthValue.value,
-    [AVAILABLE_HEIGHT_VAR]: availableHeightValue.value,
-    [CommonPositionerCssVars.anchorWidth]: anchorWidthValue.value,
-    [CommonPositionerCssVars.anchorHeight]: anchorHeightValue.value,
-    [CommonPositionerCssVars.transformOrigin]: isPositioned.value
+    [positionerVars.availableWidth]: availableWidthValue.value,
+    [positionerVars.availableHeight]: availableHeightValue.value,
+    [positionerVars.anchorWidth]: anchorWidthValue.value,
+    [positionerVars.anchorHeight]: anchorHeightValue.value,
+    [positionerVars.transformOrigin]: isPositioned.value
       ? middlewareData.value.transformOrigin?.value
       : undefined,
   }));
@@ -745,7 +761,7 @@ export function useAnchorPositioning(
     positionerCssVars,
     positionerStyles,
     arrowStyles,
-    arrowRef,
+    createArrowRef,
     arrowUncentered,
     side: logicalRenderedSide,
     align: renderedAlign,
@@ -944,7 +960,7 @@ export interface UseAnchorPositioningReturnValue {
   positionerCssVars: ComputedRef<CSSProperties>;
   positionerStyles: ComputedRef<CSSProperties>;
   arrowStyles: ComputedRef<CSSProperties>;
-  arrowRef: (element: Element | null) => void;
+  createArrowRef: () => (element: Element | null) => void;
   arrowUncentered: ComputedRef<boolean>;
   /**
    * The side of the anchor that the popup is on. It has a logical name when the `side` option has
@@ -968,3 +984,117 @@ export interface UseAnchorPositioningReturnValue {
   isPositioned: Readonly<Ref<boolean>>;
   update: () => void;
 }
+
+// `@floating-ui/vue` does not export this type of `@floating-ui/dom`.
+type Derivable<T> = (state: MiddlewareState) => T;
+
+export interface ArrowOptions {
+  /**
+   * The arrow element to be positioned.
+   * @default undefined
+   */
+  element: any;
+  /**
+   * The padding between the arrow element and the floating element edges.
+   * Useful when the floating element has rounded corners.
+   * @default 0
+   */
+  padding?: Padding | undefined;
+}
+
+/**
+ * Fork of the `arrow` middleware of Floating UI. It always uses the floating element as the
+ * offset parent of the arrow.
+ * @see https://floating-ui.com/docs/arrow
+ */
+export const arrow = (options: ArrowOptions | Derivable<ArrowOptions>): Middleware => ({
+  name: 'arrow',
+  options,
+  async fn(state) {
+    const { x, y, placement, rects, platform, elements, middlewareData } = state;
+    // `element` is required, so the type is not `Partial`.
+    const { element, padding = 0 } = evaluate(options, state) || {};
+
+    if (element == null) {
+      return {};
+    }
+
+    const paddingObject = getPaddingObject(padding);
+    const coords = { x, y };
+    const axis = getAlignmentAxis(placement);
+    const length = getAxisLength(axis);
+    const arrowDimensions = await platform.getDimensions(element);
+    const isYAxis = axis === 'y';
+    const minProp = isYAxis ? 'top' : 'left';
+    const maxProp = isYAxis ? 'bottom' : 'right';
+    const clientProp = isYAxis ? 'clientHeight' : 'clientWidth';
+
+    const endDiff =
+      rects.reference[length] + rects.reference[axis] - coords[axis] - rects.floating[length];
+    const startDiff = coords[axis] - rects.reference[axis];
+
+    const clientSize = elements.floating[clientProp] || rects.floating[length];
+
+    const centerToReference = endDiff / 2 - startDiff / 2;
+
+    // A large padding can move the arrow off the center. Then reduce the padding, so that the
+    // arrow is at the center.
+    const largestPossiblePadding = clientSize / 2 - arrowDimensions[length] / 2 - 1;
+    const minPadding = Math.min(paddingObject[minProp], largestPossiblePadding);
+    const maxPadding = Math.min(paddingObject[maxProp], largestPossiblePadding);
+
+    // Keep the arrow in the floating element when the center point is outside the bounds of the
+    // floating element.
+    const min = minPadding;
+    const max = clientSize - arrowDimensions[length] - maxPadding;
+    const center = clientSize / 2 - arrowDimensions[length] / 2 + centerToReference;
+    const offset = clamp(min, center, max);
+
+    // For an aligned placement, a small reference and the padding of the arrow can make the arrow
+    // point to nothing. Then the middleware moves the floating element itself.
+    // One reset makes sure that `shift()` still acts.
+    const shouldAddOffset =
+      !middlewareData.arrow &&
+      getAlignment(placement) != null &&
+      center !== offset &&
+      rects.reference[length] / 2 -
+        (center < min ? minPadding : maxPadding) -
+        arrowDimensions[length] / 2 <
+        0;
+    const alignmentOffset = shouldAddOffset ? (center < min ? center - min : center - max) : 0;
+
+    return {
+      [axis]: coords[axis] + alignmentOffset,
+      data: {
+        [axis]: offset,
+        centerOffset: center - offset - alignmentOffset,
+        ...(shouldAddOffset && { alignmentOffset }),
+      },
+      reset: shouldAddOffset,
+    };
+  },
+});
+
+export const hide: Middleware = {
+  name: 'hide',
+  async fn(state) {
+    const { width, height, x, y } = state.rects.reference;
+    const anchorHidden = width === 0 && height === 0 && x === 0 && y === 0;
+    // This is the `referenceHidden` strategy of `hide()` of Floating UI. Floating UI gives
+    // `detectOverflow` to the platform of a middleware before it calls the middleware.
+    const overflow = await state.platform.detectOverflow(state, {
+      elementContext: 'reference',
+    });
+    const referenceHidden =
+      overflow.top - height >= 0 ||
+      overflow.right - width >= 0 ||
+      overflow.bottom - height >= 0 ||
+      overflow.left - width >= 0;
+
+    return {
+      data: {
+        referenceHidden: referenceHidden || anchorHidden,
+      },
+    };
+  },
+};

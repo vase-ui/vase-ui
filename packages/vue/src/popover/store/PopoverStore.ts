@@ -13,7 +13,7 @@ import {
   createPopupStoreContext,
   popupStoreSelectors,
 } from '../../utils/popups/usePopupRoot';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginMiddleware';
 import type {
   PopupStoreContext,
   PopupStoreState,

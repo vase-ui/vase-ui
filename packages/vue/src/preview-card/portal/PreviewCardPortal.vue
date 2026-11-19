@@ -45,8 +45,8 @@ defineSlots<{
 
 const state: PreviewCardPortalState = EMPTY_OBJECT;
 
-const store = usePreviewCardRootContext();
-const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
+const { mounted } = usePreviewCardRootContext();
+const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
   PreviewCardPortalContext,

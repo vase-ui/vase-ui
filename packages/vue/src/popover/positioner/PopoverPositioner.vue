@@ -42,7 +42,7 @@ import { provide } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
-import { usePopupPositioner } from '../../utils/popups/popupPositioner';
+import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { usePopoverPortalContext } from '../portal/PopoverPortalContext';
@@ -70,12 +70,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverPositionerState>;
 }>();
 
-const store = usePopoverRootContext();
+const { store, trigger } = usePopoverRootContext();
 const keepMounted = usePopoverPortalContext();
 const nodeId = useFloatingNodeId();
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning, open } =
-  usePopupPositioner<PopoverPositionerState>(store, props, {
+  usePopupPositioner<PopoverPositionerState>(props, store, {
     keepMounted,
     positioning: { nodeId },
   });
@@ -85,7 +85,7 @@ provideFloatingNode(nodeId);
 
 useTriggerSwitchTransition({
   store,
-  domReference: () => store.select('anchorElement'),
+  domReference: () => store.state.anchorElement,
   positionerElement: () => store.select('positionerElement'),
   open,
 });
@@ -93,11 +93,11 @@ useTriggerSwitchTransition({
 useAnchoredPopupScrollLock(
   () =>
     open.value &&
-    store.select('modal') === true &&
-    store.select('openChangeReason') !== REASONS.triggerHover,
-  () => store.select('openMethod') === 'touch',
+    store.state.modal === true &&
+    store.state.openChangeReason !== REASONS.triggerHover,
+  () => store.state.openMethod === 'touch',
   () => store.select('positionerElement'),
-  () => store.select('activeTriggerElement'),
+  () => trigger.value,
 );
 
 defineExpose({ element });

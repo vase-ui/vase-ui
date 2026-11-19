@@ -17,8 +17,8 @@ import {
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeChildren } from '../tree/nodes';
 import type { PopupPositioningContext, ReferenceType } from '../types';
-import { useVaseUIFloating } from './useFloating';
-import type { UseFloatingOptions } from './useFloating';
+import { useVaseUIFloating } from '../usePopupPositioner';
+import type { UseFloatingOptions } from '../usePopupPositioner';
 
 const { render } = createRenderer();
 

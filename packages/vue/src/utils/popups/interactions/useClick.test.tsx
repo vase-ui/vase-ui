@@ -20,8 +20,7 @@ import { useRenderElement } from '../../../internals/useRenderElement';
 import { useButton } from '../../../internals/use-button/useButton';
 import { useTriggerRegistration } from '../usePopupTrigger';
 import type { UseClickProps } from '../usePopupTrigger';
-import { useHoverPopupInteraction } from './useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
+import { usePopupHover } from './usePopupHover';
 
 type AppProps = UseClickProps & {
   initialOpen?: boolean | undefined;
@@ -384,10 +383,10 @@ describe('useClick', () => {
             open.value = nextOpen;
           },
         });
-        const hoverReferenceProps = useHoverTriggerInteraction(context.rootStore, {
+        const hoverReferenceProps = usePopupHover(context.rootStore).trigger({
           triggerElement: refs.reference,
         });
-        useHoverPopupInteraction(context.rootStore);
+        usePopupHover(context.rootStore).popup();
         const { getReferenceProps, getFloatingProps } = useTestInteractions([
           { reference: hoverReferenceProps },
           useClick(context.rootStore, { stickIfOpen }),

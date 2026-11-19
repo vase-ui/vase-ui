@@ -4,7 +4,7 @@ import type { UseAnchorPositioningReturnValue } from '../../internals/useAnchorP
 
 export type ToastPositionerContext = Pick<
   UseAnchorPositioningReturnValue,
-  'side' | 'align' | 'arrowRef' | 'arrowUncentered' | 'arrowStyles'
+  'side' | 'align' | 'createArrowRef' | 'arrowUncentered' | 'arrowStyles'
 >;
 
 export const ToastPositionerContext: InjectionKey<ToastPositionerContext> = Symbol();

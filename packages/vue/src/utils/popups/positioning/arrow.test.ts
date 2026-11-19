@@ -1,6 +1,6 @@
 import { arrow as nativeArrow, computePosition } from '@floating-ui/vue';
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { arrow } from './arrow';
+import { arrow } from '../../../internals/useAnchorPositioning';
 
 const anchorSize = { width: 40, height: 20 };
 const floatingSize = { width: 200, height: 50 };

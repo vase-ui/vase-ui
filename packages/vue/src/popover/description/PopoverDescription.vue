@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverDescriptionState>;
 }>();
 
-const store = usePopoverRootContext();
+const { store } = usePopoverRootContext();
 
 const descriptionId = useVaseUiId(() => props.id);
 

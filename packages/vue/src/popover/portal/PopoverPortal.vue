@@ -43,8 +43,8 @@ defineSlots<{
 
 const state: PopoverPortalState = EMPTY_OBJECT;
 
-const store = usePopoverRootContext();
-const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
+const { mounted } = usePopoverRootContext();
+const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
   PopoverPortalContext,

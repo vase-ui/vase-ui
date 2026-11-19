@@ -9,7 +9,7 @@ import {
   getHoverPopupInstantType,
   popupStoreSelectors,
 } from '../../src/utils/popups/usePopupRoot';
-import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginConstants';
+import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginMiddleware';
 import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
 import type {
   PopupOpenChangeEventDetails,

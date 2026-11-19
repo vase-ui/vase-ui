@@ -49,13 +49,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverCloseState>;
 }>();
 
-const store = usePopoverRootContext();
+const { requestOpen } = usePopoverRootContext();
 useClosePartRegistration();
 
 const state: PopoverCloseState = EMPTY_OBJECT;
 
 function handleClick(event: MouseEvent) {
-  store.setOpen(false, createChangeEventDetails(REASONS.closePress, event));
+  requestOpen(false, createChangeEventDetails(REASONS.closePress, event));
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {

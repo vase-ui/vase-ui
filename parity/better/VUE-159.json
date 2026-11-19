@@ -1,0 +1,8 @@
+{
+  "id": "VUE-159",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts#L98-L109"
+  ],
+  "behavior": "A trigger releases its own hover timer. A user can hover one trigger while another trigger disappears. Base UI cancels the shared timer when either trigger leaves.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts"
+}

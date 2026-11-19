@@ -1,5 +1,18 @@
-import { computed, onBeforeMount, onScopeDispose, provide, shallowRef, watch } from 'vue';
-import type { ComputedRef, CSSProperties, MaybeRefOrGetter } from 'vue';
+import { positionerVars } from '../../../internals/useAnchorPositioning';
+import {
+  computed,
+  onBeforeMount,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  watch,
+  inject,
+  nextTick,
+  normalizeStyle,
+  onMounted,
+  toValue,
+} from 'vue';
+import type { CSSProperties, MaybeRefOrGetter } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import { useDirection } from '../../../internals/direction-context/DirectionContext';
@@ -7,26 +20,34 @@ import type { StateAttributesMapping } from '../../../internals/getStateAttribut
 import type { Side } from '../../../internals/useAnchorPositioning';
 import { useAnimationsFinished } from '../../../internals/useAnimationsFinished';
 import { useKeepAliveState } from '../../../internals/useKeepAliveState';
-import type { usePopupPositioner } from '../popupPositioner';
+import type { PopupPositionerStore } from '../usePopupPositioner';
+import type { VaseUIComponentProps } from '../../../internals/types';
+import { useRenderElement } from '../../../internals/useRenderElement';
 import { adaptiveOrigin } from '../positioning/adaptiveOriginMiddleware';
-import type { AdaptiveOriginMiddleware } from '../positioning/adaptiveOriginConstants';
-import * as CommonPopupCssVars from './CommonPopupCssVars';
-import * as CommonViewportDataAttributes from './CommonViewportDataAttributes';
-import { PopupViewportContext } from './PopupViewportContext';
-import { usePopupAutoResize } from './usePopupAutoResize';
+import type { AdaptiveOriginMiddleware } from '../positioning/adaptiveOriginMiddleware';
+import { PopupViewportContext, PopupStyleContext } from './PopupViewportContext';
+import { EMPTY_OBJECT } from '../../../common/empty';
+import { useDomEffect } from '../useDomEffect';
+import { getCssDimensions } from '../../getCssDimensions';
 
-export const popupViewportStateMapping: StateAttributesMapping<{
+const popupVars = {
+  popupWidth: '--popup-width',
+  popupHeight: '--popup-height',
+} as const;
+
+const popupViewportStateMapping: StateAttributesMapping<{
   activationDirection: string | undefined;
 }> = {
   activationDirection: (value) =>
     value
       ? {
-          [CommonViewportDataAttributes.activationDirection]: value,
+          'data-activation-direction': value,
         }
       : null,
 };
 
-export interface PopupViewportState {
+interface PopupViewportState<Instant> {
+  instant: Instant;
   /**
    * Direction from which the popup was activated, used for directional animations.
    */
@@ -37,28 +58,11 @@ export interface PopupViewportState {
   transitioning: boolean;
 }
 
-type PopupViewportStore = Parameters<typeof usePopupPositioner>[0] & {
+type PopupViewportStore<Instant> = {
+  select(key: 'instantType'): NoInfer<Instant>;
+  readonly state: { readonly instantType: Instant };
   set(key: 'adaptiveOrigin', value: AdaptiveOriginMiddleware | undefined): void;
-};
-
-export interface UsePopupViewportParameters {
-  /**
-   * Popup store instance for accessing shared popup state. The store stays the same while the
-   * part exists.
-   */
-  store: PopupViewportStore;
-  /**
-   * Side of the positioner relative to the trigger.
-   */
-  side: MaybeRefOrGetter<Side>;
-}
-
-export interface UsePopupViewportResult {
-  /**
-   * Viewport state used for data attributes and render prop styling.
-   */
-  state: ComputedRef<PopupViewportState>;
-}
+} & PopupPositionerStore;
 
 const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
@@ -102,9 +106,11 @@ function takePicture(container: Element): Node[] {
  * Call it in `setup` of the viewport part. It provides the context of `PopupViewportChildren`,
  * which renders the containers.
  */
-export function usePopupViewport(parameters: UsePopupViewportParameters): UsePopupViewportResult {
-  const { store, side } = parameters;
-
+export function usePopupViewport<Instant extends string | undefined>(
+  props: VaseUIComponentProps<PopupViewportState<NoInfer<Instant>>>,
+  store: PopupViewportStore<Instant>,
+  side: MaybeRefOrGetter<Side>,
+) {
   const direction = useDirection();
 
   const open = computed(() => store.select('open'));
@@ -135,8 +141,8 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     return {
       ...(dimensions
         ? {
-            [CommonPopupCssVars.popupWidth]: `${dimensions.width}px`,
-            [CommonPopupCssVars.popupHeight]: `${dimensions.height}px`,
+            [popupVars.popupWidth]: `${dimensions.width}px`,
+            [popupVars.popupHeight]: `${dimensions.height}px`,
           }
         : null),
       position: 'absolute',
@@ -306,12 +312,20 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
     previousContainerRef,
   });
 
-  const state = computed<PopupViewportState>(() => ({
+  const state = computed<PopupViewportState<Instant>>(() => ({
+    instant: store.select('instantType'),
     activationDirection: getActivationDirection(triggerOffset.value),
     transitioning: transitioning.value,
   }));
 
-  return { state };
+  return {
+    state,
+    ...useRenderElement('div', props, {
+      state,
+      stateAttributesMapping: popupViewportStateMapping,
+      children: true,
+    }),
+  };
 }
 
 export type Offset = {
@@ -380,4 +394,212 @@ export function calculateRelativePosition(from: Element, to: Element): Offset {
     horizontal: toCenter.x - fromCenter.x,
     vertical: toCenter.y - fromCenter.y,
   };
+}
+
+/**
+ * Allows the element to automatically resize based on its content while supporting animations.
+ * Call it in `setup`.
+ */
+export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
+  const { onMeasureLayout, onMeasureLayoutComplete } = parameters;
+
+  const animationFrame = useAnimationFrame();
+
+  let committedDimensions: Dimensions | null = null;
+
+  const { isHeld } = useKeepAliveState();
+  const ready = shallowRef(false);
+  onMounted(() => {
+    ready.value = true;
+  });
+
+  const readPopup = () => toValue(parameters.popupElement);
+  const readPositioner = () => toValue(parameters.positionerElement);
+  const readContent = () => toValue(parameters.content);
+  const runOnceAnimationsFinish = useAnimationsFinished(readPopup, true);
+  const readMounted = () => toValue(parameters.mounted);
+  const anchoringStyles = computed(() =>
+    getPopupAnchoringStyles(toValue(parameters.side), toValue(parameters.direction)),
+  );
+  const readPopupStyle = inject(PopupStyleContext, undefined);
+  // An ancestor's deactivation hook reads the detached popup before Vue can patch its style.
+  useDomEffect(
+    [readPopup, readMounted, anchoringStyles],
+    () => {
+      const popup = readPopup();
+      if (!popup || !readMounted()) {
+        return undefined;
+      }
+      const anchors = Object.entries(anchoringStyles.value);
+      return () => {
+        if (!isHeld.value || !anchors.length) {
+          return;
+        }
+        const rendered = normalizeStyle([readPopupStyle?.()]);
+        for (const [key, value] of anchors) {
+          if (
+            !(typeof rendered === 'object' && rendered[key] != null) &&
+            popup.style.getPropertyValue(key) === value &&
+            !popup.style.getPropertyPriority(key)
+          ) {
+            popup.style.removeProperty(key);
+          }
+        }
+      };
+    },
+    isHeld,
+  );
+  const popupSize = shallowRef<Dimensions | 'auto' | null>(null);
+  const positionerSize = shallowRef<Dimensions | null>(null);
+  const active = computed(() => ready.value && !isHeld.value && readMounted());
+  watch(
+    [active, readPopup, readPositioner, readContent, anchoringStyles],
+    ([shown, popup, positioner], _, onCleanup) => {
+      if (!readMounted()) {
+        committedDimensions = null;
+      }
+      if (!shown || !popup?.isConnected || !positioner) {
+        return;
+      }
+
+      // Both boxes must have their intrinsic size in the same layout read.
+      const restorePopup = applyElementStyles(popup, {
+        ...popupSizeStyles('auto'),
+        position: 'static',
+        transform: 'none',
+        scale: '1',
+      });
+      const restorePositioner = applyElementStyles(positioner, {
+        [positionerVars.availableWidth]: 'max-content',
+        [positionerVars.availableHeight]: 'max-content',
+        [positionerVars.positionerWidth]: 'max-content',
+        [positionerVars.positionerHeight]: 'max-content',
+      });
+      const previous = committedDimensions;
+      let target: Dimensions;
+      try {
+        onMeasureLayout?.();
+        target = getCssDimensions(popup);
+      } finally {
+        restorePopup();
+        restorePositioner();
+      }
+      onMeasureLayoutComplete?.(previous, target);
+      committedDimensions = target;
+      positionerSize.value = target;
+      popupSize.value = previous ?? 'auto';
+      if (!previous) {
+        return;
+      }
+
+      const controller = new AbortController();
+      onCleanup(() => {
+        controller.abort();
+        animationFrame.cancel();
+      });
+      animationFrame.request(() => {
+        popupSize.value = target;
+        void nextTick(() => {
+          if (!controller.signal.aborted) {
+            runOnceAnimationsFinish(() => {
+              popupSize.value = 'auto';
+            }, controller.signal);
+          }
+        });
+      });
+    },
+    { flush: 'post' },
+  );
+
+  return {
+    popup: computed(() => ({
+      ...(active.value && anchoringStyles.value),
+      ...popupSizeStyles(popupSize.value),
+    })),
+    positioner: computed(() => positionerSizeStyles(positionerSize.value)),
+  };
+}
+
+interface UsePopupAutoResizeParameters {
+  /**
+   * Element to resize.
+   */
+  popupElement: MaybeRefOrGetter<HTMLElement | null>;
+  /*
+   * Positioner element (parent of the popup)
+   */
+  positionerElement: MaybeRefOrGetter<HTMLElement | null>;
+  /**
+   * Whether the popup is mounted.
+   */
+  mounted: MaybeRefOrGetter<boolean>;
+  /*
+   * Content that may change and trigger a resize.
+   * This doesn't have to be the actual content of the popup, but a value that triggers a resize.
+   */
+  content: MaybeRefOrGetter<unknown>;
+  /**
+   * Callback fired immediately before measuring the dimensions of the new content.
+   */
+  onMeasureLayout?: (() => void) | undefined;
+  /**
+   * Callback fired after the new dimensions have been measured.
+   *
+   * @param previousDimensions Dimensions before the change, or `null` if this is the first measurement.
+   * @param newDimensions Newly measured dimensions.
+   */
+  onMeasureLayoutComplete?:
+    ((previousDimensions: Dimensions | null, newDimensions: Dimensions) => void) | undefined;
+
+  side: MaybeRefOrGetter<Side>;
+  direction: MaybeRefOrGetter<'ltr' | 'rtl'>;
+}
+
+function getPopupAnchoringStyles(side: Side, direction: 'ltr' | 'rtl'): Record<string, string> {
+  // Ensure popup size transitions correctly when anchored to `bottom` (side=top) or `right` (side=left).
+  const isPhysicalTop = side === 'top';
+  const isPhysicalLeft =
+    side === 'left' || side === (direction === 'rtl' ? 'inline-end' : 'inline-start');
+
+  if (!isPhysicalTop && !isPhysicalLeft) {
+    return EMPTY_OBJECT;
+  }
+
+  return {
+    position: 'absolute',
+    [isPhysicalTop ? 'bottom' : 'top']: '0px',
+    [isPhysicalLeft ? 'right' : 'left']: '0px',
+  };
+}
+
+function applyElementStyles(element: HTMLElement, styles: Record<string, string>) {
+  const { style } = element;
+  const previous = Object.entries(styles).map(([key, value]) => {
+    const original = [key, style.getPropertyValue(key), style.getPropertyPriority(key)] as const;
+    style.setProperty(key, value);
+    return original;
+  });
+  return () => {
+    for (const [key, value, priority] of previous) {
+      style.setProperty(key, value, priority);
+    }
+  };
+}
+
+export function popupSizeStyles(size: Dimensions | 'auto' | null) {
+  return (
+    size && {
+      [popupVars.popupWidth]: size === 'auto' ? size : `${size.width}px`,
+      [popupVars.popupHeight]: size === 'auto' ? size : `${size.height}px`,
+    }
+  );
+}
+
+export function positionerSizeStyles(size: Dimensions | null) {
+  return (
+    size && {
+      [positionerVars.positionerWidth]: `${size.width}px`,
+      [positionerVars.positionerHeight]: `${size.height}px`,
+    }
+  );
 }

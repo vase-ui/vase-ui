@@ -3,9 +3,7 @@ import { KeepAlive, defineComponent, onMounted, onUpdated, shallowRef } from 'vu
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
-import { getDelay } from '../interactions/useHoverShared';
-import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
+import { getDelay, usePopupHover } from '../interactions/usePopupHover';
 import type { Delay } from '../types';
 import { useTestDelayGroup as useDelayGroup } from '../../../../test/fixtures/tooltipInteractions';
 import { provideFloatingDelayGroup } from '../../../tooltip/root/TooltipRootContext';
@@ -36,11 +34,11 @@ const Tooltip = defineComponent({
     const group = useDelayGroup(Object.assign(context.rootStore, { closeForSibling }), { open });
     props.onGroup?.(group);
     const delay = () => props.delay ?? group.delay();
-    const hoverReferenceProps = useHoverTriggerInteraction(context.rootStore, {
+    const hoverReferenceProps = usePopupHover(context.rootStore).trigger({
       delay,
       triggerElement: refs.reference,
     });
-    useHoverPopupInteraction(context.rootStore, {
+    usePopupHover(context.rootStore).popup({
       closeDelay: () => getDelay(delay(), 'close') ?? 0,
     });
 

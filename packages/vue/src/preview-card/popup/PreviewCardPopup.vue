@@ -41,7 +41,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
-import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
+import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { usePreviewCardPositionerContext } from '../positioner/PreviewCardPositionerContext';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
@@ -55,19 +55,16 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PreviewCardPopupState>;
 }>();
 
-const store = usePreviewCardRootContext();
+const { store, open, transitionStatus } = usePreviewCardRootContext();
 const { side, align } = usePreviewCardPositionerContext();
 
-const open = computed(() => store.select('open'));
-const transitionStatus = computed(() => store.select('transitionStatus'));
-
-useHoverPopupInteraction(store, { closeDelay: () => store.select('closeDelay') });
+usePopupHover(store).popup({ closeDelay: () => store.state.closeDelay });
 
 const state = computed<PreviewCardPopupState>(() => ({
   open: open.value,
   side: side.value,
   align: align.value,
-  instant: store.select('instantType'),
+  instant: store.state.instantType,
   transitionStatus: transitionStatus.value,
 }));
 

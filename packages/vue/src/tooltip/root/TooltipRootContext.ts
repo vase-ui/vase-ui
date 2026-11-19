@@ -11,7 +11,7 @@ import {
   getHoverPopupInstantType,
   popupStoreSelectors,
 } from '../../utils/popups/usePopupRoot';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginMiddleware';
 import type {
   PopupStoreContext,
   PopupStoreState,
@@ -25,7 +25,7 @@ import type {
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import type { UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
 import { Timeout, useTimeout } from '../../common/useTimeout';
-import { getDelay } from '../../utils/popups/interactions/useHoverShared';
+import { getDelay } from '../../utils/popups/interactions/usePopupHover';
 import type { Delay } from '../../utils/popups/types';
 
 export type State<Payload> = PopupStoreState<Payload> & {
@@ -167,7 +167,7 @@ export function useTooltipPortalContext(): ComputedRef<boolean> {
 
 export type TooltipPositionerContext = Pick<
   UseAnchorPositioningReturnValue,
-  'side' | 'align' | 'arrowRef' | 'arrowUncentered' | 'arrowStyles'
+  'side' | 'align' | 'createArrowRef' | 'arrowUncentered' | 'arrowStyles'
 >;
 
 export const TooltipPositionerContext: InjectionKey<TooltipPositionerContext> = Symbol();

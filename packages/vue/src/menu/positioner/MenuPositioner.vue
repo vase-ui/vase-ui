@@ -67,7 +67,7 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
-import { usePopupPositioner } from '../../utils/popups/popupPositioner';
+import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
 import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { useMenuPortalContext } from '../portal/MenuPortalContext';
@@ -146,7 +146,7 @@ const resolvedProps = computed(() => {
 const isContextMenu = computed(() => parent.value.type === 'context-menu');
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning, open } =
-  usePopupPositioner<MenuPositionerState>(store, props, {
+  usePopupPositioner<MenuPositionerState>(props, store, {
     keepMounted,
     positioning: {
       anchor: () => resolvedProps.value.anchor,

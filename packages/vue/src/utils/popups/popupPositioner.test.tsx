@@ -26,8 +26,8 @@ import PopupPositionerPart from '../../../test/fixtures/PopupPositionerPart.vue'
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { adaptiveOrigin } from './positioning/adaptiveOriginMiddleware';
-import { usePopupPositioner } from './popupPositioner';
-import type { PopupPositionerState } from './popupPositioner';
+import { usePopupPositioner } from './usePopupPositioner';
+import type { PopupPositionerState } from './usePopupPositioner';
 import PopupPositionerHydration from './PopupPositionerHydration.test.vue';
 import PopupPositionerReplace from './PopupPositionerReplace.test.vue';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from './tree/FloatingTree';
@@ -318,8 +318,8 @@ describe('usePopupPositioner', () => {
         const store = inject(PopupFixtureContext)!;
         const props = reactive({});
         const { elementProps } = usePopupPositioner<PopupPositionerState & { extra: string }>(
-          store,
           props,
+          store,
           {
             keepMounted: false,
             positioning: { side: () => 'top' },
@@ -361,7 +361,7 @@ describe('usePopupPositioner', () => {
       setup() {
         store = inject(PopupFixtureContext)!;
         const props = reactive({});
-        const { elementProps } = usePopupPositioner(store, props, {
+        const { elementProps } = usePopupPositioner(props, store, {
           keepMounted: false,
           positioning: {
             nodeId: () => place.value.nodeId,

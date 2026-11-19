@@ -29,10 +29,8 @@ export interface PopoverArrowProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useRenderElement } from '../../internals/useRenderElement';
-import { popupStateMapping } from '../../utils/popups/popupStateMapping';
+import { usePopupArrow } from '../../utils/popups/usePopupArrow';
 import { usePopoverPositionerContext } from '../positioner/PopoverPositionerContext';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 
@@ -45,22 +43,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverArrowState>;
 }>();
 
-const store = usePopoverRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles } = usePopoverPositionerContext();
-
-const state = computed<PopoverArrowState>(() => ({
-  open: store.select('open'),
-  side: side.value,
-  align: align.value,
-  uncentered: arrowUncentered.value,
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: [arrowRef],
-  stateAttributesMapping: popupStateMapping,
-  props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
-});
+const { open } = usePopoverRootContext();
+const positioner = usePopoverPositionerContext();
+const { element, elementProps, setRef, usesRenderSlot, state } = usePopupArrow(
+  props,
+  open,
+  positioner,
+);
 
 defineExpose({ element });
 </script>

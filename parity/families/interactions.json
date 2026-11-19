@@ -186,7 +186,56 @@
       "relation": "inlined-into",
       "destination": "packages/vue/src/tooltip/root/TooltipRoot.vue",
       "member": "useTooltipCursor",
-      "witness": "packages/vue/src/utils/popups/interactions/useClientPoint.test.tsx"
+      "witness": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx",
+      "member": "createHoverApp",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx",
+      "member": "createPopupApp",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx",
+      "member": "expectLocation",
+      "witness": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
+      "member": "PopupHoverSession",
+      "witness": "packages/vue/src/utils/popups/interactions/hoverIntent.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverShared.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
+      "member": "getDelay",
+      "witness": "packages/vue/src/utils/popups/interactions/useHoverShared.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
+      "member": "enterTrigger",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
+      "member": "enterPopup",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
     }
   ]
 }

@@ -65,7 +65,7 @@ export interface MenuSubmenuTriggerProps
 
 <script setup lang="ts">
 import { triggerBindings } from '../../utils/popups/popupBindings';
-import { submenuTriggers } from '../../utils/popups/registeredParts';
+import { bindPositionerHandlers, submenuTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, onUpdated, shallowRef, watch, type ShallowRef } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
@@ -79,10 +79,8 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useTriggerPress, useTriggerRegistration } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
@@ -149,10 +147,12 @@ useDomEffect([open, () => store.select('positionerElement')], () => {
     }
   }
 
-  positionerElement.addEventListener('focusout', handleGuardFocusOut, true);
+  const detach = bindPositionerHandlers(positionerElement, {
+    onFocusoutCapture: handleGuardFocusOut,
+  });
   return () => {
     focusReturnedThroughGuard = false;
-    positionerElement.removeEventListener('focusout', handleGuardFocusOut, true);
+    detach?.();
   };
 });
 
@@ -201,13 +201,10 @@ const { button, commonProps } = useMenuItem(triggerElement, {
   isSubmenuTrigger: true,
 });
 
-// The handlers that one safe polygon makes share its timer, so each trigger has its own.
-const handleClose = safePolygon({ blockPointerEvents: true });
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(store, {
+const hoverProps = usePopupHover(store).trigger({
   enabled: () => store.select('hoverEnabled') && props.openOnHover && !isDisabled.value,
-  handleClose: () => handleClose,
+  safePolygon: { blockPointerEvents: true },
   mouseOnly: true,
   move: true,
   restMs: () => props.delay,

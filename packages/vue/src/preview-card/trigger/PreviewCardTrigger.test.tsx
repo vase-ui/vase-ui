@@ -18,6 +18,34 @@ import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 describe('<PreviewCard.Trigger />', () => {
   const { render } = createRenderer();
 
+  it('VUE-159: keeps the hover delay when another trigger unmounts', async () => {
+    vi.useFakeTimers();
+    try {
+      const other = shallowRef(true);
+      await render(() => (
+        <PreviewCard.Root>
+          {other.value && <PreviewCard.Trigger id="other" />}
+          <PreviewCard.Trigger id="active" data-testid="active" delay={100} />
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="card" />
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>
+      ));
+      const active = screen.getByTestId('active');
+      await fireEvent.mouseEnter(active);
+      other.value = false;
+      await flushMicrotasks();
+      vi.advanceTimersByTime(100);
+      await flushMicrotasks();
+      expect(screen.getByTestId('card')).toBeVisible();
+      expect(active).toHaveAttribute('data-popup-open');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   describeConformance(<PreviewCard.Trigger />, () => ({
     refInstanceof: window.HTMLAnchorElement,
     render(node) {

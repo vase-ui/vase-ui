@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { InlineRectCoordsRef } from './inlineRect';
+import type { InlineRectCoordsRef } from '../../preview-card/positioner/PreviewCardPositionerContext';
 import {
   createInlineMiddleware,
   getInlineRectTriggerProps,
   updateInlineRectCoords,
-} from './inlineRect';
+} from '../../preview-card/positioner/PreviewCardPositionerContext';
 
 type RectLike = {
   left: number;

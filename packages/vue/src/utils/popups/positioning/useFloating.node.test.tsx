@@ -6,7 +6,7 @@ import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../usePopupRoot';
 import { provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
-import { useVaseUIFloating } from './useFloating';
+import { useVaseUIFloating } from '../usePopupPositioner';
 
 function createPopup() {
   const store = new FloatingRootStore({

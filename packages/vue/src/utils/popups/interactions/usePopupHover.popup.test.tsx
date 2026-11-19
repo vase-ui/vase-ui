@@ -7,11 +7,13 @@ import { createChangeEventDetails } from '../../../internals/createVaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
-import { hoverPointerStyle, useHoverPointerStyle } from './hoverPointerEvents';
-import { getHoverIntent } from './hoverIntent';
-import { useHoverPopupInteraction } from './useHoverPopupInteraction';
-import type { UseHoverPopupInteractionProps } from './useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
+import {
+  hoverPointerStyle,
+  useHoverPointerStyle,
+  getPopupHoverSession,
+  usePopupHover,
+} from './usePopupHover';
+import type { HoverPopupOptions } from './usePopupHover';
 
 describe('useHoverPopupInteraction', () => {
   const { render } = createRenderer();
@@ -34,11 +36,11 @@ describe('useHoverPopupInteraction', () => {
           open.value = nextOpen;
         },
       });
-      const referenceProps = useHoverTriggerInteraction(context.rootStore, {
+      const referenceProps = usePopupHover(context.rootStore).trigger({
         triggerElement: refs.reference,
         delay: () => ({ close: props.closeDelay }),
       });
-      useHoverPopupInteraction(context.rootStore, { closeDelay: () => props.closeDelay });
+      usePopupHover(context.rootStore).popup({ closeDelay: () => props.closeDelay });
 
       return () => (
         <>
@@ -127,7 +129,7 @@ describe('useHoverPopupInteraction', () => {
     // A popup with no trigger interaction, so only the interaction of the popup answers to the
     // pointer. The case opens it with a hover event. It has a button that opens a popup and a
     // button that does not.
-    function createPopupApp(options: UseHoverPopupInteractionProps = {}) {
+    function createPopupApp(options: HoverPopupOptions = {}) {
       let store!: FloatingRootStore;
 
       const PopupApp = defineComponent({
@@ -140,7 +142,7 @@ describe('useHoverPopupInteraction', () => {
             },
           });
           store = context.rootStore;
-          useHoverPopupInteraction(store, options);
+          usePopupHover(store).popup(options);
 
           const triggerStyle = useHoverPointerStyle(refs.reference);
           const positionerStyle = useHoverPointerStyle(refs.floating);
@@ -253,7 +255,7 @@ describe('useHoverPopupInteraction', () => {
 
       const PopupPart = defineComponent({
         setup() {
-          useHoverPopupInteraction(store);
+          usePopupHover(store).popup();
           return () => null;
         },
       });
@@ -263,7 +265,7 @@ describe('useHoverPopupInteraction', () => {
             onOpenChange: (nextOpen) => calls.push(nextOpen),
           });
           store = context.rootStore;
-          const hoverProps = useHoverTriggerInteraction(store, {
+          const hoverProps = usePopupHover(store).trigger({
             delay: 500,
             triggerElement: refs.reference,
           });
@@ -297,11 +299,11 @@ describe('useHoverPopupInteraction', () => {
       async function renderOpenPopup({
         block = true,
         ...options
-      }: UseHoverPopupInteractionProps & { block?: boolean } = {}) {
+      }: HoverPopupOptions & { block?: boolean } = {}) {
         const { PopupApp, getStore } = createPopupApp(options);
         const view = await renderInKeepAlive(PopupApp);
         if (block) {
-          getHoverIntent(getStore()).handleCloseOptions = { blockPointerEvents: true };
+          getPopupHoverSession(getStore()).handleCloseOptions = { blockPointerEvents: true };
         }
         await openByHover(getStore());
         const trigger = screen.getByTestId('trigger');
@@ -367,7 +369,7 @@ describe('useHoverPopupInteraction', () => {
         const { read, unmount, trigger, positioner, getStore } = await renderOpenPopup({
           block: false,
         });
-        getHoverIntent(getStore()).blockOutsidePointerEvents({
+        getPopupHoverSession(getStore()).blockOutsidePointerEvents({
           scopeElement: document.body,
           triggerElement: trigger,
           positionerElement: positioner,
@@ -423,7 +425,7 @@ describe('useHoverPopupInteraction', () => {
             }
             const first = useStore('first');
             const second = useStore('second');
-            useHoverPopupInteraction(() => (moved.value ? stores.second : stores.first));
+            usePopupHover(() => (moved.value ? stores.second : stores.first)).popup();
 
             return () => (
               <>
@@ -464,7 +466,7 @@ describe('useHoverPopupInteraction', () => {
       it('gives back the pointer events that the old store blocked', async () => {
         const { StoreChangeApp, moved, stores } = createStoreChangeApp();
         await render(<StoreChangeApp />);
-        getHoverIntent(stores.first).handleCloseOptions = { blockPointerEvents: true };
+        getPopupHoverSession(stores.first).handleCloseOptions = { blockPointerEvents: true };
         await openByHover(stores.first);
         await openByHover(stores.second);
         expect(document.body.style.pointerEvents).toBe('none');
@@ -480,7 +482,7 @@ describe('useHoverPopupInteraction', () => {
         await render(<StoreChangeApp />);
         // The first store stays closed, so the block effect holds no pointer events. Only the stop
         // effect can give them back.
-        getHoverIntent(stores.first).blockOutsidePointerEvents({
+        getPopupHoverSession(stores.first).blockOutsidePointerEvents({
           scopeElement: document.body,
           triggerElement: screen.getByTestId('trigger'),
           positionerElement: screen.getByTestId('popup'),
@@ -497,7 +499,7 @@ describe('useHoverPopupInteraction', () => {
         const { StoreChangeApp, moved, stores } = createStoreChangeApp();
         await render(<StoreChangeApp />);
         // Only the second store asks to block. The part blocks nothing until it follows that store.
-        getHoverIntent(stores.second).handleCloseOptions = { blockPointerEvents: true };
+        getPopupHoverSession(stores.second).handleCloseOptions = { blockPointerEvents: true };
         await openByHover(stores.first);
         await openByHover(stores.second);
         expect(document.body.style.pointerEvents).toBe('');
@@ -511,7 +513,7 @@ describe('useHoverPopupInteraction', () => {
       it('forgets what the hover intent of a closed new store holds', async () => {
         const { StoreChangeApp, moved, stores } = createStoreChangeApp();
         await render(<StoreChangeApp />);
-        getHoverIntent(stores.second).blockOutsidePointerEvents({
+        getPopupHoverSession(stores.second).blockOutsidePointerEvents({
           scopeElement: document.body,
           triggerElement: screen.getByTestId('trigger'),
           positionerElement: screen.getByTestId('popup'),
@@ -533,12 +535,12 @@ describe('useHoverPopupInteraction', () => {
         props: {
           store: { type: Object as PropType<FloatingRootStore>, required: true },
           options: {
-            type: Object as PropType<UseHoverPopupInteractionProps>,
+            type: Object as PropType<HoverPopupOptions>,
             default: () => ({}),
           },
         },
         setup(props) {
-          useHoverPopupInteraction(props.store, props.options);
+          usePopupHover(props.store).popup(props.options);
           return () => null;
         },
       });
@@ -548,7 +550,7 @@ describe('useHoverPopupInteraction', () => {
       const Layer = defineComponent({
         props: {
           name: { type: String, required: true },
-          options: { type: Object as PropType<UseHoverPopupInteractionProps>, default: undefined },
+          options: { type: Object as PropType<HoverPopupOptions>, default: undefined },
         },
         setup(props, { slots }) {
           const nodeId = useFloatingNodeId();
@@ -585,7 +587,7 @@ describe('useHoverPopupInteraction', () => {
       async function renderLayers({
         withTree = true,
         parentOptions,
-      }: { withTree?: boolean; parentOptions?: UseHoverPopupInteractionProps } = {}) {
+      }: { withTree?: boolean; parentOptions?: HoverPopupOptions } = {}) {
         const layers = (
           <Layer name="parent" options={parentOptions}>
             <Layer name="child" />
@@ -783,7 +785,7 @@ describe('useHoverPopupInteraction', () => {
             });
             store = context.rootStore;
             provideFloatingNode(nodeId);
-            useHoverPopupInteraction(store, { nodeId: () => nodeId });
+            usePopupHover(store).popup({ nodeId: () => nodeId });
 
             return () =>
               open.value && (

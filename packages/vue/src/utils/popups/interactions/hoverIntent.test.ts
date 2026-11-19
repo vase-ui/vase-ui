@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../usePopupRoot';
 import { menuPopups } from '../registeredParts';
-import { hoverPointerStyle } from './hoverPointerEvents';
-import { getHoverIntent } from './hoverIntent';
-import type { HoverIntent } from './hoverIntent';
+import { hoverPointerStyle, getPopupHoverSession } from './usePopupHover';
+import type { PopupHoverSession } from './usePopupHover';
 
 function createIntent(openEvent?: Event) {
   const store = new FloatingRootStore({
@@ -17,7 +16,7 @@ function createIntent(openEvent?: Event) {
     onOpenChange: undefined,
   });
   store.context.openEvent = openEvent;
-  return getHoverIntent(store);
+  return getPopupHoverSession(store);
 }
 
 function createElements() {
@@ -76,10 +75,10 @@ describe('HoverIntent', () => {
     it.each([
       {
         name: 'restoreOutsidePointerEvents',
-        restore: (intent: HoverIntent) => intent.restoreOutsidePointerEvents(),
+        restore: (intent: PopupHoverSession) => intent.restoreOutsidePointerEvents(),
       },
-      { name: 'reset', restore: (intent: HoverIntent) => intent.reset() },
-      { name: 'onPopupMouseEnter', restore: (intent: HoverIntent) => intent.onPopupMouseEnter() },
+      { name: 'reset', restore: (intent: PopupHoverSession) => intent.reset() },
+      { name: 'onPopupMouseEnter', restore: (intent: PopupHoverSession) => intent.enterPopup() },
     ])('$name gives each element its value back', ({ restore }) => {
       const elements = createElements();
       const intent = createIntent();

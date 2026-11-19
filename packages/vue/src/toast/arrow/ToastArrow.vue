@@ -39,7 +39,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ToastArrowState>;
 }>();
 
-const { arrowRef, side, align, arrowUncentered, arrowStyles } = useToastPositionerContext();
+const { createArrowRef, side, align, arrowUncentered, arrowStyles } = useToastPositionerContext();
 
 const state = computed<ToastArrowState>(() => ({
   side: side.value,
@@ -49,7 +49,7 @@ const state = computed<ToastArrowState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [arrowRef],
+  ref: createArrowRef(),
   props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
 });
 

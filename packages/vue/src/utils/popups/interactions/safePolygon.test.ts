@@ -2,9 +2,10 @@ import { vi, expect, describe, beforeEach, afterEach, it } from 'vitest';
 import { flushMicrotasks } from '#test-utils';
 import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
-import type { HandleCloseContext } from './useHoverShared';
+import type { HandleCloseContext } from './usePopupHover';
 import type { PopupPositioningContext } from '../types';
-import { safePolygon } from './safePolygon';
+import { trackHoverPolygon, resolvePolygonOptions } from './usePopupHover';
+import { Timeout } from '../../../common/useTimeout';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 
 function createRect(left: number, top: number, width: number, height: number) {
@@ -148,7 +149,7 @@ describe('safePolygon', () => {
     domReference.getBoundingClientRect = () => createRect(0, 0, 100, 100);
     floating.getBoundingClientRect = () => createRect(120, 0, 100, 100);
     const onClose = vi.fn();
-    const handleMove = safePolygon()(
+    const handleMove = trackHoverPolygon(
       createHandleCloseContext({
         domReference,
         floating,
@@ -157,6 +158,7 @@ describe('safePolygon', () => {
         x: 100,
         y: 50,
       }),
+      new Timeout(),
     );
 
     handleMove(createMouseMoveEvent(215, 95, button));
@@ -185,7 +187,7 @@ describe('safePolygon', () => {
     const openChildContext = createFloatingContext({ domReference, floating, open: true });
     tree.addNode({ id: 'child', parentId: 'root', context: openChildContext });
 
-    const handler = safePolygon()(context);
+    const handler = trackHoverPolygon(context, new Timeout());
     handler(createMouseMoveEvent(3, -1));
 
     vi.advanceTimersByTime(50);
@@ -213,7 +215,7 @@ describe('safePolygon', () => {
     tree.addNode({ id: 'inline-root', parentId: 'root' });
     tree.addNode({ id: 'child', parentId: 'inline-root', context: openChildContext });
 
-    const handler = safePolygon()(context);
+    const handler = trackHoverPolygon(context, new Timeout());
     handler(createMouseMoveEvent(3, -1));
 
     vi.advanceTimersByTime(50);
@@ -240,7 +242,7 @@ describe('safePolygon', () => {
     const closedChildContext = createFloatingContext({ domReference, floating, open: false });
     tree.addNode({ id: 'child', parentId: 'root', context: closedChildContext });
 
-    const handler = safePolygon()(context);
+    const handler = trackHoverPolygon(context, new Timeout());
     handler(createMouseMoveEvent(3, -1));
 
     vi.advanceTimersByTime(50);
@@ -271,7 +273,7 @@ describe('safePolygon', () => {
         y: scenario.leavePoint[1],
       });
 
-      const handler = safePolygon()(context);
+      const handler = trackHoverPolygon(context, new Timeout());
       handler(createMouseMoveEvent(scenario.troughPoint[0], scenario.troughPoint[1]));
 
       expect(onClose).toHaveBeenCalledTimes(0);
@@ -300,7 +302,7 @@ describe('safePolygon', () => {
         y: scenario.leavePoint[1],
       });
 
-      const handler = safePolygon()(context);
+      const handler = trackHoverPolygon(context, new Timeout());
       handler(createMouseMoveEvent(scenario.outsidePoint[0], scenario.outsidePoint[1]));
 
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -327,11 +329,11 @@ describe('safePolygon', () => {
       y: scenario.leavePoint[1],
     });
 
-    const handleClose = safePolygon();
-    const firstHandler = handleClose(context);
+    const timer = new Timeout();
+    const firstHandler = trackHoverPolygon(context, timer);
     firstHandler(createMouseMoveEvent(130, 50, floating));
 
-    const secondHandler = handleClose(context);
+    const secondHandler = trackHoverPolygon(context, timer);
     secondHandler(createMouseMoveEvent(scenario.troughPoint[0], scenario.troughPoint[1]));
 
     expect(onClose).toHaveBeenCalledTimes(0);
@@ -345,7 +347,7 @@ describe('safePolygon', () => {
       domReference.getBoundingClientRect = () => createRect(0, 0, 100, 100);
       floating.getBoundingClientRect = () => createRect(120, -100, 100, 300);
 
-      return safePolygon()(
+      return trackHoverPolygon(
         createHandleCloseContext({
           domReference,
           floating,
@@ -355,6 +357,7 @@ describe('safePolygon', () => {
           x: 100,
           y: 50,
         }),
+        new Timeout(),
       );
     }
 
@@ -392,7 +395,7 @@ describe('safePolygon', () => {
 
       const onClose = vi.fn();
       // The pointer leaves at the left edge, which is the side opposite to the popup.
-      const handler = safePolygon()(
+      const handler = trackHoverPolygon(
         createHandleCloseContext({
           domReference,
           floating,
@@ -402,6 +405,7 @@ describe('safePolygon', () => {
           x: 0,
           y: 50,
         }),
+        new Timeout(),
       );
 
       handler({
@@ -416,9 +420,9 @@ describe('safePolygon', () => {
     });
 
     it('gives the options to the hover interaction, with pointer events not blocked by default', () => {
-      expect(safePolygon().__options).toEqual({ blockPointerEvents: false });
+      expect(resolvePolygonOptions(true)).toEqual({ blockPointerEvents: false });
       const getScope = () => null;
-      expect(safePolygon({ blockPointerEvents: true, getScope }).__options).toEqual({
+      expect(resolvePolygonOptions({ blockPointerEvents: true, getScope })).toEqual({
         blockPointerEvents: true,
         getScope,
       });

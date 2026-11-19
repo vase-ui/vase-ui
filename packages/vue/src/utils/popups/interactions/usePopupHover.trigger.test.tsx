@@ -11,11 +11,8 @@ import { useFloating } from '../../../../test/fixtures/useFloating';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { Delay } from '../types';
-import { getHoverIntent } from './hoverIntent';
-import { safePolygon } from './safePolygon';
-import { useHoverPopupInteraction } from './useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
-import type { UseHoverTriggerInteractionProps } from './useHoverTriggerInteraction';
+import { getPopupHoverSession, usePopupHover } from './usePopupHover';
+import type { HoverTriggerOptions } from './usePopupHover';
 
 describe('useHoverTriggerInteraction', () => {
   const { render } = createRenderer();
@@ -29,11 +26,11 @@ describe('useHoverTriggerInteraction', () => {
     let store!: FloatingRootStore;
     const Trigger = defineComponent(() => {
       store = useFloating().context.rootStore;
-      useHoverTriggerInteraction(store);
+      usePopupHover(store).trigger();
       return () => null;
     });
     const { unmount } = await render(<Trigger />);
-    const cancel = vi.spyOn(getHoverIntent(store), 'cancel');
+    const cancel = vi.spyOn(getPopupHoverSession(store), 'cancel');
     store.context.events.emit('openchange', { open: false });
     expect(cancel).toHaveBeenCalledOnce();
 
@@ -51,25 +48,25 @@ describe('useHoverTriggerInteraction', () => {
       setup() {
         const { context } = useFloating();
         store = context.rootStore;
-        useHoverTriggerInteraction(context.rootStore, {
-          handleClose: () => safePolygon({ blockPointerEvents: block.value }),
+        usePopupHover(context.rootStore).trigger({
+          safePolygon: () => ({ blockPointerEvents: block.value }),
         });
         return () => null;
       },
     });
 
     await render(<App />);
-    expect(getHoverIntent(store).handleCloseOptions?.blockPointerEvents).toBe(false);
+    expect(getPopupHoverSession(store).handleCloseOptions?.blockPointerEvents).toBe(false);
 
     block.value = true;
     await flushMicrotasks();
-    expect(getHoverIntent(store).handleCloseOptions?.blockPointerEvents).toBe(true);
+    expect(getPopupHoverSession(store).handleCloseOptions?.blockPointerEvents).toBe(true);
   });
 
   // The setup of the cases that give the listeners to a wrapper of the trigger. The popup is open.
   function useWrapped(
     onOpenChange: (open: boolean, details: unknown) => void,
-    options: UseHoverTriggerInteractionProps = {
+    options: HoverTriggerOptions = {
       mouseOnly: true,
       restMs: 100,
       delay: { close: 0 },
@@ -85,7 +82,7 @@ describe('useHoverTriggerInteraction', () => {
         open.value = nextOpen;
       },
     });
-    const hoverProps = useHoverTriggerInteraction(context.rootStore, {
+    const hoverProps = usePopupHover(context.rootStore).trigger({
       ...options,
       triggerElement,
     });
@@ -310,12 +307,12 @@ describe('useHoverTriggerInteraction', () => {
             open.value = nextOpen;
           },
         });
-        const referenceProps = useHoverTriggerInteraction(context.rootStore, {
+        const referenceProps = usePopupHover(context.rootStore).trigger({
           triggerElement: refs.reference,
           delay: () => props.delay,
           restMs: () => props.restMs,
         });
-        useHoverPopupInteraction(context.rootStore);
+        usePopupHover(context.rootStore).popup();
 
         return () => (
           <>
@@ -496,7 +493,7 @@ describe('useHoverTriggerInteraction', () => {
               open.value = nextOpen;
             },
           });
-          const referenceProps = useHoverTriggerInteraction(context.rootStore, {
+          const referenceProps = usePopupHover(context.rootStore).trigger({
             triggerElement: refs.reference,
           });
 
@@ -538,7 +535,7 @@ describe('useHoverTriggerInteraction', () => {
     function createHoverApp({
       secondTrigger,
       ...options
-    }: UseHoverTriggerInteractionProps & { secondTrigger?: boolean } = {}) {
+    }: HoverTriggerOptions & { secondTrigger?: boolean } = {}) {
       const calls: { open: boolean; reason: string; trigger: string | undefined }[] = [];
       const open = shallowRef(false);
       let store!: FloatingRootStore;
@@ -557,14 +554,14 @@ describe('useHoverTriggerInteraction', () => {
             },
           });
           store = context.rootStore;
-          const hoverProps = useHoverTriggerInteraction(store, {
+          const hoverProps = usePopupHover(store).trigger({
             triggerElement: refs.reference,
             ...options,
           });
           // Each trigger has its own composable, as each trigger part has.
           const secondElement = shallowRef<Element | null>(null);
           const secondHoverProps = secondTrigger
-            ? useHoverTriggerInteraction(store, { triggerElement: secondElement, ...options })
+            ? usePopupHover(store).trigger({ triggerElement: secondElement, ...options })
             : undefined;
           const register = (id: string) => (node: unknown) => {
             if (node) {
@@ -611,7 +608,7 @@ describe('useHoverTriggerInteraction', () => {
 
     // A trigger that moves from the first store to the second store when `second` is `true`.
     // `opened` lists the store that gets each open request.
-    function createStoreChangeApp(options: UseHoverTriggerInteractionProps = {}) {
+    function createStoreChangeApp(options: HoverTriggerOptions = {}) {
       const second = shallowRef(false);
       const opened: string[] = [];
       const App = defineComponent({
@@ -621,7 +618,7 @@ describe('useHoverTriggerInteraction', () => {
             second: useFloating({ onOpenChange: () => opened.push('second') }).context.rootStore,
           };
           const store = computed(() => (second.value ? stores.second : stores.first));
-          const hoverProps = useHoverTriggerInteraction(store, options);
+          const hoverProps = usePopupHover(store).trigger(options);
           return () => <button data-testid="trigger" {...hoverProps} />;
         },
       });
@@ -718,8 +715,8 @@ describe('useHoverTriggerInteraction', () => {
       const App = defineComponent(() => {
         const first = useFloating().context.rootStore;
         const second = useFloating({ onOpenChange: opened }).context.rootStore;
-        useHoverTriggerInteraction(() => (moved.value ? second : first), { enabled });
-        const hover = useHoverTriggerInteraction(second, { delay: 500 });
+        usePopupHover(() => (moved.value ? second : first)).trigger({ enabled });
+        const hover = usePopupHover(second).trigger({ delay: 500 });
         return () => <button {...hover}>Other trigger</button>;
       });
       await render(<App />);
@@ -871,7 +868,7 @@ describe('useHoverTriggerInteraction', () => {
     });
 
     describe('the safe polygon', () => {
-      const handleClose = () => safePolygon();
+      const safePolygon = true;
 
       function trackDocumentMousemoveListeners() {
         const added = vi.spyOn(document, 'addEventListener');
@@ -889,7 +886,7 @@ describe('useHoverTriggerInteraction', () => {
       }
 
       it('listens to the document from the leave until the pointer leaves the polygon', async () => {
-        const { App } = createHoverApp({ handleClose });
+        const { App } = createHoverApp({ safePolygon });
         await render(<App />);
         await enter(getTrigger());
         await flushMicrotasks();
@@ -925,7 +922,7 @@ describe('useHoverTriggerInteraction', () => {
         },
       ])('removes the listener when $name', async ({ release }) => {
         const enabled = shallowRef(true);
-        const { App, getStore } = createHoverApp({ handleClose, enabled });
+        const { App, getStore } = createHoverApp({ safePolygon, enabled });
         const view = await renderInKeepAlive(App);
         await enter(getTrigger());
         await flushMicrotasks();
@@ -944,15 +941,33 @@ describe('useHoverTriggerInteraction', () => {
         getStore: () => FloatingRootStore;
       };
 
+      it('VUE-158: a canceled corridor cannot close a reopened popup', async () => {
+        const { App, getStore, calls } = createHoverApp({ safePolygon });
+        await render(<App />);
+        await enter(getTrigger());
+        const popup = screen.getByTestId('popup');
+        popup.style.top = '-100px';
+        popup.style.height = '300px';
+        await fireEvent.mouseLeave(getTrigger(), { clientX: 100, clientY: 50 });
+        await moveOnDocument(195, 145);
+        const store = getStore();
+        store.setOpen(false, createChangeEventDetails(REASONS.escapeKey));
+        await enter(getTrigger());
+        await tick(50);
+
+        expect(calls.map((call) => call.open)).toEqual([true, false, true]);
+        expect(isOpen()).toBe(true);
+      });
+
       it('restores the pointer events that the popup blocks when the pointer leaves the polygon', async () => {
         const { App, getStore } = createHoverApp({
-          handleClose: () => safePolygon({ blockPointerEvents: true }),
+          safePolygon: () => ({ blockPointerEvents: true }),
         });
         await render(<App />);
         await enter(getTrigger());
         await flushMicrotasks();
         // The interaction of the popup blocks the pointer events while a hover popup is open.
-        getHoverIntent(getStore()).blockOutsidePointerEventsForPopup(
+        getPopupHoverSession(getStore()).blockOutsidePointerEventsForPopup(
           getTrigger(),
           screen.getByTestId('popup'),
           null,
@@ -970,12 +985,12 @@ describe('useHoverTriggerInteraction', () => {
 
       it('keeps the options of the active trigger when an inactive trigger gives its own', async () => {
         const { App, getStore } = createHoverApp({
-          handleClose: () => safePolygon({ blockPointerEvents: true }),
+          safePolygon: () => ({ blockPointerEvents: true }),
         });
         const Inactive = defineComponent({
           setup() {
-            useHoverTriggerInteraction(getStore(), {
-              handleClose: () => safePolygon({ blockPointerEvents: false }),
+            usePopupHover(getStore()).trigger({
+              safePolygon: () => ({ blockPointerEvents: false }),
               isActiveTrigger: false,
             });
             return () => null;
@@ -989,7 +1004,7 @@ describe('useHoverTriggerInteraction', () => {
           </>,
         );
 
-        expect(getHoverIntent(getStore()).handleCloseOptions?.blockPointerEvents).toBe(true);
+        expect(getPopupHoverSession(getStore()).handleCloseOptions?.blockPointerEvents).toBe(true);
       });
     });
 
@@ -1020,7 +1035,7 @@ describe('useHoverTriggerInteraction', () => {
           const { context } = useFloating({
             onOpenChange: (_open, details) => triggers.push(details.trigger?.id),
           });
-          const hoverProps = useHoverTriggerInteraction(context.rootStore);
+          const hoverProps = usePopupHover(context.rootStore).trigger();
           // The inner trigger mounts after the outer trigger, so it registers after it.
           onMounted(() => {
             context.rootStore.context.triggerElements.add('outer', outer.value!);
@@ -1091,7 +1106,7 @@ describe('useHoverTriggerInteraction', () => {
       const store = new PopupFixtureStore({});
       const App = defineComponent({
         setup() {
-          const hoverProps = useHoverTriggerInteraction(store, { delay: 500 });
+          const hoverProps = usePopupHover(store).trigger({ delay: 500 });
           return () => <button data-testid="trigger" {...hoverProps} />;
         },
       });

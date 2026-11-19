@@ -83,10 +83,8 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import {
@@ -280,16 +278,13 @@ onScopeDispose(stopListening);
 
 const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpen.value ?? false);
 
-// The handlers that one safe polygon makes share its timer, so each trigger has its own.
-const handleClose = safePolygon({ blockPointerEvents: !isInMenubar });
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(store, {
+const hoverProps = usePopupHover(store).trigger({
   enabled: () =>
     (props.openOnHover ?? parentMenubarHasSubmenuOpen.value) &&
     !isDisabled.value &&
     (!isInMenubar || (parentMenubarHasSubmenuOpen.value && !isMountedByThisTrigger.value)),
-  handleClose: () => handleClose,
+  safePolygon: { blockPointerEvents: !isInMenubar },
   mouseOnly: true,
   move: false,
   restMs: () => (parent.type === undefined ? props.delay : undefined),

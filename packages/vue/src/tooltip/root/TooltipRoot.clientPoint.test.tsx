@@ -11,18 +11,18 @@ import {
   useTestInteractions,
   waitFor,
 } from '#test-utils';
-import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
-import PopupPart from '../../../../test/fixtures/PopupPart.vue';
-import PopupPositionerPart from '../../../../test/fixtures/PopupPositionerPart.vue';
-import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
-import PopupTriggerPart from '../../../../test/fixtures/PopupTriggerPart.vue';
-import { useFloating } from '../../../../test/fixtures/useFloating';
-import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import { REASONS } from '../../../internals/reasons';
-import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { PopupTriggerMap } from '../usePopupRoot';
-import type { PopupInteractionStore } from '../types';
-import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipInteractions';
+import { PopupFixtureContext } from '../../../test/fixtures/PopupFixture';
+import PopupPart from '../../../test/fixtures/PopupPart.vue';
+import PopupPositionerPart from '../../../test/fixtures/PopupPositionerPart.vue';
+import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
+import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
+import { useFloating } from '../../../test/fixtures/useFloating';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
+import { PopupTriggerMap } from '../../utils/popups/usePopupRoot';
+import type { PopupInteractionStore } from '../../utils/popups/types';
+import { useTestCursor as useClientPoint } from '../../../test/fixtures/tooltipInteractions';
 
 const { render } = createRenderer();
 

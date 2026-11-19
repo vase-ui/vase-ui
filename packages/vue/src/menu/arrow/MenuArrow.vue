@@ -27,10 +27,8 @@ export interface MenuArrowProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useRenderElement } from '../../internals/useRenderElement';
-import { popupStateMapping } from '../../utils/popups/popupStateMapping';
+import { usePopupArrow } from '../../utils/popups/usePopupArrow';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
@@ -44,21 +42,12 @@ defineSlots<{
 }>();
 
 const { store } = useMenuRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles } = useMenuPositionerContext();
-
-const state = computed<MenuArrowState>(() => ({
-  open: store.select('open'),
-  side: side.value,
-  align: align.value,
-  uncentered: arrowUncentered.value,
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: [arrowRef],
-  stateAttributesMapping: popupStateMapping,
-  props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
-});
+const positioner = useMenuPositionerContext();
+const { element, elementProps, setRef, usesRenderSlot, state } = usePopupArrow(
+  props,
+  () => store.select('open'),
+  positioner,
+);
 
 defineExpose({ element });
 </script>

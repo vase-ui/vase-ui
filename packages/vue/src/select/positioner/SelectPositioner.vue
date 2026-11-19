@@ -47,10 +47,9 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { findItemIndex } from '../../internals/itemEquality';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
-import { usePositioner } from '../../utils/popups/positioning/usePositioner';
+import { createElementSetter, stateElementTarget } from '../../utils/popups/createElementSetter';
+import { usePositioner, usePopupPlacement } from '../../utils/popups/usePopupPositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -127,19 +126,8 @@ useAnchoredPopupScrollLock(
   () => store.select('triggerElement'),
 );
 
-// `usePopupPositioner` needs `instant` in the state, and this state has none. This part has
-// `keepMounted: true` and no portal context, so it works outside `Select.Portal`.
-const positioning = useAnchorPositioning({
-  anchor: () => props.anchor,
-  positionMethod: () => props.positionMethod,
-  side: () => props.side,
-  sideOffset: () => props.sideOffset,
-  align: () => props.align,
-  alignOffset: () => props.alignOffset,
-  arrowPadding: () => props.arrowPadding,
-  collisionBoundary: () => props.collisionBoundary,
-  collisionPadding: () => props.collisionPadding,
-  sticky: () => props.sticky,
+const positioning = usePopupPlacement((key) => props[key], {
+  rootStore: store,
   // A Boolean prop is never `undefined`, so an explicit `false` cannot turn the tracking on while
   // the popup is over the trigger. The positioner does not use the anchored position then.
   disableAnchorTracking: () => props.disableAnchorTracking || alignItemWithTriggerActive.value,
@@ -149,8 +137,6 @@ const positioning = useAnchorPositioning({
   positionerElement: () => store.select('positionerElement'),
   defaultAnchor: () => store.select('anchor'),
 });
-
-useVaseUIFloating({ rootStore: store, mounted, positioning });
 
 const renderedSide = computed(() =>
   alignItemWithTriggerActive.value ? ('none' as const) : positioning.side.value,
@@ -171,7 +157,6 @@ onMounted(writePopupSide);
 watch(positioning.side, writePopupSide);
 
 const itemAlignment = shallowRef<SelectItemAlignment | null>(null);
-let positionerElement: HTMLElement | null = null;
 
 const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
   state,
@@ -184,14 +169,7 @@ const { element, elementProps, setRef, usesRenderSlot } = usePositioner(props, {
         }
       : positioning.positionerStyles.value,
   transitionStatus: () => store.select('transitionStatus'),
-  ref(positioner) {
-    // A compiled template can mount a new positioner before it unmounts the old one. The old one
-    // then must not clear the element of the new one.
-    if (positioner !== null || toRaw(store.state).positionerElement === positionerElement) {
-      store.set('positionerElement', positioner);
-    }
-    positionerElement = positioner;
-  },
+  ref: createElementSetter(stateElementTarget(store, 'positionerElement'), { keepWhileHeld: true }),
   hidden: () => !mounted.value,
   inert: () => !open.value,
 });
@@ -210,7 +188,7 @@ useCompositeList({
     const values = valuesRef.value;
     // `KeepAlive` takes the list out of the document, and the registry then has no item. No item
     // left the select, so the value stays.
-    if (positionerElement?.isConnected === false) {
+    if (toRaw(store.state).positionerElement?.isConnected === false) {
       return;
     }
 
@@ -273,7 +251,7 @@ onScopeDispose(() => {
 
 provide(SelectPositionerContext, {
   align: positioning.align,
-  arrowRef: positioning.arrowRef,
+  createArrowRef: positioning.createArrowRef,
   arrowUncentered: positioning.arrowUncentered,
   arrowStyles: positioning.arrowStyles,
   isPositioned: positioning.isPositioned,

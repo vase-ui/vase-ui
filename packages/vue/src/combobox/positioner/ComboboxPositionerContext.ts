@@ -6,7 +6,7 @@ export type ComboboxPositionerContext = Pick<
   UseAnchorPositioningReturnValue,
   | 'side'
   | 'align'
-  | 'arrowRef'
+  | 'createArrowRef'
   | 'arrowUncentered'
   | 'arrowStyles'
   | 'anchorHidden'

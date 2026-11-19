@@ -74,7 +74,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
-import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
+import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { usePopoverPositionerContext } from '../positioner/PopoverPositionerContext';
@@ -98,22 +98,19 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverPopupState>;
 }>();
 
-const store = usePopoverRootContext();
+const { store, open, mounted, transitionStatus, trigger } = usePopoverRootContext();
 const { side, align } = usePopoverPositionerContext();
 const insideToolbar = useToolbarRootContext(true) !== undefined;
 const hasClosePart = useClosePartCount();
 
-const open = computed(() => store.select('open'));
-const mounted = computed(() => store.select('mounted'));
-const transitionStatus = computed(() => store.select('transitionStatus'));
 const activeTriggerElement = computed(() => {
-  const trigger = store.select('activeTriggerElement');
-  return isHTMLElement(trigger) ? trigger : undefined;
+  const element = trigger.value;
+  return isHTMLElement(element) ? element : undefined;
 });
 
-useHoverPopupInteraction(store, {
+usePopupHover(store).popup({
   enabled: () => store.select('openOnHover') && !store.select('disabled'),
-  closeDelay: () => store.select('closeDelay'),
+  closeDelay: () => store.state.closeDelay,
 });
 
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
@@ -121,7 +118,7 @@ const resolvedInitialFocus = computed(() =>
   props.initialFocus === undefined ? defaultInitialFocus : props.initialFocus,
 );
 
-const focusManagerModal = computed(() => store.select('modal') !== false && hasClosePart.value);
+const focusManagerModal = computed(() => store.state.modal !== false && hasClosePart.value);
 // `immediate` also writes `false` for a popup that replaces a popup with a close part. A portal
 // renders the popup after the mount, so a server does not run the watcher.
 watch(focusManagerModal, (modal) => store.set('focusManagerModal', modal), { immediate: true });
@@ -159,11 +156,11 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     popupBindings(store),
     { style: store.context.viewportStyles.value?.popup.value },
     {
-      id: store.select('defaultPopupId'),
+      id: store.state.defaultPopupId,
       role: 'dialog',
       ...FOCUSABLE_POPUP_PROPS,
-      'aria-labelledby': store.select('titleElementId'),
-      'aria-describedby': store.select('descriptionElementId'),
+      'aria-labelledby': store.state.titleElementId,
+      'aria-describedby': store.state.descriptionElementId,
       onKeydown: handleKeydown,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
@@ -174,9 +171,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
 useFloatingFocusManager(
   () => ({
     store,
-    openInteractionType: store.select('openMethod'),
+    openInteractionType: store.state.openMethod,
     modal: focusManagerModal.value,
-    disabled: !mounted.value || store.select('openChangeReason') === REASONS.triggerHover,
+    disabled: !mounted.value || store.state.openChangeReason === REASONS.triggerHover,
     initialFocus: resolvedInitialFocus.value,
     returnFocus: props.finalFocus,
     restoreFocus: 'popup',
