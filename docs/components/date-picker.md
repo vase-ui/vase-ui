@@ -54,7 +54,7 @@ Base UI has no date picker. This one follows the [Date Picker Dialog pattern](ht
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `DatePicker.Field` an `id` and a `<label>` element whose `for` is that id. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `DatePicker.Field` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
 - **The popup must have a name**: Give `DatePicker.Popup` an `aria-label`, or put a `DatePicker.Title` in it.
 
 ## Anatomy

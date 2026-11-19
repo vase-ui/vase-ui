@@ -32,9 +32,10 @@ defineSlots<{
 }>();
 
 // A `Field` has one control that its label names, and the start field is that control. This field
-// gets the name, the state and the descriptions of the `Field`, as an item of a group does, and has
-// no part in its control, its label or its value. `useDateRangePickerField` reads the label of the `Field` and
-// joins it to the name of this field.
+// gets the name, the state and the descriptions of the `Field`, as an item of a group does. It has
+// no part in the label or the value of the field. The field validates its hidden input with the
+// start field, and an edit or a leave of this field counts for the field.
+// `useDateRangePickerField` reads the label of the `Field` and joins it to the name of this field.
 const outerField = inject(fieldKey, null);
 if (outerField) {
   provide(fieldKey, {
@@ -56,8 +57,8 @@ if (outerField) {
     },
     setControl: () => () => {},
     setValue() {},
-    onEdit() {},
-    onLeave() {},
+    onEdit: () => outerField.onEdit(),
+    onLeave: (left) => outerField.onLeave(left),
     onReset() {},
   });
 }

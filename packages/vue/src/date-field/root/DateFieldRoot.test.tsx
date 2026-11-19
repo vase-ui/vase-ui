@@ -386,6 +386,24 @@ describe('<DateField.Root />', () => {
       expect(typesOf(container)).toBe('month day year');
     });
 
+    it('is not dirty in a field after an edit that gives back the first date', async () => {
+      const { user } = await render(
+        <Field.Root data-testid="field">
+          <DateField.Root locale="en-US" defaultValue={Temporal.PlainDate.from('2026-11-14')}>
+            <DateField.Input />
+          </DateField.Root>
+        </Field.Root>,
+      );
+      const field = screen.getByTestId('field');
+
+      screen.getAllByRole('spinbutton')[1]!.focus();
+      await user.keyboard('{ArrowUp}');
+      expect(field).toHaveAttribute('data-dirty');
+
+      await user.keyboard('{ArrowDown}');
+      expect(field).not.toHaveAttribute('data-dirty');
+    });
+
     it('names the group with the ids of the aria-labelledby attribute', async () => {
       await render(
         <div>

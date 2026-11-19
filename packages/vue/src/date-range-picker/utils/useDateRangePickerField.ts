@@ -51,12 +51,18 @@ export function useDateRangePickerField(
   if (outerField) useDeferredServerRender();
   const fieldLabelId = computed(() => outerField?.labelId);
   const groupId = useVaseUiId().value;
-  provide(DateTimeFieldHostContext, { groupId });
+  provide(DateTimeFieldHostContext, {
+    groupId,
+    ...(end === 'start' && {
+      endInput: () => picker.endInputs.first.value as HTMLInputElement | null,
+    }),
+  });
 
   const element = computed(() => field.value?.element ?? null);
   const inputElement = computed(() => field.value?.inputElement ?? null);
 
   usePickerPartElement(end === 'start' ? picker.startFields : picker.endFields, element);
+  if (end === 'end') usePickerPartElement(picker.endInputs, inputElement);
 
   // The field holds the input of the form, so it hears about the reset.
   useFormReset(inputElement, (event) => {

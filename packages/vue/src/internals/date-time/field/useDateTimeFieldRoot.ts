@@ -674,11 +674,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
             return isReadOnly.value;
           },
           get inputs() {
-            return hiddenInputElement.value ? [hiddenInputElement.value] : [];
+            return [hiddenInputElement.value, host?.endInput?.()].filter((input) => !!input);
           },
           get focusElement() {
             return firstSegment.value ?? undefined;
           },
+          sameValue: (a, b) => isSameValue(a as TemporalValue | null, b),
         }),
       );
     },

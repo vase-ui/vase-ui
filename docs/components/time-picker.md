@@ -52,7 +52,7 @@ Base UI has no time picker. This one follows the [dialog pattern](https://www.w3
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `TimePicker.Field` an `id` and a `<label>` element whose `for` is that id. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `TimePicker.Field` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
 - **The popup must have a name**: Give `TimePicker.Popup` an `aria-label`, or put a `TimePicker.Title` in it.
 
 ## Anatomy

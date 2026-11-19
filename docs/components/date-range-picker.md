@@ -48,7 +48,7 @@ Base UI has no date range picker. This one follows the [Date Picker Dialog patte
 
 ## Usage guidelines
 
-- **Each field must have an accessible name**: A field has the default name `Start date` or `End date`. In a `Field`, the label of the `Field` joins the default name of each field, as in `Start date Trip dates`. A `<label>` element whose `for` is the `id` prop of a field replaces its default name. See the [forms guide](/handbook/forms).
+- **Each field must have an accessible name**: A field has the default name `Start date` or `End date`. In a `Field`, the label of the `Field` joins the default name of each field, as in `Start date Trip dates`. The `aria-labelledby` of a field replaces its default name. See the [forms guide](/handbook/forms).
 - **The popup must have a name**: Give `DateRangePicker.Popup` an `aria-label`, or put a `DateRangePicker.Title` in it.
 
 ## Anatomy
@@ -129,7 +129,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 ## Accessibility
 
 - `DateRangePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose dates`. With a range that has two ends, its name is `Change dates,` and the range in full. Give it an `aria-label` to change it.
-- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"`. Their default names are `Start date` and `End date`. A `<label>` element whose `for` is the `id` prop of a field, or the `aria-labelledby` of a field, replaces its name. The label of a `Field` joins the name of each field: the `aria-labelledby` of the group holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`.
+- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"`. Their default names are `Start date` and `End date`. The `aria-labelledby` of a field replaces its name. The label of a `Field` joins the name of each field: the `aria-labelledby` of the group holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`.
 - `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DateRangePicker.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DateRangePicker.Popup` to move the focus to another element, or `false` to move none.
 - A picker that is `disabled`, in a disabled fieldset or `readOnly` has a disabled trigger, and Alt and Down does nothing.

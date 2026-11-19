@@ -267,6 +267,7 @@ provide(DateRangePickerRootContext, {
   closeOnSelect: picker.closeOnSelect,
   startFields: picker.fields,
   endFields: createPickerPartElements(),
+  endInputs: createPickerPartElements(),
   triggers: picker.triggers,
   props,
   disabled: picker.disabled,

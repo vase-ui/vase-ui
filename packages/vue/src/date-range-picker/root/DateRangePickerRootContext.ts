@@ -38,6 +38,8 @@ export interface DateRangePickerRootContext {
   startFields: PickerPartElements;
   /** The end fields give the popup its end anchor. */
   endFields: PickerPartElements;
+  /** The hidden inputs of the end fields. A `Field` around the picker validates the first one. */
+  endInputs: PickerPartElements;
   /** The triggers give the root its native fieldset when it has no start field. */
   triggers: PickerPartElements;
   /** The props of the root. Its parts read the props that they share. */

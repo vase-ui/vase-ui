@@ -4,6 +4,7 @@ import { shallowRef } from 'vue';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import {
   createRenderer,
   fireEvent,
@@ -873,6 +874,67 @@ describe('<DateRangePicker.Root />', () => {
 
       expect(start).toHaveAttribute('min', '2026-11-18T08:00');
       expect(end).toHaveAttribute('min', '2026-11-18T09:00');
+    });
+
+    it('shows the error of the end field in a Field after a leave, and an edit of the end removes it', async () => {
+      const { user, container } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <DateRangePickerAnatomy
+              {...{
+                locale: 'en-US',
+                timeZone: 'UTC',
+                defaultValue: range('2026-11-18', '2026-11-20'),
+              }}
+            />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+      screen.getByRole('button', { name: 'After' }).focus();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent(end.validationMessage);
+      });
+      expect(end.validity.rangeUnderflow).toBe(true);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid');
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}');
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-valid');
+    });
+
+    it('a Form blocks the submit of a Field whose required range has no end', async () => {
+      const onSubmit = vi.fn((event: Event) => event.preventDefault());
+      await render(
+        <Form onSubmit={onSubmit}>
+          <Field.Root name="trip">
+            <DateRangePickerAnatomy
+              {...{
+                locale: 'en-US',
+                timeZone: 'UTC',
+                required: true,
+                defaultValue: [day('2026-11-18'), null],
+              }}
+            />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">Send</button>
+        </Form>,
+      );
+
+      screen.getByRole('button', { name: 'Send' }).click();
+      await flushMicrotasks();
+
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('error')).toBeInTheDocument();
     });
 
     // A zoned value has a text input, so the field reports its limit with a custom error.
