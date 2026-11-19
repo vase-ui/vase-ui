@@ -33,5 +33,21 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/collapsible/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/root/CollapsibleRootContext.ts",
+      "member": "collapsibleStateAttributesMapping",
+      "witness": "packages/vue/src/collapsible/root/CollapsibleRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/useCollapsibleRoot.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/root/CollapsibleRootContext.ts",
+      "member": "useCollapsibleRoot",
+      "witness": "packages/vue/src/collapsible/root/CollapsibleRoot.test.tsx"
+    }
+  ]
 }

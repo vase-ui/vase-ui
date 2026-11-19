@@ -53,16 +53,17 @@ export interface DialogPopupProps
 </script>
 
 <script setup lang="ts">
+import {
+  popupBindings,
+  FOCUSABLE_POPUP_PROPS,
+  createDefaultInitialFocus,
+} from '../../utils/popups/popupBindings';
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
-import {
-  FOCUSABLE_POPUP_PROPS,
-  createDefaultInitialFocus,
-} from '../../utils/popups/popupStoreUtils';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
@@ -134,7 +135,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
-    store.select('popupProps'),
+    popupBindings(store),
     {
       id: store.select('defaultPopupId'),
       'aria-labelledby': store.select('titleElementId'),

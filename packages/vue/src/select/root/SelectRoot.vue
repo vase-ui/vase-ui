@@ -164,7 +164,7 @@ import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { useControlled } from '../../common/useControlled';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -192,17 +192,16 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
-import { useClick } from '../../utils/popups/interactions/useClick';
+import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
-import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
-import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
-  FOCUSABLE_POPUP_PROPS,
-  usePopupInteractionProps,
-} from '../../utils/popups/popupStoreUtils';
-import { createInitialPopupStoreState, createPopupStoreContext } from '../../utils/popups/store';
+  useSingleAnchorPopupRoot,
+  createInitialPopupStoreState,
+  createPopupStoreContext,
+} from '../../utils/popups/usePopupRoot';
+import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { getMaxScrollOffset, normalizeScrollOffset } from '../../utils/scrollEdges';
 import { SelectStore, selectors } from '../store';
 import { SelectRootContext } from './SelectRootContext';
@@ -271,7 +270,7 @@ const {
 
 const controlId = useLabelableId({
   id: () => props.id,
-  element: () => store.select('triggerElement'),
+  element: () => store.state.triggerElement,
 });
 
 // The root has no element. Its hidden input is at the place of the root.
@@ -320,11 +319,7 @@ watch(
   { deep: true },
 );
 
-const {
-  store,
-  open: isOpen,
-  actions,
-} = useSingleAnchorPopupRoot(
+const owner = useSingleAnchorPopupRoot(
   props,
   (initialState, defaultPopupId) =>
     new SelectStore(
@@ -419,6 +414,7 @@ const {
     },
   },
 );
+const { store, bindParts, open: isOpen, actions } = owner;
 
 const serializedValue = computed(() => {
   // In multiple mode the shared input is nameless; per-value entries are submitted via
@@ -439,7 +435,7 @@ const fieldStringValue = computed(() => {
 });
 
 useRegisterFieldControl(
-  () => store.select('triggerElement'),
+  () => store.state.triggerElement,
   controlId,
   () => selectedValue.value,
   () => fieldStringValue.value,
@@ -557,15 +553,15 @@ watch(comparer, (nextComparer) => {
 // `readOnly` locks the value, not the interaction: the popup can be opened and browsed so the
 // user can see the available options and which one is selected. Committing a value is blocked
 // separately in `SelectItem` and in the hidden input's autofill handler.
-const click = useClick(store, {
+const click = useTriggerPress(store, {
   enabled: () => !isDisabled.value,
   event: 'mousedown',
 });
 
 const dismiss = useDismiss(store);
 
-const getActiveIndex = () => store.select('activeIndex');
-const getSelectedIndex = () => store.select('selectedIndex');
+const getActiveIndex = () => store.state.activeIndex;
+const getSelectedIndex = () => store.state.selectedIndex;
 
 const listNavigation = useListNavigation(store, {
   enabled: () => !isDisabled.value,
@@ -631,7 +627,7 @@ const triggerProps = computed<HTMLAttributes>(() =>
     typeahead.reference,
     listNavigation.value.reference,
     dismiss.reference,
-    click.reference,
+    click,
     interactionTypeProps,
   ),
 );
@@ -652,28 +648,34 @@ const itemRoot = computed(() => ({
   isItemEqualToValue: comparer.value,
 }));
 
-usePopupInteractionProps(store, () => ({
-  id: controlId.value,
-  labelId: labelId.value,
-  modal: props.modal,
-  selectionMode: isMultiple.value ? ('multiple' as const) : ('single' as const),
-  disabled: isDisabled.value,
-  readOnly: props.readOnly,
-  required: props.required,
-  highlightItemOnHover: props.highlightItemOnHover,
-  selectedValue: selectedValue.value,
-  popupProps: popupProps.value,
-  activeTriggerProps: triggerProps.value,
-  inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
-  itemRoot: itemRoot.value,
-  items: plainItems.value,
-  itemToStringLabel: props.itemToStringLabel,
-  itemToStringValue: props.itemToStringValue,
-  isItemEqualToValue: comparer.value,
-  openMethod: openMethod.value ?? renderedOpenMethod.value,
-}));
+bindParts({
+  trigger: () => triggerProps.value,
+  popup: () => popupProps.value,
+  inactiveTrigger: () => EMPTY_OBJECT,
+});
+watch(
+  () => ({
+    id: controlId.value,
+    labelId: labelId.value,
+    modal: props.modal,
+    selectionMode: isMultiple.value ? ('multiple' as const) : ('single' as const),
+    disabled: isDisabled.value,
+    readOnly: props.readOnly,
+    required: props.required,
+    highlightItemOnHover: props.highlightItemOnHover,
+    selectedValue: selectedValue.value,
+    itemRoot: itemRoot.value,
+    items: plainItems.value,
+    itemToStringLabel: props.itemToStringLabel,
+    itemToStringValue: props.itemToStringValue,
+    isItemEqualToValue: comparer.value,
+    openMethod: openMethod.value ?? renderedOpenMethod.value,
+  }),
+  (values) => store.update(values),
+  { immediate: true },
+);
 
-provide(SelectRootContext, store);
+provide(SelectRootContext, owner);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 const giveFieldInput = useFieldInput();
@@ -809,7 +811,7 @@ function inputProps() {
     onInvalid: handleHiddenInputInvalid,
     onFocusin() {
       // Move focus to the trigger element when the hidden input is focused.
-      store.select('triggerElement')?.focus({
+      store.state.triggerElement?.focus({
         // Supported in Chrome from 144 (January 2026)
         focusVisible: true,
       } as FocusOptions);

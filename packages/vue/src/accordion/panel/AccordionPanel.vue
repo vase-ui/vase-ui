@@ -38,19 +38,19 @@ export interface AccordionPanelProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, watchEffect } from 'vue';
 import { useCollapsiblePanel } from '../../collapsible/panel/useCollapsiblePanel';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { warn } from '../../common/warn';
-import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
-import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
-import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
-import { useAccordionRootContext } from '../root/AccordionRootContext';
+import {
+  accordionStateAttributesMapping,
+  useAccordionRootContext,
+} from '../root/AccordionRootContext';
 import * as AccordionPanelCssVars from './AccordionPanelCssVars';
 
 defineOptions({ inheritAttrs: false });
@@ -76,57 +76,36 @@ const isKeptMounted = computed(() => props.keepMounted ?? contextKeepMounted.val
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Accordion.Panel');
-  const warnWhenKeepMountedIsIgnored = () => {
-    if (props.keepMounted === false && isHiddenUntilFound.value) {
-      warn(
-        'The `keepMounted` prop of `Accordion.Panel` is `false` and `hiddenUntilFound` is enabled on the panel or on the root.',
-        'The panel must stay mounted while it is closed, so `keepMounted` has no effect.',
-        'Remove `keepMounted`, or remove `hiddenUntilFound`.',
-      );
-    }
-  };
-  onMounted(warnWhenKeepMountedIsIgnored);
-  watch([isHiddenUntilFound, () => props.keepMounted], warnWhenKeepMountedIsIgnored);
+  onMounted(() => {
+    watchEffect(() => {
+      if (props.keepMounted === false && isHiddenUntilFound.value) {
+        warn(
+          'The `keepMounted` prop of `Accordion.Panel` is `false` and `hiddenUntilFound` is enabled on the panel or on the root.',
+          'The panel must stay mounted while it is closed, so `keepMounted` has no effect.',
+          'Remove `keepMounted`, or remove `hiddenUntilFound`.',
+        );
+      }
+    });
+  });
 }
 
+const root = useCollapsibleRootContext();
 const {
-  defaultPanelId,
-  mounted,
-  onOpenChange,
-  open,
-  registerPanelId,
-  setMounted,
-  setOpen,
-  transitionStatus,
-} = useCollapsibleRootContext();
-
-const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
-
-useRegisteredId(
-  () => panelId.value,
-  registerPanelId,
-  () => element.value,
-);
-
-const {
+  element,
+  id: panelId,
+  hidden,
+  persistStartingStyle,
+  handleAnimationEnd,
+  handleBeforeMatch,
   height,
-  props: panelProps,
-  ref: panelRef,
-  shouldPreventOpenAnimation,
-  shouldRender,
-  temporaryStyle,
-  transitionStatus: panelTransitionStatus,
   width,
-} = useCollapsiblePanel({
-  hiddenUntilFound: isHiddenUntilFound,
-  id: () => panelId.value,
-  keepMounted: isKeptMounted,
-  mounted,
-  onOpenChange,
-  open,
-  setMounted,
-  setOpen,
+  shouldRender,
+  overridingStyle,
   transitionStatus,
+} = useCollapsiblePanel(root, {
+  id: () => props.id,
+  hiddenUntilFound: isHiddenUntilFound,
+  keepMounted: isKeptMounted,
 });
 
 const { state, triggerId } = useAccordionItemContext();
@@ -136,32 +115,29 @@ useDeferredServerRender();
 
 const panelState = computed<AccordionPanelState>(() => ({
   ...state.value,
-  transitionStatus: panelTransitionStatus.value,
+  transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: panelState,
-  ref: panelRef,
+  elementRef: element,
   props: (attrs) => [
-    panelProps.value,
     {
+      ...(persistStartingStyle.value && { 'data-starting-style': '' }),
+      hidden: hidden.value,
+      id: panelId.value,
+      onAnimationend: handleAnimationEnd,
+      onBeforematch: handleBeforeMatch,
       'aria-labelledby': triggerId.value,
       role: 'region',
       style: {
-        [AccordionPanelCssVars.accordionPanelHeight]:
-          height.value === undefined ? 'auto' : `${height.value}px`,
-        [AccordionPanelCssVars.accordionPanelWidth]:
-          width.value === undefined ? 'auto' : `${width.value}px`,
+        [AccordionPanelCssVars.accordionPanelHeight]: height.value,
+        [AccordionPanelCssVars.accordionPanelWidth]: width.value,
       },
     },
     attrs,
   ],
-  // The temporary `animation-name: none` and the temporary declarations must win over the style of
-  // the consumer.
-  overridingStyle: () =>
-    shouldPreventOpenAnimation.value
-      ? { animationName: 'none', ...temporaryStyle.value }
-      : temporaryStyle.value,
+  overridingStyle,
   stateAttributesMapping: accordionStateAttributesMapping,
 });
 

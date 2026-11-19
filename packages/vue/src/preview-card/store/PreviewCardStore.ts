@@ -2,20 +2,20 @@ import { NOOP } from '../../common/empty';
 import { REASONS } from '../../internals/reasons';
 import { updateInlineRectCoords } from '../../utils/popups/inlineRect';
 import type { InlineRectCoordsRef } from '../../utils/popups/inlineRect';
-import { NullStore } from '../../utils/popups/NullStore';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
+  NullStore,
   BasePopupStore,
   createInitialPopupStoreState,
   createPopupStoreContext,
   getHoverPopupInstantType,
   popupStoreSelectors,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import type {
   PopupStoreContext,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
 import type { PreviewCardRootChangeEventDetails } from '../root/PreviewCardRoot.vue';
 import { CLOSE_DELAY } from '../utils/constants';
 

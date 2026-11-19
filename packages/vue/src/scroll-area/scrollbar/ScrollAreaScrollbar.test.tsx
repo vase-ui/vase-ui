@@ -17,9 +17,8 @@ import {
   within,
 } from '#test-utils';
 import { createSlotHost } from '../../../test/fixtures/slotHost';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import { SCROLL_TIMEOUT, useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import type { ScrollAreaRootContext } from '../root/ScrollAreaRootContext';
-import { SCROLL_TIMEOUT } from '../constants';
 import ScrollAreaScrollbarHydration from './ScrollAreaScrollbarHydration.test.vue';
 
 // `data-id` holds an id that Vue generates, so it can differ between two apps.

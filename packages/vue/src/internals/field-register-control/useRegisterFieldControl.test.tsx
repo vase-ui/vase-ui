@@ -5,7 +5,7 @@ import {
   DEFAULT_FIELD_ROOT_CONTEXT,
   FieldRootContext,
 } from '../field-root-context/FieldRootContext';
-import { useRegisterFieldControl } from './useRegisterFieldControl';
+import { useRegisterFieldControl } from '../field-register-control';
 
 interface ControlValues {
   id: string | undefined;

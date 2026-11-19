@@ -10,7 +10,7 @@ import { createPopoverHandle } from '../../popover/store/PopoverHandle';
 import { createPreviewCardHandle } from '../../preview-card/store/PreviewCardHandle';
 import { createTooltipHandle } from '../../tooltip/store/TooltipHandle';
 import { BasePopupHandle } from './popupHandle';
-import { PopupTriggerMap } from './popupTriggerMap';
+import { PopupTriggerMap } from './usePopupRoot';
 
 type SetOpen = (
   open: boolean,

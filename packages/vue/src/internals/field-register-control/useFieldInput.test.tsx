@@ -5,7 +5,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { NOOP } from '../noop';
-import { useFieldInput } from './useFieldInput';
+import { useFieldInput } from '../field-register-control';
 
 describe('useFieldInput', () => {
   const { render } = createRenderer();

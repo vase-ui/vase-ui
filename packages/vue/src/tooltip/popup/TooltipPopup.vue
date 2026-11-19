@@ -34,6 +34,8 @@ export interface TooltipPopupProps
 </script>
 
 <script setup lang="ts">
+import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { computed, provide } from 'vue';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -42,9 +44,7 @@ import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportCont
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -55,22 +55,22 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TooltipPopupState>;
 }>();
 
-const store = useTooltipRootContext();
+const { store } = useTooltipRootContext();
 const { side, align } = useTooltipPositionerContext();
 
-const open = computed(() => store.select('open'));
-const transitionStatus = computed(() => store.select('transitionStatus'));
+const open = computed(() => popupStoreSelectors.open(store.state));
+const transitionStatus = computed(() => popupStoreSelectors.transitionStatus(store.state));
 
 useHoverPopupInteraction(store, {
-  enabled: () => !store.select('disabled'),
-  closeDelay: () => store.select('closeDelay'),
+  enabled: () => !store.state.disabled,
+  closeDelay: () => store.state.closeDelay,
 });
 
 const state = computed<TooltipPopupState>(() => ({
   open: open.value,
   side: side.value,
   align: align.value,
-  instant: store.select('instantType'),
+  instant: store.state.instantType,
   transitionStatus: transitionStatus.value,
 }));
 
@@ -83,7 +83,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,
-    store.select('popupProps'),
+    popupBindings(store),
     { style: store.context.viewportStyles.value?.popup.value },
     getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,

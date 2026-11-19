@@ -34,7 +34,7 @@ const MESSAGES = {
   wrapperAttrs:
     'An attribute can set a prop that only the inner part declares. Bind `withoutPropsOf($attrs, <the part that the tag renders>)` before the props of the wrapper. To accept a prop of the inner part, declare it on the wrapper.',
   inputRefByName:
-    'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter of the input beside the spread: `v-bind="inputProps()" :ref="setInputElement"`.',
+    'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Give the input a named ref or bind its setter beside the spread.',
   defineComponent:
     'Only a `<script setup>` SFC compiles to Vapor mode. Use `<script setup lang="ts">`.',
   domGlobal:
@@ -415,7 +415,7 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   {
     // A selector cannot read the bound object, so the rule applies to each `<input>` with a spread.
     selector:
-      "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref']))",
+      "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref'])):not(:has(VAttribute[directive=false][key.name='ref'][value.value=/.+/]))",
     message: MESSAGES.inputRefByName,
   },
   {

@@ -20,9 +20,9 @@ import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import type { PopupInteractionStore } from '../types';
-import { useClientPoint } from './useClientPoint';
+import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipInteractions';
 
 const { render } = createRenderer();
 

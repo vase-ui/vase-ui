@@ -4,7 +4,7 @@ import { getEmptyRootStore } from '../../src/utils/popups/floating-root/getEmpty
 import { FloatingFocusManager } from '../fixtures/floatingFocusManagerHarness';
 import { safePolygon } from '../../src/utils/popups/interactions/safePolygon';
 import { useDismiss } from '../../src/utils/popups/interactions/useDismiss';
-import { useFocus } from '../../src/utils/popups/interactions/useFocus';
+import { useTriggerFocus as useFocus } from '../../src/utils/popups/usePopupTrigger';
 import { useHoverPopupInteraction } from '../../src/utils/popups/interactions/useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from '../../src/utils/popups/interactions/useHoverTriggerInteraction';
 import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';

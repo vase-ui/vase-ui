@@ -2,7 +2,7 @@ import { shallowRef, toRaw, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { resolveElement } from '../../internals/resolveElement';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import type { PopupStoreState, PopupTriggerDataStore } from './store';
+import type { PopupStoreState, PopupTriggerDataStore } from './usePopupRoot';
 
 /** A ref or a store entry that holds the element of a part. */
 export interface ElementTarget {

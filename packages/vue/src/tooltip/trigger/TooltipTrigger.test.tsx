@@ -15,7 +15,7 @@ import {
   waitFor,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import { OPEN_DELAY } from '../utils/constants';
+import { OPEN_DELAY } from '../root/TooltipRootContext';
 
 describe('<Tooltip.Trigger />', () => {
   const { render } = createRenderer();

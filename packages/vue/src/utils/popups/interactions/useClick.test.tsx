@@ -12,15 +12,14 @@ import {
 } from '#test-utils';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
-import { useFloating } from '../../../../test/fixtures/useFloating';
+import { useFloating, useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import { useButton } from '../../../internals/use-button/useButton';
-import { useTriggerRegistration } from '../popupStoreUtils';
-import { useClick } from './useClick';
-import type { UseClickProps } from './useClick';
+import { useTriggerRegistration } from '../usePopupTrigger';
+import type { UseClickProps } from '../usePopupTrigger';
 import { useHoverPopupInteraction } from './useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
 

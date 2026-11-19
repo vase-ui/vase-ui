@@ -133,10 +133,7 @@ import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import {
-  useInputRegistration,
-  useRegisterFieldControl,
-} from '../../internals/field-register-control';
+import { useFieldControl, useInputRegistration } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -208,7 +205,6 @@ const {
   setFilled,
   validationMode,
   disabled: fieldDisabled,
-  name: fieldName,
   validation: fieldValidation,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
@@ -226,7 +222,12 @@ const isDisabled = computed(
     fieldsetDisabled.value ||
     props.disabled,
 );
-const inputName = computed(() => fieldName.value ?? props.name);
+const { name: inputName } = useFieldControl(() => element.value, {
+  id: () => rootId.value,
+  name: () => props.name,
+  value: () => isChecked.value,
+  enabled: () => !group && !isDisabled.value,
+});
 // In a group, the value of the checkbox is the name that the group lists when the checkbox is on.
 const itemValue = computed(() => props.value ?? inputName.value);
 const clearFieldError = useClearFieldError(inputName);
@@ -303,15 +304,6 @@ const isChecked = useControlled({
   name: 'Checkbox',
   state: 'checked',
 });
-
-useRegisterFieldControl(
-  () => element.value,
-  rootId,
-  () => isChecked.value,
-  undefined,
-  () => !group && !isDisabled.value,
-  () => props.name,
-);
 
 // A group derives the filled state of the field from its value.
 if (!group) {

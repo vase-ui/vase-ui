@@ -348,6 +348,27 @@
       "destination": "packages/vue/src/internals/use-button/useButton.ts",
       "member": "useButton",
       "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/field-register-control.ts",
+      "member": "useRegisterFieldControl",
+      "witness": "packages/vue/src/internals/field-register-control/useRegisterFieldControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/useFieldControlRegistration.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/field/root/FieldRoot.vue",
+      "member": "registerFieldControl",
+      "witness": "packages/vue/src/internals/field-register-control/useFieldControlRegistration.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/useRegisterFieldControl.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/field-register-control.ts",
+      "member": "useRegisterFieldControl",
+      "witness": "packages/vue/src/internals/field-register-control/useRegisterFieldControl.test.tsx"
     }
   ]
 }

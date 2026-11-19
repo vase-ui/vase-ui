@@ -43,7 +43,7 @@ import {
 } from '../tree/FloatingTree';
 import type { InteractionProps } from '../types';
 import { navigateUniformGrid } from '../../../internals/composite/gridNavigation';
-import { useClick } from './useClick';
+import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { useDismiss } from './useDismiss';
 import { useListNavigation } from './useListNavigation';
 import type { UseListNavigationProps } from './useListNavigation';

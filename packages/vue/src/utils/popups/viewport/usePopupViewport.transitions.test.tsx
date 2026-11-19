@@ -44,7 +44,7 @@ import type {
 import { REASONS } from '../../../internals/reasons';
 import type { HTMLProps } from '../../../internals/types';
 import { adaptiveOrigin } from '../positioning/adaptiveOriginMiddleware';
-import type { PopupOpenChangeEventDetails } from '../store';
+import type { PopupOpenChangeEventDetails } from '../usePopupRoot';
 import PopupViewportHydration from './PopupViewportHydration.test.vue';
 import PopupViewportReplace from './PopupViewportReplace.test.vue';
 

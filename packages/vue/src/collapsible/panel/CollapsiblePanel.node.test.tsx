@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, normalizeStyle } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 
@@ -29,19 +29,9 @@ function readTriggerTag(html: string) {
   return tag;
 }
 
-/** The declarations of the `style` attribute of the panel, in the order that the server wrote them. */
-function readPanelDeclarations(html: string) {
+function readPanelStyle(html: string) {
   const style = /style="([^"]*)"/.exec(readPanelTag(html))?.[1] ?? '';
-  return style
-    .split(';')
-    .filter((declaration) => declaration.trim() !== '')
-    .map((declaration) => {
-      const separator = declaration.indexOf(':');
-      return [
-        declaration.slice(0, separator).trim(),
-        declaration.slice(separator + 1).trim(),
-      ] as const;
-    });
+  return normalizeStyle([style]) as Record<string, string>;
 }
 
 describe('<Collapsible.Panel />', () => {
@@ -74,7 +64,7 @@ describe('<Collapsible.Panel />', () => {
         </>,
       );
 
-      expect(readPanelDeclarations(html)).toContainEqual(['animation-name', 'none']);
+      expect(readPanelStyle(html)['animation-name']).toBe('none');
     });
 
     it('suppresses the initial keyframe animation from inline styles when rendered open', async () => {
@@ -108,11 +98,9 @@ describe('<Collapsible.Panel />', () => {
         </>,
       );
 
-      const animationNames = readPanelDeclarations(html).filter(
-        ([property]) => property === 'animation-name',
-      );
-      expect(animationNames.at(-1)).toEqual(['animation-name', 'none']);
-      expect(readPanelDeclarations(html)).toContainEqual(['animation-duration', '100ms']);
+      const style = readPanelStyle(html);
+      expect(style['animation-name']).toBe('none');
+      expect(style['animation-duration']).toBe('100ms');
     });
   });
 

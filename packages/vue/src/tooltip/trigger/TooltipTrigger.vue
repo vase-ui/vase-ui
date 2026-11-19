@@ -67,7 +67,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 <script setup lang="ts" generic="Payload = unknown">
 import { tooltipTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
-import { computed, onMounted, shallowRef, useSlots, watch } from 'vue';
+import { computed, onMounted, useSlots, watch } from 'vue';
 import { closestInEventPath } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -77,21 +77,22 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
+import {
+  useDelayGroup,
+  useTooltipProviderContext,
+  OPEN_DELAY,
+  useTooltipRootContext,
+} from '../root/TooltipRootContext';
 import { isMouseLikePointerType } from '../../utils/popups/event';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useFocus } from '../../utils/popups/interactions/useFocus';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { getDelay } from '../../utils/popups/interactions/useHoverShared';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
-import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
-import { useTooltipProviderContext } from '../provider/TooltipProviderContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
-import type { TooltipHandleStore } from '../store/TooltipStore';
-import { OPEN_DELAY } from '../utils/constants';
+import { triggerBindings } from '../../utils/popups/popupBindings';
+import type { TooltipHandleStore } from '../root/TooltipRootContext';
 import * as TooltipTriggerDataAttributes from './TooltipTriggerDataAttributes';
 
 defineOptions({ inheritAttrs: false });
@@ -113,45 +114,42 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TooltipTriggerState>;
 }>();
 
-const rootStore = useTooltipRootContext(true);
-const handleStore = usePopupHandleStore(() => props.handle);
-if (rootStore === undefined && props.handle === undefined) {
-  throw new Error(
-    'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`. Without a root the trigger has no tooltip to open. Put the trigger inside <Tooltip.Root>, or pass a `handle`.',
-  );
-}
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
-const store = computed<TooltipHandleStore<any>>(() => handleStore.value ?? rootStore!);
-
+const store = useTriggerOwner<TooltipHandleStore<unknown>>(
+  useTooltipRootContext(true)?.store,
+  () => props.handle,
+  'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`. Without a root the trigger has no tooltip to open. Put the trigger inside <Tooltip.Root>, or pass a `handle`.',
+);
 const thisTriggerId = useVaseUiId(() => props.id);
-const isTriggerActive = computed(() => store.value.select('isTriggerActive', thisTriggerId.value));
-const isOpenedByThisTrigger = computed(() =>
-  store.value.select('isOpenedByTrigger', thisTriggerId.value),
-);
-
-const triggerElement = shallowRef<Element | null>(null);
-
-const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
-  thisTriggerId,
-  store,
-  () => ({
-    payload: props.payload,
-    closeOnClick: props.closeOnClick,
-    closeDelay: props.closeDelay ?? 0,
-  }),
-);
+const {
+  element: triggerElement,
+  registerTrigger,
+  useFocus,
+  isMountedByThisTrigger,
+  isTriggerActive,
+  isOpenedByThisTrigger,
+  open: popupOpen,
+  requestOpen,
+} = usePopupTrigger(thisTriggerId, store, () => ({
+  payload: props.payload,
+  closeOnClick: props.closeOnClick,
+  closeDelay: props.closeDelay ?? 0,
+}));
 
 const providerDelay = useTooltipProviderContext();
-const delayGroup = useDelayGroup(store, { open: isOpenedByThisTrigger });
+const delayGroup = useDelayGroup({
+  open: isOpenedByThisTrigger,
+  popupId: () => store.value.state.defaultPopupId,
+  popupOpen: () => popupOpen.value,
+  closeForSibling: () => store.value.closeForSibling(),
+});
 function writeIsInstantPhase() {
-  store.value.set('isInstantPhase', delayGroup.isInstantPhase.value);
+  store.value.update({ isInstantPhase: delayGroup.isInstantPhase.value });
 }
-// A trigger that unmounts in its instant phase leaves the value `true` in the store. The write at
-// the mount of the next trigger ends that phase, as `useSyncedValue` of Base UI does.
+// A new trigger clears the instant phase left by a trigger that unmounted.
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useFieldsetDisabled(triggerElement);
 const slots = useSlots();
 // The part has no element in a server render and in the first client render. The default tag
 // then gives the answer, so the server HTML follows `Fieldset.Root`.
@@ -162,10 +160,10 @@ const isNativeButton = computed(() =>
 );
 const isButtonDisabled = computed(() => isNativeButton.value && fieldsetDisabled.value);
 const isDisabled = computed(
-  () => props.disabled || store.value.select('disabled') || isButtonDisabled.value,
+  () => props.disabled || store.value.state.disabled || isButtonDisabled.value,
 );
-const trackCursorAxis = computed(() => store.value.select('trackCursorAxis'));
-const disableHoverablePopup = computed(() => store.value.select('disableHoverablePopup'));
+const trackCursorAxis = computed(() => store.value.state.trackCursorAxis);
+const disableHoverablePopup = computed(() => store.value.state.disableHoverablePopup);
 
 let isNestedTriggerHovered = false;
 const nestedTriggerOpenTimeout = useTimeout();
@@ -221,7 +219,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
   shouldOpen: () => !isNestedTriggerHovered,
 });
 
-const focusProps = useFocus(store, { enabled: () => !isDisabled.value });
+const focusProps = useFocus({ enabled: () => !isDisabled.value });
 
 function handleNestedTriggerHover(event: MouseEvent) {
   const currentStore = store.value;
@@ -232,10 +230,10 @@ function handleNestedTriggerHover(event: MouseEvent) {
   // Close only a tooltip that hover opened. A tooltip that another interaction opened stays open.
   if (
     nestedTriggerHovered &&
-    currentStore.select('open') &&
-    currentStore.select('lastOpenChangeReason') === REASONS.triggerHover
+    popupOpen.value &&
+    currentStore.state.openChangeReason === REASONS.triggerHover
   ) {
-    currentStore.setOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
+    requestOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
     return;
   }
 
@@ -245,13 +243,13 @@ function handleNestedTriggerHover(event: MouseEvent) {
     trigger &&
     closestInEventPath(event, (node) => node === trigger) &&
     !isDisabled.value &&
-    !currentStore.select('open') &&
+    !popupOpen.value &&
     // The hover composable also accepts an empty pointer type for a sequence of mouse events.
     isMouseLikePointerType(pointerType)
   ) {
     const open = () => {
-      if (!isNestedTriggerHovered && !isDisabled.value && !store.value.select('open')) {
-        store.value.setOpen(
+      if (!isNestedTriggerHovered && !isDisabled.value && !popupOpen.value) {
+        requestOpen(
           true,
           createChangeEventDetails(REASONS.triggerHover, event, trigger ?? undefined),
         );
@@ -273,10 +271,9 @@ function handleNestedTriggerHover(event: MouseEvent) {
 }
 
 const rootTriggerProps = computed(() =>
-  store.value.select(
-    'appliedTriggerProps',
-    isMountedByThisTrigger.value || trackCursorAxis.value !== 'none',
-  ),
+  isMountedByThisTrigger.value || trackCursorAxis.value !== 'none'
+    ? triggerBindings(store.value, true)
+    : undefined,
 );
 
 function preventNestedTriggerFocus(event: FocusEvent) {
@@ -309,7 +306,7 @@ function setPointerType(event: PointerEvent) {
 }
 
 function cancelPendingOpen(event: MouseEvent | PointerEvent) {
-  if (props.closeOnClick && !store.value.select('open')) {
+  if (props.closeOnClick && !popupOpen.value) {
     store.value.cancelPendingOpen(event);
   }
 }
@@ -318,7 +315,7 @@ function handlePointerdown(event: PointerEvent) {
   pointerType = event.pointerType;
   // A press of a trigger that is not active reaches the dismissal of the root while the tooltip
   // follows the cursor. The dismissal then reads `closeOnClick` of this trigger.
-  store.value.set('closeOnClick', props.closeOnClick);
+  store.value.update({ closeOnClick: props.closeOnClick });
   cancelPendingOpen(event);
 }
 
@@ -329,12 +326,7 @@ const state = computed<TooltipTriggerState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   state,
-  ref: [
-    registerTrigger,
-    (trigger) => {
-      triggerElement.value = trigger;
-    },
-  ],
+  ref: registerTrigger,
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
     hoverProps,

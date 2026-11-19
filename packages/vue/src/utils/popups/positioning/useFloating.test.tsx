@@ -6,7 +6,7 @@ import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks } from '#t
 import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { useDismiss } from '../interactions/useDismiss';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import {
   provideFloatingNode,
   provideFloatingTree,

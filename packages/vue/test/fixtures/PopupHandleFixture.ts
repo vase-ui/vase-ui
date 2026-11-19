@@ -1,10 +1,9 @@
 import type { InjectionKey } from 'vue';
 import { NOOP } from '../../src/common/empty';
 import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
-import { NullStore } from '../../src/utils/popups/NullStore';
+import { NullStore, PopupTriggerMap } from '../../src/utils/popups/usePopupRoot';
 import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
-import { PopupTriggerMap } from '../../src/utils/popups/popupTriggerMap';
-import { ReactiveStore } from '../../src/utils/popups/ReactiveStore';
+import { ReactiveStore } from '../../src/utils/popups/handleStoreAdapter';
 
 export interface PopupHandleFixtureState {
   open: boolean;

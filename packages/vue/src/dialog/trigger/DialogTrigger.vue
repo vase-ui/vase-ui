@@ -56,11 +56,8 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useClick } from '../../utils/popups/interactions/useClick';
-import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
-import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import type { DialogHandleStore } from '../store/DialogStore';
 
@@ -82,46 +79,35 @@ defineSlots<{
 }>();
 
 const rootStore = useDialogRootContext(true);
-const handleStore = usePopupHandleStore(() => props.handle);
-if (rootStore === undefined && props.handle === undefined) {
-  throw new Error(
-    'Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.',
-  );
-}
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
-const store = computed<DialogHandleStore<any>>(() => handleStore.value ?? rootStore!);
+const store = useTriggerOwner<DialogHandleStore<unknown>>(
+  rootStore,
+  () => props.handle,
+  'Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.',
+);
 
 const thisTriggerId = useVaseUiId(() => props.id);
-const isOpenedByThisTrigger = computed(() =>
-  store.value.select('isOpenedByTrigger', thisTriggerId.value),
-);
-const popupId = computed(() => store.value.select('triggerPopupId', thisTriggerId.value));
 
-const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
-  thisTriggerId,
-  store,
-  () => ({ payload: props.payload }),
-);
+const {
+  registerTrigger,
+  useModality,
+  usePress,
+  bindings: rootTriggerProps,
+  isOpenedByThisTrigger,
+  popupId,
+} = usePopupTrigger(thisTriggerId, store, () => ({ payload: props.payload }));
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
-const click = useClick(store);
-const interactionTypeProps = useOpenMethodTriggerProps(
-  () => store.value.select('open'),
-  (interactionType) => {
-    store.value.set('openMethod', interactionType);
-  },
-);
+const click = usePress();
+const interactionTypeProps = useModality((interactionType) => {
+  store.value.set('openMethod', interactionType);
+});
 
 const state = computed<DialogTriggerState>(() => ({
   disabled: isDisabled.value,
   open: isOpenedByThisTrigger.value,
 }));
-
-const rootTriggerProps = computed(() =>
-  store.value.select('triggerProps', isMountedByThisTrigger.value),
-);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   DialogTriggerState,
@@ -136,7 +122,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: registerTrigger,
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
-    click.reference,
+    click,
     rootTriggerProps.value,
     interactionTypeProps,
     {

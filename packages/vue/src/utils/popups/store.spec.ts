@@ -1,4 +1,4 @@
-import { BasePopupStore } from './store';
+import { BasePopupStore } from './usePopupRoot';
 import type {
   PopupOpenChangeEventDetails,
   PopupOpenChangeState,
@@ -7,7 +7,7 @@ import type {
   PopupTriggerDataStore,
   PopupUnmountState,
   popupStoreSelectors,
-} from './store';
+} from './usePopupRoot';
 import type { PositioningInteractionStore } from './types';
 
 type TestState = PopupStoreState<unknown> & {

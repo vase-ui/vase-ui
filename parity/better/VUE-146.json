@@ -1,0 +1,10 @@
+{
+  "id": "VUE-146",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/content/ScrollAreaContent.tsx#L25-L58",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx#L118-L128",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx#L261-L269"
+  ],
+  "behavior": "Scroll area measurements follow the registered parts. Replacement content can update the tab order on its first resize. A previous viewport cannot measure its replacement. Removing the corner returns its width and height to the tracks. Base UI observes the initial content element, reads the shared viewport ref and writes the corner size only while a corner exists.",
+  "dueWith": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx"
+}

@@ -26,6 +26,18 @@ describe('<Collapsible.Root />', () => {
   }));
 
   describe('ARIA attributes', () => {
+    it('VUE-157: reports a closed trigger when the default open value is null', async () => {
+      const { user } = await render(
+        <Collapsible.Root defaultOpen={null as unknown as boolean}>
+          <Collapsible.Trigger>Details</Collapsible.Trigger>
+        </Collapsible.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Details' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      await user.click(trigger);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('sets ARIA attributes', async () => {
       await render(
         <Collapsible.Root defaultOpen>

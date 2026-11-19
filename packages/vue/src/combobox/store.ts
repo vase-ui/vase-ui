@@ -4,7 +4,7 @@ import { compareItemEquality } from '../internals/itemEquality';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AdaptiveOriginMiddleware } from '../utils/popups/positioning/adaptiveOriginConstants';
-import { createElementIdObserver, popupStoreSelectors } from '../utils/popups/store';
+import { createElementIdObserver, popupStoreSelectors } from '../utils/popups/usePopupRoot';
 import type { PopupInteractionReader, PositioningInteractionStore } from '../utils/popups/types';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {

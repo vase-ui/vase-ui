@@ -48,6 +48,8 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
+import { selectors as selectSelectors } from '../store';
+import { triggerBindings } from '../../utils/popups/popupBindings';
 import { computed, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
@@ -73,7 +75,7 @@ import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
-import { useSelectRootContext } from '../root/SelectRootContext';
+import { useSelectRootOwner } from '../root/SelectRootContext';
 import * as SelectTriggerDataAttributes from './SelectTriggerDataAttributes';
 
 defineOptions({ inheritAttrs: false });
@@ -105,27 +107,28 @@ const { labelId: fieldLabelId } = useLabelableContext();
 // The trigger binds the id of a label and the ids of the messages of a field, which can come after
 // it. `Select.Label` registers its id with the root, so the trigger defers also with no field.
 useDeferredServerRender();
-const store = useSelectRootContext();
+const { store, open: isOpen, requestOpen } = useSelectRootOwner();
 
 const isDisabled = computed(
-  () => Boolean(fieldDisabled.value) || store.select('disabled') || props.disabled,
+  () => Boolean(fieldDisabled.value) || store.state.disabled || props.disabled,
 );
-const isOpen = computed(() => store.select('open'));
-const isReadOnly = computed(() => store.select('readOnly'));
-const hasSelectedValue = computed(() => store.select('hasSelectedValue'));
+const isReadOnly = computed(() => store.state.readOnly);
+const hasSelectedValue = computed(() => selectSelectors.hasSelectedValue(store.state));
 const popupSide = computed(() =>
-  store.select('mounted') && store.select('positionerElement') ? store.select('popupSide') : null,
+  store.state.mounted && selectSelectors.positionerElement(store.state)
+    ? store.state.popupSide
+    : null,
 );
-const triggerId = computed(() => given('id', props.id) ?? store.select('id'));
+const triggerId = computed(() => given('id', props.id) ?? store.state.id);
 // The trigger names the list, or the popup while the popup holds no list. An element with no id has
 // an empty `id`, and the trigger then has no `aria-controls`.
 const ariaControls = computed(() => {
   if (!isOpen.value) {
     return undefined;
   }
-  return store.select('listElement')
-    ? store.select('listElementId') || undefined
-    : store.select('popupId');
+  return store.state.listElement
+    ? store.state.listElementId || undefined
+    : selectSelectors.popupId(store.state);
 });
 
 useLabelableId({ id: () => props.id });
@@ -181,7 +184,7 @@ function handleMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
-  store.setOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
+  requestOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
 }
 
 onScopeDispose(removeMouseUpListener);
@@ -236,7 +239,7 @@ const state = computed<SelectTriggerState<Value>>(() => ({
   ...fieldState.value,
   open: isOpen.value,
   disabled: isDisabled.value,
-  value: store.select('selectedValue'),
+  value: store.state.selectedValue,
   readOnly: isReadOnly.value,
   popupSide: popupSide.value,
   placeholder: !hasSelectedValue.value,
@@ -260,7 +263,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   ref: setTriggerElement,
   stateAttributesMapping,
   props: (attrs) => [
-    store.select('triggerProps', true),
+    triggerBindings(store, true),
     {
       id: triggerId.value,
       role: 'combobox',
@@ -269,14 +272,14 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       'aria-controls': ariaControls.value,
       'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
       'aria-readonly': isReadOnly.value || undefined,
-      'aria-required': store.select('required') || undefined,
+      'aria-required': store.state.required || undefined,
       tabindex: isDisabled.value ? -1 : 0,
       onFocusin(event: FocusEvent) {
         setFocused(true);
 
         // The popup element shouldn't obscure the focused trigger.
         if (isOpen.value && store.context.alignItemWithTriggerActiveRef.value) {
-          store.setOpen(false, createChangeEventDetails(REASONS.none, event));
+          requestOpen(false, createChangeEventDetails(REASONS.none, event));
         }
 
         // Saves a re-render on initial click: `forceMounted === true` mounts

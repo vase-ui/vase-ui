@@ -2,7 +2,7 @@ import type { Placement, VirtualElement } from '@floating-ui/vue';
 import type { HTMLAttributes, Ref, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { PopupTriggerMap } from './popupTriggerMap';
+import type { PopupTriggerMap } from './usePopupRoot';
 import type { FloatingTreeStore } from './tree/FloatingTreeStore';
 
 export type ReferenceType = Element | VirtualElement;
@@ -36,7 +36,7 @@ export interface PopupInteractionReader {
   (key: 'anchorElement'): Element | null;
   /**
    * The anchor that the interaction composables see. It is the anchor override, such as the cursor
-   * position from `useClientPoint`, or else the anchor of the owner, usually the active trigger.
+   * position from the Tooltip cursor, or else the anchor of the owner, usually the active trigger.
    * It does not include the `anchor` prop of a positioner, because positioning applies that prop
    * itself.
    */
@@ -197,9 +197,3 @@ export type ListNavigationElementProps = Required<
  * so the object always has the two members.
  */
 export type TypeaheadElementProps = Required<Pick<ElementProps, 'reference' | 'floating'>>;
-
-/**
- * The props that `useClick` returns. Each handler does nothing while the composable is not enabled,
- * so the object always has the `reference` member.
- */
-export type ClickElementProps = Required<Pick<ElementProps, 'reference'>>;

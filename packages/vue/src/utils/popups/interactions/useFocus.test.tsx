@@ -10,8 +10,8 @@ import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createAttribute } from '../createAttribute';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { useFocus } from './useFocus';
-import type { UseFocusProps } from './useFocus';
+import { useTriggerFocus as useFocus } from '../usePopupTrigger';
+import type { UseFocusProps } from '../usePopupTrigger';
 
 // A module namespace is read-only. The mock gives `os` and `engine` as plain objects, so a case can
 // set `mac` and `webkit`. Both start `false`, so a case does not depend on the engine that runs it.

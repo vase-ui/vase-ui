@@ -60,8 +60,9 @@ export interface ComboboxPopupProps
 </script>
 
 <script setup lang="ts">
+import { popupBindings } from '../../utils/popups/popupBindings';
 import { computed, toRaw } from 'vue';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { contains, getTarget } from '../../common/shadowDom';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -133,7 +134,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
-    store.select('popupProps'),
+    popupBindings(store),
     {
       id: popupId.value,
       role: inputInsidePopup.value ? 'dialog' : 'presentation',

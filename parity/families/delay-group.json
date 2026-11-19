@@ -4,5 +4,14 @@
   "exceptions": [],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
+      "member": "provideFloatingDelayGroup",
+      "witness": "packages/vue/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx"
+    }
+  ]
 }

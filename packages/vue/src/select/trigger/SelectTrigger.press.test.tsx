@@ -13,7 +13,9 @@ describe('<Select.Trigger />', () => {
     });
     await render(() => (
       <div>
-        {shifted.value && <div style={{ height: '100px' }}>Status</div>}
+        <div hidden={!shifted.value} style={{ height: '100px' }}>
+          Status
+        </div>
         <Select.Root onOpenChange={onOpenChange}>
           <Select.Trigger data-testid="trigger">Fruit</Select.Trigger>
           <Select.Portal>

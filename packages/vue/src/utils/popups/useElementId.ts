@@ -1,6 +1,6 @@
 import { onScopeDispose, shallowRef, watch } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
-import { createElementIdObserver } from './store';
+import { createElementIdObserver } from './usePopupRoot';
 
 /**
  * Gives a ref of the `id` of the element that `element` holds. The ref follows a change of the

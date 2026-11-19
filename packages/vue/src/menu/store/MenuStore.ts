@@ -2,24 +2,24 @@ import { shallowRef, toRaw } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
 import { platform } from '../../common/platform';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { Timeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
 
-import { NullStore } from '../../utils/popups/NullStore';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
+  NullStore,
   BasePopupStore,
   createElementIdObserver,
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import type {
   PopupStoreContext,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from '../../utils/popups/store';
+} from '../../utils/popups/usePopupRoot';
 import { FloatingTreeStore } from '../../utils/popups/tree/FloatingTreeStore';
 import type {
   MenuParent,
@@ -130,7 +130,7 @@ export interface MenuCommittedOpenState {
   openChangeReason: MenuRootChangeEventReason | null;
 }
 
-const selectors = {
+export const selectors = {
   ...popupStoreSelectors,
   disabled: (state: State<unknown>) =>
     state.parent.type === 'menubar'
@@ -147,7 +147,7 @@ const selectors = {
   parent: (state: State<unknown>) => state.parent,
   rootId: (state: State<unknown>): string | undefined => {
     if (state.parent.type === 'menu') {
-      return state.parent.store.select('rootId');
+      return selectors.rootId(state.parent.store.state);
     }
 
     return state.parent.type !== undefined ? state.parent.context.rootId.value : state.rootId;
@@ -184,7 +184,7 @@ const selectors = {
   lastOpenChangeReason: (state: State<unknown>) => state.openChangeReason,
   floatingTreeRoot: (state: State<unknown>): FloatingTreeStore => {
     if (state.parent.type === 'menu') {
-      return state.parent.store.select('floatingTreeRoot');
+      return selectors.floatingTreeRoot(state.parent.store.state);
     }
 
     return state.floatingTreeRoot;
@@ -201,7 +201,7 @@ const selectors = {
     }
 
     if (state.parent.type === 'menu') {
-      return state.parent.store.select('keyboardEventRelay');
+      return selectors.keyboardEventRelay(state.parent.store.state);
     }
 
     return undefined;

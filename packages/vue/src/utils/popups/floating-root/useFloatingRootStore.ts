@@ -1,7 +1,7 @@
 import { toValue, useId, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import { useFloatingParentNodeId } from '../tree/FloatingTree';
 import { FloatingRootStore } from './FloatingRootStore';
 import type { FloatingRootState } from './FloatingRootStore';
