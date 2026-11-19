@@ -5,6 +5,7 @@
  * older forms leave them out.
  */
 export const REFACTORED_FOLDERS = [
+  'avatar',
   'checkbox',
   'checkbox-group',
   'field',
@@ -15,6 +16,7 @@ export const REFACTORED_FOLDERS = [
   'progress',
   'radio',
   'radio-group',
+  'scroll-area',
   'separator',
   'switch',
   'tabs',
