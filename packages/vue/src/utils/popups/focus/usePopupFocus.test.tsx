@@ -5739,7 +5739,7 @@ describe('FloatingFocusManager', () => {
       expect(screen.getByText('outside')).toHaveAttribute('aria-hidden', 'true');
     });
 
-    test('uses the last rendered return target when removal and a policy change share one update', async () => {
+    test('uses the new return target when removal and a policy change share one update', async () => {
       const shown = shallowRef(true);
       const target = shallowRef<HTMLElement | null>(null);
       const Child = defineComponent(() => {
@@ -5766,7 +5766,7 @@ describe('FloatingFocusManager', () => {
       screen.getByTestId('inside').focus();
       shown.value = false;
       target.value = screen.getByTestId('last');
-      await waitFor(() => expect(screen.getByTestId('first')).toHaveFocus());
+      await waitFor(() => expect(screen.getByTestId('last')).toHaveFocus());
     });
 
     test('updates the managed tabindex binding on the owned dialog element', async () => {

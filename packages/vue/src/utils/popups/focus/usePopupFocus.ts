@@ -412,16 +412,7 @@ export function usePopupFocus(
     }
   }
 
-  // The props change before each render of the part, as the props of a component do. A cleanup
-  // after the unmount thus reads the props of the last render, and not a state that changed at the
-  // unmount, such as the active trigger of a submenu.
-  const resolved = shallowRef(withDefaultProps(props()));
-  watch(
-    () => withDefaultProps(props()),
-    (value) => {
-      resolved.value = value;
-    },
-  );
+  const resolved = computed(() => withDefaultProps(props()));
 
   const open = computed(() => resolved.value.store.select('open'));
   const domReference = computed(() => resolved.value.store.select('anchorElement'));
