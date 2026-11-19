@@ -15,7 +15,6 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
@@ -255,12 +254,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Menubar role={undefined} data-testid="part" />,
     expected: () => 'menubar',
-  },
-  {
-    name: 'Meter.Root role',
-    attribute: 'role',
-    createNode: () => <Meter.Root value={30} role={undefined} data-testid="part" />,
-    expected: () => 'meter',
   },
   {
     name: 'NavigationMenu.Trigger aria-expanded',

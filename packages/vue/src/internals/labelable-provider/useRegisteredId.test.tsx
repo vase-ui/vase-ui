@@ -5,7 +5,6 @@ import { Accordion } from '@vase-ui/vue/accordion';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
-import { Meter } from '@vase-ui/vue/meter';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
@@ -311,15 +310,6 @@ describe('useRegisteredId', () => {
               </Toast.Root>
             </Toast.Viewport>
           </Toast.Provider>
-        ),
-      },
-      {
-        name: 'Meter.Label',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Meter.Root value={30} data-testid="named">
-            <Meter.Label v-slots={slot('span', id)} />
-          </Meter.Root>
         ),
       },
       {

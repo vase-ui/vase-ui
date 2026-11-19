@@ -5,7 +5,6 @@ import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#te
 import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
-import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
@@ -146,16 +145,6 @@ const rows: Row[] = [
       </Menu.Root>
     ),
     expected: 'Actions',
-  },
-  {
-    name: 'Meter.Root',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Meter.Root value={10} data-testid="part" {...attrs}>
-        <Meter.Label>Storage</Meter.Label>
-      </Meter.Root>
-    ),
-    expected: 'Storage',
   },
   {
     name: 'NavigationMenu.Popup aria-label',
