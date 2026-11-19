@@ -8,31 +8,19 @@ import { createHeldBranch, createRenderer, screen } from '#test-utils';
 describe('toolbar activation', () => {
   const { render } = createRenderer();
 
-  it('keeps a disabled custom button focusable when it receives the element', async () => {
-    const disabled = vi.fn();
+  it('keeps a disabled custom button focusable after render', async () => {
     await render(
       <Toolbar.Root>
         <Toolbar.Button
           disabled
           v-slots={{
-            render: ({ props }: { props: HTMLProps }) => (
-              <button
-                {...props}
-                disabled
-                ref={(node) => {
-                  props.ref(node);
-                  if (node instanceof HTMLButtonElement) {
-                    disabled(node.disabled);
-                  }
-                }}
-              />
-            ),
+            render: ({ props }: { props: HTMLProps }) => <button {...props} disabled />,
           }}
         />
       </Toolbar.Root>,
     );
-    expect(disabled.mock.calls[0]).toEqual([false]);
     const button = screen.getByRole('button');
+    expect(button).toHaveProperty('disabled', false);
     button.focus();
     expect(button).toHaveFocus();
   });

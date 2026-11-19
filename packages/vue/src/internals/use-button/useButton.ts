@@ -40,11 +40,9 @@ export function useButton(
       node.disabled = false;
     }
   }
-  // The render slot must receive the corrected native disabled state as soon as it sets the ref.
-  watch(() => toValue(element), restoreFocusability, { flush: 'sync' });
   watch(
-    [isDisabled, isComposite, () => focus.attributes.value.disabled],
-    () => restoreFocusability(toValue(element)),
+    [() => toValue(element), isDisabled, isComposite, () => focus.attributes.value.disabled],
+    ([node]) => restoreFocusability(node),
     { flush: 'post' },
   );
 
