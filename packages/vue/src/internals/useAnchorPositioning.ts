@@ -642,7 +642,7 @@ export function useAnchorPositioning(
   // ends. A pass that ends after the popup closed then gives `true` for a closed popup. This ref is
   // `true` only when a pass ends while the popup is open. The end of a pass is a source, because
   // `useFloating` keeps `true` from an earlier open. The flush is `sync`: a reader outside a
-  // render, such as the microtask of `arrowRef`, needs the value in the write that ends the pass.
+  // render, such as the arrow callback, needs the value as soon as the pass ends.
   const isPositioned = shallowRef(false);
   watch(
     [middlewareData, floatingIsPositioned],
