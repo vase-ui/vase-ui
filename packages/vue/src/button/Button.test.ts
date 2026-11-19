@@ -75,7 +75,7 @@ test('the project compiles Button and the fixtures in the modes of its app', () 
 });
 
 describe('the element', () => {
-  test('is one button with only the attributes of the developer, and it has no type', async () => {
+  test('is one button with type="button" and the attributes of the developer', async () => {
     const onClick = vi.fn();
     const { buttons } = mountButtons({
       name: 'action',
@@ -86,11 +86,24 @@ describe('the element', () => {
     });
     await nextTick();
     const [button] = buttons;
-    expect(button!.getAttributeNames().sort()).toEqual(['class', 'data-test', 'name', 'value']);
+    expect(button!.getAttributeNames().sort()).toEqual([
+      'class',
+      'data-test',
+      'name',
+      'type',
+      'value',
+    ]);
     expect(button).toHaveAttribute('class', 'Button');
-    expect(button!.type).toBe('submit');
+    expect(button).toHaveAttribute('type', 'button');
     button!.click();
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  test('a type of the developer wins, undefined too', async () => {
+    const { buttons } = mountButtons({ type: 'submit' }, { type: 'reset' }, { type: undefined });
+    await nextTick();
+    expect(buttons.map((button) => button.getAttribute('type'))).toEqual(['submit', 'reset', null]);
+    expect(buttons[2]!.type).toBe('submit');
   });
 
   test('the element slot renders the markup of the developer with the state; a template ref reaches the element; Transition works', async () => {
@@ -111,13 +124,47 @@ describe('the element', () => {
 });
 
 describe('a form', () => {
-  test('a Button with no type submits its form, and the submitter gives its name and value', async () => {
-    const { form, buttons } = mountButtons({ name: 'action', value: 'save' });
+  function recordSubmitters(form: HTMLFormElement) {
     const submitters: (HTMLElement | null)[] = [];
     form.addEventListener('submit', (event) => submitters.push(event.submitter));
+    return submitters;
+  }
+
+  test('a Button with no type does not submit its form from a press, Enter or Space', async () => {
+    const { form, buttons } = mountButtons({});
+    const submitters = recordSubmitters(form);
+    const [button] = buttons;
+    await userEvent.click(button!);
+    button!.focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    expect(submitters).toEqual([]);
+  });
+
+  test('Enter in a text field submits the form with the first Button of type="submit", not with a Button with no type', async () => {
+    const { form, text, buttons } = mountButtons({}, { type: 'submit' });
+    const submitters = recordSubmitters(form);
+    text.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(submitters).toEqual([buttons[1]]);
+  });
+
+  test('a Button of type="submit" submits its form, and the submitter gives its name and value', async () => {
+    const { form, buttons } = mountButtons({ type: 'submit', name: 'action', value: 'save' });
+    const submitters = recordSubmitters(form);
     await userEvent.click(buttons[0]!);
     expect(submitters).toEqual([buttons[0]]);
     expect([...new FormData(form, buttons[0])]).toEqual([['action', 'save']]);
+  });
+
+  test('a <button> in the element slot gets type="button" and does not submit its form; a type of the developer wins', async () => {
+    const { element, form } = await mountInSlot('button');
+    expect(element()).toHaveAttribute('type', 'button');
+    const submitters = recordSubmitters(form);
+    await userEvent.click(element());
+    expect(submitters).toEqual([]);
+    const submit = await mountInSlot('button', { type: 'submit' });
+    expect(submit.element()).toHaveAttribute('type', 'submit');
   });
 });
 
@@ -127,7 +174,7 @@ describe('disabled', () => {
     const { text, buttons } = mountButtons({ disabled: true, onClick });
     await nextTick();
     const [button] = buttons;
-    expect(button!.getAttributeNames()).toEqual(['disabled']);
+    expect(button!.getAttributeNames().sort()).toEqual(['disabled', 'type']);
     expect(button!.matches(':disabled')).toBe(true);
     text.focus();
     await userEvent.keyboard('{Tab}');
@@ -159,7 +206,7 @@ describe('disabled, and it keeps the focus', () => {
     const { text, buttons } = mountButtons({ ...focusable });
     await nextTick();
     const [button] = buttons;
-    expect(button!.getAttributeNames()).toEqual(['aria-disabled']);
+    expect(button!.getAttributeNames().sort()).toEqual(['aria-disabled', 'type']);
     expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button!.matches(':disabled')).toBe(false);
     text.focus();
@@ -204,8 +251,8 @@ describe('disabled, and it keeps the focus', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  test('does not submit its form, also not from Enter in a text field', async () => {
-    const { form, text, buttons } = mountButtons({ ...focusable });
+  test('of type="submit", does not submit its form, also not from Enter in a text field', async () => {
+    const { form, text, buttons } = mountButtons({ ...focusable, type: 'submit' });
     const submits = vi.fn();
     form.addEventListener('submit', submits);
     const [button] = buttons;
@@ -306,7 +353,7 @@ describe('disabled, and it keeps the focus', () => {
     const { buttons } = mountButtons({ focusableWhenDisabled: true, onClick });
     await nextTick();
     const [button] = buttons;
-    expect(button!.getAttributeNames()).toEqual([]);
+    expect(button!.getAttributeNames()).toEqual(['type']);
     await userEvent.click(button!);
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -510,7 +557,7 @@ describe('an element that is not a native button', () => {
     const { element, exposed } = await mountInSlot('styled', { disabled: true });
     expect(element()).toHaveClass('StyledButton');
     expect(exposed.button.element).toBe(element());
-    expect(element().getAttributeNames().sort()).toEqual(['class', 'disabled']);
+    expect(element().getAttributeNames().sort()).toEqual(['class', 'disabled', 'type']);
   });
 
   test('follows a swap of the element in the slot', async () => {
@@ -519,7 +566,7 @@ describe('an element that is not a native button', () => {
     scene.tag = 'button';
     await waitFor(() => expect(element().localName).toBe('button'));
     await nextTick();
-    expect(element().getAttributeNames()).toEqual(['disabled']);
+    expect(element().getAttributeNames().sort()).toEqual(['disabled', 'type']);
     scene.tag = 'span';
     await waitFor(() => expect(element().localName).toBe('span'));
     await nextTick();
@@ -529,6 +576,7 @@ describe('an element that is not a native button', () => {
   test('an input of the type submit in the slot gets no role and no tabindex, and Enter submits its form one time', async () => {
     const { element, form } = await mountInSlot('input');
     expect(element().getAttributeNames().sort()).toEqual(['type', 'value']);
+    expect(element()).toHaveAttribute('type', 'submit');
     const submits = vi.fn();
     form.addEventListener('submit', submits);
     element().focus();

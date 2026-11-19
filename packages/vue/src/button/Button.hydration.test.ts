@@ -8,15 +8,15 @@ import { waitFor } from '../../test/waitFor';
 
 describe('server render and hydration', () => {
   test.each([
-    { name: 'an enabled button', attrs: {}, attributes: [] as string[] },
-    { name: 'a disabled button', attrs: { disabled: true }, attributes: ['disabled'] },
+    { name: 'an enabled button', attrs: {}, attributes: ['type'] },
+    { name: 'a disabled button', attrs: { disabled: true }, attributes: ['disabled', 'type'] },
     {
       name: 'a disabled button that keeps the focus',
       attrs: { disabled: true, focusableWhenDisabled: true },
-      attributes: ['aria-disabled'],
+      attributes: ['aria-disabled', 'type'],
     },
   ])(
-    'the server HTML of $name has its content and the attributes of its state, with no mismatch',
+    'the server HTML of $name has its content, type="button" and the attributes of its state, with no mismatch',
     async ({ attrs, attributes }) => {
       const props = { buttons: [attrs] };
       const root = await renderOnServer('Buttons', props);
@@ -25,19 +25,21 @@ describe('server render and hydration', () => {
       expect(button.getAttribute('aria-disabled')).toBe(
         attributes.includes('aria-disabled') ? 'true' : null,
       );
+      expect(button).toHaveAttribute('type', 'button');
       expect(button).toHaveTextContent(`Button 0 ${String(!!attrs.disabled)}`);
       hydrate(Buttons, props, root);
       await nextTick();
       expect(root.querySelector('.Ancestor > button')).toBe(button);
       expect(button.getAttributeNames()).toEqual(attributes);
+      expect(button).toHaveAttribute('type', 'button');
     },
   );
 
-  test('an element that is not a native button gets its role, tabindex and aria-disabled at the mount', async () => {
+  test('an element that is not a native button has the attributes of a native button in the server HTML, and gets its own at the mount', async () => {
     const props = { scene: { tag: 'span' }, attrs: { disabled: true } };
     const root = await renderOnServer('ButtonInSlot', props);
     const span = root.querySelector('.Ancestor > span')!;
-    expect(span.getAttributeNames()).toEqual(['disabled']);
+    expect(span.getAttributeNames()).toEqual(['disabled', 'type']);
     hydrate(ButtonInSlot, { ...props, scene: reactive(props.scene) }, root);
     await nextTick();
     await nextTick();

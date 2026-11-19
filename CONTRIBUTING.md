@@ -710,6 +710,7 @@ The element of a part:
 - `src/common/` holds only what two callers use.
 - A part that acts as a button takes `useButton` of `button/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
+- A part that renders a `<button>` passes the option `type` of `useButton`. The button then has `type="button"` and does not submit its form. A `type` of the developer wins, `undefined` too.
 
 The public form:
 

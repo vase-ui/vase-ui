@@ -44,11 +44,13 @@ async function expectButtonPage(page: Page, { hydrated = false } = {}) {
   const none = Object.fromEntries(attributeNames.map((name) => [name, null]));
 
   expect(await page.getByTestId('counter').textContent()).toBe('Count 0');
-  expect(await read('counter')).toEqual(none);
-  expect(await read('disabled')).toEqual({ ...none, disabled: '' });
-  expect(await read('focusable')).toEqual({ ...none, 'aria-disabled': 'true' });
-  // The part knows the element of its `element` slot after the mount.
-  expect(await read('span')).toEqual(hydrated ? { ...none, tabindex: '0', role: 'button' } : none);
+  const button = { ...none, type: 'button' };
+  expect(await read('counter')).toEqual(button);
+  expect(await read('disabled')).toEqual({ ...button, disabled: '' });
+  expect(await read('focusable')).toEqual({ ...button, 'aria-disabled': 'true' });
+  // The part knows the element of its `element` slot after the mount. Until then, it writes the
+  // attributes of a native button.
+  expect(await read('span')).toEqual(hydrated ? { ...none, tabindex: '0', role: 'button' } : button);
 }
 
 async function expectSeparatorPage(page: Page) {
@@ -501,7 +503,7 @@ async function expectInputPage(page: Page) {
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
-  expect(await page.getByTestId('button').getAttribute('type')).toBeNull();
+  expect(await page.getByTestId('button').getAttribute('type')).toBe('button');
   // A provider renders its slot and no element.
   expect(
     await page

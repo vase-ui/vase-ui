@@ -6,7 +6,7 @@ import { Button, type ButtonState } from '@vase-ui/vue/button';
 
 <!-- A button takes the native attributes of its element, and its slots give the state. -->
 <template>
-  <Button type="button" form="order" name="action" value="save" aria-label="Save" />
+  <Button type="submit" form="order" name="action" value="save" aria-label="Save" />
   <Button v-slot="{ state }">
     <span @click="expectType<ButtonState, typeof state>(state)">Save</span>
   </Button>

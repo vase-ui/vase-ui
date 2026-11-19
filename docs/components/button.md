@@ -48,7 +48,7 @@ A button component that can stay focusable while it is disabled.
 
 ## Usage guidelines
 
-- **Submit buttons**: Button renders a native `<button>` with no `type`. In a form, it is a submit button, as the native element is. Set `type="button"` on a button that must not submit its form.
+- **Submit buttons**: Unlike the native `<button>`, Button renders `type="button"`, so it does not submit its form. Set `type="submit"` for a submit button. Set `type` on Button, not on the element of the `element` slot.
 - **Links**: Button has button semantics (`role="button"`, keyboard interaction, disabled state). Do not use it for a link. See [Rendering links as buttons](#rendering-links-as-buttons).
 
 ## Anatomy
@@ -65,7 +65,7 @@ Render another element, such as a `<div>`, in the `element` slot. Bind `props` a
 
 <<< ./button/CustomTagButton.vue{7-9}
 
-The part reads its element after the mount, so the server HTML of the element has no `role` and no `tabindex`. Write the two attributes on the element when the server HTML must have them.
+The part reads its element after the mount. Until then, it gives the element the attributes of a native `<button>`, such as `type="button"`. The server HTML thus has no `role` and no `tabindex`. Write the two attributes on the element when the server HTML must have them.
 
 ### Rendering links as buttons
 

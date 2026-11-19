@@ -11,7 +11,10 @@ export function useButton(options: {
   /** Disabled by the part: its prop, or its group. */
   disabled: () => boolean;
   focusableWhenDisabled?: () => boolean;
-  /** For a part that never submits a form. Written only on a `<button>`. */
+  /**
+   * The `type` of a `<button>`, so that the button does not submit its form. Written only on a
+   * `<button>`, or on an element that the part does not know yet. A `type` of the developer wins.
+   */
   type?: 'button';
 }) {
   const isNative = computed(() => isNativeButton(options.element.value));

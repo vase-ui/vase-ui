@@ -25,6 +25,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
+  type: 'button',
 });
 const state = computed<ButtonState>(() => ({ disabled: isDisabled.value }));
 
