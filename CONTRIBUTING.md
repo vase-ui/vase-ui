@@ -350,6 +350,7 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
 - Put the extra nodes in an internal SFC. Meter uses `RangeLabelChildren.vue` for its screen reader text.
+- A part of a refactored family writes the extra nodes in its own template, and its `element` slot gets none. `Progress.Root` renders its screen reader text after its default slot.
 - Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
