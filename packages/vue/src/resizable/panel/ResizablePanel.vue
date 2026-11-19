@@ -38,7 +38,7 @@ export interface ResizablePanelProps
     VaseUIComponentProps<ResizablePanelState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
   /**
-   * The id of the panel element, and the key of the panel in the layout.
+   * The panel's layout key. The default panel element uses it as its id.
    * The default is a generated id. Give an id of your own to save the layout and to read it again.
    */
   id?: string | undefined;

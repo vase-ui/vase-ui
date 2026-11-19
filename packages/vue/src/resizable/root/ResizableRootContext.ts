@@ -70,7 +70,7 @@ export interface ResizableHandleMove {
  */
 export interface ResizableParentPanel extends ResizablePanelActions {
   /**
-   * The id of the panel element, and the key of the panel in the layout.
+   * The panel's layout key. The default panel element uses it as its id.
    */
   id: ComputedRef<string>;
   /**
