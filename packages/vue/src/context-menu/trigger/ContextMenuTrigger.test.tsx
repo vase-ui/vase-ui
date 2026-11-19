@@ -355,7 +355,7 @@ describe('<ContextMenu.Trigger />', () => {
           Right click me
           <div ref={portalContainer} />
         </ContextMenu.Trigger>
-        <ContextMenu.Portal container={portalContainer}>
+        <ContextMenu.Portal to={portalContainer.value}>
           <ContextMenu.Positioner>
             <ContextMenu.Popup data-testid="popup" />
           </ContextMenu.Positioner>

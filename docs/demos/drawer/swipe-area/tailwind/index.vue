@@ -24,7 +24,7 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
           Swipe from the right edge to open the drawer.
         </p>
       </div>
-      <Drawer.Portal :container="portalContainer">
+      <Drawer.Portal :to="portalContainer">
         <Drawer.Backdrop
           class="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] absolute inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute"
         />

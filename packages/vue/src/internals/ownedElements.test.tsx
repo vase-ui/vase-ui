@@ -19,7 +19,7 @@ import {
 } from '#test-utils';
 import { TestElement } from '../../test/testElement';
 import VaporConsumer from '../../test/conformanceTests/VaporConsumer.vue';
-import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
+import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
 import CompositeItem from '../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../test/fixtures/CompositeRootPart.vue';
@@ -370,12 +370,12 @@ describe('owned parts', () => {
     const innerTarget = shallowRef<ShadowRoot | null>(null);
     await render(() => (
       <>
-        <FloatingPortalLite data-testid="outer">
+        <PopupPortal data-testid="outer">
           <div data-testid="host" />
-        </FloatingPortalLite>
-        <FloatingPortalLite container={innerTarget.value} data-testid="inner">
+        </PopupPortal>
+        <PopupPortal to={innerTarget.value} data-testid="inner">
           <button>Content</button>
-        </FloatingPortalLite>
+        </PopupPortal>
       </>
     ));
     const outer = screen.getByTestId('outer');
@@ -475,7 +475,7 @@ describe('owned parts', () => {
                     <Menu.Item>First</Menu.Item>
                     <Menu.SubmenuRoot>
                       <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
-                      <Menu.Portal container={frameBody}>
+                      <Menu.Portal to={frameBody}>
                         <Menu.Positioner>
                           <Menu.Popup>
                             <Menu.Item>Child</Menu.Item>

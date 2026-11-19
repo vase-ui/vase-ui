@@ -11357,7 +11357,7 @@ describe('<Combobox.Root />', () => {
             >
               <div style={{ height: '100px' }} />
               <Combobox.Input data-testid="input" />
-              <Combobox.Portal container={dialogElement}>
+              <Combobox.Portal to={dialogElement.value}>
                 <Combobox.Positioner>
                   <Combobox.Popup>
                     <Combobox.List>

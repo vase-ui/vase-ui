@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onScopeDispose, useTemplateRef, watch } from 'vue';
+import { computed, useTemplateRef, watch } from 'vue';
 import { markChildrenMounted } from '../../internals/useRenderElement';
 import InternalBackdrop from '../../utils/popups/InternalBackdrop.vue';
 import { useDialogRootContext } from '../root/DialogRootContext';
@@ -15,30 +15,19 @@ const modal = computed(() => store.select('modal'));
 const open = computed(() => store.select('open'));
 
 const internalBackdrop = useTemplateRef('internalBackdrop');
-let internalBackdropElement: HTMLDivElement | null = null;
-
-function releaseInternalBackdrop() {
-  const internalBackdropRef = store.context.internalBackdropRef;
-  if (internalBackdropElement !== null && internalBackdropRef.value === internalBackdropElement) {
-    internalBackdropRef.value = null;
-  }
-  internalBackdropElement = null;
-}
-
 watch(
-  () => internalBackdrop.value?.element ?? null,
-  (backdrop) => {
-    releaseInternalBackdrop();
+  () => internalBackdrop.value?.element,
+  (backdrop, _previous, onCleanup) => {
     if (backdrop) {
-      internalBackdropElement = backdrop;
-      store.context.internalBackdropRef.value = backdrop;
+      const target = store.context.internalBackdropRef;
+      target.value = backdrop;
+      onCleanup(() => {
+        if (target.value === backdrop) target.value = null;
+      });
     }
   },
   { flush: 'sync' },
 );
-
-// Vue stops the watcher before it unmounts the backdrop with the portal.
-onScopeDispose(releaseInternalBackdrop);
 
 markChildrenMounted();
 </script>

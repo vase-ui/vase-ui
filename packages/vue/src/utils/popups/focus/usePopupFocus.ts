@@ -39,7 +39,7 @@ import { createAttribute } from '../createAttribute';
 import { getFloatingFocusElement, isTypeableCombobox, isTypeableElement } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
 import { getNestedPortals } from '../portal/portalElements';
-import { usePortalContext } from '../portal/FloatingPortalContext';
+import { usePortalContext } from '../portal/PopupPortalContext';
 import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeAncestors, getNodeChildren } from '../tree/nodes';
@@ -1217,7 +1217,7 @@ export function usePopupFocus(
       // Returns `true` for `restoreFocus: 'popup'`, after it focuses the floating element. The
       // caller then stops.
       function restoreLostFocus() {
-        // Let `FloatingPortal` effect knows that focus is still inside the
+        // Let `PopupPortal` effect knows that focus is still inside the
         // floating tree.
         if (isHTMLElement(floatingFocusEl)) {
           floatingFocusEl.focus();

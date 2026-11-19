@@ -30,8 +30,8 @@ import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import FloatingPortal from '../portal/FloatingPortal.vue';
-import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -190,10 +190,10 @@ const Popup = defineComponent({
           </button>
           {props.teleport && <Teleport to="body">{popup}</Teleport>}
           {props.portalContainer && (
-            <FloatingPortalLite container={props.portalContainer}>
+            <PopupPortal to={props.portalContainer}>
               {props.portalBackdrop && <div data-testid={`${props.name}-backdrop`} />}
               {popup}
-            </FloatingPortalLite>
+            </PopupPortal>
           )}
           {!props.teleport && !props.portalContainer && popup}
         </>
@@ -812,9 +812,9 @@ describe('useDismiss', () => {
             <>
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {isOpen.value && (
-                <FloatingPortal container={props.shadowRoot}>
+                <PopupPortal guards={usePortalFocus} to={props.shadowRoot}>
                   <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -862,11 +862,11 @@ describe('useDismiss', () => {
             <>
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {isOpen.value && (
-                <FloatingPortal container={props.shadowRoot}>
+                <PopupPortal guards={usePortalFocus} to={props.shadowRoot}>
                   <FloatingFocusManager store={context.rootStore}>
                     <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -1060,9 +1060,9 @@ describe('useDismiss', () => {
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {open.value && (
                 <div {...getFloatingProps({ ref: refs.setFloating })}>
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     <button data-testid="portaled-button" />
-                  </FloatingPortal>
+                  </PopupPortal>
                 </div>
               )}
             </>
@@ -1610,14 +1610,14 @@ describe('useDismiss', () => {
           <>
             <button {...getReferenceProps({ ref: refs.setReference })} />
             {open.value && (
-              <FloatingPortal>
+              <PopupPortal guards={usePortalFocus}>
                 <FloatingFocusManager store={context.rootStore}>
                   <div {...getFloatingProps({ ref: refs.setFloating })}>
                     <span>{props.id}</span>
                     {slots.default?.()}
                   </div>
                 </FloatingFocusManager>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );
@@ -2319,13 +2319,13 @@ describe('useDismiss', () => {
               {props.triggerText}
             </button>
             {open.value && (
-              <FloatingPortal container={props.portalContainer}>
+              <PopupPortal guards={usePortalFocus} to={props.portalContainer}>
                 <FloatingFocusManager store={context.rootStore} modal={false}>
                   <div ref={refs.setFloating} {...getFloatingProps()}>
                     {slots.default?.()}
                   </div>
                 </FloatingFocusManager>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );
@@ -2882,9 +2882,9 @@ describe('useDismiss', () => {
       const outside = addOutsideElement();
       await render(
         <Popup name="parent">
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <button type="button" data-testid="portaled" />
-          </FloatingPortal>
+          </PopupPortal>
         </Popup>,
       );
       expect(screen.getByTestId('parent').contains(screen.getByTestId('portaled'))).toBe(false);
@@ -2911,9 +2911,9 @@ describe('useDismiss', () => {
             dismiss={intentional}
             onChange={(change: Change) => parentChanges.push(change)}
           >
-            <FloatingPortal>
+            <PopupPortal guards={usePortalFocus}>
               <button type="button" data-testid="portaled" />
-            </FloatingPortal>
+            </PopupPortal>
           </Popup>,
         );
 
@@ -2933,13 +2933,13 @@ describe('useDismiss', () => {
     it('VUE-4: the suppression of a prevented press in a portal that no popup owns expires in the popup above', async () => {
       await render(
         <Popup name="parent" dismiss={intentional}>
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <button
               type="button"
               data-testid="portaled"
               onPointerdown={(event: PointerEvent) => event.preventDefault()}
             />
-          </FloatingPortal>
+          </PopupPortal>
         </Popup>,
       );
 

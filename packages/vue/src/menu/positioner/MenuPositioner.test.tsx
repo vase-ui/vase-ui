@@ -1101,7 +1101,7 @@ describe('<Menu.Positioner />', () => {
             <Teleport to={page.body}>
               <Menu.Trigger id="trigger">Open</Menu.Trigger>
             </Teleport>
-            <Menu.Portal container={page.body}>
+            <Menu.Portal to={page.body}>
               <Menu.Positioner {...positioner}>
                 <Menu.Popup />
               </Menu.Positioner>
@@ -1156,7 +1156,7 @@ describe('<Menu.Positioner />', () => {
         <MenubarProvider context={createMenubarContext({ modal: computed(() => modal) })}>
           <Menu.Root>
             <probe.Probe />
-            <Menu.Portal container={page.body}>
+            <Menu.Portal to={page.body}>
               <Menu.Positioner>
                 <Menu.Popup />
               </Menu.Positioner>

@@ -1,12 +1,11 @@
 <script lang="ts">
-import type {
-  FloatingPortalLiteProps,
-  FloatingPortalLiteState,
-} from '../../utils/popups/portal/FloatingPortalLite.vue';
+import type { HTMLAttributes } from 'vue';
+import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
-export interface ToastPortalState extends FloatingPortalLiteState {}
+export interface ToastPortalState {}
 
-export interface ToastPortalProps extends FloatingPortalLiteProps {}
+export interface ToastPortalProps extends PortalTargetProps, VaseUIComponentProps<ToastPortalState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">
@@ -15,7 +14,7 @@ import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -39,20 +38,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortalLite
+  <PopupPortal
     v-if="$slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortalLite), ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), ...props }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-  </FloatingPortalLite>
-  <FloatingPortalLite
+  </PopupPortal>
+  <PopupPortal
     v-else
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortalLite), ...props }"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), ...props }"
   >
     <slot :state="state" />
-  </FloatingPortalLite>
+  </PopupPortal>
 </template>

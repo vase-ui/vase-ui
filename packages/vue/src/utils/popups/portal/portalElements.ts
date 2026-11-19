@@ -2,6 +2,7 @@ import { shallowReactive, watch } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
 import { closest } from '../../../common/shadowDom';
 
+export const PortalNode: InjectionKey<Readonly<Ref<HTMLElement | null>>> = Symbol();
 export const DismissPortalRegistration: InjectionKey<(portal: Element) => () => void> = Symbol();
 
 const portals = shallowReactive(new Map<Element, symbol>());

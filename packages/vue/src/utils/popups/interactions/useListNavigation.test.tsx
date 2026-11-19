@@ -34,7 +34,8 @@ import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import FloatingPortal from '../portal/FloatingPortal.vue';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -483,7 +484,7 @@ const EmojiPicker = defineComponent(() => {
           ☻
         </button>
         {selectedEmoji.value && <span>{selectedEmoji.value} selected</span>}
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           {open.value && (
             <FloatingFocusManager store={context.rootStore} modal={false}>
               <div {...getFloatingProps({ ...getListFloatingProps(), ref: refs.setFloating })}>
@@ -534,7 +535,7 @@ const EmojiPicker = defineComponent(() => {
               </div>
             </FloatingFocusManager>
           )}
-        </FloatingPortal>
+        </PopupPortal>
       </>
     );
   };
@@ -2903,7 +2904,7 @@ describe('useListNavigation', () => {
           <>
             <button {...getReferenceProps({ ref: refs.setReference })} />
             {open.value && (
-              <FloatingPortal>
+              <PopupPortal guards={usePortalFocus}>
                 <div role="menu" {...getFloatingProps({ ref: refs.setFloating })}>
                   <ul>
                     {['one', 'two', 'three'].map((string, index) => (
@@ -2924,7 +2925,7 @@ describe('useListNavigation', () => {
                   </ul>
                   <FocusSecondItemOnMount />
                 </div>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );

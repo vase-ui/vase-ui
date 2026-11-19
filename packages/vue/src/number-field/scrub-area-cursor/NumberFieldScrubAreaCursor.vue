@@ -39,7 +39,7 @@ const CURSOR_STYLE: CSSProperties = {
 // The element makes no box, so its container gets no new box during a scrub.
 // A `<Transition>` of the consumer around the part gets this element in Vue 3.5.41 and later, and
 // in Vue 3.6.0-rc.3 and later. It does not animate the cursor, because the element has no box.
-// The element is in this template and not in `FloatingPortalLite`, because that portal renders its
+// The element is in this template and not in `PopupPortal`, because that portal renders its
 // slot after the mount of this part. The checks of the `#render` slot run in the hooks of this part,
 // and they then do not see the element.
 const PORTAL_PROPS = { [createAttribute('portal')]: '', style: { display: 'contents' } };

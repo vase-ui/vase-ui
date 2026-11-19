@@ -10,7 +10,8 @@ import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/index.parts';
 import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
-import FloatingPortal from './FloatingPortal.vue';
+import { usePortalFocus } from './usePortalFocus';
+import PopupPortal from './PopupPortal.vue';
 
 // Vue 3.5.41 and 3.6.0-rc.3 are the first versions that give a `Transition` to the element in a
 // `Teleport` that is the root node of a component (https://github.com/vuejs/core/pull/11959). An
@@ -71,11 +72,11 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     await render(
       <div data-testid="host">
         <Transition appear onEnter={(element: Element) => entered.push(element)}>
-          <FloatingPortal data-testid="portal">
+          <PopupPortal guards={usePortalFocus} data-testid="portal">
             <FocusManagerPart>
               <input />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </Transition>
       </div>,
     );

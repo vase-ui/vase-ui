@@ -114,7 +114,7 @@ describe('<Dialog.Popup />', () => {
     const root = createSlotHost(field);
     await render(
       <Dialog.Root defaultOpen modal="trap-focus">
-        <Dialog.Portal container={root}>
+        <Dialog.Portal to={root}>
           <Dialog.Popup initialFocus={field}>{h('slot')}</Dialog.Popup>
         </Dialog.Portal>
       </Dialog.Root>,
@@ -133,7 +133,7 @@ describe('<Dialog.Popup />', () => {
     const { user } = await render(
       <Dialog.Root modal={false} onOpenChangeComplete={complete}>
         <Dialog.Trigger>Open</Dialog.Trigger>
-        <Dialog.Portal container={root}>
+        <Dialog.Portal to={root}>
           <style>{POPUP_EXIT_CSS}</style>
           <Dialog.Popup class="popup" finalFocus={field}>
             <Dialog.Close>Close</Dialog.Close>

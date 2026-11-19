@@ -611,7 +611,7 @@ describe('<Popover.Positioner />', () => {
             <Teleport to={page.body}>
               <Popover.Trigger id="trigger">Open</Popover.Trigger>
             </Teleport>
-            <Popover.Portal container={page.body}>
+            <Popover.Portal to={page.body}>
               <Popover.Positioner {...positioner}>
                 <Popover.Popup />
               </Popover.Positioner>

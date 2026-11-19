@@ -435,7 +435,7 @@ describe('<Menu.SubmenuTrigger />', () => {
                 <Menu.Popup data-testid="parent-menu">
                   <Menu.SubmenuRoot>
                     <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
-                    <Menu.Portal container={shadowRoot}>
+                    <Menu.Portal to={shadowRoot}>
                       <Menu.Positioner>
                         <Menu.Popup data-testid="submenu">
                           <Menu.Item>Alpha</Menu.Item>

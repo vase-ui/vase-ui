@@ -58,7 +58,7 @@ describe('<Menu.Popup />', () => {
     await render(
       <Menu.Root defaultOpen defaultTriggerId="trigger" modal={false}>
         <Menu.Trigger id="trigger">Open</Menu.Trigger>
-        <Menu.Portal container={root}>
+        <Menu.Portal to={root}>
           <Menu.Positioner>
             <Menu.Popup>{h('slot')}</Menu.Popup>
           </Menu.Positioner>
@@ -213,7 +213,7 @@ describe('<Menu.Popup />', () => {
         <div onKeydown={onParentKeyDown}>
           <div ref={setContainer} />
           <Menu.Root>
-            <Menu.Portal keepMounted container={container}>
+            <Menu.Portal keepMounted to={container.value}>
               <Menu.Positioner>
                 <Menu.Popup data-testid="popup" />
               </Menu.Positioner>

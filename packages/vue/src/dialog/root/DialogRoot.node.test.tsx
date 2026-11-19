@@ -19,14 +19,13 @@ describe('<Dialog.Root /> on a server', () => {
       { name: 'not modal', modal: false },
     ])('renders an open dialog in place: $name', async ({ modal }) => {
       const context: Record<string, unknown> = {};
-      const container = vi.fn();
       const html = await renderToString(
         createSSRApp({
           render: () => (
             <main>
               <button>Before</button>
               <Dialog.Root open modal={modal}>
-                <Dialog.Portal disabled container={container}>
+                <Dialog.Portal disabled to="#target">
                   <Dialog.Backdrop />
                   <Dialog.Popup>
                     <Dialog.Title>Title</Dialog.Title>
@@ -54,7 +53,6 @@ describe('<Dialog.Root /> on a server', () => {
       expect(popup).not.toContain('aria-describedby');
       expect(html).not.toContain('teleport');
       expect(context.teleports).toBeUndefined();
-      expect(container).not.toHaveBeenCalled();
     });
 
     it('keeps the explicit name and description of the popup in the server HTML', async () => {

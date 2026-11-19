@@ -91,21 +91,9 @@ const store = useDialogRootContext();
 
 useDialogPortalContext();
 
-const disablePointerDismissal = computed(() => store.select('disablePointerDismissal'));
-const modal = computed(() => store.select('modal'));
-const mounted = computed(() => store.select('mounted'));
-const nestedOpenDialogCount = computed(() => store.select('nestedOpenDialogCount'));
-const open = computed(() => store.select('open'));
-const openMethod = computed(() => store.select('openMethod'));
-// Base UI stops the focus manager when the popup unmounts. During an exit animation, the focus then
-// stays in the closing popup, and its focus guards, which have `aria-hidden`, stay in the tab
-// order (BUG-5519). This part stops the focus manager when the popup closes.
-const focusManagerDisabled = computed(() => !open.value);
-
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
-const resolvedInitialFocus = computed(() =>
-  props.initialFocus === undefined ? defaultInitialFocus : props.initialFocus,
-);
+const open = computed(() => store.select('open'));
+const nestedOpenDialogCount = computed(() => store.select('nestedOpenDialogCount'));
 
 const state = computed<DialogPopupState>(() => ({
   open: open.value,
@@ -142,7 +130,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       'aria-describedby': store.select('descriptionElementId'),
       role: store.select('role'),
       ...FOCUSABLE_POPUP_PROPS,
-      hidden: mounted.value ? undefined : true,
+      hidden: store.select('mounted') ? undefined : true,
       onKeydown: handleKeydown,
       style: { [DialogPopupCssVars.nestedDialogs]: nestedOpenDialogCount.value },
     },
@@ -154,13 +142,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
 const focusBindings = usePopupFocus(
   () => ({
     store,
-    openInteractionType: openMethod.value,
-    disabled: focusManagerDisabled.value,
-    closeOnFocusOut: !disablePointerDismissal.value,
-    initialFocus: resolvedInitialFocus.value,
+    openInteractionType: store.select('openMethod'),
+    disabled: !open.value,
+    closeOnFocusOut: !store.select('disablePointerDismissal'),
+    initialFocus: props.initialFocus === undefined ? defaultInitialFocus : props.initialFocus,
     returnFocus: props.finalFocus,
-    modal: modal.value !== false,
-    outsideElementsInert: modal.value === true,
+    modal: store.select('modal') !== false,
+    outsideElementsInert: store.select('modal') === true,
     restoreFocus: 'popup',
     getInsideElements,
   }),

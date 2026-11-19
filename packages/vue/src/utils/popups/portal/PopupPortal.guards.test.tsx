@@ -15,12 +15,13 @@ import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import OwnIdElement from '../../../../test/fixtures/OwnIdElement.vue';
 import { REASONS } from '../../../internals/reasons';
 import { createAttribute } from '../createAttribute';
-import { usePortalContext } from './FloatingPortalContext';
-import type { PortalContextValue } from './FloatingPortalContext';
-import FloatingPortal from './FloatingPortal.vue';
-import FloatingPortalHydration from './FloatingPortalHydration.test.vue';
+import { usePortalContext } from './PopupPortalContext';
+import type { PortalContextValue } from './PopupPortalContext';
+import { usePortalFocus } from './usePortalFocus';
+import PopupPortal from './PopupPortal.vue';
+import PopupPortalHydration from './PopupPortalHydration.test.vue';
 
-const HYDRATION_FILE = 'src/utils/popups/portal/FloatingPortalHydration.test.vue';
+const HYDRATION_FILE = 'src/utils/popups/portal/PopupPortalHydration.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
@@ -59,7 +60,7 @@ function appendUntabbableReference() {
 describe('FloatingPortal', () => {
   const { render } = createRenderer();
 
-  describeConformance(<FloatingPortal />, () => ({
+  describeConformance(<PopupPortal guards={usePortalFocus} />, () => ({
     elementIsRoot: false,
     render,
     refInstanceof: window.HTMLDivElement,
@@ -76,12 +77,12 @@ describe('FloatingPortal', () => {
       });
       await render(
         <div data-testid="host">
-          <FloatingPortal inPlace data-testid="portal">
+          <PopupPortal guards={usePortalFocus} disabled data-testid="portal">
             <FocusManagerPart>
               <Probe />
               <input />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -102,11 +103,11 @@ describe('FloatingPortal', () => {
       await render(
         <div data-testid="host">
           <input data-testid="trigger" />
-          <FloatingPortal data-testid="portal">
+          <PopupPortal guards={usePortalFocus} data-testid="portal">
             <FocusManagerPart>
               <input data-testid="inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
           <input data-testid="next" />
         </div>,
       );
@@ -125,7 +126,7 @@ describe('FloatingPortal', () => {
       const hasFocusManager = shallowRef(true);
       await render(() => (
         <div data-testid="host">
-          <FloatingPortal>{hasFocusManager.value ? <FocusManagerPart /> : null}</FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>{hasFocusManager.value ? <FocusManagerPart /> : null}</PopupPortal>
         </div>
       ));
       const host = screen.getByTestId('host');
@@ -144,9 +145,9 @@ describe('FloatingPortal', () => {
     ])('renders no guard and no owner element when $name', async ({ managerProps }) => {
       await render(
         <div data-testid="host">
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             {managerProps ? <FocusManagerPart {...managerProps} /> : null}
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -157,9 +158,9 @@ describe('FloatingPortal', () => {
       const nextFocusableElement = shallowRef<HTMLElement | null>(appendUntabbableReference());
       await render(() => (
         <div data-testid="host">
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart nextFocusableElement={nextFocusableElement.value} />
-          </FloatingPortal>
+          </PopupPortal>
         </div>
       ));
       const host = screen.getByTestId('host');
@@ -175,12 +176,12 @@ describe('FloatingPortal', () => {
       await render(
         <div>
           <input data-testid="trigger" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart>
               <input data-testid="first-inside" />
               <input data-testid="last-inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
           <input data-testid="next" />
         </div>,
       );
@@ -198,11 +199,11 @@ describe('FloatingPortal', () => {
       await render(
         <div>
           <input data-testid="trigger" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart>
               <input data-testid="inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -216,11 +217,11 @@ describe('FloatingPortal', () => {
       const reference = appendUntabbableReference();
       await render(
         <div>
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart domReference={reference}>
               <input data-testid="inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -234,11 +235,11 @@ describe('FloatingPortal', () => {
       async function renderPopupBeforeNextField(managerProps: Record<string, unknown>) {
         await render(
           <div>
-            <FloatingPortal>
+            <PopupPortal guards={usePortalFocus}>
               <FocusManagerPart {...managerProps}>
                 <input data-testid="inside" />
               </FocusManagerPart>
-            </FloatingPortal>
+            </PopupPortal>
             <input data-testid="next" />
           </div>,
         );
@@ -258,11 +259,11 @@ describe('FloatingPortal', () => {
         const reference = appendUntabbableReference();
         await render(
           <div>
-            <FloatingPortal>
+            <PopupPortal guards={usePortalFocus}>
               <FocusManagerPart domReference={reference}>
                 <input data-testid="inside" />
               </FocusManagerPart>
-            </FloatingPortal>
+            </PopupPortal>
           </div>,
         );
 
@@ -309,11 +310,11 @@ describe('FloatingPortal', () => {
       });
       await render(() => (
         <div>
-          <FloatingPortal data-testid="portal">
+          <PopupPortal guards={usePortalFocus} data-testid="portal">
             <FocusManagerPart open={open.value}>
               <Probe />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>
       ));
       const [firstGuard, lastGuard] = getOutsideGuards();
@@ -339,11 +340,11 @@ describe('FloatingPortal', () => {
       });
       await render(
         <div data-testid="host">
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart nextFocusableElement={appendUntabbableReference()}>
               <Probe />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -356,9 +357,9 @@ describe('FloatingPortal', () => {
       it('is a span that the style of ownerVisuallyHidden hides', async () => {
         await render(
           <div data-testid="host">
-            <FloatingPortal>
+            <PopupPortal guards={usePortalFocus}>
               <FocusManagerPart />
-            </FloatingPortal>
+            </PopupPortal>
           </div>,
         );
         const owner = getOwner(screen.getByTestId('host'));
@@ -376,9 +377,9 @@ describe('FloatingPortal', () => {
       it('has the role that portalOwnerRole gives', async () => {
         await render(
           <div data-testid="host">
-            <FloatingPortal portalOwnerRole="group">
+            <PopupPortal guards={usePortalFocus} portalOwnerRole="group">
               <FocusManagerPart />
-            </FloatingPortal>
+            </PopupPortal>
           </div>,
         );
 
@@ -390,25 +391,25 @@ describe('FloatingPortal', () => {
           name: 'the generated id',
           ownedId: null,
           create: () => (
-            <FloatingPortal data-testid="portal">
+            <PopupPortal guards={usePortalFocus} data-testid="portal">
               <FocusManagerPart />
-            </FloatingPortal>
+            </PopupPortal>
           ),
         },
         {
           name: 'the id attribute',
           ownedId: 'custom-portal',
           create: () => (
-            <FloatingPortal id="custom-portal" data-testid="portal">
+            <PopupPortal guards={usePortalFocus} id="custom-portal" data-testid="portal">
               <FocusManagerPart />
-            </FloatingPortal>
+            </PopupPortal>
           ),
         },
         {
           name: 'the id of the #render slot',
           ownedId: 'rendered-portal',
           create: () => (
-            <FloatingPortal
+            <PopupPortal guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id="rendered-portal" data-testid="portal">
@@ -434,9 +435,9 @@ describe('FloatingPortal', () => {
         const id = shallowRef('first-portal');
         await render(() => (
           <div data-testid="host">
-            <FloatingPortal id={id.value} data-testid="portal">
+            <PopupPortal guards={usePortalFocus} id={id.value} data-testid="portal">
               <FocusManagerPart />
-            </FloatingPortal>
+            </PopupPortal>
           </div>
         ));
         const owner = getOwner(screen.getByTestId('host'));
@@ -453,7 +454,7 @@ describe('FloatingPortal', () => {
         const ownId = shallowRef('first');
         await render(
           <div data-testid="host">
-            <FloatingPortal
+            <PopupPortal guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <OwnIdElement {...props} tag="div" ownId={ownId}>
@@ -487,9 +488,9 @@ describe('FloatingPortal', () => {
         const open = shallowRef(false);
         await render(() => (
           <div data-testid="host">
-            <FloatingPortal portalOwnerRole="group" data-testid="portal">
+            <PopupPortal guards={usePortalFocus} portalOwnerRole="group" data-testid="portal">
               <FocusManagerPart open={open.value} />
-            </FloatingPortal>
+            </PopupPortal>
           </div>
         ));
         const host = screen.getByTestId('host');
@@ -506,7 +507,7 @@ describe('FloatingPortal', () => {
       it('names no id when the #render slot gives the portal element no id', async () => {
         await render(
           <div data-testid="host">
-            <FloatingPortal
+            <PopupPortal guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id={undefined}>
@@ -535,7 +536,7 @@ describe('FloatingPortal', () => {
       await render(
         <div>
           <input data-testid="outside" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <input
               data-testid="first"
               onFocusout={(event: FocusEvent) => {
@@ -543,7 +544,7 @@ describe('FloatingPortal', () => {
               }}
             />
             <input data-testid="second" />
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
       const outside = screen.getByTestId('outside');
@@ -574,14 +575,14 @@ describe('FloatingPortal', () => {
       await render(
         <div>
           <input data-testid="outside" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <input
               data-testid="inside"
               onFocusin={(event: FocusEvent) => {
                 tabindexAtFocus.push((event.target as HTMLElement).getAttribute('tabindex'));
               }}
             />
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
       const inside = screen.getByTestId('inside');
@@ -598,11 +599,11 @@ describe('FloatingPortal', () => {
       await render(
         <div>
           <input data-testid="outside" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart modal>
               <input data-testid="inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>,
       );
 
@@ -617,11 +618,11 @@ describe('FloatingPortal', () => {
       await render(() => (
         <div>
           <input data-testid="outside" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart open={open.value}>
               <input data-testid="inside" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>
       ));
       const inside = screen.getByTestId('inside');
@@ -644,11 +645,11 @@ describe('FloatingPortal', () => {
       name: 'Page',
       setup: () => () => (
         <div data-testid="host">
-          <FloatingPortal data-testid="portal">
+          <PopupPortal guards={usePortalFocus} data-testid="portal">
             <FocusManagerPart>
               <input data-testid="input" />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </div>
       ),
     });
@@ -688,11 +689,11 @@ describe('FloatingPortal', () => {
   it('VUE-5: keeps the portal element, the guards and the owner element out of the document when the part mounts while KeepAlive holds its branch', async () => {
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
       () => (
-        <FloatingPortal data-testid="portal">
+        <PopupPortal guards={usePortalFocus} data-testid="portal">
           <FocusManagerPart>
             <input />
           </FocusManagerPart>
-        </FloatingPortal>
+        </PopupPortal>
       ),
       { renderBranch: (part) => <div data-testid="host">{part}</div> },
     );
@@ -718,7 +719,7 @@ describe('FloatingPortal', () => {
     await render(() => (
       <div>
         <input data-testid="trigger" />
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           <KeepAlive>
             {visible.value ? (
               <FocusManagerPart key="part">
@@ -727,7 +728,7 @@ describe('FloatingPortal', () => {
               </FocusManagerPart>
             ) : null}
           </KeepAlive>
-        </FloatingPortal>
+        </PopupPortal>
         <input data-testid="next" />
       </div>
     ));
@@ -746,7 +747,7 @@ describe('FloatingPortal', () => {
     await render(() => (
       <div>
         <input data-testid="trigger" />
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           <KeepAlive>
             {visible.value ? (
               <FocusManagerPart key="part">
@@ -755,7 +756,7 @@ describe('FloatingPortal', () => {
               </FocusManagerPart>
             ) : null}
           </KeepAlive>
-        </FloatingPortal>
+        </PopupPortal>
         <input data-testid="next" />
       </div>
     ));
@@ -781,7 +782,7 @@ describe('FloatingPortal', () => {
       await render(() => (
         <div>
           <input data-testid="trigger" />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <KeepAlive>
               {visible.value ? (
                 <FocusManagerPart
@@ -793,7 +794,7 @@ describe('FloatingPortal', () => {
                 </FocusManagerPart>
               ) : null}
             </KeepAlive>
-          </FloatingPortal>
+          </PopupPortal>
           <input data-testid="next" />
         </div>
       ));
@@ -824,7 +825,7 @@ describe('FloatingPortal', () => {
       const visible = shallowRef(true);
       await render(() => (
         <div>
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <KeepAlive>
               {visible.value ? (
                 <FocusManagerPart key="part" domReference={reference}>
@@ -832,7 +833,7 @@ describe('FloatingPortal', () => {
                 </FocusManagerPart>
               ) : null}
             </KeepAlive>
-          </FloatingPortal>
+          </PopupPortal>
         </div>
       ));
 
@@ -850,7 +851,7 @@ describe('FloatingPortal', () => {
     await render(() => (
       <div>
         <input data-testid="trigger" />
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           <KeepAlive>
             {visible.value ? (
               <FocusManagerPart key="part">
@@ -859,7 +860,7 @@ describe('FloatingPortal', () => {
               </FocusManagerPart>
             ) : null}
           </KeepAlive>
-        </FloatingPortal>
+        </PopupPortal>
         <input data-testid="next" />
       </div>
     ));
@@ -891,7 +892,7 @@ describe('FloatingPortal', () => {
         Array.from(template.content.firstElementChild!.childNodes, (node) => node.nodeName),
       ).toEqual(['BUTTON', '#comment', 'BUTTON']);
 
-      await hydrate(FloatingPortalHydration, { serverHtml });
+      await hydrate(PopupPortalHydration, { serverHtml });
 
       const portal = screen.getByTestId('portal');
       expect(portal.parentElement).toBe(document.body);

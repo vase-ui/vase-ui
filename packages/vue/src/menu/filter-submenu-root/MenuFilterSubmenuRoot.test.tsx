@@ -681,7 +681,7 @@ describe('closing a filtered submenu from the keyboard', () => {
     const submenu = (
       <Menu.SubmenuRoot>
         <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
-        <Menu.Portal container={props.container}>
+        <Menu.Portal to={props.container}>
           <Menu.Positioner>
             <Menu.Popup data-testid="submenu">
               {props.filterable && <Menu.Input aria-label="Filter child actions" />}

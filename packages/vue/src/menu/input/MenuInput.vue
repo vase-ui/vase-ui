@@ -31,9 +31,7 @@ export interface MenuInputProps
 </script>
 
 <script setup lang="ts">
-import { watch } from 'vue';
 import {
-  addInputFocusListeners,
   useFilterDropdownInput,
 } from '../../filter-dropdown/input/FilterDropdownInput';
 import { useFilterDropdownValueContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
@@ -85,23 +83,12 @@ function setInputFocused(element: HTMLInputElement | null) {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref, setInputFocused],
-  props: (attrs) => input.props(mergeProps<'input'>({ onKeydown: handleKeydown }, attrs)),
+  props: (attrs) => input.props(mergeProps<'input'>({
+    onKeydown: handleKeydown,
+    onFocusin(event) { if (element.value === event.currentTarget) store.set('inputFocused', true); },
+    onFocusout(event) { if (element.value === event.currentTarget) store.set('inputFocused', false); },
+  }, attrs)),
 });
-
-watch(
-  element,
-  (input, _previous, onCleanup) => {
-    if (input) {
-      onCleanup(
-        addInputFocusListeners(input, {
-          focusin: () => store.set('inputFocused', true),
-          focusout: () => store.set('inputFocused', false),
-        }),
-      );
-    }
-  },
-  { flush: 'sync' },
-);
 
 defineExpose({ element });
 </script>

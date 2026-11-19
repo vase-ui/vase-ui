@@ -1,48 +1,9 @@
-<script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
-import type { VaseUIComponentProps, WithVaseUIEvent } from '../../../internals/types';
-import type { FloatingPortalContainer } from './useFloatingPortalNode';
-
-export interface FloatingPortalState {}
-
-/**
- * Puts the popup into a container, by default `<body>`, unless `inPlace` is true.
- * In a container, a parent with `overflow: hidden` does not clip the popup.
- * The popup keeps its place in the component tree.
- * @see https://floating-ui.com/docs/FloatingPortal
- */
-export interface FloatingPortalProps
-  extends
-    VaseUIComponentProps<FloatingPortalState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
-  /**
-   * The role for the hidden `aria-owns` owner element.
-   */
-  portalOwnerRole?: string | undefined;
-  /**
-   * Whether the portal element renders in the place of the part, with no `Teleport`.
-   * Only `Dialog.Portal` sets this prop, from its `disabled` prop.
-   * On other portal parts, `disabled` stays an attribute of the portal element.
-   * @default false
-   */
-  inPlace?: boolean | undefined;
-}
-</script>
-
-<script setup lang="ts">
 import { computed, provide, shallowRef, watch } from 'vue';
-import type { Component } from 'vue';
 import { addEventListener } from '../../../common/addEventListener';
-import { EMPTY_OBJECT } from '../../../common/empty';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerVisuallyHidden } from '../../../internals/constants';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
-import type { HTMLProps } from '../../../internals/types';
 import { createFocusGuardElement } from '../focus/createFocusGuardElement';
 import { useElementSiblings } from '../focus/useElementSiblings';
 import { useElementId } from '../useElementId';
@@ -56,22 +17,17 @@ import {
   isOutsideEvent,
 } from '../focus/tabbable';
 import type { FocusableElement } from '../focus/tabbable';
-import FloatingPortalChildren from './FloatingPortalChildren.vue';
-import { PortalContext } from './FloatingPortalContext';
-import type { FocusManagerState } from './FloatingPortalContext';
-import { useFloatingPortalNode } from './useFloatingPortalNode';
+import { PortalContext } from './PopupPortalContext';
+import type { FocusManagerState } from './PopupPortalContext';
+import type { Ref } from 'vue';
+import type { PopupPortalProps } from './PopupPortal.vue';
+import PopupPortalAnchor from './PopupPortalAnchor.vue';
 
-defineOptions({ inheritAttrs: false });
-
-const props = withDefaults(defineProps<FloatingPortalProps>(), { as: 'div', inPlace: false });
-
-defineSlots<{
-  default(props: { state: FloatingPortalState }): unknown;
-  render(props: { props: HTMLProps; state: FloatingPortalState; children: Component }): unknown;
-}>();
-
-const state: FloatingPortalState = EMPTY_OBJECT;
-
+export function usePortalFocus(
+  element: Readonly<Ref<HTMLElement | null>>,
+  props: PopupPortalProps,
+  teleportStart: Readonly<Ref<Comment | Text | HTMLElement | null>>,
+) {
 const focusManagerState = shallowRef<FocusManagerState | null>(null);
 const modal = computed(() => focusManagerState.value?.modal);
 const open = computed(() => focusManagerState.value?.open);
@@ -96,19 +52,11 @@ function handleFocus(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, setRef, usesRenderSlot, containerElement, isHeld } =
-  useFloatingPortalNode({
-    container: () => props.container,
-    componentProps: props,
-    children: true,
-    inPlace: () => props.inPlace,
-  });
-
 // The capture phase runs these listeners before a listener of the focus manager. A Vue listener
 // here would get each focus in the popup first. Vue would then skip the Vue listener of a target
 // that mounted in the millisecond of the focus.
 watch(
-  [element, modal, () => props.inPlace],
+  [element, modal, () => props.disabled],
   ([portalNode, isModal, inPlace], _previous, onCleanup) => {
     if (!portalNode || isModal || inPlace) {
       return;
@@ -151,17 +99,6 @@ const shouldRenderGuards = computed(
 // The `id` attribute and the `#render` slot can replace the generated id, and the owner element
 // names the id that the DOM has.
 const nodeId = useElementId(element);
-
-// Vue gives a ref of a `Teleport` the node that marks the place of the `Teleport`: a comment in a
-// development build, and an empty text node in a production build. The guards and the owner
-// element are not in the template, so the part has one root node in either form.
-// In place, the part renders no `Teleport`. The ref is then `null`, so the part keeps no guards and
-// no owner element.
-const teleportStart = shallowRef<Comment | Text | null>(null);
-
-function setTeleportStart(node: unknown) {
-  teleportStart.value = node as Comment | Text | null;
-}
 
 interface PlaceNodes {
   owner: HTMLSpanElement;
@@ -234,7 +171,7 @@ const afterInsideRef = shallowRef<HTMLSpanElement | null>(null);
 
 provide(PortalContext, {
   portalNode: element,
-  inPlace: computed(() => props.inPlace),
+  inPlace: computed(() => !!props.disabled),
   setFocusManagerState(nextState) {
     focusManagerState.value = nextState;
   },
@@ -301,35 +238,6 @@ function handleAfterGuardFocusin(event: FocusEvent) {
   }
 }
 
-defineExpose({ element });
-</script>
 
-<template>
-  <slot
-    v-if="inPlace && usesRenderSlot()"
-    name="render"
-    :props="elementProps()"
-    :state="state"
-    :children="FloatingPortalChildren"
-  />
-  <component :is="as" v-else-if="inPlace" v-bind="elementProps()" :ref="setRef">
-    <slot :state="state" />
-  </component>
-  <Teleport
-    v-else-if="containerElement"
-    :ref="setTeleportStart"
-    :to="containerElement"
-    :disabled="isHeld"
-  >
-    <slot
-      v-if="usesRenderSlot()"
-      name="render"
-      :props="elementProps()"
-      :state="state"
-      :children="FloatingPortalChildren"
-    />
-    <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
-    </component>
-  </Teleport>
-</template>
+  return PopupPortalAnchor;
+}

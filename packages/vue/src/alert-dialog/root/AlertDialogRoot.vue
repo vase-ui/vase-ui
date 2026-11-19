@@ -42,7 +42,7 @@ export type AlertDialogRootChangeEventDetails =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
+import { useDialogRoot } from '../../dialog/root/useDialogRoot';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 
 const props = withDefaults(defineProps<AlertDialogRootProps<Payload>>(), {
@@ -80,7 +80,7 @@ defineSlots<{
   default(props: { payload: Payload | undefined }): unknown;
 }>();
 
-const { payload, actions } = useRenderDialogRoot<Payload>('alert-dialog', props, emit);
+const { payload, actions } = useDialogRoot<Payload>('alert-dialog', props, emit);
 
 defineExpose({ unmount: actions.unmount, close: actions.close });
 </script>

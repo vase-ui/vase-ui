@@ -355,7 +355,7 @@ describe('<Select.Positioner />', () => {
                 <Select.Value />
               </Select.Trigger>
             </Teleport>
-            <Select.Portal container={page.body}>
+            <Select.Portal to={page.body}>
               <Select.Positioner data-testid="positioner" {...positioner}>
                 <Select.Popup>
                   <Select.Item value="a">a</Select.Item>

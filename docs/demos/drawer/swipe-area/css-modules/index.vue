@@ -17,7 +17,7 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
           <p :class="styles.Hint">Swipe from the right edge to open the drawer.</p>
         </div>
       </div>
-      <Drawer.Portal :container="portalContainer">
+      <Drawer.Portal :to="portalContainer">
         <Drawer.Backdrop :class="styles.Backdrop" />
         <Drawer.Viewport :class="styles.Viewport">
           <Drawer.Popup :class="styles.Popup">

@@ -96,7 +96,7 @@ describe('<Menu.Portal />', () => {
             <div ref={setContainer} data-testid="container">
               <Menu.Root defaultOpen={!controlled} open={controlled ? true : undefined}>
                 <Menu.Trigger>Open menu</Menu.Trigger>
-                <Menu.Portal container={container} keepMounted={keepMounted} data-testid="portal">
+                <Menu.Portal to={container.value} keepMounted={keepMounted} data-testid="portal">
                   <Menu.Positioner>
                     <Menu.Popup>
                       <Menu.Item>Item</Menu.Item>
@@ -131,7 +131,7 @@ describe('<Menu.Portal />', () => {
             <div ref={setContainer} data-testid="container">
               <Menu.Root open={props.open}>
                 <Menu.Trigger>Open menu</Menu.Trigger>
-                <Menu.Portal container={container} keepMounted>
+                <Menu.Portal to={container.value} keepMounted>
                   <Menu.Positioner>
                     <Menu.Popup data-testid="popup">
                       <Menu.Item>Item</Menu.Item>

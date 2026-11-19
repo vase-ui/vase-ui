@@ -209,6 +209,9 @@
         "<Popover.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
+      "fails": {}
+    },
     "src/preview-card/popup/PreviewCardPopup.test.tsx": {
       "fails": {
         "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -241,7 +244,9 @@
         "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a stored layout, data-collapsed": "vue-16305-hydration"
       }
     },
-    "src/resizable/root/ResizableRoot.edges.test.tsx": { "fails": {} },
+    "src/resizable/root/ResizableRoot.edges.test.tsx": {
+      "fails": {}
+    },
     "src/scroll-area/content/ScrollAreaContent.test.tsx": {
       "fails": {
         "<ScrollArea.Content /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
@@ -311,6 +316,9 @@
         "useToastLabelPart > <Toast.Title /> > drops aria-labelledby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive"
       }
     },
+    "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
+      "fails": {}
+    },
     "src/tooltip/positioner/TooltipPositioner.test.tsx": {
       "fails": {
         "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
@@ -327,6 +335,9 @@
     "src/utils/popups/interactions/usePopupHover.session.test.ts": {
       "fails": {}
     },
+    "src/utils/popups/portal/PopupPortal.integration.test.tsx": {
+      "fails": {}
+    },
     "src/utils/popups/useDomEffect.test.tsx": {
       "fails": {}
     },
@@ -339,13 +350,13 @@
     "src/utils/useSwipeDismiss.test.tsx": {
       "fails": {}
     },
-    "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
-      "fails": {}
-    },
     "test/disclosurePanels.test.tsx": {
       "fails": {}
     },
     "test/modelOwnership.test.tsx": {
+      "fails": {}
+    },
+    "test/popupLayout.test.tsx": {
       "fails": {}
     },
     "test/rangeLabelChildren.test.tsx": {
@@ -357,16 +368,10 @@
     "test/testApp.test.tsx": {
       "fails": {}
     },
-    "test/popupLayout.test.tsx": {
-      "fails": {}
-    },
     "test/vaporParts/vaporParts.test.tsx": {
       "fails": {}
     },
     "test/withoutVaporAnchors.test.tsx": {
-      "fails": {}
-    },
-    "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
       "fails": {}
     }
   }

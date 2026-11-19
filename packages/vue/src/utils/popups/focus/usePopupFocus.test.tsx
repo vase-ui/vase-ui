@@ -39,9 +39,10 @@ import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 import { usePopupHover } from '../interactions/usePopupHover';
-import { usePortalContext } from '../portal/FloatingPortalContext';
-import type { PortalContextValue } from '../portal/FloatingPortalContext';
-import FloatingPortal from '../portal/FloatingPortal.vue';
+import { usePortalContext } from '../portal/PopupPortalContext';
+import type { PortalContextValue } from '../portal/PopupPortalContext';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -162,7 +163,7 @@ const Popup = defineComponent({
           </FloatingFocusManager>
         ) : null;
       const popup = props.portal ? (
-        <FloatingPortal container={props.container}>{content}</FloatingPortal>
+        <PopupPortal guards={usePortalFocus} to={props.container}>{content}</PopupPortal>
       ) : (
         content
       );
@@ -438,7 +439,7 @@ const Dialog = defineComponent({
               children,
               getReferenceProps({ ref: refs.setReference, ...children.props }),
             )}
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             {open() && (
               <FloatingFocusManager store={context.rootStore} modal={props.modal}>
                 <div {...getFloatingProps({ ref: refs.setFloating })}>
@@ -450,7 +451,7 @@ const Dialog = defineComponent({
                 </div>
               </FloatingFocusManager>
             )}
-          </FloatingPortal>
+          </PopupPortal>
           {slots.side?.()}
         </>
       );
@@ -532,7 +533,7 @@ const RemovedReferenceApp = defineComponent({
           <button ref={refs.setReference} {...getReferenceProps()} data-testid="reference" />
         )}
         {isOpen.value && (
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FloatingFocusManager store={context.rootStore} modal={props.modal}>
               <div ref={refs.setFloating} {...getFloatingProps()}>
                 <button
@@ -546,7 +547,7 @@ const RemovedReferenceApp = defineComponent({
                 </button>
               </div>
             </FloatingFocusManager>
-          </FloatingPortal>
+          </PopupPortal>
         )}
         <button data-testid="fallback" />
       </>
@@ -954,11 +955,11 @@ describe('FloatingFocusManager', () => {
       const hasFirst = shallowRef(true);
       const hasSecond = shallowRef(false);
       await render(() => (
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           <Probe />
           {hasFirst.value ? <Manager key="first" /> : null}
           {hasSecond.value ? <Manager key="second" /> : null}
-        </FloatingPortal>
+        </PopupPortal>
       ));
 
       // The second manager writes its guards in an update before the first manager unmounts. When
@@ -2706,9 +2707,9 @@ describe('FloatingFocusManager', () => {
               {{
                 default: () => [
                   <input data-testid="one" />,
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     <input data-testid="nested" />
-                  </FloatingPortal>,
+                  </PopupPortal>,
                 ],
               }}
             </Popup>
@@ -2932,9 +2933,9 @@ describe('FloatingFocusManager', () => {
             {{
               default: () => [
                 <input data-testid="one" />,
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <input data-testid="nested" />
-                </FloatingPortal>,
+                </PopupPortal>,
               ],
             }}
           </Popup>
@@ -3602,7 +3603,7 @@ describe('FloatingFocusManager', () => {
             return () => (
               <>
                 <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   {isOpen.value && (
                     <FloatingFocusManager store={context.rootStore} returnFocus={() => undefined}>
                       <div ref={refs.setFloating} {...getFloatingProps()}>
@@ -3615,7 +3616,7 @@ describe('FloatingFocusManager', () => {
                       </div>
                     </FloatingFocusManager>
                   )}
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -3658,13 +3659,13 @@ describe('FloatingFocusManager', () => {
             <>
               {cloneElement(slots.default!()[0], getReferenceProps({ ref: refs.setReference }))}
               {open.value && (
-                <FloatingPortal container={props.portalRef}>
+                <PopupPortal guards={usePortalFocus} to={props.portalRef}>
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div ref={refs.setFloating} {...getFloatingProps()}>
                       {slots.popup?.()}
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -4562,7 +4563,7 @@ describe('FloatingFocusManager', () => {
                     isOpen.value = false;
                   }}
                 />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     disabled={!isOpen.value}
@@ -4572,7 +4573,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -4710,7 +4711,7 @@ describe('FloatingFocusManager', () => {
                     ref={refs.setReference}
                     {...getReferenceProps()}
                   />
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     {isOpen.value && (
                       <FloatingFocusManager store={context.rootStore} returnFocus={finalFocus}>
                         <div ref={refs.setFloating} {...getFloatingProps()}>
@@ -4718,7 +4719,7 @@ describe('FloatingFocusManager', () => {
                         </div>
                       </FloatingFocusManager>
                     )}
-                  </FloatingPortal>
+                  </PopupPortal>
                 </>
               );
             },
@@ -4779,13 +4780,13 @@ describe('FloatingFocusManager', () => {
                     reopenOnClose.value = true;
                   }}
                 />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager store={context.rootStore} disabled={!isOpen.value}>
                     <div ref={refs.setFloating} {...getFloatingProps()}>
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -4841,7 +4842,7 @@ describe('FloatingFocusManager', () => {
                 <span data-testid="open-state">{String(isOpen.value)}</span>
                 <button data-testid="before" />
                 <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     disabled={!isOpen.value}
@@ -4851,7 +4852,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
                 <button data-testid="after" />
               </>
             );
@@ -4890,7 +4891,7 @@ describe('FloatingFocusManager', () => {
       });
     });
 
-    describe('non-modal + FloatingPortal', () => {
+    describe('non-modal + PopupPortal', () => {
       // The `App` of four cases of this block. `portalOwnerRole` goes to the portal.
       const PortalApp = defineComponent({
         props: { portalOwnerRole: { type: String, default: undefined } },
@@ -4911,7 +4912,7 @@ describe('FloatingFocusManager', () => {
                   open.value = true;
                 }}
               />
-              <FloatingPortal portalOwnerRole={props.portalOwnerRole}>
+              <PopupPortal guards={usePortalFocus} portalOwnerRole={props.portalOwnerRole}>
                 {open.value && (
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div data-testid="floating" ref={refs.setFloating}>
@@ -4919,7 +4920,7 @@ describe('FloatingFocusManager', () => {
                     </div>
                   </FloatingFocusManager>
                 )}
-              </FloatingPortal>
+              </PopupPortal>
               <span tabindex={0} data-testid="last" />
             </>
           );
@@ -4964,7 +4965,7 @@ describe('FloatingFocusManager', () => {
                   <span data-testid="reference-sibling-1" />
                   <span data-testid="reference-sibling-2" />
                 </div>
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   {open.value && (
                     <FloatingFocusManager store={context.rootStore} modal={false}>
                       <div data-testid="floating" ref={refs.setFloating}>
@@ -4972,7 +4973,7 @@ describe('FloatingFocusManager', () => {
                       </div>
                     </FloatingFocusManager>
                   )}
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -5440,7 +5441,7 @@ describe('FloatingFocusManager', () => {
                 role="combobox"
               />
               {isOpen.value && (
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     initialFocus={false}
@@ -5451,7 +5452,7 @@ describe('FloatingFocusManager', () => {
                       <button>two</button>
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
               <button>outside</button>
             </>
@@ -5923,7 +5924,7 @@ describe('FloatingFocusManager', () => {
             <>
               <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
               {isOpen.value && (
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div
                       ref={refs.setFloating}
@@ -5934,7 +5935,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="inner">inner</button>
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );

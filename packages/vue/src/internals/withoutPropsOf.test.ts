@@ -1,17 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import PopoverRoot from '../popover/root/PopoverRoot.vue';
-import FloatingPortal from '../utils/popups/portal/FloatingPortal.vue';
-import FloatingPortalLite from '../utils/popups/portal/FloatingPortalLite.vue';
+import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { withoutPropsOf } from './withoutPropsOf';
 
 describe('withoutPropsOf', () => {
   it.each([
-    { name: 'inPlace' },
-    { name: 'in-place' },
+    { name: 'guards' },
+    { name: 'disabled' },
     { name: 'portalOwnerRole' },
     { name: 'portal-owner-role' },
   ])('drops the declared prop $name', ({ name }) => {
-    expect(withoutPropsOf({ [name]: '' }, FloatingPortal)).toEqual({});
+    expect(withoutPropsOf({ [name]: '' }, PopupPortal)).toEqual({});
   });
 
   it('drops handle and trigger-id from the attributes of a generic part', () => {
@@ -31,10 +30,7 @@ describe('withoutPropsOf', () => {
       'aria-label': 'Details',
       onClick: vi.fn(),
     };
-    expect(withoutPropsOf({ ...attributes, inPlace: true }, FloatingPortal)).toEqual(attributes);
-    expect(withoutPropsOf({ container: null, 'in-place': '' }, FloatingPortalLite)).toEqual({
-      'in-place': '',
-    });
+    expect(withoutPropsOf({ ...attributes, guards: true }, PopupPortal)).toEqual(attributes);
   });
 
   it('copies all attributes for a component with no props option', () => {
