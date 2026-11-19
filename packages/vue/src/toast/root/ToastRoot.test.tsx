@@ -47,7 +47,6 @@ async function simulateSwipe(
     button: 0,
     bubbles: true,
     pointerId: 1,
-    pointerType: 'mouse',
   });
 
   // Fire an initial move event close to the start to trigger the isFirstPointerMove logic correctly.
@@ -57,7 +56,6 @@ async function simulateSwipe(
     clientY: startY + Math.sign(endY - startY),
     bubbles: true,
     pointerId: 1,
-    pointerType: 'mouse',
   });
 
   // Fire the main move event to the end position.
@@ -66,7 +64,6 @@ async function simulateSwipe(
     clientY: endY,
     bubbles: true,
     pointerId: 1,
-    pointerType: 'mouse',
   });
 
   await fireEvent.pointerUp(releaseTarget, {
@@ -74,7 +71,6 @@ async function simulateSwipe(
     clientY: endY,
     bubbles: true,
     pointerId: 1,
-    pointerType: 'mouse',
   });
 }
 
