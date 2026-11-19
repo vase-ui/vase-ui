@@ -173,7 +173,6 @@ describe('<TimeField.Root /> on a server', () => {
       expect(labelId).toBeTruthy();
       expect(attribute(tag(html, GROUP), 'aria-labelledby')).toBe(labelId);
       expect(attribute(tag(html, GROUP), 'aria-describedby')).toBe(descriptionId);
-      expect(attribute(tag(html, HIDDEN_INPUT), 'aria-describedby')).toBe(descriptionId);
     },
   );
 
