@@ -25,7 +25,7 @@ const TSX_PATH = 'hero/css-modules/index.tsx';
 const VUE_PATH = 'hero/css-modules/index.vue';
 const TAILWIND_TSX_PATH = 'hero/tailwind/index.tsx';
 const TAILWIND_VUE_PATH = 'hero/tailwind/index.vue';
-const RERUN = 'Run `pnpm docs:demos --upstream <path> button`.';
+const RERUN = 'Run `pnpm docs:demos --upstream <path> toggle`.';
 const ENTRY_POINTS = new Set(['button']);
 
 const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
@@ -248,7 +248,7 @@ function makeRecord(commit = COMMIT): DemoRecord {
 
 function makeDemoFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
   return {
-    name: 'button',
+    name: 'toggle',
     own: false,
     matchedCommit: COMMIT,
     record: makeRecord(),
@@ -299,6 +299,19 @@ test('a demo of a family of native form parts can have a style sheet and classes
   assert.deepEqual(checkDemos([family], ENTRY_POINTS), []);
 });
 
+test('a demo that imports a family of native form parts can have a style sheet and classes of its own', () => {
+  const family = makeTailwindFamily({
+    record: { ...TAILWIND_RECORD, entryPoints: { hero: ['button'] } },
+    files: new Map([
+      ...CSS_MODULES_FILES,
+      [STYLE_PATH, sha256('.Button:disabled {}')],
+      [TAILWIND_VUE_PATH, sha256('tailwind vue')],
+    ]),
+    vueClasses: new Map([['hero/tailwind', { Button: ['flex disabled:text-neutral-500'] }]]),
+  });
+  assert.deepEqual(checkDemos([family], ENTRY_POINTS), []);
+});
+
 test('a family with a record, the copies and the Vue file of each demo has no problem', () => {
   assert.deepEqual(checkDemos([makeDemoFamily()], ENTRY_POINTS), []);
 });
@@ -318,7 +331,7 @@ test('the check has no problem for a demo with no Vue file while an entry point 
 
 test('the check reports a demo with no Vue file when each entry point that it imports exists', () => {
   assert.deepEqual(checkDemos([WAITING], new Set([...ENTRY_POINTS, 'toggle'])), [
-    'docs/demos/button/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
+    'docs/demos/toggle/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
   ]);
 });
 
@@ -333,7 +346,7 @@ test('the check has no problem for a Tailwind demo with no Vue file while an ent
 
 test('the check reports a Tailwind demo with no Vue file when each entry point that it imports exists', () => {
   assert.deepEqual(checkDemos([WAITING_TAILWIND], new Set([...ENTRY_POINTS, 'menu'])), [
-    'docs/demos/button/hero/tailwind/index.vue does not exist. Base UI has the Tailwind demo hero. Port it.',
+    'docs/demos/toggle/hero/tailwind/index.vue does not exist. Base UI has the Tailwind demo hero. Port it.',
   ]);
 });
 
@@ -424,18 +437,18 @@ test('the demo of the Vue variants is listed with its name in Base UI', () => {
 });
 
 const NO_FAMILY_FILE =
-  'parity/families/button.json does not exist, but button has a page or a demo folder. Add the family file. For a component that Base UI does not have, add parity/own/button.json.';
+  'parity/families/toggle.json does not exist, but toggle has a page or a demo folder. Add the family file. For a component that Base UI does not have, add parity/own/toggle.json.';
 
 const failures: { name: string; family: DemoFamily; problem: string }[] = [
   {
     name: 'a family with no record',
     family: makeDemoFamily({ record: undefined }),
-    problem: `docs/demos/button/upstream.json does not exist. ${RERUN}`,
+    problem: `docs/demos/toggle/upstream.json does not exist. ${RERUN}`,
   },
   {
     name: 'a record at another commit than matchedCommit',
     family: makeDemoFamily({ record: makeRecord(OTHER_COMMIT) }),
-    problem: `docs/demos/button/upstream.json: the record was read at commit ${OTHER_COMMIT}, but matchedCommit of button is ${COMMIT}. ${RERUN}`,
+    problem: `docs/demos/toggle/upstream.json: the record was read at commit ${OTHER_COMMIT}, but matchedCommit of toggle is ${COMMIT}. ${RERUN}`,
   },
   {
     name: 'a copied style sheet that differs from the record',
@@ -445,12 +458,12 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
         [VUE_PATH, sha256('vue')],
       ]),
     }),
-    problem: `docs/demos/button/${STYLE_PATH} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${RERUN}`,
+    problem: `docs/demos/toggle/${STYLE_PATH} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${RERUN}`,
   },
   {
     name: 'a recorded style sheet that has no copy',
     family: makeDemoFamily({ files: new Map([[VUE_PATH, sha256('vue')]]) }),
-    problem: `docs/demos/button/${STYLE_PATH} does not exist. ${RERUN}`,
+    problem: `docs/demos/toggle/${STYLE_PATH} does not exist. ${RERUN}`,
   },
   {
     name: 'a style sheet that the record does not have',
@@ -462,33 +475,33 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
       ]),
     }),
     problem:
-      'docs/demos/button/hero/css-modules/own.module.css is not in docs/demos/button/upstream.json. Base UI has no such style sheet. Delete the file.',
+      'docs/demos/toggle/hero/css-modules/own.module.css is not in docs/demos/toggle/upstream.json. Base UI has no such style sheet. Delete the file.',
   },
   {
     name: 'a demo of Base UI that has no Vue file',
     family: makeDemoFamily({ files: new Map([[STYLE_PATH, sha256(STYLE)]]) }),
     problem:
-      'docs/demos/button/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
+      'docs/demos/toggle/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
   },
   {
     name: 'a Tailwind demo of Base UI that has no Vue file',
     family: makeTailwindFamily(NO_TAILWIND_VUE),
     problem:
-      'docs/demos/button/hero/tailwind/index.vue does not exist. Base UI has the Tailwind demo hero. Port it.',
+      'docs/demos/toggle/hero/tailwind/index.vue does not exist. Base UI has the Tailwind demo hero. Port it.',
   },
   {
     name: 'a class string that the demo lacks and a class string that Base UI lacks',
     family: makeTailwindFamily({
       vueClasses: new Map([['hero/tailwind', { Button: [CLASS_A, CLASS_B, 'flex h-9'] }]]),
     }),
-    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}", extra "flex h-9". Copy each class string from the Base UI file to the same element. Do not change it.`,
+    problem: `docs/demos/toggle/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}", extra "flex h-9". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
     name: 'a class string that Base UI repeats and the demo does not',
     family: makeTailwindFamily({
       vueClasses: new Map([['hero/tailwind', { Button: [CLASS_A, CLASS_B] }]]),
     }),
-    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+    problem: `docs/demos/toggle/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
     name: 'a class string on an element that Base UI gives no class',
@@ -497,7 +510,7 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
         ['hero/tailwind', { Button: [CLASS_A, CLASS_B, CLASS_B], div: [CLASS_A] }],
       ]),
     }),
-    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. div: extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+    problem: `docs/demos/toggle/hero/tailwind has classes that differ from Base UI. div: extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
     name: 'the class strings of two elements that change places',
@@ -510,14 +523,14 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
         ['hero/tailwind', { 'Switch.Root': [CLASS_B], 'Switch.Thumb': [CLASS_A] }],
       ]),
     }),
-    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Switch.Root: absent "${CLASS_A}", extra "${CLASS_B}". Switch.Thumb: absent "${CLASS_B}", extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+    problem: `docs/demos/toggle/hero/tailwind has classes that differ from Base UI. Switch.Root: absent "${CLASS_A}", extra "${CLASS_B}". Switch.Thumb: absent "${CLASS_B}", extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
     name: 'two Vue variants that differ in more than their classes while the two Base UI variants do not',
     family: makeTailwindFamily({
       vueVariants: new Map([['hero', { form: FORM_DIFFERENCE, text: undefined }]]),
     }),
-    problem: `docs/demos/button/hero: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${FORM_DIFFERENCE}. Make the two demos equal apart from the classes.`,
+    problem: `docs/demos/toggle/hero: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${FORM_DIFFERENCE}. Make the two demos equal apart from the classes.`,
   },
   {
     name: 'two Vue variants with other texts while the two Base UI variants differ',
@@ -525,14 +538,14 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
       record: { ...TAILWIND_RECORD, differentVariants: ['hero'] },
       vueVariants: new Map([['hero', { form: FORM_DIFFERENCE, text: TEXT_DIFFERENCE }]]),
     }),
-    problem: `docs/demos/button/hero: the Tailwind demo has other texts than the CSS-module demo. ${TEXT_DIFFERENCE}. Give the Tailwind demo the texts of the CSS-module demo.`,
+    problem: `docs/demos/toggle/hero: the Tailwind demo has other texts than the CSS-module demo. ${TEXT_DIFFERENCE}. Give the Tailwind demo the texts of the CSS-module demo.`,
   },
   {
     name: 'a Tailwind folder of a demo for which the record has no Tailwind file',
     family: makeDemoFamily({
       files: new Map([...CSS_MODULES_FILES, [TAILWIND_VUE_PATH, sha256('tailwind vue')]]),
     }),
-    problem: `docs/demos/button/hero/tailwind is not in docs/demos/button/upstream.json. ${RERUN} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
+    problem: `docs/demos/toggle/hero/tailwind is not in docs/demos/toggle/upstream.json. ${RERUN} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
   },
   {
     name: 'a family with no family file',

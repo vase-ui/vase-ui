@@ -32,9 +32,11 @@ const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate
 /**
  * The families whose parts are native form elements. A demo of such a family styles the parts with
  * the pseudo-classes of these elements, such as `:checked`, and can add an element of its own for a
- * mark or a thumb. Its classes and its style sheets thus differ from those of the Base UI demo.
+ * mark or a thumb. Its classes and its style sheets thus differ from those of the Base UI demo. A
+ * demo of another family that imports such a family styles its parts in the same way.
  */
 const NATIVE_FORM_FAMILIES = new Set([
+  'button',
   'checkbox',
   'checkbox-group',
   'field',
@@ -47,6 +49,14 @@ const NATIVE_FORM_FAMILIES = new Set([
 ]);
 
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
+
+/** Whether a demo styles the parts of a native form family, by a path from the folder of its family. */
+function stylesNativeParts(name: string, record: DemoRecord, path: string): boolean {
+  const demo = path.split('/')[0]!;
+  return [name, ...(record.entryPoints?.[demo] ?? [])].some((family) =>
+    NATIVE_FORM_FAMILIES.has(family),
+  );
+}
 
 /** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
 const TAILWIND_FOLDER_PATH = /^[^/]+\/tailwind(?=\/)/;
@@ -343,7 +353,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
-      } else if (files.get(path) !== hash && !NATIVE_FORM_FAMILIES.has(name)) {
+      } else if (files.get(path) !== hash && !stylesNativeParts(name, record, upstreamPath)) {
         problems.push(
           `${folder}/${path} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${rerun}`,
         );
@@ -372,9 +382,9 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
-    for (const [key, row] of NATIVE_FORM_FAMILIES.has(name)
-      ? []
-      : Object.entries(record.classes ?? {})) {
+    for (const [key, row] of Object.entries(record.classes ?? {}).filter(
+      ([key]) => !stylesNativeParts(name, record, key),
+    )) {
       const path = vueDemoPath(name, key);
       const vueRow = vueClasses.get(path);
       if (vueRow === undefined) {
