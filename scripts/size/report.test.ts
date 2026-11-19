@@ -70,6 +70,7 @@ test('shows entries that exchange one byte while their totals match', () => {
     }).split('<details>');
     assert.match(changes, /\| `@fixture\/ui` \| Raw \|/);
     assert.match(changes, /\| `@fixture\/ui\/same` \| Raw \|/);
+    assert.doesNotMatch(changes, /Only the packed size changed/);
   }
 });
 
@@ -78,6 +79,7 @@ test('reports a change to either tarball size alone', () => {
     const report = sizeReport(base, { ...base, [key]: base[key] + 1 });
     assert.match(report, /<summary>Unchanged entries \(4\)<\/summary>/);
     assert.doesNotMatch(report, /Changed entries|No size change/);
+    assert.equal(report.includes('Declaration order can vary'), key === 'packed');
   }
 });
 

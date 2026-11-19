@@ -74,6 +74,12 @@ export function sizeReport(base: PackageSize | undefined, merge: PackageSize | u
   for (const key of formats) {
     rows.push(`| Sum of entries (${metrics[key]}) | ${comparison(baseSum[key], mergeSum[key])} |`);
   }
+  if (!changed.length && base.unpacked === merge.unpacked) {
+    rows.push(
+      '',
+      'Only the packed size changed. Declaration order can vary between builds of the same source.',
+    );
+  }
   if (changed.length) {
     rows.push(
       '',
