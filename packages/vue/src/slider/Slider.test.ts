@@ -478,7 +478,7 @@ describe('the direction', () => {
     container.dir = 'rtl';
     const { root } = mount(SliderParts, { root: { defaultValue: 30 } }, container);
     await nextTick();
-    const input = root.querySelector('input[type=range]')!;
+    const input = root.querySelector<HTMLInputElement>('input[type=range]')!;
     const thumb = input.parentElement!;
     expect(thumb.style.translate).toBe('50% -50%');
     container.dir = 'ltr';
