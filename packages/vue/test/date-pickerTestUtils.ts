@@ -9,7 +9,6 @@ export function createPartRef<Instance>() {
       instance = (value as Instance | null) ?? instance;
     },
     get current() {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A test reads the part after its mount.
       return instance!;
     },
   };

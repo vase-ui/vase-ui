@@ -586,12 +586,14 @@ describe('<DatePicker.Root />', () => {
       const { container } = await render(
         <form data-testid="form">
           <DatePickerAnatomy
-            open
-            name="day"
-            defaultValue={day('2026-11-18')}
-            locale="en-US"
+            {...{
+              open: true,
+              name: 'day',
+              defaultValue: day('2026-11-18'),
+              locale: 'en-US',
+              'onUpdate:modelValue': update,
+            }}
             popupProps={{ initialFocus: false }}
-            onUpdate:modelValue={update}
           />
         </form>,
       );

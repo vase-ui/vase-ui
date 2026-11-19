@@ -132,7 +132,7 @@ const calendarProps = computed(() => {
 defineExpose({
   element,
   /** Gives the focus to `date`, or to the day that has the tab stop. */
-  focus: (date?: DateValue) => calendar.value?.focus(date),
+  focus: (date?: DateValue): void => calendar.value?.focus(date),
 });
 </script>
 
