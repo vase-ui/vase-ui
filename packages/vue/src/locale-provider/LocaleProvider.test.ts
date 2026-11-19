@@ -60,7 +60,7 @@ describe('the locale of a part', () => {
   });
 });
 
-test('VUE-169: the server HTML has the locale of each part, and the text stays after the hydration in a browser with another locale', async () => {
+test('VUE-170: the server HTML has the locale of each part, and the text stays after the hydration in a browser with another locale', async () => {
   const props = { locales: { outer: 'de-DE', inner: 'fr-FR', meter: 'ar-EG' } };
   const root = await renderOnServer('RangesInLocaleProviders', props);
   const server = texts(root);

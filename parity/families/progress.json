@@ -82,7 +82,7 @@
       "title": "formats with en-US until hydrated, then with the runtime locale",
       "kind": "replaced",
       "test": "packages/vue/src/locale-provider/LocaleProvider.test.ts",
-      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-169)."
+      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-170)."
     },
     {
       "upstream": "packages/react/src/progress/value/ProgressValue.test.tsx",
@@ -98,7 +98,7 @@
       "title": "hydrates $name without a mismatch, then uses the runtime locale",
       "kind": "replaced",
       "test": "packages/vue/src/locale-provider/LocaleProvider.test.ts",
-      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-169). The case of VUE-169 hydrates `Progress.Value` with no message."
+      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-170). The case of VUE-170 hydrates `Progress.Value` with no message."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
