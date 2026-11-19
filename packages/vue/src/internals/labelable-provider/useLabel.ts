@@ -27,12 +27,6 @@ export function useLabel(params: UseLabelParameters): ComputedRef<UseLabelReturn
 
   function focusControl(event: MouseEvent) {
     const resolvedControlId = resolveControlId();
-
-    if (params.focusControl) {
-      params.focusControl(event, resolvedControlId);
-      return;
-    }
-
     const controlElement =
       toValue(params.controlElement) ??
       (resolvedControlId
@@ -113,17 +107,11 @@ export interface UseLabelParameters {
    * The getter returns `undefined` while `KeepAlive` holds the label.
    */
   registerLabelId?: RegisterId | undefined;
-  /**
-   * A focus handler for a label that is not native.
-   * If it is omitted, the click focuses `controlElement`. With no `controlElement`, it focuses the
-   * control that has the resolved id.
-   */
-  focusControl?: ((event: MouseEvent, controlId: string | undefined) => void) | undefined;
 }
 
 export type UseLabelReturnValue = LabelHTMLAttributes;
 
-export function getControlById(label: Element, id: string) {
+function getControlById(label: Element, id: string) {
   let root = label.getRootNode();
   while (isShadowRoot(root)) {
     const element = root.getElementById(id);
@@ -135,7 +123,7 @@ export function getControlById(label: Element, id: string) {
   return ownerDocument(label).getElementById(id);
 }
 
-export function focusElementWithVisible(element: HTMLElement) {
+function focusElementWithVisible(element: HTMLElement) {
   element.focus({
     // Available from Chrome 144+ (January 2026).
     // Safari and Firefox already support it.

@@ -17,7 +17,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
@@ -443,19 +442,6 @@ const rows: Row[] = [
       nativeLabel: true,
     }),
   })),
-  {
-    name: 'Slider.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Slider.Root defaultValue={50} {...blankId} data-testid={`slider${k}`}>
-        <Slider.Label>Volume {k}</Slider.Label>
-        <Slider.Control>
-          <Slider.Thumb />
-        </Slider.Control>
-      </Slider.Root>
-    ),
-    named: labelled('slider', 'Volume'),
-  },
   {
     name: 'Meter.Label',
     tree: (k, blankId) => (

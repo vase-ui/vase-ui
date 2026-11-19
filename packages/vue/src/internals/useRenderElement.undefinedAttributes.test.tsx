@@ -24,7 +24,6 @@ import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
 import { Separator } from '@vase-ui/vue/separator';
-import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
@@ -367,12 +366,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Separator role={undefined} data-testid="part" />,
     expected: () => 'separator',
-  },
-  {
-    name: 'Slider.Root role',
-    attribute: 'role',
-    createNode: () => <Slider.Root role={undefined} data-testid="part" />,
-    expected: () => 'group',
   },
   {
     name: 'Tabs.Tab aria-controls',

@@ -6,7 +6,6 @@ import { Field } from '@vase-ui/vue/field';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
@@ -14,16 +13,12 @@ import { Toolbar } from '@vase-ui/vue/toolbar';
 // the form data, the model of each part and the count of its change events.
 const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
-const CONTROL_STYLE = 'position: relative; width: 200px; height: 10px';
-const THUMB_STYLE = 'width: 20px; height: 10px';
 
 const filter = ref('');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
 const quantity = ref<number | null>(1);
 const code = ref('');
-const volume = ref(50);
-const range = ref([20, 80]);
 const when = shallowRef<Temporal.PlainDate | null>(null);
 const alarm = shallowRef<Temporal.PlainTime | null>(null);
 const changes = reactive<Record<string, number>>({});
@@ -100,22 +95,6 @@ function handleFilterInput(event: Event) {
           <OTPField.Input v-for="index in 4" :key="index" :data-testid="`code-${index}`" />
         </OTPField.Root>
       </Field.Root>
-      <Slider.Root
-        v-model="volume"
-        name="volume"
-        aria-label="Volume"
-        @value-change="count('volume')"
-      >
-        <Slider.Control :style="CONTROL_STYLE">
-          <Slider.Thumb :style="THUMB_STYLE" data-testid="volume-thumb" />
-        </Slider.Control>
-      </Slider.Root>
-      <Slider.Root v-model="range" name="range" @value-change="count('range')">
-        <Slider.Control :style="CONTROL_STYLE">
-          <Slider.Thumb aria-label="Minimum" :style="THUMB_STYLE" data-testid="range-min" />
-          <Slider.Thumb aria-label="Maximum" :style="THUMB_STYLE" data-testid="range-max" />
-        </Slider.Control>
-      </Slider.Root>
       <DateField.Root v-model="when" name="when" locale="en-US" @value-change="count('when')">
         <DateField.Input data-testid="when" />
       </DateField.Root>
@@ -137,8 +116,6 @@ function handleFilterInput(event: Event) {
         fruit,
         quantity,
         code,
-        volume,
-        range,
         when: when?.toString() ?? null,
         alarm: alarm?.toString({ smallestUnit: 'minute' }) ?? null,
       })

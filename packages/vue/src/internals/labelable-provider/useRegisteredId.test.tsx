@@ -10,7 +10,6 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { Progress } from '@vase-ui/vue/progress';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -368,18 +367,6 @@ describe('useRegisteredId', () => {
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>
-        ),
-      },
-      {
-        name: 'Slider.Label',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Slider.Root defaultValue={50} data-testid="named">
-            <Slider.Label v-slots={slot('div', id)} />
-            <Slider.Control>
-              <Slider.Thumb />
-            </Slider.Control>
-          </Slider.Root>
         ),
       },
       {

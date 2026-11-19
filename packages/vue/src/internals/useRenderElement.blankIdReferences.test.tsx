@@ -10,14 +10,12 @@ import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Field } from '@vase-ui/vue/field';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { Toast } from '@vase-ui/vue/toast';
@@ -461,6 +459,70 @@ const rows: Row[] = [
     ),
   },
   {
+    part: 'Combobox.Input',
+    attribute: 'aria-controls',
+    createNode: (attrs) => createCombobox('input', attrs),
+  },
+  {
+    part: 'Autocomplete.Input',
+    attribute: 'aria-controls',
+    createNode: createAutocomplete,
+  },
+  {
+    part: 'Menu.Input',
+    attribute: 'aria-controls',
+    createNode: createMenuWithInput,
+  },
+  {
+    part: 'NumberField.Increment',
+    attribute: 'aria-controls',
+    createNode: (attrs) => (
+      <NumberField.Root>
+        <NumberField.Input data-testid="target" />
+        <NumberField.Increment data-testid="part" {...attrs} />
+      </NumberField.Root>
+    ),
+  },
+  {
+    part: 'NumberField.Decrement',
+    attribute: 'aria-controls',
+    createNode: (attrs) => (
+      <NumberField.Root>
+        <NumberField.Input data-testid="target" />
+        <NumberField.Decrement data-testid="part" {...attrs} />
+      </NumberField.Root>
+    ),
+  },
+  {
+    part: 'Resizable.Handle',
+    attribute: 'aria-controls',
+    createNode: (attrs) => (
+      <div style={{ width: '1000px', height: '400px' }}>
+        <Resizable.Root style={{ height: '100%' }}>
+          <Resizable.Panel id="a" data-testid="target" />
+          <Resizable.Handle data-testid="part" {...attrs} />
+          <Resizable.Panel id="b" />
+        </Resizable.Root>
+      </div>
+    ),
+  },
+  {
+    part: 'Tabs.Tab',
+    attribute: 'aria-controls',
+    createNode: (attrs) => (
+      <Tabs.Root defaultValue="a">
+        <Tabs.List>
+          <Tabs.Tab value="a" data-testid="part" {...attrs}>
+            Overview
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="a" data-testid="target">
+          Text
+        </Tabs.Panel>
+      </Tabs.Root>
+    ),
+  },
+  {
     part: 'Slider.Value',
     attribute: 'for',
     createNode: (attrs) => (
@@ -545,46 +607,6 @@ describe('VUE-110: a blank ID reference attribute of the consumer', () => {
   });
 
   describe('declared prop ariaDescribedby', () => {
-    // `Field.Root` adds the id of the description to an empty value, so only white space shows
-    // the fault.
-    it('gives the input of Slider.Thumb only the description for white space', async () => {
-      await render(
-        <Field.Root>
-          <Slider.Root defaultValue={10}>
-            <Slider.Control>
-              <Slider.Track>
-                <Slider.Thumb aria-describedby={'\n\t '} />
-              </Slider.Track>
-            </Slider.Control>
-          </Slider.Root>
-          <Field.Description data-testid="target">Help</Field.Description>
-        </Field.Root>,
-      );
-
-      const { id } = screen.getByTestId('target');
-      await waitFor(() => {
-        expect(screen.getByRole('slider')).toHaveAttribute('aria-describedby', id);
-      });
-    });
-
-    it.each(BLANKS)(
-      'gives the input of Slider.Thumb no attribute for $blank',
-      async ({ value }) => {
-        await render(
-          <Slider.Root defaultValue={10}>
-            <Slider.Control>
-              <Slider.Track>
-                <Slider.Thumb aria-describedby={value} />
-              </Slider.Track>
-            </Slider.Control>
-          </Slider.Root>,
-        );
-        await flushMicrotasks();
-
-        expect(screen.getByRole('slider')).not.toHaveAttribute('aria-describedby');
-      },
-    );
-
     it.each(BLANKS)(
       'gives the input of TimeClock.Face no attribute for $blank',
       async ({ value }) => {

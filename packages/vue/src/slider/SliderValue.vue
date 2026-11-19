@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
+import type { OutputHTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderValueState } from './types';
 
+// The part takes the attributes of its element.
+interface Attributes extends /* @vue-ignore */ OutputHTMLAttributes {}
+
 defineOptions({ inheritAttrs: false });
+
+defineProps<Attributes>();
 
 defineSlots<{
   default?(scope: {

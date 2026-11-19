@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderControlState } from './types';
@@ -21,7 +22,12 @@ interface Press {
   half: number;
 }
 
+// The part takes the attributes of its element.
+interface Attributes extends /* @vue-ignore */ HTMLAttributes {}
+
 defineOptions({ inheritAttrs: false });
+
+defineProps<Attributes>();
 
 defineSlots<{
   default?(scope: { state: SliderControlState }): unknown;
