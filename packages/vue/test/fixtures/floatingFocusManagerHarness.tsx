@@ -44,7 +44,7 @@ export const FloatingFocusManager = defineComponent(
       }
       const elementNode = cloneVNode(
         content,
-        { ...bindings(content.props ?? {}), ref: setElement },
+        { ...bindings({ tabindex: content.props?.tabindex }), ref: setElement },
         true,
       );
       return rest.length > 0 ? [elementNode, ...rest] : elementNode;
