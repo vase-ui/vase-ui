@@ -37,9 +37,8 @@ import { computed, provide, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { usePositioner, usePopupPlacement } from '../../utils/popups/usePopupPositioner';
-import { useToastProviderContext } from '../provider/ToastProviderContext';
+import { ToastPositionerContext, useToastProviderContext } from '../provider/ToastProviderContext';
 import * as ToastRootCssVars from '../root/ToastRootCssVars';
-import { ToastPositionerContext } from '../provider/ToastProviderContext';
 
 defineOptions({ inheritAttrs: false });
 

@@ -1,4 +1,4 @@
-import { generateId } from '../common/generateId';
+import { generateId } from './provider/ToastProviderContext';
 import type {
   ToastObject,
   ToastManagerAddOptions,
@@ -17,6 +17,8 @@ export function createToastManager<Data extends object = any>(): ToastManager<Da
   }
 
   return {
+    // Only `Toast.Provider` calls this member. For the space in its name, see
+    // https://x.com/drosenwasser/status/1816947740032872664.
     ' subscribe': function subscribe(listener: (data: ToastManagerEvent) => void) {
       listeners.add(listener);
       return () => {
@@ -25,7 +27,7 @@ export function createToastManager<Data extends object = any>(): ToastManager<Da
     },
 
     add<T extends Data = Data>(options: ToastManagerAddOptions<T>): string {
-      const id = options.id || generateId('toast');
+      const id = options.id || generateId();
       const toastToAdd: ToastObject<T> = {
         ...options,
         id,

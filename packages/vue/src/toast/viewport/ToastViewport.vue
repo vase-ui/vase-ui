@@ -30,11 +30,10 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
-import { useToastProviderContext } from '../provider/ToastProviderContext';
+import { ToastViewportContext, useToastProviderContext } from '../provider/ToastProviderContext';
 import { useToastEscape } from '../utils/useToastEscape';
 import { matchesFocusVisible } from '../../utils/popups/element';
 import ToastViewportChildren from './ToastViewportChildren.vue';
-import { ToastViewportContext } from '../provider/ToastProviderContext';
 import * as ToastViewportCssVars from './ToastViewportCssVars';
 
 defineOptions({ inheritAttrs: false });

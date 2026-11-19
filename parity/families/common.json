@@ -290,6 +290,13 @@
       "destination": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx",
       "behavior": "Enter activates the first submit button of the form.",
       "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/generateId.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider/ToastProviderContext.ts",
+      "member": "generateId",
+      "witness": "packages/vue/src/toast/createToastManager.test.tsx"
     }
   ]
 }

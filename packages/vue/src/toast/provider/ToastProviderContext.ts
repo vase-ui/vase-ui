@@ -1,7 +1,6 @@
 import { computed, inject, toRaw } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type { UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
-import { generateId } from '../../common/generateId';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains, getTarget } from '../../common/shadowDom';
 import { Timeout } from '../../common/useTimeout';
@@ -105,6 +104,13 @@ export const selectors = {
   expanded: (state: State) => state.hovering || state.focused,
   expandedOrOutOfFocus: (state: State) => state.hovering || state.focused || !state.isWindowFocused,
 };
+
+let toastCount = 0;
+
+export function generateId() {
+  toastCount += 1;
+  return `toast-${Math.random().toString(36).slice(2, 6)}-${toastCount}`;
+}
 
 function resolvePromiseOptions<T, Data extends object>(
   options:
@@ -228,7 +234,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
 
   addToast = <Data extends object>(toast: ToastManagerAddOptions<Data>): string => {
     const { timeout, limit } = this.#current;
-    const id = toast.id || generateId('toast');
+    const id = toast.id || generateId();
 
     if (toast.id) {
       const existingToast = selectors.toast(this.#current, toast.id);
