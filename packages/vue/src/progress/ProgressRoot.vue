@@ -86,15 +86,16 @@ provide(progressKey, {
 
 defineExpose({ element });
 
-// With `max` equal to `min`, the percent is 0.
+// The value is in the range, so the percent is from 0 to 100. With `max` equal to `min`, it is 0.
 function percentOf(value: number) {
-  return clamp(((value - props.min) / (props.max - props.min)) * 100 || 0, 0, 100);
+  return ((value - props.min) / (props.max - props.min)) * 100 || 0;
 }
 
 // A server writes the attributes of the root before the `setup` of a label in it, so the root
 // assumes a label until the mount.
 function labelledBy() {
-  if (attrs['aria-label'] != null || attrs['aria-labelledby'] != null) return undefined;
+  // An `aria-labelledby` of the developer wins in the merge.
+  if (attrs['aria-label'] != null) return undefined;
   return labels[0]?.id ?? (mounted.value ? undefined : labelId);
 }
 

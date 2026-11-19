@@ -78,6 +78,11 @@ describe('the parts', () => {
     });
     expect(section.querySelector('p')).toHaveAttribute('data-progressing');
     expect(section.querySelector('i')!.style.width).toBe('30%');
+    // The slots give the `value` prop as the developer gave it.
+    scene.value = 150;
+    await nextTick();
+    expect(section.querySelector('output')).toHaveTextContent(`${percent(1)} 150`);
+    expect(JSON.parse(section.querySelector('.scope')!.textContent!)).toMatchObject({ value: 150 });
     scene.value = null;
     await nextTick();
     expect(JSON.parse(section.querySelector('.scope')!.textContent!)).toEqual({
