@@ -186,11 +186,8 @@ const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabel,
 );
 
-const { activate, onInputClick, onInputFocus, onInputInvalid, restoreInput } = useCheckedInput(
-  inputElement,
-  () => element.value,
-  { checked, acceptClick },
-);
+const { checkedProps, activate, onInputClick, onInputFocus, onInputInvalid, restoreInput } =
+  useCheckedInput(inputElement, () => element.value, { checked, acceptClick });
 
 // A radio must wait for the group to read its peers before a write unchecks one of them.
 watch(
@@ -357,7 +354,7 @@ defineExpose({ element, inputElement });
     :required="isRequired"
     :readonly="isReadOnly"
     :style="group?.name.value ? visuallyHiddenInput : visuallyHiddenInputPinned"
-    v-bind="{ checked }"
+    v-bind="checkedProps"
     :value="value === undefined ? undefined : serializeValue(value)"
     :id="hiddenInputId"
     :disabled="isDisabled"

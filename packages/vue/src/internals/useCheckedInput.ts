@@ -1,4 +1,4 @@
-import { nextTick, toValue, watch } from 'vue';
+import { computed, nextTick, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { queueInputTake } from '../common/hydration';
 import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
@@ -77,6 +77,8 @@ export function useCheckedInput(
   }
 
   return {
+    // A direct checked prop overwrites a native edit during hydration. Vapor also inlines a literal object.
+    checkedProps: computed(() => ({ checked: toValue(checked) })),
     activate,
     onInputClick,
     onInputFocus() {

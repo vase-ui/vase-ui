@@ -356,7 +356,7 @@ function requestChange(nextChecked: boolean, event?: Event) {
   return true;
 }
 
-const { activate, onInputClick, onInputFocus, onInputInvalid } = useCheckedInput(
+const { checkedProps, activate, onInputClick, onInputFocus, onInputInvalid } = useCheckedInput(
   inputElement,
   () => element.value,
   {
@@ -549,7 +549,7 @@ defineExpose({ element, inputElement });
   <input
     ref="input"
     type="checkbox"
-    v-bind="{ ...inputValidation, checked: isChecked }"
+    v-bind="{ ...inputValidation, ...checkedProps }"
     :aria-describedby="ariaAfterHydration(inputValidation['aria-describedby'])"
     :name="parent ? undefined : inputName"
     :form="form"

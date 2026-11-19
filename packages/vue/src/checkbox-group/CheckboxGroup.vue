@@ -142,7 +142,7 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
   groupValue.value = nextValue;
 }
 
-// The third parent press restores the last selection from the children.
+// A mixed selection returns on the third parent press.
 let childrenValue = groupValue.value;
 let status: 'mixed' | 'on' | 'off' = 'mixed';
 const disabledStates = new Map<string, boolean>();
