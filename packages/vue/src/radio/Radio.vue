@@ -58,8 +58,9 @@ const ownProps = computed(() => {
     form: group.form,
     value: props.value,
     checked: checked.value,
-    // A read-only radio is not validated.
-    required: state.value.required && !isReadonly.value,
+    // A read-only radio is not validated. HTML counts a disabled checked radio in its group, so
+    // no radio of the group misses a value, also when that radio has no `name`.
+    required: state.value.required && !isReadonly.value && !group.checkedRadioDisabled,
     disabled: isDisabled.value,
     // One tab stop for the group, after the mount of its radios. Before the mount, the browser
     // gives the tab stop to the checked radio of a named group.

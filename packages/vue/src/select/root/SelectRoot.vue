@@ -454,6 +454,8 @@ watch(
         },
         formValue: () => fieldStringValue.value,
         sameValue: (a, b) => !isSelectedValueDirty(a, b, comparer.value),
+        // The user picks an item, so a select with no value is never dirty (BUG-1425).
+        countsMissingAtLeave: true,
       }),
     );
   },

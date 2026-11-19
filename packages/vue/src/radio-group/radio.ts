@@ -20,6 +20,8 @@ export interface RadioGroupForRadio {
   readonly required: boolean;
   /** The tab stop of the group, after the mount of its radios. */
   readonly tabStop: GroupRadio | undefined;
+  /** The checked radio is disabled. */
+  readonly checkedRadioDisabled: boolean;
   /** The user chose the radio with this value. `event` is its native `change` event. */
   select(value: unknown, event: Event): void;
   /** A `click` on a radio. The group prevents the click that must select nothing. */

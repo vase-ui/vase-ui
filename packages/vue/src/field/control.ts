@@ -34,6 +34,11 @@ export interface FieldControl {
   formValue?(): unknown;
   /** Two values of the control are the same, when the control compares its values in its own way. */
   sameValue?(a: unknown, b: unknown): boolean;
+  /**
+   * In `blur` mode, a leave counts a missing value, as a submit does. The user picks the value of
+   * such a control, so the control cannot become dirty before it has a value.
+   */
+  readonly countsMissingAtLeave?: boolean;
 }
 
 /**

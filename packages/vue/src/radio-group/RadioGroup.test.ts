@@ -257,6 +257,22 @@ describe('the keyboard', () => {
     expect(focused()).toBe('a');
   });
 
+  test('a required group whose checked radio is disabled passes the native check, as with native radios', async () => {
+    const b = reactive<Record<string, unknown>>({ disabled: true });
+    const { root, radio } = await mountGroup({
+      group: { defaultValue: 'b', name: 'storage', required: true },
+      items: [{ key: 'a' }, { key: 'b', attrs: b }],
+    });
+    const form = root.querySelector('form')!;
+    expect(radio('b')).not.toHaveAttribute('name');
+    expect(radio('a').required).toBe(false);
+    expect(form.checkValidity()).toBe(true);
+    b.disabled = false;
+    await nextTick();
+    expect(radio('a').required).toBe(true);
+    expect(form.checkValidity()).toBe(true);
+  });
+
   test('the tab stop and the arrow keys follow the order of the document, not the order of the mounts', async () => {
     const items = reactive<Item[]>(choices('a', 'c'));
     const { radio, checked } = await mountGroup({ items });
@@ -478,6 +494,33 @@ describe('in a field', () => {
     await settle();
     expect(dataAttributes(field)).toEqual([]);
   });
+
+  test.each(['blur', 'submit'])(
+    'BUG-1425: a required group with no value and no change is invalid after a leave only in %s mode',
+    async (validationMode) => {
+      const { root, group, radio } = await mountGroup({
+        group: { required: true },
+        items: choices('ssd', 'hdd'),
+        field: { name: 'storage', validationMode },
+      });
+      const field = root.querySelector('form > div')!;
+      radio('ssd').focus();
+      await leave(radio('ssd'));
+      expect(field).toHaveAttribute('data-touched');
+      expect(field).not.toHaveAttribute('data-dirty');
+      if (validationMode === 'submit') {
+        expect(root.querySelector('#error')).toBeNull();
+        expect(group).not.toHaveAttribute('aria-invalid');
+        return;
+      }
+      expect(root.querySelector('#error')).toHaveTextContent(radio('ssd').validationMessage);
+      expect(group).toHaveAttribute('aria-invalid', 'true');
+      radio('hdd').click();
+      await settle();
+      expect(root.querySelector('#error')).toBeNull();
+      expect(field).toHaveAttribute('data-valid');
+    },
+  );
 
   test('no value and null are the same for dirty', async () => {
     const group = reactive<Record<string, unknown>>({});

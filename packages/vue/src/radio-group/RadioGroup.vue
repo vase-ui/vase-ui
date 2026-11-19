@@ -63,6 +63,8 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
   // A form gets the value of the checked radio that is mounted and enabled.
   formValue: () =>
     radios.some((radio) => radio.value === value.value && !radio.disabled) ? value.value : null,
+  // The user picks a radio, so a group with no value is never dirty (BUG-1425).
+  countsMissingAtLeave: true,
 });
 const isDisabled = computed<boolean>(
   () => props.disabled || !!field?.disabled || inDisabledFieldset.value,
@@ -100,6 +102,9 @@ provide(radioGroupKey, {
   },
   get tabStop() {
     return tabStop.value;
+  },
+  get checkedRadioDisabled() {
+    return radios.some((radio) => radio.disabled && radio.value === value.value);
   },
   select: (next, event) => select(next as Value, event),
   onClick,

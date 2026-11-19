@@ -774,6 +774,27 @@ describe('<Select.Trigger />', () => {
       );
     }
 
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
+      const { user } = await renderSelect('blur');
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('required');
+      });
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
     it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
       const { user } = await renderSelect();
       const trigger = screen.getByTestId('trigger');

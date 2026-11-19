@@ -1725,6 +1725,185 @@ describe('<Combobox.Trigger />', () => {
     expect(trigger).toHaveTextContent('apricot');
   });
 
+  describe('BUG-1425: a required combobox with no value after blur', () => {
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('required'));
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('is invalid when an outside press closes the popup, with no change before', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Trigger data-testid="trigger" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.List>
+                      <Combobox.Item value="a">a</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">Outside</button>
+        </div>,
+      );
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(screen.getByTestId('input')).toHaveFocus();
+      });
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      // The press closes the popup before the focus leaves the input in the popup.
+      await user.click(screen.getByRole('button', { name: 'Outside' }));
+
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('required'));
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('stays valid when the focus leaves an input outside the popup, with no change before', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Input data-testid="input" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+      const input = screen.getByTestId('input');
+
+      input.focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(input).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('stays valid when the focus leaves a trigger beside an input outside the popup', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('input')).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('stays valid when the focus leaves the trigger of a root with no selection mode', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <Autocomplete.Root required>
+              <Combobox.Trigger data-testid="trigger" />
+            </Autocomplete.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+    });
+  });
+
   it('does not mount the popup after focus on a disabled custom trigger', async () => {
     const disabled = shallowRef(true);
     const onMount = vi.fn();

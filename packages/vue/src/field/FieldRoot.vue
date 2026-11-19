@@ -87,7 +87,8 @@ const firstValue = shallowRef<unknown>();
 let hasValue = false;
 const ownTouched = ref(false);
 const result = shallowRef<Result | null>(null);
-// The required rule: `valueMissing` counts after the field was dirty, a submit, or `validate()`.
+// The required rule: `valueMissing` counts after the field was dirty, a submit, or `validate()`,
+// and for some controls after a leave in `blur` mode.
 let valueMissingCounts = false;
 // The number of the last validation. The result of an earlier one changes nothing.
 let validation = 0;
@@ -216,6 +217,7 @@ provide(fieldKey, {
       if (!state.value.touched) emit('update:touched', true);
       ownTouched.value = true;
       if (mode.value === 'blur') {
+        if (control.value?.countsMissingAtLeave) valueMissingCounts = true;
         // The field validates with the value that the blur listeners of the developer gave, after
         // the render of their change.
         clearTimeout(waiting);

@@ -16,6 +16,8 @@ export function useFieldGroup(group: {
   name?: () => string | undefined;
   /** The value in the values of a form, when it is not the value that the group gives the field. */
   formValue?: () => unknown;
+  /** In `blur` mode, a leave counts a missing value. */
+  countsMissingAtLeave?: boolean;
 }) {
   const field = inject(fieldKey, null);
   const fieldset = inject(fieldsetKey, null);
@@ -46,6 +48,7 @@ export function useFieldGroup(group: {
             return group.focusElement?.();
           },
           ...(group.formValue && { formValue: group.formValue }),
+          countsMissingAtLeave: group.countsMissingAtLeave,
         }),
       );
     },

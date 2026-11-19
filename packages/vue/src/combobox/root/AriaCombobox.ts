@@ -933,6 +933,12 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             selectionMode.value === 'none'
               ? a === b
               : !isSelectedValueDirty(a, b, isItemEqualToValue.value),
+          // A trigger with a selection mode is a select: the user picks an item, so the combobox
+          // with no value is never dirty (BUG-1425). The user can empty an input outside the
+          // popup, so that input keeps the rule of a text field.
+          get countsMissingAtLeave() {
+            return selectionMode.value !== 'none' && inputInsidePopup.value;
+          },
         }),
       );
     },
