@@ -46,6 +46,18 @@ const NATIVE_FORM_FAMILIES = new Set([
   'switch',
 ]);
 
+/**
+ * The families whose demos select a state with CSS in place of an attribute that the parts no
+ * longer write, such as `:hover` of the root in place of `data-hovering`. Their classes and their
+ * style sheets thus differ from those of the Base UI demo.
+ */
+const CSS_STATE_FAMILIES = new Set(['scroll-area']);
+
+/** Whether the demos of a family may differ from the classes and style sheets of Base UI. */
+function hasOwnStyles(name: string): boolean {
+  return NATIVE_FORM_FAMILIES.has(name) || CSS_STATE_FAMILIES.has(name);
+}
+
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
 /** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
@@ -343,7 +355,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
-      } else if (files.get(path) !== hash && !NATIVE_FORM_FAMILIES.has(name)) {
+      } else if (files.get(path) !== hash && !hasOwnStyles(name)) {
         problems.push(
           `${folder}/${path} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${rerun}`,
         );
@@ -372,9 +384,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
-    for (const [key, row] of NATIVE_FORM_FAMILIES.has(name)
-      ? []
-      : Object.entries(record.classes ?? {})) {
+    for (const [key, row] of hasOwnStyles(name) ? [] : Object.entries(record.classes ?? {})) {
       const path = vueDemoPath(name, key);
       const vueRow = vueClasses.get(path);
       if (vueRow === undefined) {

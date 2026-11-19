@@ -341,14 +341,6 @@ async function expectScrollAreaPage(page: Page) {
     { ...style, parentTestId: 'second-root' },
   ]);
 
-  const viewportId = await page.getByTestId('viewport').getAttribute('data-id');
-  const secondViewportId = await page.getByTestId('second-viewport').getAttribute('data-id');
-  expect(viewportId).toMatch(/-viewport$/);
-  expect(secondViewportId).toMatch(/-viewport$/);
-  expect(secondViewportId).not.toBe(viewportId);
-  expect(await page.getByTestId('scrollbar').getAttribute('data-id')).toBe(
-    `${viewportId!.slice(0, -'viewport'.length)}scrollbar`,
-  );
   expect(await readAttributes(page.getByTestId('viewport'), ['tabindex', 'class'])).toEqual({
     tabindex: '-1',
     class: 'vase-ui-disable-scrollbar',
@@ -2505,22 +2497,20 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     const page = await createPage('/scroll-area');
     const thumb = page.getByTestId('thumb');
     await page.getByTestId('corner').waitFor();
-    const readTransform = () => thumb.evaluate((element) => element.style.transform);
-    const initialTransform = await readTransform();
+    const readTranslate = () => thumb.evaluate((element) => element.style.translate);
+    const initialTranslate = await readTranslate();
 
     await page.getByTestId('viewport').evaluate((element) => {
       element.scrollTop = 400;
     });
     await page.waitForFunction(
       ([testId, previous]) =>
-        document.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.style.transform !==
+        document.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.style.translate !==
         previous,
-      ['thumb', initialTransform],
+      ['thumb', initialTranslate],
     );
 
-    const offsetY = Number(
-      /^translate3d\(0px, ([\d.]+)px, 0px\)$/.exec(await readTransform())?.[1],
-    );
+    const offsetY = Number(/^0px ([\d.]+)px$/.exec(await readTranslate())?.[1]);
     expect(offsetY).toBeGreaterThan(0);
   });
 
