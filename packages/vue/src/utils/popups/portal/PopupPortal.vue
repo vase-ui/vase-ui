@@ -96,7 +96,8 @@ defineExpose({ element });
       :children="PopupPortalChildren"
     />
     <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <slot :state="state" />
+      <!-- Mount descendants after the source exists. Vapor can then remove the portal if a child setup throws. -->
+      <slot v-if="start" :state="state" />
     </component>
   </component>
 </template>
