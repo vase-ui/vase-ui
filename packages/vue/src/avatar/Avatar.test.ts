@@ -268,13 +268,27 @@ describe('without keepMounted', () => {
     expect(events).toEqual(['loaded', 'loading', 'loaded']);
   });
 
+  test('the part reads no element, so a lazy image from srcset below the view stays (measurement M7)', async () => {
+    const picture = await pictureThatBrowserHas();
+    const { img, events } = mountAvatar({
+      loading: 'lazy',
+      style: 'position: absolute; top: 100000px',
+      sizes: '2px',
+      srcset: `${picture} 2w`,
+    });
+    for (let frame = 0; frame < 10; frame += 1) await nextFrame();
+    await settle();
+    expect(img()).not.toBeNull();
+    expect(events).toEqual(['loaded']);
+  });
+
   test('the load of an image that a new source replaced does not change the status', async () => {
     const first = await pictureThatMustLoad();
     const { image, events, next } = mountAvatar({ src: first });
     await nextTick();
     image.src = pictureThatFails();
     await next('error');
-    // The first picture has loaded when another image has it.
+    // When another image loads the first picture, the replaced image object also has it.
     await new Promise((resolve) => Object.assign(new Image(), { src: first, onload: resolve }));
     await settle();
     expect(events).toEqual(['loading', 'error']);

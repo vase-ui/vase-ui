@@ -154,3 +154,13 @@ test('M6: a lazy img with the hidden attribute requests no picture, and one with
   for (let frame = 0; frame < 10; frame += 1) await nextFrame();
   expect(requested(hidden, invisible)).toEqual([invisible]);
 });
+
+test('M7: in Firefox, a lazy img with a srcset that the document has is not complete below the view', async () => {
+  const url = await pictureThatBrowserHas();
+  const image = html(
+    `<img alt="" loading="lazy" style="position: absolute; top: 100000px" sizes="2px" srcset="${url} 2w">`,
+  ).querySelector('img')!;
+  for (let frame = 0; frame < 10; frame += 1) await nextFrame();
+  const complete = server.browser !== 'firefox';
+  expect(read(image)).toEqual({ complete, loaded: complete });
+});

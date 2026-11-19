@@ -12,8 +12,8 @@ const photo = 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1';
         <img
           v-bind="props"
           :ref="elementRef"
-          :src="`${photo}?w=48&h=48`"
           :srcset="`${photo}?w=48&h=48 1x, ${photo}?w=96&h=96 2x`"
+          :src="`${photo}?w=48&h=48`"
         />
       </template>
     </Avatar.Image>

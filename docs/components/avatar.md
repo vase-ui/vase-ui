@@ -50,9 +50,9 @@ Import the component and assemble its parts:
 
 <<< ./avatar/Anatomy.vue
 
-## Loading the image
+## How the image loads
 
-By default, `<Avatar.Image>` loads the picture with an image outside the document. It renders the `<img>` only after the picture has loaded, so one of the image and the fallback is in the DOM, and they need no CSS to stack them. A picture that the browser already has shows at once, from `src` and from `srcset`.
+By default, `<Avatar.Image>` loads the picture with an image outside the document. It renders the `<img>` only after the picture loads. So one of the image and the fallback is in the DOM, and they need no CSS to stack them. A picture that the browser already has shows at once, from `src` and from `srcset`.
 
 The image has `alt=""` by default, also for an `alt` that is `undefined`. Give an `alt` when no text beside the avatar names the person.
 

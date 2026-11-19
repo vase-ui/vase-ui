@@ -1,6 +1,6 @@
 import { onTestFinished, vi } from 'vitest';
 
-/** A picture of 2 by 2 pixels in a new color, so that no image of the document has loaded it. */
+/** A picture of 2 by 2 pixels in a new color, so that no image of the document has it. */
 function newPicture() {
   const canvas = document.createElement('canvas');
   canvas.width = 2;

@@ -85,7 +85,8 @@ onMounted(() => {
 
 // With `keepMounted`, the element loads the picture. The browser sends no event when a source
 // changes, and the picture can load before the hydration, so the part reads each new element and
-// each change of its request attributes.
+// each change of its request attributes. Without `keepMounted`, the part reads no element: Firefox
+// does not complete a lazy `<img>` with `srcset` below the view (measurement M7).
 watch(
   () => (props.keepMounted ? element.value : null),
   (image, _, onCleanup) => {
