@@ -131,6 +131,20 @@
       "kind": "replaced",
       "test": "packages/vue/src/menu/group-label/MenuGroupLabel.test.tsx",
       "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterParts.test.tsx",
+      "describe": ["Menu filter parts conformance"],
+      "suite": "describeConformance",
+      "kind": "replaced",
+      "test": "packages/vue/src/separator/Separator.test.ts",
+      "reason": "The call tests `Menu.Separator`, which is `Separator`. `Separator.test.ts` tests that component."
     }
   ],
   "surfaceAdditions": [

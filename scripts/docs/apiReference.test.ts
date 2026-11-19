@@ -571,9 +571,9 @@ test('the reference of a family with one part has the part under the name of the
   );
 });
 
-test('the reference of separator has data-orientation with its type', () => {
-  const [separator] = read('separator').parts;
-  assert.deepEqual(separator.dataAttributes, [
+test('the reference of Select.Separator has data-orientation with its type', () => {
+  const separator = read('select').parts.find(({ name }) => name === 'Select.Separator');
+  assert.deepEqual(separator?.dataAttributes, [
     {
       name: 'data-orientation',
       type: "'horizontal' | 'vertical'",
