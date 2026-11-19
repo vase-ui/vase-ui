@@ -24,28 +24,14 @@ export function getSliderValue(
   }
 
   const output = values.slice();
-  // Bound the new value to the thumb's neighbours.
   output[index] = clamp(clamped, values[index - 1] ?? -Infinity, values[index + 1] ?? Infinity);
   return output.sort(asc);
 }
 
 export function getDecimalPrecision(num: number) {
-  if (num === 0) {
-    return 0;
-  }
-
-  // This handles the case when num is very small (0.00000001), js will turn this into 1e-8.
-  // When num is bigger than 1 or less than -1 it won't get converted to this notation so it's fine.
-  if (Math.abs(num) < 1) {
-    /* eslint-disable @typescript-eslint/no-non-null-assertion -- A number below 1 has an exponent that starts with `e-`, so the split has two parts. */
-    const parts = num.toExponential().split('e-');
-    const matissaDecimalPart = parts[0]!.split('.')[1];
-    return (matissaDecimalPart ? matissaDecimalPart.length : 0) + parseInt(parts[1]!, 10);
-    /* eslint-enable @typescript-eslint/no-non-null-assertion */
-  }
-
-  const decimalPart = num.toString().split('.')[1];
-  return decimalPart ? decimalPart.length : 0;
+  const [coefficient = '', exponent = '0'] = String(num).split('e');
+  const fractionLength = coefficient.split('.')[1]?.length ?? 0;
+  return Math.max(0, fractionLength - Number(exponent));
 }
 
 export function roundValueToStep(value: number, step: number, min: number) {

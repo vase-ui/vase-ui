@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/slider/thumb/prehydrationScript.template.js",
       "kind": "not-applicable",
-      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. No component imports the template. Vase UI has no minifier."
+      "reason": "Vase UI keeps its prehydration script in `thumb/prehydrationScript.min.ts`. Slider.Thumb renders that script through its children component."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -24,7 +24,7 @@
       "title": "explicitly blurs the focused thumb when disabled",
       "kind": "replaced",
       "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
-      "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. Firefox moves the focus off a disabled input itself, so the root has nothing to blur there. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
+      "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. A browser can move focus before the root calls `blur()`. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",

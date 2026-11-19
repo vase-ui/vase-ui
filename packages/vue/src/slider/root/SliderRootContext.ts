@@ -56,8 +56,6 @@ export interface SliderRootContext {
     reason: SliderRootCommitEventReason,
     event: Event,
   ) => void;
-  pressedThumb: Readonly<{ index: number; centerOffset: number | null }>;
-  setPressedThumb: (index: number, centerOffset: number | null) => void;
   renderBeforeHydration: ComputedRef<boolean>;
   setActive: (index: number) => void;
   setDragging: (dragging: boolean) => void;

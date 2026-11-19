@@ -37,6 +37,7 @@ import {
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { createTouches, getHorizontalSliderRect } from '../../../test/sliderTestUtils';
+import SliderInputPortal from '../../../test/fixtures/SliderInputPortal.vue';
 import FormRestoreRender from '../../../test/FormRestoreRender.test.vue';
 import SliderRootHydration from '../root/SliderRootHydration.test.vue';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
@@ -478,6 +479,34 @@ describe('<Slider.Thumb />', () => {
         await waitFor(() => {
           expect(validateSpy).toHaveBeenCalledTimes(1);
         });
+      });
+
+      it('VUE-87: validates on leaving the slider after focus moves to a teleported thumb input', async () => {
+        const target = document.createElement('div');
+        document.body.appendChild(target);
+        onTestFinished(() => target.remove());
+        const validate = vi.fn(() => null);
+        await render(
+          <Field.Root validationMode="onBlur" validate={validate}>
+            <Slider.Root defaultValue={[20, 50]}>
+              <Slider.Control>
+                <Slider.Thumb aria-label="Minimum" />
+                <SliderInputPortal target={target} />
+              </Slider.Control>
+            </Slider.Root>
+          </Field.Root>,
+        );
+
+        screen.getByRole('slider', { name: 'Minimum' }).focus();
+        await flushMicrotasks();
+        validate.mockClear();
+        within(target).getByRole('slider').focus();
+        await flushMicrotasks();
+        expect(validate).not.toHaveBeenCalled();
+
+        within(target).getByRole('button', { name: 'After input' }).focus();
+        await flushMicrotasks();
+        expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything());
       });
 
       it.skipIf(isJSDOM)(

@@ -2,7 +2,7 @@
   "id": "VUE-148",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L271-L303",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L262-L273"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L265-L276"
   ],
   "behavior": "An edge-aligned thumb and its indicator follow the new axis when the orientation changes and the elements keep their size. After alignment changes to center, a track press uses the full control width or height.",
   "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"

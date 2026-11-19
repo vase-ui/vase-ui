@@ -2,8 +2,9 @@
   "id": "VUE-149",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L335-L389",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L435-L477"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L435-L477",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L521-L531"
   ],
-  "behavior": "A slider press releases capture and clears dragging when its control changes or becomes disabled. Release commits the last accepted pointer or touch change with its own reason and only if the value still has the same shape. The next move picks up changes the parent made to its range during valueChange.",
+  "behavior": "Only the pointer or touch that starts a slider press can move or release it. A press that stops before the control leaves no thumb selected. Disabling or replacing the control ends the press and releases capture. Release uses the last accepted gesture reason and drops a value if the number of thumbs or the model type changed. The next move uses range edits the parent made during valueChange.",
   "dueWith": "packages/react/src/slider/control/SliderControl.tsx"
 }

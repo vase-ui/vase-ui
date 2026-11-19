@@ -786,6 +786,67 @@ describe('<Slider.Control />', () => {
     },
   );
 
+  it('VUE-149: a press that never reaches the control leaves the next thumb choice free', async () => {
+    const change = vi.fn();
+    await render(
+      <Slider.Root defaultValue={[20, 80]} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <div onPointerdown={(event: PointerEvent) => event.stopPropagation()}>
+            <Slider.Thumb data-testid="first" />
+          </div>
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    const first = screen.getByTestId('first');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(first, 'getBoundingClientRect').mockReturnValue(new DOMRect(15, 0, 10, 10));
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(75, 0, 10, 10),
+    );
+
+    await fireEvent.pointerDown(first, { buttons: 1, clientX: 20 });
+    await fireEvent.pointerUp(first);
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 90 });
+    await fireEvent.pointerUp(control);
+
+    expect(change).toHaveBeenCalledExactlyOnceWith(
+      [20, 90],
+      expect.objectContaining({ activeThumbIndex: 1 }),
+    );
+  });
+
+  it('VUE-149: only the pointer that started the press can move or release it', async () => {
+    const change = vi.fn();
+    const commit = vi.fn();
+    await render(
+      <Slider.Root defaultValue={20} onValueChange={change} onValueCommitted={commit}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    const first = { pointerId: 3, pointerType: 'pen', buttons: 1 };
+    const other = { pointerId: 7, pointerType: 'touch', buttons: 1 };
+
+    await fireEvent.pointerDown(control, { ...first, clientX: 40 });
+    await fireEvent.pointerDown(control, { ...other, clientX: 90 });
+    await fireEvent.pointerMove(document.body, { ...other, clientX: 95 });
+    await fireEvent.pointerCancel(document.body, other);
+    await fireEvent.pointerUp(document.body, other);
+    expect(control).toHaveAttribute('data-dragging');
+    expect(commit).not.toHaveBeenCalled();
+
+    await fireEvent.pointerMove(document.body, { ...first, clientX: 60 });
+    await fireEvent.pointerUp(document.body, first);
+    expect(change.mock.calls.map(([value]) => value)).toEqual([40, 60]);
+    expect(commit).toHaveBeenCalledExactlyOnceWith(60, expect.objectContaining({ reason: 'drag' }));
+    expect(control).not.toHaveAttribute('data-dragging');
+  });
+
   it('VUE-149: commits the pointer change with its reason after a key press', async () => {
     const commit = vi.fn();
     await render(

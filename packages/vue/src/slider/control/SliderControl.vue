@@ -79,23 +79,23 @@ const {
   thumbRefs,
   thumbList,
   values,
-  pressedThumb,
-  setPressedThumb,
 } = useSliderRootContext();
 
 const direction = useDirection();
 
 let control: HTMLElement | null = null;
 let styles: CSSStyleDeclaration | null = null;
+let pointerId: number | null = null;
 let touchId: number | null = null;
+let pressedIndex = -1;
+let centerOffset: number | null = null;
 let moveCount = 0;
 let insetThumbOffset = 0;
 let initialValues: readonly number[] | undefined;
 // A controlled parent can keep its value between two moves.
 let lastChange: { value: number | number[]; model: readonly number[]; reason: PressReason } | null =
   null;
-// Whether `pointerdown` started the current gesture, so the `touchstart` that follows it
-// doesn't restart it.
+// A compatibility touchstart continues the pointer press.
 let pointerGesture = false;
 const { isHeld } = useKeepAliveState();
 const pointerSession = useListenerSession(isHeld);
@@ -110,32 +110,23 @@ function getFingerCoords(event: TouchEvent | PointerEvent): Coords | null {
     }
     return null;
   }
-  return { x: event.clientX, y: event.clientY };
+  return event.pointerId === pointerId ? { x: event.clientX, y: event.clientY } : null;
 }
 
 function getThumbInput(el: Element | null | undefined) {
   return el?.isConnected ? thumbList.map.value.get(el)?.getInput() : null;
 }
 
-function updatePressedThumb(nextIndex: number) {
-  setPressedThumb(nextIndex, thumbRefs.value[nextIndex] ? pressedThumb.centerOffset : null);
-}
-
-function isTargetDisabledThumb(target: EventTarget | null) {
-  if (!isElement(target)) {
-    return false;
-  }
-
-  return thumbRefs.value.some((thumbEl) => {
-    const input = getThumbInput(thumbEl);
-    return (
-      (target === input || contains(thumbEl, target)) && (!input || input.matches(':disabled'))
-    );
-  });
+function getTargetThumbIndex(target: EventTarget | null) {
+  return isElement(target)
+    ? thumbRefs.value.findIndex(
+        (thumb) => contains(thumb, target) || getThumbInput(thumb) === target,
+      )
+    : -1;
 }
 
 function getFingerState(fingerCoords: Coords): FingerState | null {
-  const thumbIndex = pressedThumb.index;
+  const thumbIndex = pressedIndex;
 
   if (!control || thumbIndex < 0 || thumbIndex >= values.value.length) {
     if (thumbIndex >= values.value.length) {
@@ -150,14 +141,13 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
   const controlOffset = getControlOffset(styles, vertical);
   const controlSize =
     (vertical ? height : width) - controlOffset.start - controlOffset.end - insetThumbOffset * 2;
-  const thumbCenterOffset = pressedThumb.centerOffset ?? 0;
+  const thumbCenterOffset = centerOffset ?? 0;
   const fingerX = fingerCoords.x - thumbCenterOffset;
   const fingerY = fingerCoords.y - thumbCenterOffset;
 
   const valueSize = vertical
     ? bottom - fingerY - controlOffset.end
     : (direction.value === 'rtl' ? right - fingerX : fingerX - left) - controlOffset.start;
-  // the value at the finger origin scaled down to fit the range [0, 1]
   const valueRescaled = clamp((valueSize - insetThumbOffset) / controlSize, 0, 1);
 
   let newValue = (rootProps.max - rootProps.min) * valueRescaled + rootProps.min;
@@ -188,53 +178,40 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
   );
 }
 
-function startPressing(fingerCoords: Coords) {
+function startPressing(fingerCoords: Coords, targetIndex = -1) {
   const vertical = rootProps.orientation === 'vertical';
-  initialValues = values.value;
-  lastChange = null;
-
-  const pressedThumbIndex = pressedThumb.index;
-  let closestThumbIndex = pressedThumbIndex;
-
-  if (pressedThumbIndex > -1 && pressedThumbIndex < values.value.length) {
-    if (values.value[pressedThumbIndex] === rootProps.max) {
-      let candidateIndex = pressedThumbIndex;
-
-      while (candidateIndex > 0 && values.value[candidateIndex - 1] === rootProps.max) {
-        candidateIndex -= 1;
+  const axis = vertical ? 'y' : 'x';
+  const target = thumbRefs.value[targetIndex];
+  centerOffset = null;
+  pressedIndex = -1;
+  if (target && targetIndex < values.value.length) {
+    pressedIndex = targetIndex;
+    centerOffset = fingerCoords[axis] - getMidpoint(target, vertical);
+    if (values.value[pressedIndex] === rootProps.max) {
+      while (pressedIndex > 0 && values.value[pressedIndex - 1] === rootProps.max) {
+        pressedIndex -= 1;
       }
-
-      closestThumbIndex = candidateIndex;
     }
   } else {
-    // pressed on control
-    const axis = !vertical ? 'x' : 'y';
-    let minDistance: number | undefined;
-
-    closestThumbIndex = -1;
-
-    for (let i = 0; i < thumbRefs.value.length; i += 1) {
-      const thumbEl = thumbRefs.value[i];
-      const input = getThumbInput(thumbEl);
-      if (thumbEl && input && !input.matches(':disabled')) {
-        const midpoint = getMidpoint(thumbEl, vertical);
-        const distance = Math.abs(fingerCoords[axis] - midpoint);
-
-        if (minDistance === undefined || distance <= minDistance) {
-          closestThumbIndex = i;
-          minDistance = distance;
+    let closestDistance = Infinity;
+    for (const [index, thumb] of thumbRefs.value.entries()) {
+      if (thumb && getThumbInput(thumb)?.matches(':enabled')) {
+        const distance = Math.abs(fingerCoords[axis] - getMidpoint(thumb, vertical));
+        if (distance <= closestDistance) {
+          pressedIndex = index;
+          closestDistance = distance;
         }
       }
     }
   }
 
-  if (closestThumbIndex > -1 && closestThumbIndex !== pressedThumbIndex) {
-    updatePressedThumb(closestThumbIndex);
-  }
-
-  const thumb = thumbRefs.value[closestThumbIndex];
+  const thumb = thumbRefs.value[pressedIndex];
+  if (!thumb) centerOffset = null;
   insetThumbOffset =
     inset.value && thumb ? thumb.getBoundingClientRect()[vertical ? 'height' : 'width'] / 2 : 0;
+  initialValues = values.value;
+  lastChange = null;
+  return getFingerState(fingerCoords);
 }
 
 function focusThumb(thumbIndex: number) {
@@ -245,8 +222,7 @@ function focusThumb(thumbIndex: number) {
 
   input.focus({
     preventScroll: true,
-    // Prevent pointer-driven focus rings in browsers that support this option.
-    // Supported in Chrome from 144+.
+    // A pointer press should not draw the keyboard focus ring.
     focusVisible: false,
   } as FocusOptions);
 }
@@ -261,7 +237,8 @@ function setValueFromPointer(
     lastChange = { value: finger.value, model, reason };
     // A veto keeps focus on the original thumb.
     if (finger.didSwap) {
-      updatePressedThumb(finger.thumbIndex);
+      pressedIndex = finger.thumbIndex;
+      if (!thumbRefs.value[pressedIndex]) centerOffset = null;
       focusThumb(finger.thumbIndex);
     }
   }
@@ -276,7 +253,7 @@ function handleTouchMove(nativeEvent: TouchEvent | PointerEvent) {
 
   moveCount += 1;
 
-  // Cancel move in case some other element consumed a pointerup event and it was not fired.
+  // A release can stop at another element before it reaches the document.
   if ('buttons' in nativeEvent && nativeEvent.buttons === 0) {
     handleTouchEnd(nativeEvent);
     return;
@@ -298,9 +275,13 @@ function handleTouchMove(nativeEvent: TouchEvent | PointerEvent) {
 }
 
 function handleTouchEnd(nativeEvent: TouchEvent | PointerEvent) {
-  if (getFingerCoords(nativeEvent) == null) {
-    return;
-  }
+  // A touchcancel with no touches ends the whole touch stream.
+  const cancelledAllTouches =
+    nativeEvent.type === 'touchcancel' &&
+    'changedTouches' in nativeEvent &&
+    !nativeEvent.changedTouches.length &&
+    !nativeEvent.touches.length;
+  if (!cancelledAllTouches && !getFingerCoords(nativeEvent)) return;
 
   const change = lastChange;
   stopPress();
@@ -317,42 +298,39 @@ function handleTouchEnd(nativeEvent: TouchEvent | PointerEvent) {
 function handlePointerCancel(nativeEvent: PointerEvent) {
   // The browser cancels a touch pointer once it starts panning, but the touch listeners keep
   // tracking the finger until `touchend` or `touchcancel`.
-  if (touchId != null) {
-    return;
+  if (nativeEvent.pointerId !== pointerId) return;
+  if (touchId !== null) {
+    pointerSession.stop();
+  } else {
+    handleTouchEnd(nativeEvent);
   }
-
-  handleTouchEnd(nativeEvent);
 }
 
 function handleTouchStart(nativeEvent: TouchEvent) {
-  // Only the `touchstart` right after `pointerdown` belongs to the pointer gesture, so consume
-  // the flag here where it can't outlive a cancelled gesture.
+  // Only the first touchstart can continue the pointer press.
   const startedByPointer = pointerGesture;
   pointerGesture = false;
 
-  if (disabled.value || isHeld.value) {
+  if (
+    disabled.value ||
+    isHeld.value ||
+    touchId !== null ||
+    (pointerId !== null && !startedByPointer)
+  ) {
     return;
   }
 
-  if (isTargetDisabledThumb(getTarget(nativeEvent))) {
-    setPressedThumb(-1, null);
-    return;
-  }
+  const thumb = thumbRefs.value[getTargetThumbIndex(getTarget(nativeEvent))];
+  if (thumb && !getThumbInput(thumb)?.matches(':enabled')) return;
 
   const touch = nativeEvent.changedTouches[0];
   if (touch == null) {
     return;
   }
 
-  touchId = touch.identifier;
-
-  // The pointer handlers already started this gesture. Keep its state and only add the touch
-  // listeners, which continue tracking the finger if the browser cancels the pointer.
   if (!startedByPointer) {
     const fingerCoords = { x: touch.clientX, y: touch.clientY };
-    startPressing(fingerCoords);
-
-    const finger = getFingerState(fingerCoords);
+    const finger = startPressing(fingerCoords);
 
     if (finger == null) {
       return;
@@ -364,6 +342,7 @@ function handleTouchStart(nativeEvent: TouchEvent) {
     moveCount = 0;
   }
 
+  touchId = touch.identifier;
   const doc = ownerDocument(control);
   touchSession.start((onCleanup) => {
     onCleanup(addEventListener(doc, 'touchmove', handleTouchMove, { passive: true }));
@@ -375,11 +354,13 @@ function handleTouchStart(nativeEvent: TouchEvent) {
 function stopPress() {
   pointerSession.stop();
   touchSession.stop();
-  if (initialValues) {
+  if (pointerId !== null || touchId !== null) {
     setActive(-1);
     setDragging(false);
-    setPressedThumb(-1, null);
   }
+  pressedIndex = -1;
+  centerOffset = null;
+  pointerId = null;
   touchId = null;
   initialValues = undefined;
   lastChange = null;
@@ -389,7 +370,6 @@ function stopPress() {
 const focusFrame = useAnimationFrame();
 
 function onPointerdown(event: PointerEvent) {
-  // Replace a flag left by a cancelled gesture that had no `touchstart` to consume it.
   pointerGesture = false;
   const target = getTarget(event);
 
@@ -397,28 +377,25 @@ function onPointerdown(event: PointerEvent) {
     !control ||
     disabled.value ||
     isHeld.value ||
+    touchId !== null ||
+    (pointerId !== null && event.pointerId !== pointerId) ||
     event.defaultPrevented ||
     !isElement(target) ||
-    // Only handle left clicks
     event.button !== 0
   ) {
     return;
   }
 
-  if (isTargetDisabledThumb(target)) {
-    setPressedThumb(-1, null);
-    return;
-  }
-
-  const fingerCoords = { x: event.clientX, y: event.clientY };
-  startPressing(fingerCoords);
-
-  const finger = getFingerState(fingerCoords);
+  const index = getTargetThumbIndex(target);
+  const targetThumb = thumbRefs.value[index];
+  if (targetThumb && !getThumbInput(targetThumb)?.matches(':enabled')) return;
+  const finger = startPressing({ x: event.clientX, y: event.clientY }, index);
 
   if (finger == null) {
     return;
   }
 
+  pointerId = event.pointerId;
   const focused = activeElement(ownerDocument(control));
   const thumb = thumbRefs.value[finger.thumbIndex];
   const pressedOnFocusedThumb = getThumbInput(thumb)?.matches(':focus') || contains(thumb, focused);
@@ -433,8 +410,7 @@ function onPointerdown(event: PointerEvent) {
 
   setDragging(true);
 
-  const pressedOnAnyThumb = pressedThumb.centerOffset != null;
-  if (!pressedOnAnyThumb) {
+  if (centerOffset === null) {
     setValueFromPointer(finger, REASONS.trackPress, event);
   }
 
@@ -456,8 +432,8 @@ function onPointerdown(event: PointerEvent) {
       });
     }
     onCleanup(addEventListener(doc, 'pointermove', handleTouchMove, { passive: true }));
-    onCleanup(addEventListener(doc, 'pointerup', handleTouchEnd, { once: true }));
-    onCleanup(addEventListener(doc, 'pointercancel', handlePointerCancel, { once: true }));
+    onCleanup(addEventListener(doc, 'pointerup', handleTouchEnd));
+    onCleanup(addEventListener(doc, 'pointercancel', handlePointerCancel));
   });
 }
 

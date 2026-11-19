@@ -314,8 +314,6 @@ const valueUnwrapped = useControlled<number | readonly number[]>({
 
 const controlElement = shallowRef<HTMLElement | null>(null);
 const thumbRefs = shallowRef<(HTMLElement | null)[]>([]);
-// A thumb records its press before the event reaches the track.
-const pressedThumb = { index: -1, centerOffset: null as number | null };
 const active = shallowRef(-1);
 const lastUsedThumbIndex = shallowRef(-1);
 const dragging = shallowRef(false);
@@ -578,11 +576,6 @@ provide(SliderRootContext, {
   lastUsedThumbIndex,
   name: inputName,
   commitValue,
-  pressedThumb,
-  setPressedThumb(index, centerOffset) {
-    pressedThumb.index = index;
-    pressedThumb.centerOffset = centerOffset;
-  },
   renderBeforeHydration: computed(() => props.thumbAlignment === 'edge'),
   setActive,
   setDragging(value) {

@@ -109,12 +109,7 @@ import {
   useSliderRootContext,
 } from '../root/SliderRootContext';
 import type { ThumbMetadata } from '../root/SliderRootContext';
-import {
-  getDecimalPrecision,
-  getMidpoint,
-  getSliderValue,
-  roundValueToStep,
-} from '../utils/thumbValues';
+import { getDecimalPrecision, getSliderValue, roundValueToStep } from '../utils/thumbValues';
 import SliderThumbChildren from './SliderThumbChildren.vue';
 import * as SliderThumbDataAttributes from './SliderThumbDataAttributes';
 
@@ -200,9 +195,7 @@ const {
   setIndicatorPosition,
   state: rootState,
   thumbList,
-  thumbRefs,
   values: sliderValues,
-  setPressedThumb,
 } = useSliderRootContext();
 
 // The input binds the id of the label, and the label can come after the thumb.
@@ -446,12 +439,12 @@ function inputProps() {
 
         setActive(-1);
 
-        // Keep field-level blur logic from running while focus moves to another thumb
-        // of the same slider, so validation doesn't commit mid-interaction.
-        if (
-          thumbRefs.value.some((thumb) => contains(thumb, event.relatedTarget as Element | null))
-        ) {
-          return;
+        // A render slot can place the next input outside its thumb.
+        const next = event.relatedTarget as Element | null;
+        if (next) {
+          for (const [thumb, entry] of thumbList.map.value) {
+            if (next === entry.getInput() || contains(thumb, next)) return;
+          }
         }
 
         setTouched(true);
@@ -591,18 +584,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
       {
         [SliderThumbDataAttributes.index]: thumbIndex.value,
         id: thumbId.value,
-        onPointerdown(event: PointerEvent) {
-          // Keep disabled thumbs from writing transient pointer state.
-          if (isDisabled.value) {
-            return;
-          }
-
-          const midpoint = getMidpoint(event.currentTarget as HTMLElement, vertical.value);
-          setPressedThumb(
-            thumbIndex.value,
-            (vertical.value ? event.clientY : event.clientX) - midpoint,
-          );
-        },
         style: getThumbStyle(),
         // The script of the server HTML writes the position to the style.
         'data-allow-mismatch':
