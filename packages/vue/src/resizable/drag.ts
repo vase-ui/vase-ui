@@ -234,7 +234,9 @@ export function useDrag(options: {
       drags.set(element, drag);
       onCleanup(() => drags.delete(element));
     },
-    { immediate: true, flush: 'sync' },
+    // A Vapor slot in a virtual DOM part can set its ref to `null` and to the same element again
+    // in one update.
+    { immediate: true, flush: 'post' },
   );
   watch(options.canMove, (canMove) => {
     if (!canMove) endPress();
