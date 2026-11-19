@@ -75,6 +75,7 @@ const emit = defineEmits<{
   'update:modelValue': [layout: ResizableLayout];
   /** The user ends a change: the release of a drag, a key, a double click. */
   layoutCommitted: [layout: ResizableLayout, details: ResizableRootCommitEventDetails];
+  /** A drag starts, and it ends. */
   draggingChange: [dragging: boolean];
 }>();
 defineSlots<{

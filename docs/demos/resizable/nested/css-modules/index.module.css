@@ -55,6 +55,10 @@
   outline: none;
   cursor: col-resize;
 
+  @media (pointer: coarse) {
+    --resizable-handle-hit-area-size: 24px;
+  }
+
   @media (prefers-color-scheme: dark) {
     background-color: oklch(26.9% 0 0deg);
   }
@@ -67,7 +71,7 @@
     cursor: w-resize;
   }
 
-  &[data-orientation='vertical'] {
+  &[aria-orientation='horizontal'] {
     width: auto;
     height: 1px;
     cursor: row-resize;
@@ -77,11 +81,11 @@
    * :where() adds no specificity, so each state rule below has the same specificity. The sequence
    * of the rules then decides: an end, both ends, a crossing, disabled.
    */
-  &:where([data-orientation='vertical'])[data-at-min] {
+  &:where([aria-orientation='horizontal'])[data-at-min] {
     cursor: s-resize;
   }
 
-  &:where([data-orientation='vertical'])[data-at-max] {
+  &:where([aria-orientation='horizontal'])[data-at-max] {
     cursor: n-resize;
   }
 
@@ -93,7 +97,7 @@
     cursor: move;
   }
 
-  &[data-disabled] {
+  &[aria-disabled='true'] {
     cursor: default;
   }
 

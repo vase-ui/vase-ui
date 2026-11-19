@@ -6,17 +6,10 @@
   ],
   "reason": "Base UI has no resizable panels. A person drags a handle, or presses a key on it, to give the panels beside it new sizes, as the window splitter pattern describes.",
   "parts": ["Root", "Panel", "Handle"],
-  "functions": ["useParentPanel", "useParentRoot", "useLayoutStorage"],
   "types": [
-    "Resizable.Root.ResizeMode",
-    "Resizable.Root.ChangeEventReason",
-    "Resizable.Root.CommitEventReason",
-    "Resizable.Root.Actions",
-    "Resizable.Panel.Size",
-    "Resizable.Panel.Actions",
-    "ResizableParentPanel",
-    "ResizableParentRoot",
-    "ResizableLayoutStorageOptions",
-    "ResizableLayoutStorageReturnValue"
+    "ResizableRootResizeMode",
+    "ResizableRootChangeEventReason",
+    "ResizableRootChangeEventDetails",
+    "ResizableRootCommitEventDetails"
   ]
 }

@@ -439,7 +439,7 @@ for (const { family, part, members } of [
   {
     family: 'resizable',
     part: 'Resizable.Panel',
-    members: ['element', 'collapse', 'expand', 'resize', 'isCollapsed', 'getSize'],
+    members: ['element', 'collapse', 'expand', 'resize', 'isCollapsed'],
   },
 ]) {
   test(`the exposed members of ${part} keep the sequence of defineExpose`, () => {

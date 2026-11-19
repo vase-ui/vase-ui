@@ -46,7 +46,7 @@ const root = injectRoot('Panel');
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const id = computed(() => givenId(props.id) ?? generatedId);
+const panelId = computed(() => givenId(props.id) ?? generatedId);
 // A server renders a panel after the `setup` of the parts beside it, so the server HTML has the
 // layout of all the parts.
 const onServer = shallowRef(false);
@@ -54,11 +54,11 @@ onServerPrefetch(() => {
   onServer.value = true;
 });
 
-const defaultSize = props.defaultSize;
+const firstDefaultSize = props.defaultSize;
 onScopeDispose(
   root.addPanel({
     get id() {
-      return id.value;
+      return panelId.value;
     },
     get element() {
       return element.value;
@@ -69,7 +69,7 @@ onScopeDispose(
     get maxSize() {
       return props.maxSize;
     },
-    defaultSize,
+    defaultSize: firstDefaultSize,
     get collapsible() {
       return props.collapsible;
     },
@@ -99,18 +99,18 @@ onScopeDispose(
 
 // Until the root is mounted, the panel knows only its own first size. A percent of it is known.
 const firstSize = computed<Size | undefined>(() => {
-  const given = root.entry(id.value) ?? defaultSize;
+  const given = root.entry(panelId.value) ?? firstDefaultSize;
   return isSize(given) ? given : undefined;
 });
 const firstPercent = computed(() => parseSize(firstSize.value, undefined));
 
 // A panel that leaves the layout, such as a panel that `KeepAlive` holds, keeps its last size.
-const size = computed<number>((previous) => root.shown[id.value] ?? previous ?? 0);
-const length = computed(() => root.lengths.get(id.value));
+const size = computed<number>((previous) => root.shown[panelId.value] ?? previous ?? 0);
+const length = computed(() => root.lengths.get(panelId.value));
 const collapsed = computed<boolean>((previous) => {
   // A panel that waits for its first measurement has no size, and it is not collapsed.
   if (length.value !== undefined) return false;
-  const constraints = root.constraints.find((panel) => panel.id === id.value);
+  const constraints = root.constraints.find((panel) => panel.id === panelId.value);
   return constraints ? isCollapsed(constraints, size.value) : (previous ?? false);
 });
 
@@ -146,26 +146,22 @@ function format(percent: number) {
   return String(Math.round(percent * 1000) / 1000);
 }
 
-function layoutStyle() {
-  if (length.value !== undefined) return { flex: `0 1 ${length.value}` };
-  const shown = format(size.value);
-  return { flex: `${shown} 1 0px`, '--resizable-panel-size': shown };
+function layoutFlex() {
+  return length.value === undefined ? `${format(size.value)} 1 0px` : `0 1 ${length.value}`;
 }
 
 // A form that the panel knows alone. A panel with no size takes a share of the room.
-function firstStyle() {
+function firstFlex() {
   const first = firstSize.value;
-  if (first === undefined) return { flex: '1 0 0px' };
-  return {
-    flex: isLength(first) ? `0 1 ${first.trim()}` : `0 1 ${format(firstPercent.value ?? 0)}%`,
-  };
+  if (first === undefined) return '1 0 0px';
+  return isLength(first) ? `0 1 ${first.trim()}` : `0 1 ${format(firstPercent.value ?? 0)}%`;
 }
 
 function elementProps() {
   const withLayout = root.mounted || onServer.value;
   return mergeProps(
     {
-      id: id.value,
+      id: panelId.value,
       'data-orientation': root.orientation,
       'data-disabled': props.disabled ? '' : undefined,
       // `null` before the mount, so that the next render always writes or removes it.
@@ -173,9 +169,12 @@ function elementProps() {
       // The server HTML has the layout of all the panels, and the first client render has the
       // first form.
       'data-allow-mismatch': root.mounted ? undefined : 'style',
+      // The variable comes last, as the render after the mount adds it.
       style: {
-        ...(withLayout ? layoutStyle() : firstStyle()),
+        flex: withLayout ? layoutFlex() : firstFlex(),
         [root.orientation === 'horizontal' ? 'minWidth' : 'minHeight']: 0,
+        '--resizable-panel-size':
+          withLayout && length.value === undefined ? format(size.value) : undefined,
       },
     },
     attrs,
@@ -185,14 +184,14 @@ function elementProps() {
 defineExpose({
   element,
   /** Collapses the panel to its `collapsedSize`. No other panel collapses for it. */
-  collapse: () => root.collapsePanel(id.value),
+  collapse: () => root.collapsePanel(panelId.value),
   /**
    * Gives a collapsed panel the size from before the collapse, else its `minSize`. No other panel
    * collapses for it.
    */
-  expand: () => root.expandPanel(id.value),
+  expand: () => root.expandPanel(panelId.value),
   /** Gives the panel a size, as far as the constraints allow. No other panel collapses for it. */
-  resize: (wanted: number | string) => root.resizePanel(id.value, wanted),
+  resize: (wanted: number | string) => root.resizePanel(panelId.value, wanted),
   isCollapsed: () => state.value.collapsed,
 });
 </script>
