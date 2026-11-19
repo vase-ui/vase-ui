@@ -16,10 +16,9 @@ export function useButton(options: {
 }) {
   const isNative = computed(() => isNativeButton(options.element.value));
   const inDisabledFieldset = useInDisabledFieldset(options.element);
+  const disabledByFieldset = computed(() => isNative.value && inDisabledFieldset.value);
   /** Disabled by the part, or by a disabled fieldset around a native button. */
-  const disabled = computed(
-    () => options.disabled() || (isNative.value && inDisabledFieldset.value),
-  );
+  const disabled = computed(() => options.disabled() || disabledByFieldset.value);
   let isSpaceDown = false;
 
   // A native disabled button gets no `mousedown`, `mouseup` or `click`, and no ancestor gets them
@@ -53,7 +52,9 @@ export function useButton(options: {
 
   const rule = computed(() => {
     const isDisabled = disabled.value;
-    const focusable = !!options.focusableWhenDisabled?.();
+    // A disabled `<fieldset>` takes each button in it out of the tab order. A `Fieldset.Root` with
+    // another element does the same.
+    const focusable = !!options.focusableWhenDisabled?.() && !disabledByFieldset.value;
     const element = options.element.value;
     const attributes: Record<string, unknown> = isNative.value
       ? isDisabled && focusable

@@ -7,7 +7,8 @@ export interface ButtonProps extends /* @vue-ignore */ Omit<ButtonHTMLAttributes
    */
   disabled?: boolean;
   /**
-   * A disabled button stays in the tab order, and a focused button keeps the focus.
+   * A disabled button stays in the tab order, and a focused button keeps the focus. A disabled
+   * fieldset still disables a native button.
    * @default false
    */
   focusableWhenDisabled?: boolean;

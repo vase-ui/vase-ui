@@ -14,10 +14,9 @@ import { waitFor } from '../../test/waitFor';
 type Tag = 'span' | 'a' | 'button' | 'input' | 'styled' | 'wrapped';
 
 function mountButtons(...buttons: Record<string, unknown>[]) {
-  const { root, exposed } = mount(Buttons, { buttons });
+  const { root } = mount(Buttons, { buttons });
   return {
     root,
-    exposed,
     form: root.querySelector('form')!,
     text: root.querySelector('input')!,
     ancestor: root.querySelector<HTMLElement>('.Ancestor')!,
@@ -621,13 +620,15 @@ describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)'
   });
 });
 
-test('a disabled Fieldset.Root whose element is not a fieldset disables a native button', async () => {
+test('a disabled Fieldset.Root whose element is not a fieldset disables a native button, also one with focusableWhenDisabled', async () => {
   const scene = reactive({ kind: 'div', disabled: true, ownDisabled: false });
   const { root } = mount(ButtonsInFieldset, { scene });
   await settle();
-  const native = root.querySelector('.Native')!;
-  expect(native).toHaveTextContent('Native true');
-  expect(native.matches(':disabled')).toBe(true);
+  for (const name of ['Native', 'Focusable']) {
+    const button = root.querySelector(`.${name}`)!;
+    expect(button).toHaveTextContent(`${name} true`);
+    expect(button.matches(':disabled')).toBe(true);
+  }
 });
 
 describe('accessibility', () => {
