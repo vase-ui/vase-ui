@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {

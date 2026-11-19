@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, screen, waitFor } from '#test-utils';
+import { createRenderer, screen } from '#test-utils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const range = (start: string, end: string) => [day(start), day(end)] as const;

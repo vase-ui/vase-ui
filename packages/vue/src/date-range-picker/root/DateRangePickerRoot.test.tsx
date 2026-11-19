@@ -4,7 +4,6 @@ import { shallowRef } from 'vue';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
 import {
   createRenderer,
   fireEvent,

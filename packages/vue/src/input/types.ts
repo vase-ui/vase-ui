@@ -3,17 +3,12 @@ import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { FieldState } from '../field/control';
 
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
-interface InputAutocomplete {
-  autocomplete?: string | null | undefined;
-}
+type InputAttributes = Omit<
+  InputHTMLAttributes,
+  'autocomplete' | 'defaultValue' | 'disabled' | 'id' | 'name' | 'readonly' | 'value'
+> & { autocomplete?: string | null | undefined };
 
-export interface InputProps
-  extends
-    /* @vue-ignore */ Omit<
-      InputHTMLAttributes,
-      'autocomplete' | 'defaultValue' | 'disabled' | 'id' | 'name' | 'readonly' | 'value'
-    >,
-    /* @vue-ignore */ InputAutocomplete {
+export interface InputProps extends /* @vue-ignore */ InputAttributes {
   modelValue?: string | number | readonly string[];
   defaultValue?: string | number | string[];
   id?: string;
