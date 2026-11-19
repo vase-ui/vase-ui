@@ -37,7 +37,12 @@ import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type { HTMLProps } from '../../../internals/types';
 import { createAttribute } from '../createAttribute';
-import { DismissPortalRegistration, PortalNode, usePortalRegistration } from './portalElements';
+import {
+  DismissPortalRegistration,
+  getPortalLocation,
+  PortalNode,
+  usePortalRegistration,
+} from './portalElements';
 import PopupPortalChildren from './PopupPortalChildren.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -60,7 +65,7 @@ watchPostEffect(() => {
     target.value = null;
     return;
   }
-  const doc = ownerDocument(parent?.value);
+  const doc = getPortalLocation(parent?.value).document ?? ownerDocument(null);
   target.value = typeof to === 'string' ? doc.querySelector(to) : (to ?? parent?.value ?? doc.body);
 });
 const { isHeld } = useKeepAliveState();

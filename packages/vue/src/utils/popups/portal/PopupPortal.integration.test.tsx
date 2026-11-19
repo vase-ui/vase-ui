@@ -68,6 +68,25 @@ describe('PopupPortal parts', () => {
     expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('target'));
   });
 
+  it('VUE-168: resolves a nested selector in the new document when its parent portal moves', async () => {
+    const first = await createScrollDocument();
+    const second = await createScrollDocument();
+    const to = shallowRef(first.body);
+    first.reference.id = 'nested-portal-target';
+    second.reference.id = 'nested-portal-target';
+    await render(() => (
+      <Toast.Portal to={to.value}>
+        <Toast.Portal to="#nested-portal-target" data-testid="nested" />
+      </Toast.Portal>
+    ));
+    const nested = first.reference.querySelector('[data-testid="nested"]');
+    expect(nested).toBeTruthy();
+
+    to.value = second.body;
+    await nextTick();
+    expect(second.reference.querySelector('[data-testid="nested"]')).toBe(nested);
+  });
+
   it('VUE-20: moves the modal marks with an open dialog when its portal changes target', async () => {
     const to = shallowRef('#first-target');
     await render(() => (
