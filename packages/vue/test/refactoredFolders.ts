@@ -14,5 +14,6 @@ export const REFACTORED_FOLDERS = [
   'input',
   'radio',
   'radio-group',
+  'separator',
   'switch',
 ];

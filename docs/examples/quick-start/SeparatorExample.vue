@@ -19,7 +19,7 @@ import { Separator } from '@vase-ui/vue/separator';
   font-size: 0.875rem;
 }
 
-.separator[data-orientation='vertical'] {
+.separator[aria-orientation='vertical'] {
   width: 1px;
   background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
