@@ -81,7 +81,10 @@ function toPixels(amount: number, unit: Length, measurement: Measurement): numbe
  * percent already. A length needs the measurement. With no measurement, and for a size that is not
  * valid, the result is `undefined`.
  */
-export function parseSize(value: unknown, measurement: Measurement | undefined): number | undefined {
+export function parseSize(
+  value: unknown,
+  measurement: Measurement | undefined,
+): number | undefined {
   const size = splitSize(value);
   if (size === undefined || !isLengthUnit(size.unit)) {
     return size?.amount;
@@ -95,7 +98,10 @@ export function parseSize(value: unknown, measurement: Measurement | undefined):
  * The size in pixels of the panel space. It is `undefined` while there is no measurement, and for a
  * size that is not valid.
  */
-export function parsePixels(value: unknown, measurement: Measurement | undefined): number | undefined {
+export function parsePixels(
+  value: unknown,
+  measurement: Measurement | undefined,
+): number | undefined {
   const size = splitSize(value);
   if (measurement === undefined || size === undefined) {
     return undefined;

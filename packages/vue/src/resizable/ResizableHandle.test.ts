@@ -28,9 +28,15 @@ interface Options {
 }
 
 // The frame is 400 px wide and 100 px high, and a handle has no size.
-async function mountHandles({ root = {}, panels = [{ id: 'a' }, { id: 'b' }], handle }: Options = {}) {
+async function mountHandles({
+  root = {},
+  panels = [{ id: 'a' }, { id: 'b' }],
+  handle,
+}: Options = {}) {
   const parts: LayoutPart[] = panels.flatMap((attrs, index) => [
-    ...(index > 0 ? [{ kind: 'handle' as const, key: `h${index}`, ...(handle && { attrs: handle }) }] : []),
+    ...(index > 0
+      ? [{ kind: 'handle' as const, key: `h${index}`, ...(handle && { attrs: handle }) }]
+      : []),
     { kind: 'panel' as const, key: `p${index}`, attrs },
   ]);
   const spec = reactive<LayoutSpec>({ root, parts });
@@ -57,7 +63,9 @@ function logged(log: unknown[][]) {
 /** Whether the default action of the next key on the element is prevented. */
 function recordKeys(element: HTMLElement) {
   const prevented: boolean[] = [];
-  element.addEventListener('keydown', (event) => queueMicrotask(() => prevented.push(event.defaultPrevented)));
+  element.addEventListener('keydown', (event) =>
+    queueMicrotask(() => prevented.push(event.defaultPrevented)),
+  );
   return prevented;
 }
 
@@ -68,19 +76,22 @@ describe('attributes', () => {
   test.each([
     { name: 'horizontal', orientation: 'horizontal', expected: 'vertical' },
     { name: 'vertical', orientation: 'vertical', expected: 'horizontal' },
-  ] as const)('a focusable separator across the axis of a $name root', async ({ orientation, expected }) => {
-    const { at } = await mountHandles({ root: { orientation } });
-    const handle = at('h1');
-    expect(handle.tagName).toBe('DIV');
-    expect(handle).toHaveAttribute('role', 'separator');
-    expect(handle).toHaveAttribute('tabindex', '0');
-    expect(handle).toHaveAttribute('aria-orientation', expected);
-    expect(handle).not.toHaveAttribute('data-orientation');
-    expect(handle).not.toHaveAttribute('data-disabled');
-    expect(handle.style.touchAction).toBe('none');
-    expect(handle.style.position).toBe('relative');
-    expect(handle.style.cursor).toBe('');
-  });
+  ] as const)(
+    'a focusable separator across the axis of a $name root',
+    async ({ orientation, expected }) => {
+      const { at } = await mountHandles({ root: { orientation } });
+      const handle = at('h1');
+      expect(handle.tagName).toBe('DIV');
+      expect(handle).toHaveAttribute('role', 'separator');
+      expect(handle).toHaveAttribute('tabindex', '0');
+      expect(handle).toHaveAttribute('aria-orientation', expected);
+      expect(handle).not.toHaveAttribute('data-orientation');
+      expect(handle).not.toHaveAttribute('data-disabled');
+      expect(handle.style.touchAction).toBe('none');
+      expect(handle.style.position).toBe('relative');
+      expect(handle.style.cursor).toBe('');
+    },
+  );
 
   test('the value of the panel before it, with the least and the greatest value; primaryPanel="next" gives the panel after it', async () => {
     const panels = [
@@ -120,7 +131,11 @@ describe('attributes', () => {
     expect(at('h1')).toHaveAttribute('aria-valuetext', 'Half');
     expect(at('h1')).toHaveAttribute('aria-label', 'Resize h1');
     spec.parts.push({ kind: 'handle', key: 'end' });
-    spec.parts.push({ kind: 'panel', key: 'p2', attrs: { id: 'c' } }, { kind: 'handle', key: 'off', attrs: { disabled: true } }, { kind: 'panel', key: 'p3', attrs: { id: 'd' } });
+    spec.parts.push(
+      { kind: 'panel', key: 'p2', attrs: { id: 'c' } },
+      { kind: 'handle', key: 'off', attrs: { disabled: true } },
+      { kind: 'panel', key: 'p3', attrs: { id: 'd' } },
+    );
     spec.parts.unshift({ kind: 'handle', key: 'first' });
     await settle();
     await expectNoAxeViolations(container);
@@ -162,12 +177,36 @@ describe('keys', () => {
   test.each([
     { name: 'ArrowRight', orientation: 'horizontal', dir: 'ltr', keys: '{ArrowRight}', size: '51' },
     { name: 'ArrowLeft', orientation: 'horizontal', dir: 'ltr', keys: '{ArrowLeft}', size: '49' },
-    { name: 'Shift ArrowRight', orientation: 'horizontal', dir: 'ltr', keys: '{Shift>}{ArrowRight}{/Shift}', size: '60' },
-    { name: 'ArrowRight in RTL', orientation: 'horizontal', dir: 'rtl', keys: '{ArrowRight}', size: '49' },
-    { name: 'ArrowLeft in RTL', orientation: 'horizontal', dir: 'rtl', keys: '{ArrowLeft}', size: '51' },
+    {
+      name: 'Shift ArrowRight',
+      orientation: 'horizontal',
+      dir: 'ltr',
+      keys: '{Shift>}{ArrowRight}{/Shift}',
+      size: '60',
+    },
+    {
+      name: 'ArrowRight in RTL',
+      orientation: 'horizontal',
+      dir: 'rtl',
+      keys: '{ArrowRight}',
+      size: '49',
+    },
+    {
+      name: 'ArrowLeft in RTL',
+      orientation: 'horizontal',
+      dir: 'rtl',
+      keys: '{ArrowLeft}',
+      size: '51',
+    },
     { name: 'ArrowDown', orientation: 'vertical', dir: 'ltr', keys: '{ArrowDown}', size: '51' },
     { name: 'ArrowUp', orientation: 'vertical', dir: 'ltr', keys: '{ArrowUp}', size: '49' },
-    { name: 'ArrowDown in RTL', orientation: 'vertical', dir: 'rtl', keys: '{ArrowDown}', size: '51' },
+    {
+      name: 'ArrowDown in RTL',
+      orientation: 'vertical',
+      dir: 'rtl',
+      keys: '{ArrowDown}',
+      size: '51',
+    },
     { name: 'PageUp', orientation: 'horizontal', dir: 'ltr', keys: '{PageUp}', size: '60' },
     { name: 'PageDown', orientation: 'horizontal', dir: 'ltr', keys: '{PageDown}', size: '40' },
     { name: 'PageUp in RTL', orientation: 'horizontal', dir: 'rtl', keys: '{PageUp}', size: '60' },
@@ -195,16 +234,51 @@ describe('keys', () => {
   // A real Meta with an arrow key goes back in the history of WebKit on macOS, so the keys are
   // made events.
   test.each([
-    { name: 'ArrowUp in a horizontal root', orientation: 'horizontal', key: 'ArrowUp', modifier: {} },
-    { name: 'ArrowLeft in a vertical root', orientation: 'vertical', key: 'ArrowLeft', modifier: {} },
-    { name: 'Ctrl with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { ctrlKey: true } },
-    { name: 'Alt with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { altKey: true } },
-    { name: 'Meta with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { metaKey: true } },
-    { name: 'Enter on a panel that is not collapsible', orientation: 'horizontal', key: 'Enter', modifier: {} },
+    {
+      name: 'ArrowUp in a horizontal root',
+      orientation: 'horizontal',
+      key: 'ArrowUp',
+      modifier: {},
+    },
+    {
+      name: 'ArrowLeft in a vertical root',
+      orientation: 'vertical',
+      key: 'ArrowLeft',
+      modifier: {},
+    },
+    {
+      name: 'Ctrl with an arrow',
+      orientation: 'horizontal',
+      key: 'ArrowLeft',
+      modifier: { ctrlKey: true },
+    },
+    {
+      name: 'Alt with an arrow',
+      orientation: 'horizontal',
+      key: 'ArrowLeft',
+      modifier: { altKey: true },
+    },
+    {
+      name: 'Meta with an arrow',
+      orientation: 'horizontal',
+      key: 'ArrowLeft',
+      modifier: { metaKey: true },
+    },
+    {
+      name: 'Enter on a panel that is not collapsible',
+      orientation: 'horizontal',
+      key: 'Enter',
+      modifier: {},
+    },
   ] as const)('a key of the browser stays: $name', async ({ orientation, key: name, modifier }) => {
     const log: unknown[][] = [];
     const { at } = await mountHandles({ root: { orientation, ...logged(log) } });
-    const event = new KeyboardEvent('keydown', { key: name, ...modifier, bubbles: true, cancelable: true });
+    const event = new KeyboardEvent('keydown', {
+      key: name,
+      ...modifier,
+      bubbles: true,
+      cancelable: true,
+    });
     at('h1').dispatchEvent(event);
     await nextTick();
     expect(event.defaultPrevented).toBe(false);
@@ -247,7 +321,10 @@ describe('keys', () => {
     expect(prevented).toEqual([true]);
     expect(at('h1')).toHaveAttribute('aria-valuenow', '60');
     await release();
-    expect(log.map(([name, , reason]) => `${name} ${reason}`)).toEqual(['layoutChange drag', 'layoutCommitted drag']);
+    expect(log.map(([name, , reason]) => `${name} ${reason}`)).toEqual([
+      'layoutChange drag',
+      'layoutCommitted drag',
+    ]);
   });
 
   test('primaryPanel="next": Page Up grows the panel after the handle, and an arrow moves the handle on the screen', async () => {
@@ -274,7 +351,10 @@ describe('collapse', () => {
 
   test('Enter collapses the primary panel and gives its size back, with the reason keyboard', async () => {
     const log: unknown[][] = [];
-    const { at, flex } = await mountHandles({ root: logged(log), panels: [collapsible, { id: 'b' }] });
+    const { at, flex } = await mountHandles({
+      root: logged(log),
+      panels: [collapsible, { id: 'b' }],
+    });
     const prevented = recordKeys(at('h1'));
     await key(at('h1'), '{Enter}');
     expect(prevented).toEqual([true]);
@@ -301,7 +381,11 @@ describe('collapse', () => {
     ] as const) {
       const { at, flex } = await mountHandles({
         root: { pushPanels, defaultLayout: { a: 0, b: 20, c: 80 } },
-        panels: [{ id: 'a', collapsible: true, minSize: 20 }, { id: 'b', minSize: 20 }, { id: 'c' }],
+        panels: [
+          { id: 'a', collapsible: true, minSize: 20 },
+          { id: 'b', minSize: 20 },
+          { id: 'c' },
+        ],
       });
       await key(at('h1'), '{Enter}');
       expect(flex(0, 1, 2)).toEqual(sizes);
@@ -330,7 +414,9 @@ describe('collapse', () => {
     expect(home.at('h1')).toHaveAttribute('aria-valuemin', '0');
     await key(home.at('h1'), '{Home}');
     expect(home.flex(0, 1)).toEqual(['0', '100']);
-    const arrows = await mountHandles({ panels: [{ ...collapsible, defaultSize: 20 }, { id: 'b' }] });
+    const arrows = await mountHandles({
+      panels: [{ ...collapsible, defaultSize: 20 }, { id: 'b' }],
+    });
     await key(arrows.at('h1'), '{ArrowLeft}');
     expect(arrows.flex(0, 1)).toEqual(['0', '100']);
     await key(arrows.at('h1'), '{ArrowRight}');
@@ -353,10 +439,34 @@ describe('collapse', () => {
 
 describe('double click', () => {
   test.each([
-    { name: 'the first size of the panel', root: {}, handle: {}, panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }], sizes: ['30', '70'] },
-    { name: 'the default layout', root: { defaultLayout: { a: 20, b: 80 } }, handle: {}, panels: [{ id: 'a' }, { id: 'b' }], sizes: ['20', '80'] },
-    { name: 'the share of a panel with no size', root: {}, handle: {}, panels: [{ id: 'a' }, { id: 'b' }, { id: 'c' }], sizes: ['33.334', '33.333', '33.333'] },
-    { name: 'the panel after the handle', root: {}, handle: { primaryPanel: 'next' }, panels: [{ id: 'a' }, { id: 'b', defaultSize: 30 }], sizes: ['70', '30'] },
+    {
+      name: 'the first size of the panel',
+      root: {},
+      handle: {},
+      panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+      sizes: ['30', '70'],
+    },
+    {
+      name: 'the default layout',
+      root: { defaultLayout: { a: 20, b: 80 } },
+      handle: {},
+      panels: [{ id: 'a' }, { id: 'b' }],
+      sizes: ['20', '80'],
+    },
+    {
+      name: 'the share of a panel with no size',
+      root: {},
+      handle: {},
+      panels: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      sizes: ['33.334', '33.333', '33.333'],
+    },
+    {
+      name: 'the panel after the handle',
+      root: {},
+      handle: { primaryPanel: 'next' },
+      panels: [{ id: 'a' }, { id: 'b', defaultSize: 30 }],
+      sizes: ['70', '30'],
+    },
   ])('gives the primary panel its first size: $name', async ({ root, handle, panels, sizes }) => {
     const log: unknown[][] = [];
     const { at, flex } = await mountHandles({ root: { ...root, ...logged(log) }, handle, panels });
@@ -380,7 +490,12 @@ describe('double click', () => {
     ] as const) {
       const log: unknown[][] = [];
       const { at } = await mountHandles({
-        root: { pushPanels, modelValue: { a: 30, b: 20, c: 50 }, defaultLayout: { a: 50, b: 20, c: 30 }, ...logged(log) },
+        root: {
+          pushPanels,
+          modelValue: { a: 30, b: 20, c: 50 },
+          defaultLayout: { a: 50, b: 20, c: 30 },
+          ...logged(log),
+        },
         panels: [{ id: 'a' }, { id: 'b', minSize: 20 }, { id: 'c' }],
       });
       await doubleClick(at('h1'));
@@ -392,7 +507,10 @@ describe('double click', () => {
     const second = new MouseEvent('dblclick', { bubbles: true, cancelable: true, detail: 2 });
     at('h1').dispatchEvent(second);
     expect(second.defaultPrevented).toBe(false);
-    const disabled = await mountHandles({ handle: { disabled: true }, panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }] });
+    const disabled = await mountHandles({
+      handle: { disabled: true },
+      panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+    });
     const third = new MouseEvent('dblclick', { bubbles: true, cancelable: true, detail: 2 });
     disabled.at('h1').dispatchEvent(third);
     expect(third.defaultPrevented).toBe(false);
@@ -426,9 +544,24 @@ describe('ends of the travel', () => {
   });
 
   test.each([
-    { name: 'the top of a vertical root', root: { orientation: 'vertical' }, handle: {}, expected: ['data-at-min'] },
-    { name: 'the right of a right-to-left root', root: { dir: 'rtl' }, handle: {}, expected: ['data-at-max'] },
-    { name: 'the panel after the handle', root: {}, handle: { primaryPanel: 'next' }, expected: ['data-at-min'] },
+    {
+      name: 'the top of a vertical root',
+      root: { orientation: 'vertical' },
+      handle: {},
+      expected: ['data-at-min'],
+    },
+    {
+      name: 'the right of a right-to-left root',
+      root: { dir: 'rtl' },
+      handle: {},
+      expected: ['data-at-max'],
+    },
+    {
+      name: 'the panel after the handle',
+      root: {},
+      handle: { primaryPanel: 'next' },
+      expected: ['data-at-min'],
+    },
   ])('a side of the screen: $name', async ({ root, handle, expected }) => {
     const { at } = await mountHandles({
       root: { ...root, defaultLayout: { a: 20, b: 80 } },
@@ -440,11 +573,21 @@ describe('ends of the travel', () => {
 
   test('a collapsible panel at its least size has neither; collapsed, the least end; a disabled handle neither; a handle that cannot move both', async () => {
     const collapsible = [{ id: 'a', collapsible: true, minSize: 20 }, { id: 'b' }];
-    const least = await mountHandles({ root: { defaultLayout: { a: 20, b: 80 } }, panels: collapsible });
+    const least = await mountHandles({
+      root: { defaultLayout: { a: 20, b: 80 } },
+      panels: collapsible,
+    });
     expect(ends(least.at('h1'))).toEqual([]);
-    const collapsed = await mountHandles({ root: { defaultLayout: { a: 0, b: 100 } }, panels: collapsible });
+    const collapsed = await mountHandles({
+      root: { defaultLayout: { a: 0, b: 100 } },
+      panels: collapsible,
+    });
     expect(ends(collapsed.at('h1'))).toEqual(['data-at-min']);
-    const disabled = await mountHandles({ root: { defaultLayout: { a: 20, b: 80 } }, handle: { disabled: true }, panels: bounded });
+    const disabled = await mountHandles({
+      root: { defaultLayout: { a: 20, b: 80 } },
+      handle: { disabled: true },
+      panels: bounded,
+    });
     expect(ends(disabled.at('h1'))).toEqual([]);
     const locked = await mountHandles({ panels: [{ id: 'a', disabled: true }, { id: 'b' }] });
     expect(ends(locked.at('h1'))).toEqual(['data-at-min', 'data-at-max']);
@@ -507,7 +650,10 @@ describe('the pointer target', () => {
     for (const orientation of ['horizontal', 'vertical'] as const) {
       const { at } = await mountHandles({
         root: { orientation },
-        handle: { style: orientation === 'horizontal' ? 'flex: none; width: 2px' : 'flex: none; height: 2px' },
+        handle: {
+          style:
+            orientation === 'horizontal' ? 'flex: none; width: 2px' : 'flex: none; height: 2px',
+        },
       });
       const handle = at('h1');
       const target = handle.lastElementChild as HTMLElement;
@@ -522,7 +668,9 @@ describe('the pointer target', () => {
           ? [rect.width, rect.left, rect.height]
           : [rect.height, rect.top, rect.width],
       ).toEqual(
-        orientation === 'horizontal' ? [10, box.left - 4, box.height] : [10, box.top - 4, box.width],
+        orientation === 'horizontal'
+          ? [10, box.left - 4, box.height]
+          : [10, box.top - 4, box.width],
       );
     }
   });
@@ -530,7 +678,9 @@ describe('the pointer target', () => {
   test('--resizable-handle-hit-area-size gives another size; a wider handle keeps its box', async () => {
     const wide = await mountHandles({ root: { style: '--resizable-handle-hit-area-size: 24px' } });
     expect(widthOf(wide.at('h1').lastElementChild!)).toBe(24);
-    const none = await mountHandles({ handle: { style: '--resizable-handle-hit-area-size: 0px; width: 3px; flex: none' } });
+    const none = await mountHandles({
+      handle: { style: '--resizable-handle-hit-area-size: 0px; width: 3px; flex: none' },
+    });
     expect(widthOf(none.at('h1').lastElementChild!)).toBe(3);
     const box = await mountHandles({ handle: { style: 'flex: none; width: 20px' } });
     expect(widthOf(box.at('h1').lastElementChild!)).toBe(20);
@@ -561,7 +711,10 @@ describe('the pointer target', () => {
     button.style.cssText = 'width: 20px; height: 20px; margin: 0; padding: 0';
     button.addEventListener('click', () => clicks.push('button'));
     const box = at('h1').getBoundingClientRect();
-    await userEvent.pointer({ coords: { x: box.right + 3, y: button.getBoundingClientRect().top + 5 }, keys: '[MouseLeft]' });
+    await userEvent.pointer({
+      coords: { x: box.right + 3, y: button.getBoundingClientRect().top + 5 },
+      keys: '[MouseLeft]',
+    });
     expect(clicks).toEqual(['button']);
   });
 });

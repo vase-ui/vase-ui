@@ -212,7 +212,12 @@ describe('prop: collapsible', () => {
   });
 
   test.each([
-    { name: 'stops at the least size above the middle', first: 40, distance: -100, sizes: ['20', '80'] },
+    {
+      name: 'stops at the least size above the middle',
+      first: 40,
+      distance: -100,
+      sizes: ['20', '80'],
+    },
     { name: 'collapses below the middle', first: 40, distance: -124, sizes: ['0', '100'] },
     { name: 'stays collapsed below the middle', first: 0, distance: 36, sizes: ['0', '100'] },
     { name: 'expands above the middle', first: 0, distance: 44, sizes: ['20', '80'] },
@@ -226,7 +231,12 @@ describe('prop: collapsible', () => {
   test('a collapsed size stays while the panel is collapsed; a panel that starts at it is collapsed with no event', async () => {
     const events: boolean[] = [];
     const { at, flex } = await mountPanels([
-      { ...collapsible, collapsedSize: 4, defaultSize: 4, onCollapsedChange: (value: boolean) => events.push(value) },
+      {
+        ...collapsible,
+        collapsedSize: 4,
+        defaultSize: 4,
+        onCollapsedChange: (value: boolean) => events.push(value),
+      },
       {},
     ]);
     expect(flex(0, 1)).toEqual(['4', '96']);
@@ -270,11 +280,29 @@ describe('prop: collapsible', () => {
 describe('prop: collapseThreshold', () => {
   // A threshold of 5 collapses a panel below 15 and expands it above 5.
   test.each([
-    { name: 'a number collapses below 15', threshold: 5, first: 40, distance: -104, sizes: ['0', '100'] },
+    {
+      name: 'a number collapses below 15',
+      threshold: 5,
+      first: 40,
+      distance: -104,
+      sizes: ['0', '100'],
+    },
     { name: 'a number stops at 16', threshold: 5, first: 40, distance: -96, sizes: ['20', '80'] },
-    { name: 'a percent collapses below 15', threshold: '5%', first: 40, distance: -104, sizes: ['0', '100'] },
+    {
+      name: 'a percent collapses below 15',
+      threshold: '5%',
+      first: 40,
+      distance: -104,
+      sizes: ['0', '100'],
+    },
     { name: 'a number expands above 5', threshold: 5, first: 0, distance: 24, sizes: ['20', '80'] },
-    { name: 'a number stays collapsed at 4', threshold: 5, first: 0, distance: 16, sizes: ['0', '100'] },
+    {
+      name: 'a number stays collapsed at 4',
+      threshold: 5,
+      first: 0,
+      distance: 16,
+      sizes: ['0', '100'],
+    },
   ])('is the distance from the limits: $name', async ({ threshold, first, distance, sizes }) => {
     const { at, flex } = await mountPanels([
       { collapsible: true, minSize: 20, collapseThreshold: threshold, defaultSize: first },
@@ -350,18 +378,24 @@ describe('methods', () => {
     { name: 'in one move', drags: [[-160]], sizes: ['40', '60'] },
     { name: 'in two moves', drags: [[-100, -160]], sizes: ['40', '60'] },
     { name: 'from the least size', drags: [[-80], [-80]], sizes: ['20', '80'] },
-  ])('expand() gives the size from the start of the drag that collapsed it: $name', async ({ drags, sizes }) => {
-    const { at, panel, flex } = await mountPanels([{ ...collapsible, defaultSize: 40 }, { id: 'b' }]);
-    for (const moves of drags) {
-      const start = await press(at('h1'));
-      for (const distance of moves) await moveTo({ x: start.x + distance, y: start.y });
-      await release();
-    }
-    expect(flex(0, 1)).toEqual(['0', '100']);
-    panel(0).expand();
-    await nextTick();
-    expect(flex(0, 1)).toEqual(sizes);
-  });
+  ])(
+    'expand() gives the size from the start of the drag that collapsed it: $name',
+    async ({ drags, sizes }) => {
+      const { at, panel, flex } = await mountPanels([
+        { ...collapsible, defaultSize: 40 },
+        { id: 'b' },
+      ]);
+      for (const moves of drags) {
+        const start = await press(at('h1'));
+        for (const distance of moves) await moveTo({ x: start.x + distance, y: start.y });
+        await release();
+      }
+      expect(flex(0, 1)).toEqual(['0', '100']);
+      panel(0).expand();
+      await nextTick();
+      expect(flex(0, 1)).toEqual(sizes);
+    },
+  );
 
   test('expand() gives the least size with no size from before, and takes no room that would collapse another panel', async () => {
     const first = await mountPanels([{ ...collapsible, defaultSize: 0 }, { id: 'b' }]);
@@ -423,7 +457,14 @@ describe('methods', () => {
   test('a method pushes the panels in a root that does not push, works on a disabled panel and in a disabled root, and does not snap', async () => {
     const { panel, flex } = await mountPanels(
       [
-        { id: 'a', collapsible: true, minSize: 20, disabled: true, snapPoints: [40], snapTolerance: 10 },
+        {
+          id: 'a',
+          collapsible: true,
+          minSize: 20,
+          disabled: true,
+          snapPoints: [40],
+          snapTolerance: 10,
+        },
         { id: 'b', minSize: 20 },
         { id: 'c' },
       ],
@@ -438,9 +479,18 @@ describe('methods', () => {
   });
 
   test.each([
-    { name: 'collapse() of a panel that is not collapsible', act: (p: (i: number) => PanelMethods) => p(1).collapse() },
-    { name: 'collapse() of a collapsed panel', act: (p: (i: number) => PanelMethods) => p(2).collapse() },
-    { name: 'expand() of a panel that is not collapsed', act: (p: (i: number) => PanelMethods) => p(0).expand() },
+    {
+      name: 'collapse() of a panel that is not collapsible',
+      act: (p: (i: number) => PanelMethods) => p(1).collapse(),
+    },
+    {
+      name: 'collapse() of a collapsed panel',
+      act: (p: (i: number) => PanelMethods) => p(2).collapse(),
+    },
+    {
+      name: 'expand() of a panel that is not collapsed',
+      act: (p: (i: number) => PanelMethods) => p(0).expand(),
+    },
     { name: 'resize() to the same size', act: (p: (i: number) => PanelMethods) => p(0).resize(40) },
   ])('emits nothing for $name', async ({ act }) => {
     const log: ResizableLayout[] = [];
@@ -461,9 +511,12 @@ describe('methods', () => {
 
 describe('prop: disabled', () => {
   test('data-disabled; a drag goes through the panel to the next one', async () => {
-    const { at, flex } = await mountPanels([{ id: 'a' }, { id: 'b', disabled: true }, { id: 'c' }], {
-      root: { defaultLayout: { a: 30, b: 30, c: 40 } },
-    });
+    const { at, flex } = await mountPanels(
+      [{ id: 'a' }, { id: 'b', disabled: true }, { id: 'c' }],
+      {
+        root: { defaultLayout: { a: 30, b: 30, c: 40 } },
+      },
+    );
     expect(at('p1')).toHaveAttribute('data-disabled');
     expect(at('p0')).not.toHaveAttribute('data-disabled');
     await drag(at('h1'), 40);
@@ -476,7 +529,12 @@ describe('prop: disabled', () => {
     const log: ResizableLayout[] = [];
     const { at } = await mountPanels(
       [{ id: 'a', collapsible: true, minSize: 20, disabled: true }, { id: 'b' }],
-      { root: { defaultLayout: { a: 50, b: 50 }, 'onUpdate:modelValue': (l: ResizableLayout) => log.push(l) } },
+      {
+        root: {
+          defaultLayout: { a: 50, b: 50 },
+          'onUpdate:modelValue': (l: ResizableLayout) => log.push(l),
+        },
+      },
     );
     await key(at('h1'), '{ArrowRight}{ArrowLeft}{Home}{End}{Enter}');
     await doubleClick(at('h1'));
@@ -496,35 +554,41 @@ describe('sizes with a unit', () => {
     { name: 'vh', size: '10vh', style: undefined, pixels: () => window.innerHeight * 0.1 },
   ] as const;
 
-  test.each(units)('$name: the first size, the least size and the greatest size', async ({ size, style, pixels }) => {
-    const first = await mountPanels([{ defaultSize: size, style }, {}]);
-    expect(first.width(0)).toBeCloseTo(pixels(), 0);
-    expect(first.width(1)).toBeCloseTo(400 - pixels(), 0);
-    const least = await mountPanels([{ minSize: size, style }, {}]);
-    await drag(least.at('h1'), -190);
-    expect(least.width(0)).toBeCloseTo(pixels(), 0);
-    const greatest = await mountPanels([{ maxSize: size, style }, {}]);
-    await drag(greatest.at('h1'), 190);
-    expect(greatest.width(0)).toBeCloseTo(pixels(), 0);
-  });
+  test.each(units)(
+    '$name: the first size, the least size and the greatest size',
+    async ({ size, style, pixels }) => {
+      const first = await mountPanels([{ defaultSize: size, style }, {}]);
+      expect(first.width(0)).toBeCloseTo(pixels(), 0);
+      expect(first.width(1)).toBeCloseTo(400 - pixels(), 0);
+      const least = await mountPanels([{ minSize: size, style }, {}]);
+      await drag(least.at('h1'), -190);
+      expect(least.width(0)).toBeCloseTo(pixels(), 0);
+      const greatest = await mountPanels([{ maxSize: size, style }, {}]);
+      await drag(greatest.at('h1'), 190);
+      expect(greatest.width(0)).toBeCloseTo(pixels(), 0);
+    },
+  );
 
-  test.each(units)('$name: the collapsed size and the collapse threshold', async ({ size, style, pixels }) => {
-    const collapsed = await mountPanels([
-      { collapsible: true, minSize: 60, defaultSize: 70, collapsedSize: size, style },
-      {},
-    ]);
-    await key(collapsed.at('h1'), '{Enter}');
-    expect(collapsed.width(0)).toBeCloseTo(pixels(), 0);
-    // The least size is 50%: 200 px.
-    const threshold = await mountPanels([
-      { collapsible: true, minSize: 50, defaultSize: 50, collapseThreshold: size, style },
-      {},
-    ]);
-    await drag(threshold.at('h1'), -(pixels() - 2));
-    expect(threshold.width(0)).toBeCloseTo(200, 0);
-    await drag(threshold.at('h1'), -(pixels() + 2));
-    expect(threshold.width(0)).toBeCloseTo(0, 0);
-  });
+  test.each(units)(
+    '$name: the collapsed size and the collapse threshold',
+    async ({ size, style, pixels }) => {
+      const collapsed = await mountPanels([
+        { collapsible: true, minSize: 60, defaultSize: 70, collapsedSize: size, style },
+        {},
+      ]);
+      await key(collapsed.at('h1'), '{Enter}');
+      expect(collapsed.width(0)).toBeCloseTo(pixels(), 0);
+      // The least size is 50%: 200 px.
+      const threshold = await mountPanels([
+        { collapsible: true, minSize: 50, defaultSize: 50, collapseThreshold: size, style },
+        {},
+      ]);
+      await drag(threshold.at('h1'), -(pixels() - 2));
+      expect(threshold.width(0)).toBeCloseTo(200, 0);
+      await drag(threshold.at('h1'), -(pixels() + 2));
+      expect(threshold.width(0)).toBeCloseTo(0, 0);
+    },
+  );
 
   test('a panel of a vertical root has pixels of its height; the padding and the border are not in the panel space', async () => {
     const vertical = await mountPanels([{ defaultSize: '25px', minSize: '20px' }, {}], {
@@ -643,7 +707,10 @@ describe('prop: rootResizeBehavior', () => {
 
   test.each([
     { name: 'a drag', act: (at: (key: string) => HTMLElement) => drag(at('h1'), 40) },
-    { name: 'a key', act: (at: (key: string) => HTMLElement) => key(at('h1'), '{Shift>}{ArrowRight}{/Shift}') },
+    {
+      name: 'a key',
+      act: (at: (key: string) => HTMLElement) => key(at('h1'), '{Shift>}{ArrowRight}{/Shift}'),
+    },
   ])('gives the fixed panel new pixels: $name', async ({ act }) => {
     const { at, width, resizeFrame } = await mountPanels(fixedFirst);
     await act(at);
@@ -680,7 +747,9 @@ describe('prop: rootResizeBehavior', () => {
   });
 
   test('a layout of the app gives a fixed panel new pixels, in percent or in pixels; the same entries give none', async () => {
-    const root = reactive<Record<string, unknown>>({ modelValue: { nav: 25, editor: 50, preview: 25 } });
+    const root = reactive<Record<string, unknown>>({
+      modelValue: { nav: 25, editor: 50, preview: 25 },
+    });
     const { width, resizeFrame } = await mountPanels(
       [{ id: 'nav', rootResizeBehavior: 'fixed' }, { id: 'editor' }, { id: 'preview' }],
       { root },
@@ -699,11 +768,18 @@ describe('prop: rootResizeBehavior', () => {
   });
 
   test('a fixed panel that mounts later, and a panel that becomes fixed, take their pixels', async () => {
-    const { spec, width, resizeFrame } = await mountPanels([{ id: 'a', defaultSize: 25 }, { id: 'b' }]);
+    const { spec, width, resizeFrame } = await mountPanels([
+      { id: 'a', defaultSize: 25 },
+      { id: 'b' },
+    ]);
     spec.parts[0]!.attrs = { id: 'a', defaultSize: 25, rootResizeBehavior: 'fixed' };
     spec.parts.push(
       { kind: 'handle', key: 'h2' },
-      { kind: 'panel', key: 'p2', attrs: { id: 'late', defaultSize: 25, rootResizeBehavior: 'fixed' } },
+      {
+        kind: 'panel',
+        key: 'p2',
+        attrs: { id: 'late', defaultSize: 25, rootResizeBehavior: 'fixed' },
+      },
     );
     await settle();
     const late = width(2);
@@ -716,7 +792,13 @@ describe('prop: rootResizeBehavior', () => {
     const panels = (priority: number) => [
       { id: 'nav', defaultSize: 30, minSize: 10, rootResizeBehavior: 'fixed' },
       { id: 'editor', defaultSize: 40, minSize: 40 },
-      { id: 'aside', defaultSize: 30, minSize: 10, rootResizeBehavior: 'fixed', rootResizePriority: priority },
+      {
+        id: 'aside',
+        defaultSize: 30,
+        minSize: 10,
+        rootResizeBehavior: 'fixed',
+        rootResizePriority: priority,
+      },
     ];
     // The two pins of 120 px are 37.5% each at 320 px, and the editor has 40% at the least.
     const prioritized = await mountPanels(panels(1));
@@ -728,7 +810,10 @@ describe('prop: rootResizeBehavior', () => {
     ]);
     const plain = await mountPanels(panels(0));
     await plain.resizeFrame(320);
-    expect([plain.width(0), plain.width(2)]).toEqual([expect.closeTo(72, 0), expect.closeTo(120, 0)]);
+    expect([plain.width(0), plain.width(2)]).toEqual([
+      expect.closeTo(72, 0),
+      expect.closeTo(120, 0),
+    ]);
   });
 });
 
@@ -740,11 +825,17 @@ describe('prop: snapPoints', () => {
     { name: 'outside the tolerance', snapPoints: [40], distance: -52, size: '37' },
     { name: 'in pixels', snapPoints: ['160px'], distance: -36, size: '40' },
     { name: 'one of two', snapPoints: [20, 40], distance: -36, size: '40' },
-  ])('a drag snaps to a point within the tolerance: $name', async ({ snapPoints, distance, size }) => {
-    const { at, flex } = await mountPanels([{ defaultSize: 50, snapPoints, snapTolerance: '2%' }, {}]);
-    await drag(at('h1'), distance);
-    expect(flex(0)).toEqual([size]);
-  });
+  ])(
+    'a drag snaps to a point within the tolerance: $name',
+    async ({ snapPoints, distance, size }) => {
+      const { at, flex } = await mountPanels([
+        { defaultSize: 50, snapPoints, snapTolerance: '2%' },
+        {},
+      ]);
+      await drag(at('h1'), distance);
+      expect(flex(0)).toEqual([size]);
+    },
+  );
 
   test('the tolerance is 10 px by default, and snapTolerance gives another', async () => {
     const plain = await mountPanels([{ defaultSize: 50, snapPoints: [40] }, {}]);
@@ -752,7 +843,10 @@ describe('prop: snapPoints', () => {
     expect(plain.flex(0)).toEqual(['40']);
     await drag(plain.at('h1'), 52);
     expect(plain.flex(0)).toEqual(['53']);
-    const wide = await mountPanels([{ defaultSize: 50, snapPoints: [40], snapTolerance: '20px' }, {}]);
+    const wide = await mountPanels([
+      { defaultSize: 50, snapPoints: [40], snapTolerance: '20px' },
+      {},
+    ]);
     await drag(wide.at('h1'), -58);
     expect(wide.flex(0)).toEqual(['40']);
   });

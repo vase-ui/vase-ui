@@ -192,12 +192,8 @@ export function useDrag(options: {
           hovering.value =
             event.buttons === 0 &&
             options.canMove() &&
-            crossedDrags(
-              drag,
-              event.currentTarget as Element,
-              event.clientX,
-              event.clientY,
-            ).length > 0;
+            crossedDrags(drag, event.currentTarget as Element, event.clientX, event.clientY)
+              .length > 0;
         }
         return;
       }

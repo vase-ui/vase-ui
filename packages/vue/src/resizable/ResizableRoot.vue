@@ -37,7 +37,12 @@ import {
   type PanelConstraints,
   type Sizes,
 } from './layout';
-import { getMeasurement, isSameMeasurement, readMeasurement, type RootMeasurement } from './measure';
+import {
+  getMeasurement,
+  isSameMeasurement,
+  readMeasurement,
+  type RootMeasurement,
+} from './measure';
 import { rootKey, type HandleMove, type RootHandle, type RootPanel, type Size } from './root';
 import type {
   ResizableLayout,
@@ -328,7 +333,11 @@ function updateLayout(layout: Layout) {
   emit('update:modelValue', next);
 }
 
-function commitLayout(layout: ResizableLayout, reason: ResizableRootChangeEventReason, event: Event) {
+function commitLayout(
+  layout: ResizableLayout,
+  reason: ResizableRootChangeEventReason,
+  event: Event,
+) {
   emit('layoutCommitted', layout, { reason, event });
 }
 
@@ -424,7 +433,8 @@ function expandPanel(id: string, move?: HandleMove) {
 function resizePanel(id: string, size: Size) {
   const found = canChange() ? findPanel(id) : undefined;
   const percent = parseSize(size, measurementFor(id));
-  if (found && percent !== undefined) resizeWithHandle(found.index, percent, found.index, undefined);
+  if (found && percent !== undefined)
+    resizeWithHandle(found.index, percent, found.index, undefined);
 }
 
 // The first layout, as the panels show it now. A length has its percent in the present panel
@@ -487,9 +497,7 @@ watch(
       previous !== undefined &&
       ids.some(
         (id) =>
-          !knownIds.has(id) &&
-          !Object.hasOwn(requested.value.layout, id) &&
-          !lengths.value.has(id),
+          !knownIds.has(id) && !Object.hasOwn(requested.value.layout, id) && !lengths.value.has(id),
       );
     knownIds = new Set(ids);
     if (isNew) updateLayout(shown.value);
@@ -618,8 +626,7 @@ function onKeydown(event: KeyboardEvent) {
   if (from < 0) return;
   const forward = !event.shiftKey;
   const isNested =
-    outer?.panels.some((panel) => element.value && panel.element?.contains(element.value)) ??
-    false;
+    outer?.panels.some((panel) => element.value && panel.element?.contains(element.value)) ?? false;
   const control =
     findControl(forward ? items.slice(from + 1) : items.slice(0, from).reverse()) ??
     (isNested

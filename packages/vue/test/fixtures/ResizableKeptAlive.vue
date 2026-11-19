@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { defineComponent, h, KeepAlive, type PropType } from 'vue';
+import { KeepAlive, type PropType } from 'vue';
 import { Resizable } from '../../src/resizable';
+import LastPanel from './ResizableLastPanel.vue';
 
 // The panel `c` with its handle, in `KeepAlive`, which holds them while `scene.show` is `false`.
 defineProps({
@@ -8,13 +9,6 @@ defineProps({
     type: Object as PropType<{ show: boolean; root?: Record<string, unknown> }>,
     required: true,
   },
-});
-const LastPanel = defineComponent({
-  name: 'LastPanel',
-  setup: () => () => [
-    h(Resizable.Handle, { 'data-key': 'h2', 'aria-label': 'Resize b' }),
-    h(Resizable.Panel, { id: 'c' }),
-  ],
 });
 </script>
 

@@ -202,21 +202,32 @@ describe('the press of a div with pointer capture', () => {
    */
   async function pressInFrame(
     press: Press,
-    { before = 'nothing', focus }: { before?: 'nothing' | 'mouse' | 'Tab' | 'script'; focus?: 'pointerdown' | 'mousedown' } = {},
+    {
+      before = 'nothing',
+      focus,
+    }: {
+      before?: 'nothing' | 'mouse' | 'Tab' | 'script';
+      focus?: 'pointerdown' | 'mousedown';
+    } = {},
   ) {
     const frame = document.body.appendChild(document.createElement('iframe'));
     onTestFinished(() => frame.remove());
-    frame.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px; height: 120px; border: 0';
-    const select = press === 'user-select: none' ? '; user-select: none; -webkit-user-select: none' : '';
+    frame.style.cssText =
+      'position: fixed; left: 0; top: 0; width: 400px; height: 120px; border: 0';
+    const select =
+      press === 'user-select: none' ? '; user-select: none; -webkit-user-select: none' : '';
     frame.srcdoc = `<body style="margin: 0"><input id="start" aria-label="Start" style="width: 100px; height: 20px"><input id="before" aria-label="Before" style="width: 100px; height: 20px"><div style="display: flex"><div id="target" tabindex="0" style="width: 40px; height: 40px; background: gray${select}"></div><p style="width: 300px; margin: 0">Some text that a drag can select.</p></div></body>`;
     await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
     const doc = frame.contentDocument!;
     const target = doc.querySelector<HTMLElement>('#target')!;
     target.addEventListener('pointerdown', (event) => target.setPointerCapture(event.pointerId));
-    if (press === 'prevented mousedown') target.addEventListener('mousedown', (event) => event.preventDefault());
-    if (press === 'prevented selectstart') target.addEventListener('selectstart', (event) => event.preventDefault());
+    if (press === 'prevented mousedown')
+      target.addEventListener('mousedown', (event) => event.preventDefault());
+    if (press === 'prevented selectstart')
+      target.addEventListener('selectstart', (event) => event.preventDefault());
     if (focus) target.addEventListener(focus, () => target.focus({ preventScroll: true }));
-    if (before === 'mouse') await userEvent.pointer({ coords: { x: 150, y: 10 }, keys: '[MouseLeft]' });
+    if (before === 'mouse')
+      await userEvent.pointer({ coords: { x: 150, y: 10 }, keys: '[MouseLeft]' });
     if (before === 'Tab') {
       doc.querySelector<HTMLElement>('#start')!.focus();
       await userEvent.keyboard('{Tab}');
@@ -239,7 +250,12 @@ describe('the press of a div with pointer capture', () => {
   test('M4: a press that moves across text selects it only in WebKit, also with user-select: none; a prevented mousedown or selectstart selects nothing', async () => {
     releaseAfterTest();
     const results: Record<string, string> = {};
-    for (const press of ['native', 'user-select: none', 'prevented mousedown', 'prevented selectstart'] as const) {
+    for (const press of [
+      'native',
+      'user-select: none',
+      'prevented mousedown',
+      'prevented selectstart',
+    ] as const) {
       results[press] = await pressInFrame(press);
     }
     const webkit = server.browser === 'webkit';
@@ -258,7 +274,10 @@ describe('the press of a div with pointer capture', () => {
     const results: Record<string, string> = {};
     for (const focus of ['pointerdown', 'mousedown'] as const) {
       for (const before of ['nothing', 'mouse', 'Tab', 'script'] as const) {
-        results[`${focus} after ${before}`] = await pressInFrame('prevented mousedown', { before, focus });
+        results[`${focus} after ${before}`] = await pressInFrame('prevented mousedown', {
+          before,
+          focus,
+        });
       }
     }
     const ring = 'focus, ring, no selection';
@@ -447,7 +466,9 @@ describe('M11: a ResizeObserver callback that changes the size of the items that
     });
     // The test runner also writes each loop error to the console.
     expect(new Set(takeReportedMessages())).toEqual(
-      new Set(['console.error: Error: ResizeObserver loop completed with undelivered notifications.']),
+      new Set([
+        'console.error: Error: ResizeObserver loop completed with undelivered notifications.',
+      ]),
     );
   });
 });

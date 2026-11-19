@@ -51,11 +51,14 @@ describe('a drag', () => {
   test.each([
     { name: 'horizontal', orientation: 'horizontal', x: 40, y: 0 },
     { name: 'vertical', orientation: 'vertical', x: 0, y: 10 },
-  ] as const)('moves the handle with the pointer in a $name root', async ({ orientation, x, y }) => {
-    const { root, at } = await mountLayout({ root: { orientation }, parts: three() });
-    await drag(at('h1'), x, y);
-    expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
-  });
+  ] as const)(
+    'moves the handle with the pointer in a $name root',
+    async ({ orientation, x, y }) => {
+      const { root, at } = await mountLayout({ root: { orientation }, parts: three() });
+      await drag(at('h1'), x, y);
+      expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
+    },
+  );
 
   test('moves toward the previous panel in a right-to-left root', async () => {
     const { root, at } = await mountLayout({ root: { dir: 'rtl' }, parts: three() });
@@ -137,7 +140,12 @@ describe('a drag', () => {
     const start = await press(at('h1'));
     for (const type of ['pointermove', 'pointerup', 'pointercancel']) {
       at('h1').dispatchEvent(
-        new PointerEvent(type, { pointerId: 99, buttons: 0, clientX: start.x + 100, bubbles: true }),
+        new PointerEvent(type, {
+          pointerId: 99,
+          buttons: 0,
+          clientX: start.x + 100,
+          bubbles: true,
+        }),
       );
     }
     expect(at('h1')).toHaveAttribute('data-dragging');
@@ -168,7 +176,12 @@ describe('a drag', () => {
     const start = await press(at('h1'));
     await moveTo({ x: start.x + 40, y: start.y });
     at('h1').dispatchEvent(
-      new PointerEvent('pointermove', { pointerId: pointer.id, buttons: 0, clientX: start.x + 40, bubbles: true }),
+      new PointerEvent('pointermove', {
+        pointerId: pointer.id,
+        buttons: 0,
+        clientX: start.x + 40,
+        bubbles: true,
+      }),
     );
     await nextTick();
     expect(at('h1')).not.toHaveAttribute('data-dragging');
@@ -236,7 +249,9 @@ describe('a drag', () => {
 describe('the focus, the selection and the click', () => {
   // Each browser shows a ring for a focus that a script gives, unless a mouse gave the last focus.
   test('a press gives the handle the focus; after a focus that a mouse gave, with no focus ring', async () => {
-    const { at, root } = await mountLayout({ parts: three().map((each) => (each.key === 'a' ? { ...each, controls: ['A'] } : each)) });
+    const { at, root } = await mountLayout({
+      parts: three().map((each) => (each.key === 'a' ? { ...each, controls: ['A'] } : each)),
+    });
     await userEvent.click(root.querySelector<HTMLElement>('#A')!);
     await press(at('h1'));
     expect(at('h1')).toHaveFocus();
@@ -250,7 +265,12 @@ describe('the focus, the selection and the click', () => {
         { kind: 'panel', key: 'a' },
         { kind: 'handle', key: 'h1' },
         { kind: 'panel', key: 'b', controls: [] },
-        { kind: 'element', key: 'text', text: 'A drag across this text selects nothing.', attrs: { style: 'flex: none; width: 100px' } },
+        {
+          kind: 'element',
+          key: 'text',
+          text: 'A drag across this text selects nothing.',
+          attrs: { style: 'flex: none; width: 100px' },
+        },
       ],
     });
     const start = await press(at('h1'));
@@ -265,7 +285,9 @@ describe('the focus, the selection and the click', () => {
     const clicks: number[] = [];
     const { at } = await mountLayout({
       parts: three().map((each) =>
-        each.key === 'h1' ? { ...each, attrs: { onClick: (event: MouseEvent) => clicks.push(event.detail) } } : each,
+        each.key === 'h1'
+          ? { ...each, attrs: { onClick: (event: MouseEvent) => clicks.push(event.detail) } }
+          : each,
       ),
     });
     await press(at('h1'));
@@ -373,7 +395,11 @@ describe('resize mode on-release', () => {
 
   test('the distance has three decimals at the most', async () => {
     // In a root of 300 px, 1 px is 0.333 percent of the panel space.
-    const { at } = await mountLayout({ frame: 'width: 300px; height: 100px', root: { resizeMode: 'on-release' }, parts: three() });
+    const { at } = await mountLayout({
+      frame: 'width: 300px; height: 100px',
+      root: { resizeMode: 'on-release' },
+      parts: three(),
+    });
     const start = await press(at('h1'));
     await moveTo({ x: start.x + 1, y: start.y });
     expect(offset(at('h1'))).toBe('0.999px');
@@ -401,7 +427,9 @@ describe('resize mode on-release', () => {
     const pointer = pointerOf(at('h1'));
     const start = await press(at('h1'));
     await moveTo({ x: start.x + 40, y: start.y });
-    at('h1').dispatchEvent(new PointerEvent('pointermove', { pointerId: pointer.id, buttons: 0, bubbles: true }));
+    at('h1').dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: pointer.id, buttons: 0, bubbles: true }),
+    );
     await nextTick();
     expect(log).toContain('layoutCommitted drag pointermove');
     expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
@@ -435,20 +463,31 @@ describe('resize mode on-release', () => {
   test('a cancel at the release keeps the layout; a key writes at once; a controlled root shows the layout of the parent', async () => {
     const log: string[] = [];
     const cancelled = await mountLayout({
-      root: onRelease(log, { onLayoutChange: (_: unknown, details: { cancel(): void }) => details.cancel() }),
+      root: onRelease(log, {
+        onLayoutChange: (_: unknown, details: { cancel(): void }) => details.cancel(),
+      }),
       parts: three(),
     });
     await drag(cancelled.at('h1'), 40);
-    expect(log.filter((each) => each === 'update' || each.startsWith('layoutCommitted'))).toEqual([]);
+    expect(log.filter((each) => each === 'update' || each.startsWith('layoutCommitted'))).toEqual(
+      [],
+    );
     expect(grows(cancelled.root, 'a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
 
     const keyLog: string[] = [];
     const keys = await mountLayout({ root: onRelease(keyLog), parts: three() });
     keys.at('h1').focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(keyLog).toEqual(['layoutChange keyboard keydown', 'update', 'layoutCommitted keyboard keydown']);
+    expect(keyLog).toEqual([
+      'layoutChange keyboard keydown',
+      'update',
+      'layoutCommitted keyboard keydown',
+    ]);
 
-    const root = reactive<Record<string, unknown>>({ resizeMode: 'on-release', modelValue: { a: 30, b: 30, c: 40 } });
+    const root = reactive<Record<string, unknown>>({
+      resizeMode: 'on-release',
+      modelValue: { a: 30, b: 30, c: 40 },
+    });
     root['onUpdate:modelValue'] = (layout: ResizableLayout) => (root.modelValue = layout);
     const controlled = await mountLayout({ root, parts: three() });
     await drag(controlled.at('h1'), 40);
@@ -471,20 +510,28 @@ describe('resize mode on-release', () => {
     await release();
     expect(collapse.at('a')).toHaveAttribute('data-collapsed');
 
-    const snap = await mountLayout({ root: { resizeMode: 'on-release', dragStep: 10 }, parts: panelsAndHandles('a', 'b') });
+    const snap = await mountLayout({
+      root: { resizeMode: 'on-release', dragStep: 10 },
+      parts: panelsAndHandles('a', 'b'),
+    });
     const snapStart = await press(snap.at('h1'));
     await moveTo({ x: snapStart.x + 55, y: snapStart.y });
     expect(offset(snap.at('h1'))).toBe('40px');
     await release();
 
     const log: string[] = [];
-    const mode = await mountLayout({ root: { resizeMode: 'live', ...logged(log) }, parts: three() });
+    const mode = await mountLayout({
+      root: { resizeMode: 'live', ...logged(log) },
+      parts: three(),
+    });
     const modeStart = await press(mode.at('h1'));
     mode.spec.root!.resizeMode = 'on-release';
     await nextTick();
     await moveTo({ x: modeStart.x + 20, y: modeStart.y });
     await release();
-    expect(log.filter((each) => each.startsWith('layoutChange'))).toEqual(['layoutChange drag pointermove']);
+    expect(log.filter((each) => each.startsWith('layoutChange'))).toEqual([
+      'layoutChange drag pointermove',
+    ]);
   });
 });
 
@@ -559,7 +606,10 @@ describe('the crossing of two handles', () => {
 
   test('a press away from the junction moves one layout', async () => {
     const { outer, inner, junction } = await mountCrossing();
-    await userEvent.pointer({ coords: { x: junction.x, y: junction.y - 60 }, keys: '[MouseLeft>]' });
+    await userEvent.pointer({
+      coords: { x: junction.x, y: junction.y - 60 },
+      keys: '[MouseLeft>]',
+    });
     await moveTo({ x: junction.x + 40, y: junction.y - 30 });
     expect(values(outer, inner)).toEqual(['60', '50']);
     expect(outer).not.toHaveAttribute('data-crossing');
@@ -623,29 +673,41 @@ describe('the crossing of two handles', () => {
 describe('touch and pen of Chromium', () => {
   const chromium = server.browser === 'chromium';
 
-  test.skipIf(!chromium)('a touch drag moves the layout, and the browser cancels no pointer', async () => {
-    const cancels: string[] = [];
-    const { root, at } = await mountLayout({
-      parts: three().map((each) => (each.key === 'h1' ? { ...each, attrs: { onPointercancel: () => cancels.push('cancel') } } : each)),
-    });
-    const start = centerOf(at('h1'));
-    await touchDrag({ x: start.x + 4, y: start.y }, { x: start.x + 44, y: start.y });
-    expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
-    expect(cancels).toEqual([]);
-  });
+  test.skipIf(!chromium)(
+    'a touch drag moves the layout, and the browser cancels no pointer',
+    async () => {
+      const cancels: string[] = [];
+      const { root, at } = await mountLayout({
+        parts: three().map((each) =>
+          each.key === 'h1'
+            ? { ...each, attrs: { onPointercancel: () => cancels.push('cancel') } }
+            : each,
+        ),
+      });
+      const start = centerOf(at('h1'));
+      await touchDrag({ x: start.x + 4, y: start.y }, { x: start.x + 44, y: start.y });
+      expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
+      expect(cancels).toEqual([]);
+    },
+  );
 
-  test.skipIf(!chromium)('a pen drag moves the layout and stops the click that follows; a pen press with no move gives the click', async () => {
-    const clicks: string[] = [];
-    const { root, at } = await mountLayout({
-      parts: three().map((each) => (each.key === 'h1' ? { ...each, attrs: { onClick: () => clicks.push('click') } } : each)),
-    });
-    const start = centerOf(at('h1'));
-    await penDrag(start, { x: start.x + 40, y: start.y });
-    expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
-    expect(clicks).toEqual([]);
-    const moved = centerOf(at('h1'));
-    await penDrag(moved, moved);
-    await waitFor(() => expect(clicks).toEqual(['click']));
-    expect(widthOf(at('a'))).toBeGreaterThan(0);
-  });
+  test.skipIf(!chromium)(
+    'a pen drag moves the layout and stops the click that follows; a pen press with no move gives the click',
+    async () => {
+      const clicks: string[] = [];
+      const { root, at } = await mountLayout({
+        parts: three().map((each) =>
+          each.key === 'h1' ? { ...each, attrs: { onClick: () => clicks.push('click') } } : each,
+        ),
+      });
+      const start = centerOf(at('h1'));
+      await penDrag(start, { x: start.x + 40, y: start.y });
+      expect(grows(root, 'a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
+      expect(clicks).toEqual([]);
+      const moved = centerOf(at('h1'));
+      await penDrag(moved, moved);
+      await waitFor(() => expect(clicks).toEqual(['click']));
+      expect(widthOf(at('a'))).toBeGreaterThan(0);
+    },
+  );
 });

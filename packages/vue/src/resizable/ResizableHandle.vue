@@ -3,7 +3,13 @@ import { computed, mergeProps, onScopeDispose, onServerPrefetch, shallowRef, use
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { useDrag } from './drag';
-import { adjustLayout, areLayoutsEqual, getHandleLimits, getHandleRange, isCollapsed } from './layout';
+import {
+  adjustLayout,
+  areLayoutsEqual,
+  getHandleLimits,
+  getHandleRange,
+  isCollapsed,
+} from './layout';
 import { injectRoot } from './root';
 import type { ResizableHandleProps, ResizableHandleState } from './types';
 
@@ -97,7 +103,8 @@ function layoutAttributes() {
   const range = hasValue
     ? getHandleRange(root.constraints, root.shown, pivot.value, panel, root.pushPanels)
     : undefined;
-  const whole = (value: number | undefined) => (value === undefined ? undefined : Math.round(value));
+  const whole = (value: number | undefined) =>
+    value === undefined ? undefined : Math.round(value);
   return {
     'aria-controls': root.panels[primaryIndex.value]?.id,
     'aria-valuenow': whole(hasValue ? root.shown[panel.id] : undefined),

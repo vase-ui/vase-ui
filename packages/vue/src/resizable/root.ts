@@ -91,7 +91,10 @@ export interface ResizableRootForParts {
    * Emits the change of the user. The result is the layout of the event, or `undefined` when a
    * listener cancelled it.
    */
-  changeLayout(layout: Layout, details: ResizableRootChangeEventDetails): ResizableLayout | undefined;
+  changeLayout(
+    layout: Layout,
+    details: ResizableRootChangeEventDetails,
+  ): ResizableLayout | undefined;
   commitLayout(layout: ResizableLayout, reason: ResizableRootChangeEventReason, event: Event): void;
   /** With no `move`, a method of the panel calls it. */
   collapsePanel(id: string, move?: HandleMove): void;

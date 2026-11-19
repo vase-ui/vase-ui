@@ -81,7 +81,10 @@ describe('the root', () => {
   });
 
   test('data-disabled and data-dragging; the default slot gets the state and the sizes', async () => {
-    const { root, spec, at } = await mountLayout({ root: { defaultLayout: { a: 20 } }, parts: three() });
+    const { root, spec, at } = await mountLayout({
+      root: { defaultLayout: { a: 20 } },
+      parts: three(),
+    });
     const slot = () => JSON.parse(root.querySelector('.root-state')!.textContent!);
     expect(slot()).toEqual({
       state: { orientation: 'horizontal', disabled: false, dragging: false },
@@ -108,7 +111,11 @@ describe('prop: defaultLayout', () => {
   test.each([
     { name: 'an entry for each panel', layout: { a: 20, b: 30, c: 50 }, sizes: ['20', '30', '50'] },
     { name: 'a lacking panel', layout: { a: 50 }, sizes: ['50', '25', '25'] },
-    { name: 'an entry with no panel', layout: { a: 30, b: 30, c: 30, gone: 10 }, sizes: ['33.334', '33.333', '33.333'] },
+    {
+      name: 'an entry with no panel',
+      layout: { a: 30, b: 30, c: 30, gone: 10 },
+      sizes: ['33.334', '33.333', '33.333'],
+    },
     { name: 'strings in percent', layout: { a: '20', b: '30%' }, sizes: ['20', '30', '50'] },
   ])('gives each panel its size: $name', async ({ layout, sizes }) => {
     const { root } = await mountLayout({ root: { defaultLayout: layout }, parts: three() });
@@ -127,7 +134,10 @@ describe('prop: defaultLayout', () => {
   });
 
   test('a later change has no effect', async () => {
-    const { root, spec } = await mountLayout({ root: { defaultLayout: { a: 20 } }, parts: three() });
+    const { root, spec } = await mountLayout({
+      root: { defaultLayout: { a: 20 } },
+      parts: three(),
+    });
     spec.root!.defaultLayout = { a: 60 };
     await nextTick();
     expect(grows(root, 'a')).toEqual(['20']);
@@ -212,7 +222,10 @@ describe('change events', () => {
 
   test('a key gives layoutChange, update:modelValue and layoutCommitted with the reason keyboard', async () => {
     const log: unknown[][] = [];
-    const { at } = await mountLayout({ root: { ...logged(log), defaultLayout: { a: 30, b: 30 } }, parts: three() });
+    const { at } = await mountLayout({
+      root: { ...logged(log), defaultLayout: { a: 30, b: 30 } },
+      parts: three(),
+    });
     await key(at('h1'), '{ArrowRight}');
     expect(log).toEqual([
       ['layoutChange', { a: 31, b: 29, c: 40 }, 'keyboard', 'keydown'],
@@ -256,7 +269,10 @@ describe('change events', () => {
     });
     await act(at);
     expect(new Set(log.map(([name]) => name))).toEqual(
-      new Set(['layoutChange', ...(log.some(([name]) => name === 'draggingChange') ? ['draggingChange'] : [])]),
+      new Set([
+        'layoutChange',
+        ...(log.some(([name]) => name === 'draggingChange') ? ['draggingChange'] : []),
+      ]),
     );
     expect(grows(root, 'a', 'b', 'c')).toEqual(['20', '40', '40']);
   });
@@ -388,8 +404,12 @@ describe('panels that mount and unmount', () => {
     expect(grows(root, 'a', 'b')).toEqual(['50', '50']);
     part(spec, 'middle').show = true;
     await settle();
-    expect(at('a').getBoundingClientRect().left).toBeLessThan(at('middle').getBoundingClientRect().left);
-    expect(at('middle').getBoundingClientRect().left).toBeLessThan(at('b').getBoundingClientRect().left);
+    expect(at('a').getBoundingClientRect().left).toBeLessThan(
+      at('middle').getBoundingClientRect().left,
+    );
+    expect(at('middle').getBoundingClientRect().left).toBeLessThan(
+      at('b').getBoundingClientRect().left,
+    );
     expect(grows(root, 'a', 'middle', 'b')).toEqual(['33.334', '33.333', '33.333']);
     expect(log).toEqual([['update', { a: 33.334, middle: 33.333, b: 33.333 }]]);
     expect(at('h1')).toHaveAttribute('aria-controls', 'a');
@@ -549,13 +569,18 @@ describe('nested roots', () => {
           {
             kind: 'panel',
             key: 'b',
-            inner: { root: { orientation: 'vertical', ...logged(inner) }, parts: panelsAndHandles('x', 'y') },
+            inner: {
+              root: { orientation: 'vertical', ...logged(inner) },
+              parts: panelsAndHandles('x', 'y'),
+            },
           },
         ],
       },
       'width: 400px; height: 400px',
     );
-    const innerHandle = root.querySelector<HTMLElement>('[data-key="inner-root"] [role="separator"]')!;
+    const innerHandle = root.querySelector<HTMLElement>(
+      '[data-key="inner-root"] [role="separator"]',
+    )!;
     expect(innerHandle).toHaveAttribute('aria-controls', 'x');
     expect(at('h1')).toHaveAttribute('aria-controls', 'a');
     await drag(innerHandle, 0, 40);
@@ -669,7 +694,9 @@ describe('F6', () => {
 
   test('a control in a shadow tree counts for its pane', async () => {
     const { root } = await mountLayout({ parts: panes({ a: [], b: ['B'], c: ['C'] }) });
-    const shadow = byKey(root, 'a').appendChild(document.createElement('div')).attachShadow({ mode: 'open' });
+    const shadow = byKey(root, 'a')
+      .appendChild(document.createElement('div'))
+      .attachShadow({ mode: 'open' });
     shadow.innerHTML = '<slot></slot><button id="in-shadow">In shadow</button>';
     shadow.querySelector<HTMLElement>('#in-shadow')!.focus();
     await userEvent.keyboard('{F6}');
