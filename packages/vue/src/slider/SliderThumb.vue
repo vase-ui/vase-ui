@@ -46,8 +46,8 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: input, setElement: setInput } = useElement<HTMLInputElement>();
 // A key with Ctrl, Alt or Meta, until the next task.
 let modifiedKey = false;
-// The blur and the focus of `showFocusRing`. The slider, the field and the listeners of the
-// developer do not get them.
+// The blur and the focus of `showFocusRing`. Their events stop at the input. Only a capture
+// listener on an element that contains the input gets them.
 let refocusing = false;
 
 const entry: SliderThumbEntry = {
@@ -160,8 +160,11 @@ function inputProps() {
       ...(field && controlAria(field)),
       'aria-labelledby': named ? undefined : slider.labelId,
       style: inputStyle.value,
-      onFocus,
-      onBlur,
+      // Capture listeners, so that they come before each listener of the developer on the input.
+      onFocusCapture: onFocus,
+      onBlurCapture: onBlur,
+      onFocusin: stopRefocusEvent,
+      onFocusout: stopRefocusEvent,
       onKeydown,
       onInput,
       value: value.value,
@@ -185,6 +188,10 @@ function onFocus(event: FocusEvent) {
 function onBlur(event: FocusEvent) {
   if (refocusing) event.stopImmediatePropagation();
   else slider.onBlur(event);
+}
+
+function stopRefocusEvent(event: FocusEvent) {
+  if (refocusing) event.stopImmediatePropagation();
 }
 
 function onInput(event: Event) {

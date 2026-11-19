@@ -78,7 +78,7 @@
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the thumb do not get them. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it."
+      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the developer on the thumb and the root do not get them. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it."
     },
     {
       "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",

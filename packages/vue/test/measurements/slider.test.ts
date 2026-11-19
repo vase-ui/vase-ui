@@ -162,8 +162,7 @@ describe('S2: :focus-visible of the input after a press', () => {
     expect(input.matches(':focus-visible')).toBe(false);
   });
 
-  // The key listener prevents the default action, as a thumb does. The default action, and Tab
-  // before the press, change no result.
+  // The key listener prevents the default action, as a thumb does.
   test.each([
     { atKey: 'nothing', ring: webkit },
     { atKey: 'a focus', ring: webkit },
