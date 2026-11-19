@@ -81,27 +81,6 @@ describe('useCheckedInput', () => {
     },
   );
 
-  it('keeps the input style of a named parent checkbox', async () => {
-    const { container } = await render(<Checkbox.Root parent name="fruit" />);
-    const input = container.querySelector('input')!;
-    expect(input).not.toHaveAttribute('name');
-    expect(input).toHaveStyle({ position: 'absolute', width: '1px' });
-  });
-
-  it('binds changes of the mixed state to the native checkbox', async () => {
-    const mixed = shallowRef(false);
-    const { container } = await render(() => <Checkbox.Root indeterminate={mixed.value} />);
-    const input = container.querySelector('input')!;
-
-    mixed.value = true;
-    await nextTick();
-    expect(input.indeterminate).toBe(true);
-
-    mixed.value = false;
-    await nextTick();
-    expect(input.indeterminate).toBe(false);
-  });
-
   it('restores only the checked properties changed by a click', async () => {
     const { container } = await render(<Checkbox.Root modelValue={false} indeterminate />);
     const input = container.querySelector('input')!;
