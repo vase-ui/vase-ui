@@ -34,7 +34,7 @@ export interface DatePickerCalendarProps extends Omit<
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
+import CalendarRootComponent from '../../calendar/root/CalendarRoot.vue';
 import {
   PickerCalendarOwner,
   providePickerControl,
@@ -45,7 +45,7 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import { mergeProps } from '../../merge-props';
+import type { DatePickerRootValue } from '../root/DatePickerRoot.vue';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -96,6 +96,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerCalendarState>;
 }>();
 
+const CalendarRoot = CalendarRootComponent<DatePickerRootValue>;
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
@@ -111,40 +112,12 @@ providePickerControl(PickerCalendarOwner, (event) => {
   }
 });
 
-const calendarHandlers = {
-  onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => {
-    emit('monthChange', month, details);
-  },
-  'onUpdate:month': (month: Temporal.PlainYearMonth) => {
-    emit('update:month', month);
-  },
-  onFocusedDateChange: (date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) => {
-    emit('focusedDateChange', date, details);
-  },
-  'onUpdate:focusedDate': (date: Temporal.PlainDate) => {
-    emit('update:focusedDate', date);
-  },
-  onViewChange: (view: CalendarRootView, details: CalendarRootChangeEventDetails) => {
-    emit('viewChange', view, details);
-  },
-  'onUpdate:view': (view: CalendarRootView) => {
-    emit('update:view', view);
-  },
-};
-
-// `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
-// props. The picker has any kind, so the value and the default value have the type `any`. The
-// default value gives the kind of a new value, the same kind as for the field.
-function calendarProps(attributes: Record<string, unknown>) {
+const calendarProps = computed(() => {
   const root = picker.props;
-  const valueProps: Record<string, any> = {
+  return {
+    ...props,
     modelValue: picker.value.value,
     defaultValue: picker.template.value,
-  };
-  return {
-    ...mergeProps(calendarHandlers, givenAttributes(attributes)),
-    ...props,
-    ...valueProps,
     minDate: root.minDate,
     maxDate: root.maxDate,
     unavailableDates: root.unavailableDates,
@@ -154,14 +127,12 @@ function calendarProps(attributes: Record<string, unknown>) {
     disabled: picker.disabled.value,
     readOnly: root.readOnly,
   };
-}
+});
 
 defineExpose({
   element,
   /** Gives the focus to `date`, or to the day that has the tab stop. */
-  focus: (date?: DateValue) => {
-    calendar.value?.focus(date);
-  },
+  focus: (date?: DateValue) => calendar.value?.focus(date),
 });
 </script>
 
@@ -169,7 +140,13 @@ defineExpose({
   <CalendarRoot
     v-if="$slots.render"
     ref="calendar"
-    v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
+    v-bind="{ ...givenAttributes(withoutPropsOf($attrs, CalendarRoot)), ...calendarProps }"
+    @month-change="(month, details) => emit('monthChange', month, details)"
+    @update:month="(month) => emit('update:month', month)"
+    @focused-date-change="(day, details) => emit('focusedDateChange', day, details)"
+    @update:focused-date="(day) => emit('update:focusedDate', day)"
+    @view-change="(view, details) => emit('viewChange', view, details)"
+    @update:view="(view) => emit('update:view', view)"
     @value-change="picker.commit"
   >
     <template #render="slotProps">
@@ -179,7 +156,13 @@ defineExpose({
   <CalendarRoot
     v-else
     ref="calendar"
-    v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
+    v-bind="{ ...givenAttributes(withoutPropsOf($attrs, CalendarRoot)), ...calendarProps }"
+    @month-change="(month, details) => emit('monthChange', month, details)"
+    @update:month="(month) => emit('update:month', month)"
+    @focused-date-change="(day, details) => emit('focusedDateChange', day, details)"
+    @update:focused-date="(day) => emit('update:focusedDate', day)"
+    @view-change="(view, details) => emit('viewChange', view, details)"
+    @update:view="(view) => emit('update:view', view)"
     @value-change="picker.commit"
   >
     <template #default="slotProps">

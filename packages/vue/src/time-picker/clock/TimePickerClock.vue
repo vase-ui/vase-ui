@@ -60,8 +60,6 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimePickerClockProps>(), { as: 'div' });
 
-// The events of `TimeClock.Root` that are not about the value. The root of the picker gives the
-// events of the value.
 const emit = defineEmits<{
   /**
    * Callback fired when the user commits the time: when a press or a drag that selects a number
@@ -105,8 +103,6 @@ const element = computed(() => clock.value?.element ?? null);
 
 providePickerControl(PickerClockOwner);
 
-// The clock commits a view and shows the next view, so the picker follows the view to know the
-// last commit.
 const initialView = props.defaultView ?? 'hour';
 const currentView = useControlled<TimeClockView>({
   controlled: () => props.view,
@@ -114,9 +110,7 @@ const currentView = useControlled<TimeClockView>({
   name: 'TimePicker.Clock',
   state: 'view',
 });
-// A clock in a popup that mounts at each open starts at its first view. The part thus gives the
-// view to `TimeClock.Root`, and it shows the first view again each time that a popup that stays
-// mounted opens.
+// A kept popup starts at the default view on each open.
 watch(popup.open, (open) => {
   if (open) {
     currentView.value = props.defaultView ?? 'hour';
@@ -126,7 +120,6 @@ const isLastView = computed(
   () => nextView(currentView.value, picker.props.granularity ?? 'minute') === undefined,
 );
 
-// The last commit sets the whole time, so it closes the popup when a selection does.
 function handleValueCommitted(
   value: TimePickerRootValue,
   details: TimeClockRootCommitEventDetails,
@@ -137,40 +130,24 @@ function handleValueCommitted(
   }
 }
 
-// `TimeClock.Root` reads `details.isCanceled` after this emit returns, so a listener can stop the
-// change of the view.
-function handleViewChange(next: TimeClockView, details: TimeClockRootViewChangeEventDetails) {
-  emit('viewChange', next, details);
-}
-
 function handleViewUpdate(next: TimeClockView) {
   currentView.value = next;
   emit('update:view', next);
 }
 
-// `TimeClock.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
-// props. The picker has any kind, so the value and the reference date have the type `any`. The
-// reference date gives the kind of a new value, the same kind as for the field, and the time that
-// the face shows while the picker has no value.
-function clockProps() {
-  const root = picker.props;
-  const valueProps: Record<string, any> = {
-    modelValue: picker.value.value,
-    referenceDate: withTime(picker.template.value, picker.referenceTime.value),
-  };
-  return {
-    ...props,
-    ...valueProps,
-    view: currentView.value,
-    granularity: root.granularity,
-    hourCycle: root.hourCycle,
-    minTime: root.minTime,
-    maxTime: root.maxTime,
-    locale: root.locale,
-    disabled: picker.disabled.value,
-    readOnly: picker.readOnly.value,
-  };
-}
+const clockProps = computed(() => ({
+  ...props,
+  modelValue: picker.value.value,
+  referenceDate: withTime(picker.template.value, picker.referenceTime.value),
+  view: currentView.value,
+  granularity: picker.props.granularity,
+  hourCycle: picker.props.hourCycle,
+  minTime: picker.props.minTime,
+  maxTime: picker.props.maxTime,
+  locale: picker.props.locale,
+  disabled: picker.disabled.value,
+  readOnly: picker.props.readOnly,
+}));
 
 defineExpose({ element });
 </script>
@@ -179,10 +156,10 @@ defineExpose({ element });
   <TimeClockRoot
     v-if="$slots.render"
     ref="clock"
-    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps }"
     @value-change="picker.commit"
     @value-committed="handleValueCommitted"
-    @view-change="handleViewChange"
+    @view-change="(next, details) => emit('viewChange', next, details)"
     @update:view="handleViewUpdate"
   >
     <template #render="slotProps">
@@ -192,10 +169,10 @@ defineExpose({ element });
   <TimeClockRoot
     v-else
     ref="clock"
-    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps }"
     @value-change="picker.commit"
     @value-committed="handleValueCommitted"
-    @view-change="handleViewChange"
+    @view-change="(next, details) => emit('viewChange', next, details)"
     @update:view="handleViewUpdate"
   >
     <template #default="slotProps">

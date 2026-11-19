@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CalendarChangeEventReason } from '../../internals/date-time/calendar/calendarProps';
+import type { CalendarChangeEventReason } from '../../internals/date-time/calendar/useCalendarRoot';
 import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
 import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { DateMatcher } from '../../internals/date-time/matchers';

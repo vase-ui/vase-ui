@@ -34,13 +34,14 @@ export interface TimePickerItemProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatText } from '../../internals/date-time/calendar/formatText';
-import { toPlainTime } from '../../internals/date-time/temporal';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { hourCycleOption } from '../utils/useTimePickerFormat';
-import { useTimePickerOption } from '../utils/useTimePickerOption';
+import {
+  useTimePickerRootContext,
+  hourCycleOption,
+  useTimePickerOption,
+} from '../root/TimePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -55,9 +56,7 @@ const picker = useTimePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
 
 const selected = computed(
-  () =>
-    picker.value.value !== null &&
-    Temporal.PlainTime.compare(toPlainTime(picker.value.value), props.time) === 0,
+  () => picker.value.value !== null && picker.time.value.equals(props.time),
 );
 const isDisabled = computed(() => props.disabled || picker.disabled.value);
 

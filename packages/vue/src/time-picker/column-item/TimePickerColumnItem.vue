@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { TimePickerColumnValue } from '../utils/columns';
+import type { TimePickerColumnValue } from '../root/TimePickerRootContext';
 
 export interface TimePickerColumnItemState {
   /**
@@ -38,11 +38,15 @@ import { computed } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { clampTime } from '../../time-clock/utils/clockViews';
-import { useTimePickerColumnContext } from '../column/TimePickerColumnContext';
-import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { columnText, isColumnValueAllowed, timeOfColumnValue } from '../utils/columns';
-import { useTimePickerFormat } from '../utils/useTimePickerFormat';
-import { useTimePickerOption } from '../utils/useTimePickerOption';
+import {
+  useTimePickerColumnContext,
+  useTimePickerRootContext,
+  columnText,
+  isColumnValueAllowed,
+  timeOfColumnValue,
+  useTimePickerFormat,
+  useTimePickerOption,
+} from '../root/TimePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
 

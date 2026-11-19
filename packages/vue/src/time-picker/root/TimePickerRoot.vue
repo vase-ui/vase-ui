@@ -220,12 +220,11 @@ const picker = useDateTimePickerRoot<
   name: 'TimePicker',
   empty: null,
   templateOf: (value) => value,
-  fallback: () => props.referenceDate ?? new Temporal.PlainTime(),
+  fallback: () => props.referenceDate ?? referenceTime.value,
   valueChange: (value, details) => emit('valueChange', value as Value | null, details),
   updateValue: (value) => emit('update:modelValue', value as Value | null),
 });
 
-const isReadOnly = computed(() => props.readOnly);
 // A part of the popup changes the time of the value. While the picker has no value, it starts at
 // the time of the reference date.
 const time = computed(() =>
@@ -235,7 +234,6 @@ const time = computed(() =>
 provide(TimePickerRootContext, {
   ...picker,
   props,
-  readOnly: isReadOnly,
   time,
   referenceTime,
 });

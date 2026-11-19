@@ -4,7 +4,7 @@ import {
   isColumnValueAllowed,
   selectedColumnValue,
   timeOfColumnValue,
-} from './columns';
+} from './TimePickerRootContext';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const noLimits = { minTime: undefined, maxTime: undefined, disabledTimes: undefined };

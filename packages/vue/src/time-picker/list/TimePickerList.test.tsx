@@ -128,6 +128,26 @@ describe('<TimePicker.List />', () => {
       expect(optionTexts()).toEqual([timeText('09:15'), timeText('10:00'), timeText('10:45')]);
     });
 
+    it.each([
+      { step: 1, min: '23:58:30', expected: ['23:58:30', '23:59:30'] },
+      { step: 30, min: '23:00:30', expected: ['23:00:30', '23:30:30'] },
+    ])('keeps the seconds of the minimum for a step of $step', async ({ step, min, expected }) => {
+      await render(
+        <TimePicker.Root minTime={time(min)}>
+          <TimePicker.List
+            step={step}
+            v-slots={{
+              item: ({ time: option }: { time: Temporal.PlainTime }) => (
+                <span data-testid="time">{option.toString()}</span>
+              ),
+            }}
+          />
+        </TimePicker.Root>,
+      );
+
+      expect(screen.getAllByTestId('time').map((option) => option.textContent)).toEqual(expected);
+    });
+
     it('ends at the last time before maxTime when the step does not reach it', async () => {
       await renderList({ step: 30 }, { minTime: time('09:00'), maxTime: time('10:20') });
 
@@ -162,7 +182,7 @@ describe('<TimePicker.List />', () => {
       expect(optionTexts()).toEqual(['00:00', '12:00'].map((text) => timeText(text, {}, 'ja-JP')));
     });
 
-    it.each([0, -5, 2.5, Number.NaN])(
+    it.each([0, -5, 2.5, Number.NaN, Number.POSITIVE_INFINITY])(
       'warns for the step %s and uses a step of 30',
       async (step) => {
         await renderList({ step });

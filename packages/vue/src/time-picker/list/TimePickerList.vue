@@ -2,6 +2,8 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 
+const DEFAULT_LIST_STEP = 30;
+
 export interface TimePickerListState {
   /**
    * Whether the picker ignores user interaction.
@@ -28,17 +30,15 @@ export interface TimePickerListProps
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { warn } from '../../common/warn';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import { usePickerFocusTarget } from '../../internals/date-time/picker/usePickerPopup';
-import { toPlainTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useTimePickerRootContext, findOptionToFocus } from '../root/TimePickerRootContext';
+import { isValidStep } from '../../time-clock/utils/clockViews';
 import TimePickerItem from '../item/TimePickerItem.vue';
-import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { findOptionToFocus } from '../utils/findOptionToFocus';
-import { DEFAULT_LIST_STEP, isValidListStep, listTimes } from '../utils/timeList';
 
 defineOptions({ inheritAttrs: false });
 
@@ -58,42 +58,42 @@ defineSlots<{
 const picker = useTimePickerRootContext();
 
 if (process.env.NODE_ENV !== 'production') {
-  watch(
-    () => props.step,
-    (step) => {
-      if (!isValidListStep(step)) {
-        warn(
-          'TimePicker.List `step` must be a whole number of minutes above 0.',
-          `The list uses a step of ${DEFAULT_LIST_STEP} minutes instead.`,
-          'Set `step` to a whole number above 0.',
-        );
-      }
-    },
-    { immediate: true },
-  );
+  watchEffect(() => {
+    if (!isValidStep(props.step)) {
+      warn(
+        'TimePicker.List `step` must be a whole number of minutes above 0.',
+        `The list uses a step of ${DEFAULT_LIST_STEP} minutes instead.`,
+        'Set `step` to a whole number above 0.',
+      );
+    }
+  });
 }
 
 // A consumer can make a new `Temporal` object for the same time in each render, so the list reads
 // the text of each limit. The times of the list then stay the same objects until a limit changes.
 const minTime = computed(() => picker.props.minTime?.toString());
 const maxTime = computed(() => picker.props.maxTime?.toString());
-const times = computed(() =>
-  listTimes(
-    isValidListStep(props.step) ? props.step : DEFAULT_LIST_STEP,
-    minTime.value,
-    maxTime.value,
-  ),
-);
-
-// With a selected time, the tab stop is the item of that time, so the focus enters the list there.
-const hasSelectedItem = computed(() => {
-  const { value } = picker.value;
-  const selected = value === null ? null : toPlainTime(value);
-  return (
-    selected !== null &&
-    times.value.some((time) => Temporal.PlainTime.compare(time, selected) === 0)
-  );
+const times = computed(() => {
+  const step = isValidStep(props.step) ? props.step : DEFAULT_LIST_STEP;
+  const last = maxTime.value === undefined ? undefined : Temporal.PlainTime.from(maxTime.value);
+  let time =
+    minTime.value === undefined ? new Temporal.PlainTime() : Temporal.PlainTime.from(minTime.value);
+  const options: Temporal.PlainTime[] = [];
+  while (!last || Temporal.PlainTime.compare(time, last) <= 0) {
+    options.push(time);
+    const next = time.add({ minutes: step });
+    // A step past midnight wraps to an earlier time.
+    if (Temporal.PlainTime.compare(next, time) <= 0) {
+      break;
+    }
+    time = next;
+  }
+  return options;
 });
+
+const hasSelectedItem = computed(
+  () => picker.value.value !== null && times.value.some((time) => time.equals(picker.time.value)),
+);
 
 const { onFocusin, onFocusout, onKeydown, registerRoot, itemMap } = useCompositeRoot({
   orientation: 'vertical',
@@ -103,7 +103,7 @@ const { onFocusin, onFocusout, onKeydown, registerRoot, itemMap } = useComposite
 
 const state = computed<TimePickerListState>(() => ({
   disabled: picker.disabled.value,
-  readOnly: picker.readOnly.value,
+  readOnly: picker.props.readOnly ?? false,
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

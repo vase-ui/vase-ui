@@ -36,10 +36,9 @@ import { FieldRootContext } from '../../internals/field-root-context/FieldRootCo
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
+import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
 import { useDatePickerRootContext, hasTime } from '../root/DatePickerRootContext';
 import type { DatePickerRootValue } from '../root/DatePickerRoot.vue';
-
-import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -74,12 +73,11 @@ const referenceDate = computed(() => toTimeValue(picker.props.referenceDate ?? n
 
 const field = useTemplateRef<{
   element: HTMLElement | null;
-  inputElement: HTMLInputElement | null;
   clear: () => void;
 }>('field');
 const element = computed(() => field.value?.element ?? null);
 
-function timeFieldProps() {
+const timeFieldProps = computed(() => {
   const root = picker.props;
   const granularity = root.granularity;
   return {
@@ -98,7 +96,7 @@ function timeFieldProps() {
     disabled: picker.disabled.value,
     readOnly: root.readOnly,
   };
-}
+});
 
 defineExpose({
   element,
@@ -111,7 +109,7 @@ defineExpose({
   <TimeFieldRoot
     v-if="$slots.render"
     ref="field"
-    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps }"
     @value-change="picker.commit"
   >
     <template #render="slotProps">
@@ -121,7 +119,7 @@ defineExpose({
   <TimeFieldRoot
     v-else
     ref="field"
-    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
+    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps }"
     @value-change="picker.commit"
   >
     <template #default="slotProps">

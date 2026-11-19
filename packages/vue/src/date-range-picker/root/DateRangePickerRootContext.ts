@@ -1,25 +1,23 @@
 import { inject, provide, useAttrs } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
+import { DateTimeFieldHostContext } from '../../internals/date-time/field/DateTimeFieldContext';
+import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
+import { laterMinimum } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { usePickerField } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import type {
   DateTimePickerContext,
+  PickerFieldActions,
   PickerPartElements,
 } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import type { DateValue } from '../../internals/date-time/temporal';
+import { given, givenAttributes } from '../../internals/givenAttributes';
+import { useControlLabelId } from '../../internals/labelable-provider';
+import { useVaseUiId } from '../../internals/useVaseUiId';
+import { mergeProps } from '../../merge-props';
 import type {
   DateRangePickerRootChangeEventDetails,
   DateRangePickerRootProps,
 } from './DateRangePickerRoot.vue';
-import { given, givenAttributes } from '../../internals/givenAttributes';
-import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
-import { DateTimeFieldHostContext } from '../../internals/date-time/field/dateTimeFieldHost';
-import {
-  usePickerField,
-  type PickerFieldActions,
-} from '../../internals/date-time/picker/useDateTimePickerRoot';
-import { laterMinimum } from '../../internals/date-time/field/customValidity';
-import { useControlLabelId } from '../../internals/labelable-provider';
-import { useVaseUiId } from '../../internals/useVaseUiId';
-import { mergeProps } from '../../merge-props';
 
 /** The first day and the last day of the range that the picker holds. */
 export type DateRangePickerRange = readonly [DateValue | null, DateValue | null];

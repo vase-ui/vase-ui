@@ -3,7 +3,7 @@ import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEvent
 import type {
   RangeChangeEventReason,
   RangeValue,
-} from '../../internals/date-time/calendar/rangeSelection';
+} from '../../range-calendar/root/RangeCalendarRootContext';
 import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';

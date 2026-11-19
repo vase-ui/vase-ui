@@ -25,11 +25,11 @@ import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useTimePickerRootContext } from '../root/TimePickerRootContext';
+import { useTimePickerRootContext, hourCycleOption } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
-import { hourCycleOption } from '../utils/useTimePickerFormat';
+
+import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -53,7 +53,7 @@ const picker = useTimePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
 
 // A picker that the user cannot change has nothing to choose.
-const isDisabled = computed(() => props.disabled || picker.disabled.value || picker.readOnly.value);
+const isDisabled = computed(() => props.disabled || picker.disabled.value || picker.props.readOnly);
 
 // The name has the time and not the date, because the picker sets the time. It has the seconds for
 // a granularity of seconds, and the name of the time zone for a value in a time zone.
