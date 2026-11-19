@@ -2,7 +2,7 @@
 import { useTemplateRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIEventDetails';
 import { useFloatingRootStore } from '../../src/utils/popups/floating-root/useFloatingRootStore';
-import { useFloatingFocusManager } from '../../src/utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../src/utils/popups/focus/usePopupFocus';
 
 // A focus manager with a store of its own, for the tests of the portal. The props are the state
 // that a popup part gives through its store. The store has no popup element, and the guards go
@@ -28,7 +28,7 @@ const store = useFloatingRootStore({
   elements: { anchor: () => props.domReference },
 });
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     modal: props.modal,
@@ -37,9 +37,10 @@ useFloatingFocusManager(
     initialFocus: false,
   }),
   useTemplateRef('element'),
+  true,
 );
 </script>
 
 <template>
-  <div ref="element"><slot /></div>
+  <div ref="element" v-bind="focusBindings({})"><slot /></div>
 </template>

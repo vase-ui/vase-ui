@@ -1,6 +1,7 @@
 import {
   computed,
   inject,
+  nextTick,
   onBeforeMount,
   onMounted,
   onScopeDispose,
@@ -11,7 +12,7 @@ import {
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, InjectionKey, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
-import { getNodeName, isHTMLElement } from '@floating-ui/utils/dom';
+import { getNodeName, isHTMLElement, isShadowRoot } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../../../common/owner';
@@ -28,6 +29,7 @@ import type { InteractionType } from '../usePopupTrigger';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible } from '../../../internals/composite/listIndex';
 import { clickTriggers } from '../registeredParts';
+import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';
@@ -43,10 +45,10 @@ import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeAncestors, getNodeChildren } from '../tree/nodes';
 import type { PopupInteractionStore } from '../types';
 import { createFocusGuardElement } from './createFocusGuardElement';
-import { enqueueFocus } from './enqueueFocus';
-import { markOthers } from './markOthers';
 import {
+  enqueueFocus,
   focusable,
+  getTabbableNearElement,
   getNextTabbable,
   getPreviousTabbable,
   isOutsideEvent,
@@ -81,7 +83,7 @@ export type FocusOption =
  * Provides focus management for the floating element.
  * @see https://floating-ui.com/docs/FloatingFocusManager
  */
-export interface FloatingFocusManagerProps {
+export interface PopupFocusOptions {
   /**
    * The popup's interaction store.
    */
@@ -332,43 +334,16 @@ function findReturnElement(
   return { element: null, skippedConnected };
 }
 
-function handleTabIndex(floatingFocusElement: HTMLElement) {
-  if (
-    floatingFocusElement.hasAttribute('tabindex') &&
-    !floatingFocusElement.hasAttribute('data-tabindex')
-  ) {
-    return;
+function dialogTabIndex(target: HTMLElement) {
+  if (!target.getAttribute('role')?.includes('dialog') ||
+      (target.hasAttribute('tabindex') && !target.hasAttribute('data-tabindex'))) {
+    return undefined;
   }
-
-  if (!floatingFocusElement.getAttribute('role')?.includes('dialog')) {
-    return;
-  }
-
-  const focusableElements = focusable(floatingFocusElement);
-  const tabbableContent = focusableElements.filter((element) => {
-    const dataTabIndex = element.getAttribute('data-tabindex') || '';
-    return (
-      isTabbable(element) ||
-      (element.hasAttribute('data-tabindex') && !dataTabIndex.startsWith('-'))
-    );
+  const hasTabStop = focusable(target).some((child) => {
+    const saved = child.getAttribute('data-tabindex');
+    return isTabbable(child) || (saved !== null && !saved.startsWith('-'));
   });
-  const tabIndex = floatingFocusElement.getAttribute('tabindex');
-
-  if (tabbableContent.length === 0) {
-    if (tabIndex !== '0') {
-      floatingFocusElement.setAttribute('tabindex', '0');
-      // Mark our own write so the externally-managed early-return above doesn't
-      // mistake it for a user-authored `tabindex` and freeze management.
-      floatingFocusElement.setAttribute('data-tabindex', '0');
-    }
-  } else if (
-    tabIndex !== '-1' ||
-    (floatingFocusElement.hasAttribute('data-tabindex') &&
-      floatingFocusElement.getAttribute('data-tabindex') !== '-1')
-  ) {
-    floatingFocusElement.setAttribute('tabindex', '-1');
-    floatingFocusElement.setAttribute('data-tabindex', '-1');
-  }
+  return hasTabStop ? -1 : 0;
 }
 
 // A default applies only to `undefined`, as `withDefaults` does. `null` has its own meaning for
@@ -377,7 +352,7 @@ function withDefault<Value, Default>(value: Value | undefined, defaultValue: Def
   return value === undefined ? defaultValue : value;
 }
 
-function withDefaultProps(props: FloatingFocusManagerProps) {
+function withDefaultProps(props: PopupFocusOptions) {
   return {
     ...props,
     openInteractionType: withDefault(props.openInteractionType, ''),
@@ -409,10 +384,33 @@ function haveSameNodes(first: ElementSiblings, second: ElementSiblings) {
  * It keeps its two inside focus guards beside `element` with `useElementSiblings`, so the part
  * keeps one root node.
  */
-export function useFloatingFocusManager(
-  props: () => FloatingFocusManagerProps,
+export function usePopupFocus(
+  props: () => PopupFocusOptions,
   element: Readonly<Ref<HTMLElement | null>>,
-): void {
+  bound = false,
+) {
+  const managedTabIndex = shallowRef<0 | -1>();
+  let localListeners: {
+    focusin: (event: FocusEvent) => void;
+    focusout: (event: FocusEvent) => void;
+    capture?: (() => void) | undefined;
+  } | undefined;
+  const listeners = {
+    onFocusin: (event: FocusEvent) => localListeners?.focusin(event),
+    onFocusout: (event: FocusEvent) => localListeners?.focusout(event),
+    onFocusoutCapture: () => localListeners?.capture?.(),
+  };
+
+  function handleTabIndex(target: HTMLElement) {
+    const value = dialogTabIndex(target);
+    if (bound && target === element.value) {
+      managedTabIndex.value = value;
+    } else if (value !== undefined) {
+      target.setAttribute('tabindex', String(value));
+      target.setAttribute('data-tabindex', String(value));
+    }
+  }
+
   // The props change before each render of the part, as the props of a component do. A cleanup
   // after the unmount thus reads the props of the last render, and not a state that changed at the
   // unmount, such as the active trigger of a submenu.
@@ -620,32 +618,25 @@ export function useFloatingFocusManager(
   interface Effect {
     sources: () => unknown[];
     setup: () => Cleanup;
-    lastSources?: unknown[];
-    cleanup?: Cleanup;
+      cleanup?: Cleanup;
   }
 
-  // The effects keep the sequence of the effects of Base UI: the layout effects of the file, then its
-  // other effects. Vue runs two `watch` calls of one component in the sequence of the writes to their
-  // sources, so one `watch` calls `update`. `update` runs each effect whose sources changed, in the
-  // sequence of the list.
+  // Several sources can change in the same patch. Entry, return and outside marks need a fixed order.
   const effects: Effect[] = [];
 
   function effect(sources: Effect['sources'], setup: Effect['setup']) {
     effects.push({ sources, setup });
   }
 
-  const readSources = () => effects.map((item) => item.sources());
-
-  function update(sourceLists: unknown[][]) {
+  function update(sourceLists: unknown[][], previous?: unknown[][]) {
     effects.forEach((item, index) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `sourceLists` has one list for each effect.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Each effect contributes one source list.
       const sources = sourceLists[index]!;
-      const lastSources = item.lastSources;
+      const lastSources = previous?.[index];
       if (
         sources.length !== lastSources?.length ||
         sources.some((value, position) => !Object.is(value, lastSources[position]))
       ) {
-        item.lastSources = sources;
         item.cleanup?.();
         item.cleanup = item.setup();
       }
@@ -1414,6 +1405,15 @@ export function useFloatingFocusManager(
         }
       }
 
+      if (bound && element.value && focusContainers.has(element.value)) {
+        localListeners = {
+          focusin: handleFocusIn,
+          focusout: handleFocusOutside,
+          capture: isInsidePortal.value ? markInsideComponentTree : undefined,
+        };
+        focusContainers.delete(element.value);
+      }
+
       return mergeCleanups(
         anchorElement && addEventListener(anchorElement, 'focusout', handleFocusOutside),
         anchorElement && addEventListener(anchorElement, 'pointerdown', handlePointerDown),
@@ -1435,6 +1435,7 @@ export function useFloatingFocusManager(
               addEventListener(node, 'focusout', fromFirst(markInsideComponentTree), true),
           );
         }),
+        () => { localListeners = undefined; },
         removalObserver && (() => removalObserver.disconnect()),
       );
     },
@@ -1516,10 +1517,9 @@ export function useFloatingFocusManager(
     },
   );
 
-  onMounted(() => update(readSources()));
-  // `isHeld` is a source, so `update` runs after the DOM update of the `KeepAlive` hook. At the
-  // activation, the portal has put the popup back by then.
-  watch(readSources, update, { flush: 'post' });
+  onMounted(() => {
+    watch(() => effects.map((item) => item.sources()), update, { immediate: true, flush: 'post' });
+  });
   onScopeDispose(() => {
     for (const item of effects) {
       item.cleanup?.();
@@ -1567,4 +1567,393 @@ export function useFloatingFocusManager(
       }
     }
   }
+  return (attrs: { tabindex?: unknown }) => {
+    const index = managedTabIndex.value;
+    return index === undefined || attrs.tabindex != null
+      ? listeners
+      : { ...listeners, tabindex: index, 'data-tabindex': index };
+  };
+
+}
+
+
+type Undo = () => void;
+
+interface MarkOthersOptions {
+  ariaHidden?: boolean | undefined;
+  /**
+   * Whether the outside elements get `inert`, so that the Tab key and a press cannot reach them.
+   * They are the elements that `ariaHidden` hides: live regions, their ancestors and scripts do
+   * not get it.
+   */
+  inert?: boolean | undefined;
+  mark?: boolean | undefined;
+}
+
+const markerName = createAttribute('inert');
+
+interface Mark {
+  name: string;
+  value: string;
+  isSet: (element: Element) => boolean;
+}
+
+const MARKS: Mark[] = [
+  {
+    name: 'aria-hidden',
+    value: 'true',
+    isSet(element) {
+      const attr = element.getAttribute('aria-hidden');
+      return attr !== null && attr !== 'false';
+    },
+  },
+  { name: 'inert', value: '', isSet: (element) => element.hasAttribute('inert') },
+  { name: markerName, value: '', isSet: (element) => element.hasAttribute(markerName) },
+];
+
+interface Lock {
+  /** The elements that the lock keeps free of its attributes. */
+  avoid: Set<Node>;
+  /** The elements of `avoid` and their ancestors. */
+  keep: Set<Node>;
+  /** The elements that get each attribute, by the name of the attribute. */
+  targets: Record<string, Element[]>;
+}
+
+interface ModalMarks {
+  version: 1;
+  /** The locks that are held, the oldest first. */
+  locks: Lock[];
+  /**
+   * The elements that have each attribute because of a lock, by the name of the attribute. An
+   * element that had the attribute before is not in the set, and keeps the attribute.
+   */
+  written: Record<string, Set<Element>>;
+}
+
+const MODAL_MARKS_KEY = Symbol.for('vase-ui.modal-marks');
+
+// Two copies of the library on one page mark the same elements, so the key is a `Symbol.for` key.
+// With a registry for each copy, the first copy that releases an element removes the attribute
+// while the popup of the other copy is still open.
+function getModalMarks(): ModalMarks {
+  const holder = globalThis as { [MODAL_MARKS_KEY]?: ModalMarks };
+  holder[MODAL_MARKS_KEY] ??= {
+    version: 1,
+    locks: [],
+    written: Object.fromEntries(MARKS.map(({ name }) => [name, new Set<Element>()])),
+  };
+  return holder[MODAL_MARKS_KEY];
+}
+
+function unwrapHost(node: Node | null): Element | null {
+  if (!node) {
+    return null;
+  }
+
+  return isShadowRoot(node) ? node.host : unwrapHost(node.parentNode);
+}
+
+const correctElements = (parent: HTMLElement, targets: Element[]): Element[] =>
+  targets
+    .map((target) => {
+      if (parent.contains(target)) {
+        return target;
+      }
+
+      const correctedTarget = unwrapHost(target);
+
+      if (parent.contains(correctedTarget)) {
+        return correctedTarget;
+      }
+
+      return null;
+    })
+    .filter((x): x is Element => x != null);
+
+const buildKeepSet = (targets: Element[]): Set<Node> => {
+  const keep = new Set<Node>();
+
+  targets.forEach((target) => {
+    let node: Node | null = target;
+    while (node && !keep.has(node)) {
+      keep.add(node);
+      node = node.parentNode;
+    }
+  });
+
+  return keep;
+};
+
+const collectOutsideElements = (
+  root: Element,
+  keepElements: Set<Node>,
+  stopElements: Set<Node>,
+): Element[] => {
+  const outside: Element[] = [];
+
+  const walk = (parent: Element | null) => {
+    if (!parent || stopElements.has(parent)) {
+      return;
+    }
+
+    Array.from(parent.children).forEach((node: Element) => {
+      if (getNodeName(node) === 'script') {
+        return;
+      }
+
+      if (keepElements.has(node)) {
+        walk(node);
+      } else {
+        outside.push(node);
+      }
+    });
+  };
+
+  walk(root);
+
+  return outside;
+};
+
+// A lock that is taken later lifts the attributes of the older locks from its own elements and
+// their ancestors. Each lifted ancestor passes the attribute to its children that hold no element
+// of the lock, so the rest of the page keeps it. Base UI keeps the attributes on these elements,
+// and a popup that opens later in a marked container is hidden:
+// https://github.com/mui/base-ui/issues/5577
+function applyLocks(marks: ModalMarks) {
+  MARKS.forEach(({ name, value, isSet }) => {
+    const wanted = new Set<Element>();
+    marks.locks.forEach((lock) => {
+      Array.from(wanted).forEach((element) => {
+        if (lock.keep.has(element)) {
+          wanted.delete(element);
+          collectOutsideElements(element, lock.keep, lock.avoid).forEach((child) => {
+            wanted.add(child);
+          });
+        }
+      });
+      lock.targets[name]?.forEach((element) => {
+        wanted.add(element);
+      });
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `written` has a set for each name in `MARKS`.
+    const written = marks.written[name]!;
+    written.forEach((element) => {
+      if (!wanted.has(element)) {
+        element.removeAttribute(name);
+        written.delete(element);
+      }
+    });
+    wanted.forEach((element) => {
+      if (!written.has(element) && !isSet(element)) {
+        element.setAttribute(name, value);
+        written.add(element);
+      }
+    });
+  });
+}
+
+export function markOthers(avoidElements: Element[], options: MarkOthersOptions = {}): Undo {
+  const { ariaHidden = false, inert = false, mark = true } = options;
+  const body = ownerDocument(avoidElements[0]).body;
+  const avoid = correctElements(body, avoidElements);
+  const lock: Lock = { avoid: new Set<Node>(avoid), keep: buildKeepSet(avoid), targets: {} };
+
+  if (mark) {
+    lock.targets[markerName] = collectOutsideElements(body, lock.keep, lock.avoid);
+  }
+
+  if (ariaHidden || inert) {
+    const ariaLiveElements = correctElements(
+      body,
+      Array.from(body.querySelectorAll('[aria-live]')),
+    );
+    const controlElements = avoid.concat(ariaLiveElements);
+    const controlTargets = collectOutsideElements(
+      body,
+      buildKeepSet(controlElements),
+      new Set<Node>(controlElements),
+    );
+    if (ariaHidden) {
+      lock.targets['aria-hidden'] = controlTargets;
+    }
+    if (inert) {
+      lock.targets.inert = controlTargets;
+    }
+  }
+
+  const marks = getModalMarks();
+  marks.locks.push(lock);
+  applyLocks(marks);
+
+  return () => {
+    const index = marks.locks.indexOf(lock);
+    if (index !== -1) {
+      marks.locks.splice(index, 1);
+      applyLocks(marks);
+    }
+  };
+}
+
+
+/**
+ * The part of a popup store that the focus guards of a trigger use. The stores of Popover and Menu
+ * have it.
+ */
+export interface TriggerFocusGuardStore {
+  setOpen(open: boolean, eventDetails: VaseUIChangeEventDetails<typeof REASONS.focusOut>): void;
+  select(key: 'positionerElement'): HTMLElement | null;
+  context: {
+    /**
+     * The focus manager gets it through `getInsideElements`. A blur of the trigger onto this guard
+     * then does not close the popup before the handler of the guard runs.
+     */
+    readonly beforeTriggerFocusGuardRef: ShallowRef<HTMLElement | null>;
+    readonly beforeContentFocusGuardRef: ShallowRef<HTMLElement | null>;
+    readonly afterContentFocusGuardRef: ShallowRef<HTMLElement | null>;
+    readonly triggerFocusTargetRef: ShallowRef<HTMLElement | null>;
+  };
+}
+
+/**
+ * Keeps a focus guard before and after the element of a popup trigger while `enabled` is `true`.
+ * The guards give an open popup one place in the tab order, right after its trigger.
+ *
+ * A focus that leaves the trigger backward, or the popup forward, goes onto a guard. The guard
+ * closes the popup and moves the focus to the tabbable element on its side.
+ *
+ * The guard before the trigger also gets the focus from any other element. It asks for the close,
+ * and it focuses the trigger when the popup stays open.
+ *
+ * The guard after the trigger sends a focus from the trigger, or from no element, to the start of
+ * the popup. It sends a focus from another element outside the popup to the end of the popup. It
+ * asks for no close.
+ *
+ * While the popup is not in the document, the guard after the trigger skips it. `KeepAlive` takes a
+ * held popup out of the document, and a root with no popup part has none. A focus from the trigger,
+ * or from no element, then leaves as from the end of the popup. A focus from another element goes
+ * to the trigger.
+ *
+ * The guards are not in the template, so the trigger keeps one root node.
+ */
+export function useTriggerFocusGuards(
+  store: MaybeRefOrGetter<TriggerFocusGuardStore>,
+  triggerElement: MaybeRefOrGetter<HTMLElement | null>,
+  enabled: MaybeRefOrGetter<boolean>,
+): void {
+  async function closeAndFocus(
+    event: FocusEvent,
+    direction: 1 | -1,
+    positionerElement: HTMLElement | null,
+    entersTrigger: boolean,
+  ) {
+    const guard = event.currentTarget as HTMLElement;
+    toValue(store).setOpen(false, createChangeEventDetails(REASONS.focusOut, event, guard));
+    // The close can change the tab order. The code below reads the DOM after the update.
+    await nextTick();
+    const trigger = toValue(triggerElement);
+    // The guards of the trigger follow the `open` state. A guard that is still in the document thus
+    // shows that the popup stayed open. A focus that enters from outside then goes to the trigger,
+    // which comes right before the popup in the tab order.
+    if (entersTrigger && guard.isConnected) {
+      trigger?.focus();
+      return;
+    }
+    // The search skips the guards of the trigger and the content of the popup. It starts at the
+    // trigger, also when the `tabindex` of the trigger is -1, so the trigger keeps the focus when no
+    // other element is tabbable.
+    getTabbableNearElement(
+      trigger,
+      direction,
+      (element) =>
+        contains(positionerElement, element) ||
+        element === guards?.before ||
+        element === guards?.after,
+    )?.focus();
+  }
+
+  // The focus comes from the trigger when Shift+Tab leaves the trigger. A focus from any other
+  // element, or from no element, enters from outside.
+  function handlePreFocusGuardFocus(event: FocusEvent) {
+    const entersTrigger = !contains(toValue(triggerElement), event.relatedTarget as Element | null);
+    void closeAndFocus(event, -1, toValue(store).select('positionerElement'), entersTrigger);
+  }
+
+  // A focus with no origin has no direction. The Tab key from a trigger that a press did not focus
+  // (WebKit, and Firefox on macOS) gives such a focus. It goes to the start of the popup, as a focus
+  // from the trigger does and as in Base UI.
+  function handleFocusTargetFocus(event: FocusEvent) {
+    const current = toValue(store);
+    const positionerElement = current.select('positionerElement');
+    if (positionerElement && !isOutsideEvent(event, positionerElement)) {
+      void closeAndFocus(event, 1, positionerElement, false);
+      return;
+    }
+    const origin = event.relatedTarget as Element | null;
+    const entersAtStart = origin === null || contains(toValue(triggerElement), origin);
+    const contentGuard = (
+      entersAtStart
+        ? current.context.beforeContentFocusGuardRef
+        : current.context.afterContentFocusGuardRef
+    ).value;
+    // `KeepAlive` takes the inside guards out of the document with the popup, and a root with no
+    // popup part has none. The Tab key then skips the popup, as it skips a popup with no tabbable
+    // element.
+    if (contentGuard?.isConnected) {
+      contentGuard.focus();
+    } else if (entersAtStart) {
+      void closeAndFocus(event, 1, positionerElement, false);
+    } else {
+      toValue(triggerElement)?.focus();
+    }
+  }
+
+  let guards: { before: HTMLElement; after: HTMLElement; siblings: ElementSiblings } | null = null;
+
+  const siblings = computed(() => {
+    const trigger = toValue(triggerElement);
+    if (!toValue(enabled) || !trigger) {
+      return null;
+    }
+    if (guards?.before.ownerDocument !== trigger.ownerDocument) {
+      const before = createFocusGuardElement(trigger.ownerDocument);
+      const after = createFocusGuardElement(trigger.ownerDocument);
+      before.addEventListener('focusin', handlePreFocusGuardFocus);
+      after.addEventListener('focusin', handleFocusTargetFocus);
+      guards = { before, after, siblings: { before: [before], after: [after] } };
+    }
+    return guards.siblings;
+  });
+
+  useElementSiblings(triggerElement, siblings);
+
+  function clearRefs(target: TriggerFocusGuardStore) {
+    if (target.context.beforeTriggerFocusGuardRef.value === guards?.before) {
+      target.context.beforeTriggerFocusGuardRef.value = null;
+    }
+    if (target.context.triggerFocusTargetRef.value === guards?.after) {
+      target.context.triggerFocusTargetRef.value = null;
+    }
+  }
+
+  // Another trigger of the same store can write the refs in the same DOM update, so a trigger clears
+  // only the guards that it wrote. A trigger with a handle changes its store when a root attaches.
+  watch(
+    [() => toValue(store), siblings],
+    ([current, placed], [previous]) => {
+      if (previous && previous !== current) {
+        clearRefs(previous);
+      }
+      if (placed && guards) {
+        current.context.beforeTriggerFocusGuardRef.value = guards.before;
+        current.context.triggerFocusTargetRef.value = guards.after;
+      } else {
+        clearRefs(current);
+      }
+    },
+    { flush: 'post' },
+  );
+
+  onScopeDispose(() => clearRefs(toValue(store)));
 }

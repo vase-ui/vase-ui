@@ -51,7 +51,7 @@ import {
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { PopupPositioningContext } from '../types';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager';
+import type { PopupFocusOptions, FocusOption } from './usePopupFocus';
 import FocusGuard from './FocusGuard.vue';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set the
@@ -83,7 +83,7 @@ function ignoreFocusOptions() {
   onTestFinished(() => spy.mockRestore());
 }
 
-type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
+type ManagerProps = Partial<Omit<PopupFocusOptions, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a

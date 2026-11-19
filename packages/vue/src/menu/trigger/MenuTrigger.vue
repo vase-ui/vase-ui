@@ -93,7 +93,7 @@ import {
   useFloatingTree,
 } from '../../utils/popups/tree/FloatingTree';
 import { FloatingTreeStore } from '../../utils/popups/tree/FloatingTreeStore';
-import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
+import { useTriggerFocusGuards } from '../../utils/popups/focus/usePopupFocus';
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuHandleStore } from '../store/MenuStore';

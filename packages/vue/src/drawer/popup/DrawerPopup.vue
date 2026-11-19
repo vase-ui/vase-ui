@@ -3,7 +3,7 @@ import type { CSSProperties, HTMLAttributes } from 'vue';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
 import type { DrawerSwipeDirection } from '../root/DrawerRootContext';
@@ -169,7 +169,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
@@ -409,6 +409,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       },
       style: popupStyle(),
     },
+    focusBindings(attrs),
     attrs,
   ],
   // A render during a swipe must keep the drag of the swipe, also over a `transform` or a
@@ -505,7 +506,7 @@ function getInsideElements() {
   return [store.context.internalBackdropRef.value];
 }
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: store.select('openMethod'),
@@ -519,6 +520,7 @@ useFloatingFocusManager(
     restoreFocus: 'popup',
   }),
   element,
+  true,
 );
 
 defineExpose({ element });

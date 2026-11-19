@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 
 export interface MenuPopupState {
   /**
@@ -69,7 +69,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
@@ -198,6 +198,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       onFocusin: parentHandoff?.handleFocus,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
+    focusBindings(attrs),
     filterPopup ? filterPopup.props(attrs) : attrs,
     // This listener runs before each other listener of the popup.
     {
@@ -276,7 +277,7 @@ function getNextFocusableElement() {
   return store.context.triggerFocusTargetRef.value;
 }
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: store.select('openMethod'),
@@ -295,6 +296,7 @@ useFloatingFocusManager(
     afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
   }),
   element,
+  true,
 );
 
 useElementRegistration(menuPopups, element, () => store.select('rootId'));

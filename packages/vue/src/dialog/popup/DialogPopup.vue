@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 
 export interface DialogPopupState {
   /**
@@ -63,7 +63,7 @@ import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
@@ -146,11 +146,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       onKeydown: handleKeydown,
       style: { [DialogPopupCssVars.nestedDialogs]: nestedOpenDialogCount.value },
     },
+    focusBindings(attrs),
     attrs,
   ],
 });
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: openMethod.value,
@@ -164,6 +165,7 @@ useFloatingFocusManager(
     getInsideElements,
   }),
   element,
+  true,
 );
 
 defineExpose({ element });

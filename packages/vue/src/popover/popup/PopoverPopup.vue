@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 
 export interface PopoverPopupState {
   /**
@@ -73,7 +73,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
@@ -164,11 +164,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       onKeydown: handleKeydown,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
+    focusBindings(attrs),
     attrs,
   ],
 });
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: store.state.openMethod,
@@ -184,6 +185,7 @@ useFloatingFocusManager(
     afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
   }),
   element,
+  true,
 );
 
 provide(PopupStyleContext, () => elementProps().style);

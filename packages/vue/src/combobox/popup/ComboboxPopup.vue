@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 
 export interface ComboboxPopupState {
   /**
@@ -68,7 +68,7 @@ import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMou
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
@@ -141,6 +141,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       onFocusin: handleFocusin,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
+    focusBindings(attrs),
     attrs,
   ],
 });
@@ -180,7 +181,7 @@ function getInsideElements() {
 
 const dismissButton = useDismissButton(element, focusManagerModal, store.context.endDismissRef);
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store: store.interactions,
     disabled: focusManagerDisabled.value,
@@ -192,6 +193,7 @@ useFloatingFocusManager(
     nodesAfterElement: dismissButton.value ? [dismissButton.value] : undefined,
   }),
   element,
+  true,
 );
 
 defineExpose({ element });
