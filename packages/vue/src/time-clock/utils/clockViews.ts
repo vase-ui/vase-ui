@@ -331,14 +331,12 @@ export function outerRingRadius(rect: ClockRect, numbers: readonly ClockRect[]):
   return total / numbers.length;
 }
 
-/**
- * The position that `angle` selects on a face of `count` equal parts: a whole number from 0 up to
- * `count`, rounded to `step`. The part before `count` is next to the part at 0, so a position that
- * rounds up to `count` is 0.
- */
+/** The nearest mark on the face. The gap from the last mark back to zero can be shorter than a step. */
 export function positionOfAngle(angle: number, count: number, step = 1): number {
-  const position = Math.round(angle / (360 / count) / step) * step;
-  return position >= count ? 0 : position;
+  const position = angle / (360 / count);
+  const before = Math.floor(position / step) * step;
+  const after = Math.min(before + step, count);
+  return position - before < after - position ? before : after % count;
 }
 
 /** The angle of a position on a face of `count` equal parts, in degrees from 12 o'clock, clockwise. */
