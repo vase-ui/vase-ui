@@ -68,7 +68,7 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, provide, shallowRef, triggerRef } from 'vue';
+import { computed, nextTick, provide, shallowRef, triggerRef } from 'vue';
 import { queueInputTake } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
@@ -90,7 +90,8 @@ import { useVaseUiId } from '../internals/useVaseUiId';
 import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
-import { RadioGroupContext } from './RadioGroupContext';
+import { RadioGroupContext } from './radioContext';
+import type { RadioInput } from './radioContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -160,12 +161,21 @@ if (checkedValue.value != null) {
 }
 
 const touched = shallowRef(false);
-const inputSyncRequest = shallowRef(0);
+const radioInputs = new Map<HTMLInputElement, RadioInput>();
 
-// The group asks all its radios in one flush. With one take for each radio, a take of another
-// part between two radios waits for a flush, and the write of the earlier radio unchecks the input
-// that the browser checked in a group with a name.
-const inputTakeRequest = shallowRef<{ event?: Event | undefined }>();
+function restoreInputs() {
+  for (const radio of radioInputs.values()) radio.restore();
+}
+
+function takeInputs(event?: Event) {
+  // Unnamed inputs can both be checked. Compare them before a change updates the group.
+  const changes = Array.from(radioInputs).filter(
+    ([input, radio]) => input.checked && !radio.checked.value,
+  );
+  for (const [, radio] of changes) radio.take(event);
+  void nextTick(restoreInputs);
+}
+
 let isInputTakeQueued = false;
 
 function takeInputsAfterMount() {
@@ -175,7 +185,7 @@ function takeInputsAfterMount() {
   isInputTakeQueued = true;
   queueInputTake(() => {
     isInputTakeQueued = false;
-    inputTakeRequest.value = {};
+    takeInputs();
     return true;
   });
 }
@@ -193,17 +203,10 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
 
   emit('update:modelValue', value);
   checkedValue.value = value;
-  inputSyncRequest.value += 1;
+  void nextTick(restoreInputs);
 }
 
-// The exposed input is the checked input when it is enabled, or else the first enabled input in the
-// document. The field validates each registered input, so the group does not write
-// `validation.inputRef`. A stale input of an unmounted radio there would block the submit of the
-// form.
-const radioInputs = new Set<HTMLInputElement>();
-// `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI. The
-// registration of an input whose `disabled` property is `false` and a value that becomes `null` end
-// this state.
+// The exposed input stays null after removal until an enabled radio registers or the value clears.
 const isExposedInputDetached = shallowRef(false);
 
 // A keyed move runs no registration, and a radio follows a change of a native `<fieldset>` only after
@@ -215,7 +218,7 @@ function getExposedInput() {
   }
 
   let firstInput: HTMLInputElement | null = null;
-  for (const input of radioInputs) {
+  for (const input of radioInputs.keys()) {
     if (input.matches(':disabled')) {
       continue;
     }
@@ -229,18 +232,15 @@ function getExposedInput() {
   return firstInput;
 }
 
-function registerInputRef(input: HTMLInputElement) {
-  radioInputs.add(input);
-
-  // A radio reads a native `<fieldset>` after its mount. The first registration of a radio that
-  // mounts in a disabled fieldset thus sees no `disabled` attribute, and it ends the detach, as in
-  // Base UI.
-  if (!input.disabled) {
-    isExposedInputDetached.value = false;
-  }
-  // A `computed` that reads `inputElement` then follows each registration.
+function refreshInput(input: HTMLInputElement) {
+  if (!input.disabled) isExposedInputDetached.value = false;
+  // A computed that reads inputElement must also see a new checked or disabled input.
   triggerRef(isExposedInputDetached);
+}
 
+function registerInput(input: HTMLInputElement, actions: RadioInput) {
+  radioInputs.set(input, actions);
+  refreshInput(input);
   return () => {
     const givenInput = getExposedInput();
     radioInputs.delete(input);
@@ -333,13 +333,12 @@ provide(RadioGroupContext, {
   validation,
   name: inputName,
   readOnly: computed(() => props.readOnly),
-  registerInputRef,
+  registerInput,
+  refreshInput,
   required: computed(() => props.required),
   setCheckedValue,
   setTouched,
   touched,
-  inputSyncRequest,
-  inputTakeRequest,
   takeInputsAfterMount,
   reset,
 });
@@ -394,7 +393,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 });
 
 useFormRestore(element, (event) => {
-  inputTakeRequest.value = { event };
+  void nextTick(() => takeInputs(event));
 });
 
 defineExpose({

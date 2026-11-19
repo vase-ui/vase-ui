@@ -81,5 +81,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/radio-group/radioContext.ts",
+      "member": "RadioGroupContext",
+      "witness": "packages/vue/src/radio-group/RadioGroup.test.tsx"
+    }
+  ]
 }

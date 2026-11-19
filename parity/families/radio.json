@@ -28,5 +28,21 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/radio/root/RadioRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/radio-group/radioContext.ts",
+      "member": "RadioRootContext",
+      "witness": "packages/vue/src/radio/indicator/RadioIndicator.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/radio/utils/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/radio-group/radioContext.ts",
+      "member": "stateAttributesMapping",
+      "witness": "packages/vue/src/radio/indicator/RadioIndicator.test.tsx"
+    }
+  ]
 }

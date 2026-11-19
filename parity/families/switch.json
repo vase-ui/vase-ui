@@ -34,5 +34,21 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/switch/root/SwitchRoot.vue",
+      "member": "SwitchRootContext",
+      "witness": "packages/vue/src/switch/thumb/SwitchThumb.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/switch/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/switch/root/SwitchRoot.vue",
+      "member": "stateAttributesMapping",
+      "witness": "packages/vue/src/switch/root/SwitchRoot.test.tsx"
+    }
+  ]
 }

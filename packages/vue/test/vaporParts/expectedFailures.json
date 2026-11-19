@@ -118,9 +118,6 @@
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },
-    "src/internals/checkedInputProps.test.tsx": {
-      "fails": {}
-    },
     "src/internals/composite/item/useCompositeItem.test.tsx": {
       "fails": {}
     },
@@ -143,6 +140,9 @@
       "fails": {}
     },
     "src/internals/useAnimationsFinished.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useCheckedInput.test.tsx": {
       "fails": {}
     },
     "src/internals/useFormReset.test.tsx": {

@@ -2048,6 +2048,13 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('prop: parent', () => {
+    it('keeps the input style of a named parent checkbox', async () => {
+      await render(<Checkbox.Root parent name="fruit" />);
+      const input = getInput();
+      expect(input).not.toHaveAttribute('name');
+      expect(input).toHaveStyle({ position: 'absolute', width: '1px' });
+    });
+
     it('has `data-parent` on the parent and on no child', async () => {
       await render(
         <CheckboxGroup allValues={['a']}>

@@ -14,12 +14,12 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
-import { CheckboxRootContext } from '../root/CheckboxRootContext';
+import { CheckboxRootContext } from '../../checkbox-group/checkboxContext';
 import CheckboxIndicatorHydration from './CheckboxIndicatorHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/checkbox/indicator/CheckboxIndicatorHydration.test.vue';
 
-const testContext: CheckboxRootContext = computed(() => ({
+const testContext = computed(() => ({
   checked: true,
   disabled: false,
   readOnly: false,
