@@ -380,9 +380,9 @@ function measure() {
   return measurement.value;
 }
 
-// A key and a method need the room of the panels, and no length that waits.
+// A key and a method need the room of the panels. A measurement gives each length its percent.
 function canChange() {
-  return measure() !== undefined && lengths.value.size === 0;
+  return measure() !== undefined;
 }
 
 function findPanel(id: string) {
@@ -495,18 +495,18 @@ const pivots = computed(() => {
 });
 
 // A panel that mounts with no entry gives `update:modelValue` alone, when it has its place.
-let knownIds = new Set<string>();
 watch(
   () => (mounted.value ? constraints.value.map((panel) => panel.id) : undefined),
   (ids, previous) => {
-    if (!ids) return;
     const isNew =
+      ids !== undefined &&
       previous !== undefined &&
       ids.some(
         (id) =>
-          !knownIds.has(id) && !Object.hasOwn(requested.value.layout, id) && !lengths.value.has(id),
+          !previous.includes(id) &&
+          !Object.hasOwn(requested.value.layout, id) &&
+          !lengths.value.has(id),
       );
-    knownIds = new Set(ids);
     if (isNew) updateLayout(shown.value);
   },
   { flush: 'post' },

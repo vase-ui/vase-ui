@@ -104,9 +104,9 @@ const firstSize = computed<Size | undefined>(() => {
 });
 const firstPercent = computed(() => parseSize(firstSize.value, undefined));
 
-// A panel that leaves the layout, such as a panel that `KeepAlive` holds, keeps its last size.
-const size = computed<number>((previous) => root.shown[panelId.value] ?? previous ?? 0);
+const size = computed(() => root.shown[panelId.value] ?? 0);
 const length = computed(() => root.lengths.get(panelId.value));
+// A panel that leaves the layout, such as a panel that `KeepAlive` holds, keeps its collapsed state.
 const collapsed = computed<boolean>((previous) => {
   // A panel that waits for its first measurement has no size, and it is not collapsed.
   if (length.value !== undefined) return false;

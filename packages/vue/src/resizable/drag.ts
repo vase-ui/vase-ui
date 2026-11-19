@@ -79,19 +79,18 @@ export function useDrag(options: {
       startPointer = horizontal ? event.clientX : event.clientY;
       panelSpace = measurement.space * measurement.scale;
       startLayout = root.shown;
-      applied = undefined;
       lastEvent = event;
       if (root.resizeMode === 'on-release') root.setPendingLayout(startLayout);
       return true;
     },
     move(event) {
       lastEvent = event;
-      const pivot = options.pivot();
       // A panel that mounted or unmounted since the start makes the start layout unfit for a move.
-      if (pivot < 0 || !hasSamePanels(startLayout, root.shown)) {
+      if (!hasSamePanels(startLayout, root.shown)) {
         drag.end(event, false);
         return;
       }
+      const pivot = options.pivot();
       const distance = (horizontal ? event.clientX : event.clientY) - startPointer;
       const delta = ((rtl ? -distance : distance) / panelSpace) * 100;
       const { constraints } = root;
@@ -103,7 +102,7 @@ export function useDrag(options: {
         { push: root.pushPanels },
       );
       if (root.pendingLayout) {
-        if (!areLayoutsEqual(next, root.pendingLayout)) root.setPendingLayout(next);
+        root.setPendingLayout(next);
       } else if (!areLayoutsEqual(next, root.shown)) {
         applied = root.changeLayout(next, createChangeEventDetails('drag', event)) ?? applied;
       }
@@ -135,7 +134,6 @@ export function useDrag(options: {
   // The drags of the press of this handle.
   let press: Set<Drag> | undefined;
   let pointerId = 0;
-  let captured: HTMLElement | undefined;
   let startX = 0;
   let startY = 0;
   let moved = false;
@@ -147,7 +145,6 @@ export function useDrag(options: {
     if (!ended) return;
     press = undefined;
     for (const each of ended) each.end(event, apply);
-    captured = undefined;
     stopClick = moved;
   }
 
@@ -178,20 +175,17 @@ export function useDrag(options: {
       startX = event.clientX;
       startY = event.clientY;
       moved = false;
-      captured = element;
       element.setPointerCapture(event.pointerId);
-      // The `mousedown` of the press does not focus the handle. Here, no browser shows a focus
-      // ring unless a key moved the focus before.
-      element.focus({ preventScroll: true });
+      // The `mousedown` of the press does not focus the handle. A focus of a script shows a ring
+      // unless a mouse gave the last focus, and `focusVisible: false` stops it (M5).
+      element.focus({ preventScroll: true, focusVisible: false });
     },
     onPointermove(event: PointerEvent) {
       if (!press) {
-        if (!dragging.value) {
-          hovering.value =
-            event.buttons === 0 &&
-            crossedDrags(drag, event.currentTarget as Element, event.clientX, event.clientY)
-              .length > 0;
-        }
+        hovering.value =
+          event.buttons === 0 &&
+          crossedDrags(drag, event.currentTarget as Element, event.clientX, event.clientY).length >
+            0;
         return;
       }
       if (event.pointerId !== pointerId) return;
@@ -229,14 +223,12 @@ export function useDrag(options: {
     options.element,
     (element, _, onCleanup) => {
       // The browser sends no `lostpointercapture` to a capture element that goes.
-      if (captured && captured !== element) finish(undefined, false);
+      if (press) finish(undefined, false);
       if (!element) return;
       drags.set(element, drag);
       onCleanup(() => drags.delete(element));
     },
-    // A Vapor slot in a virtual DOM part can set its ref to `null` and to the same element again
-    // in one update.
-    { immediate: true, flush: 'post' },
+    { immediate: true },
   );
   watch(options.canMove, (canMove) => {
     if (!canMove) endPress();

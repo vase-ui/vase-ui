@@ -150,13 +150,13 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   // The steps and the constraints can be lengths, and the page can have changed.
-  root.measure();
+  const measurement = root.measure();
   const delta = keyDelta(event);
   if (delta === undefined) return;
   event.preventDefault();
   // The next move of a drag starts from the layout at the press, and it would undo the key. A
-  // root with a length that waits has no layout to move.
-  if (root.dragging || !root.measurement || root.lengths.size > 0) return;
+  // root with no room for its panels has no layout to move.
+  if (root.dragging || !measurement) return;
   const next = adjustLayout(root.constraints, root.shown, pivot.value, delta, {
     exact: true,
     push: root.pushPanels,

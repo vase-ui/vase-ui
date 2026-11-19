@@ -509,7 +509,7 @@ The parts write no style sheet and no cursor, so a page with a Content Security 
 
 `data-at-min` means that the handle cannot move to the left, or up in a vertical root. `data-at-max` means that it cannot move to the right, or down. The sides are sides of the screen, also in a right-to-left root. A cursor of `e-resize` for `data-at-min` and `w-resize` for `data-at-max` thus shows the one way that the handle can move. A handle with both attributes cannot move, and the demos give it the cursor `default` except at a crossing, where a press moves the other handle.
 
-The handle has `position: relative`, because it is the containing block of its pointer target, the last `<span>` in it. Do not give the handle `position: static`: the pointer target then has another place. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle. A press gives the handle the focus. Each browser shows a focus ring for that focus unless a mouse gave the last focus.
+The handle has `position: relative`, because it is the containing block of its pointer target, the last `<span>` in it. Do not give the handle `position: static`: the pointer target then has another place. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle. A press gives the handle the focus with no focus ring. A browser without the `focusVisible` option of `focus()` can show a ring for that focus.
 
 ## RTL
 

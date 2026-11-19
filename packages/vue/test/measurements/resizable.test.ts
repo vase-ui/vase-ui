@@ -185,17 +185,20 @@ describe('the press of a div with pointer capture', () => {
 
   /**
    * Presses a div with pointer capture in a new document, after `before`, and moves across text.
-   * `focus` gives the div the focus by a script in that listener. A new document has no focus
-   * that a mouse gave, and the focus ring of each browser depends on it.
+   * `focus` gives the div the focus by a script in that listener, with `focusVisible: false` for
+   * `hideRing`. A new document has no focus that a mouse gave, and the focus ring of each browser
+   * depends on it.
    */
   async function pressInFrame(
     press: Press,
     {
       before = 'nothing',
       focus,
+      hideRing = false,
     }: {
       before?: 'nothing' | 'mouse' | 'Tab' | 'script';
       focus?: 'pointerdown' | 'mousedown';
+      hideRing?: boolean;
     } = {},
   ) {
     const frame = document.body.appendChild(document.createElement('iframe'));
@@ -213,7 +216,11 @@ describe('the press of a div with pointer capture', () => {
       target.addEventListener('mousedown', (event) => event.preventDefault());
     if (press === 'prevented selectstart')
       target.addEventListener('selectstart', (event) => event.preventDefault());
-    if (focus) target.addEventListener(focus, () => target.focus({ preventScroll: true }));
+    if (focus) {
+      target.addEventListener(focus, () =>
+        target.focus({ preventScroll: true, ...(hideRing && { focusVisible: false }) }),
+      );
+    }
     if (before === 'mouse')
       await userEvent.pointer({ coords: { x: 150, y: 10 }, keys: '[MouseLeft]' });
     if (before === 'Tab') {
@@ -256,8 +263,9 @@ describe('the press of a div with pointer capture', () => {
   });
 
   // A focus that the browser gives at a press never shows a ring. A focus that a script gives in
-  // the press shows one unless a mouse gave the focus before, in each browser.
-  test('M5: focus() in a press matches :focus-visible unless a mouse gave the last focus', async () => {
+  // the press shows one unless a mouse gave the focus before, in each browser. The option
+  // `focusVisible: false` of `focus()` stops the ring in each browser.
+  test('M5: focus() in a press matches :focus-visible unless a mouse gave the last focus or the call has focusVisible: false', async () => {
     releaseAfterTest();
     const results: Record<string, string> = {};
     for (const focus of ['pointerdown', 'mousedown'] as const) {
@@ -267,6 +275,12 @@ describe('the press of a div with pointer capture', () => {
           focus,
         });
       }
+    }
+    for (const before of ['nothing', 'Tab', 'script'] as const) {
+      results[`pointerdown with focusVisible: false after ${before}`] = await pressInFrame(
+        'prevented mousedown',
+        { before, focus: 'pointerdown', hideRing: true },
+      );
     }
     const ring = 'focus, ring, no selection';
     const noRing = 'focus, no ring, no selection';
@@ -279,6 +293,9 @@ describe('the press of a div with pointer capture', () => {
       'mousedown after mouse': noRing,
       'mousedown after Tab': ring,
       'mousedown after script': ring,
+      'pointerdown with focusVisible: false after nothing': noRing,
+      'pointerdown with focusVisible: false after Tab': noRing,
+      'pointerdown with focusVisible: false after script': noRing,
     });
   });
 
