@@ -1,0 +1,103 @@
+import { computed, mergeProps, type Ref } from 'vue';
+import { useInDisabledFieldset } from '../fieldset/part';
+import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
+
+/**
+ * The behavior of a button: the attributes of its state, the stop of a disabled button, and the
+ * keys of an element that is not a native button.
+ */
+export function useButton(options: {
+  element: Readonly<Ref<Element | null>>;
+  /** Disabled by the part: its prop, or its group. */
+  disabled: () => boolean;
+  focusableWhenDisabled?: () => boolean;
+  /** For a part that never submits a form. Written only on a `<button>`. */
+  type?: 'button';
+}) {
+  const isNative = computed(() => isNativeButton(options.element.value));
+  const inDisabledFieldset = useInDisabledFieldset(options.element);
+  /** Disabled by the part, or by a disabled fieldset around a native button. */
+  const disabled = computed(
+    () => options.disabled() || (isNative.value && inDisabledFieldset.value),
+  );
+  let isSpaceDown = false;
+
+  // A native disabled button gets no `mousedown`, `mouseup` or `click`, and no ancestor gets them
+  // in the bubble phase (test/measurements/button.test.ts). A disabled button that keeps the focus,
+  // and each other element, stops them the same way.
+  function stopWhileDisabled(event: Event) {
+    if (!disabled.value) return;
+    if (event.type === 'click') event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    const target = event.currentTarget as Element;
+    if (event.target !== target || event.defaultPrevented) return;
+    if (event.key === ' ') {
+      // A native button gives the click at `keyup`, and the page does not scroll.
+      event.preventDefault();
+      isSpaceDown = true;
+    } else if (event.key === 'Enter' && !disabled.value && !isLink(target)) {
+      dispatchClickWithModifiers(target, event);
+    }
+  }
+
+  function onKeyup(event: KeyboardEvent) {
+    if (event.key !== ' ' || !isSpaceDown) return;
+    isSpaceDown = false;
+    if (!event.defaultPrevented && !disabled.value) {
+      dispatchClickWithModifiers(event.currentTarget as Element, event);
+    }
+  }
+
+  const rule = computed(() => {
+    const isDisabled = disabled.value;
+    const focusable = !!options.focusableWhenDisabled?.();
+    const element = options.element.value;
+    const attributes: Record<string, unknown> = isNative.value
+      ? isDisabled && focusable
+        ? { 'aria-disabled': 'true' }
+        : { disabled: isDisabled ? '' : undefined }
+      : {
+          role: 'button',
+          tabindex: isDisabled && !focusable ? -1 : 0,
+          'aria-disabled': isDisabled ? 'true' : undefined,
+        };
+    if (options.type && (!element || element.localName === 'button')) {
+      attributes.type = options.type;
+    }
+    return {
+      ...attributes,
+      onClick: stopWhileDisabled,
+      onMousedown: stopWhileDisabled,
+      onMouseup: stopWhileDisabled,
+    };
+  });
+
+  return {
+    disabled,
+    /**
+     * The attributes of the element. The values of the developer (`attrs`) win, then those of the
+     * part (`own`), then those of the button. The key listeners run last, so that
+     * `preventDefault()` in a key listener of the developer stops the click of the key.
+     */
+    mergeAttributes(own: Record<string, unknown>, attrs: Record<string, unknown>) {
+      return mergeProps(rule.value, own, attrs, isNative.value ? {} : { onKeydown, onKeyup });
+    },
+  };
+}
+
+/** A `<button>`, an `<input>` that is a button, or an element that the part does not know yet. */
+function isNativeButton(element: Element | null) {
+  if (!element) return true;
+  if (element.localName === 'button') return true;
+  return (
+    element.localName === 'input' &&
+    ['button', 'submit', 'reset', 'image'].includes((element as HTMLInputElement).type)
+  );
+}
+
+function isLink(element: Element) {
+  return element.localName === 'a' && element.hasAttribute('href');
+}

@@ -5,6 +5,7 @@
  * older forms leave them out.
  */
 export const REFACTORED_FOLDERS = [
+  'button',
   'checkbox',
   'checkbox-group',
   'field',

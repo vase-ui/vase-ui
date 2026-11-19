@@ -515,13 +515,11 @@ test('the reference of use-render has useRender.Parameters with defaultTagName a
   );
 });
 
-test('the reference of button has the prop disabled and the attribute data-disabled', () => {
+test('the reference of button has the prop disabled with the default false, and no data attribute', () => {
   const [button] = read('button').parts;
   assert.equal(button.name, 'Button');
   assert.equal(button.props.find(({ name }) => name === 'disabled')?.default, 'false');
-  assert.deepEqual(button.dataAttributes, [
-    { name: 'data-disabled', type: null, description: 'Present when the button is disabled.' },
-  ]);
+  assert.deepEqual(button.dataAttributes, []);
 });
 
 test('the reference lists the default model, the named models and the item value', () => {

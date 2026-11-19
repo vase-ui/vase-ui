@@ -38,43 +38,17 @@ async function readElement(locator: Locator, attributeNames: string[]) {
   };
 }
 
-async function expectButtonPage(page: Page) {
+async function expectButtonPage(page: Page, { hydrated = false } = {}) {
   const attributeNames = ['type', 'tabindex', 'disabled', 'aria-disabled', 'data-disabled', 'role'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+  const none = Object.fromEntries(attributeNames.map((name) => [name, null]));
 
   expect(await page.getByTestId('counter').textContent()).toBe('Count 0');
-  expect(await read('counter')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': null,
-    'data-disabled': null,
-    role: null,
-  });
-  expect(await read('disabled')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: '',
-    'aria-disabled': null,
-    'data-disabled': '',
-    role: null,
-  });
-  expect(await read('focusable')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': 'true',
-    'data-disabled': '',
-    role: null,
-  });
-  expect(await read('span')).toEqual({
-    type: null,
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': null,
-    'data-disabled': null,
-    role: 'button',
-  });
+  expect(await read('counter')).toEqual(none);
+  expect(await read('disabled')).toEqual({ ...none, disabled: '' });
+  expect(await read('focusable')).toEqual({ ...none, 'aria-disabled': 'true' });
+  // The part knows the element of its `element` slot after the mount.
+  expect(await read('span')).toEqual(hydrated ? { ...none, tabindex: '0', role: 'button' } : none);
 }
 
 async function expectSeparatorPage(page: Page) {
@@ -527,7 +501,7 @@ async function expectInputPage(page: Page) {
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
-  expect(await page.getByTestId('button').getAttribute('type')).toBe('button');
+  expect(await page.getByTestId('button').getAttribute('type')).toBeNull();
   // A provider renders its slot and no element.
   expect(
     await page
@@ -1933,7 +1907,11 @@ interface PageCase {
 }
 
 const PAGES: PageCase[] = [
-  { path: '/button', expectPage: expectButtonPage },
+  {
+    path: '/button',
+    expectPage: expectButtonPage,
+    expectHydratedPage: (page) => expectButtonPage(page, { hydrated: true }),
+  },
   { path: '/separator', expectPage: expectSeparatorPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
     path,

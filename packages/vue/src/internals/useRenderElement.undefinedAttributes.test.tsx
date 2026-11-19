@@ -6,7 +6,6 @@ import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Avatar } from '@vase-ui/vue/avatar';
-import { Button } from '@vase-ui/vue/button';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
@@ -115,18 +114,6 @@ const rows: Row[] = [
       </Avatar.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Button type',
-    attribute: 'type',
-    createNode: () => (
-      <form>
-        <Button type={undefined} data-testid="part">
-          Save
-        </Button>
-      </form>
-    ),
-    expected: () => 'button',
   },
   {
     name: 'Calendar.Grid role',
@@ -423,6 +410,18 @@ const rows: Row[] = [
       </Toast.Provider>
     ),
     expected: targetId,
+  },
+  {
+    name: 'Toggle type',
+    attribute: 'type',
+    createNode: () => (
+      <form>
+        <Toggle type={undefined} data-testid="part">
+          Bold
+        </Toggle>
+      </form>
+    ),
+    expected: () => 'button',
   },
   {
     name: 'Toggle aria-pressed',

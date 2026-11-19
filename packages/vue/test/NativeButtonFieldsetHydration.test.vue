@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Button } from '@vase-ui/vue/button';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -18,7 +17,6 @@ defineProps<{ fieldsetRoot?: boolean }>();
 
 <template>
   <component :is="fieldsetRoot ? Fieldset.Root : 'fieldset'" disabled>
-    <Button v-slot="{ state }">{{ state.disabled }}</Button>
     <Toggle v-slot="{ state }">{{ state.disabled }}</Toggle>
     <Accordion.Root>
       <Accordion.Item value="one">
