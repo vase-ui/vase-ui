@@ -4,18 +4,18 @@ import MeasureRegister from './MeasureRegister.vue';
 
 defineProps({
   scene: { type: Object as PropType<{ first: boolean }>, required: true },
+  log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
   transition: Boolean,
 });
-const emit = defineEmits<{ log: [entry: string] }>();
 </script>
 
 <template>
   <Transition v-if="transition">
-    <MeasureRegister v-if="scene.first" key="first" name="first" @log="emit('log', $event)" />
-    <MeasureRegister v-else key="second" name="second" @log="emit('log', $event)" />
+    <MeasureRegister v-if="scene.first" key="first" name="first" :log="log" />
+    <MeasureRegister v-else key="second" name="second" :log="log" />
   </Transition>
   <div v-else>
-    <MeasureRegister v-if="scene.first" name="first" @log="emit('log', $event)" />
-    <MeasureRegister v-else name="second" @log="emit('log', $event)" />
+    <MeasureRegister v-if="scene.first" name="first" :log="log" />
+    <MeasureRegister v-else name="second" :log="log" />
   </div>
 </template>

@@ -173,20 +173,20 @@ describe('native radios with no name', () => {
   });
 });
 
-/** Mounts the radios. Their parent keeps the value that they send only with `accept`. */
-function mountRadios(model: { value: string | null; accept: boolean }) {
-  return mount(MeasureControlledRadios, {
-    model,
-    onChange: (value: string) => {
+/** Mounts the radios. Their parent keeps the value that they give only with `accept`. */
+function mountRadios(state: { value: string | null; accept: boolean }) {
+  const model = reactive({
+    ...state,
+    write(value: string) {
       if (model.accept) model.value = value;
     },
-  }).root;
+  });
+  return { model, root: mount(MeasureControlledRadios, { model }).root };
 }
 
 describe('a native reset of radios with :checked', () => {
   test('gives the value that Vue bound last, so a parent that keeps its value sees no change', async () => {
-    const model = reactive({ value: 'a' as string | null, accept: false });
-    const mounted = mountRadios(model);
+    const { root: mounted } = mountRadios({ value: 'a', accept: false });
     const [a] = mounted.querySelectorAll('input');
     mounted.querySelectorAll('input')[1]!.click();
     await settle();
@@ -196,8 +196,7 @@ describe('a native reset of radios with :checked', () => {
   });
 
   test('a listener on the window can prevent it, and a timer sees that; each reset is one event', async () => {
-    const model = reactive({ value: 'a' as string | null, accept: true });
-    const mounted = mountRadios(model);
+    const { root: mounted } = mountRadios({ value: 'a', accept: true });
     await nextTick();
     const form = mounted.querySelector('form')!;
     const seen: boolean[] = [];

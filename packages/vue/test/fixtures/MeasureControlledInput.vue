@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-// A native input with `:value`. Its listener sends the text, and the parent can keep its value.
-defineProps({ model: { type: Object as PropType<{ value: string }>, required: true } });
-const emit = defineEmits<{ input: [value: string] }>();
+// A native input with `:value`. Its listener gives the text to the parent, and the parent can keep
+// its value.
+defineProps({
+  model: {
+    type: Object as PropType<{ value: string; write(value: string): void }>,
+    required: true,
+  },
+});
 </script>
 
 <template>
@@ -11,7 +16,7 @@ const emit = defineEmits<{ input: [value: string] }>();
     <input
       :value="model.value"
       aria-label="Text"
-      @input="emit('input', ($event.target as HTMLInputElement).value)"
+      @input="model.write(($event.target as HTMLInputElement).value)"
     />
   </form>
 </template>

@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-// Native radios with `:checked`. Their listener sends the value, and the parent can keep its value.
-defineProps({ model: { type: Object as PropType<{ value: string | null }>, required: true } });
-const emit = defineEmits<{ change: [value: string] }>();
+// Native radios with `:checked`. Their listener gives the value to the parent, and the parent can
+// keep its value.
+defineProps({
+  model: {
+    type: Object as PropType<{ value: string | null; write(value: string): void }>,
+    required: true,
+  },
+});
 </script>
 
 <template>
@@ -16,7 +21,7 @@ const emit = defineEmits<{ change: [value: string] }>();
       :value="value"
       :aria-label="value"
       :checked="model.value === value"
-      @change="emit('change', value)"
+      @change="model.write(value)"
     />
     <button type="reset">Reset</button>
   </form>

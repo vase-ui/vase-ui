@@ -19,20 +19,31 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Mounts the checkbox. Its parent keeps the state that the checkbox sends only with `accept`. */
-function mountBox(model: { checked: boolean; indeterminate: boolean; accept: boolean }) {
-  const mounted = mount(MeasureControlledCheckbox, {
-    model,
-    onChange: (checked: boolean) => {
+/** Mounts the checkbox. Its parent keeps the state that the checkbox gives only with `accept`. */
+function mountBox(model: {
+  checked: boolean;
+  indeterminate: boolean;
+  accept: boolean;
+  write(checked: boolean): void;
+}) {
+  const mounted = mount(MeasureControlledCheckbox, { model }).root;
+  return { form: mounted.querySelector('form')!, box: mounted.querySelector('input')! };
+}
+
+/** The state of the parent of the checkbox, which keeps a state only with `accept`. */
+function parentState(state: { checked: boolean; indeterminate: boolean; accept: boolean }) {
+  const model = reactive({
+    ...state,
+    write(checked: boolean) {
       if (model.accept) model.checked = checked;
     },
-  }).root;
-  return { form: mounted.querySelector('form')!, box: mounted.querySelector('input')! };
+  });
+  return model;
 }
 
 describe('a native checkbox with :checked and :indeterminate', () => {
   test('stays checked after a click that its listener does not write to the model', async () => {
-    const model = reactive({ checked: false, indeterminate: false, accept: false });
+    const model = parentState({ checked: false, indeterminate: false, accept: false });
     const { box } = mountBox(model);
     box.click();
     await settle();
@@ -41,7 +52,7 @@ describe('a native checkbox with :checked and :indeterminate', () => {
   });
 
   test('loses the indeterminate property at a click, and a prop that stays true does not set it again', async () => {
-    const model = reactive({ checked: false, indeterminate: true, accept: true });
+    const model = parentState({ checked: false, indeterminate: true, accept: true });
     const { box } = mountBox(model);
     await nextTick();
     expect(box.indeterminate).toBe(true);
@@ -52,7 +63,7 @@ describe('a native checkbox with :checked and :indeterminate', () => {
   });
 
   test('gets the checked attribute at each value from :checked, so a reset gives the last value', async () => {
-    const model = reactive({ checked: true, indeterminate: false, accept: true });
+    const model = parentState({ checked: true, indeterminate: false, accept: true });
     const { form, box } = mountBox(model);
     await nextTick();
     expect(box.hasAttribute('checked')).toBe(true);
@@ -65,7 +76,7 @@ describe('a native checkbox with :checked and :indeterminate', () => {
   });
 
   test('has an indeterminate attribute in the server HTML that :indeterminate does not match, and gets the property at the hydration', async () => {
-    const props = { model: { checked: false, indeterminate: true } };
+    const props = { model: { checked: false, indeterminate: true, write() {} } };
     const rendered = await renderOnServer('MeasureControlledCheckbox', props);
     const box = rendered.querySelector('input')!;
     expect(box.hasAttribute('indeterminate')).toBe(true);

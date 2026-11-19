@@ -124,7 +124,7 @@ describe('submit', () => {
   test('the native modifiers .prevent and .once work', () => {
     const submits: SubmitEvent[] = [];
     const { root } = mount(SubmitWithModifiers, {
-      onSave: (event: SubmitEvent) => submits.push(event),
+      submits: { add: (event: SubmitEvent) => submits.push(event) },
     });
     const button = root.querySelector('button')!;
     button.click();
@@ -186,8 +186,10 @@ describe('the values of the form', () => {
   test('@submit.prevent gets the event and the typed values of the named fields; a disabled field and a field outside the form have none', async () => {
     const submits: { prevented: boolean; values: Record<string, unknown> }[] = [];
     const { root } = mount(FormValues, {
-      onSave: (prevented: boolean, values: Record<string, unknown>) =>
-        submits.push({ prevented, values }),
+      saves: {
+        add: (prevented: boolean, values: Record<string, unknown>) =>
+          submits.push({ prevented, values }),
+      },
     });
     await nextTick();
     const form = root.querySelector('form')!;
