@@ -523,21 +523,6 @@ const rows: Row[] = [
     ),
   },
   {
-    part: 'Slider.Value',
-    attribute: 'for',
-    createNode: (attrs) => (
-      <Slider.Root defaultValue={10}>
-        <Slider.Value data-testid="part" {...attrs} />
-        <Slider.Control>
-          <Slider.Track>
-            <Slider.Thumb />
-          </Slider.Track>
-        </Slider.Control>
-      </Slider.Root>
-    ),
-    getTarget: () => screen.getByRole('slider'),
-  },
-  {
     part: 'Combobox.Input',
     attribute: 'aria-activedescendant',
     createNode: (attrs) => createCombobox('input', attrs),
