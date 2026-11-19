@@ -3,15 +3,20 @@ import { shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
-import { Form } from '@vase-ui/vue/form';
+import { Form, type FormErrors } from '@vase-ui/vue/form';
 
 interface FormState {
-  serverErrors?: Form.Props['errors'];
+  serverErrors?: FormErrors;
 }
 
 const form = useTemplateRef('form');
 const state = shallowRef<FormState>({});
 const loading = shallowRef(false);
+
+// An edit of a field removes its error.
+function updateErrors(serverErrors: FormErrors) {
+  state.value = { ...state.value, serverErrors };
+}
 
 async function formAction(event: SubmitEvent) {
   event.preventDefault();
@@ -57,6 +62,7 @@ async function submitForm(_previousState: FormState, formData: FormData) {
     ref="form"
     :errors="state.serverErrors"
     class="flex w-full max-w-64 flex-col gap-4"
+    @update:errors="updateErrors"
     @submit="formAction"
   >
     <Field.Root name="username" class="flex flex-col items-start gap-1">

@@ -1,7 +1,8 @@
+import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { FieldState } from '../field/control';
 
-export interface CheckboxGroupProps {
+export interface CheckboxGroupProps extends /* @vue-ignore */ HTMLAttributes {
   /** `null` is an empty value. */
   modelValue?: string[] | null;
   defaultValue?: string[] | null;

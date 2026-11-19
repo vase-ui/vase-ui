@@ -1,7 +1,20 @@
+import type { InputHTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { FieldState } from '../field/control';
 
-export interface CheckboxProps {
+export interface CheckboxProps extends /* @vue-ignore */ Omit<
+  InputHTMLAttributes,
+  | 'autocomplete'
+  | 'checked'
+  | 'disabled'
+  | 'id'
+  | 'indeterminate'
+  | 'name'
+  | 'readonly'
+  | 'required'
+  | 'type'
+  | 'value'
+> {
   modelValue?: boolean;
   defaultChecked?: boolean;
   indeterminate?: boolean;

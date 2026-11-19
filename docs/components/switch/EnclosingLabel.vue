@@ -4,7 +4,7 @@ import { Switch } from '@vase-ui/vue/switch';
 
 <template>
   <label>
-    <Switch.Root />
+    <Switch name="notifications" />
     Notifications
   </label>
 </template>

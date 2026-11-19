@@ -7,11 +7,11 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
   <div id="protocols-label">Allowed network protocols</div>
   <CheckboxGroup aria-labelledby="protocols-label">
     <label>
-      <Checkbox.Root value="http" />
+      <Checkbox value="http" />
       HTTP
     </label>
     <label>
-      <Checkbox.Root value="https" />
+      <Checkbox value="https" />
       HTTPS
     </label>
   </CheckboxGroup>

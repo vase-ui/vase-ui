@@ -5,6 +5,6 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 
 <template>
   <CheckboxGroup>
-    <Checkbox.Root />
+    <Checkbox value="a" />
   </CheckboxGroup>
 </template>

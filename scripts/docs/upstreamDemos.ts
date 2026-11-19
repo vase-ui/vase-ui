@@ -30,22 +30,9 @@ const TAILWIND_FOLDER = 'tailwind';
 const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate']]);
 
 /**
- * The class strings that the Vue folder of a demo has and its row of `classes` lacks, by family, by
- * the key of the row and by element name. The Vue library of such a demo needs an element that the
- * Base UI demo does not have.
- */
-const VUE_DEMO_EXTRA_CLASSES: Record<string, Record<string, ClassRow> | undefined> = {
-  'handbook-forms': {
-    // `handleSubmit` of VeeValidate must get each `submit` event, so the demo has a native form.
-    // `Form` emits `submit` only when each field is valid. The string is that of the wrapper `Form`.
-    'react-hook-form/tailwind': { form: ['flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]'] },
-  },
-};
-
-/**
  * The families whose parts are native form elements. A demo of such a family styles the parts with
  * the pseudo-classes of these elements, such as `:checked`, and can add an element of its own for a
- * mark or a thumb. Its classes thus differ from the classes of the Base UI demo.
+ * mark or a thumb. Its classes and its style sheets thus differ from those of the Base UI demo.
  */
 const NATIVE_FORM_FAMILIES = new Set([
   'checkbox',
@@ -180,19 +167,6 @@ function subtract(strings: string[], other: string[]): string[] {
 
 function stringsOf(row: ClassRow, element: string): string[] {
   return Object.hasOwn(row, element) ? row[element] : [];
-}
-
-/** The row with the strings of `extra` added to the same elements. */
-function addStrings(row: ClassRow, extra: ClassRow): ClassRow {
-  return {
-    ...row,
-    ...Object.fromEntries(
-      Object.entries(extra).map(([element, strings]): [string, string[]] => [
-        element,
-        [...stringsOf(row, element), ...strings],
-      ]),
-    ),
-  };
 }
 
 /** For each element name that the rows do not share, its absent and its extra strings, as text. */
@@ -369,7 +343,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
-      } else if (files.get(path) !== hash) {
+      } else if (files.get(path) !== hash && !NATIVE_FORM_FAMILIES.has(name)) {
         problems.push(
           `${folder}/${path} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${rerun}`,
         );
@@ -406,8 +380,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       if (vueRow === undefined) {
         continue;
       }
-      const expected = addStrings(row, VUE_DEMO_EXTRA_CLASSES[name]?.[key] ?? {});
-      const differences = rowDifferences(expected, vueRow);
+      const differences = rowDifferences(row, vueRow);
       if (differences.length > 0) {
         problems.push(
           `${folder}/${path} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,

@@ -16,8 +16,11 @@ const props = withDefaults(defineProps<CheckboxProps>(), {
   modelValue: undefined,
 });
 const emit = defineEmits<{
+  /** The user presses the checkbox. `details.cancel()` keeps the state as it was. */
   checkedChange: [checked: boolean, details: CheckboxChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [checked: boolean];
+  /** A press asks to clear the indeterminate state. `v-model:indeterminate` uses it. */
   'update:indeterminate': [indeterminate: false];
 }>();
 const slots = defineSlots<{

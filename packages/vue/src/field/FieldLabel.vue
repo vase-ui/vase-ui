@@ -28,17 +28,18 @@ const elementId = computed(() => givenId(props.id) ?? generatedId);
 // and moves the focus to it. Another element names the control by `aria-labelledby`.
 const native = computed(() => !element.value || element.value.localName === 'label');
 
-onUnmounted(
-  field.addLabel({
-    // The `element` slot can give the element another `id`.
-    get id() {
-      return (slots.element && element.value?.id) || elementId.value;
-    },
-    get native() {
-      return native.value;
-    },
-  }),
-);
+// Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the
+// part registers before the call.
+const unregister = field.addLabel({
+  // The `element` slot can give the element another `id`.
+  get id() {
+    return (slots.element && element.value?.id) || elementId.value;
+  },
+  get native() {
+    return native.value;
+  },
+});
+onUnmounted(unregister);
 
 const ownProps = computed(() => ({
   id: elementId.value,

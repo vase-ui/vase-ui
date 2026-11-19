@@ -6,21 +6,19 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 </script>
 
 <template>
-  <Field.Root>
-    <Fieldset.Root :as="RadioGroup">
+  <Field.Root name="storage">
+    <Fieldset.Root>
       <Fieldset.Legend>Storage type</Fieldset.Legend>
-      <Field.Item>
-        <Field.Label>
-          <Radio.Root value="ssd" />
-          SSD
-        </Field.Label>
-      </Field.Item>
-      <Field.Item>
-        <Field.Label>
-          <Radio.Root value="hdd" />
-          HDD
-        </Field.Label>
-      </Field.Item>
+      <RadioGroup>
+        <Field.Item>
+          <Radio value="ssd" />
+          <Field.Label>SSD</Field.Label>
+        </Field.Item>
+        <Field.Item>
+          <Radio value="hdd" />
+          <Field.Label>HDD</Field.Label>
+        </Field.Item>
+      </RadioGroup>
     </Fieldset.Root>
   </Field.Root>
 </template>

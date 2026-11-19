@@ -15,18 +15,18 @@ Vase UI components are unstyled and ship no styles. Use [Tailwind CSS](https://t
 
 A part that renders an HTML element accepts a `class` attribute. Use it to style the element with CSS classes.
 
-<<< ../examples/styling/ClassAttribute.vue{7}
+<<< ../examples/styling/ClassAttribute.vue{6}
 
 The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
 
-<<< ../examples/styling/SlotClass.vue{8-9}
+<<< ../examples/styling/SlotClass.vue{8}
 
 ### Data attributes
 
-A part sets data attributes for its states. For example, you can style [Switch](/components/switch) with its `[data-checked]` and `[data-unchecked]` attributes, among others.
+A part sets data attributes for its states. For example, you can style [Toggle](/components/toggle) with its `[data-pressed]` attribute, among others. A part that is a native form control, such as [Checkbox](/components/checkbox), has the pseudo-classes of its element, such as `:checked`, in place of such attributes. Its page lists a selector for each state.
 
 ```css
-.SwitchThumb[data-checked] {
+.Toggle[data-pressed] {
   background-color: green;
 }
 ```
@@ -47,11 +47,11 @@ See the API reference of each component for a complete list of its data attribut
 
 A part that renders an HTML element accepts a `style` attribute. Use it to style the element with an object of CSS properties.
 
-<<< ../examples/styling/StyleAttribute.vue{7}
+<<< ../examples/styling/StyleAttribute.vue{6}
 
 For a style that depends on state, bind `:style` on the element in the render slot.
 
-<<< ../examples/styling/SlotStyle.vue{8-9}
+<<< ../examples/styling/SlotStyle.vue{8}
 
 If the part controls the same property, put your style before `v-bind="props"` to give the part priority.
 For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.
@@ -60,11 +60,11 @@ For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.
 
 Each part that renders an element has one root node, except the parts that this section names. A rule of `<style scoped>` thus matches the element of the part. `v-show`, a custom directive and `<Transition>` on the part apply to that element too. This also applies to a part that renders its element only in some states, such as `Collapsible.Panel`, `Dialog.Backdrop` or `Tabs.Indicator`.
 
-A part that renders a hidden input beside its element has more than one root node. These parts are `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root`, `OTPField.Root`, `DateField.Root`, `TimeField.Root`, `DatePicker.Field`, `DatePicker.TimeField`, `DateRangePicker.StartField`, `DateRangePicker.EndField` and `TimePicker.Field`. `Tabs.Indicator` with `renderBeforeHydration` renders a script element after its element, so it also has more than one root node. A rule of `<style scoped>` does not match the element of such a part. `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
+A part that renders a hidden input beside its element has more than one root node. These parts are `NumberField.Root`, `OTPField.Root`, `DateField.Root`, `TimeField.Root`, `DatePicker.Field`, `DatePicker.TimeField`, `DateRangePicker.StartField`, `DateRangePicker.EndField` and `TimePicker.Field`. `Tabs.Indicator` with `renderBeforeHydration` renders a script element after its element, so it also has more than one root node. A rule of `<style scoped>` does not match the element of such a part. `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
 
 Each `Popup` part has one root node, also while it keeps focus guards or a dismiss button beside its element. A rule of `<style scoped>`, `v-show`, a custom directive and `<Transition>` thus apply to the popup element.
 
-In this sample, the rule `.thumb` matches `Switch.Thumb`, which has one root node. The rule `.field :deep(.switch)` reaches `Switch.Root` from an element of your own:
+In this sample, the rule `.input` matches `NumberField.Input`, which has one root node. The rule `.field :deep(.root)` reaches `NumberField.Root` from an element of your own:
 
 <<< ../examples/styling/ScopedStyle.vue
 

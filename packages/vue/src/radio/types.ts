@@ -1,6 +1,19 @@
+import type { InputHTMLAttributes } from 'vue';
 import type { FieldState } from '../field/control';
 
-export interface RadioProps<Value = any> {
+export interface RadioProps<Value = any> extends /* @vue-ignore */ Omit<
+  InputHTMLAttributes,
+  | 'autocomplete'
+  | 'checked'
+  | 'disabled'
+  | 'id'
+  | 'indeterminate'
+  | 'name'
+  | 'readonly'
+  | 'required'
+  | 'type'
+  | 'value'
+> {
   /** The value that the group gets when the user selects this radio. */
   value: Value;
   id?: string;

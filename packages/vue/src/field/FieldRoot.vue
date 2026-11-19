@@ -37,7 +37,9 @@ const props = withDefaults(defineProps<FieldRootProps>(), {
   touched: undefined,
 });
 const emit = defineEmits<{
+  /** The dirty state changes. `v-model:dirty` uses it. */
   'update:dirty': [dirty: boolean];
+  /** The touched state changes. `v-model:touched` uses it. */
   'update:touched': [touched: boolean];
 }>();
 defineSlots<{

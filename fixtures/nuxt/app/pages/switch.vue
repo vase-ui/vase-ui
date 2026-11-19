@@ -9,14 +9,10 @@ const wifi = ref(true);
   <main>
     <form data-testid="form">
       <label data-testid="label">
-        <Switch.Root data-testid="notifications" name="notifications" unchecked-value="no">
-          <Switch.Thumb data-testid="thumb">Thumb</Switch.Thumb>
-        </Switch.Root>
+        <Switch data-testid="notifications" name="notifications" unchecked-value="no" />
         Notifications
       </label>
-      <Switch.Root v-model="wifi" data-testid="wifi" name="wifi" aria-label="Wi-Fi">
-        Wi-Fi
-      </Switch.Root>
+      <Switch v-model="wifi" data-testid="wifi" name="wifi" aria-label="Wi-Fi" />
       <output data-testid="wifi-value">{{ wifi }}</output>
     </form>
   </main>

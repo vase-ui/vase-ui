@@ -26,13 +26,14 @@ const elementId = computed(() => givenId(props.id) ?? generatedId);
 const root = inject(legendKey, null);
 if (root) {
   provide(fieldsetKey, root.forParts);
-  onUnmounted(
-    root.addLegend({
-      get id() {
-        return elementId.value;
-      },
-    }),
-  );
+  // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the
+  // part registers before the call.
+  const unregister = root.addLegend({
+    get id() {
+      return elementId.value;
+    },
+  });
+  onUnmounted(unregister);
 }
 
 defineExpose({ element });

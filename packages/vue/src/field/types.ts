@@ -1,9 +1,10 @@
+import type { HTMLAttributes, LabelHTMLAttributes } from 'vue';
 import type { FormValidationMode, FormValues } from '../form/field';
 import type { FieldState } from './control';
 
 export type FieldValidateResult = string | string[] | null | undefined | void;
 
-export interface FieldRootProps {
+export interface FieldRootProps extends /* @vue-ignore */ HTMLAttributes {
   name?: string;
   disabled?: boolean;
   /**
@@ -45,19 +46,19 @@ export interface FieldValidity {
   valid: boolean | null;
 }
 
-export interface FieldLabelProps {
+export interface FieldLabelProps extends /* @vue-ignore */ Omit<LabelHTMLAttributes, 'for' | 'id'> {
   id?: string;
 }
 
-export interface FieldDescriptionProps {
+export interface FieldDescriptionProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
   id?: string;
 }
 
-export interface FieldItemProps {
+export interface FieldItemProps extends /* @vue-ignore */ HTMLAttributes {
   disabled?: boolean;
 }
 
-export interface FieldErrorProps {
+export interface FieldErrorProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
   id?: string;
   match?: Exclude<keyof FieldValidity, 'valid'>;
 }

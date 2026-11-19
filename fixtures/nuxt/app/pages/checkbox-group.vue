@@ -4,9 +4,6 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 
-// A checkbox has no content, so an inline style gives it a size that a click can reach.
-const CHECKBOX_STYLE = 'display: inline-block; width: 24px; height: 24px; border: 1px solid';
-
 const APPLES = ['fuji', 'gala', 'granny-smith'];
 
 const apples = ref(['fuji']);
@@ -17,13 +14,12 @@ const apples = ref(['fuji']);
     <form data-testid="form">
       <Field.Root name="apples">
         <CheckboxGroup v-model="apples" :all-values="APPLES" data-testid="group">
-          <Checkbox.Root parent aria-label="All" :style="CHECKBOX_STYLE" data-testid="parent" />
-          <Checkbox.Root
+          <Checkbox parent aria-label="All" data-testid="parent" />
+          <Checkbox
             v-for="apple in APPLES"
             :key="apple"
             :value="apple"
             :aria-label="apple"
-            :style="CHECKBOX_STYLE"
             :data-testid="apple"
           />
         </CheckboxGroup>

@@ -9,20 +9,11 @@ const news = ref(true);
   <main>
     <form data-testid="form">
       <label data-testid="label">
-        <Checkbox.Root data-testid="terms" name="terms" unchecked-value="no">
-          <Checkbox.Indicator data-testid="terms-indicator">Tick</Checkbox.Indicator>
-        </Checkbox.Root>
+        <Checkbox data-testid="terms" name="terms" unchecked-value="no" />
         Terms
       </label>
-      <Checkbox.Root v-model="news" data-testid="news" name="news" aria-label="News">
-        <Checkbox.Indicator data-testid="news-indicator">Tick</Checkbox.Indicator>
-      </Checkbox.Root>
-      <Checkbox.Root indeterminate data-testid="some" aria-label="Some">
-        <Checkbox.Indicator data-testid="some-indicator">Tick</Checkbox.Indicator>
-      </Checkbox.Root>
-      <Checkbox.Root data-testid="kept" aria-label="Kept">
-        <Checkbox.Indicator data-testid="kept-indicator" keep-mounted>Tick</Checkbox.Indicator>
-      </Checkbox.Root>
+      <Checkbox v-model="news" data-testid="news" name="news" aria-label="News" />
+      <Checkbox indeterminate data-testid="some" aria-label="Some" />
       <output data-testid="news-value">{{ news }}</output>
     </form>
   </main>

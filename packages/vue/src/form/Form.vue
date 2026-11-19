@@ -11,7 +11,9 @@ const props = withDefaults(defineProps<FormProps>(), { validationMode: 'submit' 
 // listener gets only the submits that pass. Vue gives each argument to a listener with an event
 // modifier, so `@submit.prevent="save"` calls `save(event, values)`.
 const emit = defineEmits<{
+  /** A submit with each field valid. `values` has the value of each named field of the form. */
   submit: [event: SubmitEvent, values: Values];
+  /** An edit or a reset removes the errors of a field. `v-model:errors` uses it. */
   'update:errors': [errors: FormErrors];
 }>();
 defineSlots<{

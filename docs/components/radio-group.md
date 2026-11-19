@@ -50,27 +50,34 @@ Provides shared state to a series of radio buttons.
 
 ## Anatomy
 
-Import the components and assemble their parts:
+Radio Group works with Radio. Import the components and assemble their parts:
 
 <<< ./radio-group/Anatomy.vue
 
-`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing. A disabled `<fieldset>` around the group, or `Fieldset.Root` with `disabled`, disables the group as its `disabled` prop does. A native `<fieldset>` takes effect after the mount, so the server HTML shows the group enabled.
+`RadioGroup` renders a `<div role="radiogroup">`, and each `Radio` renders one `<input type="radio">` with the `name` of the group. A `Radio` outside a `RadioGroup` throws an error.
 
-A reset of the form puts an uncontrolled group back to `defaultValue`, or to no value when it has none. A controlled group does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+Bind the value with `v-model`, or give `defaultValue` to an uncontrolled group. A selection emits `valueChange` and then `update:modelValue`. To keep the value, call `details.cancel()` in `valueChange`.
 
-Because of the hidden input, `Radio.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+The group is one tab stop: the checked radio that is enabled, or else the first enabled radio. The arrow keys move the focus and select the radio. With Ctrl, Alt or Meta, an arrow key selects nothing, so the browser keeps its shortcuts. In a read-only group, and on a read-only radio, the arrow keys move the focus and select nothing.
 
-Bind the value with `v-model`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:modelValue` and keeps its value.
+`required` on the group or on one radio makes the group required, as HTML says. A read-only radio, or a radio of a read-only group, has no `required` attribute.
 
-The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:modelValue` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
+A native reset of the form puts an uncontrolled group back to its first value, and emits only `update:*`.
 
-The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input of the group in the document. The input of a disabled radio does not count, so a group with no enabled radio gives `null`. The input of a radio in a disabled `<fieldset>` does not count either, unless the radio is in the first `<legend>` of that fieldset. After the radio of the input in `inputElement` unmounts, `inputElement` is `null`, also when the group has other radios.
+## Styling
 
-The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.
+Select the states of a radio with these selectors:
 
-When the value changes while the focus is outside the group, the tab stop moves to the checked radio. If no radio is checked then, or the checked radio is disabled, the tab stop moves to the first radio that is not disabled. When the focus leaves the group, the tab stop moves to the checked radio, unless that radio is disabled. A checked radio that becomes disabled keeps the tab stop, unless it renders a native button. Another radio that becomes disabled loses it to the first radio that is not disabled.
+| Selector          | State                                      |
+| ----------------- | ------------------------------------------ |
+| `:checked`        | The radio is selected.                     |
+| `:not(:checked)`  | The radio is not selected.                 |
+| `:disabled`       | The radio is disabled.                     |
+| `:required`       | The group is required.                     |
+| `[data-readonly]` | The radio is read-only.                    |
+| `:focus-visible`  | The radio has the focus from the keyboard. |
 
-In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. A radio in a `Field.Item` has the id of its `Field.Label` there too. The group and its radios already have the id of a `Field.Description` in `aria-describedby`, and the id of a `Field.Error` while it shows. A label or a message can follow the part that it names.
+Select the states of the group with `[aria-disabled="true"]`, `[aria-readonly="true"]`, `[aria-required="true"]`, `[aria-invalid="true"]`, `[data-valid]`, `[data-touched]`, `[data-dirty]` and `[data-filled]`.
 
 ## Examples
 
@@ -80,23 +87,19 @@ Label the group with `aria-labelledby` and a sibling label element:
 
 <<< ./radio-group/GroupLabel.vue
 
-An enclosing `<label>` is the simplest labeling pattern for each radio:
+A `<label>` around each radio is the simplest way to label it:
 
 <<< ./radio-group/EnclosingLabel.vue{8,11}
 
-To name the group with a `Fieldset.Legend`, give `RadioGroup` to the `as` prop of `Fieldset.Root`:
+A `Fieldset.Legend` names the group in its `Fieldset.Root`. Put each radio in a `Field.Item` with its `Field.Label`:
 
-<<< ./radio-group/FieldsetLegend.vue{10}
+<<< ./radio-group/FieldsetLegend.vue{11}
 
-### Rendering as a native button
+### Showing a mark
 
-By default, `Radio.Root` renders a `<span>` element, so a `<label>` can hold it. Render each radio as a native button when a label beside it names it with `for` and `id`.
+Give the input `appearance: none` and draw the mark with CSS, as the demo does. The `element` slot renders the input and gives its state. Render a mark from `state.checked`:
 
-<<< ./radio-group/SiblingLabel.vue{11}
-
-To put a native button in a `<label>`, use the `#render` slot. The hidden input then stays outside the label, and the HTML stays valid.
-
-<<< ./radio-group/LabelInRenderSlot.vue{10-15}
+<<< ./radio-group/MarkInElementSlot.vue
 
 ## API reference
 

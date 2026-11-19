@@ -21,7 +21,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <Form :errors="errors" @submit.prevent="onSubmit">
+  <Form v-model:errors="errors" @submit.prevent="onSubmit">
     <Field.Root name="promoCode">
       <Input />
       <Field.Error />

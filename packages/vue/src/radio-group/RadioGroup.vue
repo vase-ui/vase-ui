@@ -17,7 +17,9 @@ const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
   defaultValue: undefined,
 });
 const emit = defineEmits<{
+  /** The user selects a radio. `details.cancel()` keeps the value as it was. */
   valueChange: [value: Value, details: RadioGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: Value | undefined];
 }>();
 defineSlots<{

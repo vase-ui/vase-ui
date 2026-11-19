@@ -19,15 +19,15 @@ function readEmail(event: SubmitEvent) {
     <Field.Root invalid data-testid="invalid-root">
       <Input data-testid="invalid-control" />
     </Field.Root>
-    <Field.Root data-testid="label-first">
+    <Field.Root invalid data-testid="label-first">
       <Field.Label data-testid="label-first-label">Name</Field.Label>
       <Input data-testid="label-first-control" />
       <Field.Description data-testid="label-first-description">Description</Field.Description>
-      <Field.Error match data-testid="label-first-error">Error</Field.Error>
+      <Field.Error data-testid="label-first-error">Error</Field.Error>
     </Field.Root>
-    <Field.Root data-testid="label-last">
+    <Field.Root invalid data-testid="label-last">
       <Field.Description data-testid="label-last-description">Description</Field.Description>
-      <Field.Error match data-testid="label-last-error">Error</Field.Error>
+      <Field.Error data-testid="label-last-error">Error</Field.Error>
       <Input data-testid="label-last-control" />
       <Field.Label data-testid="label-last-label">Name</Field.Label>
     </Field.Root>

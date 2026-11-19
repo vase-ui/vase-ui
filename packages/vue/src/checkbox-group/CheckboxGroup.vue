@@ -23,7 +23,9 @@ const props = withDefaults(defineProps<CheckboxGroupProps>(), {
   allValues: undefined,
 });
 const emit = defineEmits<{
+  /** The user checks or unchecks a checkbox of the group. `details.cancel()` keeps the value as it was. */
   valueChange: [value: string[], details: CheckboxGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: string[]];
 }>();
 defineSlots<{

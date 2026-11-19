@@ -25,10 +25,11 @@ interface Tailwind {
  * change.
  */
 export const CLASS_NAMES_WITHOUT_RULE: ReadonlySet<string> = new Set([
-  // Markers of Tailwind. The `group-*` variant of another class names the marker.
+  // Markers of Tailwind. The `group-*` and `peer-*` variants of another class name the marker.
   'group',
   'group/popup',
   'group/item',
+  'peer',
   // A marker of the demo. The class `has-[.combobox-clear]` of another element names it.
   'combobox-clear',
   // The theme of the Base UI docs has no red other than `red-400` and `red-700`, so the item has no

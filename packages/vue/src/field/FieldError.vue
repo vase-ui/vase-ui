@@ -31,17 +31,18 @@ const messages = computed(() =>
   !props.match && field.formErrors.length > 0 ? field.formErrors : field.errors,
 );
 
-onUnmounted(
-  field.addDescriber({
-    // The `element` slot can give the element another `id`.
-    get id() {
-      return (slots.element && element.value?.id) || elementId.value;
-    },
-    get shown() {
-      return shows.value;
-    },
-  }),
-);
+// Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the
+// part registers before the call.
+const unregister = field.addDescriber({
+  // The `element` slot can give the element another `id`.
+  get id() {
+    return (slots.element && element.value?.id) || elementId.value;
+  },
+  get shown() {
+    return shows.value;
+  },
+});
+onUnmounted(unregister);
 
 defineExpose({ element });
 

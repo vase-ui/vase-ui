@@ -15,7 +15,9 @@ const props = withDefaults(defineProps<SwitchProps>(), {
   modelValue: undefined,
 });
 const emit = defineEmits<{
+  /** The user presses the switch. `details.cancel()` keeps the state as it was. */
   checkedChange: [checked: boolean, details: SwitchChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [checked: boolean];
 }>();
 const slots = defineSlots<{

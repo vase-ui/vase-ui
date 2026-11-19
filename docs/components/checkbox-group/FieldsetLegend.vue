@@ -6,19 +6,21 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 </script>
 
 <template>
-  <Field.Root>
-    <Fieldset.Root :as="CheckboxGroup">
+  <Field.Root name="schedule">
+    <Fieldset.Root>
       <Fieldset.Legend>Backup schedule</Fieldset.Legend>
-      <Field.Item>
-        <Checkbox.Root value="daily" />
-        <Field.Label>Daily</Field.Label>
-        <Field.Description>Daily at 00:00</Field.Description>
-      </Field.Item>
-      <Field.Item>
-        <Checkbox.Root value="monthly" />
-        <Field.Label>Monthly</Field.Label>
-        <Field.Description>On the 5th of every month at 23:59</Field.Description>
-      </Field.Item>
+      <CheckboxGroup>
+        <Field.Item>
+          <Checkbox value="daily" />
+          <Field.Label>Daily</Field.Label>
+          <Field.Description>Daily at 00:00</Field.Description>
+        </Field.Item>
+        <Field.Item>
+          <Checkbox value="monthly" />
+          <Field.Label>Monthly</Field.Label>
+          <Field.Description>On the 5th of every month at 23:59</Field.Description>
+        </Field.Item>
+      </CheckboxGroup>
     </Fieldset.Root>
   </Field.Root>
 </template>

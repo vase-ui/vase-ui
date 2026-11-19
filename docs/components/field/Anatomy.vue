@@ -8,8 +8,6 @@ import { Input } from '@vase-ui/vue/input';
     <Field.Label />
     <Input />
     <Field.Description />
-    <Field.Item />
     <Field.Error />
-    <Field.Validity />
   </Field.Root>
 </template>

@@ -16,7 +16,9 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<InputProps>();
 const emit = defineEmits<{
+  /** The user changes the text. `details.cancel()` keeps the text as it was. */
   valueChange: [value: string, details: InputChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: string];
 }>();
 const slots = defineSlots<{

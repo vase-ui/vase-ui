@@ -1,5 +1,5 @@
 import { readdirSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { docsFolderOf } from '../parity/checkSurface.ts';
 import type { HeadingBadge } from '../parity/headingBadge.ts';
@@ -140,6 +140,22 @@ interface Named {
  * The parts of `file`, in their sequence. A part with no export in the entry file is left out,
  * and so is an export that is not a component from a `.vue` file. `pnpm parity:check` reports both.
  */
+/**
+ * The export of a part of a `types.md`. A family with one part, such as Checkbox, exports the part
+ * `Root` of Base UI under the name of the family.
+ */
+function findPartExport(project: VaseProject, entryFile: string, title: string) {
+  const [match] = project.findExports(entryFile, title);
+  if (match || title !== 'Root') {
+    return match;
+  }
+  const family = basename(dirname(entryFile))
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+  return project.findExports(entryFile, family)[0];
+}
+
 export function buildApiParts(
   project: VaseProject,
   entryFile: string,
@@ -147,7 +163,7 @@ export function buildApiParts(
   badges: ReadonlyMap<string, HeadingBadge> = new Map(),
 ): ApiPart[] {
   return file.parts.flatMap(({ name: title }) => {
-    const [match] = project.findExports(entryFile, title);
+    const match = findPartExport(project, entryFile, title);
     const component = match && project.readComponent(match);
     if (!match || !component) {
       return [];
@@ -195,8 +211,9 @@ function findEntryFileOfPart(
   }
   const repeated = typesFiles.find(
     ({ entryFile: otherEntryFile, file }) =>
+      otherEntryFile !== entryFile &&
       file.parts.some((candidate) => isDeepStrictEqual(candidate, part)) &&
-      project.findExports(otherEntryFile, part.name).length > 0,
+      findPartExport(project, otherEntryFile, part.name) !== undefined,
   );
   return repeated?.entryFile ?? entryFile;
 }

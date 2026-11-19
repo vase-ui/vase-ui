@@ -24,15 +24,16 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLParagraphElement>();
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 
-onUnmounted(
-  field.addDescriber({
-    // The `element` slot can give the element another `id`.
-    get id() {
-      return (slots.element && element.value?.id) || elementId.value;
-    },
-    shown: true,
-  }),
-);
+// Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the
+// part registers before the call.
+const unregister = field.addDescriber({
+  // The `element` slot can give the element another `id`.
+  get id() {
+    return (slots.element && element.value?.id) || elementId.value;
+  },
+  shown: true,
+});
+onUnmounted(unregister);
 
 defineExpose({ element });
 

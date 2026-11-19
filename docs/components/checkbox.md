@@ -50,15 +50,39 @@ An easily stylable checkbox component.
 
 ## Anatomy
 
-Import the component and assemble its parts:
+Import the component:
 
 <<< ./checkbox/Anatomy.vue
 
-`Checkbox.Root` renders its element and a hidden `<input>` after it. The input gives the checkbox the form behavior of a native checkbox. A reset of the form puts an uncontrolled checkbox back to `defaultChecked`. A controlled checkbox does not change. A reset does not change `indeterminate`. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+`Checkbox` renders one `<input type="checkbox">`. The browser gives it the label, the keyboard, the form data and `required`. Each attribute and listener that you give goes to the input.
 
-Because of the hidden input, `Checkbox.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+Bind the checked state with `v-model`, or give `defaultChecked` to an uncontrolled checkbox. A press emits `checkedChange` and then `update:modelValue`. To keep the state, call `details.cancel()` in `checkedChange`.
 
-`Checkbox.Root` takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The checkbox then emits `checkedChange` and `update:modelValue` one time. A `checkedChange` listener can thus run after a move back with no action of the visitor. A read-only or disabled checkbox and the parent checkbox of a group take no state. They write their own state to the input.
+`indeterminate` is a state beside `checked`. A press asks to clear it with `update:indeterminate`, so `v-model:indeterminate` follows the press. The server HTML has `data-indeterminate`, and the input gets its `indeterminate` property after the mount.
+
+`uncheckedValue` gives the form an entry while the checkbox is unchecked, enabled and has a name. The checkbox adds the entry in a `formdata` listener of its form, so a submit before the hydration has no entry. A checkbox in a `CheckboxGroup` ignores `uncheckedValue`.
+
+A native reset of the form puts an uncontrolled checkbox back to its first state, and emits only `update:*`.
+
+## Styling
+
+The input is the element that you style. Select its states with these selectors:
+
+| Selector                 | State                                                                    |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `:checked`               | The checkbox is checked.                                                 |
+| `:not(:checked)`         | The checkbox is not checked.                                             |
+| `[data-indeterminate]`   | The checkbox is indeterminate. `:indeterminate` matches after the mount. |
+| `:disabled`              | The checkbox is disabled.                                                |
+| `:required`              | The checkbox is required.                                                |
+| `[aria-readonly="true"]` | The checkbox is read-only.                                               |
+| `:focus-visible`         | The checkbox has the focus from the keyboard.                            |
+| `[data-valid]`           | The field is valid.                                                      |
+| `[aria-invalid="true"]`  | The field is invalid.                                                    |
+| `[data-touched]`         | The focus left the control.                                              |
+| `[data-dirty]`           | The value differs from the first value.                                  |
+
+The last four selectors apply in a `Field`.
 
 ## Examples
 
@@ -68,15 +92,19 @@ A `<label>` around the checkbox is the simplest pattern to label it:
 
 <<< ./checkbox/EnclosingLabel.vue{6,9}
 
-### Rendering as a native button
+A `<label>` beside the checkbox names it with `for` and `id`:
 
-By default, `Checkbox.Root` renders a `<span>` element, so a `<label>` can hold it. Render the checkbox as a native button when a label beside it names it with `for` and `id`.
+<<< ./checkbox/SiblingLabel.vue{6,7}
 
-<<< ./checkbox/SiblingLabel.vue{8}
+### Showing a mark
 
-To put a native button in a `<label>`, use the `#render` slot. The hidden input then stays outside the label, and the HTML stays valid.
+Give the input `appearance: none` and draw the mark with CSS. Or put an element of your own after the input, and select it with `:checked + .mark`:
 
-<<< ./checkbox/LabelInRenderSlot.vue{7-12}
+<<< ./checkbox/MarkBeside.vue
+
+The `element` slot renders the input and gives its state. Render the mark from `state.checked` or `state.indeterminate`:
+
+<<< ./checkbox/MarkInElementSlot.vue
 
 ## API reference
 
