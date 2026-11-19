@@ -11,7 +11,6 @@ import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
@@ -441,15 +440,6 @@ const rows: Row[] = [
       nativeLabel: true,
     }),
   })),
-  {
-    name: 'Meter.Label',
-    tree: (k, blankId) => (
-      <Meter.Root value={50} data-testid={`meter${k}`}>
-        <Meter.Label {...blankId}>Storage {k}</Meter.Label>
-      </Meter.Root>
-    ),
-    named: labelled('meter', 'Storage'),
-  },
   ...(['Tab', 'Panel'] as const).map((part): Row => ({
     name: `Tabs.${part}`,
     tree: tabsParts(part),
