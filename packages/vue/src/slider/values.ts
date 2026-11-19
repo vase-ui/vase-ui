@@ -57,7 +57,7 @@ export function sameValues(a: number | readonly number[], b: number | readonly n
 }
 
 /** The least and the largest value of a thumb, from its neighbours and the least distance. */
-export function limits(values: readonly number[], index: number, grid: Grid, distance: number) {
+function limits(values: readonly number[], index: number, grid: Grid, distance: number) {
   const before = values[index - 1];
   const after = values[index + 1];
   return [

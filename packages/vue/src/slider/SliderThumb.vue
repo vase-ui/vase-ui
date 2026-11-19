@@ -12,7 +12,7 @@ import { useElement } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
-import { fieldKey } from '../field/control';
+import { controlAria, fieldKey } from '../field/control';
 import { injectSlider, stateAttributes, type SliderThumbEntry } from './root';
 import type { SliderThumbProps, SliderThumbState } from './types';
 import { percent, snap } from './values';
@@ -34,16 +34,9 @@ const slots = defineSlots<{
 // The attributes and the listeners of the developer that go to the input.
 const INPUT_ATTRIBUTE =
   /^(?:aria-|tabindex$|autofocus$|on(?:Focus|Blur|Keydown)(?:Capture|Once|Passive)*$)/i;
-const KEYS = new Set([
-  'ArrowUp',
-  'ArrowRight',
-  'ArrowDown',
-  'ArrowLeft',
-  'PageUp',
-  'PageDown',
-  'Home',
-  'End',
-]);
+// `Toolbar.Root` moves the focus at these keys when they bubble from an item in it.
+const TOOLBAR_KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End']);
+const KEYS = new Set([...TOOLBAR_KEYS, 'PageUp', 'PageDown']);
 
 const slider = injectSlider('Thumb');
 const field = inject(fieldKey, null);
@@ -126,7 +119,7 @@ const inputStyle = computed<CSSProperties>(() => ({
   writingMode: slider.state.orientation === 'vertical' ? 'vertical-lr' : undefined,
 }));
 
-useFormReset(input, () => slider.onReset());
+useFormReset(input, (event) => slider.onReset(event));
 
 defineExpose({ element, input });
 
@@ -161,9 +154,8 @@ function inputProps() {
       disabled: isDisabled.value,
       'aria-orientation': slider.state.orientation,
       'aria-valuetext': valueText(),
+      ...(field && controlAria(field)),
       'aria-labelledby': named ? undefined : slider.labelId,
-      'aria-invalid': field?.state.valid === false ? 'true' : undefined,
-      'aria-describedby': field?.describedBy,
       style: inputStyle.value,
       onFocus,
       onBlur,
@@ -209,8 +201,7 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   event.preventDefault();
-  // `Toolbar.Root` moves the focus at an arrow key, Home and End that bubble from an item in it.
-  event.stopPropagation();
+  if (TOOLBAR_KEYS.has(event.key)) event.stopPropagation();
   const current = value.value;
   if (current === undefined) return;
   const grid = slider.state;
@@ -218,10 +209,11 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Home') target = grid.min;
   else if (event.key === 'End') target = grid.max;
   else {
+    const rtl = slider.readDirection(event.currentTarget as Element);
     const up =
       event.key === 'ArrowUp' ||
       event.key === 'PageUp' ||
-      event.key === (slider.rtl ? 'ArrowLeft' : 'ArrowRight');
+      event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
     const large = event.shiftKey || event.key === 'PageUp' || event.key === 'PageDown';
     // A large step off the grid goes on to the next value of the grid, so the thumb moves.
     const direction = up ? 1 : -1;

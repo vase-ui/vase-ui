@@ -90,6 +90,8 @@ const lastActive = shallowRef<SliderThumbEntry>();
 const elementRtl = shallowRef(false);
 // The last accepted change of the press that is on.
 let press: { change?: { value: Emitted; reason: 'track-press' | 'drag' } } | undefined;
+// The last reset that the slider followed. Each thumb tells the root a reset.
+let lastReset: Event | undefined;
 
 /** The thumbs at the index of their values: the `index` prop, else the place of the thumb. */
 const thumbs = computed(() => {
@@ -266,9 +268,10 @@ provide(sliderKey, {
       field?.onLeave(input);
     }
   },
-  // Each thumb follows the reset in a timer of its own. The form resets each input to the value
-  // that Vue wrote last.
-  onReset() {
+  // The form resets each input to the value that Vue wrote last, so the root writes no input.
+  onReset(event) {
+    if (event === lastReset) return;
+    lastReset = event;
     field?.onReset(asValue(shownValues(firstValue, grid.value), typeof firstValue === 'number'));
     if (sameValues(value.value, firstValue)) return;
     setOwn(firstValue);

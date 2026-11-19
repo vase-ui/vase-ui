@@ -486,17 +486,23 @@ describe('thumbAlignment edge', () => {
     expect(await ends()).toEqual([0, 100]);
   });
 
-  test('vertical: the indicator ends at the centre of the thumb on the vertical axis', async () => {
-    const slider = await mountSlider({
-      root: { defaultValue: 30, thumbAlignment: 'edge', orientation: 'vertical' },
-      thumbs: [{ style: 'width: 10px; height: 20px' }],
-    });
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    await settle();
+  test('VUE-148: after a change to the vertical axis, the thumb and the end of the indicator use the size of the thumb on that axis', async () => {
+    const root = reactive<Attrs>({ defaultValue: 30, thumbAlignment: 'edge' });
+    const slider = await mountSlider({ root, thumbs: [{ style: 'width: 20px; height: 10px' }] });
     const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
-    const control = slider.control.getBoundingClientRect();
+    const frame = async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await settle();
+    };
+    await frame();
     // The centre of a thumb of 20 px at 30 %: 10 + 0.3 × 80.
-    expect(control.bottom - indicator.getBoundingClientRect().top).toBeCloseTo(34);
+    expect(indicator.getBoundingClientRect().width).toBeCloseTo(34);
+    root.orientation = 'vertical';
+    await frame();
+    const control = slider.control.getBoundingClientRect();
+    // The thumb keeps its size, and it is 10 px on the new axis: 5 + 0.3 × 90.
+    expect(control.bottom - slider.thumb().getBoundingClientRect().bottom).toBeCloseTo(27);
+    expect(control.bottom - indicator.getBoundingClientRect().top).toBeCloseTo(32);
   });
 
   test('VUE-148: a press gives the value under the pointer, with half a thumb at each end; after a change of alignment, the press uses the whole control', async () => {

@@ -122,6 +122,21 @@ describe('a native reset', () => {
     expect(values()).toEqual([50]);
   });
 
+  test('of a range whose parent keeps its value emits one update:modelValue', async () => {
+    const log: string[] = [];
+    const root = reactive<Attrs>({
+      modelValue: [20, 60],
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { form, values } = await mountSlider({ root, thumbs: [{}, {}] });
+    root.modelValue = [30, 60];
+    await nextTick();
+    form.reset();
+    await settle();
+    expect(log).toEqual(['update 20,60']);
+    expect(values()).toEqual([30, 60]);
+  });
+
   test('VUE-21: clears the field, also when the value does not change', async () => {
     const field = reactive<Attrs>({ validationMode: 'change', validate: () => 'Too loud' });
     const {
@@ -241,18 +256,14 @@ describe('a field', () => {
       await leave(input(0));
       form.requestSubmit();
       await settle();
+      // `blur` and `change` validate at their moment and at the submit.
       expect(validated).toEqual(
         validationMode === 'submit'
           ? [[21, 60]]
-          : validationMode === 'blur'
-            ? [
-                [21, 60],
-                [21, 60],
-              ]
-            : [
-                [21, 60],
-                [21, 60],
-              ],
+          : [
+              [21, 60],
+              [21, 60],
+            ],
       );
     },
   );

@@ -470,10 +470,19 @@ describe('the keys', () => {
     await userEvent.keyboard('{ArrowRight}');
     expect(document.activeElement).toBe(root.querySelector('#inside'));
   });
+
+  test('Page Up and Page Down bubble from the input', async () => {
+    const keys: string[] = [];
+    const { root, input, values } = await mountSlider({ root: { defaultValue: 50 } });
+    root.addEventListener('keydown', (event) => keys.push(event.key));
+    await press(input(), '{ArrowRight}{Home}{End}{PageDown}{PageUp}');
+    expect(values()).toEqual([100]);
+    expect(keys).toEqual(['PageDown', 'PageUp']);
+  });
 });
 
 describe('the direction', () => {
-  test('the thumbs follow the direction of the root element at the mount and at the focus of a thumb', async () => {
+  test('the thumbs follow the direction of the root element at the mount, at the focus of a thumb and at a key', async () => {
     const container = document.body.appendChild(document.createElement('div'));
     container.dir = 'rtl';
     const { root } = mount(SliderParts, { root: { defaultValue: 30 } }, container);
@@ -485,6 +494,11 @@ describe('the direction', () => {
     input.focus();
     await nextTick();
     expect(thumb.style.translate).toBe('-50% -50%');
+    container.dir = 'rtl';
+    await userEvent.keyboard('{ArrowRight}');
+    await nextTick();
+    expect(input.valueAsNumber).toBe(29);
+    expect(thumb.style.translate).toBe('50% -50%');
     container.remove();
   });
 });

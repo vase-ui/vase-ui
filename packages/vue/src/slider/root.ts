@@ -54,8 +54,8 @@ export interface SliderForParts {
   endPress(event?: PointerEvent): void;
   onFocus(thumb: SliderThumbEntry): void;
   onBlur(event: FocusEvent): void;
-  /** A native reset of the form of an input. */
-  onReset(): void;
+  /** A native reset of the form of an input. The root acts one time for each reset. */
+  onReset(event: Event): void;
 }
 
 export const sliderKey: InjectionKey<SliderForParts> = Symbol('slider');

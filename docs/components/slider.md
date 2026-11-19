@@ -70,7 +70,7 @@ The input gets each `aria-*` attribute, `tabindex`, `autofocus`, and the `focus`
 
 <<< ../examples/composition/ThumbElementSlot.vue{10-14}
 
-Bind the value with `v-model`, or give `defaultValue` to an uncontrolled slider. An array makes a range slider. Each change of the user emits `valueChange` and then `update:modelValue`. A drag emits them at each move. To keep the value, call `details.cancel()` in `valueChange`. `valueCommitted` comes when the user ends an action that changed the value: at once for a key, and at the end of a press.
+Bind the value with `v-model`, or give `defaultValue` to an uncontrolled slider. An array makes a range slider. Each change of the user emits `valueChange` and then `update:modelValue`. A drag emits them at each move. To keep the value, call `details.cancel()` in `valueChange`. `valueCommitted` comes when the user ends an action that changed the value: at once for a key or an `input` event of an input, and at the end of a press.
 
 The slider shows each value on the grid that starts at `min` and goes up by `step`. It shows a value of the parent at the nearest value of the grid, with no event.
 
