@@ -20,4 +20,5 @@ export const REFACTORED_FOLDERS = [
   'scroll-area',
   'separator',
   'switch',
+  'tabs',
 ];
