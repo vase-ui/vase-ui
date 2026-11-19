@@ -38,10 +38,10 @@ import {
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../tree/FloatingTree';
-import { useClick } from './useClick';
+import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { normalizeProp, useDismiss } from './useDismiss';
 import type { UseDismissProps } from './useDismiss';
-import { useFocus } from './useFocus';
+import { useTriggerFocus as useFocus } from '../usePopupTrigger';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set
 // the flag.

@@ -1,9 +1,13 @@
 import { toRaw } from 'vue';
 import type { ShallowRef } from 'vue';
-import type { InteractionType } from '../../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../usePopupTrigger';
 import type { Side } from '../../../internals/useAnchorPositioning';
-import { BasePopupStore, createElementIdObserver, popupStoreSelectors } from '../store';
-import type { PopupOpenChangeEventDetails, PopupStoreContext, PopupStoreState } from '../store';
+import { BasePopupStore, createElementIdObserver, popupStoreSelectors } from '../usePopupRoot';
+import type {
+  PopupOpenChangeEventDetails,
+  PopupStoreContext,
+  PopupStoreState,
+} from '../usePopupRoot';
 
 /**
  * State common to popups that pick a value from a list of items: Select, Combobox and

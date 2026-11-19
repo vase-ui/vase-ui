@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, isReactive, isRef, nextTick, shallowRef, watch } from 'vue';
 import { createRenderer } from '#test-utils';
-import { NullStore } from './NullStore';
-import { ReactiveStore } from './ReactiveStore';
+import { NullStore } from './usePopupRoot';
+import { ReactiveStore } from './handleStoreAdapter';
 
 describe('ReactiveStore', () => {
   const { render } = createRenderer();

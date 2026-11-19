@@ -2,8 +2,8 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import { useClick } from './useClick';
-import { useOpenInteractionType } from './useOpenInteractionType';
+import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
+import { useOpenInteractionType } from '../usePopupTrigger';
 
 const Trigger = defineComponent({
   setup() {

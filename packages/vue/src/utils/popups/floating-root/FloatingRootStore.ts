@@ -2,10 +2,10 @@ import { toRaw } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
 import type { TransitionStatus } from '../../../internals/useTransitionStatus';
 import { createEventEmitter } from '../createEventEmitter';
-import type { PopupTriggerMap } from '../popupTriggerMap';
-import { ReactiveStore } from '../ReactiveStore';
+import type { PopupTriggerMap } from '../usePopupRoot';
+import { ReactiveStore } from '../handleStoreAdapter';
 import type { PopupInteractionContext, PositioningInteractionStore, ReferenceType } from '../types';
-import { dispatchOpenChange } from './dispatchOpenChange';
+import { dispatchOpenChange } from '../usePopupRoot';
 
 /**
  * The state of a `FloatingRootStore`. The part that owns the store gives each value.

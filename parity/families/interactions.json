@@ -159,6 +159,34 @@
       "destination": "packages/vue/src/internals/composite/gridNavigation.ts",
       "member": "navigateUniformGrid",
       "witness": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "useTriggerPress",
+      "witness": "packages/vue/src/utils/popups/interactions/useClick.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "useTriggerFocus",
+      "witness": "packages/vue/src/utils/popups/interactions/useFocus.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "useTriggerModality",
+      "witness": "packages/vue/src/utils/popups/interactions/useOpenInteractionType.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/tooltip/root/TooltipRoot.vue",
+      "member": "useTooltipCursor",
+      "witness": "packages/vue/src/utils/popups/interactions/useClientPoint.test.tsx"
     }
   ]
 }

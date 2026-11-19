@@ -1,10 +1,23 @@
+import { exposePopupBindings } from './popupBindings';
 import { hasInjectionContext, inject, markRaw, shallowRef } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import type { PopupTriggerMap } from './popupTriggerMap';
+import type { PopupTriggerMap } from './usePopupRoot';
+
+let readingTrigger: object | undefined;
+
+export function readTriggerStore<Store>(handle: PopupHandleStoreProvider<Store>): Store {
+  const previous = readingTrigger;
+  readingTrigger = handle;
+  try {
+    return handle.store;
+  } finally {
+    readingTrigger = previous;
+  }
+}
 
 /**
  * The minimal store contract that a popup handle gives to a detached trigger.
@@ -151,7 +164,12 @@ export class BasePopupHandle<
    * @internal
    */
   get store(): HandleStore {
-    return this.#attachedStoreRef.value ?? this.fallbackStore;
+    const store = this.#attachedStoreRef.value ?? this.fallbackStore;
+    // A trigger reads the same getter as a consumer but takes its bindings directly from the root.
+    if (readingTrigger !== this) {
+      exposePopupBindings(store);
+    }
+    return store;
   }
 
   /**

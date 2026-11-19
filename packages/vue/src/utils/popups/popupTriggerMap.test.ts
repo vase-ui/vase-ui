@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PopupTriggerMap } from './popupTriggerMap';
+import { PopupTriggerMap } from './usePopupRoot';
 
 describe('PopupTriggerMap', () => {
   it('adds and retrieves elements by id', () => {

@@ -54,6 +54,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
+import { popupBindings } from '../../utils/popups/popupBindings';
 import { menuPopups } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, inject, provide, toRaw, watch } from 'vue';
@@ -170,7 +171,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   props: (attrs) => [
     // This listener runs after each other listener of the popup.
     { onKeydown: parentHandoff?.sendKeyToParentList },
-    store.select('popupProps'),
+    popupBindings(store),
     { style: store.context.viewportStyles.value?.popup.value },
     {
       id: given('id', props.id) ?? store.select('defaultPopupId'),

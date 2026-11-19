@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createSlotHost } from '../../../test/fixtures/slotHost';
 import { tooltipTriggers } from './registeredParts';
 import { isEventTargetWithin, isTargetInsideEnabledTrigger } from './element';
-import { PopupTriggerMap } from './popupTriggerMap';
+import { PopupTriggerMap } from './usePopupRoot';
 
 describe('isEventTargetWithin', () => {
   it('treats a shadow-contained target as within when the event lacks composedPath', () => {

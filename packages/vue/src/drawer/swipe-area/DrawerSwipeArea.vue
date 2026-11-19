@@ -106,7 +106,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import { isVirtualClick } from '../../utils/popups/event';
-import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
+import { useTriggerRegistration } from '../../utils/popups/usePopupTrigger';
 import { getDisplacement, useSwipeDismiss } from '../../utils/useSwipeDismiss';
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
 import * as DrawerPopupCssVars from '../popup/DrawerPopupCssVars';

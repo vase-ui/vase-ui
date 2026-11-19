@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createTestPopupStore } from '../../../test/popupStoreTestUtils';
-import { useTriggerDataForwarding } from './popupStoreUtils';
+import { usePopupTrigger } from './usePopupTrigger';
 
 describe('useTriggerDataForwarding', () => {
   it('registers no trigger and writes nothing to the store in a server render', async () => {
@@ -13,7 +13,7 @@ describe('useTriggerDataForwarding', () => {
     const update = vi.spyOn(store, 'update');
 
     const Trigger = defineComponent(() => {
-      const { registerTrigger } = useTriggerDataForwarding(
+      const { registerTrigger } = usePopupTrigger(
         () => 'trigger',
         () => store,
         () => ({ payload: 'from trigger' }),

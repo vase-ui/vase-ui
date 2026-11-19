@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NullStore } from './NullStore';
+import { NullStore } from './usePopupRoot';
 
 interface State {
   value: string;

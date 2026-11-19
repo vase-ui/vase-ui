@@ -10,7 +10,13 @@ export { default as TooltipViewport } from './viewport/TooltipViewport.vue';
 export { default as TooltipArrow } from './arrow/TooltipArrow.vue';
 
 export type * from './provider/TooltipProvider.vue';
-export type * from './root/TooltipRoot.vue';
+export type {
+  TooltipRootActions,
+  TooltipRootChangeEventDetails,
+  TooltipRootChangeEventReason,
+  TooltipRootProps,
+  TooltipRootState,
+} from './root/TooltipRoot.vue';
 export type * from './trigger/TooltipTrigger.vue';
 export type * from './portal/TooltipPortal.vue';
 export type * from './positioner/TooltipPositioner.vue';

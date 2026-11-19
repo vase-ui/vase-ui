@@ -2,21 +2,18 @@ import { vi } from 'vitest';
 import { defineComponent, watch } from 'vue';
 import type { PropType } from 'vue';
 import type { VaseUIChangeEventDetails } from '../src/internals/createVaseUIEventDetails';
-import { ReactiveStore } from '../src/utils/popups/ReactiveStore';
-import {
-  useTriggerDataForwarding,
-  useTriggerRegistration,
-} from '../src/utils/popups/popupStoreUtils';
+import { ReactiveStore } from '../src/utils/popups/handleStoreAdapter';
+import { usePopupTrigger, useTriggerRegistration } from '../src/utils/popups/usePopupTrigger';
 import {
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from '../src/utils/popups/store';
+} from '../src/utils/popups/usePopupRoot';
 import type {
   PopupStoreContext,
   PopupStoreSelectors,
   PopupStoreState,
-} from '../src/utils/popups/store';
+} from '../src/utils/popups/usePopupRoot';
 
 export type TestPopupStore = ReactiveStore<
   Readonly<PopupStoreState<unknown>>,
@@ -80,7 +77,7 @@ export const TestTrigger = defineComponent({
 export const TestForwardedTrigger = defineComponent({
   props: { ...triggerProps, payload: null },
   setup(props) {
-    const { registerTrigger } = useTriggerDataForwarding(
+    const { registerTrigger } = usePopupTrigger(
       () => props.id,
       () => props.store,
       () => ({ payload: props.payload }),

@@ -9,7 +9,7 @@ import {
 } from '#test-utils';
 import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
-import { useClick } from './useClick';
+import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { useTypeahead } from './useTypeahead';
 import type { UseTypeaheadProps } from './useTypeahead';
 

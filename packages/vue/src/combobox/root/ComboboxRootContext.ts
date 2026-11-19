@@ -1,3 +1,4 @@
+import type { useSingleAnchorPopupRoot } from '../../utils/popups/usePopupRoot';
 import { computed, inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type { ComboboxStore } from '../store';
@@ -17,7 +18,9 @@ export interface ComboboxDerivedItemsContext {
  */
 export type ComboboxInputElementValue = string | number | readonly string[] | undefined;
 
-export const ComboboxRootContext: InjectionKey<ComboboxStore> = Symbol();
+export const ComboboxRootContext: InjectionKey<
+  ReturnType<typeof useSingleAnchorPopupRoot<ComboboxStore>>
+> = Symbol();
 export const ComboboxDerivedItemsContext: InjectionKey<ComboboxDerivedItemsContext> = Symbol();
 export const ComboboxHasItemsContext: InjectionKey<ComputedRef<boolean>> = Symbol();
 // `inputValue` is not a key of the store. The provider gives the `ComputedRef` that has the value,
@@ -28,7 +31,7 @@ export const ComboboxInputValueContext: InjectionKey<ComputedRef<ComboboxInputEl
 const DEFAULT_COMBOBOX_HAS_ITEMS_CONTEXT = computed(() => false);
 const DEFAULT_COMBOBOX_INPUT_VALUE_CONTEXT = computed<ComboboxInputElementValue>(() => '');
 
-export function useComboboxRootContext(): ComboboxStore {
+export function useComboboxRootOwner() {
   // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(ComboboxRootContext, undefined);
   if (context === undefined) {
@@ -55,4 +58,8 @@ export function useComboboxInputValueContext(): ComputedRef<ComboboxInputElement
 
 export function useComboboxHasItemsContext(): ComputedRef<boolean> {
   return inject(ComboboxHasItemsContext, DEFAULT_COMBOBOX_HAS_ITEMS_CONTEXT);
+}
+
+export function useComboboxRootContext(): ComboboxStore {
+  return useComboboxRootOwner().store;
 }

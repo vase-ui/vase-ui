@@ -1,12 +1,12 @@
-import { computed, onMounted, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
+import { onMounted, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
-import { popupStoreSelectors } from '../../utils/popups/store';
+import type { usePopupRoot } from '../../utils/popups/usePopupRoot';
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import type { DialogStore } from '../store/DialogStore';
 
 /**
@@ -15,16 +15,18 @@ import type { DialogStore } from '../store/DialogStore';
  */
 export function useDialogInteractions({
   store,
+  open,
+  mounted,
+  bindParts,
   parentContext,
   isDrawer,
-}: {
-  store: DialogStore<any>;
+}: Pick<
+  ReturnType<typeof usePopupRoot<DialogStore<any>>>,
+  'store' | 'open' | 'mounted' | 'bindParts'
+> & {
   parentContext: DialogStore<unknown>['context'] | undefined;
   isDrawer: boolean;
 }) {
-  const open = computed(() => store.select('open'));
-  const mounted = computed(() => store.select('mounted'));
-
   const ownNestedOpenDialogs = shallowRef(0);
   const ownNestedOpenDrawers = shallowRef(0);
   const isTopmost = () => ownNestedOpenDialogs.value === 0;
@@ -37,7 +39,7 @@ export function useDialogInteractions({
       // Ensure `aria-hidden` on outside elements is removed immediately
       // on outside press when trapping focus.
       return {
-        mouse: store.select('modal') === 'trap-focus' ? 'sloppy' : 'intentional',
+        mouse: store.state.modal === 'trap-focus' ? 'sloppy' : 'intentional',
         touch: 'sloppy',
       };
     },
@@ -90,8 +92,8 @@ export function useDialogInteractions({
   });
 
   useScrollLock(
-    () => open.value && store.select('modal') === true,
-    () => store.select('popupElement'),
+    () => open.value && store.state.modal === true,
+    () => store.state.popupElement,
   );
 
   // Listen for nested open/close events on this store to maintain the counts.
@@ -159,13 +161,12 @@ export function useDialogInteractions({
     },
   );
 
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: dismiss.reference,
-    inactiveTriggerProps: dismiss.trigger,
-    // `Dialog.Popup` and `Drawer.Popup` bind `FOCUSABLE_POPUP_PROPS` themselves, so
-    // this only needs to carry the dismiss handlers.
-    popupProps: dismiss.floating,
-    nestedOpenDialogCount: ownNestedOpenDialogs.value,
-    nestedOpenDrawerCount: ownNestedOpenDrawers.value,
-  }));
+  bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
+  watch(
+    [ownNestedOpenDialogs, ownNestedOpenDrawers],
+    ([nestedOpenDialogCount, nestedOpenDrawerCount]) => {
+      store.update({ nestedOpenDialogCount, nestedOpenDrawerCount });
+    },
+    { immediate: true },
+  );
 }
