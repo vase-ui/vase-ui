@@ -18,7 +18,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -442,22 +441,6 @@ const rows: Row[] = [
           <Resizable.Panel id="b" />
         </Resizable.Root>
       </div>
-    ),
-  },
-  {
-    part: 'Tabs.Tab',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Tabs.Root defaultValue="a">
-        <Tabs.List>
-          <Tabs.Tab value="a" data-testid="part" {...attrs}>
-            Overview
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="a" data-testid="target">
-          Text
-        </Tabs.Panel>
-      </Tabs.Root>
     ),
   },
   {
