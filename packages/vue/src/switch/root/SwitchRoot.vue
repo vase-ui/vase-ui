@@ -104,17 +104,17 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
-import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
+import { computed, provide, useTemplateRef, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
+import { useCheckedInput } from '../../internals/useCheckedInput';
+import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
-import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import {
   useAriaLabelledBy,
@@ -126,7 +126,6 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormReset } from '../../internals/useFormReset';
-import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { stateAttributesMapping } from '../stateAttributesMapping';
@@ -180,10 +179,7 @@ const {
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-function setInputElement(node: unknown) {
-  inputElement.value = node as HTMLInputElement | null;
-}
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
@@ -209,8 +205,7 @@ const { name: inputName } = useFieldControl(() => element.value, {
 });
 const clearFieldError = useClearFieldError(inputName);
 
-setFilled(isChecked.value);
-watch(isChecked, setFilled);
+watch(isChecked, setFilled, { immediate: true });
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout sets
@@ -253,38 +248,17 @@ function requestChange(nextChecked: boolean, event?: Event) {
   return true;
 }
 
-function onInputClick(event: MouseEvent) {
-  // The root dispatches this click for its own click. The ancestors already got that click.
-  event.stopPropagation();
-
-  // The browser puts the old state back after a click whose default action is prevented.
-  if (event.defaultPrevented) {
-    return;
-  }
-
-  if (props.readOnly || !requestChange((event.currentTarget as HTMLInputElement).checked, event)) {
-    event.preventDefault();
-    return;
-  }
-
-  // A parent that controls the switch can keep the old value. The input then has the new one.
-  void nextTick(restoreInput);
-}
-
-// The input changed with no event that the switch handled: a press on a native label before the
-// hydration, or a form state that the browser restored.
-function takeInputState(event?: Event) {
-  const input = inputElement.value;
-  if (!input) {
-    return;
-  }
-
-  if (input.checked !== isChecked.value && !props.readOnly && !isDisabled.value) {
-    requestChange(input.checked, event);
-  }
-
-  void nextTick(restoreInput);
-}
+const { activate, onInputClick, onInputFocus, onInputInvalid } = useCheckedInput(
+  inputElement,
+  () => element.value,
+  {
+    checked: isChecked,
+    acceptClick: (checked, event) => !props.readOnly && requestChange(checked, event),
+    takeRestored(checked, event) {
+      if (!props.readOnly && !isDisabled.value) requestChange(checked, event);
+    },
+  },
+);
 
 useFormReset(inputElement, (event) => {
   const hasChanged =
@@ -298,28 +272,6 @@ useFormReset(inputElement, (event) => {
     clearFieldError(isChecked.value);
   }
 });
-
-function restoreInput() {
-  restoreChecked(inputElement.value, isChecked.value);
-}
-
-watch(
-  inputElement,
-  (input) => {
-    // The field registers its initial value before it takes a click from before hydration.
-    if (input && input.checked !== input.defaultChecked) {
-      queueInputTake(() => {
-        takeInputState();
-        return true;
-      });
-    } else {
-      restoreInput();
-    }
-  },
-  { flush: 'post' },
-);
-
-useFormRestore(inputElement, takeInputState);
 
 const state = computed<SwitchRootState>(() => ({
   ...fieldState.value,
@@ -370,9 +322,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
           return;
         }
 
-        event.preventDefault();
-
-        forwardClickToInput(inputElement.value, event);
+        activate(event);
       },
     },
     attrs,
@@ -380,25 +330,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
   ],
 });
 
-function inputProps() {
-  const validationProps = validation.getValidationProps(isDisabled.value);
-  return {
-    ...validationProps,
-    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    ...checkedInputProps({
-      type: 'checkbox',
-      checked: isChecked.value,
-      disabled: isDisabled.value,
-      form: props.form,
-      id: hiddenInputId.value,
-      name: inputName.value,
-      required: props.required,
-      onClick: onInputClick,
-      element: () => element.value,
-    }),
-    ...(props.value !== undefined ? { value: props.value } : undefined),
-  };
-}
+const inputValidation = computed(() => validation.getValidationProps(isDisabled.value));
 
 defineExpose({ element, inputElement });
 </script>
@@ -416,5 +348,23 @@ defineExpose({ element, inputElement });
     :value="uncheckedValue"
     :disabled="isDisabled"
   />
-  <input v-bind="inputProps()" :ref="setInputElement" />
+  <input
+    ref="input"
+    type="checkbox"
+    v-bind="inputValidation"
+    :aria-describedby="ariaAfterHydration(inputValidation['aria-describedby'])"
+    :name="inputName"
+    :form="form"
+    :checked="isChecked"
+    :required="required"
+    :style="inputName ? visuallyHiddenInput : visuallyHiddenInputPinned"
+    :value="value"
+    :id="hiddenInputId"
+    :disabled="isDisabled"
+    tabindex="-1"
+    aria-hidden="true"
+    @click="onInputClick"
+    @focusin="onInputFocus"
+    @invalid="onInputInvalid"
+  />
 </template>

@@ -123,21 +123,21 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, provide, useTemplateRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
-import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
+import { useCheckedInput } from '../../internals/useCheckedInput';
+import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useFieldControl, useInputRegistration } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
-import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import {
   useAriaLabelledBy,
@@ -150,7 +150,6 @@ import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormReset } from '../../internals/useFormReset';
-import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useElementId } from '../../utils/popups/useElementId';
@@ -253,7 +252,7 @@ const isIndeterminate = computed(
   () => (groupProps.value.indeterminate ?? false) || props.indeterminate,
 );
 
-const inputElement = shallowRef<HTMLInputElement | null>(null);
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 // A field can have more than one input, so the input goes to the registry of the field and not to
 // `validation.inputRef`. The group reads the value when the form needs it, so a change of the value
 // needs no new registration. The parent checkbox is not an input of its field, because it has no
@@ -268,10 +267,6 @@ const { isHeld, updateInputRegistration } = useInputRegistration(inputElement, (
         },
       }),
 );
-
-function setInputElement(value: unknown) {
-  inputElement.value = value as HTMLInputElement | null;
-}
 
 watch(() => props.parent, updateInputRegistration);
 
@@ -307,8 +302,7 @@ const isChecked = useControlled({
 
 // A group derives the filled state of the field from its value.
 if (!group) {
-  setFilled(isChecked.value);
-  watch(isChecked, setFilled);
+  watch(isChecked, setFilled, { immediate: true });
 }
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
@@ -376,38 +370,18 @@ function requestChange(nextChecked: boolean, event?: Event) {
   return true;
 }
 
-function onInputClick(event: MouseEvent) {
-  // The root dispatches this click for its own click. The ancestors already got that click.
-  event.stopPropagation();
-
-  // The browser puts the old state back after a click whose default action is prevented.
-  if (event.defaultPrevented) {
-    return;
-  }
-
-  if (props.readOnly || !requestChange((event.currentTarget as HTMLInputElement).checked, event)) {
-    event.preventDefault();
-    return;
-  }
-
-  // A parent that controls the checkbox can keep the old value. The input then has the new one.
-  void nextTick(restoreInput);
-}
-
-// The input changed with no event that the checkbox handled: a press on a native label before the
-// hydration, or a form state that the browser restored.
-function takeInputState(event?: Event) {
-  const input = inputElement.value;
-  if (!input) {
-    return;
-  }
-
-  if (input.checked !== isChecked.value && !props.parent && !props.readOnly && !isDisabled.value) {
-    requestChange(input.checked, event);
-  }
-
-  void nextTick(restoreInput);
-}
+const { activate, onInputClick, onInputFocus, onInputInvalid } = useCheckedInput(
+  inputElement,
+  () => element.value,
+  {
+    checked: isChecked,
+    indeterminate: isIndeterminate,
+    acceptClick: (checked, event) => !props.readOnly && requestChange(checked, event),
+    takeRestored(checked, event) {
+      if (!props.parent && !props.readOnly && !isDisabled.value) requestChange(checked, event);
+    },
+  },
+);
 
 // An uncontrolled checkbox goes back to its default value through its change event. The result is
 // `true` when the state changed.
@@ -441,28 +415,6 @@ useFormReset(inputElement, (event) => {
     clearFieldError(isChecked.value);
   }
 });
-
-function restoreInput() {
-  restoreChecked(inputElement.value, isChecked.value, isIndeterminate.value);
-}
-
-watch(
-  inputElement,
-  (input) => {
-    // The field registers its initial value before it takes a click from before hydration.
-    if (input && input.checked !== input.defaultChecked) {
-      queueInputTake(() => {
-        takeInputState();
-        return true;
-      });
-    } else {
-      restoreChecked(input, isChecked.value);
-    }
-  },
-  { flush: 'post' },
-);
-
-useFormRestore(inputElement, takeInputState);
 
 const enterTimeout = useTimeout();
 
@@ -562,9 +514,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
           return;
         }
 
-        event.preventDefault();
-
-        forwardClickToInput(inputElement.value, event);
+        activate(event);
       },
     },
     attrs,
@@ -609,32 +559,9 @@ watch(
   },
 );
 
-function inputProps() {
-  const validationProps = validation.getValidationProps(isDisabled.value, getDescriptionProps({}));
-  return {
-    ...validationProps,
-    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
-    ...checkedInputProps({
-      type: 'checkbox',
-      checked: isChecked.value,
-      disabled: isDisabled.value,
-      form: props.form,
-      id: hiddenInputId.value,
-      name: inputName.value,
-      required: props.required,
-      onClick: onInputClick,
-      element: () => element.value,
-    }),
-    // HTML has no indeterminate attribute. Vue binds the property after mount.
-    ...(isHydrated.value && isIndeterminate.value ? { indeterminate: true } : undefined),
-    // The style follows the name of the checkbox. The parent checkbox has no name, so the form
-    // does not get it.
-    ...(props.parent ? { name: undefined } : undefined),
-    ...(props.value !== undefined
-      ? { value: (group ? isChecked.value && props.value : props.value) || '' }
-      : undefined),
-  };
-}
+const inputValidation = computed(() =>
+  validation.getValidationProps(isDisabled.value, getDescriptionProps({})),
+);
 
 defineExpose({ element, inputElement });
 </script>
@@ -652,5 +579,24 @@ defineExpose({ element, inputElement });
     :value="uncheckedValue"
     :disabled="isDisabled"
   />
-  <input v-bind="inputProps()" :ref="setInputElement" />
+  <input
+    ref="input"
+    type="checkbox"
+    v-bind="inputValidation"
+    :aria-describedby="ariaAfterHydration(inputValidation['aria-describedby'])"
+    :name="parent ? undefined : inputName"
+    :form="form"
+    :checked="isChecked"
+    :required="required"
+    :indeterminate="(isHydrated && isIndeterminate) || undefined"
+    :style="inputName ? visuallyHiddenInput : visuallyHiddenInputPinned"
+    :value="value === undefined ? undefined : group && !isChecked ? '' : value"
+    :id="hiddenInputId"
+    :disabled="isDisabled"
+    tabindex="-1"
+    aria-hidden="true"
+    @click="onInputClick"
+    @focusin="onInputFocus"
+    @invalid="onInputInvalid"
+  />
 </template>

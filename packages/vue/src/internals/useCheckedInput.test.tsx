@@ -3,9 +3,8 @@ import { nextTick, shallowRef } from 'vue';
 import { createRenderer } from '#test-utils';
 import { recordInputWrites } from '../../test/recordInputWrites';
 import CheckboxRoot from '../checkbox/root/CheckboxRoot.vue';
-import { restoreChecked } from './checkedInputProps';
 
-describe('checkedInputProps', () => {
+describe('useCheckedInput', () => {
   const { render } = createRenderer();
 
   it('keeps the input style of a named parent checkbox', async () => {
@@ -29,16 +28,16 @@ describe('checkedInputProps', () => {
     expect(input.indeterminate).toBe(false);
   });
 
-  it('restores only the checked properties changed by a click', () => {
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.indeterminate = true;
-    input.click();
+  it('restores only the checked properties changed by a click', async () => {
+    const { container } = await render(<CheckboxRoot modelValue={false} indeterminate />);
+    const input = container.querySelector('input')!;
     const checked = recordInputWrites(input, 'checked');
     const mixed = recordInputWrites(input, 'indeterminate');
 
-    restoreChecked(input, false, true);
-    restoreChecked(input, false, true);
+    input.click();
+    await nextTick();
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+    await nextTick();
 
     expect(input.checked).toBe(false);
     expect(input.indeterminate).toBe(true);

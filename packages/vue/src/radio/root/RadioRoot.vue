@@ -88,17 +88,17 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, provide, shallowRef, watch, type ShallowRef } from 'vue';
+import { computed, nextTick, provide, shallowRef, useTemplateRef, watch } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
-import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
+import { useCheckedInput } from '../../internals/useCheckedInput';
+import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useInputRegistration } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
-import { forwardClickToInput } from '../../internals/forwardClickToInput';
 import { given } from '../../internals/givenAttributes';
 import {
   useAriaLabelledBy,
@@ -158,11 +158,7 @@ const checked = computed(() =>
   group ? group.checkedValue.value === props.value : props.value === '',
 );
 
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-
-function setInputElement(value: unknown) {
-  inputElement.value = value as HTMLInputElement | null;
-}
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
@@ -188,9 +184,11 @@ const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabel,
 );
 
-function restoreInput() {
-  restoreChecked(inputElement.value, checked.value);
-}
+const { activate, onInputClick, onInputFocus, onInputInvalid, restoreInput } = useCheckedInput(
+  inputElement,
+  () => element.value,
+  { checked, acceptClick },
+);
 
 // A radio must wait for the group to read its peers before a write unchecks one of them.
 watch(
@@ -259,41 +257,16 @@ if (group) {
   );
 }
 
-function onInputClick(event: MouseEvent) {
-  // The root dispatches this click for its own click and for a focus that an arrow key moved. The
-  // ancestors already got the click of the user.
-  event.stopPropagation();
-
-  // The browser puts the old state back after a click whose default action is prevented.
-  if (event.defaultPrevented) {
-    return;
-  }
-
-  // React calls `onChange` of a radio input only for a click that checks it.
-  if (checked.value) {
-    return;
-  }
-
-  if (isDisabled.value || isReadOnly.value || props.value === undefined) {
-    event.preventDefault();
-    return;
-  }
+function acceptClick(_checked: boolean, event: MouseEvent) {
+  if (checked.value) return true;
+  if (isDisabled.value || isReadOnly.value || props.value === undefined) return false;
 
   const details = createChangeEventDetails(REASONS.none, event);
-
   group?.setCheckedValue(props.value, details);
-
-  if (details.isCanceled) {
-    event.preventDefault();
-    return;
-  }
+  if (details.isCanceled) return false;
 
   setFieldTouched(true);
-
-  // A radio with no group has no state to change, so its input goes back to its state.
-  if (!group) {
-    event.preventDefault();
-  }
+  return group !== undefined;
 }
 
 // A radio with no group has no state to change, so it writes its state over a restored input.
@@ -311,7 +284,7 @@ const state = computed<RadioRootState>(() => ({
 
 provide(RadioRootContext, state);
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const element = shallowRef<HTMLElement | null>(null);
 const compositeItem = group
   ? useCompositeItem(element, { active: checked, disabled: isDisabled })
   : undefined;
@@ -351,9 +324,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('span', props,
           return;
         }
 
-        event.preventDefault();
-
-        forwardClickToInput(inputElement.value, event);
+        activate(event);
       },
       onFocusin(event: FocusEvent) {
         setFocused(true);
@@ -385,24 +356,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('span', props,
   ],
 });
 
-function inputProps() {
-  return {
-    ...checkedInputProps({
-      type: 'radio',
-      checked: checked.value,
-      disabled: isDisabled.value,
-      form: group?.form.value,
-      id: hiddenInputId.value,
-      name: group?.name.value,
-      required: isRequired.value,
-      onClick: onInputClick,
-      element: () => element.value,
-    }),
-    ...(props.value !== undefined ? { value: serializeValue(props.value) } : undefined),
-    readonly: isReadOnly.value,
-  };
-}
-
 defineExpose({ element, inputElement });
 </script>
 
@@ -411,5 +364,22 @@ defineExpose({ element, inputElement });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="inputProps()" :ref="setInputElement" />
+  <input
+    ref="input"
+    type="radio"
+    :name="group?.name.value"
+    :form="group?.form.value"
+    :checked="checked"
+    :required="isRequired"
+    :readonly="isReadOnly"
+    :style="group?.name.value ? visuallyHiddenInput : visuallyHiddenInputPinned"
+    v-bind="value === undefined ? {} : { value: serializeValue(value) }"
+    :id="hiddenInputId"
+    :disabled="isDisabled"
+    tabindex="-1"
+    aria-hidden="true"
+    @click="onInputClick"
+    @focusin="onInputFocus"
+    @invalid="onInputInvalid"
+  />
 </template>
