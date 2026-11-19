@@ -151,6 +151,7 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DatePickerRootContext, createPickerTemplate, hasTime } from './DatePickerRootContext';
+
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DatePickerRootProps<Value>>(), {

@@ -25,11 +25,10 @@ import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
+import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext, hourCycleOption } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
-
-import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
 
 defineOptions({ inheritAttrs: false });
 

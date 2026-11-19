@@ -162,6 +162,7 @@ import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
+
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
