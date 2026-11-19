@@ -1546,7 +1546,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 - Write reactive state directly when the next operation needs no DOM read. Vue queues its DOM flush as a microtask before the next paint.
 - Await `nextTick()` after the write when the next operation needs the patched DOM for a read or focus. Test that order.
-- Measure after mount when the DOM reflects the inputs to the measurement. A `ResizeObserver` reports size changes only. `Tabs.Indicator` reads a size-change counter and the orientation. A change of orientation can move a tab without a resize.
+- Measure after mount when the DOM reflects the inputs to the measurement. A `ResizeObserver` reports size changes only. `Tabs.Indicator` also reads the tab order and the orientation. Either can move the selected tab without a resize.
 - A render slot can set an attribute that no prop tracks. `AvatarImage.vue` checks its rendered image at mount and after updates, and acts only on a changed value. For a referenced id, follow [Actions, handles, slots, composables and ids](#actions-handles-slots-composables-and-ids).
 - In a development build, `Menu.SubmenuTrigger` warns in this way about a disabled element of its `#render` slot. The warning comes only one time, so the hooks compare no values.
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.

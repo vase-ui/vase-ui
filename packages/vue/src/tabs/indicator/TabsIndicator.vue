@@ -211,13 +211,14 @@ defineSlots<{
 }>();
 
 const { activeTabElement, state: rootState, value } = useTabsRootContext();
-const { tabsListElement, resizeCount } = useTabsListContext();
+const { tabsListElement, tabElements, resizeCount } = useTabsListContext();
 
 const isHydrating = useIsHydrating();
 
 const measurement = computed<ActiveTabMeasurement | null>(() => {
   void resizeCount.value;
-  // A change of orientation can move a tab without a resize.
+  // Moving a tab or changing the orientation can change its position without a resize.
+  void tabElements.value;
   void rootState.value.orientation;
 
   const listElement = tabsListElement.value;

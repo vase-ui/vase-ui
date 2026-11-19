@@ -96,6 +96,7 @@ useResizeObserver(
 provide(TabsListContext, {
   activateOnFocus: computed(() => props.activateOnFocus),
   resizeCount,
+  tabElements: elementsRef,
   tabsListElement: element,
 });
 

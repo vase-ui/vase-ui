@@ -4,6 +4,7 @@ import type { ComputedRef, InjectionKey, Ref } from 'vue';
 export interface TabsListContext {
   activateOnFocus: ComputedRef<boolean>;
   resizeCount: Readonly<Ref<number>>;
+  tabElements: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   tabsListElement: Readonly<Ref<HTMLElement | null>>;
 }
 

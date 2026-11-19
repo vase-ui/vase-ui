@@ -69,7 +69,7 @@ describe('<Tabs.Indicator />', () => {
   it('exposes null active tab state when the selected value has no matching tab', async () => {
     const indicatorStates: Tabs.Indicator.State[] = [];
 
-    await render(
+    const { setProps } = await render(
       <Tabs.Root modelValue="missing">
         <Tabs.List>
           <Tabs.Tab value="one">One</Tabs.Tab>
@@ -85,13 +85,16 @@ describe('<Tabs.Indicator />', () => {
       </Tabs.Root>,
     );
 
-    // Wait for Tabs.List to register its element; before that no tab can be measured.
-    await flushMicrotasks();
+    const bubble = screen.getByTestId('bubble');
+    expect(bubble).toHaveAttribute('hidden');
+    await setProps({ modelValue: 'one' });
+    expect(bubble).not.toHaveAttribute('hidden');
 
+    await setProps({ modelValue: 'missing' });
     const state = indicatorStates.at(-1)!;
     expect(state.activeTabPosition).toBe(null);
     expect(state.activeTabSize).toBe(null);
-    expect(screen.getByTestId('bubble')).toHaveAttribute('hidden');
+    expect(bubble).toHaveAttribute('hidden');
   });
 
   describe.skipIf(isJSDOM)('rendering', () => {
@@ -775,6 +778,27 @@ describe('<Tabs.Indicator />', () => {
       await waitFor(() => {
         expectBubblePositionVariables(bubble2, tabList, activeTab);
       });
+    });
+
+    it('follows the selected tab when the list is reordered without ResizeObserver', async () => {
+      vi.stubGlobal('ResizeObserver', undefined);
+      onTestFinished(() => vi.unstubAllGlobals());
+      const order = shallowRef(['a', 'b']);
+      await render(() => (
+        <Tabs.Root modelValue="b">
+          <Tabs.List style={{ display: 'flex' }}>
+            {order.value.map((value) => (
+              <Tabs.Tab key={value} value={value} style={{ width: '50px' }} />
+            ))}
+            <Tabs.Indicator data-testid="indicator" />
+          </Tabs.List>
+        </Tabs.Root>
+      ));
+      const indicator = screen.getByTestId('indicator');
+      expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('50px');
+
+      order.value = ['b', 'a'];
+      await waitFor(() => expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('0px'));
     });
 
     it('measures again when the orientation changes with no change of size', async () => {
