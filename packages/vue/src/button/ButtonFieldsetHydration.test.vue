@@ -9,7 +9,6 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 
@@ -52,11 +51,6 @@ defineProps<{ fieldsetRoot?: boolean }>();
         </NavigationMenu.Item>
       </NavigationMenu.List>
     </NavigationMenu.Root>
-    <Tabs.Root default-value="one">
-      <Tabs.List>
-        <Tabs.Tab v-slot="{ state }" value="one">{{ state.disabled }}</Tabs.Tab>
-      </Tabs.List>
-    </Tabs.Root>
     <Tooltip.Root>
       <Tooltip.Trigger v-slot="{ state }">{{ state.disabled }}</Tooltip.Trigger>
     </Tooltip.Root>

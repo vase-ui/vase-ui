@@ -852,7 +852,7 @@ const reported = [
     ],
     [
       'a prehydration script through its subpath',
-      "import { script } from '#prehydration/tabs/indicator';\n\nexport const text = script;\n",
+      "import { script } from '#prehydration/tabs';\n\nexport const text = script;\n",
       './prehydrationScript.min',
     ],
     [
@@ -913,7 +913,7 @@ const reported = [
   {
     name: 'an import of a prehydration script through its subpath in useAnchorPositioning.ts',
     file: 'packages/vue/src/internals/useAnchorPositioning.ts',
-    code: "import { script } from '#prehydration/tabs/indicator';\n\nexport const text = script;\n",
+    code: "import { script } from '#prehydration/tabs';\n\nexport const text = script;\n",
     ruleId: 'no-restricted-imports',
     hint: './prehydrationScript.min',
   },

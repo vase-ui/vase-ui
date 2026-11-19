@@ -460,8 +460,9 @@ async function expectIndicatorUnderTab(
   );
 }
 
-// Panel `a` is not mounted, so no tab names it.
-async function expectTabIds(page: Page) {
+// Panel `a` is not mounted, so no tab names it. The server HTML names only the part that comes
+// before: the panels after the list name their tabs, and a tab after its panel names the panel.
+async function expectTabIds(page: Page, hydrated: boolean) {
   const after = await readTabsRoot(page, 'panels-after');
   const before = await readTabsRoot(page, 'panels-before');
 
@@ -472,29 +473,29 @@ async function expectTabIds(page: Page) {
     after.tabs[1].id,
     after.tabs[2].id,
   ]);
-  expect(after.tabs.map((tab) => tab.controls)).toEqual([
-    null,
-    after.panels[0].id,
-    after.panels[1].id,
-  ]);
+  expect(after.tabs.map((tab) => tab.controls)).toEqual(
+    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
+  );
   expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
-  expect(before.panels.map((panel) => panel.labelledby)).toEqual([before.tabs[1].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
+    hydrated ? before.tabs[1].id : null,
+  ]);
 }
 
 // The server cannot measure the layout, so the indicator is hidden and has no variable. The script
-// after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
+// in it has the nonce of the provider. It does not run here, because this page has no JavaScript.
 async function expectTabsPage(page: Page) {
-  await expectTabIds(page);
+  await expectTabIds(page, false);
 
   expect(
     await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
       scripts.map((script) => ({
         nonce: script.getAttribute('nonce'),
-        follows: script.previousElementSibling?.getAttribute('data-testid'),
+        parent: script.parentElement?.getAttribute('data-testid'),
         hasText: script.textContent?.includes('currentScript'),
       })),
     ),
-  ).toEqual([{ nonce: 'test-nonce', follows: 'indicator', hasText: true }]);
+  ).toEqual([{ nonce: 'test-nonce', parent: 'indicator', hasText: true }]);
   expect(await readAttributes(page.getByTestId('indicator'), ['hidden', 'role'])).toEqual({
     hidden: '',
     role: 'presentation',
@@ -505,7 +506,7 @@ async function expectTabsPage(page: Page) {
 }
 
 async function expectHydratedTabsPage(page: Page) {
-  await expectTabIds(page);
+  await expectTabIds(page, true);
 
   expect(await page.locator('[role="tablist"] script').count()).toBe(0);
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
