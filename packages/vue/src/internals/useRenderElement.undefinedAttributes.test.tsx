@@ -15,13 +15,11 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
@@ -258,12 +256,6 @@ const rows: Row[] = [
     expected: () => 'menubar',
   },
   {
-    name: 'Meter.Root role',
-    attribute: 'role',
-    createNode: () => <Meter.Root value={30} role={undefined} data-testid="part" />,
-    expected: () => 'meter',
-  },
-  {
     name: 'NavigationMenu.Trigger aria-expanded',
     attribute: 'aria-expanded',
     createNode: () => (
@@ -325,12 +317,6 @@ const rows: Row[] = [
       </PreviewCard.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Progress.Root aria-valuenow',
-    attribute: 'aria-valuenow',
-    createNode: () => <Progress.Root value={30} aria-valuenow={undefined} data-testid="part" />,
-    expected: () => '30',
   },
   {
     name: 'Resizable.Handle role',

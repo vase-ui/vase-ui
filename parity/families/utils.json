@@ -49,6 +49,19 @@
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/utils/formatRangeValue.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/meter/MeterRoot.vue",
+      "member": "formattedValue",
+      "witness": "packages/vue/src/meter/Meter.test.ts",
+      "additional": [
+        {
+          "destination": "packages/vue/src/progress/ProgressRoot.vue",
+          "member": "formattedValue"
+        }
+      ]
+    },
+    {
       "upstream": "packages/react/src/utils/useFocusableWhenDisabled.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/use-button/useButton.ts",

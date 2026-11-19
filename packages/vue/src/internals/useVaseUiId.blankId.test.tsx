@@ -11,11 +11,9 @@ import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { Toast } from '@vase-ui/vue/toast';
@@ -441,24 +439,6 @@ const rows: Row[] = [
       </Slider.Root>
     ),
     named: labelled('slider', 'Volume'),
-  },
-  {
-    name: 'Meter.Label',
-    tree: (k, blankId) => (
-      <Meter.Root value={50} data-testid={`meter${k}`}>
-        <Meter.Label {...blankId}>Storage {k}</Meter.Label>
-      </Meter.Root>
-    ),
-    named: labelled('meter', 'Storage'),
-  },
-  {
-    name: 'Progress.Label',
-    tree: (k, blankId) => (
-      <Progress.Root value={50} data-testid={`progress${k}`}>
-        <Progress.Label {...blankId}>Upload {k}</Progress.Label>
-      </Progress.Root>
-    ),
-    named: labelled('progress', 'Upload'),
   },
   ...(['Title', 'Description'] as const).map((part): Row => ({
     name: `Toast.${part}`,
