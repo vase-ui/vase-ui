@@ -92,7 +92,7 @@ function elementProps() {
 }
 </script>
 
-<!-- NVDA and JAWS say the name of a meter only when it has text: the hidden node gives it.
+<!-- NVDA and JAWS can need text in a meter to say its name: the hidden node gives it.
 https://github.com/mui/base-ui/issues/4184 -->
 <template>
   <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
