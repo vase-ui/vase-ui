@@ -322,6 +322,9 @@
         "useToastLabelPart > <Toast.Title /> > drops aria-labelledby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive"
       }
     },
+    "src/toast/viewport/ToastViewport.escape.test.tsx": {
+      "fails": {}
+    },
     "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
       "fails": {}
     },

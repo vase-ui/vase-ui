@@ -1988,6 +1988,45 @@ describe('<Toast.Root />', () => {
       },
     });
 
+    it.each(['element', 'toast'] as const)(
+      'VUE-184: cancels the swipe when its %s changes',
+      async (replacement) => {
+        const manager = Toast.createToastManager();
+        const tag = shallowRef('div');
+        const id = shallowRef('first');
+        const onClose = vi.fn();
+        const App = defineComponent({
+          setup: () => () => (
+            <Toast.Root as={tag.value} toast={{ id: id.value }} data-testid="root" />
+          ),
+        });
+        await render(
+          <Toast.Provider toastManager={manager}>
+            <App />
+          </Toast.Provider>,
+        );
+        manager.add({ id: 'first', timeout: 0, onClose });
+        manager.add({ id: 'second', timeout: 0, onClose });
+        const original = screen.getByTestId('root');
+        const pointer = { pointerId: 1, pointerType: 'mouse', clientY: 20 };
+        await fireEvent.pointerDown(original, { ...pointer, clientX: 0, button: 0 });
+        await fireEvent.pointerMove(original, { ...pointer, clientX: 1 });
+        await fireEvent.pointerMove(original, { ...pointer, clientX: 60 });
+        expect(original).toHaveAttribute('data-swiping');
+        if (replacement === 'element') tag.value = 'section';
+        else id.value = 'second';
+        await nextTick();
+
+        const current = screen.getByTestId('root');
+        expect(current).not.toHaveAttribute('data-swiping');
+        expect(current.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
+        await fireEvent.pointerUp(document, pointer);
+        expect(onClose).not.toHaveBeenCalled();
+        await simulateSwipe(current, 0, 20, 60, 20, document);
+        expect(onClose).toHaveBeenCalledOnce();
+      },
+    );
+
     it('resets drag state after releasing a far swipe even when the release lands on the document', async () => {
       await render(
         <Toast.Provider>

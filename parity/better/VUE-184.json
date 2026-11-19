@@ -1,0 +1,8 @@
+{
+  "id": "VUE-184",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/root/ToastRoot.tsx#L258-L294"
+  ],
+  "behavior": "A swipe ends when the toast ID or its root element changes. The next pointer release cannot dismiss the replacement. Base UI keeps the document listeners until the press ends or the root unmounts.",
+  "dueWith": "packages/react/src/toast/root/ToastRoot.tsx"
+}

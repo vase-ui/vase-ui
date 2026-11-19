@@ -59,7 +59,9 @@ export const toastRootStateAttributesMapping: StateAttributesMapping<ToastRootSt
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
+import { useListenerSession } from '../../common/useListenerSession';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import {
@@ -80,6 +82,7 @@ import {
   updateSwipeCancelBaseline,
 } from '../../utils/useSwipeDismiss';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
+import { useToastEscape } from '../utils/useToastEscape';
 import { ToastRootContext } from './ToastRootContext';
 import * as ToastRootCssVars from './ToastRootCssVars';
 
@@ -110,37 +113,30 @@ const swipeDirections = computed<SwipeDirection[]>(() => {
   return Array.isArray(props.swipeDirection) ? props.swipeDirection : [props.swipeDirection];
 });
 
-const swipeEnabled = computed(() => swipeDirections.value.length > 0);
-
 const currentSwipeDirection = shallowRef<SwipeDirection>();
-const isSwiping = shallowRef(false);
-const isRealSwipe = shallowRef(false);
+const activePointerId = shallowRef<number | null>(null);
+const isSwiping = computed(() => activePointerId.value !== null);
 const dragOffset = shallowRef({ x: 0, y: 0 });
 const initialTransform = shallowRef({ x: 0, y: 0, scale: 1 });
-const lockedDirection = shallowRef<'horizontal' | 'vertical' | null>(null);
+let lockedDirection: 'horizontal' | 'vertical' | null = null;
+let isRealSwipe = false;
 
 const { ids: titleIds, registerId: registerTitleId } = createIdRegistry();
 const { ids: descriptionIds, registerId: registerDescriptionId } = createIdRegistry();
 const titleId = computed(() => titleIds.value.at(-1));
 const descriptionId = computed(() => descriptionIds.value.at(-1));
 
-let lastToastId: string | undefined;
 let dragStartPos = { x: 0, y: 0 };
 let intendedSwipeDirection: SwipeDirection | undefined;
 let maxSwipeDisplacement = 0;
 let cancelledSwipe = false;
 let swipeCancelBaseline = { x: 0, y: 0 };
 let isFirstPointerMove = false;
-let activePointerId: number | null = null;
-let dragAbortController: AbortController | null = null;
 
 const domIndex = computed(() => store.select('toastIndex', props.toast.id));
 const visibleIndex = computed(() => store.select('toastVisibleIndex', props.toast.id));
 const offsetY = computed(() => store.select('toastOffsetY', props.toast.id));
-const focused = computed(() => store.select('focused'));
 const expanded = computed(() => store.select('expanded'));
-
-const isHighPriority = computed(() => props.toast.priority === 'high');
 
 const state = computed<ToastRootState>(() => ({
   transitionStatus: props.toast.transitionStatus,
@@ -155,19 +151,20 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   state,
   stateAttributesMapping: toastRootStateAttributesMapping,
   props: (attrs) => {
-    const swiping = swipeEnabled.value;
+    const swiping = swipeDirections.value.length > 0;
+    const highPriority = props.toast.priority === 'high';
     // WAI-ARIA requires a name for a `dialog` and an `alertdialog`. A toast with no title and no
     // name from the consumer thus takes its name from its description (VUE-99).
     const namedByDescription = titleId.value === undefined && !hasConsumerName(attrs);
 
     return [
       {
-        role: isHighPriority.value ? 'alertdialog' : 'dialog',
+        role: highPriority ? 'alertdialog' : 'dialog',
         tabindex: 0,
         'aria-modal': false,
         'aria-labelledby': namedByDescription ? descriptionId.value : titleId.value,
         'aria-describedby': namedByDescription ? undefined : descriptionId.value,
-        'aria-hidden': isHighPriority.value && !focused.value ? true : undefined,
+        'aria-hidden': highPriority && !store.select('focused') ? true : undefined,
         onPointerdown: swiping ? handlePointerdown : undefined,
         onPointermove: swiping ? handlePointermove : undefined,
         onPointerup: swiping ? handleSwipeEnd : undefined,
@@ -205,22 +202,11 @@ useOpenChangeComplete({
   },
 });
 
-// A toast that `KeepAlive` holds has no layout. The root measures it at the activation, and the
-// `starting` status stays until then, so the enter transition plays when the toast shows.
 const { isHeld } = useKeepAliveState();
-// The user cannot see a held toast, so a swipe in progress ends with no dismissal.
-watch(
-  isHeld,
-  (held) => {
-    if (held && activePointerId !== null) {
-      endSwipe(false);
-    }
-  },
-  { flush: 'sync' },
-);
+const isToastEscape = useToastEscape(() => element.value, isHeld);
+const press = useListenerSession(isHeld);
+watch([element, () => props.toast.id], press.stop, { flush: 'sync' });
 
-// Recalculates the natural height of the toast and updates it in the toast manager.
-// The store ignores this write while the toast is transitioning out.
 function recalculateHeight() {
   const rootElement = element.value;
   if (!rootElement || isHeld.value) {
@@ -250,84 +236,47 @@ provide(ToastRootContext, {
   expanded,
 });
 
-function setDragOffset(nextDragOffset: { x: number; y: number }) {
-  dragOffset.value = nextDragOffset;
-}
-
-// Initialize the toast on mount, and reinitialize when it begins a new lifecycle:
-// re-adding an ending toast retains the same root instance (`key` is the toast id), and
-// index-keyed lists can hand an existing instance a different toast.
-function initialize() {
-  const previousToastId = lastToastId;
-  // `recalculateHeight` clears the `starting` status itself, so bail out on the
-  // resulting re-run and on the later `ending` one, which the store discards anyway.
-  if (props.toast.transitionStatus !== 'starting' && previousToastId === props.toast.id) {
-    return;
-  }
-
-  if (previousToastId !== undefined) {
-    // A retained root keeps component-local swipe state from its previous lifecycle;
-    // clear it so the toast doesn't stay offset or exit in the swiped direction.
-    currentSwipeDirection.value = undefined;
-    initialTransform.value = { x: 0, y: 0, scale: 1 };
-    setDragOffset({ x: 0, y: 0 });
-  }
-
-  lastToastId = props.toast.id;
-  recalculateHeight();
-}
-
-onMounted(initialize);
-watch([() => props.toast.id, () => props.toast.transitionStatus], initialize, { flush: 'post' });
 watch(
-  isHeld,
-  (held) => {
-    if (!held) {
-      initialize();
+  [element, () => props.toast.id, () => props.toast.transitionStatus, isHeld],
+  ([node, id, status, held], [oldNode, oldId, , wasHeld]) => {
+    if (!node || held) return;
+    if (node === oldNode && id === oldId && status !== 'starting' && !wasHeld) return;
+
+    // A new toast can reuse a root whose last swipe still supplies the exit styles.
+    if (oldId !== id || status === 'starting') {
+      currentSwipeDirection.value = undefined;
+      initialTransform.value = { x: 0, y: 0, scale: 1 };
+      dragOffset.value = { x: 0, y: 0 };
     }
+    recalculateHeight();
   },
   { flush: 'post' },
 );
 
-onScopeDispose(() => {
-  dragAbortController?.abort();
-});
-
 function handleSwipeEnd(event: PointerEvent) {
-  if (event.pointerId !== activePointerId) {
-    return;
-  }
+  if (event.pointerId !== activePointerId.value) return;
 
-  endSwipe(event.type !== 'pointercancel' && !cancelledSwipe);
-}
+  const offset = dragOffset.value;
+  const direction =
+    event.type !== 'pointercancel' && !cancelledSwipe
+      ? getDismissDirection(
+          swipeDirections.value,
+          offset.x - initialTransform.value.x,
+          offset.y - initialTransform.value.y,
+          SWIPE_THRESHOLD,
+        )
+      : undefined;
 
-function endSwipe(canDismiss: boolean) {
-  activePointerId = null;
-  dragAbortController?.abort();
-  dragAbortController = null;
-  isSwiping.value = false;
-  isRealSwipe.value = false;
-  lockedDirection.value = null;
-
-  const resolvedInitialTransform = initialTransform.value;
-  const resolvedDragOffset = dragOffset.value;
-  const deltaX = resolvedDragOffset.x - resolvedInitialTransform.x;
-  const deltaY = resolvedDragOffset.y - resolvedInitialTransform.y;
-  const dismissDirection = canDismiss
-    ? getDismissDirection(swipeDirections.value, deltaX, deltaY, SWIPE_THRESHOLD)
-    : undefined;
-
-  if (dismissDirection) {
-    currentSwipeDirection.value = dismissDirection;
+  press.stop();
+  if (direction) {
+    dragOffset.value = offset;
+    currentSwipeDirection.value = direction;
     store.closeToast(props.toast.id);
-  } else {
-    setDragOffset({ x: resolvedInitialTransform.x, y: resolvedInitialTransform.y });
-    currentSwipeDirection.value = undefined;
   }
 }
 
 function handlePointerdown(event: PointerEvent) {
-  if (event.button !== 0) {
+  if (event.button !== 0 || isHeld.value) {
     return;
   }
 
@@ -346,35 +295,30 @@ function handlePointerdown(event: PointerEvent) {
     return;
   }
 
-  cancelledSwipe = false;
-  intendedSwipeDirection = undefined;
-  maxSwipeDisplacement = 0;
-  activePointerId = event.pointerId;
-  dragStartPos = { x: event.clientX, y: event.clientY };
-  swipeCancelBaseline = dragStartPos;
-
   const rootElement = event.currentTarget as HTMLElement;
-
-  const transform = getElementTransform(rootElement);
-  initialTransform.value = transform;
-  setDragOffset({
-    x: transform.x,
-    y: transform.y,
-  });
-
-  store.set('hovering', true);
-  isSwiping.value = true;
-  isRealSwipe.value = false;
-  lockedDirection.value = null;
-  isFirstPointerMove = true;
-
-  dragAbortController?.abort();
-  const controller = new AbortController();
-  dragAbortController = controller;
-
   const doc = ownerDocument(rootElement);
-  doc.addEventListener('pointerup', handleSwipeEnd, { signal: controller.signal });
-  doc.addEventListener('pointercancel', handleSwipeEnd, { signal: controller.signal });
+  press.start((onCleanup) => {
+    activePointerId.value = event.pointerId;
+    cancelledSwipe = false;
+    intendedSwipeDirection = undefined;
+    maxSwipeDisplacement = 0;
+    dragStartPos = { x: event.clientX, y: event.clientY };
+    swipeCancelBaseline = dragStartPos;
+    initialTransform.value = getElementTransform(rootElement);
+    dragOffset.value = { x: initialTransform.value.x, y: initialTransform.value.y };
+    store.set('hovering', true);
+    isRealSwipe = false;
+    lockedDirection = null;
+    isFirstPointerMove = true;
+
+    onCleanup(addEventListener(doc, 'pointerup', handleSwipeEnd));
+    onCleanup(addEventListener(doc, 'pointercancel', handleSwipeEnd));
+    onCleanup(() => {
+      activePointerId.value = null;
+      dragOffset.value = { x: initialTransform.value.x, y: initialTransform.value.y };
+      currentSwipeDirection.value = undefined;
+    });
+  });
 
   try {
     rootElement.setPointerCapture(event.pointerId);
@@ -385,7 +329,7 @@ function handlePointerdown(event: PointerEvent) {
 }
 
 function handlePointermove(event: PointerEvent) {
-  if (event.pointerId !== activePointerId) {
+  if (event.pointerId !== activePointerId.value) {
     return;
   }
 
@@ -415,26 +359,21 @@ function handlePointermove(event: PointerEvent) {
 
   const hasHorizontal = directions.includes('left') || directions.includes('right');
   const hasVertical = directions.includes('up') || directions.includes('down');
-  let resolvedLockedDirection = lockedDirection.value;
 
-  if (!isRealSwipe.value && Math.hypot(deltaX, deltaY) >= MIN_DRAG_THRESHOLD) {
-    isRealSwipe.value = true;
-    // `lockedDirection` and `isRealSwipe` are reset together, so `lockedDirection` is `null` here.
-    // A lock is necessary only when the two axes have a direction. With one axis, the drag moves
-    // only on that axis.
+  if (!isRealSwipe && Math.hypot(deltaX, deltaY) >= MIN_DRAG_THRESHOLD) {
+    isRealSwipe = true;
     if (hasHorizontal && hasVertical) {
-      resolvedLockedDirection = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
-      lockedDirection.value = resolvedLockedDirection;
+      lockedDirection = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
     }
   }
 
   if (!intendedSwipeDirection) {
     let candidate: SwipeDirection | undefined;
-    if (resolvedLockedDirection === 'vertical') {
+    if (lockedDirection === 'vertical') {
       if (deltaY !== 0) {
         candidate = deltaY > 0 ? 'down' : 'up';
       }
-    } else if (resolvedLockedDirection === 'horizontal') {
+    } else if (lockedDirection === 'horizontal') {
       if (deltaX !== 0) {
         candidate = deltaX > 0 ? 'right' : 'left';
       }
@@ -465,40 +404,30 @@ function handlePointermove(event: PointerEvent) {
   let newOffsetX = initialTransform.value.x;
   let newOffsetY = initialTransform.value.y;
 
-  if (resolvedLockedDirection !== 'vertical' && hasHorizontal) {
+  if (lockedDirection !== 'vertical' && hasHorizontal) {
     newOffsetX += dampedDelta.x;
   }
 
-  if (resolvedLockedDirection !== 'horizontal' && hasVertical) {
+  if (lockedDirection !== 'horizontal' && hasVertical) {
     newOffsetY += dampedDelta.y;
   }
 
-  setDragOffset({ x: newOffsetX, y: newOffsetY });
+  dragOffset.value = { x: newOffsetX, y: newOffsetY };
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    const rootElement = element.value;
-    if (!rootElement || !contains(rootElement, activeElement(ownerDocument(rootElement)))) {
-      return;
-    }
+  const root = element.value;
+  if (!isToastEscape(event) || !root || !contains(root, activeElement(ownerDocument(root)))) return;
 
-    const isEnding = props.toast.transitionStatus === 'ending';
-    store.closeToast(props.toast.id);
-    if (isEnding) {
-      return;
-    }
-
-    // The toast closes for this Escape. A popup under the toast, such as a modal dialog, listens
-    // for Escape on the document. It must not close for the same press (VUE-127). A toast that
-    // was in its exit closes nothing, so its Escape goes on, as that of a closed popup does.
-    event.stopPropagation();
-  }
+  const isEnding = props.toast.transitionStatus === 'ending';
+  store.closeToast(props.toast.id);
+  // Only the toast that closes can claim Escape from a popup below it.
+  if (!isEnding) event.stopPropagation();
 }
 
 function handleTouchmove(event: TouchEvent) {
   if (
-    activePointerId === null ||
+    activePointerId.value === null ||
     !contains(element.value, getTarget(event) as HTMLElement | null)
   ) {
     return;

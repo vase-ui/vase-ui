@@ -31,6 +31,7 @@ import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGua
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
+import { useToastEscape } from '../utils/useToastEscape';
 import { isFocusVisible } from '../utils/focusVisible';
 import ToastViewportChildren from './ToastViewportChildren.vue';
 import { ToastViewportContext } from './ToastViewportContext';
@@ -99,7 +100,7 @@ function handleKeydown(event: KeyboardEvent) {
     event.stopPropagation();
   }
 
-  const isEscape = event.key === 'Escape';
+  const isEscape = isToastEscape(event);
   if (
     (isF6 ||
       isEscape ||
@@ -233,6 +234,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
     attrs,
   ],
 });
+
+const isToastEscape = useToastEscape(() => element.value, isHeld);
 
 // Script makes the focus guard before the element and the alert region after it, so the viewport
 // has one root node.

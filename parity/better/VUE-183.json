@@ -1,0 +1,10 @@
+{
+  "id": "VUE-183",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/root/ToastRoot.tsx#L410-L420",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/viewport/ToastViewport.tsx#L119-L144",
+    "https://bugs.webkit.org/show_bug.cgi?id=165004"
+  ],
+  "behavior": "An Escape from an input method keeps the toast open and preserves focus in its viewport. WebKit can send this key just after composition ends. Base UI can close the focused toast for that key.",
+  "dueWith": "packages/react/src/toast/root/ToastRoot.tsx"
+}
