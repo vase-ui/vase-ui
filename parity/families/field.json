@@ -81,5 +81,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/field/utils/getCombinedFieldValidityData.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/internals/field-root-context/FieldRootContext.ts",
+      "member": "getCombinedFieldValidityData",
+      "witness": "packages/vue/src/field/validity/FieldValidity.test.tsx"
+    }
+  ]
 }

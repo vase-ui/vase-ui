@@ -102,31 +102,17 @@ const { ids: fields, registerId: registerField } = createIdRegistry<FormField>()
 const submitCountRef = shallowRef(0);
 let submitted = false;
 
-function copyErrors(errors: Errors | undefined): Errors | undefined {
-  return errors && { ...errors };
-}
-
-// A consumer can change a reactive `errors` object in place. The deep `watch` sees that change.
-// The copy gives the context a new object to follow, because Vue tracks no `Object.hasOwn` of a
-// reactive proxy.
-const formErrors = shallowRef(copyErrors(props.errors));
-
+const formErrors = shallowRef<Errors>();
 watch(
   () => props.errors,
-  (next) => {
-    formErrors.value = copyErrors(next);
+  (errors) => {
+    formErrors.value = errors && { ...errors };
   },
-  { deep: true },
+  { deep: 2, immediate: true },
 );
 
 function focusFirstInvalid() {
-  // A field can be invalid without a focusable control (for example a checkbox group whose
-  // custom validation failed while every checkbox is unmounted, disabled, or reassociated).
-  // Keep submission blocked, but move focus to the first invalid field that has a usable control.
-  // Registration order can diverge from DOM order (keyed fields reordered without
-  // remounting, portals), so pick the first control by document position. For controls
-  // in disconnected trees (e.g. separate shadow roots), where document position is
-  // implementation-specific, keep registration order.
+  // Disconnected controls keep their registration order. A field without a control can still block submit.
   let hasInvalid = false;
   let firstControl: HTMLElement | null = null;
   for (const field of fields.value) {
@@ -144,7 +130,6 @@ function focusFirstInvalid() {
     if (firstControl.tagName === 'INPUT') {
       (firstControl as HTMLInputElement).select();
     }
-    return true;
   }
   return hasInvalid;
 }
@@ -187,10 +172,7 @@ function validate(fieldName?: string) {
 function handleSubmit(event: SubmitEvent) {
   submitCountRef.value += 1;
 
-  // Async validation isn't supported to stop the submit event.
-  for (const field of fields.value) {
-    field.validate();
-  }
+  validate();
 
   if (focusFirstInvalid()) {
     event.preventDefault();

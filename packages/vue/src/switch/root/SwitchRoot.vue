@@ -110,7 +110,7 @@ import { useControlled } from '../../common/useControlled';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { checkedInputProps, restoreChecked } from '../../internals/checkedInputProps';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -174,28 +174,16 @@ const {
   setFilled,
   validationMode,
   disabled: fieldDisabled,
-  name: fieldName,
   validation,
 } = useFieldRootContext();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
-const inputName = computed(() => fieldName.value ?? props.name);
-const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const giveFieldInput = useFieldInput();
-
-function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === inputElement.value) {
-    return;
-  }
-  inputElement.value = input;
-  giveFieldInput(input);
+function setInputElement(node: unknown) {
+  inputElement.value = node as HTMLInputElement | null;
 }
-
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
@@ -212,14 +200,14 @@ const isChecked = useControlled({
   state: 'checked',
 });
 
-useRegisterFieldControl(
-  () => element.value,
-  rootId,
-  () => isChecked.value,
-  undefined,
-  () => !isDisabled.value,
-  () => props.name,
-);
+const { name: inputName } = useFieldControl(() => element.value, {
+  input: inputElement,
+  id: rootId,
+  name: () => props.name,
+  value: isChecked,
+  enabled: () => !isDisabled.value,
+});
+const clearFieldError = useClearFieldError(inputName);
 
 setFilled(isChecked.value);
 watch(isChecked, setFilled);

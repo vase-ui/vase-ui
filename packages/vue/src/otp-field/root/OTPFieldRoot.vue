@@ -169,7 +169,7 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { given } from '../../internals/givenAttributes';
@@ -255,7 +255,6 @@ const {
   disabled: fieldDisabled,
   setFilled,
   invalid,
-  name: fieldName,
   state: fieldState,
   validation,
   validationMode,
@@ -269,8 +268,6 @@ const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
 );
-const inputName = computed(() => fieldName.value ?? props.name);
-const clearFieldError = useClearFieldError(inputName);
 
 const valueUnwrapped = useControlled<string>({
   controlled: () => props.modelValue,
@@ -369,14 +366,14 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-useRegisterFieldControl(
-  firstInput,
-  controlId,
-  () => otpValue.value,
-  undefined,
-  () => !isDisabled.value,
-  () => props.name,
-);
+const { name: inputName } = useFieldControl(firstInput, {
+  input: hiddenInputElement,
+  id: controlId,
+  name: () => props.name,
+  value: otpValue,
+  enabled: () => !isDisabled.value,
+});
+const clearFieldError = useClearFieldError(inputName);
 
 function focusInput(index: number) {
   const elements = getConnectedInputs();
@@ -647,11 +644,8 @@ useFormReset(hiddenInputElement, (event) => {
   }
 });
 
-const giveFieldInput = useFieldInput();
 function setHiddenInput(node: unknown) {
-  const input = node as HTMLInputElement | null;
-  giveFieldInput(input);
-  hiddenInputElement.value = input;
+  hiddenInputElement.value = node as HTMLInputElement | null;
 }
 
 useFormRestore(hiddenInputElement, inputRender.renderValue);

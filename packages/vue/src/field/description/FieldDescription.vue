@@ -37,12 +37,12 @@ defineSlots<{
 
 const descriptionId = useVaseUiId(() => props.id);
 
-const fieldRootContext = useFieldRootContext(false);
-const fieldItemContext = useFieldItemContext();
+const { state: fieldState, disabled: fieldDisabled } = useFieldRootContext(false);
+const { disabled: itemDisabled } = useFieldItemContext();
 
 const state = computed<FieldDescriptionState>(() => ({
-  ...fieldRootContext.state.value,
-  disabled: (fieldRootContext.disabled.value ?? false) || fieldItemContext.disabled.value,
+  ...fieldState.value,
+  disabled: fieldDisabled.value || itemDisabled.value,
 }));
 
 useRegisteredMessageId(descriptionId, () => element.value);

@@ -133,6 +133,9 @@
     "src/internals/date-time/field/inputRegistration.test.tsx": {
       "fails": {}
     },
+    "src/internals/field-register-control/useFieldControl.test.tsx": {
+      "fails": {}
+    },
     "src/internals/field-root-context/FieldProvider.test.tsx": {
       "fails": {}
     },
