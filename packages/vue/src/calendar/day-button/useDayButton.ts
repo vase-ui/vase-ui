@@ -1,15 +1,15 @@
 import { computed } from 'vue';
 import type { HTMLAttributes, Ref } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
+import type { DayState } from '../../internals/date-time/calendar/dayState';
+import { formatText } from '../../internals/date-time/calendar/formatText';
+import { isSameDay } from '../../internals/date-time/temporal';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { NativeButtonProps, VaseUIComponentProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { isSameDay } from '../../internals/date-time/temporal';
-import type { DayState } from '../../internals/date-time/calendar/dayState';
-import { formatText } from '../../internals/date-time/calendar/formatText';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';
+import { useCalendarRootContext } from '../root/CalendarRootContext';
 
 const FULL_DATE: Intl.DateTimeFormatOptions = {
   weekday: 'long',

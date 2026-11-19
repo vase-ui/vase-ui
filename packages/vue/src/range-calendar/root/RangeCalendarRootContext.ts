@@ -1,22 +1,22 @@
-import { inject, computed, shallowRef, watchSyncEffect } from 'vue';
-import type { InjectionKey, ComputedRef, Ref } from 'vue';
-import type { RangeCalendarRootProps } from './RangeCalendarRoot.vue';
+import { computed, inject, shallowRef, watchSyncEffect } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import { dayStateAttributesMapping } from '../../calendar/root/CalendarRootContext';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
-import { matches } from '../../internals/date-time/matchers';
-import { compareDates, isSameDay, toPlainDate, withDate } from '../../internals/date-time/temporal';
-import type { DateValue } from '../../internals/date-time/temporal';
+import { isDisabledDay } from '../../internals/date-time/calendar/dayState';
 import type {
   CalendarBaseChangeEventDetails,
   CalendarBaseChangeEventReason,
 } from '../../internals/date-time/calendar/useCalendarRoot';
-import { isDisabledDay } from '../../internals/date-time/calendar/dayState';
-import type { RangeCalendarDayState } from '../day/RangeCalendarDay.vue';
-import { dayStateAttributesMapping } from '../../calendar/root/CalendarRootContext';
+import { matches } from '../../internals/date-time/matchers';
+import { compareDates, isSameDay, toPlainDate, withDate } from '../../internals/date-time/temporal';
+import type { DateValue } from '../../internals/date-time/temporal';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { REASONS } from '../../internals/reasons';
+import type { RangeCalendarDayState } from '../day/RangeCalendarDay.vue';
 import * as RangeCalendarDayDataAttributes from '../day/RangeCalendarDayDataAttributes';
+import type { RangeCalendarRootProps } from './RangeCalendarRoot.vue';
 
 type RangeSelection = ReturnType<typeof useRangeSelection>;
 

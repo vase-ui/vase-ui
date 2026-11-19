@@ -1,48 +1,49 @@
-import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
-import type { DateMatcher } from '../matchers';
-import type { DateValue, DayOfWeek } from '../temporal';
 import {
   computed,
-  shallowRef,
   nextTick,
   onMounted,
+  readonly,
+  shallowRef,
+  toValue,
   watch,
   watchEffect,
   watchPostEffect,
-  toValue,
 } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import { useServerValue } from '../../../common/hydration';
+import { ownerDocument } from '../../../common/owner';
+import { activeElement } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
+import { useFormatLocale } from '../../../utils/useFormatLocale';
+import { createChangeEventDetails } from '../../createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
+import { useDirection } from '../../direction-context/DirectionContext';
+import { REASONS } from '../../reasons';
+import { useKeepAliveState } from '../../useKeepAliveState';
+import { displayCalendar } from '../displayCalendar';
+import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
+import type { DateMatcher } from '../matchers';
+import { PickerCalendarOwner, usePickerControl } from '../picker/PickerControlContext';
 import {
   compareDates,
   isKind,
   isSameDay,
   parseInputText,
+  today,
   toInputText,
   toPlainDate,
-  today,
 } from '../temporal';
-import { ownerDocument } from '../../../common/owner';
-import { activeElement } from '../../../common/shadowDom';
-import { useServerValue } from '../../../common/hydration';
-import { useFormatLocale } from '../../../utils/useFormatLocale';
-import { createChangeEventDetails } from '../../createVaseUIEventDetails';
-import { useDirection } from '../../direction-context/DirectionContext';
-import { useKeepAliveState } from '../../useKeepAliveState';
-import { REASONS } from '../../reasons';
-import { displayCalendar } from '../displayCalendar';
-import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
+import type { DateValue, DayOfWeek } from '../temporal';
 import { assertModifierNames, canFocus, canSelect, getDayState, ownsDay } from './dayState';
 import type { DayRules } from './dayState';
-import { PickerCalendarOwner, usePickerControl } from '../picker/PickerControlContext';
 import { formatPages, formatRangeText, formatText } from './formatText';
 import {
-  getMonthPage,
-  startOfWeek,
   createWeek,
   dayOfWeekOf,
-  weekdaysFrom,
+  getMonthPage,
   getPageKey,
+  startOfWeek,
+  weekdaysFrom,
 } from './monthGrid';
 import type { CalendarPage, CalendarPageWeek } from './monthGrid';
 import { getMonthCells, getSpanOfYears, getYearCells, getYearPageStart } from './viewPages';
@@ -1738,7 +1739,7 @@ export function usePageTransition(
   );
 
   return {
-    navigationDirection,
+    navigationDirection: readonly(navigationDirection),
     renderedPages,
     isLeaving: (page: CalendarPage) =>
       leaving.value.some((left) => getPageKey(left) === getPageKey(page)),

@@ -1,18 +1,18 @@
-import { inject, computed, provide, shallowRef } from 'vue';
+import { computed, inject, provide, shallowRef } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
-import type { CalendarRootController } from '../../internals/date-time/calendar/useCalendarRoot';
-import type { CalendarState, CalendarRootState } from './CalendarRoot.vue';
-import type { DayState } from '../../internals/date-time/calendar/dayState';
 import { getModifierAttributes } from '../../internals/date-time/calendar/dayState';
-import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import type { DayState } from '../../internals/date-time/calendar/dayState';
 import { getPageKey } from '../../internals/date-time/calendar/monthGrid';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
-import { useCalendarMonthContext } from '../month/CalendarMonthContext';
+import type { CalendarRootController } from '../../internals/date-time/calendar/useCalendarRoot';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { VaseUIComponentProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { usePressAndHold } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
 import * as CalendarDayDataAttributes from '../day/CalendarDayDataAttributes';
+import { useCalendarMonthContext } from '../month/CalendarMonthContext';
+import type { CalendarRootState, CalendarState } from './CalendarRoot.vue';
 import * as CalendarRootDataAttributes from './CalendarRootDataAttributes';
 
 export interface CalendarRootContext extends Omit<

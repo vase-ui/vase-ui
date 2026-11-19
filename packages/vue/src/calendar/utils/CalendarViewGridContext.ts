@@ -1,4 +1,4 @@
-import { inject, computed } from 'vue';
+import { computed, inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { formatText } from '../../internals/date-time/calendar/formatText';

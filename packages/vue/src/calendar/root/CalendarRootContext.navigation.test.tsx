@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import CalendarNavigationAnatomy from '../root/CalendarNavigationAnatomy.test.vue';
+import CalendarNavigationAnatomy from './CalendarNavigationAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
