@@ -3,8 +3,10 @@ import { describe, expect, test, vi } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import { dataAttributes } from '../../test/field';
 import FieldsetElementReplaced from '../../test/fixtures/FieldsetElementReplaced.vue';
+import FieldsetGroupRoot from '../../test/fixtures/FieldsetGroupRoot.vue';
 import FieldsetInField from '../../test/fixtures/FieldsetInField.vue';
 import FieldsetInTransition from '../../test/fixtures/FieldsetInTransition.vue';
+import FieldsetLegends from '../../test/fixtures/FieldsetLegends.vue';
 import FieldsetParts from '../../test/fixtures/FieldsetParts.vue';
 import LegendAlone from '../../test/fixtures/LegendAlone.vue';
 import NestedFieldsets from '../../test/fixtures/NestedFieldsets.vue';
@@ -25,28 +27,30 @@ describe('the parts', () => {
     await nextTick();
     const fieldset = root.querySelector('fieldset')!;
     expect(root.children).toHaveLength(1);
-    expect(fieldset.getAttributeNames().sort()).toEqual(['class', 'data-kind', 'name']);
+    const named = ['aria-labelledby', 'class', 'data-kind'];
+    expect(fieldset.getAttributeNames().sort()).toEqual([...named, 'name']);
     expect(exposed.root.element).toBe(fieldset);
     fieldset.click();
     expect(onClick).toHaveBeenCalledTimes(1);
     attrs.disabled = true;
     await settle();
-    expect(fieldset.getAttributeNames().sort()).toEqual(['class', 'data-kind', 'disabled', 'name']);
+    expect(fieldset.getAttributeNames().sort()).toEqual([...named, 'disabled', 'name']);
     expect(root.querySelector('.state')).toHaveTextContent('true');
     expect(root.querySelector('input')).toBeDisabled();
   });
 
-  test('the legend has its id or a generated one; a legend with no root gives no error', async () => {
+  test('the legend is a div with its id or a generated one; a legend with no root gives no error', async () => {
     const attrs = reactive<Record<string, unknown>>({});
     const { root, exposed } = mount(FieldsetParts, { legend: attrs });
     await nextTick();
-    const legend = root.querySelector('legend')!;
+    const legend = root.querySelector('fieldset > div')!;
+    expect(legend).toHaveTextContent('Billing');
     expect(legend.id).not.toBe('');
     expect(exposed.legend.element).toBe(legend);
     attrs.id = 'billing';
     await nextTick();
     expect(legend.id).toBe('billing');
-    const [own, generated] = mount(LegendAlone).root.querySelectorAll('legend');
+    const [own, generated] = mount(LegendAlone).root.querySelectorAll('div');
     expect(own!.id).toBe('own');
     expect(generated!.id).not.toBe('');
   });
@@ -58,7 +62,7 @@ describe('the parts', () => {
       const group = root.querySelector('.Group')!;
       expect(group.tagName).toBe(tag.toUpperCase());
       expect(group).toHaveAttribute('data-state-disabled');
-      expect(group.firstElementChild!.tagName).toBe('LEGEND');
+      expect(group).toHaveAccessibleName('Billing');
       // A root that is not a `<fieldset>` disables its parts too.
       expect(group.querySelector('#inside')).toBeDisabled();
       expect(group.querySelector('#in-field')).toBeDisabled();
@@ -88,6 +92,45 @@ describe('the name of the group', () => {
     expect(await screen.findByRole('group', { name: 'Invoice' })).toBeInTheDocument();
   });
 
+  test('the first legend names the root, and the next one when the first goes; each has its own id', async () => {
+    const scene = reactive({ legend: 'two' as const, first: true });
+    const { root } = mount(FieldsetLegends, { scene });
+    await nextTick();
+    const fieldset = root.querySelector('fieldset')!;
+    const [first, second] = [root.querySelector('.first')!, root.querySelector('.second')!];
+    expect(first.id).not.toBe(second.id);
+    expect(fieldset).toHaveAccessibleName('Billing');
+    scene.first = false;
+    await nextTick();
+    expect(fieldset).toHaveAccessibleName('Invoice');
+  });
+
+  test.each(['radio', 'checkbox', 'slider'] as const)(
+    'a %s group that the element slot renders has the name of the legend once, and an attribute of the developer wins',
+    async (group) => {
+      const attrs = reactive<Record<string, unknown>>({});
+      const { root } = mount(FieldsetGroupRoot, { group, root: attrs });
+      await nextTick();
+      const element = root.querySelector('.Group')!;
+      const legendId = root.querySelector('.Group > div')!.id;
+      expect(element).toHaveAttribute('aria-labelledby', legendId);
+      expect(element).toHaveAccessibleName('Storage');
+      for (const [name, value] of [
+        ['aria-label', 'Disks'],
+        ['aria-label', ''],
+        ['aria-labelledby', ''],
+      ]) {
+        attrs[name!] = value;
+        await nextTick();
+        expect(element).not.toHaveAttribute('aria-labelledby', legendId);
+        expect(element).toHaveAccessibleName(value);
+        delete attrs[name!];
+        await nextTick();
+        expect(element).toHaveAttribute('aria-labelledby', legendId);
+      }
+    },
+  );
+
   test('a root with a legend and labelled inputs has no accessibility violation', async () => {
     const { root } = mount(PartsInFieldset, { scene: { disabled: false } });
     await nextTick();
@@ -112,7 +155,7 @@ describe('nested fieldsets', () => {
       expect(root.querySelector('#nested')).toBeDisabled();
       const nestedField = root.querySelector('#nested-field')!;
       const fieldInLegend = root.querySelector('#field-in-legend')!;
-      // The outer fieldset also disables the legend of the inner one.
+      // The legend of the inner root is a `<div>`, so each disabled fieldset disables it.
       expect(nestedField).toHaveAttribute('data-disabled');
       expect(fieldInLegend).toHaveAttribute('data-disabled');
       scene.outer = false;
@@ -125,14 +168,14 @@ describe('nested fieldsets', () => {
       expect(inner).toHaveAttribute('disabled');
       expect(state()).toBe('true');
       expect(nestedField).toHaveAttribute('data-disabled');
-      expect(fieldInLegend).not.toHaveAttribute('data-disabled');
+      expect(fieldInLegend).toHaveAttribute('data-disabled');
     },
   );
 });
 
 describe('the parts of the library in a disabled fieldset', () => {
   test.each([false, true])(
-    'a part is disabled, and a part in the first legend is not (native fieldset: %s)',
+    'a part is disabled; a part in the first <legend> of a native fieldset is not, and a part in Fieldset.Legend is (native fieldset: %s)',
     async (native) => {
       const { root } = mount(PartsInFieldset, { scene: { disabled: true }, native });
       await settle();
@@ -146,9 +189,16 @@ describe('the parts of the library in a disabled fieldset', () => {
       expect(root.querySelector('#alone')).toBeDisabled();
       expect(root.querySelector('#alone')).toHaveAttribute('data-state-disabled');
       const inLegend = root.querySelector('#in-legend')!;
-      expect(inLegend).toBeEnabled();
-      expect(inLegend.parentElement).not.toHaveAttribute('data-disabled');
-      expect([...new FormData(root.querySelector('form')!).keys()]).toEqual(['in-legend']);
+      if (native) {
+        expect(inLegend).toBeEnabled();
+        expect(inLegend.parentElement).not.toHaveAttribute('data-disabled');
+      } else {
+        expect(inLegend).toBeDisabled();
+        expect(inLegend.parentElement).toHaveAttribute('data-disabled');
+      }
+      expect([...new FormData(root.querySelector('form')!).keys()]).toEqual(
+        native ? ['in-legend'] : [],
+      );
     },
   );
 

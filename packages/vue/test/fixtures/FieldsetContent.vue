@@ -4,19 +4,21 @@ import { Field } from '../../src/field';
 import { Fieldset } from '../../src/fieldset';
 import { Input } from '../../src/input';
 
+// With `native`, the legend is a native `<legend>`.
 defineProps({
+  native: Boolean,
   field: Object as PropType<Record<string, unknown>>,
   input: Object as PropType<Record<string, unknown>>,
 });
 </script>
 
 <template>
-  <Fieldset.Legend>
+  <component :is="native ? 'legend' : Fieldset.Legend">
     <Field.Root>
       <Field.Label>Billing</Field.Label>
       <Input id="in-legend" name="in-legend" />
     </Field.Root>
-  </Fieldset.Legend>
+  </component>
   <Field.Root name="company" v-bind="field">
     <Field.Label>Company</Field.Label>
     <Input id="company" v-bind="input" />

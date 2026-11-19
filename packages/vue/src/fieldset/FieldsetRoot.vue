@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, provide, shallowReactive, useAttrs } from 'vue';
+import {
+  computed,
+  inject,
+  mergeProps,
+  onMounted,
+  provide,
+  shallowReactive,
+  shallowRef,
+  useAttrs,
+  useId,
+} from 'vue';
 import { useElement } from '../common/element';
 import { fieldsetKey, useInDisabledFieldset } from './part';
 import { legendKey } from './root';
@@ -19,14 +29,15 @@ defineSlots<{
 
 const attrs = useAttrs();
 const around = inject(fieldsetKey, null);
+const legendId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 // The element of the `element` slot is known after the mount. Until then, the parts take the
 // answer of the root.
 const isFieldset = computed(() => !element.value || element.value.localName === 'fieldset');
-// HTML takes the first `<legend>` child as the name of the fieldset.
 const legends = shallowReactive<{ readonly id: string }[]>([]);
-const legendId = computed(() => legends[0]?.id);
+const mounted = shallowRef(false);
+onMounted(() => (mounted.value = true));
 const state = computed<FieldsetRootState>(() => ({
   disabled: props.disabled || inDisabledFieldset.value,
 }));
@@ -39,20 +50,12 @@ provide(fieldsetKey, {
     return (!isFieldset.value && props.disabled) || !!around?.disabledOutsideBrowser;
   },
   get legendId() {
-    return legendId.value;
+    return legends[0]?.id;
   },
 });
 provide(legendKey, {
-  forParts: {
-    get disabled() {
-      return inDisabledFieldset.value;
-    },
-    get disabledOutsideBrowser() {
-      return !!around?.disabledOutsideBrowser;
-    },
-    get legendId() {
-      return legendId.value;
-    },
+  get firstLegendId() {
+    return legends.length === 0 ? legendId : undefined;
   },
   addLegend(legend) {
     legends.push(legend);
@@ -62,6 +65,14 @@ provide(legendKey, {
 
 defineExpose({ element });
 
+// A server writes the attributes of the root before the `setup` of a legend in it, so the root
+// assumes a legend until the mount.
+function labelledBy() {
+  // An `aria-labelledby` of the developer wins in the merge.
+  if (attrs['aria-label'] != null) return undefined;
+  return legends[0]?.id ?? (mounted.value ? undefined : legendId);
+}
+
 function elementProps() {
   // CSS `:disabled` matches a `<fieldset>`. Another element that the developer renders shows the
   // state as an attribute.
@@ -69,6 +80,7 @@ function elementProps() {
     {
       disabled: props.disabled,
       'data-disabled': !isFieldset.value && state.value.disabled ? '' : undefined,
+      'aria-labelledby': labelledBy(),
     },
     attrs,
   );

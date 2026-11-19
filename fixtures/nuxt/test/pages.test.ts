@@ -123,14 +123,16 @@ async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) 
   expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
-// HTML takes the first `<legend>` of a `<fieldset>` as its name.
+// The root names the fieldset with the id of its legend.
 async function expectFieldsetPage(page: Page) {
   const readTag = (testId: string) =>
     page.getByTestId(testId).evaluate((element) => element.localName);
 
   expect(await readTag('fieldset')).toBe('fieldset');
-  expect(await readTag('legend')).toBe('legend');
-  expect(await page.getByTestId('legend').getAttribute('id')).toBeTruthy();
+  expect(await readTag('legend')).toBe('div');
+  const legendId = await page.getByTestId('legend').getAttribute('id');
+  expect(legendId).toBeTruthy();
+  expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
   expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
