@@ -25,17 +25,16 @@ function dragOf(element: Element) {
 }
 
 /**
- * The drags of other roots that a press at the point joins. The browser lists the elements at the
- * point from the top, and an element that is not in a handle covers each handle under it. A handle
- * joins when it can move and its root has no drag. The press crosses nothing with no handle of the
- * other orientation.
+ * The drags of other roots at the point. The browser lists the elements at the point from the top,
+ * and an element that is not in a handle covers each handle under it. A handle that cannot move
+ * does not count. The point crosses nothing with no handle of the other orientation.
  */
 function crossedDrags(own: Drag, element: Element, x: number, y: number) {
   const found = new Set<Drag>();
   for (const at of element.ownerDocument.elementsFromPoint(x, y)) {
     const drag = dragOf(at);
     if (!drag) break;
-    if (drag.root !== own.root && drag.canMove() && !drag.root.dragging) found.add(drag);
+    if (drag.root !== own.root && drag.canMove()) found.add(drag);
   }
   return [...found].some((drag) => drag.root.orientation !== own.root.orientation)
     ? [...found]
@@ -75,7 +74,6 @@ export function useDrag(options: {
       if (!measurement || !root.startDrag()) return false;
       press.add(drag);
       group.value = press;
-      hovering.value = false;
       horizontal = root.orientation === 'horizontal';
       rtl = horizontal && root.readDirection() === 'rtl';
       startPointer = horizontal ? event.clientX : event.clientY;
@@ -149,7 +147,6 @@ export function useDrag(options: {
     if (!ended) return;
     press = undefined;
     for (const each of ended) each.end(event, apply);
-    if (captured?.hasPointerCapture(pointerId)) captured.releasePointerCapture(pointerId);
     captured = undefined;
     stopClick = moved;
   }
@@ -192,7 +189,6 @@ export function useDrag(options: {
         if (!dragging.value) {
           hovering.value =
             event.buttons === 0 &&
-            options.canMove() &&
             crossedDrags(drag, event.currentTarget as Element, event.clientX, event.clientY)
               .length > 0;
         }
@@ -206,7 +202,6 @@ export function useDrag(options: {
       }
       moved ||= event.clientX !== startX || event.clientY !== startY;
       for (const each of press) each.move(event);
-      if (press.size === 0) finish(event, false);
     },
     onPointerup: endWith(true),
     // `pointerup` ends the capture, so a `lostpointercapture` before it ends the press.

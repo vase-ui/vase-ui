@@ -767,6 +767,22 @@ describe('prop: rootResizeBehavior', () => {
     expect(width(1)).toBeCloseTo(220 * (40 / 70), 0);
   });
 
+  test('a new object with the entries in percent that the root has gives the fixed panel no new pixels', async () => {
+    const root = reactive<Record<string, unknown>>({
+      modelValue: { nav: 25, editor: 50, preview: 25 },
+    });
+    const { width, resizeFrame } = await mountPanels(
+      [{ id: 'nav', rootResizeBehavior: 'fixed' }, { id: 'editor' }, { id: 'preview' }],
+      { root },
+    );
+    await resizeFrame(300);
+    expect(width(0)).toBeCloseTo(100, 0);
+    // A template gives a new object at each render of the parent.
+    root.modelValue = { nav: 25, editor: 50, preview: 25 };
+    await nextTick();
+    expect(width(0)).toBeCloseTo(100, 0);
+  });
+
   test('a fixed panel that mounts later, and a panel that becomes fixed, take their pixels', async () => {
     const { spec, width, resizeFrame } = await mountPanels([
       { id: 'a', defaultSize: 25 },

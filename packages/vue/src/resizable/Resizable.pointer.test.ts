@@ -2,6 +2,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { ResizableLayout, ResizableRootChangeEventDetails } from '@vase-ui/vue/resizable';
+import ResizableHandleTag from '../../test/fixtures/ResizableHandleTag.vue';
 import ResizableLayoutFixture from '../../test/fixtures/ResizableLayout.vue';
 import { penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
@@ -138,16 +139,18 @@ describe('a drag', () => {
     const log: string[] = [];
     const { at } = await mountLayout({ root: logged(log), parts: three() });
     const start = await press(at('h1'));
-    for (const type of ['pointermove', 'pointerup', 'pointercancel']) {
+    for (const [type, buttons] of [
+      ['pointermove', 1],
+      ['pointermove', 0],
+      ['pointerup', 0],
+      ['pointercancel', 0],
+      ['lostpointercapture', 0],
+    ] as const) {
       at('h1').dispatchEvent(
-        new PointerEvent(type, {
-          pointerId: 99,
-          buttons: 0,
-          clientX: start.x + 100,
-          bubbles: true,
-        }),
+        new PointerEvent(type, { pointerId: 99, buttons, clientX: start.x + 40, bubbles: true }),
       );
     }
+    await nextTick();
     expect(at('h1')).toHaveAttribute('data-dragging');
     await release();
     expect(log).toEqual(['draggingChange true', 'draggingChange false']);
@@ -212,15 +215,21 @@ describe('a drag', () => {
     expect(log.filter((each) => each.startsWith('layoutChange'))).toEqual([]);
   });
 
+  // The browser sends no `lostpointercapture` to a capture element that goes (M7).
   test('the drag ends when the handle gets a new element', async () => {
-    const { spec, at } = await mountLayout({ parts: three() });
-    await press(at('h1'));
-    expect(at('h1')).toHaveAttribute('data-dragging');
-    spec.parts[1]!.key = 'h1-new';
+    const log: string[] = [];
+    const scene = reactive({ tag: 'div', root: logged(log) });
+    const { root } = mount(ResizableHandleTag, { scene });
     await settle();
-    expect(at('h1-new')).not.toHaveAttribute('data-dragging');
-    expect(byKey(document, 'root')).not.toHaveAttribute('data-dragging');
+    await press(byKey(root, 'h1'));
+    scene.tag = 'span';
+    await settle();
+    expect(byKey(root, 'h1').tagName).toBe('SPAN');
+    expect(byKey(root, 'h1')).not.toHaveAttribute('data-dragging');
+    expect(log).toEqual(['draggingChange true', 'draggingChange false']);
     await release();
+    await drag(byKey(root, 'h1'), 40);
+    expect(log.at(-1)).toBe('layoutCommitted drag pointerup');
   });
 
   test('follows the pointer over an iframe', async () => {
@@ -301,6 +310,27 @@ describe('the focus, the selection and the click', () => {
     await drag(at('h1'), -20);
     at('h1').click();
     expect(clicks).toEqual([1, 1, 0]);
+  });
+
+  test('a click that a script makes runs after a drag that no click of the browser followed', async () => {
+    const clicks: number[] = [];
+    const { at } = await mountLayout({
+      parts: three().map((each) =>
+        each.key === 'h1'
+          ? { ...each, attrs: { onClick: (event: MouseEvent) => clicks.push(event.detail) } }
+          : each,
+      ),
+    });
+    const pointer = pointerOf(at('h1'));
+    const start = await press(at('h1'));
+    await moveTo({ x: start.x + 20, y: start.y });
+    // A release outside the view of Firefox gives no click, and the next move has no button.
+    at('h1').dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: pointer.id, buttons: 0, bubbles: true }),
+    );
+    at('h1').click();
+    expect(clicks).toEqual([0]);
+    await release();
   });
 });
 
@@ -494,6 +524,17 @@ describe('resize mode on-release', () => {
     expect(grows(controlled.root, 'a', 'b', 'c')).toEqual(['40', '20', '40']);
   });
 
+  test('the distance is on the screen, also in a right-to-left root', async () => {
+    const { at } = await mountLayout({
+      root: { resizeMode: 'on-release', dir: 'rtl' },
+      parts: three(),
+    });
+    const start = await press(at('h1'));
+    await moveTo({ x: start.x + 40, y: start.y });
+    expect(offset(at('h1'))).toBe('40px');
+    await release();
+  });
+
   test('the release collapses a panel past the threshold; the pending layout snaps; the mode of each drag is the mode at its press', async () => {
     const collapse = await mountLayout({
       root: { resizeMode: 'on-release' },
@@ -542,7 +583,7 @@ describe('the crossing of two handles', () => {
   async function mountCrossing(inner: Record<string, unknown> = {}) {
     const outerLog: string[] = [];
     const innerLog: string[] = [];
-    const { root, at } = await mountLayout({
+    const { root, at, spec } = await mountLayout({
       frame: 'width: 408px; height: 208px; --resizable-handle-hit-area-size: 24px',
       root: logged(outerLog),
       parts: [
@@ -567,6 +608,7 @@ describe('the crossing of two handles', () => {
     const outerRect = outer.getBoundingClientRect();
     const innerRect = innerHandle.getBoundingClientRect();
     return {
+      spec,
       outer,
       inner: innerHandle,
       outerLog,
@@ -626,13 +668,71 @@ describe('the crossing of two handles', () => {
     expect(inner).not.toHaveAttribute('data-crossing');
   });
 
-  test('a disabled handle does not join', async () => {
+  test('a pointer with a button down from a press elsewhere gives no data-crossing', async () => {
+    const { outer, inner, junction } = await mountCrossing();
+    await userEvent.pointer({ coords: { x: 50, y: 50 }, keys: '[MouseLeft>]' });
+    await moveTo(junction);
+    expect(outer).not.toHaveAttribute('data-crossing');
+    expect(inner).not.toHaveAttribute('data-crossing');
+    await release();
+  });
+
+  test('a disabled handle does not join, and gives no crossing', async () => {
     const { outer, inner, junction } = await mountCrossing({ disabled: true });
+    await moveTo(junction);
+    expect(outer).not.toHaveAttribute('data-crossing');
     await userEvent.pointer({ coords: junction, keys: '[MouseLeft>]' });
     await moveTo({ x: junction.x + 40, y: junction.y + 20 });
     expect(outer).not.toHaveAttribute('data-crossing');
     expect(values(outer, inner)).toEqual(['60', null]);
     await release();
+  });
+
+  // The target of the inner handle is the upper one, so a press at the junction is a press of the
+  // inner handle, and the outer handle joins it.
+  test('a joined handle that becomes disabled ends its own drag, and the drag of the pressed handle goes on', async () => {
+    const { spec, outer, inner, outerLog, innerLog, junction } = await mountCrossing();
+    await userEvent.pointer({ coords: junction, keys: '[MouseLeft>]' });
+    await moveTo({ x: junction.x + 20, y: junction.y + 10 });
+    spec.parts[1]!.attrs = { ...spec.parts[1]!.attrs, disabled: true };
+    await settle();
+    expect(outer).not.toHaveAttribute('data-dragging');
+    expect(outerLog.filter((each) => each.startsWith('draggingChange'))).toEqual([
+      'draggingChange true',
+      'draggingChange false',
+    ]);
+    await moveTo({ x: junction.x + 40, y: junction.y + 20 });
+    expect(inner).toHaveAttribute('data-dragging');
+    expect(values(outer, inner)).toEqual([null, '60']);
+    await release();
+    expect(innerLog.at(-1)).toBe('layoutCommitted drag pointerup');
+  });
+
+  test('a handle of a nested root of the same orientation does not join', async () => {
+    const innerLog: string[] = [];
+    const { at, root } = await mountLayout({
+      root: { defaultLayout: { a: 50, b: 50 } },
+      parts: [
+        {
+          kind: 'panel',
+          key: 'a',
+          inner: {
+            // The collapsed panel puts the inner handle under the outer one.
+            root: { defaultLayout: { x: 100, y: 0 }, ...logged(innerLog) },
+            parts: [
+              { kind: 'panel', key: 'x' },
+              { kind: 'handle', key: 'h2' },
+              { kind: 'panel', key: 'y', attrs: { collapsible: true, minSize: 20 } },
+            ],
+          },
+        },
+        { kind: 'handle', key: 'h1' },
+        { kind: 'panel', key: 'b' },
+      ],
+    });
+    await drag(at('h1'), -40);
+    expect(grows(root, 'a', 'b')).toEqual(['40', '60']);
+    expect(innerLog).toEqual([]);
   });
 
   test('a layer over the page covers the handles under it', async () => {

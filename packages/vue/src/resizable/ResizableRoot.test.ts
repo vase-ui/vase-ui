@@ -11,6 +11,7 @@ import {
   byKey,
   doubleClick,
   drag,
+  frames,
   grows,
   key,
   panelsAndHandles,
@@ -329,6 +330,138 @@ describe('one drag in a root', () => {
     expect(inner).toHaveAttribute('data-dragging');
     inner.dispatchEvent(new PointerEvent('pointerup', { pointerId: 9, bubbles: true }));
     await release();
+  });
+});
+
+describe('prop: pushPanels', () => {
+  // The middle panel has a least size of 20, so a move of the first handle goes on into the last
+  // panel only when the root pushes the panels.
+  const pushing = (pushPanels: boolean) => ({
+    root: { pushPanels, defaultLayout: { a: 30, b: 30, c: 40 } },
+    parts: three().map((each) => (each.key === 'b' ? { ...each, attrs: { minSize: 20 } } : each)),
+  });
+
+  test.each([
+    {
+      name: 'pushes the next panels',
+      pushPanels: true,
+      dragged: ['60', '20', '20'],
+      keyed: ['50', '20', '30'],
+      max: '80',
+    },
+    {
+      name: 'stops at the next panel',
+      pushPanels: false,
+      dragged: ['40', '20', '40'],
+      keyed: ['40', '20', '40'],
+      max: '40',
+    },
+  ])('a drag and a key: $name', async ({ pushPanels, dragged, keyed, max }) => {
+    const dragRoot = await mountLayout(pushing(pushPanels));
+    expect(dragRoot.at('h1')).toHaveAttribute('aria-valuemax', max);
+    await drag(dragRoot.at('h1'), 120);
+    expect(grows(dragRoot.root, 'a', 'b', 'c')).toEqual(dragged);
+    const keyRoot = await mountLayout(pushing(pushPanels));
+    await key(keyRoot.at('h1'), '{Shift>}{ArrowRight}{ArrowRight}{/Shift}');
+    expect(grows(keyRoot.root, 'a', 'b', 'c')).toEqual(keyed);
+  });
+});
+
+describe('prop: dragStep', () => {
+  // The frame is 400 px wide, so 1% is 4 px.
+  test.each([
+    { name: 'a number of percent', dragStep: 5, distance: 29, sizes: ['55', '25', '20'] },
+    { name: 'a percent string', dragStep: '5%', distance: 29, sizes: ['55', '25', '20'] },
+    { name: 'pixels, up', dragStep: '40px', distance: 29, sizes: ['60', '20', '20'] },
+    { name: 'pixels, down', dragStep: '40px', distance: -29, sizes: ['40', '40', '20'] },
+    {
+      name: 'pixels, below half a step',
+      dragStep: '40px',
+      distance: 16,
+      sizes: ['50', '30', '20'],
+    },
+  ])('a drag moves in steps of $name; a key does not', async ({ dragStep, distance, sizes }) => {
+    const { root, at } = await mountLayout({
+      root: { dragStep, defaultLayout: { a: 50, b: 30, c: 20 } },
+      parts: three(),
+    });
+    await drag(at('h1'), distance);
+    expect(grows(root, 'a', 'b', 'c')).toEqual(sizes);
+    await key(at('h2'), '{ArrowRight}');
+    expect(grows(root, 'c')).not.toEqual(['20']);
+    expect(Number(grows(root, 'c')[0])).toBeCloseTo(19, 3);
+  });
+});
+
+describe('the panel space', () => {
+  test('a handle that changes size changes the panel space, so a length has another percent', async () => {
+    const { spec, at } = await mountLayout({
+      parts: [
+        { kind: 'panel', key: 'a', attrs: { minSize: '120px', defaultSize: 10 } },
+        { kind: 'handle', key: 'h1', attrs: { style: 'flex: none; width: 0px' } },
+        { kind: 'panel', key: 'b' },
+      ],
+    });
+    expect(widthOf(at('a'))).toBeCloseTo(120, 0);
+    spec.parts[1]!.attrs = { style: 'flex: none; width: 40px' };
+    await nextTick();
+    await frames(3);
+    // The panels share 360 px, and 120 px is a third of them.
+    expect(widthOf(at('b'))).toBeCloseTo(240, 0);
+    expect(widthOf(at('a'))).toBeCloseTo(120, 0);
+  });
+
+  test('a hidden root shows its sizes and takes the pixels of a fixed panel when it shows, and keeps them when it hides again', async () => {
+    const { spec, at } = await mountLayout({
+      frame: 'display: none; width: 400px; height: 100px',
+      parts: [
+        { kind: 'panel', key: 'nav', attrs: { defaultSize: '100px', rootResizeBehavior: 'fixed' } },
+        { kind: 'handle', key: 'h1' },
+        { kind: 'panel', key: 'main' },
+      ],
+    });
+    // A root with no room has the length that the panel asked for, and has no value.
+    expect(at('nav').style.flex).toBe('0 1 100px');
+    expect(at('h1')).not.toHaveAttribute('aria-valuenow');
+    spec.frame = 'width: 400px; height: 100px';
+    await nextTick();
+    await frames(3);
+    expect(at('h1')).toHaveAttribute('aria-valuenow', '25');
+    expect(widthOf(at('nav'))).toBeCloseTo(100, 0);
+    spec.frame = 'display: none; width: 300px; height: 100px';
+    await nextTick();
+    await frames(2);
+    spec.frame = 'width: 300px; height: 100px';
+    await nextTick();
+    await frames(3);
+    expect(widthOf(at('nav'))).toBeCloseTo(100, 0);
+    expect(widthOf(at('main'))).toBeCloseTo(200, 0);
+  });
+
+  test('while the root has no room, no drag starts, and a key and a method do nothing', async () => {
+    const log: unknown[][] = [];
+    const { at, exposed } = await mountLayout({
+      frame: 'display: none; width: 400px; height: 100px',
+      root: logged(log),
+      parts: [
+        {
+          kind: 'panel',
+          key: 'nav',
+          attrs: { defaultSize: '100px', collapsible: true, minSize: 10 },
+        },
+        { kind: 'handle', key: 'h1' },
+        { kind: 'panel', key: 'main' },
+      ],
+    });
+    at('h1').dispatchEvent(
+      new PointerEvent('pointerdown', { button: 0, buttons: 1, bubbles: true }),
+    );
+    at('h1').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    (exposed.panels.nav as { collapse(): void; resize(size: number): void }).collapse();
+    (exposed.panels.nav as { resize(size: number): void }).resize(40);
+    await nextTick();
+    expect(log).toEqual([]);
+    expect(at('nav').style.flex).toBe('0 1 100px');
   });
 });
 
