@@ -1,5 +1,4 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
 import type { Orientation } from '../../internals/types';
 import type { HandleDrag } from './useResizeHandle';
 import {
@@ -42,8 +41,6 @@ describe('handle registry', () => {
   describe('in the document', () => {
     function createDrag(disabled = false): HandleDrag {
       return {
-        dragging: shallowRef(false),
-        crossing: shallowRef(false),
         disabled: () => disabled,
         start: () => true,
         move() {},

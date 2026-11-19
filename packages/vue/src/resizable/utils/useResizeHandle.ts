@@ -1,5 +1,13 @@
-import { computed, onScopeDispose, shallowRef, toValue, watch, watchPostEffect } from 'vue';
-import type { MaybeRefOrGetter, Ref } from 'vue';
+import {
+  computed,
+  onScopeDispose,
+  shallowReactive,
+  shallowRef,
+  toValue,
+  watch,
+  watchPostEffect,
+} from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
@@ -9,10 +17,8 @@ import { adjustLayout, areLayoutsEqual, getHandleLimits, hasSamePanels, snapDelt
 import type { Layout } from './layout';
 
 export interface HandleDrag {
-  dragging: Readonly<Ref<boolean>>;
-  crossing: Ref<boolean>;
   disabled: () => boolean;
-  start: (event: PointerEvent) => boolean;
+  start: (event: PointerEvent, group: Set<HandleDrag>) => boolean;
   move: (event: PointerEvent) => void;
   end: (event: PointerEvent | undefined, apply: boolean) => void;
 }
@@ -186,8 +192,10 @@ export function getHandlesAtPoint(
 }
 
 export function useResizeHandle(root: ResizableRootContext, options: ResizeHandleOptions) {
-  const dragging = shallowRef(false);
-  const crossing = shallowRef(false);
+  const group = shallowRef<Set<HandleDrag>>();
+  const hoveringAtCrossing = shallowRef(false);
+  const dragging = computed(() => group.value !== undefined);
+  const crossing = computed(() => (group.value ? group.value.size > 1 : hoveringAtCrossing.value));
   let horizontal = true;
   let rtl = false;
   let startPointer = 0;
@@ -199,7 +207,7 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
   // A drag that a lifecycle change ends commits with the last pointer event of the drag.
   let lastEvent: PointerEvent | undefined;
 
-  function startDrag(event: PointerEvent) {
+  function startDrag(event: PointerEvent, joining: Set<HandleDrag>) {
     const pivot = toValue(options.pivot);
     if (event.button !== 0 || event.defaultPrevented || toValue(options.disabled) || pivot < 0) {
       return false;
@@ -209,7 +217,9 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
     if (measurement === undefined || !root.startDragging()) {
       return false;
     }
-    dragging.value = true;
+    joining.add(drag);
+    group.value = joining;
+    hoveringAtCrossing.value = false;
     horizontal = root.orientation.value === 'horizontal';
     rtl = horizontal && root.direction.value === 'rtl';
     startPointer = horizontal ? event.clientX : event.clientY;
@@ -224,14 +234,16 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
   }
 
   function endDrag(event: PointerEvent | undefined, apply: boolean) {
-    if (!dragging.value) {
+    hoveringAtCrossing.value = false;
+    if (!group.value) {
       return;
     }
-    dragging.value = false;
-    crossing.value = false;
+    group.value.delete(drag);
+    group.value = undefined;
     const pending = root.pendingLayout.value;
-    root.stopDragging();
     const endEvent = event ?? lastEvent;
+    lastEvent = undefined;
+    root.stopDragging();
     const shown = root.shown.value;
     const release =
       apply && pending && hasSamePanels(pending, shown) && !areLayoutsEqual(pending, shown)
@@ -283,8 +295,6 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
   }
 
   const drag: HandleDrag = {
-    dragging,
-    crossing,
     disabled: () => toValue(options.disabled),
     start: startDrag,
     move: moveDrag,
@@ -292,8 +302,8 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
   };
   const own = { drag, orientation: () => root.orientation.value };
 
-  // The drags that the press started, with the drag of `own` first. With no press it is empty.
-  let drags: readonly HandleDrag[] = [];
+  // Each handle leaves this press before it can join another pointer.
+  let drags: Set<HandleDrag> | undefined;
   let pointerId = 0;
   let captured: HTMLElement | undefined;
   let startX = 0;
@@ -305,10 +315,10 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
 
   function finish(event: PointerEvent | undefined, apply: boolean) {
     const ended = drags;
-    if (ended.length === 0) {
+    if (!ended) {
       return;
     }
-    drags = [];
+    drags = undefined;
     for (const drag of ended) {
       drag.end(event, apply);
     }
@@ -321,17 +331,15 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
 
   function onPointerdown(event: PointerEvent) {
     stopClick = false;
+    if (drags) return false;
     const target = event.currentTarget as HTMLElement;
     const found = getHandlesAtPoint(own, target, event.clientX, event.clientY);
-    // A second pointer on a handle that has a press gives no drag, so it does not change that press.
-    if (!startDrag(event)) {
+    const started = shallowReactive(new Set<HandleDrag>());
+    if (!startDrag(event, started)) {
       return false;
     }
-    const started = found.filter((candidate) => candidate === drag || candidate.start(event));
-    if (started.length > 1) {
-      for (const drag of started) {
-        drag.crossing.value = true;
-      }
+    for (const candidate of found) {
+      if (candidate !== drag) candidate.start(event, started);
     }
     drags = started;
     pointerId = event.pointerId;
@@ -348,15 +356,13 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
   }
 
   function onPointermove(event: PointerEvent) {
-    if (drags.length === 0) {
-      // The press of another pointer can drag this handle. That press writes `crossing` until it
-      // ends, so a second pointer on the handle does not change it.
+    if (!drags) {
       if (dragging.value) {
         return;
       }
-      // The hover: with no button down, the handle shows whether a press here crosses another one.
-      crossing.value =
+      hoveringAtCrossing.value =
         event.buttons === 0 &&
+        !toValue(options.disabled) &&
         getHandlesAtPoint(own, event.currentTarget as HTMLElement, event.clientX, event.clientY)
           .length > 1;
       return;
@@ -373,7 +379,7 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
     for (const drag of drags) {
       drag.move(event);
     }
-    if (drags.every((drag) => !drag.dragging.value)) {
+    if (drags?.size === 0) {
       finish(event, false);
     }
   }
@@ -395,15 +401,13 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
     onPointercancel: endWith(false),
     onLostpointercapture: endWith(false),
     onPointerleave() {
-      if (drags.length === 0 && !dragging.value) {
-        crossing.value = false;
-      }
+      hoveringAtCrossing.value = false;
     },
     // WebKit selects the text between the nearest selectable position and the pointer when a drag
     // starts on an element with `user-select: none`. Preventing the default of `mousedown` stops
     // the selection, and it also stops the focus that the press gives.
     onMousedown(event: MouseEvent) {
-      if (drags.length > 0) {
+      if (drags) {
         event.preventDefault();
       }
     },
