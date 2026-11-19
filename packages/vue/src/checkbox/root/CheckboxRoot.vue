@@ -121,7 +121,7 @@ export type CheckboxRootChangeEventReason = typeof REASONS.none;
 export type CheckboxRootChangeEventDetails =
   VaseUIChangeEventDetails<CheckboxRootChangeEventReason>;
 
-export function getDefaultFormSubmitter(form: HTMLFormElement | null) {
+function getDefaultFormSubmitter(form: HTMLFormElement | null) {
   // The first submit button remains the default even when it is disabled.
   for (const candidate of form?.elements ?? []) {
     if (candidate.tagName === 'BUTTON' || candidate.tagName === 'INPUT') {

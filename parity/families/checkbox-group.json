@@ -68,7 +68,14 @@
       "relation": "inlined-into",
       "destination": "packages/vue/src/checkbox-group/CheckboxGroup.vue",
       "member": "toggleParent",
-      "witness": "packages/vue/src/checkbox-group/useCheckboxGroupParent.test.tsx"
+      "witness": "packages/vue/src/checkbox-group/CheckboxGroup.parent.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/useCheckboxGroupParent.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/checkbox-group/CheckboxGroup.parent.test.tsx",
+      "behavior": "The parent reflects child selection and preserves disabled values.",
+      "witness": "packages/vue/src/checkbox-group/CheckboxGroup.parent.test.tsx"
     }
   ]
 }

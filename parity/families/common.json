@@ -282,7 +282,14 @@
       "relation": "inlined-into",
       "destination": "packages/vue/src/checkbox/root/CheckboxRoot.vue",
       "member": "getDefaultFormSubmitter",
-      "witness": "packages/vue/src/common/getDefaultFormSubmitter.test.ts"
+      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx",
+      "behavior": "Enter activates the first submit button of the form.",
+      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
     }
   ]
 }
