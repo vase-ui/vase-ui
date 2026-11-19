@@ -66,10 +66,11 @@ describe('<Tabs.Indicator />', () => {
   });
 
   it('exposes null active tab state when the selected value has no matching tab', async () => {
+    const selected = shallowRef('missing');
     let indicatorState: Tabs.Indicator.State | undefined;
 
-    const { setProps } = await render(
-      <Tabs.Root modelValue="missing">
+    await render(() => (
+      <Tabs.Root modelValue={selected.value}>
         <Tabs.List>
           <Tabs.Tab value="one">One</Tabs.Tab>
           <Tabs.Indicator
@@ -81,8 +82,8 @@ describe('<Tabs.Indicator />', () => {
             }}
           />
         </Tabs.List>
-      </Tabs.Root>,
-    );
+      </Tabs.Root>
+    ));
 
     const bubble = screen.getByTestId('bubble');
     function expectNoMeasurement() {
@@ -92,10 +93,12 @@ describe('<Tabs.Indicator />', () => {
     }
 
     expectNoMeasurement();
-    await setProps({ modelValue: 'one' });
+    selected.value = 'one';
+    await nextTick();
     expect(bubble).not.toHaveAttribute('hidden');
 
-    await setProps({ modelValue: 'missing' });
+    selected.value = 'missing';
+    await nextTick();
     expectNoMeasurement();
   });
 
@@ -802,7 +805,9 @@ describe('<Tabs.Indicator />', () => {
       expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('50px');
 
       order.value = ['b', 'a'];
-      await waitFor(() => expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('0px'));
+      await waitFor(() =>
+        expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('0px'),
+      );
     });
 
     it('measures again when the orientation changes with no change of size', async () => {
