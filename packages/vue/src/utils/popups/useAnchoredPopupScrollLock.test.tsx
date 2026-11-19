@@ -4,7 +4,7 @@ import { createRenderer, flushMicrotasks, renderOnServer, wait, waitFor } from '
 import AnchoredScrollLockPart from '../../../test/fixtures/AnchoredScrollLockPart.vue';
 import {
   createScrollDocument,
-  getScrollLockRegistry,
+  expectScrollLocksReleased,
   HIDDEN_SCROLLBARS_CSS,
   isPageLocked,
   recordLockCounts,
@@ -46,11 +46,7 @@ describe('useAnchoredPopupScrollLock', () => {
   // a case that leaves a lock would break each later case.
   afterEach(async () => {
     await wait(0);
-    const registry = getScrollLockRegistry();
-    expect({ lockCount: registry?.lockCount, restore: registry?.restore }).toEqual({
-      lockCount: 0,
-      restore: null,
-    });
+    expectScrollLocksReleased();
   });
 
   it('locks the page for an open that is not by touch', async () => {
@@ -218,7 +214,7 @@ describe('useAnchoredPopupScrollLock', () => {
       />
     ));
     await waitForLock(page);
-    const lockCounts = recordLockCounts();
+    const lockCounts = recordLockCounts(page.win);
 
     touchOpen.value = true;
     await nextTick();

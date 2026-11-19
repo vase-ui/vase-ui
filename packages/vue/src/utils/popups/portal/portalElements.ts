@@ -33,6 +33,23 @@ export function usePortalRegistration(
   );
 }
 
+function isPortal(element: Element) {
+  return portals.has(element);
+}
+
+// Teleport can move the same element, including its nested portals, to another container or document.
+export function getPortalLocation(element: Element | null | undefined) {
+  const targets: ParentNode[] = [];
+  for (
+    let portal = closest(element, isPortal);
+    portal?.parentNode;
+    portal = closest(portal.parentNode, isPortal)
+  ) {
+    targets.push(portal.parentNode);
+  }
+  return { document: element?.ownerDocument, targets };
+}
+
 export function getNestedPortals(parent: Element | null | undefined) {
   if (!parent) {
     return [];

@@ -28,7 +28,7 @@ export interface PopupPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, inject, provide, Teleport, useId, useTemplateRef } from 'vue';
+import { inject, provide, shallowRef, Teleport, useId, useTemplateRef, watchPostEffect } from 'vue';
 import type { Component } from 'vue';
 import { ownerDocument } from '../../../common/owner';
 import { EMPTY_OBJECT } from '../../../common/empty';
@@ -52,14 +52,16 @@ const id = useId();
 const portalAttribute = createAttribute('portal');
 const parent = inject(PortalNode, undefined);
 const mounted = useIsHydrated();
-const target = computed(() => {
-  if (!mounted.value || props.disabled || props.to === null) {
-    return null;
+const target = shallowRef<Element | ShadowRoot | null>(null);
+// A later sibling can create the selector target in the same patch.
+watchPostEffect(() => {
+  const to = props.to;
+  if (!mounted.value || props.disabled || to === null) {
+    target.value = null;
+    return;
   }
   const doc = ownerDocument(parent?.value);
-  return typeof props.to === 'string'
-    ? doc.querySelector(props.to)
-    : (props.to ?? parent?.value ?? doc.body);
+  target.value = typeof to === 'string' ? doc.querySelector(to) : (to ?? parent?.value ?? doc.body);
 });
 const { isHeld } = useKeepAliveState();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
@@ -69,7 +71,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 provide(PortalNode, element);
 usePortalRegistration(element, isHeld, target, inject(DismissPortalRegistration, undefined));
 
-// The dynamic Teleport exposes its source node in both renderers. Guards need that place in the tab order.
+// Both renderers expose the source of a dynamic Teleport to the tab guards. Vapor needs the
+// source before a default child mounts so it can remove the portal if setup throws.
 const start = useTemplateRef<Comment | Text>('start');
 props.guards?.(element, props, start);
 
@@ -96,7 +99,6 @@ defineExpose({ element });
       :children="PopupPortalChildren"
     />
     <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-      <!-- Mount descendants after the source exists. Vapor can then remove the portal if a child setup throws. -->
       <slot v-if="start" :state="state" />
     </component>
   </component>

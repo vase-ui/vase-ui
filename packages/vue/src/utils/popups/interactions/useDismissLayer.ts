@@ -1,4 +1,8 @@
-import { DismissPortalRegistration, isPortalOfPart } from '../portal/portalElements';
+import {
+  DismissPortalRegistration,
+  getPortalLocation,
+  isPortalOfPart,
+} from '../portal/portalElements';
 import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
 import type { InjectionKey, MaybeRefOrGetter, WatchSource } from 'vue';
 import {
@@ -1098,7 +1102,7 @@ export function useDismissLayer(
     getStore,
     () => getStore().select('open'),
     isEnabled,
-    () => ownerDocument(getStore().select('positionerElement')),
+    () => getPortalLocation(getPositionerElement()).document,
     isEscapeKeyEnabled,
     () => getBubbles().escapeKey,
     () => getBubbles().outsidePress,

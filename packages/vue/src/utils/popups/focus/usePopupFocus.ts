@@ -38,7 +38,7 @@ import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { getFloatingFocusElement, isTypeableCombobox, isTypeableElement } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
-import { getNestedPortals } from '../portal/portalElements';
+import { getNestedPortals, getPortalLocation } from '../portal/portalElements';
 import { usePortalContext } from '../portal/PopupPortalContext';
 import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
@@ -428,6 +428,8 @@ export function usePopupFocus(
   const floating = computed(() => resolved.value.store.select('positionerElement'));
   const floatingFocusElement = () =>
     getFloatingFocusElement(floating.value, resolved.value.store.context.popupRef?.value);
+
+  const location = computed(() => getPortalLocation(floatingFocusElement()));
 
   // A typeable combobox reference (an input or a textarea) with `initialFocus` set to `false` has
   // different focus semantics: the focus is not trapped inside the floating element, so a modal
@@ -1079,7 +1081,7 @@ export function usePopupFocus(
   );
 
   effect(
-    () => [isDisabled(), resolved.value.modal, floatingFocusElement()],
+    () => [isDisabled(), resolved.value.modal, floatingFocusElement(), location.value.document],
     () => {
       const floatingFocusEl = floatingFocusElement();
       if (isDisabled() || !resolved.value.modal) {
@@ -1113,6 +1115,7 @@ export function usePopupFocus(
       floating.value,
       domReference.value,
       floatingFocusElement(),
+      location.value.document,
       portalNode.value,
     ],
     () => {
@@ -1170,6 +1173,7 @@ export function usePopupFocus(
   // Close on focus out and restore focus within the floating tree when needed.
   effect(
     () => [
+      location.value.document,
       isDisabled(),
       domReference.value,
       floating.value,
@@ -1218,8 +1222,7 @@ export function usePopupFocus(
       // Returns `true` for `restoreFocus: 'popup'`, after it focuses the floating element. The
       // caller then stops.
       function restoreLostFocus() {
-        // Let `PopupPortal` effect knows that focus is still inside the
-        // floating tree.
+        // The portal must treat this focus repair as a move inside the popup.
         if (isHTMLElement(floatingFocusEl)) {
           floatingFocusEl.focus();
           // If explicitly requested to restore focus to the popup container, do not search
@@ -1472,6 +1475,7 @@ export function usePopupFocus(
       portalContext?.afterOutsideRef.value,
       parentMarksCount?.value,
       floatingFocusElement(),
+      ...location.value.targets,
       ...getNestedPortals(portalNode.value),
     ],
     () => {
