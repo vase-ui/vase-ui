@@ -16,6 +16,7 @@ export const REFACTORED_FOLDERS = [
   'progress',
   'radio',
   'radio-group',
+  'scroll-area',
   'separator',
   'switch',
 ];

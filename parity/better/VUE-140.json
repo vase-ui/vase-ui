@@ -1,9 +1,0 @@
-{
-  "id": "VUE-140",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/root/ScrollAreaRoot.tsx#L113-L118",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/root/ScrollAreaRoot.tsx#L168-L173"
-  ],
-  "behavior": "The scroll area viewport restores the value and priority of its inline scroll snap declaration after a thumb or track press. Base UI saves only the value.",
-  "dueWith": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx"
-}

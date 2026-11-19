@@ -1,0 +1,8 @@
+{
+  "id": "VUE-169",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx#L148-L150"
+  ],
+  "dueWith": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+  "behavior": "When the content of a viewport becomes empty and the auto height of the viewport decreases to 0, the root measures the viewport. The parts lose `data-has-overflow-y`, `--scroll-area-overflow-y-end` becomes `0px`, the scrollbar unmounts and the viewport leaves the tab order. Base UI skips a viewport whose scroll height or scroll width is 0, so it keeps the old overflow, the scrollbar and `tabindex=0`."
+}

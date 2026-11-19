@@ -14,6 +14,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
@@ -65,6 +66,10 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
       // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
       // `import.meta.glob`.
       const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
+      // Axe checks the page as the first frame paints it. A scroll area measures its viewport in
+      // that frame, and the viewport becomes a tab stop.
+      await waitSingleFrame();
+      await waitSingleFrame();
 
       await expectNoAxeViolations(container);
     });
