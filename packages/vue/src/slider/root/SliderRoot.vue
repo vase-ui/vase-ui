@@ -233,7 +233,7 @@ const emit = defineEmits<{
    * `eventDetails.event` is the original browser event, or a new `Event('vase-ui')` for a change without one.
    * The reason identifies the source of the change.
    *
-   * - `'input-change'` when the hidden range input emits a change event (for example, via form integration)
+   * - `'input-change'` for an `input` event on a thumb
    * - `'track-press'` when the control track is pressed
    * - `'drag'` while dragging a thumb
    * - `'keyboard'` for keyboard input
@@ -258,7 +258,7 @@ const emit = defineEmits<{
    * - `'drag'` while dragging a thumb
    * - `'track-press'` when the control track is pressed
    * - `'keyboard'` for keyboard input
-   * - `'input-change'` when the hidden range input emits a change event (for example, via form integration)
+   * - `'input-change'` for an `input` event on a thumb
    * - `'none'` when the commit occurs without a specific interaction
    */
   valueCommitted: [
@@ -316,7 +316,6 @@ const controlElement = shallowRef<HTMLElement | null>(null);
 const thumbRefs = shallowRef<(HTMLElement | null)[]>([]);
 // A thumb records its press before the event reaches the track.
 const pressedThumb = { index: -1, centerOffset: null as number | null };
-let lastChangeReason: SliderRootChangeEventReason = REASONS.none;
 const active = shallowRef(-1);
 const lastUsedThumbIndex = shallowRef(-1);
 const dragging = shallowRef(false);
@@ -397,8 +396,6 @@ function setValue(
     return false;
   }
 
-  lastChangeReason = reason;
-
   emit('update:modelValue', newValue as Value extends number ? number : Value);
   valueUnwrapped.value = newValue;
 
@@ -407,8 +404,8 @@ function setValue(
 
 function commitValue(
   newValue: number | readonly number[],
+  reason: SliderRootCommitEventReason,
   event: Event,
-  reason = lastChangeReason,
 ) {
   emit(
     'valueCommitted',
@@ -457,7 +454,7 @@ function handleInputChange(valueInput: number, index: number, event: Event) {
     setTouched(true);
 
     if (applied) {
-      commitValue(newValue, event, reason);
+      commitValue(newValue, reason, event);
     }
   }
 
@@ -520,7 +517,7 @@ function resetToDefaultValue(event: Event) {
   const nextValue = typeof initial === 'number' ? initial : initial.slice();
   const applied = setValue(nextValue, -1, REASONS.none, event);
   if (applied) {
-    commitValue(nextValue, event, REASONS.none);
+    commitValue(nextValue, REASONS.none, event);
   }
   return applied;
 }

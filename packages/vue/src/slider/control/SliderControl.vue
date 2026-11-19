@@ -45,6 +45,7 @@ defineSlots<{
 
 type Coords = { x: number; y: number };
 type FingerState = ReturnType<typeof resolveThumbCollision>;
+type PressReason = typeof REASONS.trackPress | typeof REASONS.drag;
 
 const INTENTIONAL_DRAG_COUNT_THRESHOLD = 2;
 
@@ -86,16 +87,13 @@ const direction = useDirection();
 
 let control: HTMLElement | null = null;
 let styles: CSSStyleDeclaration | null = null;
-// A number that uniquely identifies the current finger in the touch session.
 let touchId: number | null = null;
-// The number of touch/pointermove events that have fired.
 let moveCount = 0;
-// The offset amount to each side of the control for inset sliders.
-// This value should be equal to the radius or half the width/height of the thumb.
 let insetThumbOffset = 0;
 let initialValues: readonly number[] | undefined;
 // A controlled parent can keep its value between two moves.
-let lastChange: { value: number | number[]; model: readonly number[] } | null = null;
+let lastChange: { value: number | number[]; model: readonly number[]; reason: PressReason } | null =
+  null;
 // Whether `pointerdown` started the current gesture, so the `touchstart` that follows it
 // doesn't restart it.
 let pointerGesture = false;
@@ -191,9 +189,8 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
 }
 
 function startPressing(fingerCoords: Coords) {
-  const range = values.value.length > 1;
   const vertical = rootProps.orientation === 'vertical';
-  initialValues = range ? values.value : undefined;
+  initialValues = values.value;
   lastChange = null;
 
   const pressedThumbIndex = pressedThumb.index;
@@ -235,14 +232,9 @@ function startPressing(fingerCoords: Coords) {
     updatePressedThumb(closestThumbIndex);
   }
 
-  if (inset.value) {
-    const thumbEl = thumbRefs.value[closestThumbIndex];
-    if (isElement(thumbEl)) {
-      const thumbRect = thumbEl.getBoundingClientRect();
-      const side = !vertical ? 'width' : 'height';
-      insetThumbOffset = thumbRect[side] / 2;
-    }
-  }
+  const thumb = thumbRefs.value[closestThumbIndex];
+  insetThumbOffset =
+    inset.value && thumb ? thumb.getBoundingClientRect()[vertical ? 'height' : 'width'] / 2 : 0;
 }
 
 function focusThumb(thumbIndex: number) {
@@ -261,14 +253,13 @@ function focusThumb(thumbIndex: number) {
 
 function setValueFromPointer(
   finger: FingerState,
-  reason: typeof REASONS.trackPress | typeof REASONS.drag,
+  reason: PressReason,
   nativeEvent: TouchEvent | PointerEvent,
 ) {
-  const applied = setValue(finger.value, finger.thumbIndex, reason, nativeEvent);
-  if (applied) {
-    lastChange = { value: finger.value, model: values.value };
-    // Only track and focus the swapped thumb once the change is actually applied so a
-    // canceled swap doesn't leak the new index into subsequent moves.
+  const model = values.value;
+  if (setValue(finger.value, finger.thumbIndex, reason, nativeEvent)) {
+    lastChange = { value: finger.value, model, reason };
+    // A veto keeps focus on the original thumb.
     if (finger.didSwap) {
       updatePressedThumb(finger.thumbIndex);
       focusThumb(finger.thumbIndex);
@@ -311,23 +302,16 @@ function handleTouchEnd(nativeEvent: TouchEvent | PointerEvent) {
     return;
   }
 
-  setActive(-1);
-  setDragging(false);
-
-  setPressedThumb(-1, null);
-  // A range can gain or lose a thumb before release.
+  const change = lastChange;
+  stopPress();
+  // The parent can change the number of thumbs or switch between a number and an array.
   if (
-    lastChange &&
-    (!Array.isArray(lastChange.value) || lastChange.value.length === values.value.length)
+    change &&
+    Array.isArray(change.value) === isArrayValue.value &&
+    change.model.length === values.value.length
   ) {
-    commitValue(lastChange.value, nativeEvent);
+    commitValue(change.value, change.reason, nativeEvent);
   }
-
-  if ('pointerType' in nativeEvent && control?.hasPointerCapture(nativeEvent.pointerId)) {
-    control.releasePointerCapture(nativeEvent.pointerId);
-  }
-
-  stopListening();
 }
 
 function handlePointerCancel(nativeEvent: PointerEvent) {
@@ -388,9 +372,14 @@ function handleTouchStart(nativeEvent: TouchEvent) {
   });
 }
 
-function stopListening() {
+function stopPress() {
   pointerSession.stop();
   touchSession.stop();
+  if (initialValues) {
+    setActive(-1);
+    setDragging(false);
+    setPressedThumb(-1, null);
+  }
   touchId = null;
   initialValues = undefined;
   lastChange = null;
@@ -449,21 +438,23 @@ function onPointerdown(event: PointerEvent) {
     setValueFromPointer(finger, REASONS.trackPress, event);
   }
 
-  if (event.pointerId) {
-    // The method throws for a pointer that the browser does not know, such as the pointer of an
-    // event that a script dispatched. The drag then continues with the listeners of the document.
-    try {
-      control.setPointerCapture(event.pointerId);
-    } catch {
-      // No capture.
-    }
-  }
-
   moveCount = 0;
   // Touch and pen presses can be followed by a compatibility `touchstart` (Apple Pencil).
   pointerGesture = isTouchLikePointerType(event.pointerType);
-  const doc = ownerDocument(control);
+  const targetControl = control;
+  const doc = ownerDocument(targetControl);
   pointerSession.start((onCleanup) => {
+    if (event.pointerId) {
+      try {
+        targetControl.setPointerCapture(event.pointerId);
+      } catch {
+        // A synthetic pointer has no capture. The document listeners still track it.
+      }
+      onCleanup(() => {
+        if (targetControl.hasPointerCapture(event.pointerId))
+          targetControl.releasePointerCapture(event.pointerId);
+      });
+    }
     onCleanup(addEventListener(doc, 'pointermove', handleTouchMove, { passive: true }));
     onCleanup(addEventListener(doc, 'pointerup', handleTouchEnd, { once: true }));
     onCleanup(addEventListener(doc, 'pointercancel', handlePointerCancel, { once: true }));
@@ -473,28 +464,19 @@ function onPointerdown(event: PointerEvent) {
 function setControl(next: HTMLElement | null) {
   if (control) {
     focusFrame.cancel();
-    stopListening();
+    stopPress();
   }
   setControlElement(next, control);
   control = next;
   styles = next ? ownerWindow(next).getComputedStyle(next) : null;
 }
 
-watch(disabled, (isDisabled) => {
-  if (isDisabled) {
-    stopListening();
-  }
-});
-
-// A held control receives no pointer release.
 watch(
-  isHeld,
-  (held) => {
-    if (held) {
+  [isHeld, disabled],
+  ([held, isDisabled]) => {
+    if (held || isDisabled) {
       focusFrame.cancel();
-      stopListening();
-      setDragging(false);
-      setPressedThumb(-1, null);
+      stopPress();
     }
   },
   { flush: 'sync' },

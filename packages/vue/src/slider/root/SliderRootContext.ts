@@ -9,6 +9,7 @@ import type { ThumbCollisionBehavior } from '../utils/thumbValues';
 import type {
   SliderRootProps,
   SliderRootChangeEventReason,
+  SliderRootCommitEventReason,
   SliderRootState,
 } from './SliderRoot.vue';
 
@@ -52,8 +53,8 @@ export interface SliderRootContext {
   name: ComputedRef<string | undefined>;
   commitValue: (
     value: number | readonly number[],
+    reason: SliderRootCommitEventReason,
     event: Event,
-    reason?: SliderRootChangeEventReason,
   ) => void;
   pressedThumb: Readonly<{ index: number; centerOffset: number | null }>;
   setPressedThumb: (index: number, centerOffset: number | null) => void;

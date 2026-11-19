@@ -1,0 +1,9 @@
+{
+  "id": "VUE-149",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L335-L389",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L435-L477"
+  ],
+  "behavior": "A slider press releases capture and clears dragging when its control changes or becomes disabled. Release commits the last accepted pointer or touch change with its own reason and only if the value still has the same shape. The next move picks up changes the parent made to its range during valueChange.",
+  "dueWith": "packages/react/src/slider/control/SliderControl.tsx"
+}

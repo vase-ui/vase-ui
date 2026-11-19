@@ -2394,10 +2394,12 @@ describe('<Slider.Root />', () => {
     describe('VUE-147: native change events', () => {
       it('should pass "name" and "value" as part of the event.target for onValueChange', async () => {
         const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
-        await render(<TestSlider name="volume" defaultValue={3} onValueChange={change} />);
+        await render(<TestSlider name="volume" modelValue={3} onValueChange={change} />);
         const input = screen.getByRole<HTMLInputElement>('slider');
         const event = new Event('input', { bubbles: true });
 
+        input.focus();
+        await flushMicrotasks();
         input.value = '4';
         await fireEvent(input, event);
 
@@ -2407,6 +2409,7 @@ describe('<Slider.Root />', () => {
         expect(details.event).toBe(event);
         expect(event.target).toBe(input);
         expect(input.name).toBe('volume');
+        expect(input.valueAsNumber).toBe(3);
       });
 
       it('passes the track press and drag events with the range that the form submits', async () => {
