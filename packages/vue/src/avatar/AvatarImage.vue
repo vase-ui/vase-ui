@@ -21,8 +21,8 @@ defineSlots<{
   }): unknown;
 }>();
 
-// The browser reads the request options when a source changes, and WebKit starts the request when
-// `src` is set (measurement M3). So the sources come last.
+// WebKit starts the request when `src` is set, before a later `loading`, `srcset` or request option
+// has an effect (measurement M3). So the sources come last.
 const REQUEST_OPTIONS = ['crossorigin', 'referrerpolicy'] as const;
 const SOURCES = ['sizes', 'srcset', 'src'] as const;
 

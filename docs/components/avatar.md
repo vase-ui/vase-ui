@@ -50,15 +50,25 @@ Import the component and assemble its parts:
 
 <<< ./avatar/Anatomy.vue
 
+## Loading the image
+
+By default, `<Avatar.Image>` loads the picture with an image outside the document. It renders the `<img>` only after the picture has loaded, so one of the image and the fallback is in the DOM, and they need no CSS to stack them. A picture that the browser already has shows at once, from `src` and from `srcset`.
+
+The image has `alt=""` by default, also for an `alt` that is `undefined`. Give an `alt` when no text beside the avatar names the person.
+
 ## Optimized and lazy-loaded images
 
-By default, `<Avatar.Image>` loads `src` ahead and renders the image only after it has loaded. This does not work with `loading="lazy"`. It also does not work with an image component that serves a different URL than `src`.
+In the default mode, `loading="lazy"` has no effect. An image component that serves another URL than `src` does not work in the default mode either.
 
 Set the `keepMounted` prop to render the image element at once and let it load in place. The browser then requests only the image that it displays:
 
 <<< ./avatar/LazyImage.vue
 
-An image component that renders its own `<img>` also needs `keepMounted`. Put the component in the `#render` slot. Bind `props` on it.
+An image component that renders its own `<img>` also needs `keepMounted`. Put the component or the `<img>` in the `#element` slot, with `v-bind="props"` and `:ref="elementRef"`:
+
+<<< ./avatar/ImageComponent.vue
+
+The part reads the `<img>` from the `element` that a component exposes. For a component that exposes no `element`, give its root element: `:ref="(image) => elementRef(image?.$el)"`. With no element, the part reads the status from the `load` and `error` events only.
 
 ### Stacking
 
@@ -85,11 +95,29 @@ While an image loads, it paints nothing, so the fallback shows through it. An im
 }
 ```
 
-Do not use `display: none` here. An element with no box never intersects the viewport, so `loading="lazy"` would never request the image. `visibility` and `opacity` do not stop lazy loading.
+Do not use `display: none` or the `hidden` attribute here. In Chromium, Firefox and WebKit, a lazy image with no box requests no picture. `visibility` and `opacity` do not stop lazy loading.
+
+### Attributes
+
+With `keepMounted`, `<Avatar.Image>` writes these attributes on the `<img>`:
+
+| Attribute            | State                                                           |
+| -------------------- | --------------------------------------------------------------- |
+| `data-loading`       | The picture loads.                                              |
+| `data-error`         | The picture failed to load.                                     |
+| `aria-hidden="true"` | The picture is not loaded. An `aria-hidden` that you give wins. |
 
 ### Server rendering
 
-With `keepMounted`, the image is in the server HTML and starts to load before hydration. The fallback is also in the server HTML, and it stays visible until hydration reads the loading status. A cached image shows at once, with no enter animation.
+In the default mode, the server HTML has no image. With `keepMounted`, the image is in the server HTML and starts to load before hydration. The fallback is also in the server HTML, and it stays visible until hydration reads the loading status.
+
+## Animation
+
+Put `<Avatar.Image>` in a Vue `<Transition>` to animate its enter and its leave. Vue keeps a leaving image in the DOM beside the fallback until its leave ends, so take the leaving element out of the flow with CSS:
+
+<<< ./avatar/Animated.vue
+
+A `<Transition>` around `<Avatar.Fallback>` needs the same CSS. With `keepMounted`, the image stays in the DOM, so animate it with a CSS transition on `[data-loading]`.
 
 ## API reference
 

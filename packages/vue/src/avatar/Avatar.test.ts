@@ -13,21 +13,38 @@ import {
 } from '../../test/pictures';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { mount, mountError, settle } from '../../test/render';
-import { waitFor } from '../../test/waitFor';
 
-/** Mounts the three parts. `events` gets each `loadingStatusChange` of the image. */
-function mountAvatar(image: Record<string, unknown> = {}, props: Record<string, unknown> = {}) {
+/**
+ * A listener of `loadingStatusChange` that keeps each status in `events`. The server answers a
+ * request in its own time, so a case waits for a status with `next`, not with `waitFor`.
+ */
+function recordStatus() {
   const events: string[] = [];
-  const attrs = reactive<Record<string, unknown>>({
-    onLoadingStatusChange: (status: string) => events.push(status),
-    ...image,
-  });
+  const emitted = new EventTarget();
+  return {
+    events,
+    onLoadingStatusChange(status: string) {
+      events.push(status);
+      emitted.dispatchEvent(new Event(status));
+    },
+    /** Waits for `status`, and for the update that renders it. */
+    async next(status: string) {
+      await new Promise((resolve) => emitted.addEventListener(status, resolve, { once: true }));
+      await nextTick();
+    },
+  };
+}
+
+/** Mounts the three parts, with the attributes `image` on the image. */
+function mountAvatar(image: Record<string, unknown> = {}, props: Record<string, unknown> = {}) {
+  const { onLoadingStatusChange, ...status } = recordStatus();
+  const attrs = reactive<Record<string, unknown>>({ onLoadingStatusChange, ...image });
   const { root, exposed } = mount(AvatarParts, { image: attrs, ...props });
   const avatar = root.firstElementChild as HTMLElement;
   return {
+    ...status,
     avatar,
     exposed,
-    events,
     image: attrs,
     img: () => avatar.querySelector('img'),
     fallback: () => avatar.querySelector('span'),
@@ -67,7 +84,7 @@ describe('the parts', () => {
 
   test('the image is an img with the attributes of the developer and the five request attributes', async () => {
     const picture = await pictureThatBrowserHas();
-    const { img, exposed } = mountAvatar({
+    const { img, exposed, next } = mountAvatar({
       class: 'Image',
       'data-kind': 'person',
       crossorigin: 'anonymous',
@@ -76,15 +93,13 @@ describe('the parts', () => {
       srcset: `${picture} 2w`,
       src: picture,
     });
-    await waitFor(() => expect(img()).not.toBeNull());
-    expect(exposed.image.element).toBe(img());
-    expect(
-      Object.fromEntries(
-        img()!
-          .getAttributeNames()
-          .map((name) => [name, img()!.getAttribute(name)]),
-      ),
-    ).toEqual({
+    await next('loaded');
+    const element = img()!;
+    expect(exposed.image.element).toBe(element);
+    const attributes = element
+      .getAttributeNames()
+      .map((name) => [name, element.getAttribute(name)]);
+    expect(Object.fromEntries(attributes)).toEqual({
       alt: '',
       class: 'Image',
       'data-kind': 'person',
@@ -123,10 +138,11 @@ describe('the parts', () => {
   });
 
   test('the element slot of each part renders the element of the developer, and the props of the image have no alt', async () => {
+    const { onLoadingStatusChange, next } = recordStatus();
     const { root } = mount(AvatarElementReplaced, {
       kind: 'own-source',
       scene: { picture: await pictureThatMustLoad() },
-      image: { keepMounted: true },
+      image: { keepMounted: true, onLoadingStatusChange },
     });
     await nextTick();
     const avatar = root.querySelector('.Root')!;
@@ -135,27 +151,32 @@ describe('the parts', () => {
     expect(avatar).toHaveAttribute('data-status', 'loading');
     expect(img).not.toHaveAttribute('alt');
     expect(avatar.querySelector('i.Fallback')).toHaveTextContent('loading');
-    await waitFor(() => expect(img).toHaveAttribute('data-status', 'loaded'));
+    await next('loaded');
+    expect(img).toHaveAttribute('data-status', 'loaded');
     expect(avatar.querySelector('i')).toBeNull();
   });
 });
 
 describe('the status and its event', () => {
   test('a picture that must load gives loading, then loaded, and one of the image and the fallback is in the DOM', async () => {
-    const { img, fallback, status, events } = mountAvatar({ src: await pictureThatMustLoad() });
+    const { img, fallback, status, events, next } = mountAvatar({
+      src: await pictureThatMustLoad(),
+    });
     await nextTick();
     expect(events).toEqual(['loading']);
     expect(img()).toBeNull();
     expect(fallback()).toHaveTextContent('JD loading');
-    await waitFor(() => expect(img()).not.toBeNull());
+    await next('loaded');
+    expect(img()).not.toBeNull();
     expect(fallback()).toBeNull();
     expect(status()).toBe('loaded');
     expect(events).toEqual(['loading', 'loaded']);
   });
 
   test('a picture that fails gives loading, then error', async () => {
-    const { img, fallback, events } = mountAvatar({ src: pictureThatFails() });
-    await waitFor(() => expect(fallback()).toHaveTextContent('JD error'));
+    const { img, fallback, events, next } = mountAvatar({ src: pictureThatFails() });
+    await next('error');
+    expect(fallback()).toHaveTextContent('JD error');
     expect(img()).toBeNull();
     expect(events).toEqual(['loading', 'error']);
   });
@@ -199,7 +220,7 @@ describe('without keepMounted', () => {
   test('an image outside the document gets the request attributes, the sources last, and a new one for each change', async () => {
     const images = recordImageObjects();
     const picture = await pictureThatMustLoad();
-    const { img, fallback, image } = mountAvatar({
+    const { img, fallback, image, next } = mountAvatar({
       src: picture,
       srcset: `${picture} 2w`,
       sizes: '2px',
@@ -221,14 +242,16 @@ describe('without keepMounted', () => {
     await nextTick();
     expect(images).toHaveLength(2);
     expect(images[1]!.referrerPolicy).toBe('origin');
-    await waitFor(() => expect(img()).not.toBeNull());
+    await next('loaded');
     expect(fallback()).toBeNull();
     expect(img()).toHaveAttribute('loading', 'lazy');
     expect(notLoadedAttributes(img()!)).toEqual([]);
   });
 
   test('a new source that the browser has keeps the element with no event; one that must load shows the fallback', async () => {
-    const { img, fallback, image, events } = mountAvatar({ src: await pictureThatBrowserHas() });
+    const { img, fallback, image, events, next } = mountAvatar({
+      src: await pictureThatBrowserHas(),
+    });
     await nextTick();
     const loaded = img();
     image.src = await pictureThatBrowserHas();
@@ -240,16 +263,17 @@ describe('without keepMounted', () => {
     await nextTick();
     expect(img()).toBeNull();
     expect(fallback()).toHaveTextContent('JD loading');
-    await waitFor(() => expect(img()).toHaveAttribute('src', image.src as string));
+    await next('loaded');
+    expect(img()).toHaveAttribute('src', image.src as string);
     expect(events).toEqual(['loaded', 'loading', 'loaded']);
   });
 
   test('the load of an image that a new source replaced does not change the status', async () => {
     const first = await pictureThatMustLoad();
-    const { fallback, image, events } = mountAvatar({ src: first });
+    const { image, events, next } = mountAvatar({ src: first });
     await nextTick();
     image.src = pictureThatFails();
-    await waitFor(() => expect(fallback()).toHaveTextContent('JD error'));
+    await next('error');
     // The first picture has loaded when another image has it.
     await new Promise((resolve) => Object.assign(new Image(), { src: first, onload: resolve }));
     await settle();
@@ -261,7 +285,7 @@ describe('with keepMounted', () => {
   test('the element loads the picture in place, with data-loading and aria-hidden until the load; the listener of the developer runs once', async () => {
     const images = recordImageObjects();
     const onLoad = vi.fn();
-    const { img, fallback, events } = mountAvatar({
+    const { img, fallback, events, next } = mountAvatar({
       keepMounted: true,
       alt: 'Jane Doe',
       src: await pictureThatMustLoad(),
@@ -272,7 +296,8 @@ describe('with keepMounted', () => {
     expect(notLoadedAttributes(img()!)).toEqual(['data-loading', 'aria-hidden']);
     expect(img()).toHaveAttribute('aria-hidden', 'true');
     expect(fallback()).toHaveTextContent('JD loading');
-    await waitFor(() => expect(fallback()).toBeNull());
+    await next('loaded');
+    expect(fallback()).toBeNull();
     expect(notLoadedAttributes(img()!)).toEqual([]);
     expect(onLoad).toHaveBeenCalledTimes(1);
     expect(events).toEqual(['loading', 'loaded']);
@@ -280,47 +305,60 @@ describe('with keepMounted', () => {
 
   test('a picture that fails keeps the element with data-error and aria-hidden; the listener of the developer runs once', async () => {
     const onError = vi.fn();
-    const { img, fallback } = mountAvatar({ keepMounted: true, src: pictureThatFails(), onError });
-    await waitFor(() => expect(fallback()).toHaveTextContent('JD error'));
+    const { img, fallback, next } = mountAvatar({
+      keepMounted: true,
+      src: pictureThatFails(),
+      onError,
+    });
+    await next('error');
+    expect(fallback()).toHaveTextContent('JD error');
     expect(notLoadedAttributes(img()!)).toEqual(['data-error', 'aria-hidden']);
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
   test('an aria-hidden of the developer wins in each status', async () => {
-    const { img, fallback } = mountAvatar({
+    const { img, next } = mountAvatar({
       keepMounted: true,
       'aria-hidden': 'false',
       src: await pictureThatMustLoad(),
     });
     await nextTick();
     expect(img()).toHaveAttribute('aria-hidden', 'false');
-    await waitFor(() => expect(fallback()).toBeNull());
+    await next('loaded');
     expect(img()).toHaveAttribute('aria-hidden', 'false');
   });
 
   test('a new src reads the element again: loading, data-loading, aria-hidden and the fallback, then loaded', async () => {
-    const next = await pictureThatMustLoad();
-    const { img, fallback, image, events } = mountAvatar({
+    const picture = await pictureThatMustLoad();
+    const { img, fallback, image, events, next } = mountAvatar({
       keepMounted: true,
       src: await pictureThatBrowserHas(),
     });
     await nextTick();
-    image.src = next;
+    image.src = picture;
     await sourceUpdate();
     expect(notLoadedAttributes(img()!)).toEqual(['data-loading', 'aria-hidden']);
     expect(fallback()).toHaveTextContent('JD loading');
-    await waitFor(() => expect(fallback()).toBeNull());
+    await next('loaded');
+    expect(fallback()).toBeNull();
     expect(events).toEqual(['loaded', 'loading', 'loaded']);
   });
 
   test('a load event of a source that a new source replaced gives no loaded status (Firefox sends one)', async () => {
-    const next = await pictureThatMustLoad();
-    const { img, image } = mountAvatar({ keepMounted: true, src: await pictureThatBrowserHas() });
+    const picture = await pictureThatMustLoad();
+    const { img, image, next } = mountAvatar({
+      keepMounted: true,
+      src: await pictureThatBrowserHas(),
+    });
     // In the task of the mount, so the load event of the first source is still to come.
     const statuses: [string, boolean][] = [];
-    image.onLoadingStatusChange = (status: string) => statuses.push([status, img()!.complete]);
-    image.src = next;
-    await waitFor(() => expect(statuses.at(-1)).toEqual(['loaded', true]));
+    const { onLoadingStatusChange } = image as { onLoadingStatusChange: (status: string) => void };
+    image.onLoadingStatusChange = (status: string) => {
+      statuses.push([status, img()!.complete]);
+      onLoadingStatusChange(status);
+    };
+    image.src = picture;
+    await next('loaded');
     await settle();
     expect(statuses).toEqual([
       ['loading', false],
@@ -340,7 +378,7 @@ describe('with keepMounted', () => {
       crossorigin: 'anonymous',
     });
     await nextTick();
-    // WebKit starts the request when `src` is set, and ignores a later `loading` (measurement M3).
+    // WebKit requests `src` at once, also when `loading` and `srcset` come later (measurement M3).
     const names = ['crossorigin', 'referrerpolicy', 'loading', 'sizes', 'srcset', 'src'];
     expect(
       img()!
@@ -351,28 +389,24 @@ describe('with keepMounted', () => {
 });
 
 describe('the element slot with keepMounted', () => {
-  /** Mounts the slot of `kind` with a picture that the browser has, and waits for the status. */
+  /** Mounts the slot of `kind`, by default with a picture that the browser has. */
   async function mountSlot(kind: string, picture?: string) {
     const scene = reactive({ picture: picture ?? (await pictureThatBrowserHas()) });
-    const events: string[] = [];
-    const image = reactive<Record<string, unknown>>({
-      keepMounted: true,
-      onLoadingStatusChange: (status: string) => events.push(status),
-    });
-    const { root } = mount(AvatarElementReplaced, { kind, scene, image });
-    const avatar = root.querySelector('.Root')!;
+    const { onLoadingStatusChange, ...status } = recordStatus();
+    const image = reactive<Record<string, unknown>>({ keepMounted: true, onLoadingStatusChange });
+    const avatar = mount(AvatarElementReplaced, { kind, scene, image }).root.firstElementChild!;
+    await nextTick();
     return {
+      ...status,
       scene,
       image,
-      events,
       img: () => avatar.querySelector('img')!,
       fallback: () => avatar.querySelector('i'),
     };
   }
 
   test('the part follows an img that sets its own source and keeps that source; another change reads nothing', async () => {
-    const { scene, image, events, img } = await mountSlot('own-source');
-    await settle();
+    const { scene, image, events, img, next } = await mountSlot('own-source');
     const element = img();
     expect(element).toHaveAttribute('src', scene.picture);
     image.class = 'Changed';
@@ -382,43 +416,48 @@ describe('the element slot with keepMounted', () => {
     scene.picture = await pictureThatMustLoad();
     await sourceUpdate();
     expect(element).toHaveAttribute('data-loading');
-    await waitFor(() => expect(events).toEqual(['loaded', 'loading', 'loaded']));
+    await next('loaded');
+    expect(events).toEqual(['loaded', 'loading', 'loaded']);
   });
 
   test.each(['keyed', 'component'])(
     'the part reads a new element, and follows the source of a component (%s)',
     async (kind) => {
-      const { scene, events, img, fallback } = await mountSlot(kind);
-      await settle();
+      const { scene, events, img, fallback, next } = await mountSlot(kind);
       const first = img();
       scene.picture = await pictureThatMustLoad();
       await sourceUpdate();
       expect(img() !== first).toBe(kind === 'keyed');
       expect(notLoadedAttributes(img())).toEqual(['data-loading', 'aria-hidden']);
       expect(fallback()).toHaveTextContent('loading');
-      await waitFor(() => expect(fallback()).toBeNull());
+      await next('loaded');
+      expect(fallback()).toBeNull();
       expect(events).toEqual(['loaded', 'loading', 'loaded']);
     },
   );
 
   test('the load of an element that the slot replaced does not change the status', async () => {
-    const { scene, events, img, fallback } = await mountSlot('keyed', await pictureThatMustLoad());
+    const { scene, events, img, next } = await mountSlot('keyed', await pictureThatMustLoad());
     const replaced = img();
     const replacedLoad = new Promise((resolve) => replaced.addEventListener('load', resolve));
     scene.picture = pictureThatFails();
-    await waitFor(() => expect(fallback()).toHaveTextContent('error'));
+    await next('error');
     await replacedLoad;
     await settle();
     expect(events).toEqual(['loading', 'error']);
   });
 
   test('a component that gives no element sets the status through its load and error events only', async () => {
-    const { scene, events, fallback } = await mountSlot('no-element', await pictureThatMustLoad());
-    await nextTick();
+    const { scene, events, fallback, next } = await mountSlot(
+      'no-element',
+      await pictureThatMustLoad(),
+    );
     expect(fallback()).toHaveTextContent('idle');
-    await waitFor(() => expect(fallback()).toBeNull());
+    await next('loaded');
+    expect(fallback()).toBeNull();
     scene.picture = pictureThatFails();
-    await waitFor(() => expect(fallback()).toHaveTextContent('error'));
+    await next('error');
+    expect(fallback()).toHaveTextContent('error');
     expect(events).toEqual(['loaded', 'error']);
   });
 });
@@ -432,8 +471,11 @@ describe('the fallback and its delay', () => {
     vi.useRealTimers();
   });
 
-  /** Mounts a root with no image, and a fallback with the attributes `fallback`. */
-  function mountFallback(fallback: Record<string, unknown>, scene = reactive({ image: false })) {
+  /** Mounts a fallback with the attributes `fallback`, by default in a root with no image. */
+  function mountFallback(
+    fallback: Record<string, unknown>,
+    scene: Record<string, boolean> = { image: false },
+  ) {
     const attrs = reactive(fallback);
     return { attrs, ...mountAvatar({}, { fallback: attrs, scene }) };
   }
@@ -514,16 +556,11 @@ describe('the fallback and its delay', () => {
 });
 
 test('Transition gives its enter classes to the image and its leave classes to the fallback, out of the flow', async () => {
-  let loaded!: () => void;
-  const picture = await pictureThatMustLoad();
+  const { onLoadingStatusChange, next } = recordStatus();
   const { root } = mount(AvatarInTransition, {
-    image: {
-      src: picture,
-      onLoadingStatusChange: (status: string) => status === 'loaded' && loaded(),
-    },
+    image: { src: await pictureThatMustLoad(), onLoadingStatusChange },
   });
-  await new Promise<void>((resolve) => (loaded = resolve));
-  await nextTick();
+  await next('loaded');
   const avatar = root.firstElementChild!;
   expect(avatar.querySelector('img')).toHaveClass('v-enter-from', 'v-enter-active');
   const fallback = avatar.querySelector('span')!;
