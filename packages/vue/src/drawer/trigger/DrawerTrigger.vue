@@ -58,6 +58,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DrawerTriggerState>;
 }>();
 
+// The props interface of this part gives the API reference the handle of Drawer.
 // Separate outlets keep the forwarded slot stable across renders.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);

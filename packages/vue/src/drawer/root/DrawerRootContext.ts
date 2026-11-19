@@ -111,6 +111,7 @@ export interface ResolvedDrawerSnapPoint {
   offset: number;
 }
 
+// Square-root damping resists a drag past the fully open edge.
 export function getSnapPointSwipeMovement(baseOffset: number, movementValue: number): number {
   const nextOffset = baseOffset + movementValue;
   if (nextOffset >= 0) {
@@ -186,7 +187,8 @@ export function useDrawerSnapPoints(
 ): UseDrawerSnapPointsReturnValue {
   const store = useDialogRootContext();
   const { snapPoints, activeSnapPoint, setActiveSnapPoint, popupHeight } = useDrawerRootContext();
-  if (viewport?.snapPoints.activeSnapPoint === activeSnapPoint) {
+  // The viewport of the same root already resolves these snap points.
+  if (viewport?.snapPoints.setActiveSnapPoint === setActiveSnapPoint) {
     return viewport.snapPoints;
   }
   const viewportElement = computed(() => store.select('viewportElement'));

@@ -359,6 +359,7 @@ provide(DrawerRootContext, {
 const providerContext = useDrawerProviderContext();
 const isOpen = computed(() => store.select('open'));
 
+// `KeepAlive` takes a held drawer out of the document, so the provider does not count it.
 const { isHeld } = useKeepAliveState();
 
 onMounted(() => {

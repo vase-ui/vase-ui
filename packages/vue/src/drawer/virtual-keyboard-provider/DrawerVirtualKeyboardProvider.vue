@@ -271,6 +271,7 @@ const modal = computed(() => store.select('modal'));
 const nestedDrawerOpen = computed(() => store.select('nestedOpenDialogCount') > 0);
 const rootElement = computed(() => store.select('viewportElement'));
 const { isHeld } = useKeepAliveState();
+// The portal registry changes when a portal moves the viewport to another document.
 const probeTarget = computed(() =>
   open.value && mounted.value && !isHeld.value
     ? getPortalLocation(rootElement.value).document?.body

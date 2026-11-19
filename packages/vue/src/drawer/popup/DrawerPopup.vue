@@ -76,7 +76,8 @@ let drawerSwipeVarsRegistered = false;
 function removeCSSVariableInheritance() {
   if (drawerSwipeVarsRegistered || typeof CSS === 'undefined' || !CSS.registerProperty) return;
   drawerSwipeVarsRegistered = true;
-  // Descendants need no style recalculation for each drag sample.
+  // Descendants need no style recalculation for each drag sample. WebKit keeps this too: no drawer
+  // descendant reads these variables.
   for (const [name, syntax, initialValue] of [
     [DrawerPopupCssVars.swipeMovementX, '<length>', '0px'],
     [DrawerPopupCssVars.swipeMovementY, '<length>', '0px'],
@@ -453,6 +454,7 @@ const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: store.select('openMethod'),
+    // As in `Dialog.Popup`, focus management stops at the close, not at the unmount (BUG-5519).
     disabled: !open.value,
     closeOnFocusOut: !store.select('disablePointerDismissal'),
     initialFocus: resolvedInitialFocus.value,
