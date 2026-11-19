@@ -67,11 +67,17 @@ export function mount(
   const root = container.appendChild(document.createElement('div'));
   const app = createAppOf(component, props, false);
   const exposed = app.mount(root) as Exposed;
+  let mounted = true;
+  // A listener of a test can unmount the app while the browser dispatches an event.
+  function unmount() {
+    if (mounted) app.unmount();
+    mounted = false;
+  }
   cleanups.push(() => {
-    app.unmount();
+    unmount();
     root.remove();
   });
-  return { root, exposed };
+  return { root, exposed, unmount };
 }
 
 /** Mounts a component that throws, and returns the error. */
