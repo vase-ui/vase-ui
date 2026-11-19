@@ -1003,7 +1003,7 @@ watch(
 );
 
 if (notifyParentSwipeProgressChange) {
-  watch(open, () => notifyParentSwipeProgressChange(0), { flush: 'sync' });
+  watch(open, () => notifyParentSwipeProgressChange(0));
 }
 
 function resetGesture() {

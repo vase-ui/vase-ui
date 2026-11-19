@@ -4210,6 +4210,57 @@ describe('<Drawer.Viewport />', () => {
     expect(samples).toEqual(['0']);
   });
 
+  it('clears nested progress when a swipe dismisses the child', async () => {
+    const childOpen = shallowRef(true);
+    const samples: string[] = [];
+    const Probe = defineComponent(() => {
+      watch(
+        childOpen,
+        () => {
+          samples.push(
+            screen.getByTestId('parent-popup').style.getPropertyValue('--drawer-swipe-progress'),
+          );
+        },
+        { flush: 'post' },
+      );
+      return () => null;
+    });
+    await render(() => (
+      <Drawer.Root open modal={false}>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root
+                open={childOpen.value}
+                onOpenChange={(open: boolean) => {
+                  childOpen.value = open;
+                }}
+                modal={false}
+              >
+                <Drawer.Portal keepMounted>
+                  <Drawer.Viewport>
+                    <Drawer.Popup data-testid="child" style={{ height: '100px' }}>
+                      <Probe />
+                    </Drawer.Popup>
+                  </Drawer.Viewport>
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    const child = screen.getByTestId('child');
+    await dragPopup(child, 80);
+    expect(
+      screen.getByTestId('parent-popup').style.getPropertyValue('--drawer-swipe-progress'),
+    ).not.toBe('0');
+    await firePointer.up(child, { ...mouse, button: 0, clientY: 81, timeStamp: 130 });
+    await flushMicrotasks();
+    expect(childOpen.value).toBe(false);
+    expect(samples).toEqual(['0']);
+  });
+
   it('keeps the active drawer progress when another viewport enters a hold', async () => {
     const first = shallowRef(true);
     const second = shallowRef(true);
