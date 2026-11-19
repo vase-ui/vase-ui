@@ -772,10 +772,20 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     );
   }
 
-  const dayElements = new Map<string, HTMLElement>();
+  const dayElements = new Map<HTMLElement, string>();
+
+  function getDayElement(key: string) {
+    // A Vapor cell can mount in a cached branch before it receives a KeepAlive hook.
+    return [...dayElements].findLast(([button, date]) => date === key && button.isConnected)?.[0];
+  }
+
+  function getDayKey(element: Element | null) {
+    return [...dayElements].find(([button]) => button === element)?.[1];
+  }
+
   const onPickerSelect = usePickerControl(PickerCalendarOwner, () => {
     const date = tabStop.value;
-    return date ? dayElements.get(toInputText(date, false)) : null;
+    return date ? getDayElement(toInputText(date, false)) : null;
   });
 
   function useFocusTarget(
@@ -790,13 +800,8 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
       if (!button || !day || isHeld.value) {
         return;
       }
-      const key = toInputText(day, false);
-      dayElements.set(key, button);
-      onCleanup(() => {
-        if (dayElements.get(key) === button) {
-          dayElements.delete(key);
-        }
-      });
+      dayElements.set(button, toInputText(day, false));
+      onCleanup(() => dayElements.delete(button));
       if (register) {
         onCleanup(register(button, day));
       }
@@ -806,7 +811,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
   // The element of a day that the page shows now exists after the next flush.
   function focusDayElement(date: Temporal.PlainDate) {
     void nextTick().then(() => {
-      dayElements.get(toInputText(date, false))?.focus();
+      getDayElement(toInputText(date, false))?.focus();
     });
   }
 
@@ -847,10 +852,6 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     return max && compareDates(date, max) > 0 ? max : date;
   }
 
-  function isDayElement(element: Element | null) {
-    return [...dayElements.values()].some((dayElement) => dayElement === element);
-  }
-
   // An element in an `inert` subtree cannot keep the focus. The browser thus moves the focus to
   // `<body>` when the page of the day that has the focus leaves.
   // The root decides after the flush, because a consumer can give the new month in that flush. A
@@ -859,10 +860,10 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
   // had the focus left the grid. Else the focus event would write the tab stop to the consumer in
   // place of the day that the consumer wrote.
   function keepFocusInGrid() {
-    const [someDayElement] = dayElements.values();
+    const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    if (!isDayElement(focused)) {
+    if (getDayKey(focused) === undefined) {
       return;
     }
     void nextTick().then(() => {
@@ -872,7 +873,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
       }
       const stop = tabStop.value;
       const focusedDateHasStop = stop && props.focusedDate && isSameDay(stop, props.focusedDate);
-      if (focusedDateHasStop || !isDayElement(active)) {
+      if (focusedDateHasStop || getDayKey(active) === undefined) {
         focus();
       }
     });
@@ -883,10 +884,10 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
   // had the focus takes it again. When that cell left the grid, the cell that has the tab stop
   // takes the focus.
   watch([calendar, firstDay], () => {
-    const [someDayElement] = dayElements.values();
+    const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    const key = [...dayElements].find(([, element]) => element === focused)?.[0];
+    const key = getDayKey(focused);
     if (key === undefined) {
       return;
     }
@@ -895,7 +896,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
       if (active !== doc.body && active !== null) {
         return;
       }
-      const element = dayElements.get(key);
+      const element = getDayElement(key);
       if (element === undefined) {
         focus();
       } else {

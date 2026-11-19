@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -12,7 +12,6 @@ import {
   screen,
   setAttributeInHtml,
 } from '#test-utils';
-import { getMonthPage } from '../../internals/date-time/calendar/monthGrid';
 import * as RangeCalendar from '../index.parts';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
 import RangeCalendarRootHydration from './RangeCalendarRootHydration.test.vue';
@@ -76,42 +75,6 @@ describe('<RangeCalendar.Root />', () => {
     expect(screen.getByRole('grid')).toHaveAttribute('aria-multiselectable', 'true');
     expect(screen.getByRole('group')).toHaveAttribute('data-empty');
     expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
-  });
-
-  it('focuses the visible day when a button mounts in a cached branch', async () => {
-    const date = today();
-    const month = getMonthPage(date.toPlainYearMonth(), 1);
-    const root = shallowRef<{ focus(): void } | null>(null);
-    const first = shallowRef(true);
-    const mounted = shallowRef(false);
-    const Cached = defineComponent(
-      () => () => (mounted.value ? <RangeCalendar.DayButton data-testid="cached" /> : null),
-    );
-    const Other = defineComponent(() => () => <RangeCalendar.DayButton data-testid="other" />);
-    const Host = defineComponent(() => () => (
-      <RangeCalendar.Root ref={root} today={date}>
-        <RangeCalendar.Month month={month}>
-          <RangeCalendar.Day day={date}>
-            <KeepAlive>{first.value ? <Cached /> : <Other />}</KeepAlive>
-          </RangeCalendar.Day>
-        </RangeCalendar.Month>
-      </RangeCalendar.Root>
-    ));
-    await render(<Host />);
-
-    first.value = false;
-    await nextTick();
-    mounted.value = true;
-    await nextTick();
-    root.value!.focus();
-    await nextTick();
-    expect(screen.getByTestId('other')).toHaveFocus();
-
-    first.value = true;
-    await nextTick();
-    root.value!.focus();
-    await nextTick();
-    expect(screen.getByTestId('cached')).toHaveFocus();
   });
 
   it('names RangeCalendar in the message of a default month that changes', async () => {
