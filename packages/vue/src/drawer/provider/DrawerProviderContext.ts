@@ -5,7 +5,8 @@ export interface DrawerProviderContext {
   setDrawerOpen: (drawer: object, open: boolean) => void;
   removeDrawer: (drawer: object) => void;
   active: Readonly<Ref<boolean>>;
-  visualStateStore: DrawerVisualStateStore;
+  readonly visualState: Readonly<DrawerVisualState>;
+  setVisualState: (state: Partial<DrawerVisualState>, owner?: object) => void;
 }
 
 export const DrawerProviderContext: InjectionKey<DrawerProviderContext> = Symbol();
@@ -13,11 +14,6 @@ export const DrawerProviderContext: InjectionKey<DrawerProviderContext> = Symbol
 export interface DrawerVisualState {
   swipeProgress: number;
   frontmostHeight: number;
-}
-
-export interface DrawerVisualStateStore {
-  state: Readonly<DrawerVisualState>;
-  set: (state: Partial<DrawerVisualState>, owner?: object) => void;
 }
 
 export function useDrawerProviderContext(): DrawerProviderContext | undefined {

@@ -300,6 +300,7 @@ const {
   frontmostHeight,
   snapToSequentialPoints,
   viewportGesture,
+  setViewportGesture,
   openingSwipe,
 } = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
@@ -318,7 +319,6 @@ const mounted = computed(() => store.select('mounted'));
 const nested = computed(() => store.select('nested'));
 const nestedDrawerOpen = computed(() => store.select('nestedOpenDrawerCount') > 0);
 
-const visualStateStore = providerContext?.visualStateStore;
 const scrollAxis = computed<ScrollAxis>(() =>
   swipeDirection.value === 'left' || swipeDirection.value === 'right' ? 'horizontal' : 'vertical',
 );
@@ -442,7 +442,7 @@ function applySwipeProgress(
     DrawerBackdropCssVars.swipeProgress,
     String(swipeProgress),
   );
-  visualStateStore?.set(
+  providerContext?.setVisualState(
     {
       swipeProgress,
       frontmostHeight: swipeProgress > 0 ? frontmostHeight.value : 0,
@@ -1225,16 +1225,16 @@ watch(
     if (!viewport || held) {
       return;
     }
-    viewportGesture.value = gesture;
+    setViewportGesture(gesture);
     applyRestingSnapPointProgress();
     onCleanup(() => {
       if (viewportGesture.value === gesture) {
         swipe.reset();
-        viewportGesture.value = undefined;
+        setViewportGesture(undefined);
         notifyParentSwipeProgressChange?.(0);
         finishNestedSwipe();
       }
-      visualStateStore?.set({ swipeProgress: 0, frontmostHeight: 0 }, gesture);
+      providerContext?.setVisualState({ swipeProgress: 0, frontmostHeight: 0 }, gesture);
       backdropProgress = 0;
       backdropHeight.value = 0;
       clearSwipeRelease();

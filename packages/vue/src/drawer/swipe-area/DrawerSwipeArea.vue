@@ -133,11 +133,11 @@ const {
   swipeDirection: rootSwipeDirection,
   frontmostHeight,
   openingSwipe,
+  setOpeningSwipe,
 } = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
 
 const swipeActive = shallowRef(false);
-const swipeAreaElement = shallowRef<HTMLElement | null>(null);
 
 let swipeStartEvent: PointerEvent | TouchEvent | null = null;
 let openedBySwipe = false;
@@ -168,7 +168,7 @@ function disableDismissForSwipe() {
 }
 
 function enableDismissAfterRelease() {
-  releaseDocument.value = ownerDocument(swipeAreaElement.value);
+  releaseDocument.value = ownerDocument(element.value);
 }
 
 watch(
@@ -286,7 +286,7 @@ function applySwipeMovement() {
   sample.movementY = movementY;
   sample.progress = backdropProgress;
   sample.height.value = height;
-  openingSwipe.value = sample;
+  setOpeningSwipe(sample);
   // Bound styles on the popup and backdrop added more than 10% to frame work.
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementX, `${movementX}px`);
   popupElement.style.setProperty(DrawerPopupCssVars.swipeMovementY, `${movementY}px`);
@@ -294,16 +294,13 @@ function applySwipeMovement() {
     DrawerBackdropCssVars.swipeProgress,
     String(backdropProgress),
   );
-  providerContext?.visualStateStore.set(
-    { swipeProgress: openProgress, frontmostHeight: height },
-    sample,
-  );
+  providerContext?.setVisualState({ swipeProgress: openProgress, frontmostHeight: height }, sample);
 }
 
 function clearSwipeStyles() {
   if (openingSwipe.value === sample) {
-    openingSwipe.value = null;
-    providerContext?.visualStateStore.set({ swipeProgress: 0, frontmostHeight: 0 }, sample);
+    setOpeningSwipe(null);
+    providerContext?.setVisualState({ swipeProgress: 0, frontmostHeight: 0 }, sample);
   }
 }
 
@@ -322,12 +319,12 @@ watch(
 function openDrawer(event?: PointerEvent | TouchEvent) {
   openedBySwipe = true;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A swipe on the swipe area calls this function, so the element is set.
-  setOpen(true, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
+  setOpen(true, createChangeEventDetails(REASONS.swipe, event, element.value!));
 }
 
 function closeDrawer(event?: PointerEvent | TouchEvent) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A swipe on the swipe area calls this function, so the element is set.
-  setOpen(false, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
+  setOpen(false, createChangeEventDetails(REASONS.swipe, event, element.value!));
 }
 
 function resetSwipeInteractionState() {
@@ -347,7 +344,7 @@ function finishSwipeInteraction() {
 const swipe = useSwipeDismiss({
   enabled,
   directions: () => [resolvedSwipeDirection.value],
-  elementRef: swipeAreaElement,
+  elementRef: (): HTMLElement | null => element.value,
   trackDrag: false,
   movementCssVars: {
     x: DrawerPopupCssVars.swipeMovementX,
@@ -484,12 +481,7 @@ const state = computed<DrawerSwipeAreaState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [
-    registerTrigger,
-    (swipeArea: HTMLElement | null) => {
-      swipeAreaElement.value = swipeArea;
-    },
-  ],
+  ref: registerTrigger,
   stateAttributesMapping,
   props: (attrs) => [
     {

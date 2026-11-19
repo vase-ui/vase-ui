@@ -68,7 +68,7 @@ describe('<Drawer.Indent />', () => {
     ));
     const indent = screen.getByTestId('indent');
 
-    context.visualStateStore.set({ swipeProgress: 0.5, frontmostHeight: 120 });
+    context.setVisualState({ swipeProgress: 0.5, frontmostHeight: 120 });
     expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
 
     open.value = true;

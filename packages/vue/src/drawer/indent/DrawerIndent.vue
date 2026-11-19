@@ -43,17 +43,16 @@ defineSlots<{
 }>();
 
 const providerContext = useDrawerProviderContext();
-const visualStateStore = providerContext?.visualStateStore;
 
 const state = computed<DrawerIndentState>(() => ({
   active: providerContext?.active.value ?? false,
 }));
 
 function swipeProgress() {
-  return Math.max(0, visualStateStore ? toRaw(visualStateStore.state).swipeProgress : 0);
+  return Math.max(0, toRaw(providerContext)?.visualState.swipeProgress ?? 0);
 }
 
-const height = computed(() => visualStateStore?.state.frontmostHeight ?? 0);
+const height = computed(() => providerContext?.visualState.frontmostHeight ?? 0);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
@@ -71,7 +70,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
 
 // A bound progress value on the indent added more than 10% to frame work.
 watch(
-  () => visualStateStore?.state.swipeProgress,
+  () => providerContext?.visualState.swipeProgress,
   () => {
     element.value?.style.setProperty(DrawerBackdropCssVars.swipeProgress, String(swipeProgress()));
   },
@@ -81,7 +80,7 @@ watch(
 watch(
   element,
   (indent, _, onCleanup) => {
-    if (indent && visualStateStore) {
+    if (indent && providerContext) {
       onCleanup(() => {
         // Vue has no further patch for the retired element.
         indent.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');

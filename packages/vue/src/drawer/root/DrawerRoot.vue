@@ -4,7 +4,6 @@ import { REASONS } from '../../internals/reasons';
 import type { DrawerHandle } from '../handle';
 import type {
   DrawerOpeningSwipe,
-  DrawerNestedSwipeProgressStore,
   DrawerSnapPoint,
   DrawerSwipeDirection,
 } from './DrawerRootContext';
@@ -114,40 +113,18 @@ export type DrawerRootSnapPointChangeEventReason = DrawerRootChangeEventReason;
 
 export type DrawerRootSnapPointChangeEventDetails =
   VaseUIChangeEventDetails<DrawerRootSnapPointChangeEventReason>;
-
-interface NestedSwipeProgressStore extends DrawerNestedSwipeProgressStore {
-  set: (progress: number) => void;
-}
-
-function createNestedSwipeProgressStore(): NestedSwipeProgressStore {
-  let progress = 0;
-  const listeners = new Set<() => void>();
-
-  return {
-    getSnapshot: () => progress,
-    set(nextProgress) {
-      const resolved = Number.isFinite(nextProgress) ? nextProgress : 0;
-      if (resolved === progress) {
-        return;
-      }
-
-      progress = resolved;
-      listeners.forEach((listener) => {
-        listener();
-      });
-    },
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowReactive,
+  shallowRef,
+  watch,
+} from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
@@ -224,9 +201,7 @@ const notifyParentHasNestedDrawer = parentDrawerRootContext?.onNestedDrawerPrese
 
 const popupHeight = shallowRef(0);
 const frontmostHeight = shallowRef(0);
-const hasNestedDrawer = shallowRef(false);
-const nestedSwiping = shallowRef(false);
-const nestedSwipeProgressStore = createNestedSwipeProgressStore();
+const nestedDrawer = shallowReactive({ present: false, swiping: false, swipeProgress: 0 });
 
 const resolvedDefaultSnapPoint = computed(() =>
   props.defaultSnapPoint !== undefined ? props.defaultSnapPoint : (props.snapPoints?.[0] ?? null),
@@ -300,16 +275,16 @@ function onNestedFrontmostHeightChange(height: number) {
 }
 
 function onNestedDrawerPresenceChange(present: boolean) {
-  hasNestedDrawer.value = present;
+  nestedDrawer.present = present;
 }
 
 function onNestedSwipeProgressChange(progress: number) {
-  nestedSwipeProgressStore.set(progress);
+  nestedDrawer.swipeProgress = Number.isFinite(progress) ? progress : 0;
   notifyParentSwipeProgressChange?.(progress);
 }
 
 function onNestedSwipingChange(swiping: boolean) {
-  nestedSwiping.value = swiping;
+  nestedDrawer.swiping = swiping;
   notifyParentSwipingChange?.(swiping);
 }
 
@@ -357,15 +332,19 @@ provide(DrawerRootContext, {
   swipeDirection: computed(() => props.swipeDirection),
   openingSwipe,
   viewportGesture,
+  setViewportGesture(gesture) {
+    viewportGesture.value = gesture;
+  },
+  setOpeningSwipe(sample) {
+    openingSwipe.value = sample;
+  },
   snapToSequentialPoints: computed(() => props.snapToSequentialPoints),
   snapPoints: computed(() => props.snapPoints),
   activeSnapPoint: resolvedActiveSnapPoint,
   setActiveSnapPoint,
   frontmostHeight,
   popupHeight,
-  hasNestedDrawer,
-  nestedSwiping,
-  nestedSwipeProgressStore,
+  nestedDrawer,
   onNestedDrawerPresenceChange,
   onPopupHeightChange,
   onNestedFrontmostHeightChange,
@@ -380,28 +359,16 @@ provide(DrawerRootContext, {
 const providerContext = useDrawerProviderContext();
 const isOpen = computed(() => store.select('open'));
 
-// `KeepAlive` takes the popup of a deactivated drawer out of the document. The provider must then
-// not count the drawer, and the drawer must not handle the back gesture.
 const { isHeld } = useKeepAliveState();
 
-let hasReported = false;
-
-function reportToProvider() {
-  if (providerContext) {
-    hasReported = true;
-    providerContext.setDrawerOpen(store, isOpen.value && !isHeld.value);
-  }
-}
-
-onMounted(reportToProvider);
-watch([isOpen, isHeld], reportToProvider);
-onScopeDispose(() => {
-  if (hasReported) {
-    providerContext?.removeDrawer(store);
-  }
-});
-
 onMounted(() => {
+  if (providerContext) {
+    watch([isOpen, isHeld], ([open, held]) => providerContext.setDrawerOpen(store, open && !held), {
+      immediate: true,
+    });
+    onScopeDispose(() => providerContext.removeDrawer(store));
+  }
+
   watch(
     [
       isOpen,

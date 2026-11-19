@@ -1,6 +1,6 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, onMounted, onScopeDispose, provide, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, onMounted, provide, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -585,23 +585,20 @@ const SnapPointContextControls = defineComponent({
 
 const NestedSwipeProgressProbe = defineComponent({
   setup() {
-    const { nestedSwipeProgressStore } = useDrawerRootContext();
-    const progress = shallowRef(nestedSwipeProgressStore.getSnapshot());
-    onScopeDispose(
-      nestedSwipeProgressStore.subscribe(() => {
-        progress.value = nestedSwipeProgressStore.getSnapshot();
-      }),
-    );
-
-    return () => <output data-testid="nested-swipe-progress">{progress.value}</output>;
+    const { nestedDrawer } = useDrawerRootContext();
+    return () => <output data-testid="nested-swipe-progress">{nestedDrawer.swipeProgress}</output>;
   },
 });
 
 const NestedSwipeProgressSubscriber = defineComponent({
   props: { onChange: { type: Function as PropType<() => void>, required: true } },
   setup(props) {
-    const { nestedSwipeProgressStore } = useDrawerRootContext();
-    onScopeDispose(nestedSwipeProgressStore.subscribe(() => props.onChange()));
+    const { nestedDrawer } = useDrawerRootContext();
+    watch(
+      () => nestedDrawer.swipeProgress,
+      () => props.onChange(),
+      { flush: 'sync' },
+    );
     return () => null;
   },
 });
@@ -654,10 +651,8 @@ function createProvider() {
     setDrawerOpen: (drawer, open) => calls.push(`${name(drawer)} ${open}`),
     removeDrawer: (drawer) => calls.push(`${name(drawer)} removed`),
     active: shallowRef(false),
-    visualStateStore: {
-      state: { swipeProgress: 0, frontmostHeight: 0 },
-      set: () => {},
-    },
+    visualState: { swipeProgress: 0, frontmostHeight: 0 },
+    setVisualState: () => {},
   };
   const Provider = defineComponent({
     setup(_, { slots }) {
@@ -2347,16 +2342,16 @@ describe('<Drawer.Root />', () => {
       expect(top.notifyParentSwipingChange).toBe(undefined);
 
       bottom.notifyParentHasNestedDrawer?.(true);
-      expect(middle.hasNestedDrawer.value).toBe(true);
-      expect(top.hasNestedDrawer.value).toBe(false);
+      expect(middle.nestedDrawer.present).toBe(true);
+      expect(top.nestedDrawer.present).toBe(false);
 
       bottom.notifyParentSwipingChange?.(true);
-      expect(middle.nestedSwiping.value).toBe(true);
-      expect(top.nestedSwiping.value).toBe(true);
+      expect(middle.nestedDrawer.swiping).toBe(true);
+      expect(top.nestedDrawer.swiping).toBe(true);
 
       bottom.notifyParentSwipeProgressChange?.(0.25);
-      expect(middle.nestedSwipeProgressStore.getSnapshot()).toBe(0.25);
-      expect(top.nestedSwipeProgressStore.getSnapshot()).toBe(0.25);
+      expect(middle.nestedDrawer.swipeProgress).toBe(0.25);
+      expect(top.nestedDrawer.swipeProgress).toBe(0.25);
     });
   });
 

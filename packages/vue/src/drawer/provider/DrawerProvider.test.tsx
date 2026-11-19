@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, watchSyncEffect } from 'vue';
 import { createRenderer, hydrate, renderOnServer, screen, within } from '#test-utils';
 import * as Drawer from '../index.parts';
 import { useDrawerProviderContext } from './DrawerProviderContext';
@@ -22,21 +22,19 @@ const ProviderControls = defineComponent({
           <button onClick={() => context.removeDrawer(manualDrawer)}>Remove registered</button>
           <button onClick={() => context.removeDrawer(missingDrawer)}>Remove missing</button>
           <button
-            onClick={() =>
-              context.visualStateStore.set({ swipeProgress: 0.5, frontmostHeight: 120 })
-            }
+            onClick={() => context.setVisualState({ swipeProgress: 0.5, frontmostHeight: 120 })}
           >
             Set visual state
           </button>
-          <button onClick={() => context.visualStateStore.set({ swipeProgress: 0 })}>
+          <button onClick={() => context.setVisualState({ swipeProgress: 0 })}>
             Clear progress
           </button>
-          <button onClick={() => context.visualStateStore.set({ frontmostHeight: 0 })}>
+          <button onClick={() => context.setVisualState({ frontmostHeight: 0 })}>
             Clear height
           </button>
           <button
             onClick={() =>
-              context.visualStateStore.set({ swipeProgress: Number.NaN, frontmostHeight: Infinity })
+              context.setVisualState({ swipeProgress: Number.NaN, frontmostHeight: Infinity })
             }
           >
             Set invalid visual state
@@ -118,6 +116,43 @@ describe('<Drawer.Provider />', () => {
     await user.click(screen.getByRole('button', { name: 'Remove registered' }));
     await user.click(screen.getByRole('button', { name: 'Remove registered' }));
     expect(background).toHaveAttribute('data-inactive', '');
+  });
+
+  it('publishes height and progress together and transfers equal samples to the next drawer', async () => {
+    const samples: number[][] = [];
+    let provider!: NonNullable<ReturnType<typeof useDrawerProviderContext>>;
+    const Probe = defineComponent({
+      setup() {
+        provider = useDrawerProviderContext()!;
+        watchSyncEffect(() => {
+          const { swipeProgress, frontmostHeight } = provider.visualState;
+          samples.push([swipeProgress, frontmostHeight]);
+        });
+        return () => null;
+      },
+    });
+    await render(
+      <Drawer.Provider>
+        <Probe />
+      </Drawer.Provider>,
+    );
+    const first = {};
+    const next = {};
+    const sample = { swipeProgress: 0.5, frontmostHeight: 120 };
+    const rest = { swipeProgress: 0, frontmostHeight: 0 };
+    provider.setVisualState(sample, first);
+    provider.setVisualState(sample, next);
+    provider.setVisualState(rest, first);
+    expect(samples).toEqual([
+      [0, 0],
+      [0.5, 120],
+    ]);
+    provider.setVisualState(rest, next);
+    expect(samples).toEqual([
+      [0, 0],
+      [0.5, 120],
+      [0, 0],
+    ]);
   });
 
   it('synchronizes and restores visual state on Drawer.Indent', async () => {

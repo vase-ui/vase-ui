@@ -158,7 +158,7 @@ type DragStyles = Record<string, string | undefined>;
 
 <script setup lang="ts">
 import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
-import { computed, onMounted, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, toRaw, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import { error } from '../../common/error';
@@ -197,9 +197,7 @@ const popupRef = store.context.popupRef;
 const {
   swipeDirection,
   frontmostHeight,
-  hasNestedDrawer,
-  nestedSwiping,
-  nestedSwipeProgressStore,
+  nestedDrawer,
   onPopupHeightChange,
   notifyParentFrontmostHeight,
   notifyParentHasNestedDrawer,
@@ -211,9 +209,6 @@ const mounted = computed(() => store.select('mounted'));
 const modal = computed(() => store.select('modal'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
 const nestedOpenDrawerCount = computed(() => store.select('nestedOpenDrawerCount'));
-// As in `Dialog.Popup`, the focus manager stops when the popup closes, not when it unmounts
-// (BUG-5519).
-const focusManagerDisabled = computed(() => !open.value);
 
 const swipe = useDrawerViewportContext();
 useDialogPortalContext();
@@ -256,7 +251,7 @@ function measureHeight() {
     return;
   }
 
-  const keepHeightWhileNested = popupHeight.value > 0 && hasNestedDrawer.value;
+  const keepHeightWhileNested = popupHeight.value > 0 && nestedDrawer.present;
   if (keepHeightWhileNested) {
     onPopupHeightChange(popupHeight.value);
     return;
@@ -308,7 +303,7 @@ const state = computed<DrawerPopupState>(() => ({
   transitionStatus: transitionStatus.value,
   expanded: activeSnapPoint.value === 1,
   nestedDrawerOpen: nestedDrawerOpen.value,
-  nestedDrawerSwiping: nestedSwiping.value,
+  nestedDrawerSwiping: nestedDrawer.swiping,
   swipeDirection: swipeDirection.value,
   swiping: swiping.value || openingSwipe.value !== null,
 }));
@@ -351,7 +346,7 @@ function popupStyle(): CSSProperties {
   const opening = openingSwipe.value;
 
   let popupHeightCssVarValue: string | undefined;
-  const shouldUseAutoHeight = !hasNestedDrawer.value && transitionStatus.value !== 'ending';
+  const shouldUseAutoHeight = !nestedDrawer.present && transitionStatus.value !== 'ending';
   if (popupHeight.value && !shouldUseAutoHeight) {
     popupHeightCssVarValue = `${popupHeight.value}px`;
   }
@@ -370,7 +365,7 @@ function popupStyle(): CSSProperties {
       [DrawerPopupCssVars.swipeMovementX]: `${opening.movementX}px`,
       [DrawerPopupCssVars.swipeMovementY]: `${opening.movementY}px`,
     }),
-    [DrawerBackdropCssVars.swipeProgress]: Math.max(0, nestedSwipeProgressStore.getSnapshot()),
+    [DrawerBackdropCssVars.swipeProgress]: Math.max(0, toRaw(nestedDrawer).swipeProgress),
     [DrawerPopupCssVars.nestedDrawers]: nestedOpenDrawerCount.value,
     [DrawerPopupCssVars.height]: popupHeightCssVarValue,
     [DrawerPopupCssVars.snapPointOffset]:
@@ -484,19 +479,14 @@ watch(
       return;
     }
 
-    const syncNestedSwipeProgress = () => {
-      const progress = nestedSwipeProgressStore.getSnapshot();
-      popup.style.setProperty(
-        DrawerBackdropCssVars.swipeProgress,
-        progress > 0 ? `${progress}` : '0',
-      );
-    };
-
-    syncNestedSwipeProgress();
-    const unsubscribe = nestedSwipeProgressStore.subscribe(syncNestedSwipeProgress);
-
+    const stop = watch(
+      () => nestedDrawer.swipeProgress,
+      (progress) =>
+        popup.style.setProperty(DrawerBackdropCssVars.swipeProgress, String(Math.max(0, progress))),
+      { immediate: true, flush: 'sync' },
+    );
     onCleanup(() => {
-      unsubscribe();
+      stop();
       popup.style.setProperty(DrawerBackdropCssVars.swipeProgress, '0');
     });
   },
@@ -513,7 +503,7 @@ const focusBindings = usePopupFocus(
   () => ({
     store,
     openInteractionType: store.select('openMethod'),
-    disabled: focusManagerDisabled.value,
+    disabled: !open.value,
     closeOnFocusOut: !store.select('disablePointerDismissal'),
     initialFocus: resolvedInitialFocus.value,
     returnFocus: props.finalFocus,

@@ -126,10 +126,8 @@ describe('<Drawer.Root /> on a server', () => {
           setDrawerOpen,
           removeDrawer,
           active: shallowRef(false),
-          visualStateStore: {
-            state: { swipeProgress: 0, frontmostHeight: 0 },
-            set: () => {},
-          },
+          visualState: { swipeProgress: 0, frontmostHeight: 0 },
+          setVisualState: () => {},
         });
         return () => slots.default?.();
       },
