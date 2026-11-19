@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
+import { ownerWindow } from '../../common/owner';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { NumberFieldRootState } from '../root/NumberFieldRoot.vue';
 
@@ -26,14 +27,45 @@ export interface NumberFieldScrubAreaProps
    */
   teleportDistance?: number | undefined;
 }
+
+export function getViewportRect(teleportDistance: number | undefined, scrubAreaEl: HTMLElement) {
+  const win = ownerWindow(scrubAreaEl);
+
+  if (teleportDistance != null) {
+    const rect = scrubAreaEl.getBoundingClientRect();
+    return {
+      left: rect.left - teleportDistance / 2,
+      top: rect.top - teleportDistance / 2,
+      right: rect.right + teleportDistance / 2,
+      bottom: rect.bottom + teleportDistance / 2,
+    };
+  }
+
+  const viewport = win.visualViewport;
+
+  if (viewport) {
+    return {
+      left: viewport.offsetLeft,
+      top: viewport.offsetTop,
+      right: viewport.offsetLeft + viewport.width,
+      bottom: viewport.offsetTop + viewport.height,
+    };
+  }
+
+  return {
+    left: 0,
+    top: 0,
+    right: win.document.documentElement.clientWidth,
+    bottom: win.document.documentElement.clientHeight,
+  };
+}
 </script>
 
 <script setup lang="ts">
 import { nextTick, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
-import { mergeCleanups } from '../../common/mergeCleanups';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -42,11 +74,12 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
-import { getViewportRect } from '../utils/getViewportRect';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
-import type { ScrubCursor } from './NumberFieldScrubAreaContext';
-import { NumberFieldScrubAreaContext } from './NumberFieldScrubAreaContext';
+import {
+  useNumberFieldRootContext,
+  stateAttributesMapping,
+  NumberFieldScrubAreaContext,
+} from '../root/NumberFieldRootContext';
+import type { ScrubCursor } from '../root/NumberFieldRootContext';
 
 const SCRUB_AREA_STYLE: CSSProperties = {
   'touch-action': 'none',
@@ -69,23 +102,26 @@ defineSlots<{
 
 const {
   state,
+  disabled: rootDisabled,
+  options,
   setIsScrubbing: setRootScrubbing,
   inputRef,
   focusInput,
   incrementValue,
-  allowInputSyncRef,
+  setEditing,
   getStepAmount,
   onValueCommitted,
-  lastChangedValueRef,
-  valueRef,
+  getStepCommitValue,
 } = useNumberFieldRootContext();
 
 let didMove = false;
 let pointerDownTarget: EventTarget | null = null;
 let nativeClickReceived = false;
-let virtualCursorCoords = { x: 0, y: 0 };
+let pointerX = 0;
+let pointerY = 0;
+let activePress: PointerEvent | null = null;
 
-const cursor = shallowRef<ScrubCursor | null>(null);
+let cursor: ScrubCursor | null = null;
 
 const exitPointerLockTimeout = useTimeout();
 const syntheticClickTimeout = useTimeout();
@@ -94,115 +130,43 @@ const isTouchInput = shallowRef(false);
 const isPointerLockDenied = shallowRef(false);
 const isScrubbing = shallowRef(false);
 
-// A fixed element has the viewport as its containing block, unless an ancestor has a transform, a
-// filter, containment or a similar property. The host of a shadow root can be below such an
-// ancestor. A fixed box at `0, 0` shows the place and the scale of that block in the viewport.
-// `all: initial` keeps the styles of the page off the box.
-function readContainingBlock(virtualCursor: HTMLSpanElement) {
-  const probe = ownerDocument(virtualCursor).createElement('div');
-  probe.style.cssText = 'all:initial;position:fixed;top:0;left:0;width:100px;height:100px';
-  virtualCursor.before(probe);
-  const rect = probe.getBoundingClientRect();
-  probe.remove();
-  return { left: rect.left, top: rect.top, scaleX: rect.width / 100, scaleY: rect.height / 100 };
-}
-
-function updateCursorTransform(target: ScrubCursor, x: number, y: number) {
-  const virtualCursor = target.element;
-  // Invert the visual viewport scale so the cursor matches the OS cursor, which doesn't
-  // scale with the content on pinch-zoom.
-  const scale = ownerWindow(virtualCursor).visualViewport?.scale ?? 1;
-  // `x` and `y` are in the viewport. A block with a scale changes the size of the cursor, so the
-  // center of the cursor converts to the block, not its corner. The block can move during a scrub,
-  // for example when the page scrolls, so each placement reads it again.
-  const halfWidth = virtualCursor.offsetWidth / 2;
-  const halfHeight = virtualCursor.offsetHeight / 2;
-  const { left, top, scaleX, scaleY } = readContainingBlock(virtualCursor);
-  const blockX = (x + halfWidth - left) / scaleX - halfWidth;
-  const blockY = (y + halfHeight - top) / scaleY - halfHeight;
-  target.setTransform(`translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`);
-}
-
 function onScrub({ movementX, movementY }: PointerEvent) {
-  const target = cursor.value;
-  const scrubAreaEl = element.value;
+  pointerX = Math.round(pointerX + movementX);
+  pointerY = Math.round(pointerY + movementY);
+  const area = element.value;
+  if (!cursor || !area) return;
 
-  if (!target || !scrubAreaEl) {
-    return;
-  }
-
-  const virtualCursor = target.element;
-  const rect = getViewportRect(props.teleportDistance, scrubAreaEl);
-
-  const coords = virtualCursorCoords;
-
-  // Wrap the cursor to the opposite edge when its center crosses a viewport bound.
-  const wrap = (coord: number, halfSize: number, low: number, high: number) => {
-    if (coord + halfSize < low) {
-      return high - halfSize;
-    }
-    if (coord + halfSize > high) {
-      return low - halfSize;
-    }
-    return coord;
+  const rect = getViewportRect(props.teleportDistance, area);
+  const wrap = (position: number, low: number, high: number) => {
+    if (position < low) return high;
+    if (position > high) return low;
+    return position;
   };
-
-  const newCoords = {
-    x: wrap(Math.round(coords.x + movementX), virtualCursor.offsetWidth / 2, rect.left, rect.right),
-    y: wrap(
-      Math.round(coords.y + movementY),
-      virtualCursor.offsetHeight / 2,
-      rect.top,
-      rect.bottom,
-    ),
-  };
-
-  virtualCursorCoords = newCoords;
-
-  updateCursorTransform(target, newCoords.x, newCoords.y);
+  pointerX = wrap(pointerX, rect.left, rect.right);
+  pointerY = wrap(pointerY, rect.top, rect.bottom);
+  cursor.place(pointerX, pointerY);
 }
 
-async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: PointerEvent) {
-  isScrubbing.value = scrubbingValue;
-  setRootScrubbing(scrubbingValue);
-
-  if (!scrubbingValue) {
-    return;
-  }
-
-  // The cursor mounts in the flush of the write above.
-  await nextTick();
-
-  const target = cursor.value;
-  if (!target) {
-    return;
-  }
-
-  const virtualCursor = target.element;
-  const initialCoords = {
-    x: clientX - virtualCursor.offsetWidth / 2,
-    y: clientY - virtualCursor.offsetHeight / 2,
-  };
-
-  virtualCursorCoords = initialCoords;
-
-  updateCursorTransform(target, initialCoords.x, initialCoords.y);
+function setScrubbing(value: boolean) {
+  if (!value) activePress = null;
+  isScrubbing.value = value;
+  setRootScrubbing(value);
 }
 
-// React runs the effect of a change from a discrete event before the next event. A `pointermove`
-// that comes in the task of the `pointerdown` then reaches the listener. Only a sync watcher
-// attaches the listener in time for it.
+// A move or release can follow the press in the same task.
+// A value change must not cancel the delayed release in Firefox.
 watch(
   [
     isScrubbing,
-    () => state.value.disabled,
-    () => state.value.readOnly,
+    rootDisabled,
+    () => options.readOnly,
     () => props.direction,
     () => props.pixelSensitivity,
   ],
   ([scrubbing, disabled, readOnly], _, onCleanup) => {
-    // Only listen while actively scrubbing; avoids unrelated pointerup events committing.
-    if (!inputRef.value || disabled || readOnly || !scrubbing) {
+    if (!scrubbing) return;
+    if (disabled || readOnly) {
+      cancelScrub();
       return;
     }
 
@@ -215,11 +179,10 @@ watch(
         } catch {
           // Ignore errors.
         } finally {
-          onScrubbingChange(false, event);
-          onValueCommitted(
-            lastChangedValueRef.value ?? valueRef.value,
-            createGenericEventDetails(REASONS.scrub, event),
-          );
+          setScrubbing(false);
+          if (inputRef.value) {
+            onValueCommitted(getStepCommitValue(), createGenericEventDetails(REASONS.scrub, event));
+          }
 
           // Dispatch a click if no movement happened. While the pointer is locked, the
           // browser targets its click at the lock element instead of the scrub area.
@@ -262,6 +225,7 @@ watch(
       event.preventDefault();
 
       onScrub(event);
+      if (!inputRef.value) return;
 
       const { movementX, movementY } = event;
 
@@ -275,7 +239,7 @@ watch(
         const rawAmount = dValue * stepAmount;
 
         if (rawAmount !== 0) {
-          allowInputSyncRef.value = true;
+          setEditing(false);
           incrementValue(Math.abs(rawAmount), {
             direction: rawAmount >= 0 ? 1 : -1,
             event,
@@ -285,16 +249,10 @@ watch(
       }
     }
 
-    const win = ownerWindow(inputRef.value);
-    const unsubscribe = mergeCleanups(
-      addEventListener(win, 'pointerup', handleScrubPointerUp, true),
-      addEventListener(win, 'pointermove', handleScrubPointerMove, true),
-    );
-
-    onCleanup(() => {
-      exitPointerLockTimeout.clear();
-      unsubscribe();
-    });
+    const win = ownerWindow(element.value);
+    onCleanup(addEventListener(win, 'pointerup', handleScrubPointerUp, true));
+    onCleanup(addEventListener(win, 'pointermove', handleScrubPointerMove, true));
+    onCleanup(addEventListener(win, 'pointercancel', cancelScrub, true));
   },
   { flush: 'sync' },
 );
@@ -305,8 +263,8 @@ function cancelScrub() {
   if (!isScrubbing.value) {
     return;
   }
-  isScrubbing.value = false;
-  setRootScrubbing(false);
+  exitPointerLockTimeout.clear();
+  setScrubbing(false);
   try {
     ownerDocument(element.value).exitPointerLock();
   } catch {
@@ -353,25 +311,21 @@ async function onPointerdown(event: PointerEvent) {
 
   didMove = false;
   nativeClickReceived = false;
+  exitPointerLockTimeout.clear();
   syntheticClickTimeout.clear();
   pointerDownTarget = getTarget(event);
-  onScrubbingChange(true, event);
+  pointerX = event.clientX;
+  pointerY = event.clientY;
+  activePress = event;
+  setScrubbing(true);
 
   // WebKit causes significant layout shift with the native message, so we can't use it.
   if (!isTouch && !platform.engine.webkit) {
     try {
-      // Avoid non-deterministic errors in testing environments. This error sometimes
-      // appears:
-      // "The root document of this element is not valid for pointer lock."
       await ownerDocument(element.value).body.requestPointerLock();
-      isPointerLockDenied.value = false;
+      if (activePress === event) isPointerLockDenied.value = false;
     } catch {
-      isPointerLockDenied.value = true;
-    } finally {
-      // Place the cursor again for the result of the pointer lock request.
-      if (isScrubbing.value) {
-        onScrubbingChange(true, event);
-      }
+      if (activePress === event) isPointerLockDenied.value = true;
     }
   }
 }
@@ -397,7 +351,17 @@ provide(NumberFieldScrubAreaContext, {
   isScrubbing,
   isTouchInput,
   isPointerLockDenied,
-  cursor,
+  setCursor(element, place) {
+    if (element) {
+      cursor = { element, place };
+      // Vue sets the measurement ref in the same patch as the cursor.
+      void nextTick(() => {
+        if (cursor?.element === element) place(pointerX, pointerY);
+      });
+    } else if (cursor?.place === place) {
+      cursor = null;
+    }
+  },
   scrubAreaElement: element,
 });
 

@@ -19,9 +19,10 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { nextTick } from 'vue';
+import { computed, nextTick, shallowRef, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { useIsHydrated, useValueBeforeHydration } from '../../common/hydration';
+import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import {
@@ -38,8 +39,16 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
+import { useNumberFieldRootContext, stateAttributesMapping } from '../root/NumberFieldRootContext';
 import {
+  BASE_NON_NUMERIC_SYMBOLS,
+  getAllFormatParts,
+  getLocaleDigits,
+  MINUS_SIGNS_WITH_ASCII,
+  PERCENTAGES,
+  PERMILLE,
+  PLUS_SIGNS_WITH_ASCII,
+  SPACE_SEPARATOR_RE,
   ANY_MINUS_DETECT_RE,
   ANY_MINUS_RE,
   ANY_PLUS_DETECT_RE,
@@ -48,9 +57,9 @@ import {
   getNumberLocaleDetails,
   isNumeralChar,
   parseNumber,
+  hasNumberFormatRoundingOptions,
+  removeFloatingPointErrors,
 } from '../utils/parse';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
-import { hasNumberFormatRoundingOptions, removeFloatingPointErrors } from '../utils/validate';
 
 defineOptions({ inheritAttrs: false });
 
@@ -71,33 +80,93 @@ const NAVIGATE_KEYS = new Set([
 ]);
 
 const {
-  allowInputSyncRef,
-  formatOptionsRef,
-  getAllowedNonNumericKeys,
   getStepAmount,
   id,
-  form,
   incrementValue,
-  inputMode,
-  max,
-  min,
   name,
-  nameProp,
   setValue,
   state,
   value: numberValue,
   disabled: isDisabled,
+  options,
   setInputValue,
+  setEditing,
+  prepareStep,
+  registerInput,
   locale,
   inputRef,
   onValueCommitted,
   lastChangedValueRef,
   hasPendingCommitRef,
-  valueRef,
   onInputWheel,
   isWheelScrubEnabled,
   isResetChangePending,
 } = useNumberFieldRootContext();
+
+const isHydrated = useIsHydrated();
+const inputMode = computed<'numeric' | 'decimal' | 'text'>(() => {
+  if (!isHydrated.value || !platform.os.ios) {
+    return 'numeric';
+  }
+  return options.min != null && options.min >= 0 ? 'decimal' : 'text';
+});
+
+const allowedNonNumericKeys = computed(() => {
+  const format = options.format;
+  const parts = getAllFormatParts(locale.value, format);
+
+  const keys = new Set<string>(BASE_NON_NUMERIC_SYMBOLS);
+  const addAll = (chars: readonly string[]) => chars.forEach((char) => keys.add(char));
+
+  // A locale can omit its decimal separator from an integer format.
+  const decimal =
+    parts.find((part) => part.type === 'decimal')?.value ??
+    getNumberLocaleDetails(locale.value, format).decimal;
+  keys.add(decimal);
+
+  // Compact suffixes have no inverse in the number parser.
+  parts.forEach((part) => {
+    if (
+      part.type === 'integer' ||
+      part.type === 'fraction' ||
+      part.type === 'exponentInteger' ||
+      part.type === 'compact'
+    ) {
+      return;
+    }
+    addAll(Array.from(part.value));
+    if (SPACE_SEPARATOR_RE.test(part.value)) {
+      keys.add(' ');
+    }
+  });
+  // Digits follow the locale's numbering system, such as `১২` in bn-BD
+  addAll(getLocaleDigits(locale.value, format));
+
+  const formatStyle = format?.style;
+  const allowPercentSymbols =
+    formatStyle === 'percent' || (formatStyle === 'unit' && format?.unit === 'percent');
+  const allowPermilleSymbols =
+    formatStyle === 'percent' || (formatStyle === 'unit' && format?.unit === 'permille');
+
+  // Tolerate percent/permille variants the formatter doesn't emit but users may type or paste.
+  if (allowPercentSymbols) {
+    addAll(PERCENTAGES);
+  }
+  if (allowPermilleSymbols) {
+    addAll(PERMILLE);
+  }
+
+  addAll(PLUS_SIGNS_WITH_ASCII);
+  if ((options.min ?? Number.MIN_SAFE_INTEGER) < 0 || options.allowOutOfRange) {
+    addAll(MINUS_SIGNS_WITH_ASCII);
+    // Accounting formats show negatives in parentheses, such as `($1.00)`
+    if (format?.currencySign === 'accounting') {
+      addAll(['(', ')']);
+    }
+  }
+
+  return keys;
+});
 
 const { clearErrors } = useFormContext();
 const { validationMode, setTouched, invalid, shouldValidateOnChange, validation } =
@@ -118,7 +187,7 @@ useRegisterFieldControl(
   () => numberValue.value,
   undefined,
   () => !isDisabled.value,
-  nameProp,
+  () => options.name,
 );
 
 const { valueProps, renderValue } = useInputRender();
@@ -145,9 +214,8 @@ useValueChanged(
   },
 );
 
-function handleFocusin() {
-  // Read-only inputs are still focusable; only the value-changing handlers stay gated on it.
-  if (state.value.disabled) {
+function handleFocusin(event: FocusEvent) {
+  if (event.defaultPrevented || state.value.disabled) {
     return;
   }
 
@@ -156,7 +224,7 @@ function handleFocusin() {
 
 function handleFocusout(event: FocusEvent) {
   const { disabled, readOnly, value, inputValue } = state.value;
-  if (disabled) {
+  if (event.defaultPrevented || disabled) {
     return;
   }
 
@@ -167,10 +235,8 @@ function handleFocusout(event: FocusEvent) {
     return;
   }
 
-  const hadManualInput = !allowInputSyncRef.value;
+  const hadManualInput = setEditing(false);
   const hadPendingProgrammaticChange = hasPendingCommitRef.value;
-
-  allowInputSyncRef.value = true;
 
   if (inputValue.trim() === '') {
     const clearDetails = createChangeEventDetails(REASONS.inputClear, event);
@@ -190,7 +256,7 @@ function handleFocusout(event: FocusEvent) {
     return;
   }
 
-  const formatOptions = formatOptionsRef.value;
+  const formatOptions = options.format;
 
   // Without a manual edit, the visible text is purely formatted display, so keep the
   // authoritative numeric value rather than re-parsing it: rounded text discards precision,
@@ -237,32 +303,33 @@ function handleFocusout(event: FocusEvent) {
   }
 
   // Normalize only the displayed text
-  const canonicalText = formatNumber(committedValue, locale.value, formatOptions);
-  if (inputValue !== canonicalText) {
-    setInputValue(canonicalText);
-  }
+  setInputValue(formatNumber(committedValue, locale.value, formatOptions));
 }
 
-// A write to the input while a composition runs stops the composition. The render then waits for
-// `compositionend`.
-function refuseChange(event: Event) {
-  if (!(event as InputEvent).isComposing) {
-    renderValue();
-  }
+// An unrelated patch must preserve the text that the IME is still editing.
+const composingText = shallowRef<string | null>(null);
+const compositionTimeout = useTimeout();
+
+function handleCompositionstart(event: CompositionEvent) {
+  compositionTimeout.clear();
+  composingText.value = (event.currentTarget as HTMLInputElement).value;
 }
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const targetValue = input.value;
+  if (composingText.value !== null || (event as InputEvent).isComposing) {
+    composingText.value = targetValue;
+  }
 
   // A listener of the consumer can prevent the event before this handler runs.
   if (event.defaultPrevented) {
-    refuseChange(event);
+    renderValue();
     return;
   }
 
   if (targetValue.trim() === '') {
-    allowInputSyncRef.value = false;
+    setEditing(true);
     setInputValue(targetValue);
     setValue(null, createChangeEventDetails(REASONS.inputClear, event));
     return;
@@ -271,12 +338,11 @@ function handleInput(event: Event) {
   // Update the input text immediately and only fire onValueChange if the typed value is
   // currently parseable into a number. This preserves good UX for IME
   // composition/partial input while still providing live numeric updates when possible.
-  const allowedNonNumericKeys = getAllowedNonNumericKeys();
   const isValidCharacterString = Array.from(targetValue).every(
     (ch) =>
       isNumeralChar(ch) ||
       ANY_MINUS_DETECT_RE.test(ch) ||
-      allowedNonNumericKeys.has(ch) ||
+      allowedNonNumericKeys.value.has(ch) ||
       // Bidi/format controls are stripped by `parseNumber`; don't let them reject the string
       // (RTL locales insert them around exponent/currency signs, e.g. scientific notation).
       FORMAT_CONTROL_DETECT_RE.test(ch),
@@ -284,12 +350,12 @@ function handleInput(event: Event) {
 
   // A rejected change leaves the synced text in place, so it doesn't count as a manual edit
   if (!isValidCharacterString) {
-    refuseChange(event);
+    renderValue();
     return;
   }
 
-  allowInputSyncRef.value = false;
-  const parsedValue = parseNumber(targetValue, locale.value, formatOptionsRef.value);
+  setEditing(true);
+  const parsedValue = parseNumber(targetValue, locale.value, options.format);
 
   setInputValue(targetValue);
 
@@ -298,12 +364,11 @@ function handleInput(event: Event) {
   }
 }
 
-const compositionTimeout = useTimeout();
-
-// WebKit sends the last `input` event of a composition after `compositionend`, so the render waits
-// for the next task.
+// WebKit sends the final input after compositionend.
 function handleCompositionend() {
-  compositionTimeout.start(0, renderValue);
+  compositionTimeout.start(0, () => {
+    composingText.value = null;
+  });
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -314,20 +379,9 @@ function handleKeydown(event: KeyboardEvent) {
 
   const input = event.currentTarget as HTMLInputElement;
 
-  // Snapshot the dirty state without clearing it: navigation/allowed keys (ArrowLeft, Tab,
-  // Enter, Escape, …) return early without changing the value, so marking the input synced
-  // here would wrongly discard dirty-input authority. Only the value-changing branches below
-  // mark it synced.
-  const hadManualInput = !allowInputSyncRef.value;
+  let isAllowedNonNumericKey = allowedNonNumericKeys.value.has(event.key);
 
-  const allowedNonNumericKeys = getAllowedNonNumericKeys();
-
-  let isAllowedNonNumericKey = allowedNonNumericKeys.has(event.key);
-
-  const { decimal, currency, percentSign } = getNumberLocaleDetails(
-    locale.value,
-    formatOptionsRef.value,
-  );
+  const { decimal, currency, percentSign } = getNumberLocaleDetails(locale.value, options.format);
 
   const selectionStart = input.selectionStart;
   const selectionEnd = input.selectionEnd;
@@ -349,7 +403,7 @@ function handleKeydown(event: KeyboardEvent) {
   signGroups.forEach(([detectRe, globalRe]) => {
     if (
       detectRe.test(event.key) &&
-      Array.from(allowedNonNumericKeys).some((k) => detectRe.test(k))
+      Array.from(allowedNonNumericKeys.value).some((k) => detectRe.test(k))
     ) {
       const existingIndex = inputValue.search(globalRe);
       const isReplacingExisting = existingIndex !== -1 && selectionContainsIndex(existingIndex);
@@ -390,10 +444,10 @@ function handleKeydown(event: KeyboardEvent) {
 
   // Home/End jump to the corresponding bound, but only when that bound is defined.
   let boundaryValue: number | null = null;
-  if (event.key === 'Home' && min.value != null) {
-    boundaryValue = min.value;
-  } else if (event.key === 'End' && max.value != null) {
-    boundaryValue = max.value;
+  if (event.key === 'Home' && options.min != null) {
+    boundaryValue = options.min;
+  } else if (event.key === 'End' && options.max != null) {
+    boundaryValue = options.max;
   }
 
   // Let the browser handle multi-character keys we don't act on (PageUp, Insert, F-keys,
@@ -402,48 +456,31 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  // Step from the authoritative numeric value unless the input has unsaved manual edits.
-  // When the text is already synced, parsing the rounded display would collapse precision,
-  // so pass no `currentValue` and let `incrementValue` fall back to the numeric state
-  // (mirrors the button path).
-  const currentValue = hadManualInput
-    ? parseNumber(inputValue, locale.value, formatOptionsRef.value)
-    : null;
-
-  const amount = getStepAmount(event);
-
   // Prevent insertion of text or caret from moving.
   event.preventDefault();
   event.stopPropagation();
 
-  const commitDetails = createGenericEventDetails(REASONS.keyboard, event);
-
-  let changed = false;
-  if (isStepKey || boundaryValue !== null) {
-    allowInputSyncRef.value = true;
-  }
+  if (!isStepKey && boundaryValue === null) return;
+  let changed;
   if (isStepKey) {
-    // When stepping from the synced numeric state, refresh the commit ref to the current
-    // value so a canceled step can't commit a stale `lastChangedValueRef` left over from an
-    // earlier change (mirrors the button path).
-    if (!hadManualInput) {
-      lastChangedValueRef.value = valueRef.value;
-    }
-
-    changed = incrementValue(amount, {
+    const currentValue = prepareStep()
+      ? parseNumber(inputValue, locale.value, options.format)
+      : null;
+    changed = incrementValue(getStepAmount(event), {
       direction: event.key === 'ArrowUp' ? 1 : -1,
       currentValue,
       event,
       reason: REASONS.keyboard,
     });
-  } else if (boundaryValue !== null) {
+  } else {
+    setEditing(false);
     changed = setValue(boundaryValue, createChangeEventDetails(REASONS.keyboard, event));
   }
 
   // `changed` is only true when `setValue` applied the change, which records the stored
   // (clamped/snapped) value, so commit that rather than the pre-validation input.
   if (changed) {
-    onValueCommitted(lastChangedValueRef.value, commitDetails);
+    onValueCommitted(lastChangedValueRef.value, createGenericEventDetails(REASONS.keyboard, event));
   }
 }
 
@@ -485,10 +522,10 @@ function handlePaste(event: ClipboardEvent) {
   const nextText =
     inputValue.slice(0, selectionStart) + pastedData + inputValue.slice(selectionEnd);
 
-  const parsedValue = parseNumber(nextText, locale.value, formatOptionsRef.value);
+  const parsedValue = parseNumber(nextText, locale.value, options.format);
 
   if (parsedValue !== null) {
-    allowInputSyncRef.value = false;
+    setEditing(true);
     setValue(parsedValue, createChangeEventDetails(REASONS.inputPaste, event));
     setInputValue(nextText);
     // Vue's write of the text puts the caret at the end of the input. The part moves the caret
@@ -500,20 +537,8 @@ function handlePaste(event: ClipboardEvent) {
   }
 }
 
-// A template can mount the input that replaces this input before it unmounts this input. The input
-// then clears the context only when the element is its own.
-let ownInput: HTMLInputElement | null = null;
-function setOwnInput(next: HTMLElement | null) {
-  const input = next as HTMLInputElement | null;
-  if (input !== null || inputRef.value === ownInput) {
-    inputRef.value = input;
-  }
-  ownInput = input;
-}
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
-  ref: setOwnInput,
   props: (attrs) => {
     // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string `off`
     // then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute in each version, and
@@ -524,12 +549,14 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     return [
       {
         id: id.value,
-        form: form.value,
+        form: options.form,
         required: state.value.required ? '' : undefined,
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        ...(writesValue.value ? valueProps(state.value.inputValue) : undefined),
+        ...(writesValue.value
+          ? valueProps(composingText.value ?? state.value.inputValue)
+          : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
@@ -542,6 +569,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onInput: handleInput,
         onKeydown: handleKeydown,
         onPaste: handlePaste,
+        onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         // Vue adds the listener with no `passive` option, so `preventDefault` stops the scroll of
         // the page.
@@ -553,6 +581,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   },
   stateAttributesMapping,
 });
+
+// A replacement input can mount before the old input releases its registration.
+watch(
+  element,
+  (input, _, onCleanup) => {
+    if (input) onCleanup(registerInput(input as HTMLInputElement));
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element });
 </script>

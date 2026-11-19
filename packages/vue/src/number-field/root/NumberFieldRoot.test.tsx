@@ -846,7 +846,7 @@ describe('<NumberField />', () => {
         );
         expect(getText().value).toBe(formattedDefault);
         // The user types text that is not a number.
-        getContext().allowInputSyncRef.value = false;
+        getContext().setEditing(true);
         getContext().setInputValue('12x');
         await flushMicrotasks();
         expect(getText().value).toBe('12x');

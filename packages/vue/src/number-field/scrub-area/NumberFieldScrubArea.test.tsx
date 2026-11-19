@@ -153,6 +153,41 @@ describe('<NumberField.ScrubArea />', () => {
     });
   });
 
+  it.each(['disabled', 'readOnly', 'pointercancel'] as const)(
+    'VUE-53: ends an interrupted scrub on %s without a commit',
+    async (cause) => {
+      const locked = shallowRef(false);
+      const commit = vi.fn();
+      await render(() => (
+        <NumberField.Root
+          defaultValue={0}
+          disabled={cause === 'disabled' && locked.value}
+          readOnly={cause === 'readOnly' && locked.value}
+          onValueCommitted={commit}
+          data-testid="root"
+        >
+          <NumberField.Input />
+          <NumberField.ScrubArea data-testid="area" />
+        </NumberField.Root>
+      ));
+      const area = screen.getByTestId('area');
+      area.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' }));
+      await flushMicrotasks();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-scrubbing');
+
+      if (cause === 'pointercancel') window.dispatchEvent(new PointerEvent('pointercancel'));
+      else locked.value = true;
+      await flushMicrotasks();
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
+      locked.value = false;
+      await flushMicrotasks();
+      window.dispatchEvent(createPointerMoveEvent({ movementX: 4 }));
+      await releasePointer();
+      expect(screen.getByRole('textbox')).toHaveValue('0');
+      expect(commit).not.toHaveBeenCalled();
+    },
+  );
+
   describe('KeepAlive', () => {
     it('VUE-53: ends the scrub with no commit when KeepAlive deactivates the scrub area', async () => {
       const onValueCommitted = vi.fn();
