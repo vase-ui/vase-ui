@@ -277,7 +277,7 @@ A root can be in a panel of another root. Each root keeps its own layout. Where 
 
 ## Edges with no handle
 
-With `dragEdges`, the root renders an edge node at each boundary of two panels that have no handle between them. A drag on the edge node resizes the two panels. `dragEdges` is off by default.
+With `dragEdges`, an enabled root adds hit areas between panels where there is no handle and at least one enabled panel lies on each side. If a control separates the panels by more than the hit area size, each panel edge gets its own hit area. Drag either edge to resize the panels. The middle of the control stays clickable. `dragEdges` is off by default.
 
 An edge works with a pointer only. It has no key, no focus, no ARIA role and no double click. Give a boundary a `Resizable.Handle` where you can. A handle can have a size of 0, because its hit area takes the press.
 

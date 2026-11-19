@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { markChildrenMounted } from '../../internals/useRenderElement';
 import ResizableRootEdge from './ResizableRootEdge.vue';
-import { useResizableRootEdgesContext } from './ResizableRootEdgesContext';
+import { useResizableRootEdgesContext } from './ResizableRootContext';
 
 defineSlots<{
   default?(): unknown;

@@ -1,9 +1,10 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { ComputedRef, CSSProperties, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
+import type { ResizablePanelActions, ResizablePanelState } from '../panel/ResizablePanel.vue';
 import type { Layout, PanelConstraints } from '../utils/layout';
 import type { RootMeasurement } from '../utils/measure';
 import type {
@@ -49,17 +50,8 @@ export interface ResizablePanelRegistration {
   isHeld: Readonly<Ref<boolean>>;
 }
 
-export interface ResizableHandleRegistration {
-  /**
-   * The position of the handle among the panels and the handles of the root.
-   */
-  index: ComputedRef<number>;
-  disabled: () => boolean;
-  /**
-   * Whether `KeepAlive` holds the handle. Such a handle is not at its place.
-   */
-  isHeld: Readonly<Ref<boolean>>;
-}
+export type ResizableRegistration =
+  ResizablePanelRegistration | Pick<ResizablePanelRegistration, 'index' | 'isHeld'>;
 
 /**
  * A handle that moves a panel for a key or a double click.
@@ -71,6 +63,30 @@ export interface ResizableHandleMove {
   pivot: number;
   reason: typeof REASONS.keyboard | 'reset';
   event: KeyboardEvent | MouseEvent;
+}
+
+/**
+ * What `useParentPanel()` gives: the id, the state and the methods of the nearest panel.
+ */
+export interface ResizableParentPanel extends ResizablePanelActions {
+  /**
+   * The panel's layout key. The default panel element uses it as its id.
+   */
+  id: ComputedRef<string>;
+  /**
+   * The state of the panel.
+   */
+  state: ComputedRef<ResizablePanelState>;
+}
+
+export const ResizablePanelContext: InjectionKey<ResizableParentPanel> = Symbol();
+
+/**
+ * Gives the id, the state and the methods of the nearest `Resizable.Panel` above the caller, or
+ * `null` when the caller is not inside a panel. Call it in `setup`.
+ */
+export function useParentPanel(): ResizableParentPanel | null {
+  return inject(ResizablePanelContext, null);
 }
 
 /**
@@ -133,14 +149,9 @@ export interface ResizableRootContext {
    */
   measurement: Readonly<ShallowRef<RootMeasurement | undefined>>;
   /**
-   * Adds a panel to the root until the scope of the caller ends. Call it in `setup`.
+   * Registers a panel or handle until its scope ends.
    */
-  registerPanel: (panel: ResizablePanelRegistration) => void;
-  /**
-   * Adds a handle to the root until the scope of the caller ends. Call it in `setup`. The root
-   * needs the handles to know which boundaries of two panels have none.
-   */
-  registerHandle: (handle: ResizableHandleRegistration) => void;
+  registerPart: (part: ResizableRegistration) => void;
   /**
    * Reads the page again, before a drag, a key or a method. It gives the new measurement, or
    * `undefined` when the root has no room for its panels.
@@ -200,11 +211,78 @@ export interface ResizableRootContext {
 export const ResizableRootContext: InjectionKey<ResizableRootContext> = Symbol();
 
 export function useResizableRootContext(): ResizableRootContext {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(ResizableRootContext, undefined);
   if (context === undefined) {
     throw new Error(
       'Vase UI: A part of Resizable must be inside <Resizable.Root>. Without a root the part has no layout to read and no layout to change. Put the part inside <Resizable.Root>.',
+    );
+  }
+
+  return context;
+}
+
+/**
+ * Gives the orientation and the methods of the nearest `Resizable.Root` above the caller, or `null`
+ * when the caller is not inside a root. A root in a panel of another root is the nearest root for
+ * the parts inside it. Call it in `setup`.
+ */
+export function useParentRoot(): ResizableParentRoot | null {
+  return inject(ResizableRootContext, null)?.actions ?? null;
+}
+
+export interface ResizableHandleContext {
+  /**
+   * The style of the hit area node: the area that takes a press on the handle.
+   */
+  hitAreaStyle: ComputedRef<CSSProperties>;
+  /**
+   * The `ref` setter of the hit area node. The handle registers the node in the registry of the
+   * crossings.
+   */
+  hitAreaRef: (element: unknown) => void;
+}
+
+export const ResizableHandleContext: InjectionKey<ResizableHandleContext> = Symbol();
+
+export function useResizableHandleContext(): ResizableHandleContext {
+  const context = inject(ResizableHandleContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Resizable.Handle> must be inside <Resizable.Handle>. Without the part it has no hit area to render. Mount the `children` component in the element of the `#render` slot of <Resizable.Handle>.',
+    );
+  }
+
+  return context;
+}
+
+export interface EdgeBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface EdgeBoundary {
+  before: ResizablePanelRegistration;
+  areas: readonly EdgeBox[];
+}
+
+export interface ResizableRootEdgesContext {
+  /**
+   * The boundaries of two panels that have no handle between them, with the boxes of their edge
+   * nodes. The list is empty on a server, in the first client render, and in a root with no
+   * `dragEdges`.
+   */
+  edges: Readonly<ShallowRef<readonly EdgeBoundary[]>>;
+}
+
+export const ResizableRootEdgesContext: InjectionKey<ResizableRootEdgesContext> = Symbol();
+
+export function useResizableRootEdgesContext(): ResizableRootEdgesContext {
+  const context = inject(ResizableRootEdgesContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Resizable.Root> must be inside <Resizable.Root>. Without the part it has no edges to render. Mount the `children` component in the element of the `#render` slot of <Resizable.Root>.',
     );
   }
 

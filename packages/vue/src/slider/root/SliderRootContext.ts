@@ -1,17 +1,15 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
-import type {
-  CompositeListContextValue,
-  CompositeMetadata,
-} from '../../internals/composite/list/useCompositeList';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type { UseFieldValidationReturnValue } from '../../internals/field-root-context/FieldRootContext';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
-import type { Orientation } from '../../internals/types';
-import type { ThumbCollisionBehavior } from '../utils/resolveThumbCollision';
+import { fieldValidityMapping } from '../../internals/field-constants/constants';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import type { ThumbCollisionBehavior } from '../utils/thumbValues';
 import type {
-  SliderRootChangeEventDetails,
+  SliderRootProps,
   SliderRootChangeEventReason,
-  SliderRootCommitEventDetails,
+  SliderRootCommitEventReason,
   SliderRootState,
 } from './SliderRoot.vue';
 
@@ -22,112 +20,94 @@ export interface ThumbMetadata {
 
 /** The range input of a thumb, for a change that takes the inputs of several thumbs. */
 export interface ThumbInput {
-  /**
-   * Gives the index of the thumb and the value of its input when the input changed with no event
-   * that the slider handled.
-   */
+  /** Read a native edit that the slider has yet to receive. */
   take: () => { index: number; value: number } | undefined;
-  /** Starts a render of the input, in which Vue writes the value of the thumb to it. */
   restoreValue: () => void;
 }
 
 export interface SliderRootContext {
-  /**
-   * The index of the active thumb.
-   */
-  active: Readonly<Ref<number>>;
-  /**
-   * The index of the most recently interacted thumb.
-   */
-  lastUsedThumbIndex: Readonly<Ref<number>>;
-  controlElement: ShallowRef<HTMLElement | null>;
-  dragging: Readonly<Ref<boolean>>;
+  props: Readonly<
+    Pick<SliderRootProps, 'format' | 'form' | 'locale'> &
+      Pick<SliderRootState, 'max' | 'min' | 'minStepsBetweenValues' | 'orientation' | 'step'> & {
+        largeStep: number;
+        thumbCollisionBehavior: ThumbCollisionBehavior;
+      }
+  >;
+  state: ComputedRef<SliderRootState>;
   disabled: ComputedRef<boolean>;
+  lastUsedThumbIndex: Readonly<Ref<number>>;
+  controlElement: Readonly<Ref<HTMLElement | null>>;
+  setControlElement: (element: HTMLElement | null, previous: HTMLElement | null) => void;
   validation: UseFieldValidationReturnValue;
-  /**
-   * Options to format the value.
-   */
-  format: ComputedRef<Intl.NumberFormatOptions | undefined>;
-  handleInputChange: (valueInput: number, index: number, event: KeyboardEvent | Event) => void;
-  /** Adds the input of a thumb. Gives the function that removes it. */
-  registerThumbInput: (thumbInput: ThumbInput) => () => void;
-  /**
-   * The positions of the first thumb and of the last thumb of an inset slider, as percentages.
-   */
-  indicatorPosition: Readonly<Ref<readonly [number | undefined, number | undefined]>>;
+  handleInputChange: (value: number, index: number, event: Event) => void;
+  registerThumbInput: (input: ThumbInput) => () => void;
+  indicatorPosition: readonly [number | undefined, number | undefined];
   setIndicatorPosition: (edge: 0 | 1, position: number | undefined) => void;
   inset: ComputedRef<boolean>;
-  /**
-   * Whether the slider value is an array, including single-thumb arrays.
-   */
   isArrayValue: ComputedRef<boolean>;
-  /**
-   * The `aria-labelledby` of each thumb that has no name of its own.
-   */
   labelId: ComputedRef<string | undefined>;
-  /**
-   * The `id` of `Slider.Label`.
-   */
   rootLabelId: ComputedRef<string>;
   registerLabelId: RegisterId;
-  /**
-   * Follows the native reset of the form of a thumb input. A thumb calls it for each reset that it
-   * gets. The root handles the first call for each `reset` event. Base UI does not have this member.
-   */
   reset: (event: Event) => void;
-  thumbMap: Readonly<Ref<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>>;
-  /**
-   * The list of the thumbs. The thumbs register with it through this context. The root does not
-   * provide the list, so an item of a composite around the root joins that composite.
-   */
   thumbList: CompositeListContextValue<ThumbMetadata>;
-  largeStep: ComputedRef<number>;
-  lastChangeReasonRef: Ref<SliderRootChangeEventReason>;
-  locale: ComputedRef<Intl.LocalesArgument | undefined>;
-  max: ComputedRef<number>;
-  min: ComputedRef<number>;
-  minStepsBetweenValues: ComputedRef<number>;
-  form: ComputedRef<string | undefined>;
   name: ComputedRef<string | undefined>;
-  /**
-   * Function to be called when drag ends and the pointer is released.
-   */
-  onValueCommitted: (
-    newValue: number | readonly number[],
-    data: SliderRootCommitEventDetails,
+  commitValue: (
+    value: number | readonly number[],
+    reason: SliderRootCommitEventReason,
+    event: Event,
   ) => void;
-  orientation: ComputedRef<Orientation>;
-  pressedThumbCenterOffsetRef: Ref<number | null>;
-  pressedThumbIndexRef: Ref<number>;
-  pressedValuesRef: Ref<readonly number[] | null>;
   renderBeforeHydration: ComputedRef<boolean>;
   setActive: (index: number) => void;
   setDragging: (dragging: boolean) => void;
-  /**
-   * Applies a new value through `valueChange` for keyboard, input, track-press,
-   * and drag interactions. Returns `true` when the value was applied, or `false`
-   * when it was invalid (NaN), unchanged, or the change was canceled.
-   */
-  setValue: (newValue: number | number[], details: SliderRootChangeEventDetails) => boolean;
-  state: ComputedRef<SliderRootState>;
-  step: ComputedRef<number>;
-  thumbCollisionBehavior: ComputedRef<ThumbCollisionBehavior>;
-  thumbRefs: ShallowRef<(HTMLElement | null)[]>;
-  /**
-   * The value(s) of the slider
-   */
+  setValue: (
+    value: number | number[],
+    index: number,
+    reason: SliderRootChangeEventReason,
+    event?: Event,
+  ) => boolean;
+  thumbRefs: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   values: ComputedRef<readonly number[]>;
 }
 
 export const SliderRootContext: InjectionKey<SliderRootContext> = Symbol();
 
 export function useSliderRootContext(): SliderRootContext {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(SliderRootContext, undefined);
   if (context === undefined) {
     throw new Error(
       'Vase UI: A part of Slider must be inside <Slider.Root>. Without a root the part has no value to show or to change. Put the part inside <Slider.Root>.',
     );
   }
+  return context;
+}
+
+const nullMapping = () => null;
+
+export const sliderStateAttributesMapping: StateAttributesMapping<SliderRootState> = {
+  activeThumbIndex: nullMapping,
+  max: nullMapping,
+  min: nullMapping,
+  minStepsBetweenValues: nullMapping,
+  step: nullMapping,
+  values: nullMapping,
+  ...fieldValidityMapping,
+};
+
+export interface SliderThumbContext {
+  inputProps: () => Record<string, any>;
+  setInputElement: (value: unknown) => void;
+  hasPrehydrationScript: ComputedRef<boolean>;
+}
+
+export const SliderThumbContext: InjectionKey<SliderThumbContext> = Symbol();
+
+export function useSliderThumbContext(): SliderThumbContext {
+  const context = inject(SliderThumbContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Slider.Thumb> must be inside <Slider.Thumb>. Without the part it has no input to render. Mount the `children` component in the element of the `#render` slot of <Slider.Thumb>.',
+    );
+  }
+
   return context;
 }

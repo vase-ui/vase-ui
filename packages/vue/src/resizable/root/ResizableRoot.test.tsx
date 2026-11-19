@@ -1,6 +1,16 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, Teleport, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  Teleport,
+  createSSRApp,
+  defineComponent,
+  h,
+  nextTick,
+  onDeactivated,
+  onMounted,
+  shallowRef,
+} from 'vue';
 import type { ShallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -1265,6 +1275,29 @@ describe('<Resizable.Root />', () => {
     });
 
     // The panels stay in the document, so the handle keeps its panel on each side.
+    it('ends the press before the parent receives its deactivation hook', async () => {
+      const show = shallowRef(true);
+      const dragging = vi.fn();
+      const atHold = vi.fn();
+      const Handle = defineComponent(() => {
+        onDeactivated(() => atHold(dragging.mock.lastCall));
+        return () => <Resizable.Handle data-testid="handle" />;
+      });
+      await render(() => (
+        <Resizable.Root onDraggingChange={dragging}>
+          <Resizable.Panel id="a" />
+          <KeepAlive>{show.value ? <Handle /> : null}</KeepAlive>
+          <Resizable.Panel id="b" />
+        </Resizable.Root>
+      ));
+      await fireEvent.pointerDown(screen.getByTestId('handle'), { ...pointer, buttons: 1 });
+      expect(dragging).toHaveBeenLastCalledWith(true);
+
+      show.value = false;
+      await nextTick();
+      expect(atHold).toHaveBeenCalledExactlyOnceWith([false]);
+    });
+
     it('ends a drag when KeepAlive holds the handle', async () => {
       const Handle = defineComponent({
         setup: () => () => <Resizable.Handle data-testid="handle" />,
@@ -1973,6 +2006,46 @@ describe('<Resizable.Root />', () => {
   });
 
   describe('sizes with a unit', () => {
+    it('keeps the pixel size of a fixed panel when the root changes its axis', async () => {
+      const orientation = shallowRef<'horizontal' | 'vertical'>('horizontal');
+      await render(() => (
+        <Resizable.Root orientation={orientation.value} style={{ width: '400px', height: '200px' }}>
+          <Resizable.Panel id="a" data-testid="a" defaultSize="100px" rootResizeBehavior="fixed" />
+          <Resizable.Panel id="b" />
+        </Resizable.Root>
+      ));
+      const panel = screen.getByTestId('a');
+      expect(panel.offsetWidth).toBe(100);
+      await waitSingleFrame();
+
+      orientation.value = 'vertical';
+      await nextTick();
+      expect(panel.offsetHeight).toBe(100);
+      expect(panel.style.flexGrow).toBe('50');
+    });
+
+    it('gives the parent its measured layout at mount without ResizeObserver', async () => {
+      vi.stubGlobal('ResizeObserver', undefined);
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
+      const snapshot = vi.fn();
+      const Parent = defineComponent(() => {
+        const root = shallowRef<InstanceType<typeof Resizable.Root> | null>(null);
+        onMounted(() => snapshot(root.value?.getLayout()));
+        return () => (
+          <Resizable.Root ref={root} style={{ width: '400px' }}>
+            <Resizable.Panel id="a" defaultSize="100px" />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        );
+      });
+
+      await render(<Parent />);
+
+      expect(snapshot).toHaveBeenCalledExactlyOnceWith({ a: 25, b: 75 });
+    });
+
     const widthOf = (id: string) => screen.getByTestId(id).getBoundingClientRect().width;
 
     // The container is 1000 px wide, and a handle has no size. A test can change the width.
@@ -2860,6 +2933,33 @@ describe('<Resizable.Root />', () => {
       await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
 
       expect(calls).toEqual(['draggingChange false']);
+    });
+
+    it('discards a preview when a panel leaves between the last move and the release', async () => {
+      const third = shallowRef(true);
+      const commit = vi.fn();
+      await render(() => (
+        <Resizable.Root
+          resizeMode="on-release"
+          onLayoutCommitted={commit}
+          style={{ width: '400px' }}
+        >
+          <Resizable.Panel id="a" data-testid="a" />
+          <Resizable.Handle data-testid="handle" />
+          <Resizable.Panel id="b" data-testid="b" />
+          {third.value && <Resizable.Panel id="c" />}
+        </Resizable.Root>
+      ));
+      const handle = screen.getByTestId('handle');
+      await fireEvent.pointerDown(handle, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(handle, { ...pointer, clientX: 40, buttons: 1 });
+      expect(handle.style.getPropertyValue('--resizable-handle-preview-offset')).toBe('40px');
+
+      third.value = false;
+      await nextTick();
+      await fireEvent.pointerUp(handle, { ...pointer, clientX: 40 });
+      expect(commit).not.toHaveBeenCalled();
+      expect(grows('a', 'b')).toEqual(['50', '50']);
     });
 
     it('emits no change for a release at the start point', async () => {

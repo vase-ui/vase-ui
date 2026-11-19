@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { resolveThumbCollision } from './resolveThumbCollision';
+import { resolveThumbCollision } from './thumbValues';
 
 describe('resolveThumbCollision', () => {
   it('prevents thumbs from passing each other when behavior is "none"', () => {

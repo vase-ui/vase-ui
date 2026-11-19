@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/slider/thumb/prehydrationScript.template.js",
       "kind": "not-applicable",
-      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. No component imports the template. Vase UI has no minifier."
+      "reason": "Vase UI keeps its prehydration script in `thumb/prehydrationScript.min.ts`. Slider.Thumb renders that script through its children component."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -24,7 +24,15 @@
       "title": "explicitly blurs the focused thumb when disabled",
       "kind": "replaced",
       "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
-      "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. Firefox moves the focus off a disabled input itself, so the root has nothing to blur there. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
+      "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. A browser can move focus before the root calls `blur()`. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "describe": ["<Slider.Root />", "prop: onValueChange"],
+      "title": "should pass \"name\" and \"value\" as part of the event.target for onValueChange",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
+      "reason": "VUE-147 keeps the original event. The case with the same title checks its identity, the value argument and the input name."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
@@ -79,5 +87,70 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/slider/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/root/SliderRootContext.ts",
+      "member": "sliderStateAttributesMapping",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/asc.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "asc",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getMidpoint.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getMidpoint",
+      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getPushedThumbValues.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getPushedThumbValues",
+      "witness": "packages/vue/src/slider/utils/getPushedThumbValues.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getSliderValue.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getSliderValue",
+      "witness": "packages/vue/src/slider/utils/getSliderValue.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/resolveThumbCollision.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "resolveThumbCollision",
+      "witness": "packages/vue/src/slider/utils/resolveThumbCollision.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/roundValueToStep.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "roundValueToStep",
+      "witness": "packages/vue/src/slider/utils/roundValueToStep.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/test-utils.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/test/sliderTestUtils.ts",
+      "member": "createTouches",
+      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/validateMinimumDistance.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "validateMinimumDistance",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    }
+  ]
 }

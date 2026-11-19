@@ -5,6 +5,171 @@ import { clamp } from '../../common/clamp';
  */
 export type Layout = Record<string, number>;
 
+/**
+ * The numbers that change a size with a unit into percent of the panel space.
+ */
+export interface Measurement {
+  /**
+   * The room that the panels share on the axis of the root, in pixels. It is greater than 0.
+   */
+  space: number;
+  /**
+   * The font size of the root element of the document, in pixels.
+   */
+  rem: number;
+  /**
+   * The font size of the element that has the size, in pixels.
+   */
+  em: number;
+  viewportWidth: number;
+  viewportHeight: number;
+}
+
+/**
+ * The size of each panel by panel id: a number, or a string of a number with a unit.
+ * A string with no unit, or with `%`, is percent of the panel space.
+ */
+export type LayoutSnapshot = Record<string, number | string>;
+
+type Length = 'px' | 'em' | 'rem' | 'vh' | 'vw';
+
+const SIZE = /^(\d*\.?\d+)(%|px|em|rem|vh|vw)?$/;
+
+function splitSize(value: number | string): { amount: number; unit: '%' | Length } | undefined {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value >= 0 ? { amount: value, unit: '%' } : undefined;
+  }
+  const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
+  const amount = Number(text);
+  return Number.isFinite(amount) ? { amount, unit: isLengthUnit(unit) ? unit : '%' } : undefined;
+}
+
+export const SIZE_FORMS =
+  'Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".';
+
+export function formatSize(value: unknown): string {
+  return typeof value === 'string' ? `"${value}"` : String(value);
+}
+
+function readSize(value: number | string): { amount: number; unit: '%' | Length } {
+  const size = splitSize(value);
+  if (size === undefined) {
+    throw new Error(
+      `Vase UI: The size ${formatSize(value)} is not valid. Resizable cannot use it as a size. ${SIZE_FORMS} Examples are 30, "30%" and "200px".`,
+    );
+  }
+  return size;
+}
+
+// The pattern of `SIZE` allows no other unit.
+function isLengthUnit(unit: string): unit is Length {
+  return unit !== '%';
+}
+
+function toPixels(amount: number, unit: Length, measurement: Measurement): number {
+  switch (unit) {
+    case 'px':
+      return amount;
+    case 'em':
+      return amount * measurement.em;
+    case 'rem':
+      return amount * measurement.rem;
+    case 'vh':
+      return (amount / 100) * measurement.viewportHeight;
+    case 'vw':
+      return (amount / 100) * measurement.viewportWidth;
+  }
+}
+
+/**
+ * The percent of the panel space for a size. A number, and a string with no unit or with `%`, are
+ * percent already. A length needs the measurement: with none, the result is `undefined`.
+ * Another form throws.
+ */
+export function parseSize(
+  value: number | string,
+  measurement: Measurement | undefined,
+): number | undefined {
+  const { amount, unit } = readSize(value);
+  if (!isLengthUnit(unit)) {
+    return amount;
+  }
+  return measurement === undefined
+    ? undefined
+    : (toPixels(amount, unit, measurement) / measurement.space) * 100;
+}
+
+/**
+ * The size in pixels of the panel space. It is `undefined` while there is no measurement.
+ */
+export function parsePixels(
+  value: number | string,
+  measurement: Measurement | undefined,
+): number | undefined {
+  if (measurement === undefined) {
+    return undefined;
+  }
+  const { amount, unit } = readSize(value);
+  return isLengthUnit(unit)
+    ? toPixels(amount, unit, measurement)
+    : (amount / 100) * measurement.space;
+}
+
+/**
+ * Whether the value is a size that `parseSize` accepts. This function does not throw.
+ */
+export function isSize(value: unknown): value is number | string {
+  return (typeof value === 'number' || typeof value === 'string') && splitSize(value) !== undefined;
+}
+
+/**
+ * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`. A size that is not valid is not a
+ * length. This function does not throw.
+ */
+export function isLength(value: number | string | undefined): boolean {
+  const unit = value === undefined ? undefined : splitSize(value)?.unit;
+  return unit !== undefined && isLengthUnit(unit);
+}
+
+/**
+ * Whether the size is a length in `vh` or `vw`, which follow the size of the window.
+ */
+export function isViewportLength(value: number | string | undefined): boolean {
+  const unit = value === undefined ? undefined : splitSize(value)?.unit;
+  return unit === 'vh' || unit === 'vw';
+}
+
+/**
+ * The layout in percent that a layout of sizes gives, and the pixels that it gives to the panels
+ * that keep their size in pixels. An app can read a layout from a cookie, a storage or a server, so
+ * an entry that is not a size is left out. An entry that is a length has no percent while there is
+ * no measurement, so it is left out too.
+ */
+export function normalizeLayout(
+  snapshot: LayoutSnapshot,
+  fixedIds: ReadonlySet<string>,
+  getMeasurement: (id: string) => Measurement | undefined,
+): { layout: Layout; pins: Record<string, number> } {
+  const entries = Object.entries(snapshot).flatMap(([id, value]) => {
+    if (!isSize(value)) {
+      return [];
+    }
+    const measurement = getMeasurement(id);
+    const percent = parseSize(value, measurement);
+    return percent === undefined ? [] : [{ id, value, percent, measurement }];
+  });
+  return {
+    layout: Object.fromEntries(entries.map(({ id, percent }) => [id, percent])),
+    pins: Object.fromEntries(
+      entries.flatMap(({ id, value, measurement }) => {
+        const pixels =
+          fixedIds.has(id) && isLength(value) ? parsePixels(value, measurement) : undefined;
+        return pixels === undefined ? [] : [[id, pixels]];
+      }),
+    ),
+  };
+}
+
 export interface PanelConstraints {
   id: string;
   /** In percent. */
@@ -306,14 +471,14 @@ export function getHandleRange(
 }
 
 /**
- * Whether the handle after the panel `pivot` is at an end of its travel. `atMin`: the panel before
- * the handle is at the least size that the handle can give it. `atMax`: it is at the greatest size.
+ * The physical limits of the handle. A horizontal right-to-left layout reverses its two ends.
  */
 export function getHandleLimits(
   panels: readonly PanelConstraints[],
   layout: Layout,
   pivot: number,
   push = true,
+  reversed = false,
 ): { atMin: boolean; atMax: boolean } {
   const panel = panels[pivot];
   if (panel === undefined || panels[pivot + 1] === undefined) {
@@ -321,7 +486,9 @@ export function getHandleLimits(
   }
   const { min, max } = getHandleRange(panels, layout, pivot, panel, push);
   const size = sizeOf(layout, panel);
-  return { atMin: size <= min, atMax: size >= max };
+  return reversed
+    ? { atMin: size >= max, atMax: size <= min }
+    : { atMin: size <= min, atMax: size >= max };
 }
 
 /**

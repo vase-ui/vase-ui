@@ -64,11 +64,13 @@ Import the component and assemble its parts:
 
 <<< ./slider/Anatomy.vue
 
-Each `Slider.Thumb` renders an `<input type="range">` in its element. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
+Each `Slider.Thumb` has an `<input type="range">`. A custom render slot can place that input elsewhere. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
 
 A reset of the form puts an uncontrolled slider back to `defaultValue`, or to `min` when it has none. A controlled slider does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
 Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
+
+Read the new value from the first argument of `valueChange` and the field name from the thumb input. `eventDetails.event` is the original browser event. A change without a browser event supplies a new `Event('vase-ui')`.
 
 In the server HTML, a root with no name of its own from `aria-label` or `aria-labelledby` already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no name of its own from `aria-label`, `aria-labelledby` or `getAriaLabel`. The label can come before or after the control. Until the root is mounted, a root with no label and no `aria-label` has an `aria-labelledby` with an id that no element has. The attribute gives the root no name.
 

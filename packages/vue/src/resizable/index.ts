@@ -7,8 +7,7 @@ export { default as ResizableHandle } from './handle/ResizableHandle.vue';
 export type * from './root/ResizableRoot.vue';
 export type * from './panel/ResizablePanel.vue';
 export type * from './handle/ResizableHandle.vue';
-export type { ResizableParentPanel } from './panel/ResizablePanelContext';
-export type { ResizableParentRoot } from './root/ResizableRootContext';
+export type { ResizableParentPanel, ResizableParentRoot } from './root/ResizableRootContext';
 export type {
   ResizableLayoutStorage,
   ResizableLayoutStorageOptions,

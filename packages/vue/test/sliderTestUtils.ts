@@ -14,11 +14,7 @@ interface LegacyTouchDocument {
 }
 
 export function createTouches(touches: Touches) {
-  // eslint-disable-next-line no-restricted-globals -- A helper of the tests. The cases dispatch their events in the document of the test page.
-  const page = document;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The document of the page has a window.
-  const view = page.defaultView!;
-  const legacyDocument = page as unknown as Partial<LegacyTouchDocument>;
+  const legacyDocument = document as unknown as Partial<LegacyTouchDocument>;
 
   // WebKit has no `Touch` constructor. It has the factory methods `createTouch` and
   // `createTouchList`, and its `TouchEvent` constructor takes only a `TouchList`.
@@ -26,15 +22,15 @@ export function createTouches(touches: Touches) {
     const { createTouch, createTouchList } = legacyDocument;
     return {
       changedTouches: createTouchList.call(
-        page,
+        document,
         ...touches.map((touch) =>
           createTouch.call(
-            page,
-            view,
-            page.body,
+            document,
+            window,
+            document.body,
             touch.identifier,
-            touch.clientX + view.scrollX,
-            touch.clientY + view.scrollY,
+            touch.clientX + window.scrollX,
+            touch.clientY + window.scrollY,
             touch.clientX,
             touch.clientY,
           ),
@@ -44,7 +40,7 @@ export function createTouches(touches: Touches) {
   }
 
   return {
-    changedTouches: touches.map((touch) => new Touch({ target: page.body, ...touch })),
+    changedTouches: touches.map((touch) => new Touch({ target: document.body, ...touch })),
   };
 }
 

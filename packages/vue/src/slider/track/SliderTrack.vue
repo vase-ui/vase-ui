@@ -14,8 +14,7 @@ export interface SliderTrackProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useSliderRootContext } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
+import { sliderStateAttributesMapping, useSliderRootContext } from '../root/SliderRootContext';
 
 defineOptions({ inheritAttrs: false });
 

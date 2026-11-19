@@ -6,7 +6,7 @@ import type {
   ResizableRootLayout,
   ResizableRootLayoutSnapshot,
 } from '../root/ResizableRoot.vue';
-import { isSize } from './parseSize';
+import { isSize } from './layout';
 
 /**
  * A storage that holds the layout, such as `localStorage` or `sessionStorage`.
@@ -71,17 +71,12 @@ export function useLayoutStorage(
   // A browser that blocks the storage of the site throws when the page reads `localStorage`, and
   // `getItem` and `setItem` can throw too. Node.js prints a warning when a server reads
   // `localStorage`, so the read waits for the mount.
-  const getStorage = (): ResizableLayoutStorage => toValue(options.storage) ?? localStorage;
-
-  function read() {
-    let stored: unknown;
+  function getStorage() {
     try {
-      const text = getStorage().getItem(toValue(options.key));
-      stored = text === null ? undefined : JSON.parse(text);
+      return toValue(options.storage) ?? localStorage;
     } catch {
-      stored = undefined;
+      return undefined;
     }
-    layout.value = isLayoutSnapshot(stored) ? stored : {};
   }
 
   function save(next: ResizableRootLayout, details?: ResizableRootCommitEventDetails) {
@@ -89,18 +84,26 @@ export function useLayoutStorage(
       return;
     }
     try {
-      getStorage().setItem(toValue(options.key), JSON.stringify(details?.snapshot ?? next));
+      getStorage()?.setItem(toValue(options.key), JSON.stringify(details?.snapshot ?? next));
     } catch {
       // The layout stays as it is on the page. The next commit tries again.
     }
   }
 
-  // The watch starts at the mount, because a getter of the consumer can read a storage that a
-  // server does not have.
   onMounted(() => {
-    watch([() => toValue(options.key), () => toValue(options.storage)], read, {
-      immediate: true,
-    });
+    watch(
+      [() => toValue(options.key), getStorage],
+      ([key, storage]) => {
+        try {
+          const text = storage?.getItem(key);
+          const stored: unknown = text == null ? undefined : JSON.parse(text);
+          layout.value = isLayoutSnapshot(stored) ? stored : {};
+        } catch {
+          layout.value = {};
+        }
+      },
+      { immediate: true },
+    );
   });
 
   return { layout, save };

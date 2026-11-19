@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createSSRApp, defineComponent, provide } from 'vue';
+import { createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
   createRenderer,
   describeConformance,
   expectSetupErrorWarnings,
-  flushMicrotasks,
   hydrate,
   installPartsInterop,
   isJSDOM,
@@ -16,7 +15,6 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
-import { TabsListContext, useTabsListContext } from '../list/TabsListContext';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { script as generatedPrehydrationScript } from './prehydrationScript.min';
 import TabsIndicatorHydration from './TabsIndicatorHydration.test.vue';
@@ -44,57 +42,64 @@ describe('<Tabs.Indicator />', () => {
     testRenderPropWith: 'div',
   }));
 
-  it('releases its update listener when the indicator unmounts', async () => {
-    const listeners = new Set<() => void>();
-    const Indicator = defineComponent(() => {
-      provide(TabsListContext, {
-        ...useTabsListContext(),
-        registerIndicatorUpdateListener(listener) {
-          listeners.add(listener);
-          return () => listeners.delete(listener);
-        },
-      });
-      return () => <Tabs.Indicator />;
-    });
-    const { unmount } = await render(
-      <Tabs.Root>
+  it('updates only the mounted indicator after another indicator unmounts', async () => {
+    const visible = shallowRef(true);
+    await render(() => (
+      <Tabs.Root defaultValue="one">
         <Tabs.List>
-          <Indicator />
+          <Tabs.Tab value="one" style={{ width: '50px' }} />
+          {visible.value && <Tabs.Indicator data-testid="first" />}
+          <Tabs.Indicator data-testid="second" />
         </Tabs.List>
-      </Tabs.Root>,
-    );
-    expect(listeners.size).toBe(1);
+      </Tabs.Root>
+    ));
+    const first = screen.getByTestId('first');
+    const second = screen.getByTestId('second');
+    expect(first.style.getPropertyValue('--active-tab-width')).toBe('50px');
+    visible.value = false;
+    await nextTick();
+    expect(first).not.toBeInTheDocument();
 
-    unmount();
-    expect(listeners.size).toBe(0);
+    screen.getByRole('tab').style.width = '75px';
+    await waitFor(() => expect(second.style.getPropertyValue('--active-tab-width')).toBe('75px'));
+    expect(first.style.getPropertyValue('--active-tab-width')).toBe('50px');
   });
 
   it('exposes null active tab state when the selected value has no matching tab', async () => {
-    const indicatorStates: Tabs.Indicator.State[] = [];
+    const selected = shallowRef('missing');
+    let indicatorState: Tabs.Indicator.State | undefined;
 
-    await render(
-      <Tabs.Root modelValue="missing">
+    await render(() => (
+      <Tabs.Root modelValue={selected.value}>
         <Tabs.List>
           <Tabs.Tab value="one">One</Tabs.Tab>
           <Tabs.Indicator
             v-slots={{
               render: ({ props, state }: RenderSlotProps & { state: Tabs.Indicator.State }) => {
-                indicatorStates.push(state);
+                indicatorState = state;
                 return <span data-testid="bubble" {...props} />;
               },
             }}
           />
         </Tabs.List>
-      </Tabs.Root>,
-    );
+      </Tabs.Root>
+    ));
 
-    // Wait for Tabs.List to register its element; before that no tab can be measured.
-    await flushMicrotasks();
+    const bubble = screen.getByTestId('bubble');
+    function expectNoMeasurement() {
+      expect(indicatorState?.activeTabPosition).toBe(null);
+      expect(indicatorState?.activeTabSize).toBe(null);
+      expect(bubble).toHaveAttribute('hidden');
+    }
 
-    const state = indicatorStates.at(-1)!;
-    expect(state.activeTabPosition).toBe(null);
-    expect(state.activeTabSize).toBe(null);
-    expect(screen.getByTestId('bubble')).toHaveAttribute('hidden');
+    expectNoMeasurement();
+    selected.value = 'one';
+    await nextTick();
+    expect(bubble).not.toHaveAttribute('hidden');
+
+    selected.value = 'missing';
+    await nextTick();
+    expectNoMeasurement();
   });
 
   describe.skipIf(isJSDOM)('rendering', () => {
@@ -778,6 +783,31 @@ describe('<Tabs.Indicator />', () => {
       await waitFor(() => {
         expectBubblePositionVariables(bubble2, tabList, activeTab);
       });
+    });
+
+    it('follows the selected tab when the list is reordered without ResizeObserver', async () => {
+      vi.stubGlobal('ResizeObserver', undefined);
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
+      const order = shallowRef(['a', 'b']);
+      await render(() => (
+        <Tabs.Root modelValue="b">
+          <Tabs.List style={{ display: 'flex' }}>
+            {order.value.map((value) => (
+              <Tabs.Tab key={value} value={value} style={{ width: '50px' }} />
+            ))}
+            <Tabs.Indicator data-testid="indicator" />
+          </Tabs.List>
+        </Tabs.Root>
+      ));
+      const indicator = screen.getByTestId('indicator');
+      expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('50px');
+
+      order.value = ['b', 'a'];
+      await waitFor(() =>
+        expect(indicator.style.getPropertyValue('--active-tab-left')).toBe('0px'),
+      );
     });
 
     it('measures again when the orientation changes with no change of size', async () => {

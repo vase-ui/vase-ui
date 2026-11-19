@@ -1691,6 +1691,19 @@ describe('<Resizable.Handle />', () => {
       expect(outer).not.toHaveAttribute('data-crossing');
     });
 
+    it('clears the crossing under the pointer when the hovered handle becomes disabled', async () => {
+      const outerDisabled = shallowRef(false);
+      const { outer, at } = await renderCrossing({ outerDisabled });
+      await fireEvent.pointerMove(outer, pointerInit({ ...at, buttons: 0 }));
+      expect(outer).toHaveAttribute('data-crossing');
+
+      outerDisabled.value = true;
+      await nextTick();
+      expect(outer).not.toHaveAttribute('data-crossing');
+      await fireEvent.pointerMove(outer, pointerInit({ ...at, buttons: 0 }));
+      expect(outer).not.toHaveAttribute('data-crossing');
+    });
+
     it('does not join a disabled handle', async () => {
       const { outer, at, move } = await renderCrossing({ innerHandle: { disabled: true } });
 
@@ -1744,6 +1757,36 @@ describe('<Resizable.Handle />', () => {
       expect(innerEvents.onDraggingChange.mock.calls).toEqual([[true], [false]]);
       expect(outer).toHaveAttribute('data-dragging');
       expect(outer.getAttribute('aria-valuenow')).toBe('60');
+    });
+
+    it('keeps a new pointer independent after its handle leaves a crossing', async () => {
+      const disabled = shallowRef(false);
+      const { outer, inner, at, move } = await renderCrossing({
+        innerHandle: {
+          get disabled() {
+            return disabled.value;
+          },
+        },
+      });
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      expect(inner).toHaveAttribute('data-crossing');
+
+      disabled.value = true;
+      await nextTick();
+      disabled.value = false;
+      await nextTick();
+      const second = { pointerId: 2, clientX: at.clientX + 100, clientY: at.clientY, buttons: 1 };
+      await fireEvent.pointerDown(inner, pointerInit(second));
+      await move(40, 30);
+      expect(values()).toEqual(['60', '50']);
+      expect(outer).not.toHaveAttribute('data-crossing');
+      await fireEvent.pointerUp(outer, pointerInit(at));
+      expect(inner).toHaveAttribute('data-dragging');
+
+      await fireEvent.pointerMove(inner, pointerInit({ ...second, clientY: at.clientY + 60 }));
+      expect(values()).toEqual(['60', '70']);
+      await fireEvent.pointerUp(inner, pointerInit({ ...second, buttons: 0 }));
+      expect(inner).not.toHaveAttribute('data-dragging');
     });
 
     it('ends both drags when the pressed handle becomes disabled', async () => {
