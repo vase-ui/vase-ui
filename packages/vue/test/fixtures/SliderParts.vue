@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useTemplateRef, type PropType } from 'vue';
 import { Fieldset } from '../../src/fieldset';
+import { Form } from '../../src/form';
 import { Slider } from '../../src/slider';
 import TestField from './TestField.vue';
 
@@ -8,7 +9,8 @@ type Attrs = Record<string, unknown>;
 
 // A slider in a form, with a control of 100 px and thumbs of 10 px. `thumbs` gives the attributes
 // of each thumb. `label` and `value` put a `Slider.Label` and a `Slider.Value` before or after the
-// control. `fieldset` puts the slider in a native `<fieldset>` or in a `Fieldset.Root`.
+// control. `fieldset` puts the slider in a native `<fieldset>` or in a `Fieldset.Root`. With
+// `form`, the form is a `Form` with these attributes.
 const props = defineProps({
   root: Object as PropType<Attrs>,
   thumbs: { type: Array as PropType<Attrs[]>, default: () => [{}] },
@@ -18,6 +20,7 @@ const props = defineProps({
   control: Object as PropType<Attrs>,
   field: Object as PropType<Attrs>,
   fieldset: Object as PropType<{ native: boolean; disabled: boolean }>,
+  form: Object as PropType<Attrs>,
 });
 const vertical = computed(() => props.root?.orientation === 'vertical');
 const rootPart = useTemplateRef('rootPart');
@@ -27,7 +30,7 @@ defineExpose({ root: rootPart, control: controlPart, thumbs: thumbParts });
 </script>
 
 <template>
-  <form id="form">
+  <component :is="form ? Form : 'form'" id="form" v-bind="form">
     <input id="before" aria-label="Before" />
     <component
       :is="fieldset ? (fieldset.native ? 'fieldset' : Fieldset.Root) : 'div'"
@@ -64,5 +67,5 @@ defineExpose({ root: rootPart, control: controlPart, thumbs: thumbParts });
     <input id="after" aria-label="After" />
     <button type="submit">Submit</button>
     <button type="reset">Reset</button>
-  </form>
+  </component>
 </template>

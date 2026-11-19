@@ -2,11 +2,13 @@
 import { useTemplateRef, type PropType } from 'vue';
 import { Slider } from '../../src/slider';
 import StyledDiv from './StyledDiv.vue';
+import TestField from './TestField.vue';
 
 // Each part renders the element of the developer in its `element` slot. The input of the second
 // thumb goes to `target` with `<Teleport>`.
 defineProps({
   root: Object as PropType<Record<string, unknown>>,
+  field: Object as PropType<Record<string, unknown>>,
   target: { type: Object as PropType<Element>, required: true },
 });
 const parts = {
@@ -23,6 +25,7 @@ defineExpose(parts);
 
 <template>
   <form>
+    <TestField :field="field">
     <Slider.Root ref="root" :default-value="[20, 60]" name="volume" v-bind="root">
       <template #element="{ props, elementRef, state }">
         <section v-bind="props" :ref="elementRef" :data-values="state.values.join()">
@@ -72,5 +75,6 @@ defineExpose(parts);
         </section>
       </template>
     </Slider.Root>
+    </TestField>
   </form>
 </template>
