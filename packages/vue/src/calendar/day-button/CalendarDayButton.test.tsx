@@ -93,7 +93,7 @@ describe('<Calendar.DayButton />', () => {
 
   // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case then gets a warning about a slot.
-  it('names the missing root or day when rendered without its ancestors', async () => {
+  it('throws a descriptive error when rendered outside <Calendar.Day>', async () => {
     await expect(
       render(
         <CalendarAncestors level="month">
@@ -104,11 +104,6 @@ describe('<Calendar.DayButton />', () => {
       'Vase UI: <Calendar.DayButton> must be inside <Calendar.Day>. Without a day the button has no date to select. Put the button inside <Calendar.Day>.',
     );
 
-    expectSetupErrorWarnings(takeReportedMessages());
-
-    await expect(render(<Calendar.DayButton />)).rejects.toThrow(
-      'Vase UI: A part of Calendar must be inside <Calendar.Root>.',
-    );
     expectSetupErrorWarnings(takeReportedMessages());
   });
 });

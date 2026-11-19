@@ -31,6 +31,9 @@
         "<Calendar.Caption /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "src/calendar/day-button/CalendarDayButton.context.test.tsx": {
+      "fails": {}
+    },
     "src/calendar/day-button/CalendarDayButton.test.tsx": {
       "fails": {
         "<Calendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
