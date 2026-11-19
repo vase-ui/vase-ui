@@ -8,9 +8,10 @@ export interface TabsListForParts {
   readonly tabStop: RootTab | undefined;
   /** A key on a tab. The list moves the focus for the keys of the list. */
   onKeydown(event: KeyboardEvent, tab: RootTab): void;
-  /** A tab got or lost the focus. */
+  /** A tab got the focus. */
   onFocus(tab: RootTab): void;
-  onBlur(tab: RootTab): void;
+  /** A tab lost the focus. A browser sends `blur` before the `focus` of the next element. */
+  onBlur(): void;
 }
 
 export const tabsListKey: InjectionKey<TabsListForParts> = Symbol('tabs list');

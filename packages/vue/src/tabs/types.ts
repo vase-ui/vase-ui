@@ -65,7 +65,7 @@ export type TabsListState = TabsRootState;
 
 export interface TabsTabProps<Value = any> extends /* @vue-ignore */ Omit<
   ButtonHTMLAttributes,
-  'disabled' | 'id' | 'type' | 'value'
+  'disabled' | 'id' | 'value'
 > {
   /** The value that the root gets when the user chooses this tab. */
   value: Value;

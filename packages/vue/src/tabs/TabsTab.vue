@@ -70,14 +70,14 @@ function elementProps() {
       onClick,
       onKeydown,
       onFocus: () => list.onFocus(tab),
-      onBlur: () => list.onBlur(tab),
+      onBlur: () => list.onBlur(),
     },
     attrs,
   );
 }
 
-// The listener runs before the listeners of the developer. A disabled control gets no click in
-// HTML, so no listener of the developer and no listener of an ancestor gets one.
+// The listener runs before the listeners of the developer. HTML gives a disabled control no click.
+// So no listener of the developer on the tab runs, and the click does not bubble to an ancestor.
 function onClick(event: MouseEvent) {
   if (props.disabled) {
     event.preventDefault();
@@ -94,9 +94,10 @@ function onKeydown(event: KeyboardEvent) {
   list.onKeydown(event, tab);
   const target = element.value;
   if (!target || target.localName === 'button') return;
-  // The browser activates a `<button>` with Enter and Space. The click listener stops the click of
-  // a disabled tab.
-  if (event.key === ' ' || event.key === 'Enter') {
+  // The browser activates a `<button>` with Enter and Space, and a link with Enter. The click of a
+  // link then has the modifier keys of the key, so a modifier opens the link in a new tab or window.
+  // The click listener stops the click of a disabled tab.
+  if (event.key === ' ' || (event.key === 'Enter' && !target.matches('a[href]'))) {
     event.preventDefault();
     target.click();
   }

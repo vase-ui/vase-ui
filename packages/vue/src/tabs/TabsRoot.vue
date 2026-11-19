@@ -83,7 +83,7 @@ const state = computed<TabsRootState>(() => ({
 }));
 
 // The default flush runs after Vue writes the new props, so the direction has the new
-// orientation, and before the render, so each part renders the new value with its direction.
+// orientation. It runs before the render, so each part renders the new value with its direction.
 watch([value, () => tabOf(value.value)?.element], () => {
   const next = value.value;
   if (next === directionFrom) return;
@@ -169,7 +169,6 @@ function directionBetween(from: unknown, to: unknown): TabsTabActivationDirectio
   const fromElement = tabOf(from)?.element;
   const toElement = tabOf(to)?.element;
   if (!fromElement || !toElement) {
-    if (fromElement === toElement) return 'none';
     if (typeof from === 'number' && typeof to === 'number') return to > from ? forward : back;
     if (typeof from === 'string' && typeof to === 'string') return to > from ? forward : back;
     return 'none';

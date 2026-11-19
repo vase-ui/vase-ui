@@ -58,7 +58,7 @@ Bind the value with `v-model`, or give `defaultValue` to an uncontrolled root. W
 
 An uncontrolled root also changes its value itself. After the mount, a root with no value takes its first tab that is not disabled, with the reason `initial`. When the active tab becomes disabled (`disabled`), or no tab has the value (`missing`), the root takes the first tab that is not disabled, or `null`. A `defaultValue` that names a disabled tab stays until that tab is enabled one time. A controlled root shows only the value of its parent.
 
-A disabled tab has `aria-disabled="true"` and keeps the focus, so the arrow keys reach it. It gets no `click`, so no `click` listener on it or on an ancestor runs.
+A disabled tab has `aria-disabled="true"` and can take the focus, so the arrow keys reach it. No `click` listener on it runs, and its `click` does not bubble to an ancestor. Its press and key listeners run.
 
 The list is one tab stop: the focused tab while the focus is in the list, or else the active tab, also a disabled one. With no active tab, the first tab has the tab stop. The arrow keys follow `orientation` and the text direction of the list (`dir`), and they loop unless `loopFocus` is `false`. The list keeps each arrow key, Home and End that it handles: an ancestor with keys of its own, such as a toolbar, does not get them.
 

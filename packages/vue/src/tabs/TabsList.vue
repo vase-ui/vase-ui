@@ -45,8 +45,8 @@ provide(tabsListKey, {
   onFocus(tab) {
     focused.value = tab;
   },
-  onBlur(tab) {
-    if (focused.value === tab) focused.value = undefined;
+  onBlur() {
+    focused.value = undefined;
   },
 });
 

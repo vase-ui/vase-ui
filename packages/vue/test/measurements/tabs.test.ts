@@ -124,6 +124,18 @@ describe('Enter and Space on a focused element', () => {
     }
     expect(clicks).toEqual(['link']);
   });
+
+  test('give the click of Enter on a link the modifier keys of the key', async () => {
+    html(`<a id="link" href="#link">A</a>`);
+    const shiftKeys: boolean[] = [];
+    root!.addEventListener('click', (event) => {
+      event.preventDefault();
+      shiftKeys.push(event.shiftKey);
+    });
+    element('link').focus();
+    await userEvent.keyboard('{Shift>}{Enter}{/Shift}');
+    expect(shiftKeys).toEqual([true]);
+  });
 });
 
 describe('a ResizeObserver', () => {

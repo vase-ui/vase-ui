@@ -382,6 +382,24 @@ describe('the changes that the root makes', () => {
     expect(selected()).toEqual(['a']);
   });
 
+  test('only the defaultValue stays on a disabled tab: a tab that the user chooses and that becomes disabled in the same tick gives way', async () => {
+    const log: string[] = [];
+    const tabs = reactive<Item[]>([
+      { key: 'a' },
+      { key: 'b', attrs: { disabled: true } },
+      { key: 'c' },
+    ]);
+    const { tab, selected } = await mountTabs({
+      root: rootEvents(log, { defaultValue: 'b' }),
+      tabs,
+    });
+    tab('c').click();
+    tabs[2]!.attrs = { disabled: true };
+    await settle();
+    expect(log).toEqual(['valueChange c none', 'update c', 'valueChange a disabled', 'update a']);
+    expect(selected()).toEqual(['a']);
+  });
+
   test("a value that no tab has gives the first tab that is not disabled, or null, with 'missing'", async () => {
     const log: string[] = [];
     const tabs = reactive<Item[]>(items('a', 'b', 'c'));
@@ -532,7 +550,7 @@ describe('activation', () => {
     expect(log).toEqual(['valueChange b none', 'update b']);
   });
 
-  test('a disabled tab runs no click listener on the tab or on an ancestor; its keydown and pointerdown listeners run', async () => {
+  test('a disabled tab runs no click listener on the tab, and its click does not bubble to an ancestor; its keydown and pointerdown listeners run', async () => {
     const log: string[] = [];
     const { root, tab, selected, focused } = await mountTabs({
       root: rootEvents(log, { defaultValue: 'a' }),
@@ -841,45 +859,45 @@ describe('the scroll at the mount', () => {
     return { list, tabRect, listRect, pageScrolled: window.scrollY !== before };
   }
 
-  test('a list that overflows shows its active tab, with the scroll-margin of the tab; the page does not scroll', async () => {
+  test('a list that overflows shows its active tab, with the scroll-padding of the list and the scroll-margin of the tab; the page does not scroll', async () => {
     const { list, listRect, tabRect, pageScrolled } = await mountScrolled(
       'horizontal',
-      'display: flex; width: 120px; overflow: auto',
+      'display: flex; width: 120px; overflow: auto; border: 4px solid; scroll-padding-right: 5px',
       'flex: none; width: 60px; scroll-margin-right: 6px',
     );
     expect(list.scrollLeft).toBeGreaterThan(0);
-    expect(tabRect.right).toBeCloseTo(listRect.left + list.clientLeft + list.clientWidth - 6, 0);
+    expect(tabRect.right).toBeCloseTo(listRect.left + list.clientLeft + list.clientWidth - 11, 0);
     expect(pageScrolled).toBe(false);
   });
 
-  test('a right-to-left list scrolls to the left', async () => {
+  test('a right-to-left list scrolls to the left, with the scroll-padding and the scroll-margin of that side', async () => {
     const { list, listRect, tabRect } = await mountScrolled(
       'horizontal',
-      'display: flex; width: 120px; overflow: auto',
-      'flex: none; width: 60px',
+      'display: flex; width: 120px; overflow: auto; border: 4px solid; scroll-padding-left: 5px',
+      'flex: none; width: 60px; scroll-margin-left: 3px',
       'rtl',
     );
     expect(list.scrollLeft).toBeLessThan(0);
-    expect(tabRect.left).toBeCloseTo(listRect.left + list.clientLeft, 0);
+    expect(tabRect.left).toBeCloseTo(listRect.left + list.clientLeft + 8, 0);
   });
 
-  test('a tab longer than the list shows its start', async () => {
-    const { listRect, tabRect } = await mountScrolled(
-      'horizontal',
-      'display: flex; width: 120px; overflow: auto',
-      'flex: none; width: 200px',
-    );
-    expect(tabRect.left).toBeCloseTo(listRect.left, 0);
-  });
-
-  test('a vertical list reads its scroll-padding', async () => {
+  test('a tab longer than the list shows its start, with the scroll-padding and the scroll-margin of that side', async () => {
     const { list, listRect, tabRect } = await mountScrolled(
       'vertical',
-      'display: flex; flex-direction: column; height: 100px; overflow: auto; scroll-padding-bottom: 10px',
-      'flex: none; height: 40px',
+      'display: flex; flex-direction: column; height: 100px; overflow: auto; border: 4px solid; scroll-padding-top: 5px',
+      'flex: none; height: 160px; scroll-margin-top: 3px',
+    );
+    expect(tabRect.top).toBeCloseTo(listRect.top + list.clientTop + 8, 0);
+  });
+
+  test('a vertical list reads the scroll-padding and the scroll-margin of its end', async () => {
+    const { list, listRect, tabRect } = await mountScrolled(
+      'vertical',
+      'display: flex; flex-direction: column; height: 100px; overflow: auto; border: 4px solid; scroll-padding-bottom: 10px',
+      'flex: none; height: 40px; scroll-margin-bottom: 3px',
     );
     expect(list.scrollTop).toBeGreaterThan(0);
-    expect(tabRect.bottom).toBeCloseTo(listRect.top + list.clientTop + list.clientHeight - 10, 0);
+    expect(tabRect.bottom).toBeCloseTo(listRect.top + list.clientTop + list.clientHeight - 13, 0);
   });
 
   test('a list that gets its first tabs after the mount shows its active tab', async () => {
@@ -1194,6 +1212,21 @@ describe('a tab that is not a button', () => {
     await press('{Enter}');
     expect(navigations).toEqual(['span', 'a', 'span', 'a']);
     expect(spaces).toEqual([true, true]);
+    expect(link).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('Enter on a link tab gives the click the modifier keys, as on a native link', async () => {
+    const { root } = mount(TabsElements, { root: { defaultValue: 'button' } });
+    await nextTick();
+    const link = root.querySelector('a')!;
+    const shiftKeys: boolean[] = [];
+    root.addEventListener('click', (event) => {
+      shiftKeys.push(event.shiftKey);
+      event.preventDefault();
+    });
+    link.focus();
+    await press('{Shift>}{Enter}{/Shift}');
+    expect(shiftKeys).toEqual([true]);
     expect(link).toHaveAttribute('aria-selected', 'true');
   });
 

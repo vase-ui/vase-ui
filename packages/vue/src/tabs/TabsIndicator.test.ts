@@ -106,15 +106,18 @@ describe('<Tabs.Indicator />', () => {
     expect(renders.at(-1)).toBe('undefined undefined');
   });
 
-  test('is hidden with no variable while the active tab has no width or no height', async () => {
-    const { indicator } = await mountLayout({
-      root: { modelValue: 1 },
-      tabs: [{ value: 1, style: 'width: 0; padding: 0; border: 0' }],
-    });
-    await nextFrame();
-    expect(indicator()).toHaveAttribute('hidden');
-    expect(variable(indicator(), 'left')).toBe('');
-  });
+  test.each(['width', 'height'])(
+    'is hidden with no variable while the active tab has no %s',
+    async (side) => {
+      const { indicator } = await mountLayout({
+        root: { modelValue: 1 },
+        tabs: [{ value: 1, style: `${side}: 0; padding: 0; border: 0` }],
+      });
+      await nextFrame();
+      expect(indicator()).toHaveAttribute('hidden');
+      expect(variable(indicator(), 'left')).toBe('');
+    },
+  );
 
   test('updates only the mounted indicator after another indicator unmounts', async () => {
     const scene = reactive({ indicators: 2 });
@@ -187,10 +190,11 @@ describe('<Tabs.Indicator />', () => {
     });
 
     test('should account for scroll and border when the tab list is transformed', async () => {
+      // The gap gives the tab a place with a fraction of a pixel, which only the rectangles give.
       const { indicator, list, activeTab } = await mountLayout({
         wrapperStyle: 'transform: scale(1.5)',
         listStyle:
-          'width: 240px; display: flex; gap: 8px; overflow-x: auto; border: 6px solid black; padding: 4px',
+          'width: 240px; display: flex; gap: 8.25px; overflow-x: auto; border: 6px solid black; padding: 4px',
         root: { modelValue: 3 },
         tabs: fixedTabs('flex: 0 0 120px', 5),
       });
