@@ -47,13 +47,18 @@ afterEach(() => {
 
 function createAppOf(component: vue.Component, props: Record<string, unknown>, hydrate: boolean) {
   const kind = inject('app');
-  const create = kind.startsWith('vapor')
-    ? hydrate
-      ? createVaporSSRApp
-      : createVaporApp
-    : hydrate
-      ? vue.createSSRApp
-      : vue.createApp;
+  // A Vapor app takes a Vapor root. The project `vapor` of `vitest.config.ts` compiles no fixture
+  // as Vapor, so its fixtures mount in an app of the virtual DOM. `vitest.vue-3.6.config.ts` runs
+  // the setups with a Vapor app.
+  const vaporRoot = (component as { __vapor?: boolean }).__vapor === true;
+  const create =
+    kind.startsWith('vapor') && vaporRoot
+      ? hydrate
+        ? createVaporSSRApp
+        : createVaporApp
+      : hydrate
+        ? vue.createSSRApp
+        : vue.createApp;
   const app = create(component, props);
   if (kind.endsWith('interop')) app.use(vaporInteropPlugin);
   return app;
