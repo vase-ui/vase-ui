@@ -73,7 +73,7 @@ export default defineConfig({
         extends: true,
         test: {
           include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'],
-          provide: { testApp: 'vdom', testParts: 'vdom' },
+          provide: { testApp: 'vdom', testParts: 'vdom', app: 'vdom' },
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             ...browserOptions,
@@ -118,7 +118,11 @@ export default defineConfig({
               },
               // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
               // leaves it out.
-              { browser: 'chromium', name: 'vapor', provide: { testApp: 'vapor' } },
+              {
+                browser: 'chromium',
+                name: 'vapor',
+                provide: { testApp: 'vapor', app: 'vapor-interop' },
+              },
             ],
           },
         },
@@ -131,7 +135,7 @@ export default defineConfig({
         test: {
           include: vaporPartsFiles,
           setupFiles: ['./test/vaporParts/expectFailures.ts'],
-          provide: { testApp: 'vapor', testParts: 'vapor' },
+          provide: { testApp: 'vapor', testParts: 'vapor', app: 'vapor-interop' },
           browser: {
             ...browserOptions,
             instances: [{ browser: 'chromium', name: 'vapor-parts' }],
