@@ -1,4 +1,4 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { trackResizeObservers } from '../../../test/fixtures/trackResizeObservers';
@@ -261,6 +261,10 @@ describe('<Tabs.Tab />', () => {
       const doc = tab.ownerDocument;
       const add = vi.spyOn(doc, 'addEventListener');
       const remove = vi.spyOn(doc, 'removeEventListener');
+      onTestFinished(() => {
+        add.mockRestore();
+        remove.mockRestore();
+      });
 
       tab.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
       await setProps({ hideSecond: true });

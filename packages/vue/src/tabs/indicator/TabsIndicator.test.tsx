@@ -6,7 +6,6 @@ import {
   createRenderer,
   describeConformance,
   expectSetupErrorWarnings,
-  flushMicrotasks,
   hydrate,
   installPartsInterop,
   isJSDOM,
@@ -67,7 +66,7 @@ describe('<Tabs.Indicator />', () => {
   });
 
   it('exposes null active tab state when the selected value has no matching tab', async () => {
-    const indicatorStates: Tabs.Indicator.State[] = [];
+    let indicatorState: Tabs.Indicator.State | undefined;
 
     const { setProps } = await render(
       <Tabs.Root modelValue="missing">
@@ -76,7 +75,7 @@ describe('<Tabs.Indicator />', () => {
           <Tabs.Indicator
             v-slots={{
               render: ({ props, state }: RenderSlotProps & { state: Tabs.Indicator.State }) => {
-                indicatorStates.push(state);
+                indicatorState = state;
                 return <span data-testid="bubble" {...props} />;
               },
             }}
@@ -86,15 +85,18 @@ describe('<Tabs.Indicator />', () => {
     );
 
     const bubble = screen.getByTestId('bubble');
-    expect(bubble).toHaveAttribute('hidden');
+    function expectNoMeasurement() {
+      expect(indicatorState?.activeTabPosition).toBe(null);
+      expect(indicatorState?.activeTabSize).toBe(null);
+      expect(bubble).toHaveAttribute('hidden');
+    }
+
+    expectNoMeasurement();
     await setProps({ modelValue: 'one' });
     expect(bubble).not.toHaveAttribute('hidden');
 
     await setProps({ modelValue: 'missing' });
-    const state = indicatorStates.at(-1)!;
-    expect(state.activeTabPosition).toBe(null);
-    expect(state.activeTabSize).toBe(null);
-    expect(bubble).toHaveAttribute('hidden');
+    expectNoMeasurement();
   });
 
   describe.skipIf(isJSDOM)('rendering', () => {
@@ -782,7 +784,9 @@ describe('<Tabs.Indicator />', () => {
 
     it('follows the selected tab when the list is reordered without ResizeObserver', async () => {
       vi.stubGlobal('ResizeObserver', undefined);
-      onTestFinished(() => vi.unstubAllGlobals());
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
       const order = shallowRef(['a', 'b']);
       await render(() => (
         <Tabs.Root modelValue="b">
