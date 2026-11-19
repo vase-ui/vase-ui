@@ -60,7 +60,7 @@ The viewport is a tab stop while it can scroll. Give it `role="region"` and a na
 
 A scrollbar renders while its axis has overflow. With `keepMounted`, it renders also with no overflow, in the server HTML too. Hide such a track with `:not([data-has-overflow-y])`. The corner renders while the two axes have overflow.
 
-Each part has the `element` slot, which gives `props`, `elementRef` and `state`. Bind `props` and `elementRef` to the element that you render. A root that renders its element in the slot has no style element in the server HTML, so the native scrollbar shows until the mount.
+Each part has the `element` slot, which gives `props`, `elementRef` and `state`. The corner gives no `state`. Bind `props` and `elementRef` to the element that you render. A root that renders its element in the slot has no style element in the server HTML, so the native scrollbar shows until the mount.
 
 ## Styling
 
@@ -178,6 +178,8 @@ Each element in the viewport inherits the variables, so a fade on a child works 
   --scroll-area-overflow-y-start: inherit;
 }
 ```
+
+Before the measurement, a registered variable has its `initial-value`, not the fallback of `var()`.
 
 <DemoFrame>
   <DemoScrollAreaScrollFade />
