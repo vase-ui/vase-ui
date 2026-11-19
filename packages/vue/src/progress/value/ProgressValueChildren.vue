@@ -9,13 +9,13 @@ defineSlots<{
   default?(props: { formattedValue: string | null; value: number | null }): unknown;
 }>();
 
-const { clampedValue, format, locale, percentageValue, value, state } = useProgressRootContext();
+const { clampedValue, percentageValue, props, state } = useProgressRootContext();
 
 // This part resolves the locale itself, because it can hydrate after the root, for example in an
 // async component in `<Suspense>`.
-const formatLocale = useFormatLocale(locale);
+const formatLocale = useFormatLocale(() => props.locale);
 const formattedValue = computed(() =>
-  formatRangeValue(clampedValue.value, percentageValue.value, formatLocale.value, format.value),
+  formatRangeValue(clampedValue.value, percentageValue.value, formatLocale.value, props.format),
 );
 
 // The status decides, because a non-finite value is also indeterminate and has no text to show.
@@ -28,7 +28,7 @@ markChildrenMounted();
   <slot
     v-if="$slots.default"
     :formatted-value="indeterminate ? 'indeterminate' : formattedValue"
-    :value="value"
+    :value="props.value"
   />
   <template v-else-if="!indeterminate">{{ formattedValue }}</template>
 </template>

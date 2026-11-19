@@ -1,0 +1,10 @@
+{
+  "id": "VUE-144",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/otp-field/utils/otp.ts#L69-L76",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/otp-field/input/OTPFieldInput.tsx#L76-L79",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/otp-field/root/OTPFieldRoot.tsx#L247-L259"
+  ],
+  "behavior": "With unrestricted OTP text, each Unicode code point occupies one slot. Entry, paste, deletion, focus and completion use the same slot count. Base UI normalizes by code point but indexes slots and checks completion by UTF-16 code unit.",
+  "dueWith": "packages/react/src/otp-field/input/OTPFieldInput.tsx"
+}

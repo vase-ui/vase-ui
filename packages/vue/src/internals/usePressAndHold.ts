@@ -7,8 +7,8 @@ import { useListenerSession } from '../common/useListenerSession';
 import { Timeout, useTimeout } from '../common/useTimeout';
 import { useKeepAliveState } from './useKeepAliveState';
 
-const DEFAULT_TICK_DELAY = 60;
-const DEFAULT_START_DELAY = 400;
+export const DEFAULT_TICK_DELAY = 60;
+export const DEFAULT_START_DELAY = 400;
 const DEFAULT_SCROLL_DISTANCE = 8;
 const TOUCH_TIMEOUT = 50;
 const MAX_POINTER_MOVES_AFTER_TOUCH = 3;

@@ -1,0 +1,8 @@
+{
+  "id": "VUE-145",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/otp-field/root/OTPFieldRoot.test.tsx#L895-L907"
+  ],
+  "behavior": "OTP Field checks the rendered slot count after the list updates. A change to the length and slots together gives no warning. Base UI can warn with the previous slot count.",
+  "dueWith": "packages/react/src/otp-field/root/OTPFieldRoot.tsx"
+}

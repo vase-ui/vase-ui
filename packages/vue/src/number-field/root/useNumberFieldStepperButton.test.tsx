@@ -5,7 +5,7 @@ import type { VNode } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { createRenderer, fireEvent, flushMicrotasks, isJSDOM, screen } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import { CHANGE_VALUE_TICK_DELAY, START_AUTO_CHANGE_DELAY } from '../utils/constants';
+import { DEFAULT_TICK_DELAY, DEFAULT_START_DELAY } from '../../internals/usePressAndHold';
 
 type NumberFieldProps = InstanceType<typeof NumberField.Root>['$props'];
 
@@ -478,10 +478,10 @@ describe('useNumberFieldStepperButton', () => {
         });
 
         async function holdForThreeTicks() {
-          await tick(START_AUTO_CHANGE_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_START_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
         }
 
         it('steps continuously when holding pointerdown', async () => {
@@ -497,7 +497,7 @@ describe('useNumberFieldStepperButton', () => {
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.pointerUp(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(steps[4]);
         });
@@ -526,9 +526,9 @@ describe('useNumberFieldStepperButton', () => {
           expect(input).toHaveValue(String(boundary.value));
           expect(handleValueChange.mock.calls.length).toBe(1);
 
-          await tick(START_AUTO_CHANGE_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_START_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(String(boundary.value));
           expect(handleValueChange.mock.calls.length).toBe(1);
@@ -543,9 +543,9 @@ describe('useNumberFieldStepperButton', () => {
           const button = screen.getByRole('button');
 
           await fireEvent.pointerDown(button);
-          await tick(START_AUTO_CHANGE_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_START_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(screen.getByRole('textbox')).toHaveValue(String(boundary.value));
           expect(onValueCommitted).not.toHaveBeenCalled();
@@ -626,7 +626,7 @@ describe('useNumberFieldStepperButton', () => {
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.mouseLeave(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(steps[4]);
         });
@@ -644,11 +644,11 @@ describe('useNumberFieldStepperButton', () => {
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.mouseLeave(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.mouseEnter(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(steps[5]);
         });
@@ -666,15 +666,15 @@ describe('useNumberFieldStepperButton', () => {
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.pointerUp(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.mouseLeave(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
           expect(input).toHaveValue(steps[4]);
 
           await fireEvent.mouseEnter(button);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(steps[4]);
         });
@@ -690,9 +690,9 @@ describe('useNumberFieldStepperButton', () => {
 
           await setProps({ disabled: true });
 
-          await tick(START_AUTO_CHANGE_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_START_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(input).toHaveValue(steps[1]);
 
@@ -777,9 +777,9 @@ describe('useNumberFieldStepperButton', () => {
 
           shown.value = false;
           await flushMicrotasks();
-          await tick(START_AUTO_CHANGE_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
-          await tick(CHANGE_VALUE_TICK_DELAY);
+          await tick(DEFAULT_START_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
+          await tick(DEFAULT_TICK_DELAY);
 
           expect(onValueChange).toHaveBeenCalledTimes(1);
 

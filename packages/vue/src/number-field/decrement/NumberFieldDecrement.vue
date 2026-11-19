@@ -25,7 +25,7 @@ export interface NumberFieldDecrementProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useNumberFieldStepperButton } from '../root/useNumberFieldStepperButton';
+import { useNumberFieldStepperButton } from '../root/NumberFieldRootContext';
 
 defineOptions({ inheritAttrs: false });
 

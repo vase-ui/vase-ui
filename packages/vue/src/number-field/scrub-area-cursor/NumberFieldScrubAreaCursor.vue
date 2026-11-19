@@ -13,18 +13,20 @@ export interface NumberFieldScrubAreaCursorProps
 
 <script setup lang="ts">
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { computed, shallowRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import type { CSSProperties } from 'vue';
-import { ownerDocument } from '../../common/owner';
+import { ownerDocument, ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { usePortalRegistration } from '../../utils/popups/portal/portalElements';
 import { createAttribute } from '../../utils/popups/createAttribute';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
-import { useNumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
+import {
+  useNumberFieldRootContext,
+  useNumberFieldScrubAreaContext,
+  stateAttributesMapping,
+} from '../root/NumberFieldRootContext';
 
 const CURSOR_STYLE: CSSProperties = {
   position: 'fixed',
@@ -52,7 +54,7 @@ defineSlots<{
 }>();
 
 const { state } = useNumberFieldRootContext();
-const { isScrubbing, isTouchInput, isPointerLockDenied, cursor, scrubAreaElement } =
+const { isScrubbing, isTouchInput, isPointerLockDenied, setCursor, scrubAreaElement } =
   useNumberFieldScrubAreaContext();
 
 // The styles of a shadow root apply only in that root. The coordinates of the pointer are those of
@@ -72,38 +74,53 @@ const shouldRender = computed(
     !isPointerLockDenied.value,
 );
 
+const portal = useTemplateRef<HTMLElement>('portal');
+// A measurement box in the document changes structural selectors between pointer samples.
+const probeHost = computed(() => ownerDocument(scrubAreaElement.value).createDocumentFragment());
+const probe = useTemplateRef<HTMLDivElement>('probe');
 let transform: string | undefined;
 
-// A replacement cursor can register before its predecessor unmounts.
-function setCursorElement(next: HTMLSpanElement | null) {
-  transform = undefined;
-  if (next) {
-    cursor.value = { element: next, setTransform };
-  } else if (cursor.value?.setTransform === setTransform) {
-    cursor.value = null;
+function measureBlock(node: HTMLSpanElement, box: HTMLDivElement) {
+  const next = box.nextSibling;
+  node.before(box);
+  try {
+    return box.getBoundingClientRect();
+  } finally {
+    probeHost.value.insertBefore(box, next);
   }
 }
 
-function setTransform(value: string) {
-  transform = value;
-  // A bound cursor transform added more than 10% to frame work.
-  if (element.value) {
-    element.value.style.transform = value;
-  }
+function place(x: number, y: number) {
+  const node = element.value;
+  const box = probe.value;
+  if (!node || !box) return;
+
+  // The page can move or scale the containing block between pointer events.
+  const halfWidth = node.offsetWidth / 2;
+  const halfHeight = node.offsetHeight / 2;
+  const bounds = measureBlock(node, box);
+  const blockX = ((x - bounds.left) * 100) / bounds.width - halfWidth;
+  const blockY = ((y - bounds.top) * 100) / bounds.height - halfHeight;
+  const scale = ownerWindow(node).visualViewport?.scale ?? 1;
+  transform = `translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`;
+  // A bound transform exceeded the frame budget during a scrub.
+  node.style.transform = transform;
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   NumberFieldScrubAreaCursorState,
   HTMLSpanElement
 >('span', props, {
-  ref: setCursorElement,
+  ref(node) {
+    transform = undefined;
+    setCursor(node, place);
+  },
   state,
   props: (attrs) => [{ role: 'presentation', style: CURSOR_STYLE }, attrs],
   overridingStyle: () => (transform ? { transform } : undefined),
   stateAttributesMapping,
 });
 
-const portal = shallowRef<HTMLElement | null>(null);
 const { isHeld } = useKeepAliveState();
 usePortalRegistration(portal, isHeld);
 
@@ -112,11 +129,28 @@ defineExpose({ element });
 
 <template>
   <Teleport v-if="shouldRender" :to="getContainer()">
-    <div v-bind="PORTAL_PROPS" :ref="(node) => (portal = node as HTMLElement | null)">
+    <div ref="portal" v-bind="PORTAL_PROPS">
       <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
       <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
         <slot :state="state" />
       </component>
+      <Teleport :to="probeHost">
+        <div
+          ref="probe"
+          aria-hidden="true"
+          inert
+          style="
+            all: initial;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100px;
+            height: 100px;
+            visibility: hidden;
+            pointer-events: none;
+          "
+        />
+      </Teleport>
     </div>
   </Teleport>
 </template>
