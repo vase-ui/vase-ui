@@ -17,7 +17,7 @@
       "describe": ["PopupTriggerMap"],
       "title": "does not throw in production when the same element is registered under multiple ids",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/popupTriggerMap.node.test.ts",
+      "test": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.node.test.ts",
       "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it."
     },
     {
@@ -25,7 +25,7 @@
       "describe": ["popupId selector"],
       "title": "uses the default popup id as the popup id",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "test": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
     },
     {
@@ -33,7 +33,7 @@
       "describe": ["popupId selector"],
       "title": "associates a lone trigger with the popup id unless the popup opened without a trigger",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "test": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
     }
   ],
@@ -46,28 +46,28 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
       "member": "usePopupRoot",
-      "witness": "packages/vue/src/utils/popups/popupRoot.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/store.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
       "member": "BasePopupStore",
-      "witness": "packages/vue/src/utils/popups/store.test.ts"
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/popupTriggerMap.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
       "member": "PopupTriggerMap",
-      "witness": "packages/vue/src/utils/popups/popupTriggerMap.test.ts"
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/NullStore.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
       "member": "NullStore",
-      "witness": "packages/vue/src/utils/popups/ReactiveStore.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.nullStore.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/floating-root/dispatchOpenChange.ts",
@@ -81,7 +81,7 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "usePopupTrigger",
-      "witness": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "additional": [
         {
           "destination": "packages/vue/src/utils/popups/popupBindings.ts",
@@ -94,7 +94,7 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "usePopupHandleStore",
-      "witness": "packages/vue/src/utils/popups/usePopupHandleStore.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.handle.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/inlineRect.ts",
@@ -116,6 +116,48 @@
       "destination": "packages/vue/src/preview-card/positioner/PreviewCardPositioner.inlineRect.test.ts",
       "member": "createTrigger",
       "witness": "packages/vue/src/preview-card/positioner/PreviewCardPositioner.inlineRect.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.test.tsx",
+      "member": "createRootRef",
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts",
+      "behavior": "Adds, replaces and removes registered trigger elements.",
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts",
+      "member": "createState",
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.spec.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupRoot.store.spec.ts",
+      "member": "useTypeTests",
+      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.spec.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.spec.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/popupBindings.spec.ts",
+      "member": "useTypeTests",
+      "witness": "packages/vue/src/utils/popups/popupBindings.spec.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
+      "member": "RegisteredTrigger",
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx"
     }
   ]
 }

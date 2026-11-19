@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NOOP } from '../../../common/empty';
-import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
+import { NOOP } from '../../common/empty';
+import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
 import {
   useTestCursor,
   useTestDelayGroup as useDelayGroup,
-} from '../../../../test/fixtures/tooltipInteractions';
-import { useTriggerFocus as useFocus } from '../usePopupTrigger';
-import { usePopupHover } from '../interactions/usePopupHover';
-import type { Delay } from '../types';
+} from '../../../test/fixtures/tooltipInteractions';
+import { useTriggerFocus as useFocus } from '../../utils/popups/usePopupTrigger';
+import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
+import type { Delay } from '../../utils/popups/types';
 
 // The store of a module is the store of a handle that no root controls. Each request shares it.
 const sharedStore = Object.assign(getEmptyRootStore(), { closeForSibling: NOOP });

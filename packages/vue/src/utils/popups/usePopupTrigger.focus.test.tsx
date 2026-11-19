@@ -2,22 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { KeepAlive, Teleport, computed, defineComponent, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { platform } from '../../../common/platform';
-import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import { REASONS } from '../../../internals/reasons';
-import { useFloating } from '../../../../test/fixtures/useFloating';
-import { createAttribute } from '../createAttribute';
-import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
-import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { useTriggerFocus as useFocus } from '../usePopupTrigger';
-import type { UseFocusProps } from '../usePopupTrigger';
+import { platform } from '../../common/platform';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import { useFloating } from '../../../test/fixtures/useFloating';
+import { createAttribute } from './createAttribute';
+import { useFloatingRootStore } from './floating-root/useFloatingRootStore';
+import type { FloatingRootStore } from './floating-root/FloatingRootStore';
+import { useTriggerFocus as useFocus } from './usePopupTrigger';
+import type { UseFocusProps } from './usePopupTrigger';
 
 // A module namespace is read-only. The mock gives `os` and `engine` as plain objects, so a case can
 // set `mac` and `webkit`. Both start `false`, so a case does not depend on the engine that runs it.
-vi.mock('../../../common/platform', async () => {
-  const actual = await vi.importActual<typeof import('../../../common/platform')>(
-    '../../../common/platform',
+vi.mock('../../common/platform', async () => {
+  const actual = await vi.importActual<typeof import('../../common/platform')>(
+    '../../common/platform',
   );
   return {
     platform: {

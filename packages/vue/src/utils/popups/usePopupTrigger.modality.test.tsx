@@ -2,17 +2,17 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { platform } from '../../../common/platform';
-import type { InteractionType } from '../usePopupTrigger';
+import { platform } from '../../common/platform';
+import type { InteractionType } from './usePopupTrigger';
 import {
   useOpenInteractionType,
   useTriggerModality as useOpenMethodTriggerProps,
-} from '../usePopupTrigger';
+} from './usePopupTrigger';
 
 // A module namespace is read-only. The mock gives `os` as a plain object, so a case can set `ios`.
-vi.mock('../../../common/platform', async () => {
-  const actual = await vi.importActual<typeof import('../../../common/platform')>(
-    '../../../common/platform',
+vi.mock('../../common/platform', async () => {
+  const actual = await vi.importActual<typeof import('../../common/platform')>(
+    '../../common/platform',
   );
   return { platform: { ...actual.platform, os: { ...actual.platform.os } } };
 });

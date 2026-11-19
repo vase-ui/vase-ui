@@ -165,21 +165,21 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useTriggerPress",
-      "witness": "packages/vue/src/utils/popups/interactions/useClick.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useTriggerFocus",
-      "witness": "packages/vue/src/utils/popups/interactions/useFocus.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useTriggerModality",
-      "witness": "packages/vue/src/utils/popups/interactions/useOpenInteractionType.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.modality.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
@@ -242,13 +242,34 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/interactions/safePolygon.ts",
       "member": "safePolygon",
-      "witness": "packages/vue/src/utils/popups/interactions/safePolygon.test.ts",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts",
       "additional": [
         {
           "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
           "member": "trackHoverPolygon"
         }
       ]
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx",
+      "member": "ClickTrigger",
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx",
+      "member": "setSafariOnMac",
+      "witness": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts",
+      "member": "createPlacementScenario",
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts"
     }
   ]
 }

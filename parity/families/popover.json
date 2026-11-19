@@ -56,5 +56,14 @@
       "reason": "`Popover.Handle` is the class `PopoverHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/popover/popup/PopoverPopupTransitionState.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/popover/popup/PopoverPopup.transitionState.test.tsx",
+      "behavior": "Starts one transition for each opening of a kept popup.",
+      "witness": "packages/vue/src/popover/popup/PopoverPopup.transitionState.test.tsx"
+    }
+  ]
 }

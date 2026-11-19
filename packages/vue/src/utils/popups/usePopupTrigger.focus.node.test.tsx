@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import { useTriggerFocus as useFocus } from '../usePopupTrigger';
+import { getEmptyRootStore } from './floating-root/getEmptyRootStore';
+import { useTriggerFocus as useFocus } from './usePopupTrigger';
 
 // The store of a module is the store of a handle that no root controls. Each request shares it.
 const sharedStore = getEmptyRootStore();

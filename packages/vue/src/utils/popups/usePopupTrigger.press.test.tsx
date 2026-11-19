@@ -10,17 +10,17 @@ import {
   useTestInteractions,
   waitSingleFrame,
 } from '#test-utils';
-import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
-import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
-import { useFloating, useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { createChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import { REASONS } from '../../../internals/reasons';
-import { useRenderElement } from '../../../internals/useRenderElement';
-import { useButton } from '../../../internals/use-button/useButton';
-import { useTriggerRegistration } from '../usePopupTrigger';
-import type { UseClickProps } from '../usePopupTrigger';
-import { usePopupHover } from './usePopupHover';
+import { PopupFixtureContext } from '../../../test/fixtures/PopupFixture';
+import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
+import { useFloating, useTestClick as useClick } from '../../../test/fixtures/useFloating';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import { useRenderElement } from '../../internals/useRenderElement';
+import { useButton } from '../../internals/use-button/useButton';
+import { useTriggerRegistration } from './usePopupTrigger';
+import type { UseClickProps } from './usePopupTrigger';
+import { usePopupHover } from './interactions/usePopupHover';
 
 type AppProps = UseClickProps & {
   initialOpen?: boolean | undefined;

@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, test, vi }
 import { KeepAlive, defineComponent, onMounted, onUpdated, shallowRef } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
-import { getDelay, usePopupHover } from '../interactions/usePopupHover';
-import type { Delay } from '../types';
-import { useTestDelayGroup as useDelayGroup } from '../../../../test/fixtures/tooltipInteractions';
-import { provideFloatingDelayGroup } from '../../../tooltip/root/TooltipRootContext';
+import { useFloating } from '../../../test/floating-ui-tests/useFloating';
+import { getDelay, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
+import type { Delay } from '../../utils/popups/types';
+import { useTestDelayGroup as useDelayGroup } from '../../../test/fixtures/tooltipInteractions';
+import { provideFloatingDelayGroup } from './TooltipRootContext';
 
 type DelayGroup = ReturnType<typeof useDelayGroup>;
 
