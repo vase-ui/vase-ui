@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A range with no text, in NVDA and JAWS</title>
+    <style>
+      [role='meter'],
+      [role='progressbar'] {
+        width: 200px;
+        height: 12px;
+        margin-block: 16px;
+        background: #ddd;
+      }
+      .hidden {
+        clip-path: inset(50%);
+        overflow: hidden;
+        white-space: nowrap;
+        position: fixed;
+        top: -1px;
+        left: 0;
+        width: 1px;
+        height: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>A range with no text, in NVDA and JAWS</h1>
+    <p>
+      Each range has an <code>aria-label</code>. Move to each range with the virtual cursor and with
+      Tab, and write what the screen reader says. A range with no text has only an empty
+      <code>&lt;div&gt;</code> in it. A range with text has the same <code>&lt;div&gt;</code>, then
+      the visually hidden text node of <code>Meter.Root</code>.
+    </p>
+
+    <button type="button">Start</button>
+
+    <!-- No white space in a range: the empty cases hold only an empty element. -->
+    <!-- prettier-ignore -->
+    <div>
+      <div id="meter-empty" role="meter" aria-label="Storage" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" aria-valuetext="30%"><div></div></div>
+      <div id="meter-text" role="meter" aria-label="Storage" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" aria-valuetext="30%"><div></div><span role="presentation" class="hidden">x</span></div>
+      <div id="progress-empty" role="progressbar" aria-label="Upload" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" aria-valuetext="30%"><div></div></div>
+      <div id="progress-text" role="progressbar" aria-label="Upload" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" aria-valuetext="30%"><div></div><span role="presentation" class="hidden">x</span></div>
+    </div>
+
+    <button type="button">End</button>
+
+    <h2>Results</h2>
+    <p>
+      Write what the screen reader says for each range. Write "name" when it says "Storage" or
+      "Upload".
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Range</th>
+          <th>NVDA and Chrome</th>
+          <th>NVDA and Firefox</th>
+          <th>JAWS and Chrome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>#meter-empty</code></td>
+          <td>not measured</td>
+          <td>not measured</td>
+          <td>not measured</td>
+        </tr>
+        <tr>
+          <td><code>#meter-text</code></td>
+          <td>not measured</td>
+          <td>not measured</td>
+          <td>not measured</td>
+        </tr>
+        <tr>
+          <td><code>#progress-empty</code></td>
+          <td>not measured</td>
+          <td>not measured</td>
+          <td>not measured</td>
+        </tr>
+        <tr>
+          <td><code>#progress-text</code></td>
+          <td>not measured</td>
+          <td>not measured</td>
+          <td>not measured</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      If each screen reader says the name of each range with no text, remove the hidden node from
+      <code>Meter.Root</code>, with its test and the sentence of the docs.
+    </p>
+  </body>
+</html>
