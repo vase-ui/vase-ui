@@ -9,7 +9,7 @@ import {
 } from './dayState';
 import type { DayRules } from './dayState';
 import { getMonthPage } from './monthGrid';
-import { getBroadcastPage, getDurationPage } from './weeks';
+import { getBroadcastPage, getDurationPage } from './useCalendarRoot';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 

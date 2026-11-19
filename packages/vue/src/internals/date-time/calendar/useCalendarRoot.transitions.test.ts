@@ -1,7 +1,7 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { effectScope, shallowRef } from 'vue';
 import { getMonthPage } from './monthGrid';
-import { usePageTransition } from './usePageTransition';
+import { usePageTransition } from './useCalendarRoot';
 
 it('retains the old day page until the view leaves days, even within one task', () => {
   const november = getMonthPage(Temporal.PlainYearMonth.from('2026-11'), 1);

@@ -1,11 +1,11 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { CalendarBaseProps } from '../../internals/date-time/calendar/calendarProps';
+import type { CalendarBaseProps } from '../../internals/date-time/calendar/useCalendarRoot';
 import type {
   RangeChangeEventDetails,
   RangeChangeEventReason,
   RangeValue,
-} from '../../internals/date-time/calendar/rangeSelection';
+} from './RangeCalendarRootContext';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -62,16 +62,18 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, provide } from 'vue';
-import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
+import {
+  useRangeCalendarHost,
+  useRangeSelection,
+  RangeCalendarRootContext,
+} from './RangeCalendarRootContext';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
-import { useRangeSelection } from '../../internals/date-time/calendar/rangeSelection';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { CalendarRootContext } from '../../calendar/root/CalendarRootContext';
 import { calendarRootStateAttributesMapping } from '../../calendar/root/stateAttributesMapping';
 import type { CalendarState } from '../../calendar/root/CalendarRoot.vue';
-import { RangeCalendarRootContext } from './RangeCalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
