@@ -63,17 +63,8 @@ export interface SliderThumbProps
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  useAttrs,
-  watch,
-  type ShallowRef,
-} from 'vue';
-import type { Component } from 'vue';
+import { computed, onScopeDispose, provide, shallowRef, useAttrs, watch } from 'vue';
+import type { Component, ShallowRef } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
 import {
@@ -81,11 +72,10 @@ import {
   useHiddenValueBeforeHydration,
   useIsHydrating,
 } from '../../common/hydration';
-import { ownerWindow } from '../../common/owner';
+import { useResizeObserver } from '../../common/useResizeObserver';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
 import {
-  ARROW_DOWN,
   ARROW_LEFT,
   ARROW_RIGHT,
   ARROW_UP,
@@ -113,14 +103,19 @@ import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { valueToPercent } from '../../utils/valueToPercent';
-import { useSliderRootContext } from '../root/SliderRootContext';
+import {
+  SliderThumbContext,
+  sliderStateAttributesMapping,
+  useSliderRootContext,
+} from '../root/SliderRootContext';
 import type { ThumbMetadata } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
-import { getMidpoint } from '../utils/getMidpoint';
-import { getSliderValue } from '../utils/getSliderValue';
-import { getDecimalPrecision, roundValueToStep } from '../utils/roundValueToStep';
+import {
+  getDecimalPrecision,
+  getMidpoint,
+  getSliderValue,
+  roundValueToStep,
+} from '../utils/thumbValues';
 import SliderThumbChildren from './SliderThumbChildren.vue';
-import { SliderThumbContext } from './SliderThumbContext';
 import * as SliderThumbDataAttributes from './SliderThumbDataAttributes';
 
 defineOptions({ inheritAttrs: false });
@@ -147,13 +142,12 @@ function getDefaultAriaValueText(
     return undefined;
   }
 
-  /* eslint-disable @typescript-eslint/no-non-null-assertion -- A thumb reads the value at its own index, and `formatNumber` accepts a missing value. */
+  const value = values[index] ?? null;
   if (values.length === 2) {
-    return `${formatNumber(values[index]!, locale, format)} ${index === 0 ? 'start' : 'end'} range`;
+    return `${formatNumber(value, locale, format)} ${index === 0 ? 'start' : 'end'} range`;
   }
 
-  return format ? formatNumber(values[index]!, locale, format) : undefined;
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  return format ? formatNumber(value, locale, format) : undefined;
 }
 
 function getNewValue(
@@ -189,49 +183,39 @@ function callHandler(handler: Handler, event: Event) {
 const attrs = useAttrs();
 
 const {
-  active: activeIndex,
+  props: rootProps,
   lastUsedThumbIndex,
   controlElement,
   disabled: contextDisabled,
   validation,
-  format,
   handleInputChange,
   registerThumbInput,
   inset,
   isArrayValue,
   labelId,
-  largeStep,
-  locale,
-  max,
-  min,
-  minStepsBetweenValues,
-  form,
   name,
-  orientation,
-  pressedThumbCenterOffsetRef,
-  pressedThumbIndexRef,
   renderBeforeHydration,
   reset,
   setActive,
   setIndicatorPosition,
   state: rootState,
-  step,
   thumbList,
   thumbRefs,
   values: sliderValues,
+  setPressedThumb,
 } = useSliderRootContext();
 
 // The input binds the id of the label, and the label can come after the thumb.
 useDeferredServerRender();
 
 // Resolved here rather than in Root, since this part can hydrate later, e.g. inside Suspense.
-const formatLocale = useFormatLocale(locale);
+const formatLocale = useFormatLocale(() => rootProps.locale);
 
 const direction = useDirection();
 
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 const range = computed(() => sliderValues.value.length > 1);
-const vertical = computed(() => orientation.value === 'vertical');
+const vertical = computed(() => rootProps.orientation === 'vertical');
 const rtl = computed(() => direction.value === 'rtl');
 
 const { setTouched, validationMode } = useFieldRootContext();
@@ -261,7 +245,9 @@ const thumbIndex = computed(() => (range.value ? compositeIndex.value : 0));
 const last = computed(() => thumbIndex.value === sliderValues.value.length - 1);
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A thumb that has no index yet has no value, and `valueToPercent` then gives `NaN`, as in Base UI.
 const thumbValue = computed(() => sliderValues.value[thumbIndex.value]!);
-const thumbValuePercent = computed(() => valueToPercent(thumbValue.value, min.value, max.value));
+const thumbValuePercent = computed(() =>
+  valueToPercent(thumbValue.value, rootProps.min, rootProps.max),
+);
 
 const positionPercent = shallowRef<number | undefined>();
 const isHydrating = useIsHydrating();
@@ -272,9 +258,6 @@ const safeLastUsedThumbIndex = computed(() =>
     ? lastUsedThumbIndex.value
     : -1,
 );
-
-// The last position and indicator edge applied.
-let appliedInset: [number | undefined, number] = [undefined, -1];
 
 function getInsetPosition() {
   const control = controlElement.value;
@@ -302,51 +285,36 @@ function getInsetPosition() {
   // `min === max` has no valid position, which hides the thumb.
   const nextInsetPosition = Number.isFinite(nextPositionPercent) ? nextPositionPercent : undefined;
 
-  // The indicator edge this thumb drives: 0 = start, 1 = end, -1 = none.
-  let indicatorEdge = -1;
-  if (thumbIndex.value === 0) {
-    indicatorEdge = 0;
-  } else if (last.value) {
-    indicatorEdge = 1;
-  }
-
-  const [appliedPosition, appliedEdge] = appliedInset;
-  if (nextInsetPosition === appliedPosition && indicatorEdge === appliedEdge) {
-    return;
-  }
-
-  appliedInset = [nextInsetPosition, indicatorEdge];
-
   positionPercent.value = nextInsetPosition;
-
-  if (indicatorEdge === 0 || indicatorEdge === 1) {
-    setIndicatorPosition(indicatorEdge, nextInsetPosition);
-  }
+  if (thumbIndex.value === 0) setIndicatorPosition(0, nextInsetPosition);
+  else if (last.value) setIndicatorPosition(1, nextInsetPosition);
 }
 
-// `KeepAlive` takes the thumb out of the document. The thumb then has no layout, so the measure
-// and the observer stop until the thumb is active again.
 const { isHeld } = useKeepAliveState();
-
-function measureWhenInset() {
-  if (inset.value && !isHeld.value) {
-    getInsetPosition();
-  }
-}
-
-onMounted(measureWhenInset);
-// `index` and `last` decide which indicator edge this thumb drives.
-watch([inset, thumbValuePercent, thumbIndex, last], measureWhenInset, { flush: 'post' });
+watch(
+  [controlElement, element, inset, isHeld, vertical, thumbValuePercent, thumbIndex, last],
+  () => {
+    if (inset.value && !isHeld.value) getInsetPosition();
+  },
+  { flush: 'post' },
+);
+useResizeObserver(
+  () =>
+    inset.value && controlElement.value && element.value
+      ? [controlElement.value, element.value]
+      : [],
+  getInsetPosition,
+);
 
 const zIndex = computed(() => {
   if (range.value) {
-    if (activeIndex.value === thumbIndex.value) {
+    if (rootState.value.activeThumbIndex === thumbIndex.value) {
       return 2;
     }
     if (safeLastUsedThumbIndex.value === thumbIndex.value) {
       return 1;
     }
-  } else if (activeIndex.value === thumbIndex.value) {
+  } else if (rootState.value.activeThumbIndex === thumbIndex.value) {
     return 1;
   }
   return undefined;
@@ -380,10 +348,6 @@ const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === inputElement.value) {
-    return;
-  }
   giveFieldInput(input);
   inputElement.value = input;
 }
@@ -434,11 +398,6 @@ function inputProps() {
       : props.ariaLabel,
   );
 
-  let cssWritingMode: 'vertical-rl' | 'vertical-lr' | undefined;
-  if (vertical.value) {
-    cssWritingMode = rtl.value ? 'vertical-rl' : 'vertical-lr';
-  }
-
   const merged = mergeProps<'input'>(
     {
       'aria-label': ariaLabel,
@@ -446,12 +405,12 @@ function inputProps() {
         given('aria-labelledby', props.ariaLabelledby) ??
         (ariaLabel == null ? labelId.value : undefined),
       'aria-describedby': given('aria-describedby', props.ariaDescribedby),
-      'aria-orientation': orientation.value,
+      'aria-orientation': rootProps.orientation,
       'aria-valuenow': value,
       'aria-valuetext':
         typeof props.getAriaValueText === 'function'
           ? props.getAriaValueText(
-              formatNumber(value, formatLocale.value, format.value),
+              formatNumber(value, formatLocale.value, rootProps.format),
               value,
               thumbIndex.value,
             )
@@ -459,14 +418,14 @@ function inputProps() {
             getDefaultAriaValueText(
               sliderValues.value,
               thumbIndex.value,
-              format.value,
+              rootProps.format,
               formatLocale.value,
             )),
       disabled: isDisabled.value,
-      form: form.value,
+      form: rootProps.form,
       id: inputId.value,
-      max: max.value,
-      min: min.value,
+      max: rootProps.max,
+      min: rootProps.min,
       name: name.value,
       onInput: onNativeChange,
       onFocusin(event: FocusEvent) {
@@ -503,8 +462,8 @@ function inputProps() {
             getSliderValue(
               thumbValue.value,
               thumbIndex.value,
-              min.value,
-              max.value,
+              rootProps.min,
+              rootProps.max,
               isArrayValue.value,
               sliderValues.value,
             ),
@@ -512,11 +471,7 @@ function inputProps() {
         }
       },
       onKeydown(event: KeyboardEvent) {
-        if (event.defaultPrevented) {
-          return;
-        }
-
-        if (!ALL_KEYS.has(event.key)) {
+        if (event.defaultPrevented || !ALL_KEYS.has(event.key)) {
           return;
         }
 
@@ -524,80 +479,64 @@ function inputProps() {
           event.stopPropagation();
         }
 
-        let newValue = null;
-        let keyDirection = 0;
-        let increment = event.shiftKey ? largeStep.value : step.value;
-        const roundedValue = roundValueToStep(thumbValue.value, step.value, min.value);
+        let newValue: number;
+
         switch (event.key) {
-          case ARROW_UP:
-            keyDirection = 1;
-            break;
-          case ARROW_RIGHT:
-            keyDirection = rtl.value ? -1 : 1;
-            break;
-          case ARROW_DOWN:
-            keyDirection = -1;
-            break;
-          case ARROW_LEFT:
-            keyDirection = rtl.value ? 1 : -1;
-            break;
-          case PAGE_UP:
-            increment = largeStep.value;
-            keyDirection = 1;
-            break;
-          case PAGE_DOWN:
-            increment = largeStep.value;
-            keyDirection = -1;
-            break;
-          /* eslint-disable @typescript-eslint/no-non-null-assertion -- `Number.isFinite` proves that the value of the neighbor exists. */
-          case END:
+          case END: {
+            const next = sliderValues.value[thumbIndex.value + 1];
             newValue =
-              range.value && Number.isFinite(sliderValues.value[thumbIndex.value + 1])
-                ? sliderValues.value[thumbIndex.value + 1]! -
-                  step.value * minStepsBetweenValues.value
-                : max.value;
+              range.value && next !== undefined && Number.isFinite(next)
+                ? next - rootProps.step * rootProps.minStepsBetweenValues
+                : rootProps.max;
             break;
-          case HOME:
-            newValue =
-              range.value && Number.isFinite(sliderValues.value[thumbIndex.value - 1])
-                ? sliderValues.value[thumbIndex.value - 1]! +
-                  step.value * minStepsBetweenValues.value
-                : min.value;
-            break;
-          /* eslint-enable @typescript-eslint/no-non-null-assertion */
-          default:
-            break;
-        }
-
-        if (keyDirection !== 0) {
-          newValue = getNewValue(roundedValue, increment, keyDirection, min.value, max.value);
-        }
-
-        if (newValue !== null) {
-          const input = event.currentTarget as HTMLInputElement;
-
-          if (!matchesFocusVisible(input)) {
-            restoringFocusVisible = true;
-            input.blur();
-            input.focus({
-              preventScroll: true,
-              // Show `:focus-visible` after keyboard interaction, even if the
-              // thumb was previously focused by a pointer.
-              focusVisible: true,
-            } as FocusOptions);
           }
-
-          handleInputChange(newValue, thumbIndex.value, event);
-          event.preventDefault();
+          case HOME: {
+            const previous = sliderValues.value[thumbIndex.value - 1];
+            newValue =
+              range.value && previous !== undefined && Number.isFinite(previous)
+                ? previous + rootProps.step * rootProps.minStepsBetweenValues
+                : rootProps.min;
+            break;
+          }
+          default: {
+            const forward =
+              event.key === ARROW_UP ||
+              event.key === PAGE_UP ||
+              event.key === (rtl.value ? ARROW_LEFT : ARROW_RIGHT);
+            const large = event.shiftKey || event.key === PAGE_UP || event.key === PAGE_DOWN;
+            const rounded = roundValueToStep(thumbValue.value, rootProps.step, rootProps.min);
+            newValue = getNewValue(
+              rounded,
+              large ? rootProps.largeStep : rootProps.step,
+              forward ? 1 : -1,
+              rootProps.min,
+              rootProps.max,
+            );
+          }
         }
+        const input = event.currentTarget as HTMLInputElement;
+
+        if (!matchesFocusVisible(input)) {
+          restoringFocusVisible = true;
+          input.blur();
+          input.focus({
+            preventScroll: true,
+            // Show `:focus-visible` after keyboard interaction, even if the
+            // thumb was previously focused by a pointer.
+            focusVisible: true,
+          } as FocusOptions);
+        }
+
+        handleInputChange(newValue, thumbIndex.value, event);
+        event.preventDefault();
       },
-      step: step.value,
+      step: rootProps.step,
       style: {
         ...visuallyHidden,
         // So that VoiceOver's focus indicator matches the thumb's dimensions
         width: '100%',
         height: '100%',
-        writingMode: cssWritingMode,
+        writingMode: vertical.value ? (rtl.value ? 'vertical-rl' : 'vertical-lr') : undefined,
       },
       tabindex: props.tabindex,
       type: 'range',
@@ -658,10 +597,11 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
             return;
           }
 
-          pressedThumbIndexRef.value = thumbIndex.value;
           const midpoint = getMidpoint(event.currentTarget as HTMLElement, vertical.value);
-          pressedThumbCenterOffsetRef.value =
-            (vertical.value ? event.clientY : event.clientX) - midpoint;
+          setPressedThumb(
+            thumbIndex.value,
+            (vertical.value ? event.clientY : event.clientX) - midpoint,
+          );
         },
         style: getThumbStyle(),
         // The script of the server HTML writes the position to the style.
@@ -674,27 +614,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
   stateAttributesMapping: sliderStateAttributesMapping,
   children: true,
 });
-
-watch(
-  [controlElement, element, inset, isHeld],
-  ([control, thumb, isInset, held], _previous, onCleanup) => {
-    if (!isInset || !control || !thumb || held) {
-      return;
-    }
-
-    const ResizeObserverCtor = ownerWindow(control).ResizeObserver;
-    if (typeof ResizeObserverCtor === 'function') {
-      // An observer callback runs before the paint, and Vue renders in the microtask after it.
-      const resizeObserver = new ResizeObserverCtor(getInsetPosition);
-      resizeObserver.observe(control);
-      resizeObserver.observe(thumb);
-      onCleanup(() => resizeObserver.disconnect());
-    }
-
-    getInsetPosition();
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element, inputElement });
 </script>

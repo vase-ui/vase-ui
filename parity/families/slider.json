@@ -87,5 +87,70 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/slider/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/root/SliderRootContext.ts",
+      "member": "sliderStateAttributesMapping",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/asc.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "asc",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getMidpoint.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getMidpoint",
+      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getPushedThumbValues.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getPushedThumbValues",
+      "witness": "packages/vue/src/slider/utils/getPushedThumbValues.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getSliderValue.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "getSliderValue",
+      "witness": "packages/vue/src/slider/utils/getSliderValue.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/resolveThumbCollision.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "resolveThumbCollision",
+      "witness": "packages/vue/src/slider/utils/resolveThumbCollision.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/roundValueToStep.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "roundValueToStep",
+      "witness": "packages/vue/src/slider/utils/roundValueToStep.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/test-utils.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/test/sliderTestUtils.ts",
+      "member": "createTouches",
+      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/validateMinimumDistance.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
+      "member": "validateMinimumDistance",
+      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+    }
+  ]
 }

@@ -7,7 +7,7 @@ import type {
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { ThumbCollisionBehavior } from '../utils/resolveThumbCollision';
+import type { ThumbCollisionBehavior } from '../utils/thumbValues';
 
 export interface SliderRootState extends FieldRootState {
   /**
@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `modelValue` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowReactive, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
@@ -207,12 +207,9 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { asc } from '../utils/asc';
-import { getSliderValue } from '../utils/getSliderValue';
-import { validateMinimumDistance } from '../utils/validateMinimumDistance';
-import { SliderRootContext } from './SliderRootContext';
+import { asc, getSliderValue, validateMinimumDistance } from '../utils/thumbValues';
+import { SliderRootContext, sliderStateAttributesMapping } from './SliderRootContext';
 import type { ThumbInput, ThumbMetadata } from './SliderRootContext';
-import { sliderStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
 
@@ -275,10 +272,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderRootState>;
 }>();
 
-function areValuesEqual(
-  newValue: number | readonly number[],
-  oldValue: number | readonly number[],
-) {
+function areValuesEqual(newValue: unknown, oldValue: unknown) {
   return (
     newValue === oldValue ||
     (Array.isArray(newValue) && Array.isArray(oldValue) && areArraysEqual(newValue, oldValue))
@@ -312,8 +306,6 @@ const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
 
-// The internal value is potentially unsorted, e.g. to support frozen arrays
-// https://github.com/mui/material-ui/pull/28472
 const valueUnwrapped = useControlled<number | readonly number[]>({
   controlled: () => props.modelValue,
   default: () => props.defaultValue ?? props.min,
@@ -322,23 +314,13 @@ const valueUnwrapped = useControlled<number | readonly number[]>({
 
 const controlElement = shallowRef<HTMLElement | null>(null);
 const thumbRefs = shallowRef<(HTMLElement | null)[]>([]);
-// The px distance between the pointer and the center of a pressed thumb.
-const pressedThumbCenterOffsetRef = shallowRef<number | null>(null);
-// The index of the pressed thumb, or the closest thumb if the `Control` was pressed.
-// This is updated on pointerdown, which is sooner than the `active/activeIndex`
-// state which is updated later when the nested `input` receives focus.
-const pressedThumbIndexRef = shallowRef(-1);
-// The values when the current drag interaction started.
-const pressedValuesRef = shallowRef<readonly number[] | null>(null);
-const lastChangeReasonRef = shallowRef<SliderRootChangeEventReason>(REASONS.none);
-
-// We can't use the :active browser pseudo-classes.
-// - The active state isn't triggered when clicking on the rail.
-// - The active state isn't transferred when inversing a range slider.
+// A thumb records its press before the event reaches the track.
+const pressedThumb = { index: -1, centerOffset: null as number | null };
+let lastChangeReason: SliderRootChangeEventReason = REASONS.none;
 const active = shallowRef(-1);
 const lastUsedThumbIndex = shallowRef(-1);
 const dragging = shallowRef(false);
-const indicatorPosition = shallowRef<readonly [number | undefined, number | undefined]>([
+const indicatorPosition = shallowReactive<[number | undefined, number | undefined]>([
   undefined,
   undefined,
 ]);
@@ -349,11 +331,6 @@ function setActive(value: number) {
   if (value !== -1) {
     lastUsedThumbIndex.value = value;
   }
-}
-
-function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
-  const [start, end] = indicatorPosition.value;
-  indicatorPosition.value = edge === 0 ? [position, end] : [start, position];
 }
 
 const thumbList = useCompositeList<ThumbMetadata>({
@@ -400,29 +377,27 @@ useValueChanged(fieldValue, () => {
     validation.change(fieldValue.value);
   }
 
-  const initialValue = validityData.value.initialValue as number | readonly number[] | undefined;
-  const current = fieldValue.value;
-  let isDirty: boolean;
-  if (Array.isArray(current) && Array.isArray(initialValue)) {
-    isDirty = !areArraysEqual(current, initialValue);
-  } else {
-    isDirty = current !== initialValue;
-  }
-  setDirty(isDirty);
+  setDirty(!areValuesEqual(fieldValue.value, validityData.value.initialValue));
 });
 
-function setValue(newValue: number | number[], details: SliderRootChangeEventDetails) {
+function setValue(
+  newValue: number | number[],
+  index: number,
+  reason: SliderRootChangeEventReason,
+  event?: Event,
+) {
   if (Number.isNaN(newValue) || areValuesEqual(newValue, valueUnwrapped.value)) {
     return false;
   }
 
+  const details = createChangeEventDetails(reason, event, undefined, { activeThumbIndex: index });
   emit('valueChange', newValue as Value extends number ? number : Value, details);
 
   if (details.isCanceled) {
     return false;
   }
 
-  lastChangeReasonRef.value = details.reason;
+  lastChangeReason = reason;
 
   emit('update:modelValue', newValue as Value extends number ? number : Value);
   valueUnwrapped.value = newValue;
@@ -430,11 +405,16 @@ function setValue(newValue: number | number[], details: SliderRootChangeEventDet
   return true;
 }
 
-function onValueCommitted(
+function commitValue(
   newValue: number | readonly number[],
-  data: SliderRootCommitEventDetails,
+  event: Event,
+  reason = lastChangeReason,
 ) {
-  emit('valueCommitted', newValue as Value extends number ? number : Value, data);
+  emit(
+    'valueCommitted',
+    newValue as Value extends number ? number : Value,
+    createGenericEventDetails(reason, event),
+  );
 }
 
 const thumbInputs = new Set<ThumbInput>();
@@ -465,7 +445,7 @@ function takeChangedInputs(valueInput: number, index: number) {
   return taken.length > 0 ? { values: nextValues.sort(asc), taken } : undefined;
 }
 
-function handleInputChange(valueInput: number, index: number, event: KeyboardEvent | Event) {
+function handleInputChange(valueInput: number, index: number, event: Event) {
   const changedInputs = takeChangedInputs(valueInput, index);
   const newValue =
     changedInputs?.values ??
@@ -473,19 +453,11 @@ function handleInputChange(valueInput: number, index: number, event: KeyboardEve
 
   if (validateMinimumDistance(newValue, props.step, props.minStepsBetweenValues)) {
     const reason = 'key' in event ? REASONS.keyboard : REASONS.inputChange;
-    const applied = setValue(
-      newValue,
-      createChangeEventDetails(reason, event as KeyboardEvent, undefined, {
-        activeThumbIndex: index,
-      }) as SliderRootChangeEventDetails,
-    );
+    const applied = setValue(newValue, index, reason, event);
     setTouched(true);
 
     if (applied) {
-      onValueCommitted(
-        newValue,
-        createGenericEventDetails(reason, event as KeyboardEvent) as SliderRootCommitEventDetails,
-      );
+      commitValue(newValue, event, reason);
     }
   }
 
@@ -543,21 +515,12 @@ watch(
 );
 
 function resetToDefaultValue(event: Event) {
-  const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
-  if (props.modelValue !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
-    return false;
-  }
-
-  const nextValue = (Array.isArray(defaultValue) ? defaultValue.slice() : defaultValue) as
-    number | number[];
-  const applied = setValue(
-    nextValue,
-    createChangeEventDetails(REASONS.none, event, undefined, {
-      activeThumbIndex: -1,
-    }) as SliderRootChangeEventDetails,
-  );
+  if (props.modelValue !== undefined) return false;
+  const initial = props.defaultValue ?? props.min;
+  const nextValue = typeof initial === 'number' ? initial : initial.slice();
+  const applied = setValue(nextValue, -1, REASONS.none, event);
   if (applied) {
-    onValueCommitted(nextValue, createGenericEventDetails(REASONS.none, event));
+    commitValue(nextValue, event, REASONS.none);
   }
   return applied;
 }
@@ -595,38 +558,34 @@ const state = computed<SliderRootState>(() => ({
 }));
 
 provide(SliderRootContext, {
-  active,
+  props,
   controlElement,
+  setControlElement(next, previous) {
+    if (next || controlElement.value === previous) controlElement.value = next;
+  },
   disabled: isDisabled,
-  dragging,
   validation,
-  format: computed(() => props.format),
   handleInputChange,
   registerThumbInput,
   indicatorPosition,
-  setIndicatorPosition,
+  setIndicatorPosition(edge, position) {
+    indicatorPosition[edge] = position;
+  },
   inset: computed(() => props.thumbAlignment !== 'center'),
   isArrayValue: range,
   labelId,
   rootLabelId,
   registerLabelId,
   reset,
-  thumbMap: thumbList.map,
   thumbList,
-  largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,
-  lastChangeReasonRef,
-  form: computed(() => props.form),
-  locale: computed(() => props.locale),
-  max: computed(() => props.max),
-  min: computed(() => props.min),
-  minStepsBetweenValues: computed(() => props.minStepsBetweenValues),
   name: inputName,
-  onValueCommitted,
-  orientation: computed(() => props.orientation),
-  pressedThumbCenterOffsetRef,
-  pressedThumbIndexRef,
-  pressedValuesRef,
+  commitValue,
+  pressedThumb,
+  setPressedThumb(index, centerOffset) {
+    pressedThumb.index = index;
+    pressedThumb.centerOffset = centerOffset;
+  },
   renderBeforeHydration: computed(() => props.thumbAlignment === 'edge'),
   setActive,
   setDragging(value) {
@@ -634,16 +593,9 @@ provide(SliderRootContext, {
   },
   setValue,
   state,
-  step: computed(() => props.step),
-  thumbCollisionBehavior: computed(() => props.thumbCollisionBehavior),
   thumbRefs,
   values,
 });
-
-// The attributes of the consumer have no blank `aria-label` (VUE-106).
-function hasAriaLabel(attrs: Record<string, unknown>) {
-  return typeof attrs['aria-label'] === 'string';
-}
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
@@ -653,7 +605,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       // root assumes that label until it is mounted.
       'aria-labelledby':
         labelId.value ??
-        (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
+        (isHydrating.value && typeof attrs['aria-label'] !== 'string'
+          ? rootLabelId.value
+          : undefined),
       id: rootId.value,
       role: 'group',
     },

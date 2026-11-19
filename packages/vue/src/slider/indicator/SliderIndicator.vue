@@ -9,51 +9,15 @@ export interface SliderIndicatorProps
   extends
     VaseUIComponentProps<SliderIndicatorState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
-
-function getIndicatorStyles(
-  vertical: boolean,
-  range: boolean,
-  inset: boolean,
-  start: number | undefined,
-  end: number | undefined,
-  forceHidden: boolean,
-) {
-  const styles: Record<string, string | number | undefined> = {
-    visibility:
-      forceHidden || (inset && (start === undefined || (range && end === undefined)))
-        ? 'hidden'
-        : undefined,
-    position: vertical ? 'absolute' : 'relative',
-    [vertical ? 'width' : 'height']: 'inherit',
-  };
-
-  let startValue = `${start ?? 0}%`;
-  let sizeValue = `${(end ?? 0) - (start ?? 0)}%`;
-
-  if (inset) {
-    styles['--start-position'] = startValue;
-    startValue = 'var(--start-position)';
-
-    if (range) {
-      styles['--relative-size'] = sizeValue;
-      sizeValue = 'var(--relative-size)';
-    }
-  }
-
-  styles[vertical ? 'bottom' : 'insetInlineStart'] = range ? startValue : 0;
-  styles[vertical ? 'height' : 'width'] = range ? sizeValue : startValue;
-
-  return styles;
-}
 </script>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { valueToPercent } from '../../utils/valueToPercent';
-import { useSliderRootContext } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
+import { sliderStateAttributesMapping, useSliderRootContext } from '../root/SliderRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -64,40 +28,55 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderIndicatorState>;
 }>();
 
-const { indicatorPosition, inset, max, min, orientation, renderBeforeHydration, state, values } =
-  useSliderRootContext();
+const {
+  props: rootProps,
+  indicatorPosition,
+  inset,
+  renderBeforeHydration,
+  state,
+  values,
+} = useSliderRootContext();
 
 const isHydrating = useIsHydrating();
 
+const scriptSetsStyle = computed(() => renderBeforeHydration.value && isHydrating.value);
+const style = computed(() => {
+  const vertical = rootProps.orientation === 'vertical';
+  const range = values.value.length > 1;
+  const [start, end] = inset.value
+    ? indicatorPosition
+    : [
+        valueToPercent(values.value[0] ?? NaN, rootProps.min, rootProps.max),
+        valueToPercent(values.value.at(-1) ?? NaN, rootProps.min, rootProps.max),
+      ];
+  const offset = `${start ?? 0}%`;
+  const size = `${(end ?? 0) - (start ?? 0)}%`;
+  const startPosition = inset.value ? 'var(--start-position)' : offset;
+  const rangeSize = inset.value ? 'var(--relative-size)' : size;
+  return {
+    visibility:
+      inset.value && (scriptSetsStyle.value || start === undefined || (range && end === undefined))
+        ? 'hidden'
+        : undefined,
+    position: vertical ? 'absolute' : 'relative',
+    [vertical ? 'width' : 'height']: 'inherit',
+    '--start-position': inset.value ? offset : undefined,
+    '--relative-size': inset.value && range ? size : undefined,
+    [vertical ? 'bottom' : 'insetInlineStart']: range ? startPosition : 0,
+    [vertical ? 'height' : 'width']: range ? rangeSize : startPosition,
+  };
+});
+
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  props: (attrs) => {
-    const isInset = inset.value;
-    const sliderValues = values.value;
-    return [
-      {
-        'data-vase-ui-slider-indicator': renderBeforeHydration.value ? '' : undefined,
-        /* eslint-disable @typescript-eslint/no-non-null-assertion -- An empty `values` has no first or last value, and `valueToPercent` then gives `NaN`, as in Base UI. */
-        style: getIndicatorStyles(
-          orientation.value === 'vertical',
-          sliderValues.length > 1,
-          isInset,
-          isInset
-            ? indicatorPosition.value[0]
-            : valueToPercent(sliderValues[0]!, min.value, max.value),
-          isInset
-            ? indicatorPosition.value[1]
-            : valueToPercent(sliderValues[sliderValues.length - 1]!, min.value, max.value),
-          isInset && renderBeforeHydration.value && isHydrating.value,
-        ),
-        /* eslint-enable @typescript-eslint/no-non-null-assertion */
-        // The script of the server HTML writes the position to the style.
-        'data-allow-mismatch':
-          renderBeforeHydration.value && isHydrating.value ? 'style' : undefined,
-      },
-      attrs,
-    ];
-  },
+  props: (attrs) => [
+    {
+      'data-vase-ui-slider-indicator': renderBeforeHydration.value ? '' : undefined,
+      'data-allow-mismatch': scriptSetsStyle.value ? 'style' : undefined,
+      style: style.value,
+    },
+    attrs,
+  ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });
 

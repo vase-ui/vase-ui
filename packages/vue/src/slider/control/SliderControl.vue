@@ -13,31 +13,26 @@ export interface SliderControlProps
 
 <script setup lang="ts">
 import { isElement } from '@floating-ui/utils/dom';
-import { onScopeDispose, watch } from 'vue';
+import { watch } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import { activeElement, contains, getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
-import {
-  createChangeEventDetails,
-  createGenericEventDetails,
-} from '../../internals/createVaseUIEventDetails';
+import { useListenerSession } from '../../common/useListenerSession';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { isTouchLikePointerType } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
-import type {
-  SliderRootChangeEventDetails,
-  SliderRootCommitEventDetails,
-} from '../root/SliderRoot.vue';
-import { useSliderRootContext } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
-import { getMidpoint } from '../utils/getMidpoint';
-import { resolveThumbCollision } from '../utils/resolveThumbCollision';
-import { roundValueToStep } from '../utils/roundValueToStep';
-import { validateMinimumDistance } from '../utils/validateMinimumDistance';
+import { sliderStateAttributesMapping, useSliderRootContext } from '../root/SliderRootContext';
+import {
+  getMidpoint,
+  resolveThumbCollision,
+  roundValueToStep,
+  validateMinimumDistance,
+} from '../utils/thumbValues';
 
 defineOptions({ inheritAttrs: false });
 
@@ -48,16 +43,8 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderControlState>;
 }>();
 
-interface Coords {
-  x: number;
-  y: number;
-}
-
-interface FingerState {
-  value: number | number[];
-  thumbIndex: number;
-  didSwap: boolean;
-}
+type Coords = { x: number; y: number };
+type FingerState = ReturnType<typeof resolveThumbCollision>;
 
 const INTENTIONAL_DRAG_COUNT_THRESHOLD = 2;
 
@@ -66,45 +53,33 @@ function getControlOffset(styles: CSSStyleDeclaration | null, vertical: boolean)
     return { start: 0, end: 0 };
   }
 
-  function parseSize(value: string | null | undefined) {
-    const parsed = value != null ? parseFloat(value) : 0;
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-
+  const size = (value: string) => parseFloat(value) || 0;
   const start = !vertical ? 'InlineStart' : 'Top';
   const end = !vertical ? 'InlineEnd' : 'Bottom';
 
   return {
-    start: parseSize(styles[`border${start}Width`]) + parseSize(styles[`padding${start}`]),
-    end: parseSize(styles[`border${end}Width`]) + parseSize(styles[`padding${end}`]),
+    start: size(styles[`border${start}Width`]) + size(styles[`padding${start}`]),
+    end: size(styles[`border${end}Width`]) + size(styles[`padding${end}`]),
   };
 }
 
 const {
-  controlElement,
+  props: rootProps,
+  setControlElement,
   disabled,
-  dragging,
   inset,
   isArrayValue,
-  lastChangeReasonRef,
-  max,
-  min,
-  minStepsBetweenValues,
-  onValueCommitted,
-  orientation,
-  pressedThumbCenterOffsetRef,
-  pressedThumbIndexRef,
-  pressedValuesRef,
+  commitValue,
   renderBeforeHydration,
   setActive,
   setDragging,
   setValue,
   state,
-  step,
-  thumbCollisionBehavior,
   thumbRefs,
-  thumbMap,
+  thumbList,
   values,
+  pressedThumb,
+  setPressedThumb,
 } = useSliderRootContext();
 
 const direction = useDirection();
@@ -118,59 +93,34 @@ let moveCount = 0;
 // The offset amount to each side of the control for inset sliders.
 // This value should be equal to the radius or half the width/height of the thumb.
 let insetThumbOffset = 0;
-let currentInteractionValue: number | number[] | null = null;
+let initialValues: readonly number[] | undefined;
+// A controlled parent can keep its value between two moves.
+let lastChange: { value: number | number[]; model: readonly number[] } | null = null;
 // Whether `pointerdown` started the current gesture, so the `touchstart` that follows it
 // doesn't restart it.
 let pointerGesture = false;
-// The document that has the listeners of the current gesture. With Vue 3.6, a server also runs the
-// cleanup of `onScopeDispose`, and a server has no document.
-let listenedDocument: Document | null = null;
-// The values that the last applied move gave, or else the values of the last change of the slider.
-// A controlled parent can leave its own value as it was, and the next move still starts from the
-// applied values.
-let latestValues = values.value;
-watch(
-  values,
-  (next) => {
-    latestValues = next;
-  },
-  { flush: 'sync' },
-);
+const { isHeld } = useKeepAliveState();
+const pointerSession = useListenerSession(isHeld);
+const touchSession = useListenerSession(isHeld);
 
 function getFingerCoords(event: TouchEvent | PointerEvent): Coords | null {
-  // The event is TouchEvent
-  if (touchId != null && (event as TouchEvent).changedTouches) {
-    const touchEvent = event as TouchEvent;
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of -- The browser compatibility data has no entry for the iterator of `TouchList`. The loop reads the list by index, as Base UI does.
-    for (let i = 0; i < touchEvent.changedTouches.length; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop condition proves the index.
-      const touch = touchEvent.changedTouches[i]!;
-      if (touch.identifier === touchId) {
-        return { x: touch.clientX, y: touch.clientY };
-      }
+  if ('changedTouches' in event) {
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of -- TouchList supports indexed access in each browser.
+    for (let i = 0; i < event.changedTouches.length; i += 1) {
+      const touch = event.changedTouches[i];
+      if (touch && touch.identifier === touchId) return { x: touch.clientX, y: touch.clientY };
     }
-
     return null;
   }
-
-  // The event is PointerEvent
-  return { x: (event as PointerEvent).clientX, y: (event as PointerEvent).clientY };
+  return { x: event.clientX, y: event.clientY };
 }
 
 function getThumbInput(el: Element | null | undefined) {
-  return el?.isConnected ? thumbMap.value.get(el)?.getInput() : null;
+  return el?.isConnected ? thumbList.map.value.get(el)?.getInput() : null;
 }
 
 function updatePressedThumb(nextIndex: number) {
-  pressedThumbIndexRef.value = nextIndex;
-  if (!thumbRefs.value[nextIndex]) {
-    pressedThumbCenterOffsetRef.value = null;
-  }
-}
-
-function resetPressedThumb() {
-  pressedThumbIndexRef.value = -1;
-  pressedThumbCenterOffsetRef.value = null;
+  setPressedThumb(nextIndex, thumbRefs.value[nextIndex] ? pressedThumb.centerOffset : null);
 }
 
 function isTargetDisabledThumb(target: EventTarget | null) {
@@ -187,22 +137,22 @@ function isTargetDisabledThumb(target: EventTarget | null) {
 }
 
 function getFingerState(fingerCoords: Coords): FingerState | null {
-  const thumbIndex = pressedThumbIndexRef.value;
+  const thumbIndex = pressedThumb.index;
 
   if (!control || thumbIndex < 0 || thumbIndex >= values.value.length) {
     if (thumbIndex >= values.value.length) {
-      currentInteractionValue = null;
+      lastChange = null;
     }
     return null;
   }
 
-  const vertical = orientation.value === 'vertical';
+  const vertical = rootProps.orientation === 'vertical';
   const { width, height, bottom, left, right } = control.getBoundingClientRect();
 
   const controlOffset = getControlOffset(styles, vertical);
   const controlSize =
     (vertical ? height : width) - controlOffset.start - controlOffset.end - insetThumbOffset * 2;
-  const thumbCenterOffset = pressedThumbCenterOffsetRef.value ?? 0;
+  const thumbCenterOffset = pressedThumb.centerOffset ?? 0;
   const fingerX = fingerCoords.x - thumbCenterOffset;
   const fingerY = fingerCoords.y - thumbCenterOffset;
 
@@ -212,9 +162,9 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
   // the value at the finger origin scaled down to fit the range [0, 1]
   const valueRescaled = clamp((valueSize - insetThumbOffset) / controlSize, 0, 1);
 
-  let newValue = (max.value - min.value) * valueRescaled + min.value;
-  newValue = roundValueToStep(newValue, step.value, min.value);
-  newValue = clamp(newValue, min.value, max.value);
+  let newValue = (rootProps.max - rootProps.min) * valueRescaled + rootProps.min;
+  newValue = roundValueToStep(newValue, rootProps.step, rootProps.min);
+  newValue = clamp(newValue, rootProps.min, rootProps.max);
 
   if (values.value.length <= 1) {
     return {
@@ -225,34 +175,35 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
   }
 
   return resolveThumbCollision(
-    thumbCollisionBehavior.value,
+    rootProps.thumbCollisionBehavior,
     values.value,
-    latestValues,
-    pressedValuesRef.value,
+    lastChange?.model === values.value && Array.isArray(lastChange.value)
+      ? lastChange.value
+      : values.value,
+    initialValues,
     thumbIndex,
     newValue,
-    min.value,
-    max.value,
-    step.value,
-    minStepsBetweenValues.value,
+    rootProps.min,
+    rootProps.max,
+    rootProps.step,
+    rootProps.minStepsBetweenValues,
   );
 }
 
 function startPressing(fingerCoords: Coords) {
   const range = values.value.length > 1;
-  const vertical = orientation.value === 'vertical';
-  pressedValuesRef.value = range ? values.value.slice() : null;
-  currentInteractionValue = null;
-  latestValues = values.value;
+  const vertical = rootProps.orientation === 'vertical';
+  initialValues = range ? values.value : undefined;
+  lastChange = null;
 
-  const pressedThumbIndex = pressedThumbIndexRef.value;
+  const pressedThumbIndex = pressedThumb.index;
   let closestThumbIndex = pressedThumbIndex;
 
   if (pressedThumbIndex > -1 && pressedThumbIndex < values.value.length) {
-    if (values.value[pressedThumbIndex] === max.value) {
+    if (values.value[pressedThumbIndex] === rootProps.max) {
       let candidateIndex = pressedThumbIndex;
 
-      while (candidateIndex > 0 && values.value[candidateIndex - 1] === max.value) {
+      while (candidateIndex > 0 && values.value[candidateIndex - 1] === rootProps.max) {
         candidateIndex -= 1;
       }
 
@@ -295,7 +246,7 @@ function startPressing(fingerCoords: Coords) {
 }
 
 function focusThumb(thumbIndex: number) {
-  const input = getThumbInput(thumbRefs.value?.[thumbIndex]);
+  const input = getThumbInput(thumbRefs.value[thumbIndex]);
   if (!input) {
     return;
   }
@@ -313,17 +264,9 @@ function setValueFromPointer(
   reason: typeof REASONS.trackPress | typeof REASONS.drag,
   nativeEvent: TouchEvent | PointerEvent,
 ) {
-  const applied = setValue(
-    finger.value,
-    createChangeEventDetails(reason, nativeEvent as PointerEvent, undefined, {
-      activeThumbIndex: finger.thumbIndex,
-    }) as SliderRootChangeEventDetails,
-  );
-
+  const applied = setValue(finger.value, finger.thumbIndex, reason, nativeEvent);
   if (applied) {
-    currentInteractionValue = finger.value;
-    latestValues = Array.isArray(finger.value) ? finger.value : [finger.value];
-
+    lastChange = { value: finger.value, model: values.value };
     // Only track and focus the swapped thumb once the change is actually applied so a
     // canceled swap doesn't leak the new index into subsequent moves.
     if (finger.didSwap) {
@@ -331,8 +274,6 @@ function setValueFromPointer(
       focusThumb(finger.thumbIndex);
     }
   }
-
-  return applied;
 }
 
 function handleTouchMove(nativeEvent: TouchEvent | PointerEvent) {
@@ -345,7 +286,7 @@ function handleTouchMove(nativeEvent: TouchEvent | PointerEvent) {
   moveCount += 1;
 
   // Cancel move in case some other element consumed a pointerup event and it was not fired.
-  if (nativeEvent.type === 'pointermove' && (nativeEvent as PointerEvent).buttons === 0) {
+  if ('buttons' in nativeEvent && nativeEvent.buttons === 0) {
     handleTouchEnd(nativeEvent);
     return;
   }
@@ -356,8 +297,8 @@ function handleTouchMove(nativeEvent: TouchEvent | PointerEvent) {
     return;
   }
 
-  if (validateMinimumDistance(finger.value, step.value, minStepsBetweenValues.value)) {
-    if (!dragging.value && moveCount > INTENTIONAL_DRAG_COUNT_THRESHOLD) {
+  if (validateMinimumDistance(finger.value, rootProps.step, rootProps.minStepsBetweenValues)) {
+    if (!state.value.dragging && moveCount > INTENTIONAL_DRAG_COUNT_THRESHOLD) {
       setDragging(true);
     }
 
@@ -373,33 +314,19 @@ function handleTouchEnd(nativeEvent: TouchEvent | PointerEvent) {
   setActive(-1);
   setDragging(false);
 
-  pressedThumbCenterOffsetRef.value = null;
-
-  // If the value array shrank or grew mid-drag, the cached interaction value no longer
-  // matches the current thumbs (the pressed index can still be in range), so dropping it
-  // keeps a stale or malformed array from being committed on release.
+  setPressedThumb(-1, null);
+  // A range can gain or lose a thumb before release.
   if (
-    Array.isArray(currentInteractionValue) &&
-    currentInteractionValue.length !== values.value.length
+    lastChange &&
+    (!Array.isArray(lastChange.value) || lastChange.value.length === values.value.length)
   ) {
-    currentInteractionValue = null;
-  }
-
-  if (currentInteractionValue != null) {
-    onValueCommitted(
-      currentInteractionValue,
-      createGenericEventDetails(
-        lastChangeReasonRef.value,
-        nativeEvent as PointerEvent,
-      ) as SliderRootCommitEventDetails,
-    );
+    commitValue(lastChange.value, nativeEvent);
   }
 
   if ('pointerType' in nativeEvent && control?.hasPointerCapture(nativeEvent.pointerId)) {
-    control?.releasePointerCapture(nativeEvent.pointerId);
+    control.releasePointerCapture(nativeEvent.pointerId);
   }
 
-  pressedThumbIndexRef.value = -1;
   stopListening();
 }
 
@@ -419,12 +346,12 @@ function handleTouchStart(nativeEvent: TouchEvent) {
   const startedByPointer = pointerGesture;
   pointerGesture = false;
 
-  if (disabled.value) {
+  if (disabled.value || isHeld.value) {
     return;
   }
 
   if (isTargetDisabledThumb(getTarget(nativeEvent))) {
-    resetPressedThumb();
+    setPressedThumb(-1, null);
     return;
   }
 
@@ -454,26 +381,19 @@ function handleTouchStart(nativeEvent: TouchEvent) {
   }
 
   const doc = ownerDocument(control);
-  listenedDocument = doc;
-  doc.addEventListener('touchmove', handleTouchMove, { passive: true });
-  doc.addEventListener('touchend', handleTouchEnd, { passive: true });
-  doc.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+  touchSession.start((onCleanup) => {
+    onCleanup(addEventListener(doc, 'touchmove', handleTouchMove, { passive: true }));
+    onCleanup(addEventListener(doc, 'touchend', handleTouchEnd, { passive: true }));
+    onCleanup(addEventListener(doc, 'touchcancel', handleTouchEnd, { passive: true }));
+  });
 }
 
 function stopListening() {
-  const doc = listenedDocument;
-  listenedDocument = null;
-  if (doc) {
-    doc.removeEventListener('pointermove', handleTouchMove);
-    doc.removeEventListener('pointerup', handleTouchEnd);
-    doc.removeEventListener('pointercancel', handlePointerCancel);
-    doc.removeEventListener('touchmove', handleTouchMove);
-    doc.removeEventListener('touchend', handleTouchEnd);
-    doc.removeEventListener('touchcancel', handleTouchEnd);
-  }
+  pointerSession.stop();
+  touchSession.stop();
   touchId = null;
-  pressedValuesRef.value = null;
-  currentInteractionValue = null;
+  initialValues = undefined;
+  lastChange = null;
   pointerGesture = false;
 }
 
@@ -487,6 +407,7 @@ function onPointerdown(event: PointerEvent) {
   if (
     !control ||
     disabled.value ||
+    isHeld.value ||
     event.defaultPrevented ||
     !isElement(target) ||
     // Only handle left clicks
@@ -496,7 +417,7 @@ function onPointerdown(event: PointerEvent) {
   }
 
   if (isTargetDisabledThumb(target)) {
-    resetPressedThumb();
+    setPressedThumb(-1, null);
     return;
   }
 
@@ -523,7 +444,7 @@ function onPointerdown(event: PointerEvent) {
 
   setDragging(true);
 
-  const pressedOnAnyThumb = pressedThumbCenterOffsetRef.value != null;
+  const pressedOnAnyThumb = pressedThumb.centerOffset != null;
   if (!pressedOnAnyThumb) {
     setValueFromPointer(finger, REASONS.trackPress, event);
   }
@@ -542,29 +463,21 @@ function onPointerdown(event: PointerEvent) {
   // Touch and pen presses can be followed by a compatibility `touchstart` (Apple Pencil).
   pointerGesture = isTouchLikePointerType(event.pointerType);
   const doc = ownerDocument(control);
-  listenedDocument = doc;
-  doc.addEventListener('pointermove', handleTouchMove, { passive: true });
-  doc.addEventListener('pointerup', handleTouchEnd, { once: true });
-  doc.addEventListener('pointercancel', handlePointerCancel, { once: true });
+  pointerSession.start((onCleanup) => {
+    onCleanup(addEventListener(doc, 'pointermove', handleTouchMove, { passive: true }));
+    onCleanup(addEventListener(doc, 'pointerup', handleTouchEnd, { once: true }));
+    onCleanup(addEventListener(doc, 'pointercancel', handlePointerCancel, { once: true }));
+  });
 }
 
-function setControl(element: HTMLElement | null) {
-  if (element) {
-    control = element;
-    controlElement.value = element;
-    styles ??= ownerWindow(element).getComputedStyle(element);
-    return;
+function setControl(next: HTMLElement | null) {
+  if (control) {
+    focusFrame.cancel();
+    stopListening();
   }
-
-  // The listeners are on the document of the control, so they stop before the control goes away.
-  focusFrame.cancel();
-  stopListening();
-  if (controlElement.value === control) {
-    controlElement.value = null;
-  }
-  control = null;
-  // The style of a removed element has no values, so the next element reads its own style.
-  styles = null;
+  setControlElement(next, control);
+  control = next;
+  styles = next ? ownerWindow(next).getComputedStyle(next) : null;
 }
 
 watch(disabled, (isDisabled) => {
@@ -573,8 +486,7 @@ watch(disabled, (isDisabled) => {
   }
 });
 
-// `KeepAlive` takes the control out of the document and sends no pointer event.
-const { isHeld } = useKeepAliveState();
+// A held control receives no pointer release.
 watch(
   isHeld,
   (held) => {
@@ -582,17 +494,15 @@ watch(
       focusFrame.cancel();
       stopListening();
       setDragging(false);
-      resetPressedThumb();
+      setPressedThumb(-1, null);
     }
   },
   { flush: 'sync' },
 );
 
-onScopeDispose(stopListening);
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [setControl],
+  ref: setControl,
   props: (attrs) => [
     {
       'data-vase-ui-slider-control': renderBeforeHydration.value ? '' : undefined,

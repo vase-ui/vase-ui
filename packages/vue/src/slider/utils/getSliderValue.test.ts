@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSliderValue } from './getSliderValue';
+import { getSliderValue } from './thumbValues';
 
 describe('getSliderValue', () => {
   it('clamps a single value to the min/max range', () => {

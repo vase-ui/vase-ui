@@ -13,7 +13,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { ownerDocument } from '../../common/owner';
-import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import { createTouches, getHorizontalSliderRect } from '../../../test/sliderTestUtils';
 
 // The mock calls through, so that a case can count the reads of the document.
 vi.mock('../../common/owner', async () => {
@@ -725,6 +725,42 @@ describe('<Slider.Control />', () => {
       );
     },
   );
+
+  it('uses the last pushed range until the parent supplies a new value', async () => {
+    const model = shallowRef([20, 40]);
+    const change = vi.fn();
+    const App = defineComponent(() => () => (
+      <Slider.Root modelValue={model.value} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="first" />
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>
+    ));
+    await render(<App />);
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('first'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(15, 0, 10, 10),
+    );
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(35, 0, 10, 10),
+    );
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 25 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 60 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 30 });
+    model.value = [10, 90];
+    await flushMicrotasks();
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 35 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change.mock.calls.map(([value]) => value)).toEqual([
+      [25, 40],
+      [60, 60],
+      [30, 60],
+      [35, 90],
+    ]);
+  });
 
   it('adds its touchstart listener as a passive listener', async () => {
     const addEventListener = vi.spyOn(EventTarget.prototype, 'addEventListener');

@@ -1,0 +1,8 @@
+{
+  "id": "VUE-148",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L271-L303"
+  ],
+  "behavior": "An edge-aligned thumb and its indicator use the new axis as soon as the slider changes orientation. Base UI waits for another change in value or size when both elements keep their dimensions.",
+  "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
+}

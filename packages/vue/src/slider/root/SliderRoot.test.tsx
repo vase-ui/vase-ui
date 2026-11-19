@@ -44,7 +44,8 @@ import {
   END,
 } from '../../internals/composite/listIndex';
 import type { Orientation } from '../../internals/types';
-import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import { createTouches, getHorizontalSliderRect } from '../../../test/sliderTestUtils';
+import { useSliderRootContext } from './SliderRootContext';
 import SliderRootHydration from './SliderRootHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -2439,6 +2440,52 @@ describe('<Slider.Root />', () => {
           '20',
           '70',
         ]);
+      });
+
+      it('passes the touch event from the track', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        await render(<TestSlider defaultValue={0} onValueChange={change} />);
+        const control = screen.getByTestId('control');
+        vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+        const touch = vi.fn();
+        control.addEventListener('touchstart', touch, { capture: true, once: true });
+        const finger = createTouches([{ identifier: 1, clientX: 40, clientY: 0 }]);
+        await fireEvent.touchStart(control, finger);
+        await fireEvent.touchEnd(control, finger);
+
+        expect(change).toHaveBeenCalledTimes(1);
+        const [value, details] = change.mock.calls[0];
+        expect(value).toBe(40);
+        expect(details.event).toBe(touch.mock.calls[0][0]);
+        expect(details.event.target).toBe(control);
+      });
+
+      it('creates an event for each change without a browser event', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        const ProgrammaticEdit = defineComponent(() => {
+          const { setValue } = useSliderRootContext();
+          onMounted(() => {
+            setValue(2, 0, REASONS.none);
+            setValue(3, 0, REASONS.none);
+          });
+          return () => <Slider.Thumb />;
+        });
+        await render(
+          <Slider.Root defaultValue={1} onValueChange={change}>
+            <ProgrammaticEdit />
+          </Slider.Root>,
+        );
+
+        expect(change).toHaveBeenCalledTimes(2);
+        const [[firstValue, first], [secondValue, second]] = change.mock.calls;
+        expect([firstValue, secondValue]).toEqual([2, 3]);
+        expect(first.event).toBeInstanceOf(Event);
+        expect(first.event.type).toBe('vase-ui');
+        expect(second.event.type).toBe('vase-ui');
+        expect(second.event).not.toBe(first.event);
+        expect(first.event.target).toBeNull();
+        expect(second.event.target).toBeNull();
+        expect(screen.getByRole<HTMLInputElement>('slider').valueAsNumber).toBe(3);
       });
 
       it('keeps the input and both form entries when the listener cancels a key press', async () => {

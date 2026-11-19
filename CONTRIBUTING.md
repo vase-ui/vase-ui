@@ -531,7 +531,6 @@ Base UI has prop trios such as `checked`, `defaultChecked` and `onCheckedChange`
 - Declare each controlled prop with `default: undefined` through `withDefaults`. Without it, Vue changes an absent Boolean prop to `false`.
 - When the model prop returns to `undefined`, the part keeps the last value from the parent. An update listener alone leaves the part in control.
 - Emit the change event first. Emit the model update in the same task.
-- Pass the original browser event to `Slider.Root` change listeners. The first argument gives the value. The thumb input supplies the field name.
 - Skip the model update when `details.isCanceled` is true. `Tabs.Root` always emits the update for an automatic selection with reason `initial`, `disabled` or `missing`.
 - `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:modelValue` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
 - To stop a cancelable change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
@@ -549,7 +548,7 @@ Base UI has prop trios such as `checked`, `defaultChecked` and `onCheckedChange`
 The change event carries these details:
 
 - `reason`, with upstream's strings.
-- `event`: the native event, or `new Event('vase-ui')` when there is none.
+- `event` holds the native event, or `new Event('vase-ui')` when there is none. For `Slider.Root`, read the value from the first argument and the field name from the thumb input.
 - `cancel()` and `isCanceled`.
 - `allowPropagation()` and `isPropagationAllowed`.
 - `trigger`.
@@ -791,7 +790,7 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 - Each part must render with `renderToString` in Node with no DOM.
 - Code in setup does not touch `window` or `document`. The exception is a read behind a `typeof` check, where an option of the API needs the value before the mount.
 - A `typeof` check does not make a read of `localStorage` safe on a server. Node.js 26 prints a warning at the first read of `localStorage` in a process when no `--localstorage-file` is set. `Resizable.useLayoutStorage()` reads its storage only after the mount, so the server HTML and the first client render have the layout with no stored item.
-- With Vue 3.6, a server stops the effect scope of each component after the render, so a callback of `onScopeDispose` runs on a server. That callback does not touch `window` or `document`. `SliderControl.vue` saves the document of the press and removes its listener from that document.
+- With Vue 3.6, a server stops the effect scope of each component after the render, so a callback of `onScopeDispose` runs on a server. That callback does not touch `window` or `document`. `Slider.Control` releases the listeners of each press through its listener session.
 - Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. A value is an exception only when a server cannot know it. Such a value can change when its component is mounted. The exceptions are:
   - The `aria-labelledby` of a root with a label part, and of a control that only a native `<label>` names.
   - The id of a control that has an `id` prop in a field.
@@ -2113,7 +2112,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A case for an exit that ends before the part reads its animations uses `probeFrameAfterExitBeforeRead`. It asserts that no part read the animations before the end. The control cases of that probe are in `test/animation.test.ts`.
 - `probeFrameAfterExit` cannot show that a part that hides its element waits for an animation that a script made, such as a `motion-v` animation. `hidden` does not cancel such an animation, so the probe does not see a hide that comes too early.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
-- A ported case that Base UI writes with `createTouches` keeps the call. The helper is in `slider/utils/test-utils.ts`. It calls `new Touch` in Chromium and in Firefox. WebKit has no `Touch` constructor, so the helper calls `document.createTouch` and `document.createTouchList` where a browser has them.
+- A ported case that Base UI writes with `createTouches` keeps the call. The helper is in `packages/vue/test/sliderTestUtils.ts`. It calls `new Touch` in Chromium and in Firefox. WebKit has no `Touch` constructor, so the helper calls `document.createTouch` and `document.createTouchList` where a browser has them.
 - A case that needs a cached image first loads the source with `new Image()` and waits for its `load` event. An earlier case of the file can load the same source, but the case must also pass when it runs alone.
 - A case that needs the answer of the server for an image waits for the `load` or `error` event with a listener. Attach the listener before the source changes. Do not use `waitFor`: the server answers in its own time, and the page renders frames during that time. The 180 frames of `waitFor` can pass before the answer. After the event, call `await nextTick()` before you assert. `nextTick()` resolves after Vue renders the state that the part set in its listener.
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.

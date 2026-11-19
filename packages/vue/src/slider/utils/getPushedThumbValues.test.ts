@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { getPushedThumbValues } from './getPushedThumbValues';
+import { getPushedThumbValues } from './thumbValues';
 
 describe('getPushedThumbValues', () => {
   it('pushes the next thumb forward when moving past it', () => {

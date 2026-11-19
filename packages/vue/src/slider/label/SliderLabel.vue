@@ -20,8 +20,7 @@ import {
 } from '../../internals/labelable-provider/useLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useSliderRootContext } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
+import { sliderStateAttributesMapping, useSliderRootContext } from '../root/SliderRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -32,7 +31,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderLabelState>;
 }>();
 
-const { state, registerLabelId, thumbMap, rootLabelId } = useSliderRootContext();
+const { state, registerLabelId, thumbList, rootLabelId } = useSliderRootContext();
 
 function focusControl(event: MouseEvent, controlId: string | undefined) {
   if (controlId) {
@@ -44,7 +43,7 @@ function focusControl(event: MouseEvent, controlId: string | undefined) {
   }
 
   let singleInput: HTMLInputElement | null = null;
-  for (const [thumb, entry] of thumbMap.value) {
+  for (const [thumb, entry] of thumbList.map.value) {
     const input = thumb.isConnected && entry.getInput();
     if (input) {
       if (singleInput) {
