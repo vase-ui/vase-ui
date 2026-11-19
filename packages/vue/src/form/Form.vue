@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mergeProps, nextTick, provide, ref, useAttrs, watch } from 'vue';
+import { mergeProps, provide, ref, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { formKey, type FormErrors, type FormField } from './field';
 import type { FormProps } from './types';
@@ -23,12 +23,11 @@ defineSlots<{
 
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLFormElement>();
-const fields = new Set<FormField>();
+// The field of each control. A control that leaves the document leaves `form.elements`.
+const fieldOfControl = new WeakMap<Element, FormField>();
 const submitted = ref(false);
 // A submit passed. The next change of `errors`, the answer of the server, moves the focus.
 let focusAtAnswer = false;
-// The errors that the form asked for in this tick. The prop has them after the next render.
-let askedErrors: FormErrors | undefined;
 
 provide(formKey, {
   get validationMode() {
@@ -40,9 +39,8 @@ provide(formKey, {
   get errors() {
     return props.errors;
   },
-  addField(field) {
-    fields.add(field);
-    return () => fields.delete(field);
+  addControl(control, field) {
+    fieldOfControl.set(control, field);
   },
   onEdit(name) {
     focusAtAnswer = false;
@@ -55,7 +53,7 @@ watch(
   () => {
     if (!focusAtAnswer) return;
     focusAtAnswer = false;
-    focusFirst(fieldsOfForm().filter((field) => field.invalid));
+    firstInvalidControl(fieldsOfForm())?.focus();
   },
   { deep: true },
 );
@@ -63,47 +61,43 @@ watch(
 defineExpose({ element, validate });
 
 function validate(name?: string) {
-  const validated = fieldsOfForm().filter((field) => name === undefined || field.name === name);
-  return validateEach(validated).length === 0;
+  const fields = [...fieldsOfForm().keys()].filter(
+    (field) => name === undefined || field.name === name,
+  );
+  for (const field of fields) field.validate();
+  return fields.every((field) => !field.invalid);
 }
 
 function elementProps() {
   return mergeProps({ novalidate: true, onSubmit, onReset }, attrs);
 }
 
-// The browser tells which form owns the control of a field. A control that `KeepAlive` holds,
-// a control outside the `<form>`, and a control that the `form` attribute gives to another form
-// have another form or none.
+/**
+ * The fields of the form with their controls, in the order of the document. The browser lists the
+ * controls of the form: not a control that `KeepAlive` holds or that is outside the `<form>`, and
+ * not a control that the `form` attribute gives to another form.
+ */
 function fieldsOfForm() {
-  return [...fields].filter((field) => {
-    const owner = (field.element as HTMLInputElement | undefined)?.form;
-    return !!owner && owner === element.value;
-  });
-}
-
-/** Validates the fields, and returns the invalid ones. */
-function validateEach(validated: FormField[]) {
-  for (const field of validated) field.validate();
-  return validated.filter((field) => field.invalid);
-}
-
-function focusFirst(invalid: FormField[]) {
-  let first: HTMLElement | undefined;
-  for (const { element: control } of invalid) {
-    if (!control) continue;
-    if (!first || control.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING) {
-      first = control;
-    }
+  const fields = new Map<FormField, HTMLElement>();
+  for (const control of element.value?.elements ?? []) {
+    const field = fieldOfControl.get(control);
+    if (field) fields.set(field, control as HTMLElement);
   }
-  first?.focus();
+  return fields;
+}
+
+function firstInvalidControl(fields: Map<FormField, HTMLElement>) {
+  return [...fields].find(([field]) => field.invalid)?.[1];
 }
 
 function onSubmit(event: Event) {
   submitted.value = true;
-  const invalid = validateEach(fieldsOfForm());
-  if (invalid.length > 0) {
+  const fields = fieldsOfForm();
+  for (const field of fields.keys()) field.validate();
+  const invalid = firstInvalidControl(fields);
+  if (invalid) {
     event.preventDefault();
-    focusFirst(invalid);
+    invalid.focus();
     return;
   }
   focusAtAnswer = true;
@@ -117,17 +111,15 @@ function onReset(event: Event) {
     if (event.defaultPrevented) return;
     submitted.value = false;
     focusAtAnswer = false;
-    removeErrors(fieldsOfForm().map((field) => field.name));
+    removeErrors([...fieldsOfForm().keys()].map((field) => field.name));
   });
 }
 
 function removeErrors(names: (string | undefined)[]) {
-  const errors = askedErrors ?? props.errors;
+  const errors = props.errors;
   if (!errors || !names.some((name) => name !== undefined && Object.hasOwn(errors, name))) return;
   const kept: FormErrors = {};
   for (const key of Object.keys(errors)) if (!names.includes(key)) kept[key] = errors[key]!;
-  if (!askedErrors) nextTick(() => (askedErrors = undefined));
-  askedErrors = kept;
   emit('update:errors', kept);
 }
 </script>

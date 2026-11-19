@@ -5,14 +5,9 @@ export type FormValidationMode = 'submit' | 'blur' | 'change';
 /** Errors by the name of a field. */
 export type FormErrors = Record<string, string | string[]>;
 
-/** What a field in a form gives to the form, from its mount to its unmount. */
+/** What a field gives to its form. */
 export interface FormField {
   readonly name: string | undefined;
-  /**
-   * The element of the control. Its `form` tells if the field counts for the form. The form also
-   * uses it for the focus and the order of the document.
-   */
-  readonly element: HTMLElement | undefined;
   /** Validates the field at once. It does not wait for an async `validate`. */
   validate(): void;
   readonly invalid: boolean;
@@ -24,8 +19,11 @@ export interface FormForField {
   /** The form had a submit, also a blocked one, since its mount or its last native reset. */
   readonly submitted: boolean;
   readonly errors: Readonly<FormErrors> | undefined;
-  /** Adds a field to the form. Returns the function that removes it. */
-  addField(field: FormField): () => void;
+  /**
+   * Makes `control` the control of `field`. The form finds its fields through the controls that
+   * the browser lists in `form.elements`.
+   */
+  addControl(control: Element, field: FormField): void;
   /** The user changed the value of a field. */
   onEdit(name: string | undefined): void;
 }

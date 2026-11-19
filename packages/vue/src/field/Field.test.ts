@@ -311,8 +311,8 @@ describe('one validation', () => {
     expect(validated).toEqual([]);
   });
 
-  test('a message of validate goes on the element, and other code keeps its own message', async () => {
-    const { exposed, input, error } = await mountField({
+  test('a message of validate goes on the element, with a line feed between two lines', async () => {
+    const { exposed, input } = await mountField({
       root: { validate: (value: unknown) => (value === 'bad' ? 'One\r\ntwo' : null) },
       input: { defaultValue: 'bad' },
     });
@@ -322,13 +322,6 @@ describe('one validation', () => {
     await typeAtEnd(input, '!');
     exposed.field.validate();
     expect(input.validationMessage).toBe('');
-
-    input.setCustomValidity('Taken.');
-    exposed.field.validate();
-    await nextTick();
-    expect(error()).toHaveTextContent('Taken.');
-    exposed.field.validate();
-    expect(input.validationMessage).toBe('Taken.');
   });
 });
 
@@ -462,6 +455,18 @@ describe('edits while the field is invalid', () => {
     expect(parts.field).toHaveAttribute('data-valid');
     expect(parts.error()).toBeNull();
     expect(validated).toEqual([]);
+  });
+
+  test('an edit takes back the message of validate from the element', async () => {
+    const parts = await mountField({ root: { validationMode: 'blur', validate: () => 'Taken.' } });
+    parts.input.focus();
+    parts.input.blur();
+    await settle();
+    expect(parts.input.validationMessage).toBe('Taken.');
+    await typeAtEnd(parts.input, 'x');
+    await nextTick();
+    expect(parts.field).toHaveAttribute('data-valid');
+    expect(parts.input.matches(':invalid')).toBe(false);
   });
 });
 

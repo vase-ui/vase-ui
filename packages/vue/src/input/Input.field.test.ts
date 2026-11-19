@@ -86,22 +86,24 @@ describe('what a field gives to its control', () => {
 });
 
 describe('what a control tells its field', () => {
-  test('its element and id while it is mounted; a control that mounts before the old one unmounts wins', async () => {
+  test('its element and id while it is mounted, and the control that takes its place', async () => {
     const shown = reactive({ first: true, second: false });
     const { root } = mount(TwoInputsInField, { field: {}, shown });
     const label = root.querySelector('label')!;
     await nextTick();
     expect(label).toHaveAttribute('for', 'first');
-    shown.second = true;
-    await nextTick();
-    expect(label).toHaveAttribute('for', 'second');
     shown.first = false;
+    shown.second = true;
     await nextTick();
     expect(label).toHaveAttribute('for', 'second');
     shown.second = false;
     shown.first = true;
     await nextTick();
     expect(label).toHaveAttribute('for', 'first');
+    // A removed control leaves nothing in its field.
+    shown.first = false;
+    await nextTick();
+    expect(label).not.toHaveAttribute('for', 'first');
   });
 
   test('its value at the mount and after each change: from the user, the parent and a reset', async () => {

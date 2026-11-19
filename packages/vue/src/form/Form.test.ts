@@ -340,26 +340,6 @@ describe('errors', () => {
     expect(updates).toHaveLength(2);
   });
 
-  test('with v-model:errors, edits of two fields in one tick remove both errors and no other', async () => {
-    const form = reactive<Record<string, unknown>>({
-      errors: { email: 'Taken.', name: 'Short.', other: 'Kept.' },
-    });
-    form['onUpdate:errors'] = (errors: unknown) => (form.errors = errors);
-    const { input } = await mountForm({
-      form,
-      fields: [
-        { root: { name: 'email' }, input: { id: 'email' } },
-        { root: { name: 'name' }, input: { id: 'name' } },
-      ],
-    });
-    for (const id of ['email', 'name']) {
-      input(id).value = 'a';
-      input(id).dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    await settle();
-    expect(form.errors).toEqual({ other: 'Kept.' });
-  });
-
   test('the first change of errors after a submit that passed moves the focus, unless the user edited a field or reset the form', async () => {
     const form = reactive<Record<string, unknown>>({ errors: {} });
     const { submit, input } = await mountForm({

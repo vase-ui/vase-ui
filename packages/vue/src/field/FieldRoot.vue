@@ -4,7 +4,6 @@ import {
   inject,
   mergeProps,
   nextTick,
-  onUnmounted,
   provide,
   ref,
   shallowReactive,
@@ -15,7 +14,7 @@ import {
 } from 'vue';
 import { useElement } from '../common/element';
 import { useInDisabledFieldset } from '../fieldset/part';
-import { formKey } from '../form/field';
+import { formKey, type FormField } from '../form/field';
 import { fieldKey, fieldStateAttributes, type FieldControl } from './control';
 import { fieldPartsKey } from './root';
 import type { FieldRootProps, FieldRootState, FieldValidateResult, FieldValidity } from './types';
@@ -68,9 +67,8 @@ const form = inject(formKey, null);
 const controlId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
 
-// The control is the last one that registered and is still there.
-const controls = shallowReactive<FieldControl[]>([]);
-const control = computed(() => controls.at(-1));
+// A swap of controls removes the old one before the new one registers.
+const control = shallowRef<FieldControl>();
 const describers = shallowReactive<{ readonly id: string; readonly shown: boolean }[]>([]);
 
 const value = shallowRef<unknown>();
@@ -84,8 +82,6 @@ let valueMissingCounts = false;
 let validation = 0;
 // The timer of a validation that waits.
 let waiting: ReturnType<typeof setTimeout> | undefined;
-// The message that the field set on the element with `setCustomValidity`.
-let ownMessage = '';
 
 const name = computed(() => props.name ?? control.value?.name);
 const inDisabledFieldset = useInDisabledFieldset(element);
@@ -138,22 +134,15 @@ watch(foundDirty, (dirty) => {
   emit('update:dirty', dirty);
 });
 
-if (form) {
-  onUnmounted(
-    form.addField({
-      get name() {
-        return name.value;
-      },
-      get element() {
-        return control.value?.element;
-      },
-      validate: validateAtOnce,
-      get invalid() {
-        return valid.value === false;
-      },
-    }),
-  );
-}
+const formField: FormField = {
+  get name() {
+    return name.value;
+  },
+  validate: validateAtOnce,
+  get invalid() {
+    return valid.value === false;
+  },
+};
 
 provide(fieldKey, {
   get disabled() {
@@ -170,10 +159,10 @@ provide(fieldKey, {
     return state.value;
   },
   setControl(added) {
-    controls.push(added);
-    dropValidation();
+    control.value = added;
+    form?.addControl(added.element, formField);
     return () => {
-      controls.splice(controls.indexOf(added), 1);
+      control.value = undefined;
       dropValidation();
     };
   },
@@ -206,7 +195,7 @@ provide(fieldKey, {
     ownTouched.value = false;
     result.value = null;
     valueMissingCounts = false;
-    if (control.value) removeOwnMessage(control.value.element as HTMLInputElement);
+    (control.value?.element as HTMLInputElement | undefined)?.setCustomValidity('');
   },
 });
 
@@ -264,7 +253,8 @@ function validateNow() {
   if (barred.value) return;
   const el = control.value?.element as HTMLInputElement | undefined;
   if (el) {
-    removeOwnMessage(el);
+    // The native check does not count the message of `validate`.
+    el.setCustomValidity('');
     const failed = nativeFailure(el);
     if (failed) {
       result.value = failed;
@@ -309,19 +299,13 @@ function applyResult(output: FieldValidateResult) {
     result.value = passed;
     return;
   }
-  ownMessage = messages.join('\n').replaceAll('\r\n', '\n');
-  (control.value?.element as HTMLInputElement | undefined)?.setCustomValidity(ownMessage);
+  const message = messages.join('\n').replaceAll('\r\n', '\n');
+  (control.value?.element as HTMLInputElement | undefined)?.setCustomValidity(message);
   result.value = {
     failures: { ...noFailures, customError: true },
     errors: messages,
     ofValidate: true,
   };
-}
-
-function removeOwnMessage(el: HTMLInputElement) {
-  // A message that other code set stays: it is a native failure.
-  if (ownMessage && el.validationMessage === ownMessage) el.setCustomValidity('');
-  ownMessage = '';
 }
 
 function onEdit() {
@@ -331,7 +315,7 @@ function onEdit() {
   const el = control.value?.element as HTMLInputElement | undefined;
   if (!el) return;
   dropValidation();
-  removeOwnMessage(el);
+  el.setCustomValidity('');
   const failures = failuresOf(el);
   if (!failures.valueMissing) {
     result.value = passed;
