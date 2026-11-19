@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
+import { Form } from '../../src/form';
 import { Input } from '../../src/input';
 import TestField from './TestField.vue';
-import TestForm from './TestForm.vue';
 
 defineProps({
   form: Object as PropType<Record<string, unknown>>,
@@ -12,12 +12,14 @@ defineProps({
 </script>
 
 <template>
-  <TestForm v-bind="form">
+  <Form v-bind="form">
     <KeepAlive>
       <TestField v-if="scene.shown" :field="{}">
         <Input v-bind="attrs" />
       </TestField>
       <p v-else>Other</p>
     </KeepAlive>
-  </TestForm>
+    <button type="submit">Submit</button>
+    <button type="reset">Reset</button>
+  </Form>
 </template>

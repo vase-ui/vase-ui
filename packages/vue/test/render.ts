@@ -31,13 +31,27 @@ const cleanups: (() => void)[] = [];
 let warn: MockInstance<typeof console.warn>;
 let error: MockInstance<typeof console.error>;
 
+/**
+ * For each submit of the test, whether a listener of the form prevented its default action. The
+ * listener of the document runs after them, and it prevents the action, so that the page stays.
+ */
+export const submitsPrevented: boolean[] = [];
+
+function stopSubmit(event: Event) {
+  submitsPrevented.push(event.defaultPrevented);
+  event.preventDefault();
+}
+
 // Every test fails on a message of Vue: a warning, or a hydration mismatch.
 beforeEach(() => {
   warn = vi.spyOn(console, 'warn');
   error = vi.spyOn(console, 'error');
+  document.addEventListener('submit', stopSubmit);
 });
 
 afterEach(() => {
+  document.removeEventListener('submit', stopSubmit);
+  submitsPrevented.length = 0;
   while (cleanups.length > 0) cleanups.pop()!();
   expect(warn).not.toHaveBeenCalled();
   expect(error).not.toHaveBeenCalled();

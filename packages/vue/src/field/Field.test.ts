@@ -619,45 +619,6 @@ describe('in a form', () => {
     await nextTick();
     expect(validated).toEqual(['a', 'ab']);
   });
-
-  test('a control that the browser gives to another form makes no field of this form', async () => {
-    const other = document.body.appendChild(document.createElement('form'));
-    other.id = 'other';
-    const submitted = vi.fn();
-    try {
-      const { root } = mount(FieldsInForm, {
-        form: { onSubmit: submitted },
-        fields: [{ input: { required: true, form: 'other' } }],
-      });
-      await nextTick();
-      root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
-      expect(submitted).toHaveBeenCalledTimes(1);
-    } finally {
-      other.remove();
-    }
-  });
-
-  test('an invalid field blocks the submit and gets the focus; a disabled field is no field', async () => {
-    const submitted = vi.fn();
-    const first = reactive({ disabled: false });
-    const { root } = mount(FieldsInForm, {
-      form: { onSubmit: submitted },
-      fields: [{ root: first, input: { required: true } }, { input: { required: true } }],
-    });
-    await nextTick();
-    const [firstInput, secondInput] = root.querySelectorAll('input');
-    root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
-    await nextTick();
-    expect(submitted).not.toHaveBeenCalled();
-    expect(firstInput).toHaveFocus();
-    expect(firstInput).toHaveAttribute('aria-invalid', 'true');
-    first.disabled = true;
-    await nextTick();
-    expect(firstInput).not.toHaveAttribute('aria-invalid');
-    await typeAtEnd(secondInput!, 'a');
-    root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
-    expect(submitted).toHaveBeenCalledTimes(1);
-  });
 });
 
 describe('KeepAlive', () => {

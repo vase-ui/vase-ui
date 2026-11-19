@@ -58,10 +58,10 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
 export default defineConfig({
   test: {
     projects: [
-      setup('vdom app, vdom Input', 'vdom'),
-      setup('vapor app, vdom Input', 'vapor-interop', /\/test\/fixtures\/\w+\.vue$/),
-      setup('vapor app, vapor Input', 'vapor', /\.vue$/),
-      setup('vdom app, vapor Input', 'vdom-interop', /\/src\/\w+\/\w+\.vue$/),
+      setup('vdom app, vdom parts', 'vdom'),
+      setup('vapor app, vdom parts', 'vapor-interop', /\/test\/fixtures\/\w+\.vue$/),
+      setup('vapor app, vapor parts', 'vapor', /\.vue$/),
+      setup('vdom app, vapor parts', 'vdom-interop', /\/src\/\w+\/\w+\.vue$/),
     ],
   },
 });

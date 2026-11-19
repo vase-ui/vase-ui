@@ -1,4 +1,4 @@
-import type { ValidationMode } from '../form/field';
+import type { FormValidationMode } from '../form/field';
 import type { FieldState } from './control';
 
 export type FieldValidateResult = string | string[] | null | undefined | void;
@@ -7,7 +7,7 @@ export interface FieldRootProps {
   name?: string;
   disabled?: boolean;
   validate?: (value: unknown) => FieldValidateResult | Promise<FieldValidateResult>;
-  validationMode?: ValidationMode;
+  validationMode?: FormValidationMode;
   validationDebounceTime?: number;
   invalid?: boolean;
   dirty?: boolean;

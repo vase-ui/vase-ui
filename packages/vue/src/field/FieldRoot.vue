@@ -4,8 +4,7 @@ import {
   inject,
   mergeProps,
   nextTick,
-  onActivated,
-  onDeactivated,
+  onUnmounted,
   provide,
   ref,
   shallowReactive,
@@ -77,8 +76,6 @@ const value = shallowRef<unknown>();
 const firstValue = shallowRef<unknown>();
 let hasValue = false;
 const ownTouched = ref(false);
-// `KeepAlive` holds the field.
-const held = ref(false);
 const result = shallowRef<Result | null>(null);
 // The required rule: `valueMissing` counts after the field was dirty, a submit, or `validate()`.
 let valueMissingCounts = false;
@@ -101,8 +98,11 @@ const validatesOnChange = computed(
 );
 const formErrors = computed(() => {
   const errors = form?.errors;
-  if (!name.value || !errors || !Object.hasOwn(errors, name.value)) return [];
-  return [errors[name.value]].flat().filter((error): error is string => !!error);
+  if (!name.value || !errors) return [];
+  // The read of the key comes first: Vue tracks it, and it does not track `Object.hasOwn`.
+  const messages = errors[name.value];
+  if (!Object.hasOwn(errors, name.value)) return [];
+  return [messages].flat().filter((error): error is string => !!error);
 });
 
 const foundDirty = computed(() => value.value !== firstValue.value);
@@ -136,35 +136,22 @@ watch(foundDirty, (dirty) => {
   emit('update:dirty', dirty);
 });
 
-onActivated(() => (held.value = false));
-onDeactivated(() => (held.value = true));
-
-// A disabled field and a held field do not count for their form.
-watch(
-  () =>
-    form && control.value && !disabled.value && !control.value.disabled && !held.value
-      ? control.value
-      : null,
-  (current, _, onCleanup) => {
-    if (!form || !current) return;
-    const owner = (current.element as HTMLInputElement).form;
-    // The browser gives a control with a `form` attribute to that other form.
-    if (owner && owner !== form.element) return;
-    onCleanup(
-      form.addField({
-        get name() {
-          return name.value;
-        },
-        element: current.element,
-        validate: validateAtOnce,
-        get invalid() {
-          return valid.value === false;
-        },
-      }),
-    );
-  },
-  { immediate: true },
-);
+if (form) {
+  onUnmounted(
+    form.addField({
+      get name() {
+        return name.value;
+      },
+      get element() {
+        return control.value?.element;
+      },
+      validate: validateAtOnce,
+      get invalid() {
+        return valid.value === false;
+      },
+    }),
+  );
+}
 
 provide(fieldKey, {
   get disabled() {
@@ -336,7 +323,7 @@ function removeOwnMessage(el: HTMLInputElement) {
 }
 
 function onEdit() {
-  if (name.value) form?.clearError(name.value);
+  form?.onEdit(name.value);
   // An invalid field that does not validate at each change takes back only `valueMissing`.
   if (validatesOnChange.value || valid.value !== false) return;
   const el = control.value?.element as HTMLInputElement | undefined;

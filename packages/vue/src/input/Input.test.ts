@@ -439,7 +439,7 @@ describe('native forms', () => {
 });
 
 describe('lifetime', () => {
-  test('a held input follows a reset of its form', async () => {
+  test('a held input does not follow a reset of its form, as the native input does not', async () => {
     const scene = reactive({ shown: true });
     const attrs = vModel('first');
     const { root } = mount(KeptAliveField, { scene, attrs });
@@ -449,11 +449,11 @@ describe('lifetime', () => {
     await nextTick();
     root.querySelector('form')!.reset();
     await settle();
-    expect(attrs.modelValue).toBe('first');
+    expect(attrs.modelValue).toBe('firstx');
     scene.shown = true;
     await nextTick();
-    expect(input).toHaveValue('first');
-    expect(root.querySelector('form > div')).not.toHaveAttribute('data-dirty');
+    expect(input).toHaveValue('firstx');
+    expect(root.querySelector('form > div')).toHaveAttribute('data-dirty');
   });
 
   test('renders its element as the root, for Transition', async () => {

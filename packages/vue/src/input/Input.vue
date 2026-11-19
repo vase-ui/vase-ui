@@ -127,6 +127,9 @@ function onInput(event: Event) {
 }
 
 function onReset(event: Event) {
+  // A form resets only the controls that it owns at that moment: an element that `KeepAlive`
+  // holds has no form.
+  if (element.value?.form !== event.currentTarget) return;
   // The form resets its controls to their `value` attribute, which Vue sets to each value, so
   // Input gives the first value. A later listener can still prevent the reset, so Input waits
   // for the end of the event.
