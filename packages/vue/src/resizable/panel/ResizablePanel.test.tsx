@@ -622,6 +622,19 @@ describe('<Resizable.Panel />', () => {
     });
     const collapsible = { ...withRef('a'), collapsible: true, minSize: 20 };
 
+    it('restores the last requested size when three panel actions run before the DOM update', async () => {
+      await renderPanels({ panels: [collapsible, withRef('b')] });
+
+      instances.a.resize(35);
+      instances.a.collapse();
+      expect(instances.a.isCollapsed()).toBe(true);
+      instances.a.expand();
+      expect(instances.a.getSize().percent).toBe(35);
+
+      await nextTick();
+      expect([flexOf(0), flexOf(1)]).toEqual(['35', '65']);
+    });
+
     it('collapses with collapse() and gives back the size from before with expand()', async () => {
       await renderPanels({ panels: [{ ...collapsible, defaultSize: 40 }, withRef('b')] });
       expect(instances.a.isCollapsed()).toBe(false);

@@ -6,8 +6,7 @@ import type {
 } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { Layout } from '../utils/layout';
-import type { LayoutSnapshot } from '../utils/parseSize';
+import type { Layout, LayoutSnapshot } from '../utils/layout';
 
 /**
  * The size of each panel in percent of the panel space, by panel `id`. The sizes sum to 100.
@@ -185,8 +184,20 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  inject,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowReactive,
+  shallowRef,
+  watch,
+} from 'vue';
 import type { Component } from 'vue';
+import { areArraysEqual } from '../../common/areArraysEqual';
+import { useResizeObserver } from '../../common/useResizeObserver';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrated } from '../../common/hydration';
@@ -215,11 +226,6 @@ import {
   resolveLayout,
   takePins,
   toRequestedLayout,
-} from '../utils/layout';
-import type { PanelConstraints } from '../utils/layout';
-import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
-import type { RootMeasurement } from '../utils/measure';
-import {
   formatSize,
   isLength,
   isSize,
@@ -227,16 +233,19 @@ import {
   normalizeLayout,
   parseSize,
   SIZE_FORMS,
-} from '../utils/parseSize';
-import { useEdges } from '../utils/useEdges';
+} from '../utils/layout';
+import type { PanelConstraints } from '../utils/layout';
+import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
+import type { RootMeasurement } from '../utils/measure';
 import ResizableRootChildren from './ResizableRootChildren.vue';
-import { ResizableRootContext } from './ResizableRootContext';
+import { ResizableRootContext, ResizableRootEdgesContext } from './ResizableRootContext';
 import type {
   ResizableHandleMove,
-  ResizableHandleRegistration,
+  EdgeBoundary,
+  EdgeBox,
   ResizablePanelRegistration,
+  ResizableRegistration,
 } from './ResizableRootContext';
-import { ResizableRootEdgesContext } from './ResizableRootEdgesContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -324,11 +333,10 @@ const input = useControlled<ResizableRootLayoutSnapshot>({
 // The layout at the start. A later change of `defaultLayout` has no effect.
 const firstSnapshot: ResizableRootLayoutSnapshot = props.defaultLayout ?? EMPTY_OBJECT;
 
-const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
+const registered = shallowReactive(new Set<ResizableRegistration>());
+const parts = computed(() => [...registered].filter((part) => !part.isHeld.value));
 const panels = computed(() =>
-  registered.value
-    .filter((panel) => !panel.isHeld.value)
-    .sort((a, b) => a.index.value - b.index.value),
+  parts.value.filter((part) => 'id' in part).sort((a, b) => a.index.value - b.index.value),
 );
 
 // What the root read from the page. A server, the first render of a client and a root that has had
@@ -478,16 +486,10 @@ watch(
 
 // A panel that mounts as a fixed panel, or becomes one, takes the pixels that it has now.
 watch(
-  () => constraints.value.some((panel) => panel.fixed && !Object.hasOwn(pins.value, panel.id)),
-  (missing) => {
-    if (missing && measurement.value !== undefined) {
-      const pinless = constraints.value.filter(
-        (panel) => panel.fixed && !Object.hasOwn(pins.value, panel.id),
-      );
-      pins.value = {
-        ...pins.value,
-        ...takePins(pinless, shown.value, measurement.value.space),
-      };
+  () => constraints.value.filter((panel) => panel.fixed && !Object.hasOwn(pins.value, panel.id)),
+  (unpinned) => {
+    if (unpinned.length && measurement.value) {
+      pins.value = { ...pins.value, ...takePins(unpinned, shown.value, measurement.value.space) };
     }
   },
 );
@@ -572,16 +574,13 @@ let mounted = false;
 // activation. The panels are then the same, so the root keeps the ids that it knows.
 const { isHeld } = useKeepAliveState();
 let knownIds = new Set<string>();
-// The panels and the handles, in the order of the document.
-const listItems = shallowRef<readonly Element[]>([]);
 
 // Each panel and handle gets its place among the others from this list. A server gives the places
 // in the order of `setup`. The list calls this function when a panel or a handle comes or goes,
 // and after it sorted them. A panel that mounts with no entry in the layout of the consumer gets a
 // size, and the others make room for it. The layout then names that panel. A panel that goes keeps
 // its entry, so it comes back at its size.
-function syncLayoutWithPanels(map: ReadonlyMap<Element, unknown>) {
-  listItems.value = [...map.keys()];
+function syncLayoutWithPanels() {
   if (isHeld.value) {
     return;
   }
@@ -602,42 +601,21 @@ const list = useCompositeList<{ id?: string }>({
   provide: false,
 });
 
-onMounted(() => {
-  if (isHeld.value) {
-    return;
-  }
-  mounted = true;
-  measure();
-});
-
-// The first activation of a root that mounted while held is its mount. `KeepAlive` runs the
-// `onActivated` hooks from the last part to the first, so the panels are active at this call.
+const isHydrated = useIsHydrated();
 watch(
-  isHeld,
-  (held) => {
-    if (!held && !mounted) {
-      knownIds = new Set(constraints.value.map((panel) => panel.id));
-      mounted = true;
-      measure();
-    }
+  () => isHydrated.value && !isHeld.value,
+  () => {
+    // A parent mount hook can read lengths before the first resize observation.
+    knownIds = new Set(constraints.value.map((panel) => panel.id));
+    mounted = true;
+    measure();
   },
-  { flush: 'sync' },
+  { once: true, flush: 'sync' },
 );
 
-function registerPanel(panel: ResizablePanelRegistration) {
-  registered.value = [...registered.value, panel];
-  onScopeDispose(() => {
-    registered.value = registered.value.filter((entry) => entry !== panel);
-  });
-}
-
-const registeredHandles = shallowRef<readonly ResizableHandleRegistration[]>([]);
-
-function registerHandle(handle: ResizableHandleRegistration) {
-  registeredHandles.value = [...registeredHandles.value, handle];
-  onScopeDispose(() => {
-    registeredHandles.value = registeredHandles.value.filter((entry) => entry !== handle);
-  });
+function registerPart(part: ResizableRegistration) {
+  registered.add(part);
+  onScopeDispose(() => registered.delete(part));
 }
 
 // The size that each panel had before a change collapsed it. `expand()` gives it back.
@@ -645,10 +623,6 @@ const sizesBeforeCollapse = new Map<string, number>();
 // The layout at the start of the drag that runs. Each move of a drag starts from this layout, so a
 // panel that a drag collapses gets the size from the start of the drag, for any number of moves.
 let layoutBeforeDrag: ResizableRootLayout | undefined;
-
-// Before the mount, the panels register one at a time. A layout of only some of them is not a
-// change of the user or of the app, so the watcher below starts at the mount.
-const isHydrated = useIsHydrated();
 
 // A watcher, and not the change path, sees each collapse: also a collapse that the `layout` prop of
 // the consumer gives. It is `sync`, so an `expand()` right after a `collapse()` finds the size.
@@ -969,7 +943,7 @@ function onKeydown(event: KeyboardEvent) {
   ) {
     return;
   }
-  const items = listItems.value;
+  const items = [...list.map.value.keys()];
   const target = getTarget(event) as Element | null;
   const from = items.findIndex((item) => contains(item, target));
   if (from < 0) {
@@ -1009,8 +983,7 @@ provide(ResizableRootContext, {
   shown,
   lengthPanels,
   measurement,
-  registerPanel,
-  registerHandle,
+  registerPart,
   measure,
   startDragging,
   stopDragging,
@@ -1042,58 +1015,121 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-const edges = useEdges({
-  enabled: () => props.dragEdges,
-  disabled: () => props.disabled,
-  orientation: rootOrientation,
-  hitAreaSize: pointerHitAreaSize,
-  panels,
-  handles: registeredHandles,
-  measurement,
-  shown,
+const boundaries = computed(() => {
+  if (!props.dragEdges || props.disabled || isHeld.value) return [];
+  const ordered = panels.value;
+  const first = ordered.findIndex((panel) => !panel.disabled());
+  const last = ordered.findLastIndex((panel) => !panel.disabled());
+  // A detached root can have gaps in its setup indexes after a handle leaves.
+  const handles = parts.value.filter((part) => !('id' in part)).map((part) => part.index.value);
+  return ordered.flatMap((before, index) => {
+    const after = ordered[index + 1];
+    return index >= first &&
+      index < last &&
+      after &&
+      !handles.some((handle) => handle > before.index.value && handle < after.index.value)
+      ? [{ before, after }]
+      : [];
+  });
 });
 
+function edgeAreas(before: HTMLElement, after: HTMLElement): EdgeBox[] {
+  const horizontal = props.orientation === 'horizontal';
+  const offset = horizontal ? 'offsetLeft' : 'offsetTop';
+  const length = horizontal ? 'offsetWidth' : 'offsetHeight';
+  const [first, second] = before[offset] <= after[offset] ? [before, after] : [after, before];
+  const end = first[offset] + first[length];
+  const start = second[offset];
+  const gap = Math.max(start - end, 0);
+  const size = pointerHitAreaSize.value;
+  // A wide gap can contain another control. Keep its center free for presses.
+  const areas: [center: number, width: number][] =
+    before.nextElementSibling === after || gap <= size
+      ? [[(end + start) / 2, Math.max(gap, size)]]
+      : [
+          [end, size],
+          [start, size],
+        ];
+  return areas
+    .filter(([, width]) => width > 0)
+    .map(([center, width]) =>
+      horizontal
+        ? { left: center - width / 2, top: before.offsetTop, width, height: before.offsetHeight }
+        : {
+            left: before.offsetLeft,
+            top: center - width / 2,
+            width: before.offsetWidth,
+            height: width,
+          },
+    );
+}
+
+const edges = shallowRef<readonly EdgeBoundary[]>([]);
+function sameEdge(a: EdgeBoundary, b: EdgeBoundary) {
+  return (
+    a.before === b.before &&
+    areArraysEqual(
+      a.areas,
+      b.areas,
+      (first, second) =>
+        first.left === second.left &&
+        first.top === second.top &&
+        first.width === second.width &&
+        first.height === second.height,
+    )
+  );
+}
+
+function updateEdges() {
+  const next: EdgeBoundary[] = [];
+  if (measurement.value) {
+    for (const { before, after } of boundaries.value) {
+      const first = before.element.value;
+      const second = after.element.value;
+      if (!first || !second) continue;
+      const areas = edgeAreas(first, second);
+      if (areas.length) next.push({ before, areas });
+    }
+  }
+  if (!areArraysEqual(edges.value, next, sameEdge)) edges.value = next;
+}
+
+// A panel transition moves its boundary between Vue updates.
+useResizeObserver(
+  () => (boundaries.value.length ? panels.value.map((panel) => panel.element.value) : []),
+  updateEdges,
+);
+watch([boundaries, rootOrientation, pointerHitAreaSize, shown, measurement], updateEdges, {
+  flush: 'post',
+});
 provide(ResizableRootEdgesContext, { edges });
 
-// The root and each handle change the room of the panels when they change size. The panels do not:
-// a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
-watch(
-  [element, listItems],
-  ([rootElement, items], _previous, onCleanup) => {
-    if (rootElement === null || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    // A panel or a handle that mounted changes the room of the panels.
-    measure();
-    const panelElements = new Set<Element | null>(panels.value.map((panel) => panel.element.value));
-    const observer = new ResizeObserver(() => {
-      measure();
-    });
-    observer.observe(rootElement);
-    for (const item of items) {
-      if (!panelElements.has(item)) {
-        observer.observe(item);
-      }
-    }
-    onCleanup(() => {
-      observer.disconnect();
-    });
-  },
-  { flush: 'post' },
+// The root and the handles determine how much space the panels share.
+useResizeObserver(
+  () => [
+    element.value,
+    ...[...list.map.value].filter(([, item]) => item.id === undefined).map(([node]) => node),
+  ],
+  measure,
 );
 
-watch(
+onMounted(() => {
+  watch(
+    [element, list.map, rootOrientation],
+    () => {
+      if (!isHeld.value) measure();
+    },
+    { flush: 'post' },
+  );
+});
+
+useDomEffect(
   [usesViewportLengths, element],
-  ([uses, rootElement], _previous, onCleanup) => {
-    if (uses && rootElement !== null) {
-      onCleanup(
-        addEventListener(ownerWindow(rootElement), 'resize', () => {
-          measure();
-        }),
-      );
-    }
-  },
-  { flush: 'post' },
+  () =>
+    usesViewportLengths.value && element.value
+      ? addEventListener(ownerWindow(element.value), 'resize', measure)
+      : undefined,
+  isHeld,
 );
 
 defineExpose({ element, getLayout, setLayout, reset });

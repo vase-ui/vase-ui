@@ -1,14 +1,13 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
 import type { Orientation } from '../../internals/types';
-import type { HandleDrag } from './handleDrag';
+import type { HandleDrag } from './useResizeHandle';
 import {
   getHandlesAtPoint,
   getJoinBox,
   getNearestPoint,
   isInBox,
   registerHandle,
-} from './handleRegistry';
+} from './useResizeHandle';
 
 describe('handle registry', () => {
   it('join box: the box of the handle grows by half of the size on each side', () => {
@@ -42,8 +41,6 @@ describe('handle registry', () => {
   describe('in the document', () => {
     function createDrag(disabled = false): HandleDrag {
       return {
-        dragging: shallowRef(false),
-        crossing: shallowRef(false),
         disabled: () => disabled,
         start: () => true,
         move() {},

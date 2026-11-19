@@ -241,6 +241,7 @@
         "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a stored layout, data-collapsed": "vue-16305-hydration"
       }
     },
+    "src/resizable/root/ResizableRoot.edges.test.tsx": { "fails": {} },
     "src/scroll-area/content/ScrollAreaContent.test.tsx": {
       "fails": {
         "<ScrollArea.Content /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",

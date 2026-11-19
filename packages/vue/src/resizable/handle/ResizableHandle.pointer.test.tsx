@@ -1,5 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import { nextTick, shallowRef } from 'vue';
 import { createRenderer, penDrag, screen, touchDrag, waitFor } from '#test-utils';
 import { platform } from '../../common/platform';
 import { Resizable } from '@vase-ui/vue/resizable';
@@ -51,6 +52,32 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
 
     expect(screen.getByTestId('handle')).not.toHaveAttribute('data-dragging');
     expect(first.getBoundingClientRect().width - before).toBeCloseTo(100, 0);
+  });
+
+  it('ends the drag when the handle replaces its capture target', async () => {
+    const tag = shallowRef<'div' | 'span'>('div');
+    await render(() => (
+      <Resizable.Root style={{ width: '400px', height: '100px' }}>
+        <Resizable.Panel />
+        <Resizable.Handle as={tag.value} style={{ width: '8px' }} />
+        <Resizable.Panel />
+      </Resizable.Root>
+    ));
+    releasePointerAfterTest();
+    const handle = screen.getByRole('separator');
+    const rect = handle.getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+    expect(handle).toHaveAttribute('data-dragging');
+
+    tag.value = 'span';
+    await nextTick();
+    const replacement = screen.getByRole('separator');
+    expect(replacement.tagName).toBe('SPAN');
+    expect(replacement).not.toHaveAttribute('data-dragging');
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
   });
 
   it('focuses the handle with the press', async () => {

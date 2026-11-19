@@ -38,7 +38,7 @@ export interface ResizablePanelProps
     VaseUIComponentProps<ResizablePanelState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
   /**
-   * The id of the panel element, and the key of the panel in the layout.
+   * The panel's layout key. The default panel element uses it as its id.
    * The default is a generated id. Give an id of your own to save the layout and to read it again.
    */
   id?: string | undefined;
@@ -170,10 +170,9 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { useResizableRootContext } from '../root/ResizableRootContext';
+import { ResizablePanelContext, useResizableRootContext } from '../root/ResizableRootContext';
 import { isCollapsed } from '../utils/layout';
 import { getPanelSize } from '../utils/measure';
-import { ResizablePanelContext } from './ResizablePanelContext';
 import * as ResizablePanelCssVariables from './ResizablePanelCssVariables';
 
 defineOptions({ inheritAttrs: false });
@@ -220,8 +219,6 @@ useDeferredServerRender();
 
 const hydrating = useIsHydrating();
 const panelId = useVaseUiId(() => props.id);
-// The size at the start: a later change of the prop has no effect.
-const initialSize = props.defaultSize;
 
 // A panel whose first size is a length has that length until the first measurement. The panel
 // cannot have a size in percent before: the room of the panels is not known. It can shrink, so it
@@ -296,13 +293,13 @@ const index = useCompositeListItem(element, {
 // panels, and the handles beside it do not name it.
 const { isHeld } = useKeepAliveState();
 
-root.registerPanel({
+root.registerPart({
   id: panelId,
   referencedId: useReferencedId(() => panelId.value, element),
   index,
   minSize: () => props.minSize,
   maxSize: () => props.maxSize,
-  defaultSize: initialSize,
+  defaultSize: props.defaultSize,
   collapsible: () => props.collapsible,
   collapsedSize: () => props.collapsedSize,
   collapseThreshold: () => props.collapseThreshold,
@@ -315,40 +312,23 @@ root.registerPanel({
   isHeld,
 });
 
-// The watcher reads the size only after the mount. A size that is not valid then fails in the
-// render, and not in the watcher.
-let lastSize: ResizablePanelSize | undefined;
+const reportedSize = computed<ResizablePanelSize | undefined>((previous) => {
+  if (hydrating.value || isHeld.value || !root.measurement.value) return previous;
+  const next = getPanelSize(size.value, root.measurement.value.space);
+  return next.percent === previous?.percent && next.pixels === previous.pixels ? previous : next;
+});
 watch(
-  () =>
-    hydrating.value
-      ? undefined
-      : ([size.value, root.measurement.value?.space, isHeld.value] as const),
-  (current) => {
-    const [percent, space, held] = current ?? [];
-    if (percent === undefined || space === undefined || held === true) {
-      return;
-    }
-    const next = getPanelSize(percent, space);
-    if (next.percent === lastSize?.percent && next.pixels === lastSize.pixels) {
-      return;
-    }
-    const previous = lastSize;
-    lastSize = next;
-    emit('resize', next, previous);
+  reportedSize,
+  (next, previous) => {
+    if (next) emit('resize', next, previous);
   },
   { flush: 'post' },
 );
 
 const actions: ResizablePanelActions = {
-  collapse: () => {
-    root.collapsePanel(panelId.value);
-  },
-  expand: () => {
-    root.expandPanel(panelId.value);
-  },
-  resize: (wanted) => {
-    root.resizePanel(panelId.value, wanted);
-  },
+  collapse: () => root.collapsePanel(panelId.value),
+  expand: () => root.expandPanel(panelId.value),
+  resize: (wanted) => root.resizePanel(panelId.value, wanted),
   isCollapsed: () => collapsed.value,
   getSize: () => {
     root.measure();
