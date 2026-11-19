@@ -1065,16 +1065,44 @@ export function usePopupFocus(
   );
 
   effect(
-    () => [isDisabled(), floatingFocusElement()],
+    () => [isDisabled(), floatingFocusElement(), element.value],
     () => {
-      const floatingFocusEl = floatingFocusElement();
-      if (isDisabled() || !floatingFocusEl) {
-        return undefined;
-      }
+      const target = floatingFocusElement();
+      if (isDisabled() || !target) return;
 
-      handleTabIndex(floatingFocusEl);
+      // A child component can change the tab stops without updating the popup component.
+      const syncTabIndex = () => {
+        handleTabIndex(target);
+        const managed = managedTabIndex.value !== undefined;
+        observer?.observe(target, {
+          attributes: true,
+          childList: managed,
+          subtree: managed,
+          attributeFilter: managed
+            ? [
+                'role',
+                'tabindex',
+                'hidden',
+                'disabled',
+                'inert',
+                'href',
+                'type',
+                'contenteditable',
+                'controls',
+                'open',
+                'class',
+                'style',
+              ]
+            : ['role', 'tabindex'],
+        });
+      };
+      const observer =
+        target === element.value ? new (ownerWindow(target).MutationObserver)(syncTabIndex) : null;
+      syncTabIndex();
 
       return () => {
+        observer?.disconnect();
+        managedTabIndex.value = undefined;
         queueMicrotask(clearDisconnectedPreviouslyFocusedElements);
       };
     },

@@ -5771,6 +5771,8 @@ describe('FloatingFocusManager', () => {
 
     test('updates the managed tabindex binding on the owned dialog element', async () => {
       const content = shallowRef(false);
+      const role = shallowRef<'dialog' | 'listbox'>('dialog');
+      const manual = shallowRef<number>();
       const Test = defineComponent(() => {
         const { refs, context } = useFloating({ open: true });
         const bindings = usePopupFocus(
@@ -5778,24 +5780,36 @@ describe('FloatingFocusManager', () => {
           refs.floating,
         );
         return () => (
-          <>
-            <button data-testid="reference" ref={refs.setReference} />
-            <div role="dialog" ref={refs.setFloating} {...bindings({})}>
-              {content.value && <button data-testid="child" />}
-            </div>
-          </>
+          <div
+            role={role.value}
+            ref={refs.setFloating}
+            tabindex={manual.value}
+            {...bindings({ tabindex: manual.value })}
+          >
+            {content.value && <button>child</button>}
+          </div>
         );
       });
       await render(<Test />);
       const popup = screen.getByRole('dialog');
       expect(popup).toHaveAttribute('tabindex', '0');
       expect(popup).toHaveAttribute('data-tabindex', '0');
-      screen.getByTestId('reference').focus();
       content.value = true;
-      await nextTick();
-      screen.getByTestId('child').focus();
       await waitFor(() => expect(popup).toHaveAttribute('tabindex', '-1'));
       expect(popup).toHaveAttribute('data-tabindex', '-1');
+      content.value = false;
+      await waitFor(() => expect(popup).toHaveAttribute('tabindex', '0'));
+
+      role.value = 'listbox';
+      await waitFor(() => expect(popup.getAttribute('tabindex')).toBeNull());
+      expect(popup).not.toHaveAttribute('data-tabindex');
+      manual.value = 3;
+      role.value = 'dialog';
+      await nextTick();
+      expect(popup).toHaveAttribute('tabindex', '3');
+      expect(popup).not.toHaveAttribute('data-tabindex');
+      manual.value = undefined;
+      await waitFor(() => expect(popup).toHaveAttribute('data-tabindex', '0'));
     });
 
     test('floating element with no focusable elements and no listbox role gets tabIndex=0 when initialFocus is -1', async () => {
