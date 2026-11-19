@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowReactive, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, waitFor, waitSingleFrame } from '#test-utils';
-import { useTriggerSwitchTransition } from './useTriggerSwitchTransition';
+import { useTriggerSwitchTransition } from './usePopupPositioner';
 
 type InstantType = string | undefined;
 

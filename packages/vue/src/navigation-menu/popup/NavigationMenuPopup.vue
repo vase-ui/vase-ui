@@ -51,7 +51,7 @@ import { popupTransitionStateMapping } from '../../utils/popups/popupStateMappin
 import { useElementId } from '../../utils/popups/useElementId';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { popupSizeStyles } from '../../utils/popups/viewport/usePopupViewport';
+import { popupSizeStyles } from '../../utils/popups/viewport/popupSizeStyles';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 
 defineOptions({ inheritAttrs: false });

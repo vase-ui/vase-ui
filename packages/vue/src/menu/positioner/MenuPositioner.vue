@@ -66,8 +66,10 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
-import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
+import {
+  usePopupPositioner,
+  useTriggerSwitchTransition,
+} from '../../utils/popups/usePopupPositioner';
 import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { useMenuPortalContext } from '../portal/MenuPortalContext';

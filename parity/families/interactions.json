@@ -214,14 +214,14 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
       "member": "PopupHoverSession",
-      "witness": "packages/vue/src/utils/popups/interactions/hoverIntent.test.ts"
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.session.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverShared.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
       "member": "getDelay",
-      "witness": "packages/vue/src/utils/popups/interactions/useHoverShared.test.ts"
+      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.delay.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",

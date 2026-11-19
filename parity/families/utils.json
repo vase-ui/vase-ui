@@ -60,14 +60,14 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
       "member": "arrow",
-      "witness": "packages/vue/src/utils/popups/positioning/arrow.test.ts"
+      "witness": "packages/vue/src/internals/useAnchorPositioning.arrow.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
       "member": "hide",
-      "witness": "packages/vue/src/utils/popups/positioning/hideMiddleware.test.ts"
+      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
@@ -88,14 +88,28 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
       "member": "useVaseUIFloating",
-      "witness": "packages/vue/src/utils/popups/positioning/useFloating.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/usePositioner.tsx",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
       "member": "usePositioner",
-      "witness": "packages/vue/src/utils/popups/popupPositioner.test.tsx"
+      "witness": "packages/vue/src/utils/popups/usePopupPositioner.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts",
+      "member": "createState",
+      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx",
+      "member": "createPositioner",
+      "witness": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx"
     }
   ]
 }

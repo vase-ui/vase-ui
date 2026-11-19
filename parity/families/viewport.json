@@ -19,9 +19,9 @@
     {
       "upstream": "packages/react/src/utils/popups/viewport/CommonPopupCssVars.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/viewport/usePopupViewport.ts",
-      "member": "popupVars",
-      "witness": "packages/vue/src/utils/popups/viewport/usePopupViewport.transitions.test.tsx"
+      "destination": "packages/vue/src/utils/popups/viewport/popupSizeStyles.ts",
+      "member": "popupSizeStyles",
+      "witness": "packages/vue/src/utils/popups/viewport/usePopupViewport.resize.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/viewport/CommonViewportDataAttributes.ts",

@@ -3,22 +3,22 @@ import { KeepAlive, computed, defineComponent, nextTick, onMounted, shallowRef, 
 import type { PropType, ShallowRef } from 'vue';
 import type { Placement, VirtualElement } from '@floating-ui/vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks } from '#test-utils';
-import type { VaseUIChangeEventDetails } from '../../../internals/createVaseUIEventDetails';
-import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { useDismiss } from '../interactions/useDismiss';
-import { PopupTriggerMap } from '../usePopupRoot';
+import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { FloatingRootStore } from './floating-root/FloatingRootStore';
+import { useDismiss } from './interactions/useDismiss';
+import { PopupTriggerMap } from './usePopupRoot';
 import {
   provideFloatingNode,
   provideFloatingTree,
   useFloatingNodeId,
   useFloatingParentNodeId,
   useFloatingTree,
-} from '../tree/FloatingTree';
-import { FloatingTreeStore } from '../tree/FloatingTreeStore';
-import { getNodeChildren } from '../tree/nodes';
-import type { PopupPositioningContext, ReferenceType } from '../types';
-import { useVaseUIFloating } from '../usePopupPositioner';
-import type { UseFloatingOptions } from '../usePopupPositioner';
+} from './tree/FloatingTree';
+import { FloatingTreeStore } from './tree/FloatingTreeStore';
+import { getNodeChildren } from './tree/nodes';
+import type { PopupPositioningContext, ReferenceType } from './types';
+import { useVaseUIFloating } from './usePopupPositioner';
+import type { UseFloatingOptions } from './usePopupPositioner';
 
 const { render } = createRenderer();
 

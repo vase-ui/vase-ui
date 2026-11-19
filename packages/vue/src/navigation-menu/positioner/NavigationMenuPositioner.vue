@@ -58,7 +58,7 @@ import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
 } from '../root/NavigationMenuRootContext';
-import { positionerSizeStyles } from '../../utils/popups/viewport/usePopupViewport';
+import { positionerSizeStyles } from '../../utils/popups/viewport/popupSizeStyles';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { NavigationMenuPositionerContext } from './NavigationMenuPositionerContext';
 

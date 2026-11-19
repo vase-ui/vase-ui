@@ -41,8 +41,10 @@ export interface PopoverPositionerProps
 import { provide } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
-import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
+import {
+  usePopupPositioner,
+  useTriggerSwitchTransition,
+} from '../../utils/popups/usePopupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { usePopoverPortalContext } from '../portal/PopoverPortalContext';

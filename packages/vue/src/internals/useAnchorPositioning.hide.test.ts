@@ -1,7 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { hide as nativeHide } from '@floating-ui/vue';
 import type { MiddlewareState, Rect, SideObject } from '@floating-ui/vue';
-import { hide } from '../../../internals/useAnchorPositioning';
+import { hide } from './useAnchorPositioning';
 
 const floatingRect: Rect = { x: 0, y: 0, width: 5, height: 5 };
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { PopupTriggerMap } from '../usePopupRoot';
-import { useTestCursor as useClientPoint } from '../../../../test/fixtures/tooltipInteractions';
+import { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
+import { PopupTriggerMap } from '../../utils/popups/usePopupRoot';
+import { useTestCursor as useClientPoint } from '../../../test/fixtures/tooltipInteractions';
 
 // The window of the positioner element. It records each listener that the composable adds.
 const added: string[] = [];

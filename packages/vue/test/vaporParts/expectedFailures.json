@@ -323,7 +323,7 @@
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },
-    "src/utils/popups/interactions/hoverIntent.test.ts": {
+    "src/utils/popups/interactions/usePopupHover.session.test.ts": {
       "fails": {}
     },
     "src/utils/popups/useDomEffect.test.tsx": {
@@ -365,7 +365,7 @@
     "test/withoutVaporAnchors.test.tsx": {
       "fails": {}
     },
-    "test/popupArrowReplacement.test.tsx": {
+    "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
       "fails": {}
     }
   }

@@ -1,3 +1,4 @@
+import { popupSizeStyles, positionerSizeStyles } from './popupSizeStyles';
 import { positionerVars } from '../../../internals/useAnchorPositioning';
 import {
   computed,
@@ -29,11 +30,6 @@ import { PopupViewportContext, PopupStyleContext } from './PopupViewportContext'
 import { EMPTY_OBJECT } from '../../../common/empty';
 import { useDomEffect } from '../useDomEffect';
 import { getCssDimensions } from '../../getCssDimensions';
-
-const popupVars = {
-  popupWidth: '--popup-width',
-  popupHeight: '--popup-height',
-} as const;
 
 const popupViewportStateMapping: StateAttributesMapping<{
   activationDirection: string | undefined;
@@ -136,18 +132,10 @@ export function usePopupViewport<Instant extends string | undefined>(
   const currentContentKey = computed(
     () => `${activeTriggerId.value ?? 'current'}-${contentCount.value}`,
   );
-  const previousContainerStyle = computed<CSSProperties>(() => {
-    const dimensions = previousContentDimensions.value;
-    return {
-      ...(dimensions
-        ? {
-            [popupVars.popupWidth]: `${dimensions.width}px`,
-            [popupVars.popupHeight]: `${dimensions.height}px`,
-          }
-        : null),
-      position: 'absolute',
-    };
-  });
+  const previousContainerStyle = computed<CSSProperties>(() => ({
+    ...popupSizeStyles(previousContentDimensions.value),
+    position: 'absolute',
+  }));
 
   let isPayloadPending = false;
   watch([activeTriggerId, payload], ([id, nextPayload], [previousId, previousPayload]) => {
@@ -584,22 +572,4 @@ function applyElementStyles(element: HTMLElement, styles: Record<string, string>
       style.setProperty(key, value, priority);
     }
   };
-}
-
-export function popupSizeStyles(size: Dimensions | 'auto' | null) {
-  return (
-    size && {
-      [popupVars.popupWidth]: size === 'auto' ? size : `${size.width}px`,
-      [popupVars.popupHeight]: size === 'auto' ? size : `${size.height}px`,
-    }
-  );
-}
-
-export function positionerSizeStyles(size: Dimensions | null) {
-  return (
-    size && {
-      [positionerVars.positionerWidth]: `${size.width}px`,
-      [positionerVars.positionerHeight]: `${size.height}px`,
-    }
-  );
 }
