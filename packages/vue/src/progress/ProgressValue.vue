@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs } from 'vue';
+import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { injectProgressRoot, statusAttributes } from './root';
 import type { ProgressValueState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
+defineProps</* @vue-ignore */ HTMLAttributes>();
 defineSlots<{
   default?(scope: {
     formattedValue: string | null;
