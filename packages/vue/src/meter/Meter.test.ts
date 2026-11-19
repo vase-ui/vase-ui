@@ -3,6 +3,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import MeterElementsReplaced from '../../test/fixtures/MeterElementsReplaced.vue';
 import MeterLabelInTeleport from '../../test/fixtures/MeterLabelInTeleport.vue';
+import MeterLabels from '../../test/fixtures/MeterLabels.vue';
 import MeterPartAlone from '../../test/fixtures/MeterPartAlone.vue';
 import MeterParts from '../../test/fixtures/MeterParts.vue';
 import MeterValueSlot from '../../test/fixtures/MeterValueSlot.vue';
@@ -264,15 +265,30 @@ describe('the name', () => {
     expect(meter).not.toHaveAttribute('aria-labelledby');
   });
 
-  test('an aria-label of the developer names the root, also with a label; a bound undefined does not', async () => {
+  test('with two labels, the root names the first, and keeps it when the other unmounts', async () => {
+    const ids = reactive(['first', 'second']);
+    const meter = mount(MeterLabels, { ids }).root.firstElementChild!;
+    await nextTick();
+    expect(meter).toHaveAttribute('aria-labelledby', 'first');
+    ids.pop();
+    await nextTick();
+    expect(meter).toHaveAttribute('aria-labelledby', 'first');
+  });
+
+  test('an aria-label of the developer names the root, also with a label; a bound null or undefined does not', async () => {
     const root = reactive<Attributes>({ 'aria-label': 'Charge' });
     const { meter, label } = await mountMeter({ root });
-    expect(meter).not.toHaveAttribute('aria-labelledby');
-    expect(meter).toHaveAccessibleName('Charge');
-    root['aria-label'] = undefined;
-    await nextTick();
-    expect(meter).toHaveAttribute('aria-labelledby', label!.id);
-    expect(meter).toHaveAccessibleName('Battery');
+    for (const none of [null, undefined]) {
+      root['aria-label'] = 'Charge';
+      await nextTick();
+      expect(meter).not.toHaveAttribute('aria-labelledby');
+      expect(meter).toHaveAccessibleName('Charge');
+      root['aria-label'] = none;
+      await nextTick();
+      expect(meter).not.toHaveAttribute('aria-label');
+      expect(meter).toHaveAttribute('aria-labelledby', label!.id);
+      expect(meter).toHaveAccessibleName('Battery');
+    }
   });
 
   test('an aria-labelledby of the developer wins, with and without a label; a bound undefined removes it', async () => {

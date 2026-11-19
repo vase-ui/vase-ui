@@ -2736,6 +2736,10 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.goto(url('/meter'), { waitUntil: 'hydration' });
     await waitForTwoFrames(page);
 
+    const visitorText = await page.evaluate(() =>
+      new Intl.NumberFormat(undefined, { style: 'percent' }).format(0.42),
+    );
+    expect(visitorText).not.toBe(PERCENT_TEXT);
     expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
     expect(await page.getByTestId('percent-root').getAttribute('aria-valuetext')).toBe(
       PERCENT_TEXT,
