@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { toValidatedNumber as toValidatedNumberImpl, removeFloatingPointErrors } from './validate';
+import { toValidatedNumber as toValidatedNumberImpl, removeFloatingPointErrors } from './parse';
 
 const min = Number.MIN_SAFE_INTEGER;
 const max = Number.MAX_SAFE_INTEGER;

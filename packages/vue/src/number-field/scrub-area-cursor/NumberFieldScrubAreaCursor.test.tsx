@@ -12,7 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { platform } from '../../common/platform';
-import { NumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
+import { NumberFieldScrubAreaContext } from '../root/NumberFieldRootContext';
 import NumberFieldScrubAreaCursorReplace from './NumberFieldScrubAreaCursorReplace.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -21,7 +21,7 @@ const defaultScrubAreaContext: NumberFieldScrubAreaContext = {
   isScrubbing: shallowRef(true),
   isTouchInput: shallowRef(false),
   isPointerLockDenied: shallowRef(false),
-  cursor: shallowRef(null),
+  setCursor() {},
   scrubAreaElement: shallowRef<HTMLElement | null>(null),
 };
 
@@ -230,6 +230,30 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
     }
   });
 
+  it('keeps the sampled position when the pointer lock request resolves', async () => {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const lock = vi.spyOn(document.body, 'requestPointerLock').mockReturnValue(promise);
+    onTestFinished(() => lock.mockRestore());
+    await render(
+      <NumberField.Root>
+        <NumberField.Input />
+        <NumberField.ScrubArea data-testid="area">
+          <NumberField.ScrubAreaCursor data-testid="cursor" />
+        </NumberField.ScrubArea>
+      </NumberField.Root>,
+    );
+    screen
+      .getByTestId('area')
+      .dispatchEvent(new PointerEvent('pointerdown', { clientX: 80, clientY: 60 }));
+    await flushMicrotasks();
+    window.dispatchEvent(new PointerEvent('pointermove', { movementX: 10, movementY: 5 }));
+    const cursor = screen.getByTestId('cursor');
+    expect(getCenter(cursor)).toEqual({ x: 90, y: 65 });
+    resolve();
+    await flushMicrotasks();
+    expect(getCenter(cursor)).toEqual({ x: 90, y: 65 });
+  });
+
   it('keeps the sampled position when the cursor renders during a scrub', async () => {
     const pointerLock = vi.spyOn(document.body, 'requestPointerLock').mockResolvedValue();
     onTestFinished(() => pointerLock.mockRestore());
@@ -280,7 +304,7 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       await flushMicrotasks();
       expect(screen.queryByTestId('old-cursor')).toBe(null);
       const cursor = screen.getByTestId('new-cursor');
-      expect(cursor.style.transform).toBe('');
+      expect(getCenter(cursor)).toEqual({ x: 10, y: 10 });
 
       window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, movementX: 4 }));
       await flushMicrotasks();
@@ -416,7 +440,7 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
 
         expect(getCenter(cursor).x).toBeCloseTo(230, 1);
         expect(getCenter(cursor).y).toBeCloseTo(160, 1);
-        // The box that reads the containing block is gone.
+        // The portal has only the cursor as a child.
         expect(cursor.parentElement!.children).toHaveLength(1);
       },
     );
@@ -431,6 +455,56 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
 
       expect(getCenter(cursor).x).toBeCloseTo(230, 1);
       expect(getCenter(cursor).y).toBeCloseTo(160, 1);
+    });
+
+    it('keeps the cursor as the only child of its render slot during a scrub', async () => {
+      const lock = vi.spyOn(document.body, 'requestPointerLock').mockResolvedValue();
+      onTestFinished(() => lock.mockRestore());
+      await render(() => (
+        <NumberField.Root>
+          <style>
+            {
+              '[data-vase-ui-portal]:last-child [data-testid="wrapper"] > span:only-child { width: 20px; height: 10px }'
+            }
+          </style>
+          <NumberField.Input />
+          <NumberField.ScrubArea data-testid="area">
+            <NumberField.ScrubAreaCursor
+              data-testid="cursor"
+              v-slots={{
+                render: ({ props }: { props: Record<string, unknown> }) => (
+                  <div
+                    data-testid="wrapper"
+                    style="transform: translate(30px, 40px) scale(0.5); transform-origin: 0 0"
+                  >
+                    <span {...props} />
+                  </div>
+                ),
+              }}
+            />
+          </NumberField.ScrubArea>
+        </NumberField.Root>
+      ));
+      const area = screen.getByTestId('area');
+      area.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 120, clientY: 80 }),
+      );
+      await flushMicrotasks();
+      const cursor = screen.getByTestId('cursor');
+      const wrapper = screen.getByTestId('wrapper');
+      expect(getComputedStyle(cursor).width).toBe('20px');
+      expect(getCenter(cursor)).toEqual({ x: 120, y: 80 });
+
+      wrapper.style.transform = 'translate(60px, 10px) scale(2)';
+      window.dispatchEvent(new PointerEvent('pointermove', { movementX: 5, movementY: 8 }));
+      expect(getCenter(cursor)).toEqual({ x: 125, y: 88 });
+      expect(wrapper.children).toHaveLength(1);
+      expect(getComputedStyle(cursor).width).toBe('20px');
+
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await waitFor(() =>
+        expect(document.querySelectorAll('[data-testid="wrapper"]')).toHaveLength(0),
+      );
     });
 
     it('renders the cursor in the document of its scrub area', async () => {

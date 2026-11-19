@@ -2,6 +2,7 @@ import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, onMounted, shallowRef } from 'vue';
 import { useMediaQuery } from '@vase-ui/vue/unstable-use-media-query';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   hydrate,
@@ -82,7 +83,7 @@ describe('useMediaQuery', () => {
 
   it.each([
     {
-      name: 'the default value, then the real value, without noSsr',
+      name: 'the default then the match without noSsr',
       options: {},
       expected: [false, true],
     },
@@ -127,6 +128,33 @@ describe('useMediaQuery', () => {
     expect(small.listeners.size).toBe(0);
     expect(large.listeners.size).toBe(1);
     expect(screen.getByTestId('result')).toHaveTextContent('true');
+  });
+
+  it('keeps the listener while held and replaces it when the media window changes', async () => {
+    const first = createMatchMedia(false);
+    const second = createMatchMedia(false);
+    const options = shallowRef<useMediaQuery.Options>({ matchMedia: first.matchMedia });
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Test query="all" options={options.value} />
+    ));
+    const { unmount } = await render(<HeldBranch />);
+    await mountWhileHeld();
+    expect(first.listeners.size).toBe(1);
+
+    options.value = { ...options.value, noSsr: true };
+    await flushMicrotasks();
+    expect(first.matchMedia).toHaveBeenCalledTimes(1);
+
+    options.value = { matchMedia: second.matchMedia };
+    await flushMicrotasks();
+    expect(first.listeners.size).toBe(0);
+    expect(second.listeners.size).toBe(1);
+    second.setMatches(true);
+    await show();
+    expect(screen.getByTestId('result')).toHaveTextContent('true');
+
+    unmount();
+    expect(second.listeners.size).toBe(0);
   });
 
   it('does not read matchMedia or listen before mount when the query changes before mount', async () => {

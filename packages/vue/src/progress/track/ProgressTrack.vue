@@ -14,8 +14,10 @@ export interface ProgressTrackProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useProgressRootContext } from '../root/ProgressRootContext';
-import { progressStateAttributesMapping } from '../root/stateAttributesMapping';
+import {
+  progressStateAttributesMapping,
+  useProgressRootContext,
+} from '../root/ProgressRootContext';
 
 defineOptions({ inheritAttrs: false });
 

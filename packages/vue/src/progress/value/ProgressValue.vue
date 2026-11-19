@@ -15,8 +15,10 @@ export interface ProgressValueProps
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useProgressRootContext } from '../root/ProgressRootContext';
-import { progressStateAttributesMapping } from '../root/stateAttributesMapping';
+import {
+  progressStateAttributesMapping,
+  useProgressRootContext,
+} from '../root/ProgressRootContext';
 import ProgressValueChildren from './ProgressValueChildren.vue';
 
 defineOptions({ inheritAttrs: false });

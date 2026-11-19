@@ -7,7 +7,7 @@ import type {
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { ChangeEventCustomProperties } from '../utils/types';
+import type { ChangeEventCustomProperties } from '../utils/parse';
 
 export interface NumberFieldRootState extends FieldRootState {
   /**
@@ -168,9 +168,8 @@ export type NumberFieldRootCommitEventDetails =
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { useHiddenValueBeforeHydration, useIsHydrated } from '../../common/hydration';
+import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
-import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -191,22 +190,9 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import {
-  BASE_NON_NUMERIC_SYMBOLS,
-  getAllFormatParts,
-  getLocaleDigits,
-  getNumberLocaleDetails,
-  MINUS_SIGNS_WITH_ASCII,
-  PERCENTAGES,
-  PERMILLE,
-  PLUS_SIGNS_WITH_ASCII,
-  SPACE_SEPARATOR_RE,
-} from '../utils/parse';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
-import type { EventWithOptionalKeyState, IncrementValueParameters } from '../utils/types';
-import { toValidatedNumber } from '../utils/validate';
-import { NumberFieldRootContext } from './NumberFieldRootContext';
-import type { InputMode } from './NumberFieldRootContext';
+import { parseNumber, toValidatedNumber } from '../utils/parse';
+import { stateAttributesMapping, NumberFieldRootContext } from './NumberFieldRootContext';
+import type { EventWithOptionalKeyState, IncrementValueParameters } from '../utils/parse';
 
 defineOptions({ inheritAttrs: false });
 
@@ -280,30 +266,27 @@ const isDisabled = computed(
 );
 const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
-const stepAmount = computed(() => (props.step === 'any' ? 1 : props.step));
 
 const isScrubbing = shallowRef(false);
 
 const minWithDefault = computed(() => props.min ?? Number.MIN_SAFE_INTEGER);
 const maxWithDefault = computed(() => props.max ?? Number.MAX_SAFE_INTEGER);
-const minWithZeroDefault = computed(() => props.min ?? 0);
 
 const inputRef = shallowRef<HTMLInputElement | null>(null);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 
-// A plain variable keeps the render of the root from depending on the element.
-let ownHiddenInput: HTMLInputElement | null = null;
 const giveFieldInput = useFieldInput();
-
-function setHiddenInputElement(next: unknown) {
-  const input = next as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === ownHiddenInput) {
-    return;
-  }
+function setHiddenInputElement(node: unknown) {
+  const input = node as HTMLInputElement | null;
   giveFieldInput(input);
-  ownHiddenInput = input;
   hiddenInputElement.value = input;
+}
+
+function registerInput(input: HTMLInputElement) {
+  inputRef.value = input;
+  return () => {
+    if (inputRef.value === input) inputRef.value = null;
+  };
 }
 
 const controlId = useLabelableId({ id: () => props.id, element: inputRef });
@@ -316,19 +299,19 @@ const numberValue = useControlled<number | null>({
   state: 'value',
 });
 
-// The buttons write `valueRef`. A change of `value` writes it too, before the next render.
-const valueRef = shallowRef(numberValue.value);
-watch(numberValue, (next) => {
-  valueRef.value = next;
-});
+// A press can accept typed text and take its first step before the model patch.
+let stepValue = numberValue.value;
+watch(
+  numberValue,
+  (value) => {
+    stepValue = value;
+    setFilled(value !== null);
+  },
+  { immediate: true },
+);
 
-// The server HTML of the root and of each part after it has the attribute.
-setFilled(numberValue.value !== null);
-watch(numberValue, (next) => setFilled(next !== null));
-
-const formatOptionsRef = computed(() => props.format);
 const hasPendingCommitRef = shallowRef(false);
-const allowInputSyncRef = shallowRef(true);
+let editing = false;
 const lastChangedValueRef = shallowRef<number | null>(null);
 const isResetChangePending = shallowRef(false);
 
@@ -341,88 +324,45 @@ function onValueCommitted(nextValue: number | null, details: NumberFieldRootComm
 // root is mounted. The text then changes to the locale of the visitor.
 const formatLocale = useFormatLocale(() => props.locale);
 const inputValue = shallowRef(formatNumber(numberValue.value, formatLocale.value, props.format));
-// The numeric keyboard of iOS has no minus key, and for `numeric` it has no decimal key. The mode
-// is widened only as far as the minimum needs. A server cannot know the platform, so the first
-// render has `numeric`.
-const isHydrated = useIsHydrated();
-const inputMode = computed<InputMode>(() => {
-  if (!isHydrated.value || !platform.os.ios) {
-    return 'numeric';
-  }
-  return minWithDefault.value >= 0 ? 'decimal' : 'text';
-});
 // `setValue` raises the count, so the text is formatted again also when the value did not change.
 // A typed text can differ from the format of the same number.
 const syncRequest = shallowRef(0);
 
-function setInputValue(next: string) {
-  inputValue.value = next;
+function setEditing(next: boolean) {
+  const previous = editing;
+  editing = next;
+  return previous;
 }
 
-function getAllowedNonNumericKeys() {
-  const format = props.format;
-  const parts = getAllFormatParts(formatLocale.value, format);
+function prepareStep() {
+  const wasEditing = setEditing(false);
+  if (!wasEditing) lastChangedValueRef.value = stepValue;
+  return wasEditing;
+}
 
-  const keys = new Set<string>(BASE_NON_NUMERIC_SYMBOLS);
-  const addAll = (chars: readonly string[]) => chars.forEach((char) => keys.add(char));
-
-  // Integer formats omit the decimal from `parts`, so fall back to the locale's separator in that
-  // case; it must stay typeable regardless of whether the format renders a fraction.
-  const decimal =
-    parts.find((part) => part.type === 'decimal')?.value ??
-    getNumberLocaleDetails(formatLocale.value, format).decimal;
-  keys.add(decimal);
-
-  // Allow every non-digit character the formatter renders — separators, currency symbols, units
-  // (e.g. `km/h`, `°C`), exponent separators, and locale literals — decomposed per character
-  // because the input validates the typed string one character at a time. Deriving these from
-  // the formatter covers multi-character and locale-specific symbols of every part type
-  // uniformly. `compact` suffixes (e.g. `K`/`M`) are excluded because `parseNumber` can't reverse
-  // them, so allowing them would yield a silently incorrect value.
-  parts.forEach((part) => {
-    if (
-      part.type === 'integer' ||
-      part.type === 'fraction' ||
-      part.type === 'exponentInteger' ||
-      part.type === 'compact'
-    ) {
-      return;
-    }
-    addAll(Array.from(part.value));
-    if (SPACE_SEPARATOR_RE.test(part.value)) {
-      keys.add(' ');
-    }
-  });
-  // Digits follow the locale's numbering system, such as `১২` in bn-BD
-  addAll(getLocaleDigits(formatLocale.value, format));
-
-  const formatStyle = format?.style;
-  const allowPercentSymbols =
-    formatStyle === 'percent' || (formatStyle === 'unit' && format?.unit === 'percent');
-  const allowPermilleSymbols =
-    formatStyle === 'percent' || (formatStyle === 'unit' && format?.unit === 'permille');
-
-  // Tolerate percent/permille variants the formatter doesn't emit but users may type or paste.
-  if (allowPercentSymbols) {
-    addAll(PERCENTAGES);
-  }
-  if (allowPermilleSymbols) {
-    addAll(PERMILLE);
-  }
-
-  // Allow plus sign in all cases; minus sign when negatives are valid, or when out-of-range
-  // entry is allowed so native underflow validation can be triggered from the keyboard.
-  // Exponent notations already allow it above for negative exponents (`2E-2`).
-  addAll(PLUS_SIGNS_WITH_ASCII);
-  if (minWithDefault.value < 0 || props.allowOutOfRange) {
-    addAll(MINUS_SIGNS_WITH_ASCII);
-    // Accounting formats show negatives in parentheses, such as `($1.00)`
-    if (format?.currencySign === 'accounting') {
-      addAll(['(', ')']);
+function prepareStepper(
+  event: MouseEvent,
+  reason: typeof REASONS.incrementPress | typeof REASONS.decrementPress,
+  hold = false,
+) {
+  if (prepareStep()) {
+    const parsed = parseNumber(inputValue.value, formatLocale.value, props.format);
+    if (parsed !== null) {
+      const details = createChangeEventDetails(reason, event);
+      setValue(parsed, details);
+      if (!details.isCanceled) stepValue = parsed;
     }
   }
+  if (hold) lastChangedValueRef.value = null;
+  return stepValue;
+}
 
-  return keys;
+function getStepCommitValue() {
+  return lastChangedValueRef.value ?? stepValue;
+}
+
+function setInputValue(next: string) {
+  inputValue.value = next;
 }
 
 function getStepAmount(event?: EventWithOptionalKeyState) {
@@ -432,7 +372,7 @@ function getStepAmount(event?: EventWithOptionalKeyState) {
   if (event?.shiftKey) {
     return props.largeStep;
   }
-  return stepAmount.value;
+  return props.step === 'any' ? 1 : props.step;
 }
 
 function setValue(
@@ -455,7 +395,7 @@ function setValue(
     dir ? getStepAmount(eventWithOptionalKeyState) * dir : undefined,
     minWithDefault.value,
     maxWithDefault.value,
-    minWithZeroDefault.value,
+    props.min ?? 0,
     props.format,
     props.snapOnStep,
     eventWithOptionalKeyState?.altKey ?? false,
@@ -467,7 +407,7 @@ function setValue(
   // it back to the existing value.
   const shouldFireChange =
     validatedValue !== numberValue.value ||
-    (isInputReason && (unvalidatedValue !== numberValue.value || !allowInputSyncRef.value));
+    (isInputReason && (unvalidatedValue !== numberValue.value || editing));
 
   if (shouldFireChange) {
     emit('valueChange', validatedValue, details);
@@ -493,7 +433,7 @@ function incrementValue(
   amount: number,
   { direction, currentValue, event, reason }: IncrementValueParameters,
 ) {
-  const prevValue = currentValue ?? valueRef.value;
+  const prevValue = currentValue ?? stepValue;
   const nativeEvent = event as ReasonToEvent<IncrementValueParameters['reason']> | undefined;
 
   if (typeof prevValue !== 'number') {
@@ -509,19 +449,13 @@ function incrementValue(
   );
 }
 
-// The text follows the value, the locale and the format. During direct typing we don't want to
-// overwrite the user-provided text until blur, so the text changes only while `allowInputSyncRef`
-// is `true`.
+// Keep an unfinished edit through a change of locale or format.
 watch([numberValue, formatLocale, () => props.format, syncRequest], () => {
-  if (!allowInputSyncRef.value) {
+  if (editing) {
     return;
   }
 
-  const nextInputValue = formatNumber(numberValue.value, formatLocale.value, props.format);
-
-  if (nextInputValue !== inputValue.value) {
-    setInputValue(nextInputValue);
-  }
+  inputValue.value = formatNumber(numberValue.value, formatLocale.value, props.format);
 });
 
 // Programmatic focus leaves the caret at the start (Chrome/Firefox) or selects the whole value
@@ -571,7 +505,7 @@ function onInputWheel(event: WheelEvent) {
 
   // Prevent the default behavior to avoid scrolling the page.
   event.preventDefault();
-  allowInputSyncRef.value = true;
+  editing = false;
 
   const amount = getStepAmount(event);
 
@@ -602,25 +536,22 @@ provide(NumberFieldRootContext, {
   maxWithDefault,
   id: controlId,
   inputId,
-  form: computed(() => props.form),
   setValue,
   getStepAmount,
   incrementValue,
   inputRef,
+  registerInput,
+  options: props,
+  setEditing,
+  prepareStep,
+  prepareStepper,
+  getStepCommitValue,
   focusInput,
-  allowInputSyncRef,
-  formatOptionsRef,
-  valueRef,
   lastChangedValueRef,
   hasPendingCommitRef,
   name: inputName,
-  nameProp: computed(() => props.name),
   value: numberValue,
   disabled: isDisabled,
-  inputMode,
-  getAllowedNonNumericKeys,
-  min: computed(() => props.min),
-  max: computed(() => props.max),
   setInputValue,
   locale: formatLocale,
   setIsScrubbing(scrubbing: boolean) {
@@ -677,7 +608,7 @@ function onHiddenInputChange(event: Event) {
 useFormReset(hiddenInputElement, (event) => {
   if (props.modelValue === undefined) {
     const previousValue = numberValue.value;
-    allowInputSyncRef.value = true;
+    editing = false;
     setValue(props.defaultValue ?? null, createChangeEventDetails(REASONS.none, event));
     // A reset is not an edit of the user, so no commit follows it.
     hasPendingCommitRef.value = false;
@@ -695,30 +626,6 @@ useFormReset(hiddenInputElement, (event) => {
   clearFieldError(numberValue.value);
 });
 
-function inputProps() {
-  return {
-    ...validation.getValidationProps(isDisabled.value),
-    type: 'number',
-    form: props.form,
-    name: inputName.value,
-    ...(hiddenInputText.value === null ? undefined : valueProps()),
-    min: props.min,
-    max: props.max,
-    // stepMismatch validation is broken unless an explicit `min` is added.
-    // See https://github.com/react/react/issues/12334.
-    step: props.step,
-    disabled: isDisabled.value,
-    readonly: props.readOnly,
-    required: props.required,
-    'aria-hidden': true,
-    tabindex: -1,
-    style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
-    onInvalid: handleHiddenInputInvalid,
-    onFocusin: focusInput,
-    onInput: onHiddenInputChange,
-  };
-}
-
 defineExpose({ element, inputElement: hiddenInputElement });
 </script>
 
@@ -727,5 +634,26 @@ defineExpose({ element, inputElement: hiddenInputElement });
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input v-bind="inputProps()" :ref="setHiddenInputElement" />
+  <input
+    :ref="setHiddenInputElement"
+    v-bind="{
+      ...validation.getValidationProps(isDisabled),
+      ...(hiddenInputText === null ? undefined : valueProps()),
+    }"
+    type="number"
+    :form="props.form"
+    :name="inputName"
+    :min="props.min"
+    :max="props.max"
+    :step="props.step"
+    :disabled="isDisabled"
+    :readonly="props.readOnly"
+    :required="props.required"
+    aria-hidden="true"
+    tabindex="-1"
+    :style="inputName ? visuallyHiddenInput : visuallyHiddenInputPinned"
+    @invalid="handleHiddenInputInvalid"
+    @focusin="focusInput"
+    @input="onHiddenInputChange"
+  />
 </template>

@@ -50,15 +50,14 @@ export interface ProgressRootProps
 import { computed, provide } from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
+import RangeLabelChildren from '../../internals/RangeLabelChildren.vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { formatRangeValue } from '../../utils/formatRangeValue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
 import { valueToPercent } from '../../utils/valueToPercent';
-import ProgressRootChildren from './ProgressRootChildren.vue';
-import { ProgressRootContext } from './ProgressRootContext';
-import { progressStateAttributesMapping } from './stateAttributesMapping';
+import { progressStateAttributesMapping, ProgressRootContext } from './ProgressRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -120,10 +119,8 @@ const ariaValueText = computed(() => {
 
 provide(ProgressRootContext, {
   clampedValue,
-  format: computed(() => props.format),
-  locale: computed(() => props.locale),
+  props,
   percentageValue,
-  value: computed(() => props.value),
   labelRoot,
   state,
 });
@@ -150,8 +147,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ProgressRootChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="RangeLabelChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <ProgressRootChildren><slot :state="state" /></ProgressRootChildren>
+    <RangeLabelChildren><slot :state="state" /></RangeLabelChildren>
   </component>
 </template>
