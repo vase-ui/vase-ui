@@ -14,6 +14,7 @@ import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -3370,7 +3371,7 @@ describe('<Slider.Root />', () => {
   describe('Form', () => {
     it('clears external errors on change', async () => {
       const { user } = await render(
-        <Form
+        <ErrorsForm
           errors={{
             test: 'test',
           }}
@@ -3379,7 +3380,7 @@ describe('<Slider.Root />', () => {
             <TestSlider data-testid="slider" defaultValue={50} />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       const slider = screen.getByRole('slider');

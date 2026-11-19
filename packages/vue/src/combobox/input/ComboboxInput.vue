@@ -51,7 +51,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useDeferredServerRender } from '../../common/deferredServerRender';
-import { controlAria, fieldKey } from '../../field/control';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
@@ -531,6 +531,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       },
       autocorrect === undefined ? undefined : { autoCorrect: autocorrect },
       elementAttrs,
+      !hasPositionerParent && field
+        ? { 'aria-describedby': describedByWith(field, elementAttrs['aria-describedby']) }
+        : undefined,
     ];
   },
   stateAttributesMapping: triggerStateAttributesMapping,

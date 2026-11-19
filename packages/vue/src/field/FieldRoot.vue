@@ -282,11 +282,15 @@ function dropValidation() {
 
 function validateAfterChange() {
   dropValidation();
+  const current = validation;
   if (props.validationDebounceTime > 0) {
     waiting = setTimeout(validateNow, props.validationDebounceTime);
   } else {
-    // The element shows the new value after the next render.
-    nextTick(validateNow);
+    // The element shows the new value after the next render. A control can give the value of a
+    // native reset before it tells the field the reset, and the reset drops the validation.
+    nextTick(() => {
+      if (current === validation) validateNow();
+    });
   }
 }
 

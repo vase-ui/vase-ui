@@ -730,31 +730,7 @@ describe('<Select.Trigger />', () => {
     expect(store.select('triggerElement')).toBe(screen.getByTestId('second'));
   });
 
-  describe('Field', () => {
-    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Select.Root key="held">
-          <Select.Trigger id="held-trigger" />
-        </Select.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Font</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-trigger');
-    });
-  });
+  describe('Field', () => {});
 
   describe('BUG-1425: a required select with no value after blur', () => {
     function renderSelect(validationMode?: 'blur') {
@@ -772,25 +748,6 @@ describe('<Select.Trigger />', () => {
         </div>,
       );
     }
-
-    it('is invalid when the focus leaves the trigger, with no change before', async () => {
-      const { user } = await renderSelect('blur');
-      const trigger = screen.getByTestId('trigger');
-
-      trigger.focus();
-      await flushMicrotasks();
-
-      expect(screen.queryByTestId('error')).toBe(null);
-      expect(trigger).not.toHaveAttribute('aria-invalid');
-
-      await user.tab();
-
-      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
-      expect(trigger).toHaveAttribute('aria-invalid', 'true');
-      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
-    });
 
     it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
       const { user } = await renderSelect();

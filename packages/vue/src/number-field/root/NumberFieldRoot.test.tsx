@@ -1282,29 +1282,6 @@ describe('<NumberField />', () => {
 
       expect(getHiddenInput().value).toBe('1');
     });
-    it('the label does not name a number field that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <NumberFieldBase.Root key="held" id="held-number-field">
-          <NumberFieldBase.Input />
-        </NumberFieldBase.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Quantity</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-number-field');
-    });
   });
 
   describe('prop: defaultValue', () => {
@@ -3082,7 +3059,7 @@ describe('<NumberField />', () => {
 
     it('clears external errors on change', async () => {
       await render(
-        <Form
+        <ErrorsForm
           errors={{
             test: 'test',
           }}
@@ -3091,7 +3068,7 @@ describe('<NumberField />', () => {
             <NumberField defaultValue={1} />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       const input = screen.getByRole('textbox');

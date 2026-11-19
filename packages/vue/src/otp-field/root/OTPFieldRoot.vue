@@ -353,10 +353,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 const inputName = computed(() => field?.name ?? props.name);
 
-// The first input is the control of the field. The hidden input holds the value for the form and
-// its validation.
+// The first input is the control of the field, or the hidden input of a root with no input. The
+// hidden input holds the value for the form and its validation.
 watch(
-  firstInput,
+  () => firstInput() ?? hiddenInputElement.value,
   (input, _, onCleanup) => {
     if (!input || !field) return;
     onCleanup(

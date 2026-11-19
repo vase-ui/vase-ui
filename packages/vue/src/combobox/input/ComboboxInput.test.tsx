@@ -22,6 +22,7 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
   within,
+  wait,
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
@@ -2204,6 +2205,8 @@ describe('<Combobox.Input />', () => {
       await flushMicrotasks();
 
       input.blur();
+
+      await wait(0);
       await flushMicrotasks();
 
       expect(handleFocusout).toHaveBeenCalledTimes(1);

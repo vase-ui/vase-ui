@@ -894,7 +894,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // The input is the control of the field, or the trigger when the input is in the popup. The
   // hidden input holds the value for the validation.
   watch(
-    () => (inputInsidePopup.value ? store.state.triggerElement : inputRef.value),
+    () =>
+      (inputInsidePopup.value ? store.state.triggerElement : inputRef.value) ??
+      hiddenInputElement.value,
     (control, _, onCleanup) => {
       if (!control || !field) return;
       onCleanup(
@@ -915,7 +917,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           get inputs() {
             return hiddenInputElement.value ? [hiddenInputElement.value] : [];
           },
-          focusElement: control,
+          get focusElement() {
+            return (
+              (inputInsidePopup.value ? store.state.triggerElement : inputRef.value) ?? undefined
+            );
+          },
           formValue: () => fieldStringValue.value,
         }),
       );

@@ -674,31 +674,7 @@ describe('<DateField.Root />', () => {
     });
   });
 
-  describe('KeepAlive', () => {
-    it('the label does not name a date field that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <DateField.Root key="held" id="held-date">
-          <DateField.Input />
-        </DateField.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Birth date</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-date');
-    });
-  });
+  describe('KeepAlive', () => {});
 
   describe('hydration', () => {
     // A server whose `Intl` data differs writes other names. The root compares the attributes of

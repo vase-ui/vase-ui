@@ -30,7 +30,7 @@ import {
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../common/deferredServerRender';
-import { controlAria, fieldKey } from '../../field/control';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useInputRender } from '../../internals/useInputRender';
@@ -522,6 +522,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onWheel: isWheelScrubEnabled.value ? onInputWheel : undefined,
       },
       elementAttrs,
+      field
+        ? { 'aria-describedby': describedByWith(field, elementAttrs['aria-describedby']) }
+        : undefined,
     ];
   },
   stateAttributesMapping,

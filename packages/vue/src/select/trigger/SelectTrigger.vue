@@ -56,7 +56,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDeferredServerRender } from '../../common/deferredServerRender';
-import { controlAria, fieldKey } from '../../field/control';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import {
   DEFAULT_FIELD_STATE_ATTRIBUTES,
   fieldValidityMapping,
@@ -295,6 +295,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
+    field ? { 'aria-describedby': describedByWith(field, attrs['aria-describedby']) } : undefined,
     (merged) => ({ ...merged, role: 'combobox' }),
   ],
 });

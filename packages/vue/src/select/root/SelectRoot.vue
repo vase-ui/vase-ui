@@ -421,9 +421,12 @@ const fieldStringValue = computed(() => {
   return stringifyAsValue(value, props.itemToStringValue);
 });
 
-// The trigger is the control of the field. The hidden input holds the value for the validation.
+const inputElement = shallowRef<HTMLInputElement | null>(null);
+
+// The trigger is the control of the field, or the hidden input of a root with no trigger. The hidden
+// input holds the value for the validation.
 watch(
-  () => store.state.triggerElement,
+  () => store.state.triggerElement ?? inputElement.value,
   (trigger, _, onCleanup) => {
     if (!trigger || !field) return;
     onCleanup(
@@ -444,7 +447,9 @@ watch(
         get inputs() {
           return inputElement.value ? [inputElement.value] : [];
         },
-        focusElement: trigger,
+        get focusElement() {
+          return store.state.triggerElement ?? undefined;
+        },
         formValue: () => fieldStringValue.value,
       }),
     );
@@ -681,8 +686,6 @@ watch(
 );
 
 provide(SelectRootContext, owner);
-
-const inputElement = shallowRef<HTMLInputElement | null>(null);
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;

@@ -104,6 +104,15 @@ export function controlAria(field: FieldForControl) {
   };
 }
 
+/**
+ * The `aria-describedby` of a control whose developer gives ids too: the ids of the developer, then
+ * the ids of the field. `null` of the developer removes the ids of the field.
+ */
+export function describedByWith(field: FieldForControl, given: unknown) {
+  if (given === null) return null;
+  return [given, field.describedBy].filter(Boolean).join(' ') || undefined;
+}
+
 /** Makes the element the control of its field while the element is mounted. */
 export function useFieldControl(
   field: FieldForControl | null,

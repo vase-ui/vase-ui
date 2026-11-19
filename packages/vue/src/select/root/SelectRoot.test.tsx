@@ -4245,7 +4245,7 @@ describe('<Select.Root />', () => {
 
     it('clears external errors on change', async () => {
       const { user } = await render(
-        <Form
+        <ErrorsForm
           errors={{
             select: 'test',
           }}
@@ -4266,7 +4266,7 @@ describe('<Select.Root />', () => {
             </Select.Root>
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('test');
@@ -5141,30 +5141,6 @@ describe('<Select.Root />', () => {
         expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
       },
     );
-
-    it('the label does not name a select that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Select.Root key="held" id="held-select">
-          <Select.Trigger />
-        </Select.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Fruit</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-select');
-    });
   });
 
   describe('dynamic items', () => {

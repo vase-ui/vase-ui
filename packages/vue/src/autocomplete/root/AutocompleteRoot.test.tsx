@@ -3,6 +3,7 @@ import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import type { PropType, ShallowRef } from 'vue';
 import { Autocomplete, AutocompleteSeparatorDataAttributes } from '@vase-ui/vue/autocomplete';
 import { Field } from '@vase-ui/vue/field';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import {
@@ -2610,7 +2611,7 @@ describe('<Autocomplete.Root />', () => {
 
     it('clears external errors on change', async () => {
       const { user } = await render(
-        <Form
+        <ErrorsForm
           errors={{
             autocomplete: 'test',
           }}
@@ -2631,7 +2632,7 @@ describe('<Autocomplete.Root />', () => {
             </Autocomplete.Root>
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('test');
@@ -3068,6 +3069,7 @@ describe('<Autocomplete.Root />', () => {
 
       await user.type(input, 'ok');
       input.blur();
+      await wait(0);
       await flushMicrotasks();
 
       expect(input).toHaveAttribute('data-valid', '');

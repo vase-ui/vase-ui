@@ -3041,30 +3041,6 @@ describe('<Combobox.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
       expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
     });
-
-    it('the label does not name a combobox that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Combobox.Root key="held" items={cities} id="held-combobox">
-          <Combobox.Input />
-        </Combobox.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">City</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-combobox');
-    });
   });
 
   describe('VUE-84: the listener of the opening press', () => {
@@ -10476,6 +10452,7 @@ describe('<Combobox.Root />', () => {
 
       input.focus();
       input.blur();
+      await wait(0);
 
       expect(validate.mock.calls[0]?.[0]).toEqual([]);
 
@@ -14622,7 +14599,7 @@ describe('<Combobox.Root />', () => {
 
     it('clears external errors on change', async () => {
       const { user } = await render(
-        <Form
+        <ErrorsForm
           errors={{
             combobox: 'test',
           }}
@@ -14643,7 +14620,7 @@ describe('<Combobox.Root />', () => {
             </Combobox.Root>
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('test');

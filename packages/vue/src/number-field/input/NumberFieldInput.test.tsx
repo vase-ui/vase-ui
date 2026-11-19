@@ -737,6 +737,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     // A focus/blur with no edits must not re-parse the rounded display text and overwrite the
@@ -851,6 +852,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23456).toLocaleString());
@@ -919,6 +921,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23456789).toLocaleString());
@@ -926,6 +929,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     // Repeated no-edit blur cycles keep the full-precision numeric value; only the display
@@ -1033,6 +1037,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23).toLocaleString());
@@ -1119,6 +1124,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue(expectedValue);
@@ -1542,6 +1548,7 @@ describe('<NumberField.Input />', () => {
     input.focus();
     await flushMicrotasks();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
     expect(onValueCommitted.mock.calls.length).toBe(1);
 

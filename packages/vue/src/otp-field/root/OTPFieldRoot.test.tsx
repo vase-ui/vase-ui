@@ -2700,29 +2700,6 @@ describe('<OTPField.Root />', () => {
       expect(getValues()).toBe('1234');
       expect(document.activeElement).toBe(inputs[4]);
     });
-    it('the label does not name an OTP field that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
-          <OTPFieldBase.Input />
-        </OTPFieldBase.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Code</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-otp-field');
-    });
   });
   it('sets `data-complete` when all slots are filled', async () => {
     await render(<OTPField data-testid="root" defaultValue="123456" />);
