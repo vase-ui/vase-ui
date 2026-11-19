@@ -734,7 +734,7 @@ Measure before you write code that guards, tracks, repairs or copies a behavior:
 
 Platform and parity:
 
-- A behavior of a part rests only on features that MDN marks "Baseline Widely available". `Temporal` is the one exception.
+- A behavior of a part rests only on features that MDN marks "Baseline Widely available". `Temporal` is one exception. The `focusVisible` option of `focus()` is the other: a part can give it where Base UI gives it. A browser without the option ignores it and decides the focus ring.
 - Each feature of Base UI stays, in the form of Vue. A feature is cut only for a better way that gives the developer or the user the same thing, and the family file of `parity/families` names that way.
 
 #### Mount, hydration and render modes

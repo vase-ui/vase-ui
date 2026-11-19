@@ -18,7 +18,7 @@ type Attrs = Record<string, unknown>;
  * pointer that a script makes, so the control records the calls.
  */
 async function mountSlider(
-  props: { root?: Attrs; thumbs?: Attrs[]; control?: Attrs },
+  props: { root?: Attrs; thumbs?: Attrs[]; control?: Attrs; field?: Attrs },
   madePointers = true,
 ) {
   const { root } = mount(SliderParts, props);
@@ -556,6 +556,45 @@ describe('a real pointer', () => {
     expect(document.activeElement).toBe(slider.inputs()[0]);
     expect(log[0]).toBe('change 20 track-press 0');
     expect(log.at(-1)).toBe('commit 60 drag pointerup');
+  });
+
+  test('a mouse press gives the input no focus ring; a key that changes the value shows it, with no blur and no focus for the field and the listeners of the thumb', async () => {
+    const events: string[] = [];
+    const slider = await mountSlider(
+      {
+        root: { defaultValue: 100 },
+        thumbs: [
+          {
+            onFocus: (event: FocusEvent) => events.push(event.type),
+            onBlur: (event: FocusEvent) => events.push(event.type),
+          },
+        ],
+        field: {},
+      },
+      false,
+    );
+    const input = slider.inputs()[0]!;
+    const rect = slider.thumb().getBoundingClientRect();
+    const point = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    let held = true;
+    onTestFinished(async () => {
+      if (held) await userEvent.pointer({ keys: '[/MouseLeft]' });
+    });
+    await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
+    expect(document.activeElement).toBe(input);
+    expect(input.matches(':focus-visible')).toBe(false);
+    held = false;
+    await userEvent.pointer({ coords: point, keys: '[/MouseLeft]' });
+    // A key at the end changes no value. WebKit shows the ring at a key.
+    await userEvent.keyboard('{ArrowRight}');
+    expect(input.matches(':focus-visible')).toBe(server.browser === 'webkit');
+    await userEvent.keyboard('{ArrowLeft}');
+    await settle();
+    expect(slider.values()).toEqual([99]);
+    expect(document.activeElement).toBe(input);
+    expect(input.matches(':focus-visible')).toBe(true);
+    expect(slider.group).not.toHaveAttribute('data-touched');
+    expect(events).toEqual(['focus']);
   });
 
   test.runIf(server.browser === 'chromium')(

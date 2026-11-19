@@ -46,6 +46,9 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: input, setElement: setInput } = useElement<HTMLInputElement>();
 // A key with Ctrl, Alt or Meta, until the next task.
 let modifiedKey = false;
+// The blur and the focus of `showFocusRing`. The slider, the field and the listeners of the
+// developer do not get them.
+let refocusing = false;
 
 const entry: SliderThumbEntry = {
   get index() {
@@ -174,12 +177,14 @@ function valueText() {
   return slider.hasFormat ? text : undefined;
 }
 
-function onFocus() {
-  slider.onFocus(entry);
+function onFocus(event: FocusEvent) {
+  if (refocusing) event.stopImmediatePropagation();
+  else slider.onFocus(entry);
 }
 
 function onBlur(event: FocusEvent) {
-  slider.onBlur(event);
+  if (refocusing) event.stopImmediatePropagation();
+  else slider.onBlur(event);
 }
 
 function onInput(event: Event) {
@@ -219,7 +224,21 @@ function onKeydown(event: KeyboardEvent) {
     const direction = up ? 1 : -1;
     target = snap(current + direction * (large ? slider.largeStep : grid.step), grid, direction);
   }
-  slider.moveTo(valueIndex.value, target, 'keyboard', event);
+  if (slider.moveTo(valueIndex.value, target, 'keyboard', event)) {
+    showFocusRing(event.currentTarget as HTMLInputElement);
+  }
+}
+
+/**
+ * Chromium and Firefox show no focus ring at a key after a press. A focus after a blur at a key has
+ * the ring in each browser (`test/measurements/slider.test.ts`, S2).
+ */
+function showFocusRing(target: HTMLInputElement) {
+  if (!target.matches(':focus:not(:focus-visible)')) return;
+  refocusing = true;
+  target.blur();
+  target.focus({ preventScroll: true });
+  refocusing = false;
 }
 </script>
 

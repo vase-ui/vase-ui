@@ -41,7 +41,11 @@ type Focuser = 'pointerdown' | 'focus of the thumb';
  * A control with one thumb and text after it. `focuser` gives the focus to the range input of the
  * thumb; `prevent` names the event whose default action a listener of the control prevents.
  */
-function control(prevent: '' | 'mousedown' | 'pointerdown', focuser: Focuser = 'pointerdown') {
+function control(
+  prevent: '' | 'mousedown' | 'pointerdown',
+  focuser: Focuser = 'pointerdown',
+  options: FocusOptions = {},
+) {
   html(`<input id="before" aria-label="Before">
     <div id="control" style="position:relative;width:200px;height:20px;touch-action:none">
       <div id="thumb" style="position:absolute;left:90px;top:0;width:20px;height:20px">
@@ -52,7 +56,7 @@ function control(prevent: '' | 'mousedown' | 'pointerdown', focuser: Focuser = '
   const element = root!.querySelector<HTMLElement>('#control')!;
   const thumb = root!.querySelector<HTMLElement>('#thumb')!;
   const input = root!.querySelector<HTMLInputElement>('#range')!;
-  const focusInput = () => input.focus({ preventScroll: true });
+  const focusInput = () => input.focus({ preventScroll: true, ...options });
   if (focuser === 'pointerdown') element.addEventListener('pointerdown', focusInput);
   if (focuser === 'focus of the thumb') {
     thumb.tabIndex = -1;
@@ -157,6 +161,32 @@ describe('S2: :focus-visible of the input after a press', () => {
     expect(document.activeElement).toBe(input);
     expect(input.matches(':focus-visible')).toBe(false);
   });
+
+  // The key listener prevents the default action, as a thumb does. The default action, and Tab
+  // before the press, change no result.
+  test.each([
+    { atKey: 'nothing', ring: webkit },
+    { atKey: 'a focus', ring: webkit },
+    { atKey: 'a blur and a focus', ring: true },
+  ] as const)(
+    'a script focus with focusVisible false in the press gives no :focus-visible in each browser; at a key the script does $atKey, and the input has :focus-visible: $ring',
+    async ({ atKey, ring }) => {
+      const { element, input } = control('pointerdown', 'pointerdown', { focusVisible: false });
+      input.addEventListener('keydown', (event) => {
+        event.preventDefault();
+        if (atKey === 'nothing') return;
+        if (atKey === 'a blur and a focus') input.blur();
+        input.focus({ preventScroll: true });
+      });
+      const press = await mousePress(center(element));
+      expect(document.activeElement).toBe(input);
+      expect(input.matches(':focus-visible')).toBe(false);
+      await press.release();
+      expect(input.matches(':focus-visible')).toBe(false);
+      await userEvent.keyboard('{ArrowRight}');
+      expect(input.matches(':focus-visible')).toBe(ring);
+    },
+  );
 });
 
 describe('S3: pointer capture in pointerdown', () => {
@@ -387,6 +417,29 @@ describe('S8: a click on the label of a clipped range input', () => {
       webkit && platform.os.mac ? document.body : root!.querySelector('#range'),
     );
   });
+
+  test.each([
+    { listener: 'nothing', focus: !(webkit && platform.os.mac), ring: false },
+    { listener: 'a script focus', focus: true, ring: webkit },
+    { listener: 'a script focus with focusVisible true', focus: true, ring: true },
+  ] as const)(
+    'with $listener in a click listener of the label, the input has the focus: $focus, and :focus-visible: $ring',
+    async ({ listener, focus, ring }) => {
+      html(`<label for="range" id="label">Volume</label>
+        <div style="position:relative;width:20px;height:20px">
+          <input id="range" type="range" style="${HIDDEN_INPUT}">
+        </div>`);
+      const label = root!.querySelector<HTMLLabelElement>('#label')!;
+      const input = root!.querySelector<HTMLInputElement>('#range')!;
+      if (listener !== 'nothing') {
+        const options = listener === 'a script focus' ? {} : { focusVisible: true };
+        label.addEventListener('click', () => input.focus(options));
+      }
+      await userEvent.click(label);
+      expect(document.activeElement === input).toBe(focus);
+      expect(input.matches(':focus-visible')).toBe(ring);
+    },
+  );
 });
 
 type AXNode = {

@@ -173,7 +173,7 @@ function cancel() {
 }
 
 function focus(index: number) {
-  slider.thumbs[index]?.input?.focus({ preventScroll: true });
+  slider.thumbs[index]?.input?.focus({ preventScroll: true, focusVisible: false });
 }
 </script>
 

@@ -104,7 +104,7 @@ Each part has these attributes, and the slots give the same state:
 | `[data-dirty]`                   | The value differs from the first value of the field. |
 | `[data-valid]`, `[data-invalid]` | The field is valid or invalid.                       |
 
-`:focus-within` matches each part around the input that has the focus. Select the thumb whose input shows a focus ring with `:has(:focus-visible)`. After a press, the browsers also match `:focus-visible` on the input.
+`:focus-within` matches each part around the input that has the focus. Select the thumb whose input shows a focus ring with `:has(:focus-visible)`. A press gives the input the focus with no ring. A key that changes the value, and a click on `Slider.Label`, show the ring. A browser without the `focusVisible` option of `focus()`, such as Chrome before 145 or Safari before 18.4, decides the ring itself after a press and after a click on the label.
 
 ## Direction and text
 
@@ -124,7 +124,7 @@ A slider with one thumb and no visible label, such as a volume control, takes it
 
 <<< ./slider/VisibleLabel.vue{7}
 
-`Slider.Label` is a `<label>` for the input of the first thumb. The root and each input with no `aria-label` and no `aria-labelledby` have the id of the label in `aria-labelledby`. A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
+`Slider.Label` is a `<label>` for the input of the first thumb. A click on it gives that input the focus in each browser. The root and each input with no `aria-label` and no `aria-labelledby` have the id of the label in `aria-labelledby`. A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
 
 <<< ./slider/RangeLabels.vue{11-12}
 

@@ -471,6 +471,15 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(root.querySelector('#inside'));
   });
 
+  test('a listener of valueChange that moves the focus keeps it there', async () => {
+    const { input, focused } = await mountSlider({
+      root: { defaultValue: 50, onValueChange: () => document.getElementById('after')!.focus() },
+    });
+    input().focus({ focusVisible: false });
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused().id).toBe('after');
+  });
+
   test('Page Up and Page Down bubble from the input', async () => {
     const keys: string[] = [];
     const { root, input, values } = await mountSlider({ root: { defaultValue: 50 } });
@@ -545,6 +554,28 @@ describe('the names', () => {
     expect(label().htmlFor).toBe(inputs()[0]!.id);
     expect(group).toHaveAttribute('aria-labelledby', label().id);
     for (const input of inputs()) expect(input).toHaveAttribute('aria-labelledby', label().id);
+  });
+
+  test('a click on Slider.Label gives the first input the focus and the focus ring; a listener of the developer can prevent it', async () => {
+    const labelAttrs = reactive<Attrs>({});
+    const { label, input, thumb, focused } = await mountSlider({
+      root: { defaultValue: [20, 40] },
+      thumbs: [{}, {}],
+      label: 'before',
+      labelAttrs,
+    });
+    // A press gives the second input the focus with no focus ring.
+    await userEvent.click(thumb(1));
+    expect(focused()).toBe(input(1));
+    expect(input(1).matches(':focus-visible')).toBe(false);
+    await userEvent.click(label());
+    expect(focused()).toBe(input(0));
+    expect(input(0).matches(':focus-visible')).toBe(true);
+    input(0).blur();
+    labelAttrs.onClick = (event: MouseEvent) => event.preventDefault();
+    await nextTick();
+    await userEvent.click(label());
+    expect(focused()).toBe(document.body);
   });
 
   test('VUE-93: an empty id of Slider.Label or Slider.Thumb is no id; an id of the developer wins', async () => {

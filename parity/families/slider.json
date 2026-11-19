@@ -66,19 +66,19 @@
       "upstream": "packages/react/src/slider/label/SliderLabel.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.Label` is a native `<label>` for the input of the first thumb, so the browser decides what a click does. `Slider.test.ts` tests its `for`, its id and the `aria-labelledby` of the root and of each input. The shadow root rows go: `for` is the rule of the platform."
+      "reason": "`Slider.Label` is a native `<label>` for the input of the first thumb. A click gives that input the focus and the focus ring in each browser. `Slider.test.ts` tests its `for`, its id, a click, and the `aria-labelledby` of the root and of each input. The shadow root rows go: `for` is the rule of the platform."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range (rule 8.13), `aria-valuenow` (the native value is the value), `preventVaseUIHandler` (rule 8.7), the reason `none` of a reset (rule 8.8), the touch listeners, and each `KeepAlive` row (section 5)."
+      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range (rule 8.13), `aria-valuenow` (the native value is the value), `preventVaseUIHandler` (rule 8.7), the reason `none` of a reset (rule 8.8), the touch listeners, and each `KeepAlive` row (section 5)."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it."
+      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the thumb do not get them. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it."
     },
     {
       "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",

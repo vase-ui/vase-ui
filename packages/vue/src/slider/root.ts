@@ -40,8 +40,11 @@ export interface SliderForParts {
   addThumb(thumb: SliderThumbEntry): () => void;
   /** Adds a label. Returns the function that removes it. */
   addLabel(label: { readonly id: string }): () => void;
-  /** A key or an `input` event: the thumb goes to `target`, to its limit at most. Commits. */
-  moveTo(index: number, target: number, reason: 'keyboard' | 'input-change', event: Event): void;
+  /**
+   * A key or an `input` event: the thumb goes to `target`, to its limit at most. Commits. Returns
+   * `true` when the value changed.
+   */
+  moveTo(index: number, target: number, reason: 'keyboard' | 'input-change', event: Event): boolean;
   /** A press or a move, by `thumbCollisionBehavior`. Returns the thumb that the press goes on with. */
   dragTo(
     index: number,

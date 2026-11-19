@@ -44,7 +44,15 @@ function elementProps() {
       ...stateAttributes(slider.state),
     },
     attrs,
+    // After the listener of the developer, which can prevent the focus.
+    { onClick },
   );
+}
+
+// The browser gives the input the focus with no focus ring, and WebKit on macOS gives it no focus
+// (`test/measurements/slider.test.ts`, S8).
+function onClick(event: MouseEvent) {
+  if (!event.defaultPrevented) slider.thumbs.find(Boolean)?.input?.focus({ focusVisible: true });
 }
 </script>
 

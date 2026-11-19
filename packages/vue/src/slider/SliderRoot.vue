@@ -222,13 +222,14 @@ provide(sliderKey, {
     return () => labels.splice(labels.indexOf(label), 1);
   },
   moveTo(index, target, reason, event) {
-    if (!(props.max > props.min) || values.value[index] === undefined) return;
+    if (!(props.max > props.min) || values.value[index] === undefined) return false;
     const next = moveThumb(values.value, index, target, grid.value, distance.value);
     const accepted = change(next, index, reason, event);
-    if (accepted === undefined) return;
+    if (accepted === undefined) return false;
     // After a key during a press, the end of the press commits only a later change.
     if (press) press.change = undefined;
     emit('valueCommitted', accepted, { reason, event } as SliderRootCommitEventDetails);
+    return true;
   },
   dragTo(index, target, reason, event) {
     if (!(props.max > props.min) || values.value[index] === undefined) return index;
