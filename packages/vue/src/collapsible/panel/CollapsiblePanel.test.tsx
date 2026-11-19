@@ -125,7 +125,7 @@ describe('<Collapsible.Panel />', () => {
     },
   }));
 
-  it('VUE-144: restores the layout styles when the panel unmounts before its first open frame', async () => {
+  it('VUE-156: restores the layout styles when the panel unmounts before its first open frame', async () => {
     const open = shallowRef(false);
     const { unmount } = await render(() => (
       <Collapsible.Root open={open.value}>

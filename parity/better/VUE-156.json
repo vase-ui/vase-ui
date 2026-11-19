@@ -1,5 +1,5 @@
 {
-  "id": "VUE-144",
+  "id": "VUE-156",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L142-L147",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L203-L211",

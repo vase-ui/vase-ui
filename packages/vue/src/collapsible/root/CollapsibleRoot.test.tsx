@@ -26,7 +26,7 @@ describe('<Collapsible.Root />', () => {
   }));
 
   describe('ARIA attributes', () => {
-    it('VUE-145: reports a closed trigger when the default open value is null', async () => {
+    it('VUE-157: reports a closed trigger when the default open value is null', async () => {
       const { user } = await render(
         <Collapsible.Root defaultOpen={null as unknown as boolean}>
           <Collapsible.Trigger>Details</Collapsible.Trigger>

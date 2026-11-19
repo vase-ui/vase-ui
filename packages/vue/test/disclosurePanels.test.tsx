@@ -76,7 +76,7 @@ describe('searchable disclosure panels', () => {
     expect(panel.style.getPropertyPriority('transition-duration')).toBe('important');
   });
 
-  it('VUE-144: restores the inline duration before the parent reads a cached panel', async () => {
+  it('VUE-156: restores the inline duration before the parent reads a cached panel', async () => {
     const shown = shallowRef(true);
     let durationAtDeactivation: string | undefined;
     const Content = defineComponent(() => {
@@ -107,7 +107,7 @@ describe('searchable disclosure panels', () => {
     expect(panel.style.transitionDuration).toBe('123ms');
   });
 
-  it('VUE-144: restores the inline duration when the panel element changes', async () => {
+  it('VUE-156: restores the inline duration when the panel element changes', async () => {
     const tag = shallowRef<'div' | 'section'>('div');
     const { unmount } = await render(() => (
       <Collapsible.Root>
