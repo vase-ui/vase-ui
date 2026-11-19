@@ -22,12 +22,15 @@ export interface PopoverPortalProps
 import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { REASONS } from '../../internals/reasons';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
-import PopoverPortalChildren from './PopoverPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { PopoverPortalContext } from './PopoverPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -41,7 +44,18 @@ defineSlots<{
 
 const state: PopoverPortalState = EMPTY_OBJECT;
 
-const { mounted } = usePopoverRootContext();
+const { store, open, mounted, trigger } = usePopoverRootContext();
+provide(PopupBackdropContext, () => {
+  if (
+    !mounted.value ||
+    store.state.modal !== true ||
+    !store.select('positionerElement') ||
+    store.state.openChangeReason === REASONS.triggerHover
+  )
+    return null;
+  return { inert: !open.value, cutout: trigger.value };
+});
+
 const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
@@ -67,7 +81,7 @@ defineExpose({ element });
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="PopoverPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
   </PopupPortal>
   <PopupPortal
@@ -76,6 +90,6 @@ defineExpose({ element });
     :guards="usePortalFocus"
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <PopoverPortalChildren><slot :state="state" /></PopoverPortalChildren>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
   </PopupPortal>
 </template>

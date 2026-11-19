@@ -27,7 +27,9 @@ import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
-import ComboboxPortalChildren from './ComboboxPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { ComboboxPortalContext } from './ComboboxPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -42,6 +44,25 @@ defineSlots<{
 const state: ComboboxPortalState = EMPTY_OBJECT;
 
 const store = useComboboxRootContext();
+provide(PopupBackdropContext, () => {
+  const positioner = store.select('positionerElement');
+  // A list without a positioner is its own positioner. It has no backdrop.
+  if (
+    !store.select('mounted') ||
+    !store.select('modal') ||
+    !positioner ||
+    positioner === store.select('listElement')
+  )
+    return null;
+  return {
+    inert: !store.select('open'),
+    cutout:
+      store.select('inputGroupElement') ??
+      store.select('inputElement') ??
+      store.select('triggerElement'),
+  };
+});
+
 const shouldRender = computed(
   () => store.select('mounted') || props.keepMounted || store.select('forceMounted'),
 );
@@ -69,7 +90,7 @@ defineExpose({ element });
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="ComboboxPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
   </PopupPortal>
   <PopupPortal
@@ -78,6 +99,6 @@ defineExpose({ element });
     :guards="usePortalFocus"
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <ComboboxPortalChildren><slot :state="state" /></ComboboxPortalChildren>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
   </PopupPortal>
 </template>

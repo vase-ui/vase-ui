@@ -22,12 +22,15 @@ export interface MenuPortalProps
 import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { REASONS } from '../../internals/reasons';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
-import MenuPortalChildren from './MenuPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { MenuPortalContext } from './MenuPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -42,6 +45,27 @@ defineSlots<{
 const state: MenuPortalState = EMPTY_OBJECT;
 
 const { store, parent } = useMenuRootContext();
+provide(PopupBackdropContext, () => {
+  if (!store.select('mounted') || !store.select('positionerElement')) return null;
+  const owner = store.select('parent');
+  const visible =
+    owner.type === 'menubar'
+      ? owner.context.modal.value
+      : store.select('modal') && store.select('lastOpenChangeReason') !== REASONS.triggerHover;
+  if (!visible) return null;
+  const cutout =
+    owner.type === 'menubar'
+      ? owner.context.contentElement.value
+      : owner.type === undefined
+        ? store.select('activeTriggerElement')
+        : null;
+  return {
+    inert: !store.select('open'),
+    cutout,
+    target: owner.type === 'context-menu' ? owner.context.internalBackdropRef : null,
+  };
+});
+
 const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
 
 provide(
@@ -77,7 +101,7 @@ defineExpose({ element });
     }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="MenuPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
   </PopupPortal>
   <PopupPortal
@@ -92,6 +116,6 @@ defineExpose({ element });
       portalOwnerRole,
     }"
   >
-    <MenuPortalChildren><slot :state="state" /></MenuPortalChildren>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
   </PopupPortal>
 </template>

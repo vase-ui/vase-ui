@@ -27,7 +27,9 @@ import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useDialogRootContext } from '../root/DialogRootContext';
-import DialogPortalChildren from './DialogPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { DialogPortalContext } from './DialogPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -46,6 +48,11 @@ defineSlots<{
 const state: DialogPortalState = EMPTY_OBJECT;
 
 const store = useDialogRootContext();
+
+provide(PopupBackdropContext, () => {
+  if (!store.select('mounted') || store.select('modal') !== true) return null;
+  return { inert: !store.select('open'), target: store.context.internalBackdropRef };
+});
 
 const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
 
@@ -68,7 +75,7 @@ defineExpose({ element });
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="DialogPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
   </PopupPortal>
   <PopupPortal
@@ -77,6 +84,6 @@ defineExpose({ element });
     :guards="usePortalFocus"
     v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <DialogPortalChildren><slot :state="state" /></DialogPortalChildren>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
   </PopupPortal>
 </template>

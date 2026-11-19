@@ -1236,7 +1236,7 @@ All portal parts use `utils/popups/portal/PopupPortal.vue`. Pass the optional `u
 - Each family controls when to mount its portal. Pass `keepMounted` to child parts through the family context where the family supports it.
 - The guarded portal owns the outside guards and the element with `aria-owns`. It follows the ID on the rendered element. The popup supplies its focus state through `PortalContext`.
 - A public portal filters private props with `withoutPropsOf`. It forwards its render slot or its default content through separate branches. This keeps static slots stable on parent updates.
-- Pass `children` to the render slot. Families with an internal backdrop supply their own children component. Other parts use `PopupPortalChildren.vue`.
+- Pass `children` to the render slot. Use `PopupBackdropChildren.vue` for a family with an internal backdrop. Provide its visibility, cutout and element target in the public portal. Other portals use `PopupPortalChildren.vue`.
 - `PopupPortal.parts.test.tsx` checks slot updates. `PopupPortal.root-node.test.tsx` checks transitions on the portal element. `PopupPortal.guards.test.tsx` checks tab order at the portal source.
 
 ### Popup interactions
