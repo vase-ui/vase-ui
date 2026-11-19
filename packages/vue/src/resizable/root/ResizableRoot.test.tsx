@@ -2008,7 +2008,9 @@ describe('<Resizable.Root />', () => {
   describe('sizes with a unit', () => {
     it('gives the parent its measured layout at mount without ResizeObserver', async () => {
       vi.stubGlobal('ResizeObserver', undefined);
-      onTestFinished(() => vi.unstubAllGlobals());
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
       const snapshot = vi.fn();
       const Parent = defineComponent(() => {
         const root = shallowRef<InstanceType<typeof Resizable.Root> | null>(null);
