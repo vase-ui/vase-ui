@@ -12,6 +12,8 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // Vite finds `axe-core` during a run, and its reload stops the tests in that browser.
+  optimizeDeps: { include: ['axe-core'] },
   test: {
     passWithNoTests: true,
     retry: 0,
@@ -27,7 +29,7 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          include: ['src/**/*.test.{ts,tsx}'],
+          include: ['src/**/*.test.{ts,tsx}', 'test/measurements/*.test.ts'],
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           provide: { app: 'vdom' },
           browser: {

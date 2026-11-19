@@ -3,6 +3,7 @@ import { computed, inject, mergeProps, nextTick, ref, useAttrs, useId, watch } f
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { fieldKey, fieldStateAttributes } from '../field/control';
+import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
 
 type TextElement = HTMLInputElement | HTMLTextAreaElement;
@@ -36,8 +37,10 @@ const value = computed(() =>
 
 const id = computed(() => props.id || field?.controlId || generatedId);
 const disabled = computed(() => field?.disabled || props.disabled);
+// The browser disables the element in a disabled fieldset. The state shows it too.
+const inDisabledFieldset = useInDisabledFieldset(element);
 const state = computed<InputState>(() => ({
-  disabled: disabled.value,
+  disabled: disabled.value || inDisabledFieldset.value,
   touched: field?.state.touched ?? false,
   dirty: field?.state.dirty ?? false,
   valid: field?.state.valid ?? null,
@@ -83,7 +86,7 @@ watch(
         return props.name;
       },
       get disabled() {
-        return props.disabled;
+        return props.disabled || inDisabledFieldset.value;
       },
       get readOnly() {
         return props.readonly;

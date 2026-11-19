@@ -37,9 +37,11 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
       'process.env.NODE_ENV': JSON.stringify('test'),
     },
     resolve,
+    // Vite finds `axe-core` during a run, and its reload stops the tests in that browser.
+    optimizeDeps: { include: ['axe-core'] },
     test: {
       name,
-      include: ['src/**/*.test.{ts,tsx}'],
+      include: ['src/**/*.test.{ts,tsx}', 'test/measurements/*.test.ts'],
       exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
       retry: 0,
       provide: { app },

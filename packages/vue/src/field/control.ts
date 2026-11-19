@@ -17,7 +17,7 @@ export interface FieldControl {
   readonly id: string;
   /** The `name` of the control, for a field with no name. */
   readonly name: string | undefined;
-  /** The `disabled` of the control itself. */
+  /** The control is disabled by its own prop or by a fieldset around it, not by its field. */
   readonly disabled: boolean;
   readonly readOnly: boolean;
 }

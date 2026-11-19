@@ -14,6 +14,7 @@ import {
   watch,
 } from 'vue';
 import { useElement } from '../common/element';
+import { useInDisabledFieldset } from '../fieldset/part';
 import { formKey } from '../form/field';
 import { fieldKey, fieldStateAttributes, type FieldControl } from './control';
 import { fieldPartsKey } from './root';
@@ -87,7 +88,8 @@ let waiting: ReturnType<typeof setTimeout> | undefined;
 let ownMessage = '';
 
 const name = computed(() => props.name ?? control.value?.name);
-const disabled = computed(() => props.disabled);
+const inDisabledFieldset = useInDisabledFieldset(element);
+const disabled = computed(() => props.disabled || inDisabledFieldset.value);
 // The browser bars a disabled or read-only element from constraint validation.
 const barred = computed(
   () => disabled.value || !!control.value?.disabled || !!control.value?.readOnly,
