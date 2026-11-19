@@ -770,14 +770,11 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
   }
 
   const dayElements = new Map<HTMLElement, string>();
+  const dayKeys: ReadonlyMap<Element | null, string> = dayElements;
 
   function getDayElement(key: string) {
     // A Vapor cell can mount in a cached branch before it receives a KeepAlive hook.
     return [...dayElements].findLast(([button, date]) => date === key && button.isConnected)?.[0];
-  }
-
-  function getDayKey(element: Element | null) {
-    return [...dayElements].find(([button]) => button === element)?.[1];
   }
 
   const onPickerSelect = usePickerControl(PickerCalendarOwner, () => {
@@ -860,7 +857,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    if (getDayKey(focused) === undefined) {
+    if (!dayKeys.has(focused)) {
       return;
     }
     void nextTick().then(() => {
@@ -870,7 +867,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
       }
       const stop = tabStop.value;
       const focusedDateHasStop = stop && props.focusedDate && isSameDay(stop, props.focusedDate);
-      if (focusedDateHasStop || getDayKey(active) === undefined) {
+      if (focusedDateHasStop || !dayKeys.has(active)) {
         focus();
       }
     });
@@ -884,7 +881,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    const key = getDayKey(focused);
+    const key = dayKeys.get(focused);
     if (key === undefined) {
       return;
     }
