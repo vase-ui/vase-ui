@@ -118,7 +118,7 @@ describe('PopupPortal parts', () => {
     popup.dispatchEvent(tab);
     expect(tab.defaultPrevented).toBe(true);
     await waitFor(() => expect([isPageLocked(first), isPageLocked(second)]).toEqual([false, true]));
-    await unmount();
+    unmount();
     await waitFor(() => expect(isPageLocked(second)).toBe(false));
   });
 

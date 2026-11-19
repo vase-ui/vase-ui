@@ -25,8 +25,9 @@ export function useHandles() {
     tooltipHandle,
   ]) {
     const open: boolean = handle.isOpen;
+    const mounted: boolean = handle.store.state.mounted;
     if (open) handle.close();
-    else handle.open('trigger');
+    else if (!mounted) handle.open('trigger');
   }
   dialogHandle.openWithPayload(1);
   alertDialogHandle.openWithPayload(1);
