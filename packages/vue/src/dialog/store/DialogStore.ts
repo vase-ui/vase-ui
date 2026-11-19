@@ -2,7 +2,7 @@ import { shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../utils/popups/usePopupTrigger';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../../internals/labelable-provider/createIdRegistry';
 import {
   NullStore,
   BasePopupStore,

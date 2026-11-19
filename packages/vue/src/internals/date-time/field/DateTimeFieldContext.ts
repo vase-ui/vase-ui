@@ -1,7 +1,7 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
-import type { FieldRootState } from '../../field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../../field/types';
 import type { REASONS } from '../../reasons';
 import type { DayPeriod, EditableSegmentType, NumericSegmentType } from './segmentLayout';
 

@@ -91,6 +91,8 @@ let valueMissingCounts = false;
 let validation = 0;
 // The timer of a validation that waits.
 let waiting: ReturnType<typeof setTimeout> | undefined;
+// The input that has the message of `validate`.
+let messageInput: NativeControl | undefined;
 
 const name = computed(() => props.name ?? control.value?.name);
 const inDisabledFieldset = useInDisabledFieldset(element);
@@ -345,7 +347,8 @@ function applyResult(output: FieldValidateResult) {
     result.value = passed;
     return;
   }
-  validationInput()?.setCustomValidity(messages.join('\n').replaceAll('\r\n', '\n'));
+  messageInput = validationInput();
+  messageInput?.setCustomValidity(messages.join('\n').replaceAll('\r\n', '\n'));
   result.value = {
     failures: { ...noFailures, customError: true },
     errors: messages,
@@ -363,8 +366,11 @@ function validationInput() {
   return inputs.find((input) => !input.validity.valid) ?? inputs[0];
 }
 
+// A control can set a custom validity of its own, such as the partial entry of a date field. The
+// field removes only the message of `validate`.
 function removeMessages() {
-  for (const input of control.value?.inputs ?? []) input.setCustomValidity('');
+  messageInput?.setCustomValidity('');
+  messageInput = undefined;
 }
 
 function onEdit() {

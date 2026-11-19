@@ -1,4 +1,6 @@
-import { computed, provide, useAttrs } from 'vue';
+import { computed, inject, provide, useAttrs } from 'vue';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { fieldKey } from '../../field/control';
 import type { Ref } from 'vue';
 import { given, givenAttributes } from '../../internals/givenAttributes';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -8,7 +10,6 @@ import { usePickerPartElement } from '../../internals/date-time/picker/usePicker
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
-import { useControlLabelId } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
@@ -43,9 +44,12 @@ export function useDateRangePickerField(
   const index = end === 'start' ? 0 : 1;
 
   // The label of a `Field` around the picker names the picker, so it joins the name of each field. The
-  // end field has a labelable context of its own, so each field reads the label here. The group of
+  // end field gives its content a field of its own, so each field reads the label here. The group of
   // the field has an id, so that `aria-labelledby` can name the group itself: its `aria-label`.
-  const fieldLabelId = useControlLabelId();
+  const outerField = inject(fieldKey, null);
+  // The label of the field can come after the picker.
+  if (outerField) useDeferredServerRender();
+  const fieldLabelId = computed(() => outerField?.labelId);
   const groupId = useVaseUiId().value;
   provide(DateTimeFieldHostContext, { groupId });
 

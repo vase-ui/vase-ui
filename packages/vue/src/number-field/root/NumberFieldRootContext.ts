@@ -1,6 +1,6 @@
 import { computed, inject } from 'vue';
 import type { ComputedRef, CSSProperties, InjectionKey, Ref, ShallowRef } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { createGenericEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps } from '../../internals/types';
@@ -147,7 +147,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
       (isIncrement ? value >= maxWithDefault.value : value <= minWithDefault.value)
     );
   });
-  const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+  const fieldsetDisabled = useInDisabledFieldset(() => element.value);
   const disabled = computed(
     () => props.disabled || state.value.disabled || fieldsetDisabled.value || isAtBoundary.value,
   );

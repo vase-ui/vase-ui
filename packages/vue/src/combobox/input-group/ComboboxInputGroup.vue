@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Side } from '../../internals/useAnchorPositioning';
 
@@ -38,9 +38,10 @@ export interface ComboboxInputGroupProps
 </script>
 
 <script setup lang="ts">
-import { computed, toRaw } from 'vue';
+import { computed, inject, toRaw } from 'vue';
 import { contains } from '../../common/shadowDom';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { fieldKey } from '../../field/control';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -57,7 +58,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ComboboxInputGroupState>;
 }>();
 
-const { state: fieldState } = useFieldRootContext();
+const field = inject(fieldKey, null);
 const store = useComboboxRootContext();
 
 const disabled = computed(() => store.select('disabled'));
@@ -65,7 +66,7 @@ const popupSide = usePopupSide(store);
 const listEmpty = useListEmpty();
 
 const state = computed<ComboboxInputGroupState>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   open: store.select('open'),
   disabled: disabled.value,
   readOnly: store.select('readOnly'),

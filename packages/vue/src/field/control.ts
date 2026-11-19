@@ -91,6 +91,13 @@ export function controlAttributes(field: FieldForControl) {
   return {
     ...fieldStateAttributes(field.state),
     'data-invalid': undefined,
+    ...controlAria(field),
+  };
+}
+
+/** The ARIA attributes that a field gives to the element of its control. */
+export function controlAria(field: FieldForControl) {
+  return {
     'aria-invalid': field.state.valid === false ? 'true' : undefined,
     'aria-labelledby': field.labelledBy,
     'aria-describedby': field.describedBy,

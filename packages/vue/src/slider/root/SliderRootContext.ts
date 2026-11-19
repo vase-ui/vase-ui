@@ -1,8 +1,8 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
-import type { UseFieldValidationReturnValue } from '../../internals/field-root-context/FieldRootContext';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
+import type { FieldForControl } from '../../field/control';
+import type { RegisterId } from '../../internals/labelable-provider/createIdRegistry';
 import { fieldValidityMapping } from '../../internals/field-constants/constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ThumbCollisionBehavior } from '../utils/thumbValues';
@@ -38,7 +38,10 @@ export interface SliderRootContext {
   lastUsedThumbIndex: Readonly<Ref<number>>;
   controlElement: Readonly<Ref<HTMLElement | null>>;
   setControlElement: (element: HTMLElement | null, previous: HTMLElement | null) => void;
-  validation: UseFieldValidationReturnValue;
+  /** The field of the slider. A thumb shows its validity. */
+  field: FieldForControl | null;
+  /** The focus left the slider from `element`. */
+  onLeave: (element: Element) => void;
   handleInputChange: (value: number, index: number, event: Event) => void;
   registerThumbInput: (input: ThumbInput) => () => void;
   indicatorPosition: readonly [number | undefined, number | undefined];

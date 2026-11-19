@@ -87,11 +87,8 @@ import {
 } from '../../internals/composite/listIndex';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { useFieldInput } from '../../internals/field-register-control';
-import { useFieldRootContext } from '../../internals/field-root-context';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
 import { given } from '../../internals/givenAttributes';
-import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
@@ -109,7 +106,7 @@ import {
   useSliderRootContext,
 } from '../root/SliderRootContext';
 import type { ThumbMetadata } from '../root/SliderRootContext';
-import { getDecimalPrecision, getSliderValue, roundValueToStep } from '../utils/thumbValues';
+import { getDecimalPrecision, roundValueToStep } from '../utils/thumbValues';
 import SliderThumbChildren from './SliderThumbChildren.vue';
 import * as SliderThumbDataAttributes from './SliderThumbDataAttributes';
 
@@ -182,11 +179,11 @@ const {
   lastUsedThumbIndex,
   controlElement,
   disabled: contextDisabled,
-  validation,
+  field,
+  onLeave,
   handleInputChange,
   registerThumbInput,
   inset,
-  isArrayValue,
   labelId,
   name,
   renderBeforeHydration,
@@ -211,16 +208,11 @@ const range = computed(() => sliderValues.value.length > 1);
 const vertical = computed(() => rootProps.orientation === 'vertical');
 const rtl = computed(() => direction.value === 'rtl');
 
-const { setTouched, validationMode } = useFieldRootContext();
-
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const setFocused = useSetFieldFocused(isDisabled, inputElement);
 let restoringFocusVisible = false;
 
 const thumbId = useVaseUiId();
-const defaultInputId = useVaseUiId();
-const labelableId = useLabelableId();
-const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
+const inputId = useVaseUiId();
 
 const thumbMetadata = computed<ThumbMetadata>(() => ({
   inputId: inputId.value,
@@ -337,12 +329,8 @@ function getThumbStyle() {
   };
 }
 
-const giveFieldInput = useFieldInput();
-
 function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  giveFieldInput(input);
-  inputElement.value = input;
+  inputElement.value = value as HTMLInputElement | null;
 }
 
 const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
@@ -397,7 +385,8 @@ function inputProps() {
       'aria-labelledby':
         given('aria-labelledby', props.ariaLabelledby) ??
         (ariaLabel == null ? labelId.value : undefined),
-      'aria-describedby': given('aria-describedby', props.ariaDescribedby),
+      'aria-describedby': given('aria-describedby', props.ariaDescribedby) ?? field?.describedBy,
+      'aria-invalid': field?.state.valid === false ? 'true' : undefined,
       'aria-orientation': rootProps.orientation,
       'aria-valuenow': value,
       'aria-valuetext':
@@ -425,7 +414,6 @@ function inputProps() {
         const isRestoringFocusVisible = restoringFocusVisible;
         restoringFocusVisible = false;
         setActive(thumbIndex.value);
-        setFocused(true);
 
         if (isRestoringFocusVisible) {
           event.stopPropagation();
@@ -447,21 +435,7 @@ function inputProps() {
           }
         }
 
-        setTouched(true);
-        setFocused(false);
-
-        if (validationMode.value === 'onBlur') {
-          void validation.commit(
-            getSliderValue(
-              thumbValue.value,
-              thumbIndex.value,
-              rootProps.min,
-              rootProps.max,
-              isArrayValue.value,
-              sliderValues.value,
-            ),
-          );
-        }
+        onLeave(event.currentTarget as Element);
       },
       onKeydown(event: KeyboardEvent) {
         if (event.defaultPrevented || !ALL_KEYS.has(event.key)) {
@@ -535,7 +509,6 @@ function inputProps() {
       type: 'range',
       ...(writesValue.value ? valueProps() : undefined),
     },
-    (merged) => validation.getValidationProps(isDisabled.value, merged),
     {
       // The listeners of the consumer go to the input, so that `event.currentTarget` is the input.
       // The blur and the focus that restore `:focus-visible` are internal.

@@ -1,6 +1,17 @@
 import { computed, shallowReactive } from 'vue';
 import type { ComputedRef } from 'vue';
-import type { RegisterId } from './LabelableContext';
+
+/**
+ * Registers the `id` of a part with the provider, or removes the registration of the source when
+ * `getId` is `undefined`. The provider calls the getter each time it needs the `id`, so the part
+ * registers one time and keeps its place in the order of the registrations. A part that registers
+ * again after its removal goes to the end. The getter returns `undefined` for a part that has no
+ * `id` now, such as a part that `KeepAlive` holds.
+ */
+export type RegisterId<Id = string> = (
+  source: symbol,
+  getId: (() => Id | undefined) | undefined,
+) => void;
 
 /**
  * Holds the `id`s of the parts of one kind, such as the controls, the labels or the messages of a

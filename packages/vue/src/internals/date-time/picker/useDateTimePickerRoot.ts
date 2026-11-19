@@ -1,8 +1,8 @@
-import { computed, provide, shallowRef, toValue, watch } from 'vue';
+import { computed, inject, provide, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useControlled } from '../../../common/useControlled';
-import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
-import { useFieldRootContext } from '../../field-root-context';
+import { useInDisabledFieldset } from '../../../fieldset/part';
+import { fieldKey } from '../../../field/control';
 import { PickerResetCountContext } from '../field/PickerResetCountContext';
 import { createPickerPartElements } from './usePickerPartElement';
 import type { PickerPartElements } from './usePickerPartElement';
@@ -132,10 +132,10 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
 
   const fields = createPickerPartElements();
   const triggers = createPickerPartElements();
-  const field = useFieldRootContext();
-  const fieldsetDisabled = useFieldsetDisabled(() => fields.first.value ?? triggers.first.value);
+  const field = inject(fieldKey, null);
+  const fieldsetDisabled = useInDisabledFieldset(() => fields.first.value ?? triggers.first.value);
   const disabled = computed(
-    () => toValue(parameters.disabled) || (field.disabled.value ?? false) || fieldsetDisabled.value,
+    () => toValue(parameters.disabled) || !!field?.disabled || fieldsetDisabled.value,
   );
 
   return { value, template, commit, reset, closeOnSelect, fields, triggers, disabled };

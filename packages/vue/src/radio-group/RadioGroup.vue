@@ -54,6 +54,7 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
   disabled: () => disabled.value,
   ownDisabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,
+  name: () => props.name,
   inputs: () => radios.map((radio) => radio.element),
   // The focus goes to the tab stop, as the Tab key gives it.
   focusElement: () => tabStop.value?.element,

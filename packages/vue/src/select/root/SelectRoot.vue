@@ -158,7 +158,17 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 <script setup lang="ts" generic="Value = never, Multiple extends boolean | undefined = false">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
-import { computed, inject, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  onMounted,
+  provide,
+  shallowRef,
+  toRaw,
+  useId,
+  watch,
+} from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useHiddenValueBeforeHydration } from '../../common/hydration';
@@ -166,15 +176,9 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { fieldKey } from '../../field/control';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
-import {
-  DEFAULT_FIELD_ROOT_CONTEXT,
-  FieldRootContext,
-  useClearFieldError,
-} from '../../internals/field-root-context';
-import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -183,7 +187,7 @@ import {
   findSelectionIndex,
   isSelectedValueDirty,
 } from '../../internals/itemEquality';
-import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
+import { createLabelIdRegistry } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -258,34 +262,19 @@ const emit = defineEmits<{
 
 defineSlots<{ default(): unknown }>();
 
-const { clearErrors } = useFormContext();
-const field = inject(FieldRootContext, null);
-const {
-  setDirty,
-  setTouched,
-  setFocused,
-  validityData,
-  setFilled,
-  name: fieldName,
-  disabled: fieldDisabled,
-  validation,
-  validationMode,
-} = field ?? DEFAULT_FIELD_ROOT_CONTEXT;
+const field = inject(fieldKey, null);
 
-const controlId = useLabelableId({
-  id: () => props.id,
-  element: () => store.state.triggerElement,
-});
+const generatedId = useId();
+const controlId = computed(() => props.id || field?.controlId || generatedId);
 
 // The root has no element. Its hidden input is at the place of the root.
-const fieldsetDisabled = useFieldsetDisabled(() => inputElement.value);
+const fieldsetDisabled = useInDisabledFieldset(() => inputElement.value);
 const isDisabled = computed(() =>
-  Boolean(fieldDisabled.value || fieldsetDisabled.value || props.disabled),
+  Boolean(field?.disabled || fieldsetDisabled.value || props.disabled),
 );
 const isMultiple = computed(() => Boolean(props.multiple));
-const inputName = computed(() => fieldName.value ?? props.name);
+const inputName = computed(() => field?.name ?? props.name);
 const comparer = computed(() => props.isItemEqualToValue ?? defaultItemEquality);
-const clearFieldError = useClearFieldError(inputName);
 
 function getDefaultValue() {
   return isMultiple.value ? (props.defaultValue ?? EMPTY_ARRAY) : props.defaultValue;
@@ -403,14 +392,8 @@ const owner = useSingleAnchorPopupRoot(
         !nextOpen &&
         (eventDetails.reason === REASONS.focusOut || eventDetails.reason === REASONS.outsidePress)
       ) {
-        setTouched(true);
-        setFocused(false);
-
-        // The field is not marked dirty when the user leaves a select that has no value, so a
-        // missing value counts with no earlier change.
-        if (validationMode.value === 'onBlur') {
-          void validation.commit(selectedValue.value, true);
-        }
+        const trigger = store.state.triggerElement;
+        if (trigger) field?.onLeave(trigger);
       }
     },
     onOpenChangeComplete(nextOpen) {
@@ -438,13 +421,35 @@ const fieldStringValue = computed(() => {
   return stringifyAsValue(value, props.itemToStringValue);
 });
 
-useRegisterFieldControl(
+// The trigger is the control of the field. The hidden input holds the value for the validation.
+watch(
   () => store.state.triggerElement,
-  controlId,
-  () => selectedValue.value,
-  () => fieldStringValue.value,
-  () => !isDisabled.value,
-  () => props.name,
+  (trigger, _, onCleanup) => {
+    if (!trigger || !field) return;
+    onCleanup(
+      field.setControl({
+        element: trigger,
+        get id() {
+          return controlId.value;
+        },
+        get name() {
+          return props.name;
+        },
+        get disabled() {
+          return Boolean(props.disabled || fieldsetDisabled.value);
+        },
+        get readOnly() {
+          return Boolean(props.readOnly);
+        },
+        get inputs() {
+          return inputElement.value ? [inputElement.value] : [];
+        },
+        focusElement: trigger,
+        formValue: () => fieldStringValue.value,
+      }),
+    );
+  },
+  { flush: 'post' },
 );
 
 // Mirror the `hasSelectedValue` store selector so the Field's filled state agrees with the
@@ -456,8 +461,9 @@ const hasSelectedValue = computed(() => {
     : value != null && serializedValue.value !== '';
 });
 
-setFilled(hasSelectedValue.value);
-watch(hasSelectedValue, setFilled);
+watch([selectedValue, hasSelectedValue], ([value, filled]) => field?.setValue(value, filled), {
+  immediate: true,
+});
 
 // The items that an update adds write their values after the DOM update, so the sync runs after
 // it too. An item that gets a new value writes it before the update.
@@ -488,18 +494,13 @@ watch([isMultiple, isOpen, selectedValue, comparer], syncSelectedIndex, { flush:
 let isResetChangePending = false;
 
 useValueChanged(selectedValue, () => {
-  clearErrors(inputName.value);
-  setDirty(
-    isSelectedValueDirty(selectedValue.value, validityData.value.initialValue, comparer.value),
-  );
-
   if (isResetChangePending) {
     isResetChangePending = false;
-    clearFieldError(selectedValue.value);
+    field?.onReset(selectedValue.value);
     return;
   }
 
-  void validation.change(selectedValue.value);
+  field?.onEdit();
 });
 
 function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
@@ -682,7 +683,6 @@ watch(
 provide(SelectRootContext, owner);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -691,7 +691,6 @@ function setInputElement(value: unknown) {
     return;
   }
   inputElement.value = input;
-  giveFieldInput(input);
 }
 
 const writesHiddenValue = useHiddenValueBeforeHydration(() => inputElement.value);
@@ -778,7 +777,7 @@ useFormReset(inputElement, (event) => {
   if (hasChanged) {
     isResetChangePending = true;
   } else {
-    clearFieldError(selectedValue.value);
+    field?.onReset(selectedValue.value);
   }
 });
 
@@ -796,7 +795,6 @@ const hiddenValues = computed(() => {
 
 function inputProps() {
   return {
-    ...validation.getValidationProps(isDisabled.value),
     id:
       controlId.value && hiddenInputName.value == null
         ? `${controlId.value}-hidden-input`

@@ -12,6 +12,8 @@ export function useFieldGroup(group: {
   readOnly: () => boolean;
   inputs: () => readonly NativeControl[];
   focusElement?: () => HTMLElement | undefined;
+  /** The `name` of the group, for a field with no name. */
+  name?: () => string | undefined;
   /** The value in the values of a form, when it is not the value that the group gives the field. */
   formValue?: () => unknown;
 }) {
@@ -28,7 +30,9 @@ export function useFieldGroup(group: {
           get id() {
             return el.id;
           },
-          name: undefined,
+          get name() {
+            return group.name?.();
+          },
           get disabled() {
             return group.ownDisabled();
           },

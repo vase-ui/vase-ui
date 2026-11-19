@@ -3,7 +3,7 @@ import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../../internals/labelable-provider/createIdRegistry';
 import { REASONS } from '../../internals/reasons';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';

@@ -4,7 +4,7 @@ import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { OTPValidationType, OTPFieldInputMode } from './otpField';
@@ -155,31 +155,33 @@ export type OTPFieldRootCompleteEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch, watchPostEffect } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  provide,
+  shallowRef,
+  useId,
+  watch,
+  watchPostEffect,
+} from 'vue';
 import { clamp } from '../../common/clamp';
-import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
+import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { fieldKey } from '../../field/control';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useFieldControl } from '../../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
-import { useFormContext } from '../../internals/form-context';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
-import {
-  useAriaLabelledBy,
-  useControlLabelId,
-  useLabelableContext,
-  useLabelableId,
-} from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
@@ -249,25 +251,11 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, OTPFieldRootState>;
 }>();
 
-const {
-  setDirty,
-  validityData,
-  disabled: fieldDisabled,
-  setFilled,
-  invalid,
-  state: fieldState,
-  validation,
-  validationMode,
-  setFocused: setFieldFocused,
-  setTouched,
-} = useFieldRootContext();
-const { clearErrors } = useFormContext();
-const { getDescriptionProps } = useLabelableContext();
+const field = inject(fieldKey, null);
+const invalid = computed(() => field?.state.valid === false);
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(
-  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
-);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
+const isDisabled = computed(() => !!field?.disabled || fieldsetDisabled.value || props.disabled);
 
 const valueUnwrapped = useControlled<string>({
   controlled: () => props.modelValue,
@@ -290,13 +278,10 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 // The list can still contain a slot that this patch removed.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
-const controlId = useLabelableId({ id: () => props.id, element: firstInput });
-const ariaLabelledBy = useAriaLabelledBy(
-  () => props.ariaLabelledby,
-  useControlLabelId(),
-  firstInput,
-  true,
-  controlId,
+const generatedId = useId();
+const controlId = computed(() => props.id || field?.controlId || generatedId);
+const ariaLabelledBy = computed(
+  () => given('aria-labelledby', props.ariaLabelledby) ?? field?.labelId,
 );
 const inputAriaLabelledBy = computed(() =>
   given('aria-labelledby', props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
@@ -325,7 +310,7 @@ const activeIndex = computed(() =>
     : Math.min(characters.value.length, props.length - 1),
 );
 
-watch(filled, setFilled, { immediate: true });
+watch(otpValue, (value) => field?.setValue(value, value !== ''), { immediate: true });
 
 const inputList = useCompositeList({
   elementsRef: inputElements,
@@ -366,14 +351,37 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-const { name: inputName } = useFieldControl(firstInput, {
-  input: hiddenInputElement,
-  id: controlId,
-  name: () => props.name,
-  value: otpValue,
-  enabled: () => !isDisabled.value,
-});
-const clearFieldError = useClearFieldError(inputName);
+const inputName = computed(() => field?.name ?? props.name);
+
+// The first input is the control of the field. The hidden input holds the value for the form and
+// its validation.
+watch(
+  firstInput,
+  (input, _, onCleanup) => {
+    if (!input || !field) return;
+    onCleanup(
+      field.setControl({
+        element: input,
+        get id() {
+          return controlId.value;
+        },
+        get name() {
+          return props.name;
+        },
+        get disabled() {
+          return props.disabled || fieldsetDisabled.value;
+        },
+        get readOnly() {
+          return props.readOnly;
+        },
+        get inputs() {
+          return hiddenInputElement.value ? [hiddenInputElement.value] : [];
+        },
+      }),
+    );
+  },
+  { flush: 'post' },
+);
 
 function focusInput(index: number) {
   const elements = getConnectedInputs();
@@ -417,14 +425,11 @@ function completeValue(completedValue: string, eventDetails: OTPFieldRootComplet
 let isResetChangePending = false;
 
 useValueChanged(otpValue, () => {
-  clearErrors(inputName.value);
-  setDirty(otpValue.value !== validityData.value.initialValue);
-
   if (isResetChangePending) {
     isResetChangePending = false;
-    clearFieldError(otpValue.value);
+    field?.onReset(otpValue.value);
   } else {
-    validation.change(otpValue.value);
+    field?.onEdit();
   }
 
   const queuedFocus = pendingFocus;
@@ -520,21 +525,15 @@ function handleInputBlur(event: FocusEvent) {
     return;
   }
 
-  setTouched(true);
   focused.value = false;
-  setFieldFocused(false);
-
-  if (validationMode.value === 'onBlur') {
-    void validation.commit(otpValue.value);
-  }
+  field?.onLeave(event.currentTarget as Element);
 }
 
 const state = computed<OTPFieldRootState>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   complete: characters.value.length === props.length,
   disabled: isDisabled.value,
   filled: filled.value,
-  focused: focused.value,
   length: props.length,
   readOnly: props.readOnly,
   required: props.required,
@@ -572,7 +571,6 @@ function mergeAriaIds(...values: (string | undefined)[]) {
   return ids.length > 0 ? Array.from(new Set(ids)).join(' ') : undefined;
 }
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
@@ -585,10 +583,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         'aria-describedby':
           ariaDescribedBy === null
             ? null
-            : mergeAriaIds(
-                ariaDescribedBy as string | undefined,
-                getDescriptionProps({})['aria-describedby'] as string | undefined,
-              ),
+            : mergeAriaIds(ariaDescribedBy as string | undefined, field?.describedBy),
         'aria-labelledby': ariaLabelledBy.value,
       },
       elementAttrs,
@@ -640,7 +635,7 @@ useFormReset(hiddenInputElement, (event) => {
   if (committedValue != null) {
     isResetChangePending = true;
   } else {
-    clearFieldError(otpValue.value);
+    field?.onReset(otpValue.value);
   }
 });
 
@@ -649,11 +644,6 @@ function setHiddenInput(node: unknown) {
 }
 
 useFormRestore(hiddenInputElement, inputRender.renderValue);
-
-const hiddenValidation = computed(() => {
-  const attributes = validation.getValidationProps(isDisabled.value);
-  return { ...attributes, 'aria-describedby': ariaAfterHydration(attributes['aria-describedby']) };
-});
 
 defineExpose({ element });
 </script>
@@ -666,7 +656,7 @@ defineExpose({ element });
   <input
     v-if="hasValidLength"
     :ref="setHiddenInput"
-    v-bind="{ ...hiddenValidation, ...(writesHiddenValue && inputRender.valueProps(otpValue)) }"
+    v-bind="writesHiddenValue ? inputRender.valueProps(otpValue) : undefined"
     type="text"
     :id="controlId && inputName == null ? `${controlId}-hidden-input` : undefined"
     :form="props.form"

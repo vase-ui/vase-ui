@@ -56,7 +56,7 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useInputRegistration } from '../../internals/field-register-control';
+import { useInputRegistration } from '../../internals/useInputRegistration';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';

@@ -27,7 +27,7 @@ export interface CollapsibleTriggerProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
@@ -64,7 +64,7 @@ const { panelId, handleTrigger, state: disclosure } = useCollapsibleRootContext(
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(
   () =>
     props.disabled || disclosure.value.disabled || (props.nativeButton && fieldsetDisabled.value),

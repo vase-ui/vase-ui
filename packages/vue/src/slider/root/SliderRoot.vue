@@ -4,7 +4,7 @@ import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { ThumbCollisionBehavior } from '../utils/thumbValues';
@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `modelValue` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, provide, shallowReactive, shallowRef, watch } from 'vue';
+import { computed, inject, provide, shallowReactive, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
@@ -192,17 +192,18 @@ import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { fieldKey } from '../../field/control';
+import { useFieldGroup } from '../../field/group';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useFieldControl } from '../../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
-import { useFormContext } from '../../internals/form-context';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import { given } from '../../internals/givenAttributes';
-import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
+import { createLabelIdRegistry } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -276,27 +277,18 @@ function areValuesEqual(newValue: unknown, oldValue: unknown) {
 const rootId = useVaseUiId(() => props.id);
 const rootLabelId = computed(() => `${rootId.value}-label`);
 
-const { clearErrors } = useFormContext();
-const {
-  state: fieldState,
-  disabled: fieldDisabled,
-  setTouched,
-  setDirty,
-  validityData,
-  validation,
-} = useFieldRootContext();
-
+const field = inject(fieldKey, null);
 // In a field, the root defers its server render. The label of the field can come after the root.
-const fieldLabelId = useControlLabelId();
+if (field) useDeferredServerRender();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
 const labelId = computed(
-  () => given('aria-labelledby', props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+  () => given('aria-labelledby', props.ariaLabelledby) ?? field?.labelId ?? localLabelId.value,
 );
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
+const isDisabled = computed(() => !!field?.disabled || fieldsetDisabled.value || props.disabled);
 
 const valueUnwrapped = useControlled<number | readonly number[]>({
   controlled: () => props.modelValue,
@@ -339,15 +331,8 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
-// The form focuses `validation.inputRef`.
-const { name: inputName } = useFieldControl(validation.inputRef, {
-  id: rootId,
-  name: () => props.name,
-  value: fieldValue,
-  enabled: () => !isDisabled.value,
-});
-
-const clearFieldError = useClearFieldError(inputName);
+const inputName = computed(() => field?.name ?? props.name);
+watch(fieldValue, (value) => field?.setValue(value, false), { immediate: true });
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout sets
@@ -355,16 +340,12 @@ const clearFieldError = useClearFieldError(inputName);
 let isResetChangePending = false;
 
 useValueChanged(fieldValue, () => {
-  clearErrors(inputName.value);
-
   if (isResetChangePending) {
     isResetChangePending = false;
-    clearFieldError(fieldValue.value);
+    field?.onReset(fieldValue.value);
   } else {
-    validation.change(fieldValue.value);
+    field?.onEdit();
   }
-
-  setDirty(!areValuesEqual(fieldValue.value, validityData.value.initialValue));
 });
 
 function setValue(
@@ -439,7 +420,6 @@ function handleInputChange(valueInput: number, index: number, event: Event) {
   if (validateMinimumDistance(newValue, props.step, props.minStepsBetweenValues)) {
     const reason = 'key' in event ? REASONS.keyboard : REASONS.inputChange;
     const applied = setValue(newValue, index, reason, event);
-    setTouched(true);
 
     if (applied) {
       commitValue(newValue, reason, event);
@@ -525,12 +505,12 @@ function reset(event: Event) {
   if (resetToDefaultValue(event) && fieldValue.value !== previousValue) {
     isResetChangePending = true;
   } else {
-    clearFieldError(fieldValue.value);
+    field?.onReset(fieldValue.value);
   }
 }
 
 const state = computed<SliderRootState>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   activeThumbIndex: active.value,
   disabled: isDisabled.value,
   dragging: dragging.value,
@@ -549,7 +529,8 @@ provide(SliderRootContext, {
     if (next || controlElement.value === previous) controlElement.value = next;
   },
   disabled: isDisabled,
-  validation,
+  field,
+  onLeave: (left) => field?.onLeave(left),
   handleInputChange,
   registerThumbInput,
   indicatorPosition,
@@ -588,13 +569,28 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         (isHydrating.value && typeof attrs['aria-label'] !== 'string'
           ? rootLabelId.value
           : undefined),
+      'aria-describedby': field?.describedBy,
       id: rootId.value,
       role: 'group',
     },
     attrs,
-    (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
+});
+
+// The root is the control of the field, and the range inputs hold the value for the validation.
+const thumbInputElements = () =>
+  [...thumbList.map.value.values()]
+    .map((thumb) => thumb.getInput())
+    .filter((input) => input !== null);
+useFieldGroup({
+  element,
+  disabled: () => isDisabled.value,
+  ownDisabled: () => props.disabled || fieldsetDisabled.value,
+  readOnly: () => false,
+  name: () => props.name,
+  inputs: thumbInputElements,
+  focusElement: () => thumbInputElements()[0],
 });
 
 defineExpose({ element });

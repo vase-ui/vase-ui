@@ -80,7 +80,7 @@ import { computed, shallowRef, watchPostEffect, type ShallowRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { useListenerSession } from '../../common/useListenerSession';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import {
   useCompositeItem,
   useCompositeRootContext,
@@ -132,7 +132,7 @@ useDeferredServerRender();
 const tabId = useVaseUiId(() => props.id);
 const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const active = computed(() => props.value === activeTabValue.value);
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 useRegisteredId(

@@ -1,6 +1,6 @@
 import type { ComputedRef, ShallowRef } from 'vue';
 import { compareItemEquality } from '../internals/itemEquality';
-import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../internals/labelable-provider/createIdRegistry';
 import { hasNullItemLabel, stringifyAsValue } from '../internals/resolveValueLabel';
 import type { Group, ItemLabel } from '../internals/resolveValueLabel';
 import { popupStoreSelectors } from '../utils/popups/usePopupRoot';

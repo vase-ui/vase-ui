@@ -4,7 +4,7 @@ import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../utils/popups/usePopupTrigger';
 import { Timeout } from '../../common/useTimeout';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../../internals/labelable-provider/createIdRegistry';
 import { REASONS } from '../../internals/reasons';
 import {
   NullStore,
