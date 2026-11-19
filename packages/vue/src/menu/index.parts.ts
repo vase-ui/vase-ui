@@ -236,7 +236,7 @@ export namespace Popup {
 
 /**
  * A portal element that moves the popup to a different part of the DOM.
- * By default, the portal element is appended to `<body>`.
+ * The default target is the nearest portal element or `<body>`.
  * Renders a `<div>` element.
  *
  * The part renders its element in a `Teleport`. Vue gives the scope id of `<style scoped>`,

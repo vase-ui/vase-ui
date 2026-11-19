@@ -1,19 +1,19 @@
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { DatePicker } from '@vase-ui/vue/date-picker';
-import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import type { AlertDialog } from '@vase-ui/vue/alert-dialog';
+import type { Autocomplete } from '@vase-ui/vue/autocomplete';
+import type { Combobox } from '@vase-ui/vue/combobox';
+import type { ContextMenu } from '@vase-ui/vue/context-menu';
+import type { DatePicker } from '@vase-ui/vue/date-picker';
+import type { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { Drawer } from '@vase-ui/vue/drawer';
-import { Menu } from '@vase-ui/vue/menu';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Popover } from '@vase-ui/vue/popover';
-import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Select } from '@vase-ui/vue/select';
-import { TimePicker } from '@vase-ui/vue/time-picker';
-import { Toast } from '@vase-ui/vue/toast';
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import type { Drawer } from '@vase-ui/vue/drawer';
+import type { Menu } from '@vase-ui/vue/menu';
+import type { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import type { Popover } from '@vase-ui/vue/popover';
+import type { PreviewCard } from '@vase-ui/vue/preview-card';
+import type { Select } from '@vase-ui/vue/select';
+import type { TimePicker } from '@vase-ui/vue/time-picker';
+import type { Toast } from '@vase-ui/vue/toast';
+import type { Tooltip } from '@vase-ui/vue/tooltip';
 import type { ShallowRef } from 'vue';
 import { expectType } from '#test-utils';
 
@@ -35,7 +35,11 @@ expectType<Target, TimePicker.Portal.Props['to']>(null);
 expectType<Target, Toast.Portal.Props['to']>(null);
 expectType<Target, Tooltip.Portal.Props['to']>(null);
 
-export function useTypeTests(element: Element, shadow: ShadowRoot, ref: ShallowRef<Element | null>) {
+export function useTypeTests(
+  element: Element,
+  shadow: ShadowRoot,
+  ref: ShallowRef<Element | null>,
+) {
   <Dialog.Portal to="#teleports" />;
   <Dialog.Portal to={element} />;
   <Dialog.Portal to={shadow} />;
@@ -44,6 +48,8 @@ export function useTypeTests(element: Element, shadow: ShadowRoot, ref: ShallowR
   <Dialog.Portal to={ref} />;
   // @ts-expect-error The target must be a value.
   <Dialog.Portal to={() => element} />;
+  // @ts-expect-error Pass the element exposed by a component.
+  <Dialog.Portal to={{ element }} />;
   // @ts-expect-error The target prop is to.
   <Dialog.Portal container={element} />;
 }

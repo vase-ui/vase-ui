@@ -250,7 +250,8 @@ describe.each([
 
   test('puts the content of children in the portal element of the #render slot', async () => {
     await render(
-      <PopupPortal guards={guards}
+      <PopupPortal
+        guards={guards}
         v-slots={{
           render: ({ props, children }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element">
@@ -270,7 +271,8 @@ describe.each([
   test('warns when the #render slot does not mount children', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await render(
-      <PopupPortal guards={guards}
+      <PopupPortal
+        guards={guards}
         v-slots={{
           render: ({ props }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element" />
@@ -564,7 +566,13 @@ describe.each([
       );
 
       await renderPortal(
-        nested ? <PopupPortal guards={usePortalFocus} data-testid="parent">{content}</PopupPortal> : content,
+        nested ? (
+          <PopupPortal guards={usePortalFocus} data-testid="parent">
+            {content}
+          </PopupPortal>
+        ) : (
+          content
+        ),
       );
 
       const fallback = nested ? screen.getByTestId('parent') : document.body;
@@ -595,7 +603,8 @@ describe.each([
             const nextContainer = clear ? null : secondContainer.value;
             return (
               <>
-                <PopupPortal guards={guards}
+                <PopupPortal
+                  guards={guards}
                   to={step.value < 2 ? firstContainer.value : nextContainer}
                   data-testid="portal"
                 >

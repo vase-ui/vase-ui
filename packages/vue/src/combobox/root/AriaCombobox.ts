@@ -68,7 +68,11 @@ import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { navigateUniformGrid } from '../../internals/composite/gridNavigation';
 import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import {
   getPopupTransitionElement,

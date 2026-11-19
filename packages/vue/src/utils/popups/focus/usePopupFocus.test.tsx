@@ -1,3 +1,4 @@
+import { usePopupFocus } from './usePopupFocus';
 import testingLibraryUserEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -163,7 +164,9 @@ const Popup = defineComponent({
           </FloatingFocusManager>
         ) : null;
       const popup = props.portal ? (
-        <PopupPortal guards={usePortalFocus} to={props.container}>{content}</PopupPortal>
+        <PopupPortal guards={usePortalFocus} to={props.container}>
+          {content}
+        </PopupPortal>
       ) : (
         content
       );
@@ -4891,7 +4894,7 @@ describe('FloatingFocusManager', () => {
       });
     });
 
-    describe('non-modal + PopupPortal', () => {
+    describe('non-modal + FloatingPortal', () => {
       // The `App` of four cases of this block. `portalOwnerRole` goes to the portal.
       const PortalApp = defineComponent({
         props: { portalOwnerRole: { type: String, default: undefined } },
@@ -5734,6 +5737,65 @@ describe('FloatingFocusManager', () => {
 
       expect(screen.getByText('outside')).not.toHaveAttribute('inert');
       expect(screen.getByText('outside')).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    test('uses the last rendered return target when removal and a policy change share one update', async () => {
+      const shown = shallowRef(true);
+      const target = shallowRef<HTMLElement | null>(null);
+      const Child = defineComponent(() => {
+        const { refs, context } = useFloating({ open: true });
+        const bindings = usePopupFocus(
+          () => ({ store: context.rootStore, returnFocus: target.value, initialFocus: false }),
+          refs.floating,
+        );
+        return () => (
+          <div ref={refs.setFloating} {...bindings({})}>
+            <button data-testid="inside" />
+          </div>
+        );
+      });
+      await render(() => (
+        <>
+          <button data-testid="first" />
+          <button data-testid="last" />
+          {shown.value && <Child />}
+        </>
+      ));
+      target.value = screen.getByTestId('first');
+      await nextTick();
+      screen.getByTestId('inside').focus();
+      shown.value = false;
+      target.value = screen.getByTestId('last');
+      await waitFor(() => expect(screen.getByTestId('first')).toHaveFocus());
+    });
+
+    test('updates the managed tabindex binding on the owned dialog element', async () => {
+      const content = shallowRef(false);
+      const Test = defineComponent(() => {
+        const { refs, context } = useFloating({ open: true });
+        const bindings = usePopupFocus(
+          () => ({ store: context.rootStore, modal: false, initialFocus: false }),
+          refs.floating,
+        );
+        return () => (
+          <>
+            <button data-testid="reference" ref={refs.setReference} />
+            <div role="dialog" ref={refs.setFloating} {...bindings({})}>
+              {content.value && <button data-testid="child" />}
+            </div>
+          </>
+        );
+      });
+      await render(<Test />);
+      const popup = screen.getByRole('dialog');
+      expect(popup).toHaveAttribute('tabindex', '0');
+      expect(popup).toHaveAttribute('data-tabindex', '0');
+      screen.getByTestId('reference').focus();
+      content.value = true;
+      await nextTick();
+      screen.getByTestId('child').focus();
+      await waitFor(() => expect(popup).toHaveAttribute('tabindex', '-1'));
+      expect(popup).toHaveAttribute('data-tabindex', '-1');
     });
 
     test('floating element with no focusable elements and no listbox role gets tabIndex=0 when initialFocus is -1', async () => {

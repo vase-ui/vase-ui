@@ -7,7 +7,8 @@ export interface TooltipPortalState {}
 
 export interface TooltipPortalProps
   extends
-    PortalTargetProps, VaseUIComponentProps<TooltipPortalState>,
+    PortalTargetProps,
+    VaseUIComponentProps<TooltipPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.
@@ -62,7 +63,8 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, PopupPortal),
       as,
-      to, disabled,
+      to,
+      disabled,
     }"
   >
     <template #render="slotProps">
@@ -75,7 +77,8 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, PopupPortal),
       as,
-      to, disabled,
+      to,
+      disabled,
     }"
   >
     <slot :state="state" />

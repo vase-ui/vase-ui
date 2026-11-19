@@ -5,7 +5,11 @@ import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vu
 
 export interface ToastPortalState {}
 
-export interface ToastPortalProps extends PortalTargetProps, VaseUIComponentProps<ToastPortalState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+export interface ToastPortalProps
+  extends
+    PortalTargetProps,
+    VaseUIComponentProps<ToastPortalState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">
@@ -47,11 +51,7 @@ defineExpose({ element });
       <slot name="render" v-bind="slotProps" />
     </template>
   </PopupPortal>
-  <PopupPortal
-    v-else
-    ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), ...props }"
-  >
+  <PopupPortal v-else ref="portal" v-bind="{ ...withoutPropsOf($attrs, PopupPortal), ...props }">
     <slot :state="state" />
   </PopupPortal>
 </template>

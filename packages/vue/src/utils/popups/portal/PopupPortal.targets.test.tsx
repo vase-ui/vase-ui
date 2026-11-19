@@ -1,12 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import {
-  defineComponent,
-  KeepAlive,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  shallowRef,
-} from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, onUnmounted, shallowRef } from 'vue';
 import {
   createHeldBranch,
   createRenderer,
@@ -61,7 +54,11 @@ describe('FloatingPortalLite', () => {
     it('VUE-168: renders the portal element in a target selected by CSS', async () => {
       const target = addContainer();
       target.id = 'popup-target';
-      await render(<PopupPortal to="#popup-target" data-testid="portal">content</PopupPortal>);
+      await render(
+        <PopupPortal to="#popup-target" data-testid="portal">
+          content
+        </PopupPortal>,
+      );
       expect(screen.getByTestId('portal').parentNode).toBe(target);
     });
 
@@ -117,8 +114,6 @@ describe('FloatingPortalLite', () => {
       expect(portal.parentElement).toBe(document.body);
       expect(counts).toEqual({ mounted: 1, unmounted: 0 });
     });
-
-
   });
 
   describe('portal above', () => {
@@ -132,10 +127,7 @@ describe('FloatingPortalLite', () => {
 
         await render(
           <PopupPortal guards={usePortalFocus} data-testid="above">
-            <PopupPortal
-              to={hasContainer ? container : undefined}
-              data-testid="portal"
-            />
+            <PopupPortal to={hasContainer ? container : undefined} data-testid="portal" />
           </PopupPortal>,
         );
 

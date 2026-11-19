@@ -31,9 +31,7 @@ export interface MenuInputProps
 </script>
 
 <script setup lang="ts">
-import {
-  useFilterDropdownInput,
-} from '../../filter-dropdown/input/FilterDropdownInput';
+import { useFilterDropdownInput } from '../../filter-dropdown/input/FilterDropdownInput';
 import { useFilterDropdownValueContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
@@ -83,11 +81,21 @@ function setInputFocused(element: HTMLInputElement | null) {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref, setInputFocused],
-  props: (attrs) => input.props(mergeProps<'input'>({
-    onKeydown: handleKeydown,
-    onFocusin(event) { if (element.value === event.currentTarget) store.set('inputFocused', true); },
-    onFocusout(event) { if (element.value === event.currentTarget) store.set('inputFocused', false); },
-  }, attrs)),
+  props: (attrs) =>
+    input.props(
+      mergeProps<'input'>(
+        {
+          onKeydown: handleKeydown,
+          onFocusin(event) {
+            if (element.value === event.currentTarget) store.set('inputFocused', true);
+          },
+          onFocusout(event) {
+            if (element.value === event.currentTarget) store.set('inputFocused', false);
+          },
+        },
+        attrs,
+      ),
+    ),
 });
 
 defineExpose({ element });

@@ -294,7 +294,6 @@ export function enableFocusInside(container: HTMLElement) {
   });
 }
 
-
 interface Options {
   preventScroll?: boolean | undefined;
   sync?: boolean | undefined;

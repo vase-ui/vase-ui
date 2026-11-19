@@ -335,8 +335,10 @@ function findReturnElement(
 }
 
 function dialogTabIndex(target: HTMLElement) {
-  if (!target.getAttribute('role')?.includes('dialog') ||
-      (target.hasAttribute('tabindex') && !target.hasAttribute('data-tabindex'))) {
+  if (
+    !target.getAttribute('role')?.includes('dialog') ||
+    (target.hasAttribute('tabindex') && !target.hasAttribute('data-tabindex'))
+  ) {
     return undefined;
   }
   const hasTabStop = focusable(target).some((child) => {
@@ -387,23 +389,22 @@ function haveSameNodes(first: ElementSiblings, second: ElementSiblings) {
 export function usePopupFocus(
   props: () => PopupFocusOptions,
   element: Readonly<Ref<HTMLElement | null>>,
-  bound = false,
 ) {
   const managedTabIndex = shallowRef<0 | -1>();
-  let localListeners: {
-    focusin: (event: FocusEvent) => void;
-    focusout: (event: FocusEvent) => void;
-    capture?: (() => void) | undefined;
-  } | undefined;
+  let localListeners:
+    | {
+        focusin: (event: FocusEvent) => void;
+        focusout: (event: FocusEvent) => void;
+      }
+    | undefined;
   const listeners = {
     onFocusin: (event: FocusEvent) => localListeners?.focusin(event),
     onFocusout: (event: FocusEvent) => localListeners?.focusout(event),
-    onFocusoutCapture: () => localListeners?.capture?.(),
   };
 
   function handleTabIndex(target: HTMLElement) {
     const value = dialogTabIndex(target);
-    if (bound && target === element.value) {
+    if (target === element.value) {
       managedTabIndex.value = value;
     } else if (value !== undefined) {
       target.setAttribute('tabindex', String(value));
@@ -618,7 +619,7 @@ export function usePopupFocus(
   interface Effect {
     sources: () => unknown[];
     setup: () => Cleanup;
-      cleanup?: Cleanup;
+    cleanup?: Cleanup;
   }
 
   // Several sources can change in the same patch. Entry, return and outside marks need a fixed order.
@@ -1405,16 +1406,21 @@ export function usePopupFocus(
         }
       }
 
-      if (bound && element.value && focusContainers.has(element.value)) {
+      const local = element.value;
+      if (local && focusContainers.has(local)) {
         localListeners = {
           focusin: handleFocusIn,
           focusout: handleFocusOutside,
-          capture: isInsidePortal.value ? markInsideComponentTree : undefined,
         };
-        focusContainers.delete(element.value);
+        focusContainers.delete(local);
       }
 
       return mergeCleanups(
+        // A Vue capture listener would stamp the event before a newly mounted target sees it.
+        local &&
+          localListeners &&
+          isInsidePortal.value &&
+          addEventListener(local, 'focusout', markInsideComponentTree, true),
         anchorElement && addEventListener(anchorElement, 'focusout', handleFocusOutside),
         anchorElement && addEventListener(anchorElement, 'pointerdown', handlePointerDown),
         ...Array.from(focusContainers, (node) => {
@@ -1435,7 +1441,9 @@ export function usePopupFocus(
               addEventListener(node, 'focusout', fromFirst(markInsideComponentTree), true),
           );
         }),
-        () => { localListeners = undefined; },
+        () => {
+          localListeners = undefined;
+        },
         removalObserver && (() => removalObserver.disconnect()),
       );
     },
@@ -1573,9 +1581,7 @@ export function usePopupFocus(
       ? listeners
       : { ...listeners, tabindex: index, 'data-tabindex': index };
   };
-
 }
-
 
 type Undo = () => void;
 
@@ -1795,7 +1801,6 @@ export function markOthers(avoidElements: Element[], options: MarkOthersOptions 
     }
   };
 }
-
 
 /**
  * The part of a popup store that the focus guards of a trigger use. The stores of Popover and Menu

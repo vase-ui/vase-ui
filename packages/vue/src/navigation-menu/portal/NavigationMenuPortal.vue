@@ -7,7 +7,8 @@ export interface NavigationMenuPortalState {}
 
 export interface NavigationMenuPortalProps
   extends
-    PortalTargetProps, VaseUIComponentProps<NavigationMenuPortalState>,
+    PortalTargetProps,
+    VaseUIComponentProps<NavigationMenuPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.

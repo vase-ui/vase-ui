@@ -126,7 +126,9 @@ describe('FloatingPortal', () => {
       const hasFocusManager = shallowRef(true);
       await render(() => (
         <div data-testid="host">
-          <PopupPortal guards={usePortalFocus}>{hasFocusManager.value ? <FocusManagerPart /> : null}</PopupPortal>
+          <PopupPortal guards={usePortalFocus}>
+            {hasFocusManager.value ? <FocusManagerPart /> : null}
+          </PopupPortal>
         </div>
       ));
       const host = screen.getByTestId('host');
@@ -409,7 +411,8 @@ describe('FloatingPortal', () => {
           name: 'the id of the #render slot',
           ownedId: 'rendered-portal',
           create: () => (
-            <PopupPortal guards={usePortalFocus}
+            <PopupPortal
+              guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id="rendered-portal" data-testid="portal">
@@ -454,7 +457,8 @@ describe('FloatingPortal', () => {
         const ownId = shallowRef('first');
         await render(
           <div data-testid="host">
-            <PopupPortal guards={usePortalFocus}
+            <PopupPortal
+              guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <OwnIdElement {...props} tag="div" ownId={ownId}>
@@ -507,7 +511,8 @@ describe('FloatingPortal', () => {
       it('names no id when the #render slot gives the portal element no id', async () => {
         await render(
           <div data-testid="host">
-            <PopupPortal guards={usePortalFocus}
+            <PopupPortal
+              guards={usePortalFocus}
               v-slots={{
                 render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id={undefined}>

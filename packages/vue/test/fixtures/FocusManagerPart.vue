@@ -37,7 +37,6 @@ const focusBindings = usePopupFocus(
     initialFocus: false,
   }),
   useTemplateRef('element'),
-  true,
 );
 </script>
 

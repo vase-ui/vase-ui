@@ -7,7 +7,8 @@ export interface DialogPortalState {}
 
 export interface DialogPortalProps
   extends
-    PortalTargetProps, VaseUIComponentProps<DialogPortalState>,
+    PortalTargetProps,
+    VaseUIComponentProps<DialogPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.

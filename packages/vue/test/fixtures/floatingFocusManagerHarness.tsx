@@ -31,7 +31,7 @@ const propNames: (keyof PopupFocusOptions)[] = [
 export const FloatingFocusManager = defineComponent(
   (props: PopupFocusOptions, { slots }) => {
     const element = shallowRef<HTMLElement | null>(null);
-    usePopupFocus(() => props, element);
+    const bindings = usePopupFocus(() => props, element);
 
     function setElement(value: unknown) {
       element.value = value as HTMLElement | null;
@@ -42,7 +42,11 @@ export const FloatingFocusManager = defineComponent(
       if (!content) {
         return null;
       }
-      const elementNode = cloneVNode(content, { ref: setElement }, true);
+      const elementNode = cloneVNode(
+        content,
+        { ...bindings(content.props ?? {}), ref: setElement },
+        true,
+      );
       return rest.length > 0 ? [elementNode, ...rest] : elementNode;
     };
   },

@@ -23,7 +23,10 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
-import { dismissPopupBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,

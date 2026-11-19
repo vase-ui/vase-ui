@@ -7,7 +7,8 @@ export interface ComboboxPortalState {}
 
 export interface ComboboxPortalProps
   extends
-    PortalTargetProps, VaseUIComponentProps<ComboboxPortalState>,
+    PortalTargetProps,
+    VaseUIComponentProps<ComboboxPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.

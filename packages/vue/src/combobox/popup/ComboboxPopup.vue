@@ -193,7 +193,6 @@ const focusBindings = usePopupFocus(
     nodesAfterElement: dismissButton.value ? [dismissButton.value] : undefined,
   }),
   element,
-  true,
 );
 
 defineExpose({ element });

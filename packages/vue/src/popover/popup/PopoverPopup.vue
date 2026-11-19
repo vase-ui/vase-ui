@@ -185,7 +185,6 @@ const focusBindings = usePopupFocus(
     afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
   }),
   element,
-  true,
 );
 
 provide(PopupStyleContext, () => elementProps().style);

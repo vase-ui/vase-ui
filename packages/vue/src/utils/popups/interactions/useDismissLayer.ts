@@ -436,10 +436,13 @@ export function useDismissLayer(
   provide(DismissPortalRegistration, (portal) => {
     // Native capture leaves a newly mounted child's Vue listener eligible for this same press.
     const mark = (event: Event) => markInsidePortal(portal, event);
-    const markPrevented = (event: PointerEvent | MouseEvent) => markPortalPressStartPrevented(portal, event);
+    const markPrevented = (event: PointerEvent | MouseEvent) =>
+      markPortalPressStartPrevented(portal, event);
     return mergeCleanups(
       addElementBelow(() => portal),
-      ...PRESS_EVENTS.map((type) => addEventListener(portal, type, mark, { capture: true, passive: true })),
+      ...PRESS_EVENTS.map((type) =>
+        addEventListener(portal, type, mark, { capture: true, passive: true }),
+      ),
       addEventListener(portal, 'pointerdown', markPrevented),
       addEventListener(portal, 'mousedown', markPrevented),
     );

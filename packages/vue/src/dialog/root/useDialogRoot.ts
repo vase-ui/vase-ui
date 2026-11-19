@@ -4,8 +4,16 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
-import { popupStoreSelectors, usePopupRoot, usePopupRootSync } from '../../utils/popups/usePopupRoot';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
+import {
+  popupStoreSelectors,
+  usePopupRoot,
+  usePopupRootSync,
+} from '../../utils/popups/usePopupRoot';
 import { DialogStore } from '../store/DialogStore';
 
 import type { DialogRootChangeEventDetails, DialogRootProps } from './DialogRoot.vue';
@@ -188,7 +196,9 @@ export function useDialogRoot<Payload>(
   }
 
   onMounted(() => {
-    watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, isHeld], reportToParent, { immediate: true });
+    watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, isHeld], reportToParent, {
+      immediate: true,
+    });
   });
   onScopeDispose(() => {
     if (hasReported) {
@@ -210,7 +220,10 @@ export function useDialogRoot<Payload>(
     },
   );
 
-  bindParts({ trigger: () => dismissTriggerBindings(dismiss), popup: () => dismissPopupBindings(dismiss) });
+  bindParts({
+    trigger: () => dismissTriggerBindings(dismiss),
+    popup: () => dismissPopupBindings(dismiss),
+  });
   watch(
     [ownNestedOpenDialogs, ownNestedOpenDrawers],
     ([nestedOpenDialogCount, nestedOpenDrawerCount]) => {

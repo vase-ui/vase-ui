@@ -3060,7 +3060,9 @@ describe('useDismiss', () => {
     });
 
     it('gives the same numbers to the popups of a second copy of the module', async () => {
-      const copy: typeof import('./useDismissLayer') = await import('./useDismissLayer?copy' as string);
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
       expect(copy.useDismissLayer).not.toBe(useDismissLayer);
 
       const First = createLayer(useDismissLayer, 'first');
@@ -3637,7 +3639,9 @@ describe('useDismiss', () => {
     );
 
     it('keeps the popup open for a press in a newer popup of a second copy of the module', async () => {
-      const copy: typeof import('./useDismissLayer') = await import('./useDismissLayer?copy' as string);
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
       const First = createLayer(useDismissLayer, 'first');
       const Second = createLayer(copy.useDismissLayer, 'second');
       await render(
@@ -3658,7 +3662,9 @@ describe('useDismiss', () => {
     });
 
     it('VUE-79: keeps the popup open for a press in a newer popup of a second copy of the module in a closed shadow root', async () => {
-      const copy: typeof import('./useDismissLayer') = await import('./useDismissLayer?copy' as string);
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
       const First = createLayer(useDismissLayer, 'first');
       const Second = createLayer(copy.useDismissLayer, 'second');
       const host = document.createElement('div');

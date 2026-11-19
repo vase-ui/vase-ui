@@ -523,7 +523,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       },
       getDisabledMountTransitionStyles(transitionStatus.value),
       focusBindings(attrs),
-    attrs,
+      attrs,
     ];
   },
 });
@@ -543,7 +543,6 @@ const focusBindings = usePopupFocus(
     restoreFocus: true,
   }),
   element,
-  true,
 );
 
 defineExpose({ element });

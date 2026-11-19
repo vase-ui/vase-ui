@@ -87,7 +87,11 @@ export type PopoverRootChangeEventDetails =
 import { onScopeDispose, provide, watch } from 'vue';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { usePopupRoot, usePopupRootSync } from '../../utils/popups/usePopupRoot';
 import { provideFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { PopoverStore } from '../store/PopoverStore';
@@ -180,7 +184,10 @@ const dismiss = useDismissLayer(store, {
 
 // `Popover.Popup` has the props of a popup that can take the focus itself. The popup props of the
 // store thus hold only the dismiss handlers.
-bindParts({ trigger: () => dismissTriggerBindings(dismiss), popup: () => dismissPopupBindings(dismiss) });
+bindParts({
+  trigger: () => dismissTriggerBindings(dismiss),
+  popup: () => dismissPopupBindings(dismiss),
+});
 
 // Each registry keeps the ids of the parts of one kind, so the popup keeps its name when one of
 // two titles unmounts. A part that writes its own id to the store would clear that name when it

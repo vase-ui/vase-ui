@@ -6,7 +6,10 @@ import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vu
 export interface MenuPortalState {}
 
 export interface MenuPortalProps
-  extends PortalTargetProps, VaseUIComponentProps<MenuPortalState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  extends
+    PortalTargetProps,
+    VaseUIComponentProps<MenuPortalState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.
    * @default false
@@ -68,7 +71,8 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, PopupPortal),
       as,
-      to, disabled,
+      to,
+      disabled,
       portalOwnerRole,
     }"
   >
@@ -83,7 +87,8 @@ defineExpose({ element });
     v-bind="{
       ...withoutPropsOf($attrs, PopupPortal),
       as,
-      to, disabled,
+      to,
+      disabled,
       portalOwnerRole,
     }"
   >

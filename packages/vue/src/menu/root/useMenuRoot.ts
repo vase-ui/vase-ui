@@ -16,7 +16,11 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useTriggerModality } from '../../utils/popups/usePopupTrigger';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';

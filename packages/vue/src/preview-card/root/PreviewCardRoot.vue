@@ -68,7 +68,11 @@ export type PreviewCardRootChangeEventDetails =
 <script setup lang="ts" generic="Payload = unknown">
 import { provide, watch } from 'vue';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { provideFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { PreviewCardStore } from '../store/PreviewCardStore';
@@ -140,7 +144,10 @@ watch([isOpen, activeId], ([openNow, activeTriggerId]) => {
 });
 
 const dismiss = useDismissLayer(store, { externalTree: tree });
-bindParts({ trigger: () => dismissTriggerBindings(dismiss), popup: () => dismissPopupBindings(dismiss) });
+bindParts({
+  trigger: () => dismissTriggerBindings(dismiss),
+  popup: () => dismissPopupBindings(dismiss),
+});
 
 provide(PreviewCardRootContext, owner);
 

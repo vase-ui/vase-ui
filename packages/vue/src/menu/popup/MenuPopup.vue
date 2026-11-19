@@ -296,7 +296,6 @@ const focusBindings = usePopupFocus(
     afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
   }),
   element,
-  true,
 );
 
 useElementRegistration(menuPopups, element, () => store.select('rootId'));

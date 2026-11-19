@@ -193,7 +193,11 @@ import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import {

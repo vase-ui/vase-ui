@@ -334,7 +334,11 @@ import { provide } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
-import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { usePopupRoot, popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { TooltipStore, TooltipRootContext } from './TooltipRootContext';
 import type { State as TooltipStoreState } from './TooltipRootContext';

@@ -7,9 +7,9 @@ export interface SelectPortalState {}
 
 export interface SelectPortalProps
   extends
-    PortalTargetProps, VaseUIComponentProps<SelectPortalState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
-}
+    PortalTargetProps,
+    VaseUIComponentProps<SelectPortalState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">

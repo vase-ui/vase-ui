@@ -153,7 +153,6 @@ const focusBindings = usePopupFocus(
     getInsideElements,
   }),
   element,
-  true,
 );
 
 defineExpose({ element });
