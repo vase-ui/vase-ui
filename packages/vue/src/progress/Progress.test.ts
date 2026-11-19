@@ -55,8 +55,17 @@ describe('the parts', () => {
     for (const name of ['root', 'label', 'value', 'track', 'indicator'] as const) {
       expect(exposed[name].element).toBe(parts[name]);
     }
-    // The element of the root holds the content and no node of the part.
-    expect([...root.children]).toEqual([label, value, track]);
+    expect([...root.children].slice(0, 3)).toEqual([label, value, track]);
+  });
+
+  test('the default element of the root holds the content, then a visually hidden text', async () => {
+    const { root, track } = await mountParts({ root: { value: 30 } });
+    expect(root.children).toHaveLength(4);
+    const hidden = root.lastElementChild!;
+    expect(hidden.previousElementSibling).toBe(track);
+    expect(hidden).toHaveAttribute('role', 'presentation');
+    expect(hidden).toHaveTextContent('x');
+    expect(hidden).toHaveStyle({ clipPath: 'inset(50%)', width: '1px', height: '1px' });
   });
 
   test('the element slot of each part renders the element of the developer, with the state and the text', async () => {
@@ -78,6 +87,8 @@ describe('the parts', () => {
     });
     expect(section.querySelector('p')).toHaveAttribute('data-progressing');
     expect(section.querySelector('i')!.style.width).toBe('30%');
+    // The developer puts the text in their element.
+    expect(section.querySelector('[role=presentation]')).toBeNull();
     // The slots give the `value` prop as the developer gave it.
     scene.value = 150;
     await nextTick();
@@ -313,6 +324,17 @@ describe('the label', () => {
       }
     },
   );
+
+  test('an aria-label of undefined keeps the name that the label gives', async () => {
+    const { root } = await mountParts({ root: { value: 30, 'aria-label': undefined } });
+    expect(screen.getByRole('progressbar', { name: 'Upload' })).toBe(root);
+  });
+
+  test('a blank aria-label of the developer counts as given, so the root has no aria-labelledby', async () => {
+    const { root } = await mountParts({ root: { value: 30, 'aria-label': '' } });
+    expect(root).toHaveAttribute('aria-label', '');
+    expect(root).not.toHaveAttribute('aria-labelledby');
+  });
 
   test('a root with no label has no aria-labelledby after the mount', async () => {
     const { root } = await mountParts({ root: { value: 30 }, scene: { label: false } });

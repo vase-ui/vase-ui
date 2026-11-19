@@ -11,6 +11,7 @@ import {
 } from 'vue';
 import { clamp } from '../common/clamp';
 import { useElement } from '../common/element';
+import { visuallyHidden } from '../common/visuallyHidden';
 import { progressKey, statusAttributes } from './root';
 import type { ProgressRootProps, ProgressRootState } from './types';
 
@@ -117,6 +118,8 @@ function elementProps() {
 }
 </script>
 
+<!-- NVDA and JAWS can need text in a progress bar to say its name: the hidden node gives it.
+https://github.com/mui/base-ui/issues/4184 -->
 <template>
   <slot
     v-if="$slots.element"
@@ -127,5 +130,6 @@ function elementProps() {
   />
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
+    <span role="presentation" :style="visuallyHidden">x</span>
   </div>
 </template>

@@ -58,7 +58,9 @@ A `Progress.Label` with no `id` prop names the bar, also in the server HTML. A l
 
 A root with no `Progress.Label` needs `aria-label` or `aria-labelledby`. That attribute also names a root that has a label.
 
-The text of `Progress.Value` and `aria-valuetext` of the root is the percent of the range, or the value in `format`. With no `locale`, the text has the locale `en-US`, on the server and in the browser. Give `locale` with the locale of the page.
+The default element of `Progress.Root` holds a visually hidden text after its content, because NVDA and JAWS can need text in a progress bar to say its name. When the `element` slot replaces the element, put text in your element. A `Progress.Label` is such text.
+
+The text of `Progress.Value` and the `aria-valuetext` of the root are the percent of the range, or the value in `format`. With no `locale`, the text has the locale `en-US`, on the server and in the browser. Give `locale` with the locale of the page.
 
 While the progress is indeterminate, the root has no `aria-valuetext`, and a screen reader says the state in the language of the user. To give a text, use `getAriaValueText` or `aria-valuetext`, in the language of the page.
 
@@ -72,7 +74,7 @@ Each part has one of these attributes:
 | `[data-progressing]`   | The value is less than `max`. |
 | `[data-complete]`      | The value is `max`.           |
 
-`Progress.Indicator` has the inline style `width` with the percent of the range, and `inset-inline-start: 0`. While the progress is indeterminate, it has no inline style.
+`Progress.Indicator` has the inline style `inset-inline-start: 0`, `height: inherit` and `width` with the percent of the range. While the progress is indeterminate, it has no inline style.
 
 ## API reference
 

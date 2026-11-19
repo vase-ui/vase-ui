@@ -27,7 +27,7 @@ describe('server render and hydration', () => {
         );
       }
       const status = value === null ? 'indeterminate' : value === 100 ? 'complete' : 'progressing';
-      for (const part of root.querySelectorAll('[role=progressbar], [role=progressbar] *')) {
+      for (const part of root.querySelectorAll('[role=progressbar], [role=progressbar] [class]')) {
         expect(part).toHaveAttribute(`data-${status}`);
       }
     },
