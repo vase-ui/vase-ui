@@ -420,7 +420,7 @@ describe('S8: a click on the label of a clipped range input', () => {
 
   test.each([
     { listener: 'nothing', focus: !(webkit && platform.os.mac), ring: false },
-    { listener: 'a script focus', focus: true, ring: webkit },
+    { listener: 'a script focus', focus: true, ring: webkit && platform.os.mac },
     { listener: 'a script focus with focusVisible true', focus: true, ring: true },
   ] as const)(
     'with $listener in a click listener of the label, the input has the focus: $focus, and :focus-visible: $ring',
