@@ -117,7 +117,7 @@ Put `<Avatar.Image>` in a Vue `<Transition>` to animate its enter and its leave.
 
 <<< ./avatar/Animated.vue
 
-A `<Transition>` around `<Avatar.Fallback>` needs the same CSS. With `keepMounted`, the image stays in the DOM, so animate it with a CSS transition on `[data-loading]`.
+A `<Transition>` around `<Avatar.Fallback>` needs the same CSS. With `keepMounted`, the image stays in the DOM, so animate it with a CSS transition on `[data-loading]`. Vue does not animate a part whose element comes from the `#element` slot, so such an image also needs `keepMounted` for an animation.
 
 ## API reference
 
