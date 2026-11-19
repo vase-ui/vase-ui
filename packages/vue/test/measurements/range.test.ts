@@ -29,6 +29,7 @@ describe('the text of Intl.NumberFormat', () => {
     const props = { cases, value: 1234.567 };
     const texts = (root: Element) => [...root.querySelectorAll('p')].map((p) => p.textContent);
     const server = texts(await renderOnServer('MeasureNumberText', props));
+    expect(server).toHaveLength(cases.length);
     expect(texts(mount(MeasureNumberText, props).root)).toEqual(server);
   });
 });
