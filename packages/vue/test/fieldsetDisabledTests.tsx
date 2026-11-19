@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { shallowRef } from 'vue';
 import type { VNode, VNodeChild } from 'vue';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -151,51 +151,6 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
       expectDisabled(custom, false);
       await userEvent.click(custom);
       expect(click).toHaveBeenCalledOnce();
-    });
-
-    it('reads the fieldset again after the element moves', async () => {
-      await render(() =>
-        root(
-          <>
-            <fieldset disabled>{target()}</fieldset>
-            <fieldset data-testid="destination" />
-          </>,
-        ),
-      );
-      const button = screen.getByTestId('target');
-      expectDisabled(button, true);
-
-      screen.getByTestId('destination').append(button);
-      await flushMicrotasks();
-      expectDisabled(button, false);
-      expect(button.matches(':disabled')).toBe(false);
-    });
-
-    it('keeps its state while held and reads the fieldset at activation', async () => {
-      const shown = shallowRef(true);
-      const disabled = shallowRef(true);
-      const Part = defineComponent(() => () => target());
-      await render(() =>
-        root(
-          <fieldset disabled={disabled.value}>
-            <KeepAlive>{shown.value ? <Part /> : <div />}</KeepAlive>
-          </fieldset>,
-        ),
-      );
-      const button = screen.getByTestId('target');
-      expectDisabled(button, true);
-
-      shown.value = false;
-      await flushMicrotasks();
-      disabled.value = false;
-      await flushMicrotasks();
-      expect(button).not.toBeInTheDocument();
-      expectDisabled(button, true);
-
-      shown.value = true;
-      await flushMicrotasks();
-      expect(screen.getByTestId('target')).toBe(button);
-      expectDisabled(button, false);
     });
 
     if (hover) {

@@ -30,7 +30,7 @@ function handleToolbarInput(event: Event) {
 
     <Field.Root>
       <Field.Label>Email</Field.Label>
-      <Field.Control v-model="fieldValue" data-testid="field-control" />
+      <Input v-model="fieldValue" data-testid="field-control" />
     </Field.Root>
     <output data-testid="field-value">{{ fieldValue }}</output>
 

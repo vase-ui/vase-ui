@@ -14,7 +14,7 @@ import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
@@ -32,6 +32,7 @@ import {
   screen,
   waitFor,
   within,
+  wait,
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
@@ -3453,7 +3454,12 @@ describe('<Slider.Root />', () => {
         const handleSubmit = vi.fn();
 
         await render(
-          <Form onFormSubmit={handleSubmit}>
+          <Form
+            onSubmit={(event: SubmitEvent, values: FormValues) => (
+              event.preventDefault(),
+              handleSubmit(values)
+            )}
+          >
             <Field.Root name="slider">
               <Slider.Root defaultValue={[19, 41]} min={20} max={40}>
                 <Slider.Control>
@@ -3479,7 +3485,12 @@ describe('<Slider.Root />', () => {
         const handleSubmit = vi.fn();
 
         await render(
-          <Form onFormSubmit={handleSubmit}>
+          <Form
+            onSubmit={(event: SubmitEvent, values: FormValues) => (
+              event.preventDefault(),
+              handleSubmit(values)
+            )}
+          >
             <Field.Root name="slider">
               <Slider.Root defaultValue={5} min={20} max={40}>
                 <Slider.Control>
@@ -3576,6 +3587,7 @@ describe('<Slider.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(root).toHaveAttribute('data-touched', '');
     });
@@ -3625,113 +3637,6 @@ describe('<Slider.Root />', () => {
       await fireEvent.input(input2, { target: { value: '40' } });
 
       expect(root).not.toHaveAttribute('data-dirty');
-    });
-
-    it('[data-focused]', async () => {
-      await render(
-        <Field.Root>
-          <Slider.Root data-testid="root">
-            <Slider.Control>
-              <Slider.Thumb />
-            </Slider.Control>
-          </Slider.Root>
-        </Field.Root>,
-      );
-
-      const root = screen.getByTestId('root');
-      const input = screen.getByRole('slider');
-
-      expect(root).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(input);
-
-      expect(root).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-
-      expect(root).not.toHaveAttribute('data-focused');
-    });
-
-    describe('[data-focused] without a blur event', () => {
-      function Thumbs(props: {
-        firstMounted?: boolean;
-        firstDisabled?: boolean;
-        rangeValue?: boolean;
-      }) {
-        const { firstMounted = true, firstDisabled = false, rangeValue = false } = props;
-        return (
-          <Field.Root data-testid="root">
-            <Slider.Root defaultValue={rangeValue ? [20, 40] : 20}>
-              <Slider.Control>
-                {firstMounted && <Slider.Thumb disabled={firstDisabled} />}
-                {rangeValue && <Slider.Thumb />}
-              </Slider.Control>
-            </Slider.Root>
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused thumb becomes disabled', async () => {
-        const { setProps } = await render(<Thumbs />);
-
-        screen.getByRole('slider').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused thumb unmounts', async () => {
-        const { setProps } = await render(<Thumbs />);
-
-        screen.getByRole('slider').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
-      });
-
-      // A thumb's `blur` deliberately does nothing when focus moves to a sibling thumb, so a thumb
-      // that once held focus must not assume it still owns the field's focused state.
-      it('is kept when focus moved to a sibling before the first thumb is disabled', async () => {
-        const { setProps } = await render(<Thumbs rangeValue />);
-
-        const [first, second] = screen.getAllByRole('slider');
-
-        first.focus();
-        await flushMicrotasks();
-        second.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-      });
-
-      it('is kept when a sibling thumb is disabled or unmounted', async () => {
-        const { setProps } = await render(<Thumbs rangeValue />);
-
-        screen.getAllByRole('slider')[1].focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-      });
     });
 
     describe('prop: validate', () => {
@@ -3810,7 +3715,7 @@ describe('<Slider.Root />', () => {
       it('validationMode=onBlur', async () => {
         await render(
           <Field.Root
-            validationMode="onBlur"
+            validationMode="blur"
             validate={(value) => ((value as number) > 1 ? 'error' : null)}
           >
             <Slider.Root>
@@ -3828,6 +3733,7 @@ describe('<Slider.Root />', () => {
         await fireEvent.input(input, { target: { value: '2' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         await fireEvent.focusOut(input);
+        await wait(0);
         await flushMicrotasks();
         expect(input).toHaveAttribute('aria-invalid', 'true');
       });
@@ -3836,7 +3742,7 @@ describe('<Slider.Root />', () => {
         const validate = vi.fn<(value: unknown) => null>(() => null);
 
         await render(
-          <Field.Root validationMode="onBlur" validate={validate}>
+          <Field.Root validationMode="blur" validate={validate}>
             <Slider.Root defaultValue={[25]}>
               <Slider.Control>
                 <Slider.Thumb />
@@ -3846,6 +3752,8 @@ describe('<Slider.Root />', () => {
         );
 
         await fireEvent.focusOut(screen.getByRole('slider'));
+
+        await wait(0);
         await flushMicrotasks();
 
         expect(validate.mock.calls[0][0]).toEqual([25]);
@@ -3854,7 +3762,7 @@ describe('<Slider.Root />', () => {
       it('validationMode=onChange', async () => {
         await render(
           <Field.Root
-            validationMode="onChange"
+            validationMode="change"
             validate={(value) => (Number(value) === 1 ? 'error' : null)}
           >
             <Slider.Root defaultValue={0}>
@@ -3877,7 +3785,7 @@ describe('<Slider.Root />', () => {
         const validate = vi.fn();
 
         const { user } = await render(
-          <Field.Root validationMode="onChange" validate={validate}>
+          <Field.Root validationMode="change" validate={validate}>
             <Slider.Root defaultValue={0}>
               <Slider.Control>
                 <Slider.Thumb />
@@ -3900,7 +3808,7 @@ describe('<Slider.Root />', () => {
         const validate = vi.fn();
 
         const { user } = await render(
-          <Field.Root validationMode="onChange" validate={validate}>
+          <Field.Root validationMode="change" validate={validate}>
             <Slider.Root defaultValue={[0, 5]}>
               <Slider.Control>
                 <Slider.Thumb index={0} />
@@ -3926,7 +3834,7 @@ describe('<Slider.Root />', () => {
 
         await render(() => (
           <>
-            <Field.Root validationMode="onChange" validate={validateSpy} name="volume">
+            <Field.Root validationMode="change" validate={validateSpy} name="volume">
               <Slider.Root
                 modelValue={value.value}
                 onValueChange={(next) => {
@@ -4179,53 +4087,6 @@ describe('<Slider.Root />', () => {
       expect(
         screen.getAllByRole('slider').map((input) => input.getAttribute('aria-valuenow')),
       ).toEqual(['20', '80']);
-    });
-  });
-
-  describe('KeepAlive', () => {
-    async function submitAfterHeldControlChanges(change: 'mount' | 'element') {
-      const handleSubmit = vi.fn();
-      const tag = shallowRef('input');
-      const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(
-        () => <Field.Control as={tag.value} />,
-        { mounted: change === 'element' },
-      );
-      const { user } = await render(() => (
-        <Form onFormSubmit={handleSubmit}>
-          <Field.Root name="volume">
-            <Slider.Root defaultValue={5}>
-              <Slider.Control>
-                <Slider.Thumb />
-              </Slider.Control>
-            </Slider.Root>
-            <HeldBranch />
-          </Field.Root>
-          <button type="submit">Submit</button>
-        </Form>
-      ));
-
-      if (change === 'mount') {
-        await mountWhileHeld();
-      } else {
-        await hide();
-        tag.value = 'textarea';
-        await flushMicrotasks();
-      }
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      return handleSubmit;
-    }
-
-    it('keeps the value of a shown slider when a control mounts while KeepAlive holds it', async () => {
-      const handleSubmit = await submitAfterHeldControlChanges('mount');
-
-      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 5 });
-    });
-
-    it('keeps the value of a shown slider when a control that KeepAlive holds changes its element', async () => {
-      const handleSubmit = await submitAfterHeldControlChanges('element');
-
-      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 5 });
     });
   });
 
@@ -4571,12 +4432,7 @@ describe('<Slider.Root />', () => {
         const validate = vi.fn((value: unknown) => (value === 30 ? null : 'Too high'));
         await render(
           <Form data-testid="form">
-            <Field.Root
-              data-testid="root"
-              name="price"
-              validate={validate}
-              validationMode="onChange"
-            >
+            <Field.Root data-testid="root" name="price" validate={validate} validationMode="change">
               <Slider.Root defaultValue={30}>
                 <Slider.Control>
                   <Slider.Thumb />

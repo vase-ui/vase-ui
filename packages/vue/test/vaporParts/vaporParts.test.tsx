@@ -19,7 +19,7 @@ it.runIf(isVaporParts)('rejects an empty Fragment child during test collection',
 });
 
 it('compiles a part as a Vapor component only in the project of the Vapor parts', () => {
-  expect((Checkbox.Root as { __vapor?: boolean }).__vapor === true).toBe(isVaporParts);
+  expect((Checkbox as { __vapor?: boolean }).__vapor === true).toBe(isVaporParts);
 });
 
 it.runIf(isVaporParts).each([

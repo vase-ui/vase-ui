@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 </script>
 
@@ -7,7 +8,7 @@ import { Form } from '@vase-ui/vue/form';
   <Form>
     <Field.Root>
       <Field.Label />
-      <Field.Control />
+      <Input />
       <Field.Error />
     </Field.Root>
   </Form>

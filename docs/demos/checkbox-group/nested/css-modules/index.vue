@@ -78,40 +78,38 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
     @value-change="changeMainValue"
   >
     <label :class="styles.Item" :id="id" :style="{ marginLeft: '-1rem' }">
-      <Checkbox.Root
-        :class="styles.Checkbox"
+      <Checkbox
         parent
         :indeterminate="
           managementValue.length > 0 && managementValue.length !== userManagementPermissions.length
         "
       >
-        <Checkbox.Indicator :class="styles.Indicator">
-          <template #render="{ props, state }">
-            <span v-bind="props">
+        <template #element="{ props, elementRef, state }">
+          <span :class="styles.Box">
+            <input v-bind="props" :ref="elementRef" :class="styles.Checkbox" />
+            <span :class="styles.Indicator">
               <HorizontalRuleIcon v-if="state.indeterminate" />
               <CheckIcon v-else />
             </span>
-          </template>
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+          </span>
+        </template>
+      </Checkbox>
       User Permissions
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root value="view-dashboard" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox value="view-dashboard" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       View Dashboard
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root value="access-reports" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox value="access-reports" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Access Reports
     </label>
 
@@ -124,52 +122,49 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
       @value-change="changeManagementValue"
     >
       <label :class="styles.Item" id="manage-users-caption" :style="{ marginLeft: '-1rem' }">
-        <Checkbox.Root :class="styles.Checkbox" parent>
-          <Checkbox.Indicator :class="styles.Indicator">
-            <template #render="{ props, state }">
-              <span v-bind="props">
+        <Checkbox parent>
+          <template #element="{ props, elementRef, state }">
+            <span :class="styles.Box">
+              <input v-bind="props" :ref="elementRef" :class="styles.Checkbox" />
+              <span :class="styles.Indicator">
                 <HorizontalRuleIcon v-if="state.indeterminate" />
                 <CheckIcon v-else />
               </span>
-            </template>
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+            </span>
+          </template>
+        </Checkbox>
         Manage Users
       </label>
 
       <label :class="styles.Item">
-        <Checkbox.Root value="create-user" :class="styles.Checkbox">
-          <Checkbox.Indicator :class="styles.Indicator">
-            <CheckIcon />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+        <span :class="styles.Box">
+          <Checkbox value="create-user" :class="styles.Checkbox" />
+          <span :class="styles.Indicator"><CheckIcon /></span>
+        </span>
         Create User
       </label>
 
       <label :class="styles.Item">
-        <Checkbox.Root value="edit-user" :class="styles.Checkbox">
-          <Checkbox.Indicator :class="styles.Indicator">
-            <CheckIcon />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+        <span :class="styles.Box">
+          <Checkbox value="edit-user" :class="styles.Checkbox" />
+          <span :class="styles.Indicator"><CheckIcon /></span>
+        </span>
         Edit User
       </label>
 
       <label :class="styles.Item">
-        <Checkbox.Root value="delete-user" :class="styles.Checkbox">
-          <Checkbox.Indicator :class="styles.Indicator">
-            <CheckIcon />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+        <span :class="styles.Box">
+          <Checkbox value="delete-user" :class="styles.Checkbox" />
+          <span :class="styles.Indicator"><CheckIcon /></span>
+        </span>
         Delete User
       </label>
 
       <label :class="styles.Item">
-        <Checkbox.Root value="assign-roles" :class="styles.Checkbox">
-          <Checkbox.Indicator :class="styles.Indicator">
-            <CheckIcon />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+        <span :class="styles.Box">
+          <Checkbox value="assign-roles" :class="styles.Checkbox" />
+          <span :class="styles.Indicator"><CheckIcon /></span>
+        </span>
         Assign Roles
       </label>
     </CheckboxGroup>

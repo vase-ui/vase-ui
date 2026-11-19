@@ -195,7 +195,7 @@ import { warn } from '../../common/warn';
 import { useDeferredServerRender } from '../../common/deferredServerRender';
 import { fieldKey } from '../../field/control';
 import { useFieldGroup } from '../../field/group';
-import { useInDisabledFieldset } from '../../fieldset/part';
+import { fieldsetKey, useInDisabledFieldset } from '../../fieldset/part';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -283,8 +283,14 @@ if (field) useDeferredServerRender();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
+// The legend of a `Fieldset.Root` names a slider that is the element of the root.
+const fieldset = inject(fieldsetKey, null);
 const labelId = computed(
-  () => given('aria-labelledby', props.ariaLabelledby) ?? field?.labelId ?? localLabelId.value,
+  () =>
+    given('aria-labelledby', props.ariaLabelledby) ??
+    field?.labelId ??
+    localLabelId.value ??
+    fieldset?.legendId,
 );
 
 const fieldsetDisabled = useInDisabledFieldset(() => element.value);

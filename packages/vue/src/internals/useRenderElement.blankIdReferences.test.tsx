@@ -461,18 +461,6 @@ const rows: Row[] = [
     ),
   },
   {
-    part: 'Field.Label',
-    attribute: 'for',
-    createNode: (attrs) => (
-      <Field.Root>
-        <Field.Label data-testid="part" {...attrs}>
-          Name
-        </Field.Label>
-        <Field.Control data-testid="target" />
-      </Field.Root>
-    ),
-  },
-  {
     part: 'Slider.Value',
     attribute: 'for',
     createNode: (attrs) => (

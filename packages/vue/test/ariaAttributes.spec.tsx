@@ -1,22 +1,12 @@
-import * as Checkbox from '../src/checkbox/index.parts';
 import * as DateField from '../src/date-field/index.parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
-import * as Radio from '../src/radio/index.parts';
 import * as Resizable from '../src/resizable/index.parts';
 import * as Slider from '../src/slider/index.parts';
-import * as Switch from '../src/switch/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
 import * as TimePicker from '../src/time-picker/index.parts';
-
-<Checkbox.Root aria-label="x" aria-labelledby="id" />;
-<Checkbox.Root ariaLabel="x" ariaLabelledby="id" />;
-// @ts-expect-error `aria-label` is a string
-<Checkbox.Root aria-label={5} />;
-// @ts-expect-error `aria-labelledby` is a string
-<Checkbox.Root aria-labelledby={5} />;
 
 <DateField.Root aria-labelledby="id" />;
 <DateField.Root ariaLabelledby="id" />;
@@ -47,20 +37,6 @@ import * as TimePicker from '../src/time-picker/index.parts';
 <OTPField.Root length={6} ariaLabelledby="id" />;
 // @ts-expect-error `aria-labelledby` is a string
 <OTPField.Root length={6} aria-labelledby={5} />;
-
-<Radio.Root value="a" aria-label="x" aria-labelledby="id" />;
-<Radio.Root value="a" ariaLabel="x" ariaLabelledby="id" />;
-// @ts-expect-error `aria-label` is a string
-<Radio.Root value="a" aria-label={5} />;
-// @ts-expect-error `aria-labelledby` is a string
-<Radio.Root value="a" aria-labelledby={5} />;
-
-<Switch.Root aria-label="x" aria-labelledby="id" />;
-<Switch.Root ariaLabel="x" ariaLabelledby="id" />;
-// @ts-expect-error `aria-label` is a string
-<Switch.Root aria-label={5} />;
-// @ts-expect-error `aria-labelledby` is a string
-<Switch.Root aria-labelledby={5} />;
 
 <Slider.Root aria-labelledby="id" />;
 <Slider.Root ariaLabelledby="id" />;

@@ -2,6 +2,7 @@
 import { shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 import styles from './index.module.css';
 
@@ -56,7 +57,7 @@ async function submitForm(_previousState: FormState, formData: FormData) {
   <Form ref="form" :errors="state.serverErrors" :class="styles.Form" @submit="formAction">
     <Field.Root name="username" :class="styles.Field">
       <Field.Label :class="styles.Label">Username</Field.Label>
-      <Field.Control
+      <Input
         type="text"
         autocomplete="username"
         required

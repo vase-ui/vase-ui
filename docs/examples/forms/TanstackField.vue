@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@tanstack/vue-form';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 
 const form = useForm({ defaultValues: { username: '' } });
 </script>
@@ -15,7 +16,7 @@ const form = useForm({ defaultValues: { username: '' } });
         :touched="field.state.meta.isTouched"
       >
         <Field.Label>Username</Field.Label>
-        <Field.Control
+        <Input
           :model-value="field.state.value"
           placeholder="e.g. bob276"
           @value-change="field.handleChange"

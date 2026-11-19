@@ -31,29 +31,26 @@ const CheckIcon: FunctionalComponent = () =>
     <div :class="styles.Caption" :id="id">Apples</div>
 
     <label :class="styles.Item">
-      <Checkbox.Root name="apple" value="fuji-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox name="apple" value="fuji-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Fuji
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root name="apple" value="gala-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox name="apple" value="gala-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Gala
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root name="apple" value="granny-smith-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox name="apple" value="granny-smith-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Granny Smith
     </label>
   </CheckboxGroup>

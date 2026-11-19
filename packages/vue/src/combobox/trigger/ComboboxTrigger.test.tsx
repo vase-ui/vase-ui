@@ -183,7 +183,7 @@ describe('<Combobox.Trigger />', () => {
   ])('validates the $name value when blurred', async ({ control, expectedValue }) => {
     const validate = vi.fn();
     await render(
-      <Field.Root validationMode="onBlur" validate={validate}>
+      <Field.Root validationMode="blur" validate={validate}>
         {control()}
       </Field.Root>,
     );
@@ -191,6 +191,7 @@ describe('<Combobox.Trigger />', () => {
     const trigger = screen.getByTestId('trigger');
     await fireEvent.focusIn(trigger);
     await fireEvent.focusOut(trigger);
+    await wait(0);
 
     expect(validate).toHaveBeenCalledWith(expectedValue, expect.anything());
   });
@@ -1728,7 +1729,7 @@ describe('<Combobox.Trigger />', () => {
     it('is invalid when the focus leaves the trigger, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Trigger data-testid="trigger" />
             </Combobox.Root>
@@ -1759,7 +1760,7 @@ describe('<Combobox.Trigger />', () => {
     it('is invalid when an outside press closes the popup, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Trigger data-testid="trigger" />
               <Combobox.Portal>
@@ -1799,7 +1800,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves an input outside the popup, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Input data-testid="input" />
             </Combobox.Root>
@@ -1824,7 +1825,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves a trigger beside an input outside the popup', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Input data-testid="input" />
               <Combobox.Trigger data-testid="trigger" />
@@ -1874,7 +1875,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves the trigger of a root with no selection mode', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Autocomplete.Root required>
               <Combobox.Trigger data-testid="trigger" />
             </Autocomplete.Root>

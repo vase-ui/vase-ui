@@ -2188,44 +2188,6 @@ describe('<Combobox.Input />', () => {
   });
 
   describe('the focus listeners', () => {
-    it('keeps the highlight of an inline list and the state of the field when the focused input is replaced', async () => {
-      const InlineList = defineComponent(
-        (props: { inputKey?: string }) => () => (
-          <Field.Root data-testid="field">
-            <Combobox.Root inline items={['apple', 'banana']}>
-              <Combobox.Input key={props.inputKey} data-testid="input" />
-              <Combobox.List
-                v-slots={{
-                  item: ({ item }: { item: string }) => (
-                    <Combobox.Item key={item} value={item}>
-                      {item}
-                    </Combobox.Item>
-                  ),
-                }}
-              />
-            </Combobox.Root>
-          </Field.Root>
-        ),
-        { props: ['inputKey'] },
-      );
-      const { setProps, user } = await render(<InlineList inputKey="first" />);
-      const first = screen.getByTestId('input');
-      first.focus();
-      await user.keyboard('{ArrowDown}');
-      const apple = screen.getByRole('option', { name: 'apple' });
-      expect(first).toHaveAttribute('aria-activedescendant', apple.id);
-
-      await setProps({ inputKey: 'second' });
-      const second = screen.getByTestId('input');
-      expect(second).not.toBe(first);
-      second.focus();
-      await flushMicrotasks();
-
-      expect(second).toHaveAttribute('aria-activedescendant', apple.id);
-      expect(screen.getByTestId('field')).toHaveAttribute('data-focused');
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
-    });
-
     it('lets a focusout listener of the consumer stop the focus handler of the input', async () => {
       const handleFocusout = vi.fn((event: VaseUIEvent<FocusEvent>) => {
         event.preventVaseUIHandler();

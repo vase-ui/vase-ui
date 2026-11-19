@@ -25,35 +25,34 @@
   font-weight: 400;
 }
 
-.Checkbox {
-  box-sizing: border-box;
+.Box {
+  position: relative;
   display: flex;
   flex-shrink: 0;
+}
+
+.Checkbox {
+  appearance: none;
+  box-sizing: border-box;
   width: 1rem;
   height: 1rem;
-  align-items: center;
-  justify-content: center;
   border: 1px solid oklch(14.5% 0 0deg);
   border-radius: 0;
   background-color: white;
-  color: white;
   padding: 0;
   margin: 0;
 
   @media (prefers-color-scheme: dark) {
     border: 1px solid white;
     background-color: oklch(14.5% 0 0deg);
-    color: oklch(14.5% 0 0deg);
   }
 
-  &[data-checked],
+  &:checked,
   &[data-indeterminate] {
     background-color: oklch(14.5% 0 0deg);
-    color: white;
 
     @media (prefers-color-scheme: dark) {
       background-color: white;
-      color: oklch(14.5% 0 0deg);
     }
   }
 
@@ -68,9 +67,20 @@
 }
 
 .Indicator {
-  display: flex;
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: white;
 
-  &[data-unchecked] {
-    display: none;
+  @media (prefers-color-scheme: dark) {
+    color: oklch(14.5% 0 0deg);
   }
+}
+
+.Checkbox:checked + .Indicator,
+.Checkbox[data-indeterminate] + .Indicator {
+  display: flex;
 }

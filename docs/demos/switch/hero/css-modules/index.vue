@@ -5,9 +5,10 @@ import styles from './index.module.css';
 
 <template>
   <label :class="styles.Label">
-    <Switch.Root default-checked :class="styles.Switch">
-      <Switch.Thumb :class="styles.Thumb" />
-    </Switch.Root>
+    <span :class="styles.Track">
+      <Switch default-checked :class="styles.Switch" />
+      <span :class="styles.Thumb" />
+    </span>
     Notifications
   </label>
 </template>

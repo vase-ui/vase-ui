@@ -27,8 +27,3 @@ export const untyped = (
 );
 
 export const valuesType = <Form onSubmit={(_event: SubmitEvent, values: FormValues) => values} />;
-
-// The exposed `validate` returns whether the fields are valid.
-const form = null as unknown as InstanceType<typeof Form>;
-expectType<boolean, ReturnType<typeof form.validate>>(form.validate('email'));
-expectType<HTMLFormElement | null, typeof form.element>(form.element);

@@ -2,6 +2,7 @@
 import { ref, shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 import styles from './index.module.css';
 
@@ -48,7 +49,7 @@ async function submitForm(value: string) {
   <Form ref="form" :class="styles.Form" :errors="errors" @submit="onSubmit">
     <Field.Root name="url" :class="styles.Field">
       <Field.Label :class="styles.Label">Homepage</Field.Label>
-      <Field.Control
+      <Input
         type="url"
         required
         default-value="https://example.com"

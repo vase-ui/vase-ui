@@ -4,17 +4,18 @@ import { h, useTemplateRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import * as Autocomplete from '../../components/autocomplete';
 import { Button } from '../../components/button';
-import * as Checkbox from '../../components/checkbox';
+import { Checkbox } from '../../components/checkbox';
 import { CheckboxGroup } from '../../components/checkbox-group';
 import * as Combobox from '../../components/combobox';
 import * as Field from '../../components/field';
 import * as Fieldset from '../../components/fieldset';
+import { Input } from '../../components/input';
 import * as NumberField from '../../components/number-field';
-import * as Radio from '../../components/radio';
+import { Radio } from '../../components/radio';
 import { RadioGroup } from '../../components/radio-group';
 import * as Select from '../../components/select';
 import * as Slider from '../../components/slider';
-import * as Switch from '../../components/switch';
+import { Switch } from '../../components/switch';
 import { useToastManager } from '../../components/toast';
 
 interface FormValues {
@@ -175,7 +176,7 @@ const protocols = ['http', 'https', 'ssh'];
         :touched="meta.touched"
       >
         <Field.Label>Server name</Field.Label>
-        <Field.Control
+        <Input
           placeholder="e.g. api-server-01"
           :model-value="componentField.modelValue"
           @update:model-value="componentField['onUpdate:modelValue']"
@@ -375,9 +376,10 @@ const protocols = ['http', 'https', 'ssh'];
         :touched="meta.touched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
+          <template #element="{ props, elementRef }">
             <Slider.Root
               v-bind="props"
+              :ref="elementRef"
               :model-value="value"
               thumb-alignment="edge"
               :min="0"
@@ -414,9 +416,10 @@ const protocols = ['http', 'https', 'ssh'];
         :touched="meta.touched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
+          <template #element="{ props, elementRef }">
             <RadioGroup
               v-bind="props"
+              :ref="elementRef"
               :model-value="value"
               class="gap-4"
               @update:model-value="handleChange"
@@ -424,17 +427,13 @@ const protocols = ['http', 'https', 'ssh'];
               <Fieldset.Legend class="-mt-px">Storage type</Fieldset.Legend>
               <Field.Item>
                 <Field.Label>
-                  <Radio.Root value="ssd" @blur="handleBlur">
-                    <Radio.Indicator />
-                  </Radio.Root>
+                  <Radio value="ssd" @blur="handleBlur" />
                   SSD
                 </Field.Label>
               </Field.Item>
               <Field.Item>
                 <Field.Label>
-                  <Radio.Root value="hdd" @blur="handleBlur">
-                    <Radio.Indicator />
-                  </Radio.Root>
+                  <Radio value="hdd" @blur="handleBlur" />
                   HDD
                 </Field.Label>
               </Field.Item>
@@ -456,9 +455,13 @@ const protocols = ['http', 'https', 'ssh'];
       >
         <Field.Label class="gap-2">
           Restart on failure
-          <Switch.Root :model-value="value" @update:model-value="handleChange" @blur="handleBlur">
-            <Switch.Thumb />
-          </Switch.Root>
+          <span class="relative flex shrink-0"
+            ><Switch
+              :model-value="value"
+              @update:model-value="handleChange"
+              @blur="handleBlur" /><span
+              class="pointer-events-none absolute top-[0.1875rem] left-[0.1875rem] size-3.5 bg-neutral-950 transition-[translate,background-color] duration-150 ease-[ease] peer-checked:translate-x-4 peer-checked:bg-white dark:bg-white dark:peer-checked:bg-neutral-950"
+          /></span>
         </Field.Label>
       </Field.Root>
     </VeeField>
@@ -474,17 +477,21 @@ const protocols = ['http', 'https', 'ssh'];
         :touched="meta.touched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
-            <CheckboxGroup v-bind="props" :model-value="value" @update:model-value="handleChange">
+          <template #element="{ props, elementRef }">
+            <CheckboxGroup
+              v-bind="props"
+              :ref="elementRef"
+              :model-value="value"
+              @update:model-value="handleChange"
+            >
               <Fieldset.Legend class="mb-2">Allowed network protocols</Fieldset.Legend>
               <div class="flex gap-4">
                 <Field.Item v-for="protocol in protocols" :key="protocol">
                   <Field.Label class="uppercase">
-                    <Checkbox.Root :value="protocol" @blur="handleBlur">
-                      <Checkbox.Indicator>
-                        <CheckIcon />
-                      </Checkbox.Indicator>
-                    </Checkbox.Root>
+                    <span class="relative flex shrink-0"
+                      ><Checkbox :value="protocol" @blur="handleBlur" /><CheckIcon
+                        class="pointer-events-none absolute inset-0 hidden text-white peer-checked:block dark:text-neutral-950"
+                    /></span>
                     {{ protocol }}
                   </Field.Label>
                 </Field.Item>

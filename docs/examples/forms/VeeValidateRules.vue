@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Field as VeeField, useForm } from 'vee-validate';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 
 useForm({ initialValues: { username: '' } });
 
@@ -28,7 +29,7 @@ function validateUsername(value: unknown) {
       :dirty="meta.dirty"
     >
       <Field.Label>Username</Field.Label>
-      <Field.Control
+      <Input
         :model-value="componentField.modelValue"
         @update:model-value="componentField['onUpdate:modelValue']"
         @blur="componentField.onBlur"

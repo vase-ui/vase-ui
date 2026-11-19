@@ -21,6 +21,7 @@ import {
   waitFor,
   waitForLaterMillisecond,
   within,
+  wait,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
@@ -1337,6 +1338,7 @@ describe('<Autocomplete.Root />', () => {
       const outside = screen.getByTestId('outside');
       await fireEvent.pointerDown(outside);
       await fireEvent.focusOut(input, { relatedTarget: outside });
+      await wait(0);
       await fireEvent.focusIn(outside);
       await flushMicrotasks();
 
@@ -2930,6 +2932,7 @@ describe('<Autocomplete.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -3018,39 +3021,6 @@ describe('<Autocomplete.Root />', () => {
         expect(input).toHaveAttribute('data-filled');
       });
     });
-
-    it('[data-focused]', async () => {
-      await render(
-        <Field.Root>
-          <Autocomplete.Root>
-            <Autocomplete.Input data-testid="input" />
-            <Autocomplete.Portal>
-              <Autocomplete.Positioner>
-                <Autocomplete.Popup>
-                  <Autocomplete.List>
-                    <Autocomplete.Item value="">Select</Autocomplete.Item>
-                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
-                  </Autocomplete.List>
-                </Autocomplete.Popup>
-              </Autocomplete.Positioner>
-            </Autocomplete.Portal>
-          </Autocomplete.Root>
-        </Field.Root>,
-      );
-
-      const input = screen.getByTestId('input');
-
-      expect(input).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(input);
-
-      expect(input).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-
-      expect(input).not.toHaveAttribute('data-focused');
-    });
-
     it('[data-invalid]', async () => {
       await render(
         <Field.Root invalid>
@@ -3076,7 +3046,7 @@ describe('<Autocomplete.Root />', () => {
 
     it('[data-valid]', async () => {
       const { user } = await render(
-        <Field.Root validationMode="onBlur">
+        <Field.Root validationMode="blur">
           <Autocomplete.Root required>
             <Autocomplete.Input data-testid="input" />
             <Autocomplete.Portal>
@@ -3106,7 +3076,7 @@ describe('<Autocomplete.Root />', () => {
 
     it('prop: validate', async () => {
       await render(
-        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+        <Field.Root validationMode="blur" validate={() => 'error'}>
           <Autocomplete.Root>
             <Autocomplete.Input data-testid="input" />
             <Autocomplete.Portal>
@@ -3121,6 +3091,7 @@ describe('<Autocomplete.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
       await flushMicrotasks();
       expect(input).toHaveAttribute('aria-invalid', 'true');
     });
@@ -3172,7 +3143,7 @@ describe('<Autocomplete.Root />', () => {
     it('prop: validationMode=onChange', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onChange"
+          validationMode="change"
           validate={(value) => {
             return value === 'invalid' ? 'error' : null;
           }}
@@ -3204,7 +3175,7 @@ describe('<Autocomplete.Root />', () => {
     it('prop: validationMode=onBlur', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onBlur"
+          validationMode="blur"
           validate={(value) => {
             return value === 'invalid' ? 'error' : null;
           }}
@@ -3233,6 +3204,8 @@ describe('<Autocomplete.Root />', () => {
 
       await fireEvent.focusOut(input);
 
+      await wait(0);
+
       await waitFor(() => {
         expect(input).toHaveAttribute('aria-invalid', 'true');
       });
@@ -3247,7 +3220,7 @@ describe('<Autocomplete.Root />', () => {
               <Autocomplete.Positioner />
             </Autocomplete.Portal>
           </Autocomplete.Root>
-          <Field.Label data-testid="label" as="span" nativeLabel={false} />
+          <Field.Label data-testid="label" />
         </Field.Root>,
       );
 
@@ -3699,7 +3672,7 @@ describe('<Autocomplete.Root />', () => {
       const validate = vi.fn(() => null);
       await render(
         <form data-testid="form">
-          <Field.Root name="search" validate={validate} validationMode="onChange">
+          <Field.Root name="search" validate={validate} validationMode="change">
             <Autocomplete.Root items={cities} required defaultValue="ma">
               <Autocomplete.Input />
             </Autocomplete.Root>
@@ -3767,7 +3740,7 @@ describe('<Autocomplete.Root />', () => {
       const validate = vi.fn(() => null);
       await render(
         <form data-testid="form">
-          <Field.Root name="search" validate={validate} validationMode="onChange">
+          <Field.Root name="search" validate={validate} validationMode="change">
             <Autocomplete.Root
               mode="inline"
               items={cities}
@@ -3803,7 +3776,7 @@ describe('<Autocomplete.Root />', () => {
       const validate = vi.fn(() => null);
       await render(
         <form data-testid="form">
-          <Field.Root name="search" validate={validate} validationMode="onChange">
+          <Field.Root name="search" validate={validate} validationMode="change">
             <Autocomplete.Root mode="inline" items={cities} defaultValue="Malmö">
               <Autocomplete.Input />
               {popupWithList()}

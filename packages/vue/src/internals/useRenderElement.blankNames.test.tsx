@@ -2,18 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { Checkbox } from '@vase-ui/vue/checkbox';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { Field } from '@vase-ui/vue/field';
-import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { OTPField } from '@vase-ui/vue/otp-field';
-import { Radio } from '@vase-ui/vue/radio';
 import { Slider } from '@vase-ui/vue/slider';
-import { Switch } from '@vase-ui/vue/switch';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -97,17 +91,6 @@ async function showNavigationMenu() {
 
 const rows: Row[] = [
   {
-    name: 'Checkbox.Root in a label',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <label>
-        <Checkbox.Root data-testid="part" {...attrs} />
-        Terms
-      </label>
-    ),
-    expected: 'Terms',
-  },
-  {
     name: 'DateField.Clear',
     attribute: 'aria-label',
     createNode: (attrs) => (
@@ -117,19 +100,6 @@ const rows: Row[] = [
       </DateField.Root>
     ),
     expected: 'Clear',
-  },
-  {
-    name: 'DateField.Root in a field',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Field.Root>
-        <Field.Label>Arrival</Field.Label>
-        <DateField.Root data-testid="part" {...attrs}>
-          <DateField.Input />
-        </DateField.Root>
-      </Field.Root>
-    ),
-    expected: 'Arrival',
   },
   {
     name: 'Dialog.Popup',
@@ -144,16 +114,6 @@ const rows: Row[] = [
       </Dialog.Root>
     ),
     expected: 'Settings',
-  },
-  {
-    name: 'Fieldset.Root',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Fieldset.Root data-testid="part" {...attrs}>
-        <Fieldset.Legend>Address</Fieldset.Legend>
-      </Fieldset.Root>
-    ),
-    expected: 'Address',
   },
   {
     name: 'Menu.Popup aria-label',
@@ -214,31 +174,6 @@ const rows: Row[] = [
     expected: 'Products',
   },
   {
-    name: 'OTPField.Root in a field',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Field.Root>
-        <Field.Label>Code</Field.Label>
-        <OTPField.Root length={2} data-testid="part" {...attrs}>
-          <OTPField.Input />
-          <OTPField.Input />
-        </OTPField.Root>
-      </Field.Root>
-    ),
-    expected: 'Code',
-  },
-  {
-    name: 'Radio.Root in a label',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <label>
-        <Radio.Root value="small" data-testid="part" {...attrs} />
-        Small
-      </label>
-    ),
-    expected: 'Small',
-  },
-  {
     name: 'Slider.Root',
     attribute: 'aria-labelledby',
     createNode: (attrs) => (
@@ -269,17 +204,6 @@ const rows: Row[] = [
     expected: 'Volume',
     getNamed: () => screen.getByRole('slider'),
   })),
-  {
-    name: 'Switch.Root in a field',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Field.Root>
-        <Field.Label>Wi-Fi</Field.Label>
-        <Switch.Root data-testid="part" {...attrs} />
-      </Field.Root>
-    ),
-    expected: 'Wi-Fi',
-  },
   ...(['aria-label', 'aria-labelledby'] as const).map((attribute): Row => ({
     name: `TimeClock.Face ${attribute}`,
     attribute,

@@ -500,12 +500,7 @@ describe('<TimePicker.Field />', () => {
       ) {
         return (
           <Form data-testid="form" errors={errors}>
-            <Field.Root
-              data-testid="root"
-              name="when"
-              validate={validate}
-              validationMode="onChange"
-            >
+            <Field.Root data-testid="root" name="when" validate={validate} validationMode="change">
               <TimePicker.Root locale="en-US" hourCycle={24} referenceDate={time} {...pickerProps}>
                 <TimePicker.Field>
                   <TimeField.Input />

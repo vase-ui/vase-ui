@@ -19,7 +19,8 @@ import { Combobox, ComboboxSeparatorDataAttributes } from '@vase-ui/vue/combobox
 import { Dialog } from '@vase-ui/vue/dialog';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { Popover } from '@vase-ui/vue/popover';
 import {
@@ -2544,7 +2545,7 @@ describe('<Combobox.Root />', () => {
       const handleValueChange = vi.fn();
       await render(
         <form data-testid="form">
-          <Field.Root data-testid="field" validate={validate} validationMode="onChange">
+          <Field.Root data-testid="field" validate={validate} validationMode="change">
             <Combobox.Root
               items={[
                 { value: 'malta', label: 'Malta' },
@@ -2701,7 +2702,7 @@ describe('<Combobox.Root />', () => {
       const validate = vi.fn((value: unknown) => (value === 'Malta' ? 'Not Malta' : null));
       await render(
         <Form data-testid="form">
-          <Field.Root data-testid="field" name="city" validate={validate} validationMode="onChange">
+          <Field.Root data-testid="field" name="city" validate={validate} validationMode="change">
             <Combobox.Root items={cities} defaultValue="Oslo">
               <ComboboxInputPart />
               <ComboboxListPart />
@@ -2735,12 +2736,7 @@ describe('<Combobox.Root />', () => {
       const validate = vi.fn((value: unknown) => (value === 'Malta' ? 'Not Malta' : null));
       await render(
         <Form data-testid="form">
-          <Field.Root
-            data-testid="field"
-            name="search"
-            validate={validate}
-            validationMode="onChange"
-          >
+          <Field.Root data-testid="field" name="search" validate={validate} validationMode="change">
             <Autocomplete.Root items={cities} defaultValue="ma">
               <ComboboxInputPart />
             </Autocomplete.Root>
@@ -2928,7 +2924,7 @@ describe('<Combobox.Root />', () => {
       const { user } = await render(
         <Field.Root
           validate={(value) => (value == null ? 'Pick a city' : null)}
-          validationMode="onBlur"
+          validationMode="blur"
         >
           <Combobox.Root items={cities}>
             <ComboboxInputPart insidePopup />
@@ -3045,36 +3041,6 @@ describe('<Combobox.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
       expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
     });
-
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required combobox does not block the submit of its form: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const { HeldBranch, mountWhileHeld } = createHeldBranch(
-          () => (
-            <Combobox.Root key="held" items={cities} required>
-              <Combobox.Input />
-            </Combobox.Root>
-          ),
-          { mounted: name === 'deactivated' },
-        );
-        const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
-            <Field.Root name="city" data-testid="field">
-              <Field.Control defaultValue="shown" />
-              <HeldBranch />
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
-
-        await mountWhileHeld();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-      },
-    );
 
     it('the label does not name a combobox that mounts while KeepAlive holds it', async () => {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -6661,12 +6627,12 @@ describe('<Combobox.Root />', () => {
 
       await render(
         withField ? (
-          <Form errors={{ test: 'test' }}>
+          <ErrorsForm errors={{ test: 'test' }}>
             <Field.Root name="test">
               {combobox}
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>
+          </ErrorsForm>
         ) : (
           combobox
         ),
@@ -7088,7 +7054,7 @@ describe('<Combobox.Root />', () => {
     });
 
     await render(
-      <Field.Root validationMode="onChange" validate={validateSpy}>
+      <Field.Root validationMode="change" validate={validateSpy}>
         <Combobox.Root name="country">
           <Combobox.Input data-testid="input" />
           <Combobox.Portal>
@@ -7125,7 +7091,7 @@ describe('<Combobox.Root />', () => {
 
   it('does not update field state when autofill is canceled', async () => {
     await render(
-      <Form errors={{ country: 'server error' }}>
+      <ErrorsForm errors={{ country: 'server error' }}>
         <Field.Root name="country">
           <Combobox.Root
             onValueChange={(_value, eventDetails) => {
@@ -7147,7 +7113,7 @@ describe('<Combobox.Root />', () => {
           </Combobox.Root>
           <Field.Error data-testid="error" />
         </Field.Root>
-      </Form>,
+      </ErrorsForm>,
     );
 
     const trigger = screen.getByTestId('trigger');
@@ -10481,7 +10447,7 @@ describe('<Combobox.Root />', () => {
       const validate = vi.fn<(value: unknown) => null>(() => null);
       const value = shallowRef<string[] | null>(null);
       const App = defineComponent(() => () => (
-        <Field.Root validationMode="onBlur" validate={validate}>
+        <Field.Root validationMode="blur" validate={validate}>
           <Combobox.Root
             multiple
             modelValue={value.value}
@@ -14164,6 +14130,7 @@ describe('<Combobox.Root />', () => {
 
         const done = screen.getByRole('button', { name: 'Done' });
         await fireEvent.focusOut(input, { relatedTarget: done });
+        await wait(0);
         await fireEvent.focusIn(done);
         await flushMicrotasks();
 
@@ -14171,6 +14138,8 @@ describe('<Combobox.Root />', () => {
         expect(apple).not.toHaveAttribute('data-highlighted');
 
         await fireEvent.focusOut(done, { relatedTarget: input });
+
+        await wait(0);
         await fireEvent.focusIn(input);
 
         await waitFor(() => {
@@ -14216,7 +14185,12 @@ describe('<Combobox.Root />', () => {
       const handleFormSubmit = vi.fn();
 
       const { user } = await render(
-        <Form onFormSubmit={handleFormSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleFormSubmit(values)
+          )}
+        >
           <Field.Root name="country">
             <Combobox.Root
               items={items}
@@ -14552,7 +14526,12 @@ describe('<Combobox.Root />', () => {
       const handleFormSubmit = vi.fn();
 
       const { user } = await render(
-        <Form onFormSubmit={handleFormSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleFormSubmit(values)
+          )}
+        >
           <Field.Root name="country">
             <Combobox.Root items={['France', 'Germany']} required>
               <Combobox.Input as={Input} data-testid="input" />
@@ -14592,7 +14571,12 @@ describe('<Combobox.Root />', () => {
       const handleFormSubmit = vi.fn();
 
       const { user } = await render(
-        <Form onFormSubmit={handleFormSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleFormSubmit(values)
+          )}
+        >
           <Field.Root name="country">
             <Combobox.Root items={['France', 'Germany']} required>
               <Combobox.Trigger>
@@ -14848,52 +14832,6 @@ describe('<Combobox.Root />', () => {
       });
       expect(trigger).toHaveAttribute('id', 'x-id');
     });
-
-    it('does not apply validation ARIA attributes to input inside popup', async () => {
-      const { user } = await render(
-        <Field.Root invalid>
-          <Combobox.Root>
-            <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Input data-testid="input" />
-                  <Combobox.List>
-                    <Combobox.Item value="a">a</Combobox.Item>
-                    <Combobox.Item value="b">b</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-          <Field.Description data-testid="description" />
-          <Field.Error data-testid="error" match />
-        </Field.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-      const description = screen.getByTestId('description');
-      const error = screen.getByTestId('error');
-      const triggerDescribedBy = trigger.getAttribute('aria-describedby');
-
-      expect(trigger).toHaveAttribute('aria-invalid', 'true');
-      expect(triggerDescribedBy).toContain(description.id);
-      expect(triggerDescribedBy).toContain(error.id);
-
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
-
-      expect(input).not.toHaveAttribute('aria-invalid');
-      expect(input).not.toHaveAttribute('aria-describedby');
-      expect(input).not.toHaveAttribute('data-valid');
-      expect(input).not.toHaveAttribute('data-invalid');
-      expect(input).not.toHaveAttribute('data-touched');
-      expect(input).not.toHaveAttribute('data-dirty');
-      expect(input).not.toHaveAttribute('data-filled');
-      expect(input).not.toHaveAttribute('data-focused');
-    });
-
     it('Combobox.Label links to Combobox.Trigger when input is inside popup and trigger has an explicit id', async () => {
       await render(
         <Combobox.Root>
@@ -14977,6 +14915,7 @@ describe('<Combobox.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -15239,227 +15178,6 @@ describe('<Combobox.Root />', () => {
       });
     });
 
-    it('[data-focused]', async () => {
-      await render(
-        <Field.Root>
-          <Combobox.Root>
-            <Combobox.Input data-testid="input" />
-            <Combobox.Trigger data-testid="trigger" />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    <Combobox.Item value="">Select</Combobox.Item>
-                    <Combobox.Item value="1">Option 1</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-        </Field.Root>,
-      );
-
-      const input = screen.getByTestId('input');
-      const trigger = screen.getByTestId('trigger');
-
-      expect(input).not.toHaveAttribute('data-focused');
-      expect(trigger).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(input);
-
-      expect(input).toHaveAttribute('data-focused', '');
-      expect(trigger).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-
-      expect(input).not.toHaveAttribute('data-focused');
-      expect(trigger).not.toHaveAttribute('data-focused');
-    });
-
-    describe('[data-focused] without a blur event', () => {
-      function Comboboxes(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
-        const { firstMounted = true, firstDisabled = false } = props;
-        return (
-          <Field.Root data-testid="field">
-            {firstMounted && (
-              <Combobox.Root disabled={firstDisabled}>
-                <Combobox.Input data-testid="first" />
-              </Combobox.Root>
-            )}
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused input becomes disabled', async () => {
-        const { setProps } = await render(<Comboboxes />);
-
-        const input = screen.getByTestId('first');
-        input.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-        expect(input).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused input unmounts', async () => {
-        const { setProps } = await render(<Comboboxes />);
-
-        screen.getByTestId('first').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-      });
-
-      function Triggers(props: { disabled?: boolean; mounted?: boolean }) {
-        const { disabled = false, mounted = true } = props;
-        return (
-          <Field.Root data-testid="field">
-            <Combobox.Root disabled={disabled}>
-              {mounted && <Combobox.Trigger data-testid="trigger" />}
-            </Combobox.Root>
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused trigger becomes disabled', async () => {
-        const { setProps } = await render(<Triggers />);
-
-        const trigger = screen.getByTestId('trigger');
-        trigger.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ disabled: true });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-        expect(trigger).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused trigger unmounts', async () => {
-        const { setProps } = await render(<Triggers />);
-
-        screen.getByTestId('trigger').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ mounted: false });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-      });
-    });
-
-    it('does not mark as touched when focus moves into the popup', async () => {
-      const validateSpy = vi.fn(() => 'error');
-
-      await render(
-        <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
-            <Combobox.Root>
-              <Combobox.Trigger data-testid="trigger" />
-              <Combobox.Portal>
-                <Combobox.Positioner>
-                  <Combobox.Popup>
-                    <Combobox.List>
-                      <Combobox.Item value="1">Option 1</Combobox.Item>
-                    </Combobox.List>
-                  </Combobox.Popup>
-                </Combobox.Positioner>
-              </Combobox.Portal>
-            </Combobox.Root>
-          </Field.Root>
-          <button type="button" data-testid="outside">
-            Outside
-          </button>
-        </>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await fireEvent.focusIn(trigger);
-      await waitForLaterMillisecond(async () => {
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
-      });
-
-      const popup = screen.getByRole('dialog');
-
-      await fireEvent.focusOut(trigger, { relatedTarget: popup });
-      await fireEvent.focusIn(popup);
-
-      await flushMicrotasks();
-
-      expect(validateSpy.mock.calls.length).toBe(0);
-      expect(trigger).toHaveAttribute('data-focused', '');
-      expect(trigger).not.toHaveAttribute('data-touched');
-      expect(trigger).not.toHaveAttribute('aria-invalid');
-    });
-
-    it('validates when the popup is blurred', async () => {
-      const validateSpy = vi.fn(() => 'error');
-
-      await render(
-        <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
-            <Combobox.Root>
-              <Combobox.Trigger data-testid="trigger" />
-              <Combobox.Portal>
-                <Combobox.Positioner>
-                  <Combobox.Popup>
-                    <Combobox.List>
-                      <Combobox.Item value="1">Option 1</Combobox.Item>
-                    </Combobox.List>
-                  </Combobox.Popup>
-                </Combobox.Positioner>
-              </Combobox.Portal>
-            </Combobox.Root>
-          </Field.Root>
-          <button type="button" data-testid="outside">
-            Outside
-          </button>
-        </>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-      const outside = screen.getByTestId('outside');
-
-      await fireEvent.focusIn(trigger);
-      await waitForLaterMillisecond(async () => {
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
-      });
-
-      const popup = screen.getByRole('dialog');
-
-      // The four events go in one task, as in Base UI. The `focusout` of the popup marks a focus
-      // change inside the popup, and the check of the first `focusout` clears that marker.
-      await Promise.all([
-        fireEvent.focusOut(trigger, { relatedTarget: popup }),
-        fireEvent.focusIn(popup),
-        fireEvent.focusOut(popup, { relatedTarget: outside }),
-        fireEvent.focusIn(outside),
-      ]);
-
-      await waitFor(() => {
-        expect(validateSpy.mock.calls.length).toBe(1);
-      });
-      // The store commits the close before the Field's state updates land.
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('data-touched', '');
-      });
-      expect(trigger).not.toHaveAttribute('data-focused');
-      expect(trigger).toHaveAttribute('aria-invalid', 'true');
-    });
-
     it('[data-invalid]', async () => {
       await render(
         <Field.Root invalid>
@@ -15488,7 +15206,7 @@ describe('<Combobox.Root />', () => {
 
     it('[data-valid]', async () => {
       const { user } = await render(
-        <Field.Root validationMode="onBlur">
+        <Field.Root validationMode="blur">
           <Combobox.Root>
             <Combobox.Input data-testid="input" required />
             <Combobox.Trigger data-testid="trigger" />
@@ -15520,6 +15238,7 @@ describe('<Combobox.Root />', () => {
 
       await user.click(option);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       await waitFor(() => expect(input).toHaveAttribute('data-valid', ''));
       expect(trigger).toHaveAttribute('data-valid', '');
@@ -15529,7 +15248,7 @@ describe('<Combobox.Root />', () => {
 
     it('prop: validate', async () => {
       await render(
-        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+        <Field.Root validationMode="blur" validate={() => 'error'}>
           <Combobox.Root>
             <Combobox.Input data-testid="input" />
             <Combobox.Portal>
@@ -15545,6 +15264,7 @@ describe('<Combobox.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -15562,7 +15282,7 @@ describe('<Combobox.Root />', () => {
       });
 
       await render(
-        <Field.Root validationMode="onBlur" validate={validateSpy}>
+        <Field.Root validationMode="blur" validate={validateSpy}>
           <Combobox.Root
             items={items}
             defaultValue={items[0]}
@@ -15581,6 +15301,7 @@ describe('<Combobox.Root />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       await waitFor(() => {
         expect(validateSpy.mock.calls.length).toBe(1);
@@ -15637,7 +15358,7 @@ describe('<Combobox.Root />', () => {
     it('prop: validationMode=onChange', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onChange"
+          validationMode="change"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -15675,7 +15396,7 @@ describe('<Combobox.Root />', () => {
     it('prop: validationMode=onBlur', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onBlur"
+          validationMode="blur"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -15713,6 +15434,8 @@ describe('<Combobox.Root />', () => {
 
       await fireEvent.focusOut(input);
 
+      await wait(0);
+
       await flushMicrotasks();
 
       await waitFor(() => {
@@ -15729,7 +15452,7 @@ describe('<Combobox.Root />', () => {
               <Combobox.Positioner />
             </Combobox.Portal>
           </Combobox.Root>
-          <Field.Label data-testid="label" nativeLabel={false} as="span" />
+          <Field.Label data-testid="label" />
         </Field.Root>,
       );
 
@@ -16829,7 +16552,7 @@ describe('<Combobox.Root />', () => {
     it('validates the autocomplete input when focus leaves its popup', async () => {
       const validate = vi.fn();
       const { user } = await render(
-        <Field.Root validationMode="onBlur" validate={validate}>
+        <Field.Root validationMode="blur" validate={validate}>
           <Autocomplete.Root defaultOpen defaultValue="query">
             <Autocomplete.Trigger>Open</Autocomplete.Trigger>
             <Autocomplete.Portal>

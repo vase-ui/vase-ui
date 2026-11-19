@@ -12,14 +12,20 @@
   }
 }
 
-.Switch {
-  box-sizing: border-box;
+.Track {
+  position: relative;
   display: flex;
   flex-shrink: 0;
-  border: 1px solid oklch(14.5% 0 0deg);
-  padding: 0.125rem;
+}
+
+.Switch {
+  appearance: none;
+  box-sizing: border-box;
   width: 2.25rem;
   height: 1.25rem;
+  border: 1px solid oklch(14.5% 0 0deg);
+  border-radius: 0;
+  margin: 0;
   background-color: white;
   transition: background-color 150ms ease;
 
@@ -28,7 +34,7 @@
     background-color: oklch(14.5% 0 0deg);
   }
 
-  &[data-checked] {
+  &:checked {
     background-color: oklch(14.5% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -47,8 +53,12 @@
 }
 
 .Thumb {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
   width: 0.875rem;
   height: 0.875rem;
+  pointer-events: none;
   background-color: oklch(14.5% 0 0deg);
   transition:
     translate 150ms ease,
@@ -57,13 +67,13 @@
   @media (prefers-color-scheme: dark) {
     background-color: white;
   }
+}
 
-  &[data-checked] {
-    translate: 1rem 0;
-    background-color: white;
+.Switch:checked + .Thumb {
+  translate: 1rem 0;
+  background-color: white;
 
-    @media (prefers-color-scheme: dark) {
-      background-color: oklch(14.5% 0 0deg);
-    }
+  @media (prefers-color-scheme: dark) {
+    background-color: oklch(14.5% 0 0deg);
   }
 }

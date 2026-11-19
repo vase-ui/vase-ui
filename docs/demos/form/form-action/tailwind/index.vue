@@ -2,6 +2,7 @@
 import { shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 
 interface FormState {
@@ -60,7 +61,7 @@ async function submitForm(_previousState: FormState, formData: FormData) {
   >
     <Field.Root name="username" class="flex flex-col items-start gap-1">
       <Field.Label class="text-sm font-bold text-neutral-950 dark:text-white">Username</Field.Label>
-      <Field.Control
+      <Input
         type="text"
         autocomplete="username"
         required

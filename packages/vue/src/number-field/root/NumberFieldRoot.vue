@@ -276,10 +276,10 @@ const generatedId = useId();
 const controlId = computed(() => props.id || field?.controlId || generatedId);
 const inputId = useReferencedId(() => controlId.value, inputRef);
 
-// The text input is the control of the field. The hidden input holds the value for the form and
-// its validation.
+// The text input is the control of the field, or the hidden input of a root with no text input.
+// The hidden input holds the value for the form and its validation.
 watch(
-  inputRef,
+  () => inputRef.value ?? hiddenInputElement.value,
   (input, _, onCleanup) => {
     if (!input || !field) return;
     onCleanup(
@@ -300,7 +300,9 @@ watch(
         get inputs() {
           return hiddenInputElement.value ? [hiddenInputElement.value] : [];
         },
-        focusElement: input,
+        get focusElement() {
+          return inputRef.value ?? undefined;
+        },
       }),
     );
   },

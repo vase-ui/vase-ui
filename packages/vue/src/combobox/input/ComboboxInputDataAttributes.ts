@@ -46,10 +46,6 @@ export const dirty = 'data-dirty';
  */
 export const filled = 'data-filled';
 /**
- * Present when the input is focused (when wrapped in Field.Root).
- */
-export const focused = 'data-focused';
-/**
  * Present when the corresponding items list is empty.
  */
 export const listEmpty = 'data-list-empty';

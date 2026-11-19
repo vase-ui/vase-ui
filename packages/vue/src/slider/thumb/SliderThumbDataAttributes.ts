@@ -31,7 +31,3 @@ export const touched = 'data-touched';
  * Present when the slider's value has changed (when wrapped in Field.Root).
  */
 export const dirty = 'data-dirty';
-/**
- * Present when the slider is focused (when wrapped in Field.Root).
- */
-export const focused = 'data-focused';

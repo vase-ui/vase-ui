@@ -4,6 +4,7 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Slider } from '@vase-ui/vue/slider';
@@ -53,7 +54,7 @@ function record(name: string, value: unknown, details: { event: Event }) {
     </RadioGroup>
     <Field.Root data-testid="note-field">
       <Field.Label>Note</Field.Label>
-      <Field.Control
+      <Input
         name="note"
         data-testid="note"
         @value-change="(value, details) => record('note', value, details)"

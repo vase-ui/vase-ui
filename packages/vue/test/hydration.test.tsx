@@ -12,14 +12,12 @@ import {
 import { hydrate, hydrateAfter, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
-import LabelForControl from './fixtures/LabelForControl.vue';
 import RemountedRegion from './fixtures/RemountedRegion.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
 const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
 const CLASSED_ELEMENT = 'test/fixtures/ClassedElement.vue';
-const LABEL_FOR_CONTROL = 'test/fixtures/LabelForControl.vue';
 const REMOUNTED_REGION = 'test/fixtures/RemountedRegion.vue';
 
 describe('hydrate', () => {
@@ -27,20 +25,6 @@ describe('hydrate', () => {
     const serverHtml = await renderOnServer(FIXTURE);
 
     await hydrate(HydrationFixture, { serverHtml });
-  });
-
-  it('passes for a label that names a control with `for`', async () => {
-    const serverHtml = await renderOnServer(LABEL_FOR_CONTROL);
-
-    const { container } = await hydrate(LabelForControl, { serverHtml });
-
-    // The control finds the label in the document after the mount.
-    const label = container.querySelector('label')!;
-    expect(label.id).not.toBe('');
-    expect(container.querySelector('[role="checkbox"]')).toHaveAttribute(
-      'aria-labelledby',
-      label.id,
-    );
   });
 
   it('fails for a seeded text mismatch', async () => {

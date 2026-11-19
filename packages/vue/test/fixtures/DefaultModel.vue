@@ -15,7 +15,10 @@ const notifications = ref(true);
       <Toggle value="bold">Bold</Toggle>
       <Toggle v-model="italic" value="italic">Italic</Toggle>
     </ToggleGroup>
-    <Switch.Root v-model="notifications" name="notifications" value="email">Email</Switch.Root>
+    <label>
+      <Switch v-model="notifications" name="notifications" value="email" />
+      Email
+    </label>
     <output>{{ formats.join(',') }} / {{ italic }} / {{ notifications }}</output>
   </form>
 </template>

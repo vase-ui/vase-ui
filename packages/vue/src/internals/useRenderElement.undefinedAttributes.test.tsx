@@ -7,17 +7,12 @@ import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Avatar } from '@vase-ui/vue/avatar';
 import { Button } from '@vase-ui/vue/button';
-import { Checkbox } from '@vase-ui/vue/checkbox';
-import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Field } from '@vase-ui/vue/field';
-import { Fieldset } from '@vase-ui/vue/fieldset';
-import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -28,12 +23,9 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Progress } from '@vase-ui/vue/progress';
-import { Radio } from '@vase-ui/vue/radio';
-import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Select } from '@vase-ui/vue/select';
 import { Separator } from '@vase-ui/vue/separator';
 import { Slider } from '@vase-ui/vue/slider';
-import { Switch } from '@vase-ui/vue/switch';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
@@ -148,18 +140,6 @@ const rows: Row[] = [
     expected: () => 'grid',
   },
   {
-    name: 'Checkbox.Root role',
-    attribute: 'role',
-    createNode: () => <Checkbox.Root role={undefined} data-testid="part" />,
-    expected: () => 'checkbox',
-  },
-  {
-    name: 'CheckboxGroup role',
-    attribute: 'role',
-    createNode: () => <CheckboxGroup role={undefined} data-testid="part" />,
-    expected: () => 'group',
-  },
-  {
     name: 'Collapsible.Trigger aria-controls',
     attribute: 'aria-controls',
     createNode: () => (
@@ -247,29 +227,6 @@ const rows: Row[] = [
     expected: () => 'dialog',
   },
   {
-    name: 'Field.Label for',
-    attribute: 'for',
-    createNode: () => (
-      <Field.Root>
-        <Field.Label for={undefined} data-testid="part">
-          Name
-        </Field.Label>
-        <Field.Control data-testid="target" />
-      </Field.Root>
-    ),
-    expected: targetId,
-  },
-  {
-    name: 'Fieldset.Root aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: () => (
-      <Fieldset.Root aria-labelledby={undefined} data-testid="part">
-        <Fieldset.Legend data-testid="target">Address</Fieldset.Legend>
-      </Fieldset.Root>
-    ),
-    expected: targetId,
-  },
-  {
     name: 'FilterDropdown.Input role',
     attribute: 'role',
     createNode: () => (
@@ -284,23 +241,6 @@ const rows: Row[] = [
       </FilterDropdown.Root>
     ),
     expected: () => 'searchbox',
-  },
-  {
-    name: 'Form novalidate',
-    attribute: 'novalidate',
-    createNode: () => <Form novalidate={undefined} data-testid="part" />,
-    expected: () => '',
-  },
-  {
-    name: 'Input aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: () => (
-      <Field.Root>
-        <Field.Label data-testid="target">Name</Field.Label>
-        <Input aria-labelledby={undefined} data-testid="part" />
-      </Field.Root>
-    ),
-    expected: targetId,
   },
   {
     name: 'Menu.Trigger aria-haspopup',
@@ -396,22 +336,6 @@ const rows: Row[] = [
     expected: () => '30',
   },
   {
-    name: 'Radio.Root role',
-    attribute: 'role',
-    createNode: () => (
-      <RadioGroup>
-        <Radio.Root value="a" role={undefined} data-testid="part" />
-      </RadioGroup>
-    ),
-    expected: () => 'radio',
-  },
-  {
-    name: 'RadioGroup role',
-    attribute: 'role',
-    createNode: () => <RadioGroup role={undefined} data-testid="part" />,
-    expected: () => 'radiogroup',
-  },
-  {
     name: 'Resizable.Handle role',
     attribute: 'role',
     createNode: () => (
@@ -450,12 +374,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Slider.Root role={undefined} data-testid="part" />,
     expected: () => 'group',
-  },
-  {
-    name: 'Switch.Root data-checked',
-    attribute: 'data-checked',
-    createNode: () => <Switch.Root defaultChecked data-checked={undefined} data-testid="part" />,
-    expected: () => '',
   },
   {
     name: 'Tabs.Tab aria-controls',

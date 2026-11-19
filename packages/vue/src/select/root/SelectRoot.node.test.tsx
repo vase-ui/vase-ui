@@ -168,9 +168,7 @@ describe('<Select.Root /> on a server', () => {
           </Select.Root>
           <Field.Label data-testid="label">Font</Field.Label>
           <Field.Description data-testid="description">The font of the page</Field.Description>
-          <Field.Error data-testid="error" match>
-            Pick a font
-          </Field.Error>
+          <Field.Error data-testid="error">Pick a font</Field.Error>
         </Field.Root>,
       );
       const trigger = readAttributes(html, 'trigger');

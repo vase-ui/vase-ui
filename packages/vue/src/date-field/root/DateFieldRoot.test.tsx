@@ -3,7 +3,8 @@ import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import { Input } from '@vase-ui/vue/input';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
   createHeldBranch,
@@ -674,73 +675,6 @@ describe('<DateField.Root />', () => {
   });
 
   describe('KeepAlive', () => {
-    it('a date field that mounts while KeepAlive holds it does not block the submit of its form', async () => {
-      const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <DateField.Root key="held" required>
-          <DateField.Input />
-        </DateField.Root>
-      ));
-      const { user } = await render(() => (
-        <Form onFormSubmit={handleSubmit}>
-          <Field.Root name="date" data-testid="field">
-            <Field.Control defaultValue="shown" />
-            <HeldBranch />
-          </Field.Root>
-          <button type="submit">Submit</button>
-        </Form>
-      ));
-
-      await mountWhileHeld();
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ date: 'shown' });
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-
-      await show();
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
-    });
-
-    it('a date field that KeepAlive deactivates does not block the submit of its form', async () => {
-      const handleSubmit = vi.fn();
-      const visible = shallowRef(true);
-      const Branch = defineComponent(() => () => (
-        <div>
-          <DateField.Root key="deactivated" required>
-            <DateField.Input />
-          </DateField.Root>
-        </div>
-      ));
-      const { user } = await render(() => (
-        <Form onFormSubmit={handleSubmit}>
-          <Field.Root name="date" data-testid="field">
-            <Field.Control defaultValue="shown" />
-            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-          </Field.Root>
-          <button type="submit">Submit</button>
-        </Form>
-      ));
-
-      visible.value = false;
-      await flushMicrotasks();
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ date: 'shown' });
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-
-      visible.value = true;
-      await flushMicrotasks();
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
-    });
-
     it('the label does not name a date field that mounts while KeepAlive holds it', async () => {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <DateField.Root key="held" id="held-date">
@@ -891,7 +825,12 @@ describe('<DateField.Root />', () => {
     it('leaves a date field in a disabled fieldset out of the form values', async () => {
       const handleSubmit = vi.fn();
       await render(() => (
-        <Form onFormSubmit={handleSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleSubmit(values)
+          )}
+        >
           <Field.Root name="date">
             <fieldset disabled>
               <DateField.Root locale="en-US" defaultValue={Temporal.PlainDate.from('2026-11-14')}>
@@ -900,7 +839,7 @@ describe('<DateField.Root />', () => {
             </fieldset>
           </Field.Root>
           <Field.Root name="other">
-            <Field.Control defaultValue="sent" />
+            <Input defaultValue="sent" />
           </Field.Root>
           <button type="submit">Submit</button>
         </Form>

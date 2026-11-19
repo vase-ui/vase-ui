@@ -12,7 +12,7 @@ const CheckIcon: FunctionalComponent = () =>
       viewBox: '0 0 16 16',
       fill: 'none',
       stroke: 'currentColor',
-      style: { display: 'block' },
+      'aria-hidden': 'true',
     },
     [h('path', { d: 'm2.5 8.5 4 4 7-9' })],
   );
@@ -20,14 +20,15 @@ const CheckIcon: FunctionalComponent = () =>
 
 <template>
   <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-    <Checkbox.Root
-      default-checked
-      class="flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-    >
-      <Checkbox.Indicator class="flex data-unchecked:hidden">
-        <CheckIcon />
-      </Checkbox.Indicator>
-    </Checkbox.Root>
+    <span class="relative flex shrink-0">
+      <Checkbox
+        default-checked
+        class="peer m-0 size-4 appearance-none rounded-none border border-neutral-950 bg-white p-0 checked:bg-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:focus-visible:outline-white"
+      />
+      <CheckIcon
+        class="pointer-events-none absolute inset-0 hidden text-white peer-checked:block dark:text-neutral-950"
+      />
+    </span>
     Enable notifications
   </label>
 </template>

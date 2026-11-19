@@ -4,7 +4,6 @@ import type { PropType } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Popover } from '@vase-ui/vue/popover';
 import { Toolbar } from '@vase-ui/vue/toolbar';
-import { Switch } from '@vase-ui/vue/switch';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
@@ -229,111 +228,6 @@ describe('<Toolbar.Button />', () => {
   });
 
   describe('rendering other Vase UI components', () => {
-    describe('Switch', () => {
-      it('renders a switch', async () => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-        await render(
-          <Toolbar.Root>
-            <Toolbar.Button data-testid="button" as={Switch.Root} />
-          </Toolbar.Root>,
-        );
-
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
-        expect(screen.getByTestId('button')).toBe(screen.getByRole('switch'));
-      });
-
-      it('handles interactions', async () => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        const handleCheckedChange = vi.fn();
-        const handleClick = vi.fn();
-        const { user } = await render(
-          <Toolbar.Root>
-            <Toolbar.Button
-              onClick={handleClick}
-              v-slots={{
-                render: ({ props }: { props: Record<string, unknown> }) => (
-                  <Switch.Root
-                    {...props}
-                    defaultChecked={false}
-                    onCheckedChange={handleCheckedChange}
-                  />
-                ),
-              }}
-            />
-          </Toolbar.Root>,
-        );
-
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
-
-        const switchElement = screen.getByRole('switch');
-        expect(switchElement).toHaveAttribute('data-unchecked');
-
-        await user.keyboard('[Tab]');
-        expect(switchElement).toHaveAttribute('tabindex', '0');
-
-        await user.click(switchElement);
-        expect(handleCheckedChange).toHaveBeenCalledTimes(1);
-        expect(handleClick).toHaveBeenCalledTimes(1);
-        expect(switchElement).toHaveAttribute('data-checked');
-
-        await user.keyboard('[Enter]');
-        expect(handleCheckedChange).toHaveBeenCalledTimes(2);
-        expect(handleClick).toHaveBeenCalledTimes(2);
-        expect(switchElement).toHaveAttribute('data-unchecked');
-
-        await user.keyboard('[Space]');
-        expect(handleCheckedChange).toHaveBeenCalledTimes(3);
-        expect(handleClick).toHaveBeenCalledTimes(3);
-        expect(switchElement).toHaveAttribute('data-checked');
-      });
-
-      it('disabled state', async () => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        const handleCheckedChange = vi.fn();
-        const handleClick = vi.fn();
-        const { user } = await render(
-          <Toolbar.Root>
-            <Toolbar.Button
-              disabled
-              onClick={handleClick}
-              v-slots={{
-                render: ({ props }: { props: Record<string, unknown> }) => (
-                  <Switch.Root {...props} onCheckedChange={handleCheckedChange} />
-                ),
-              }}
-            />
-          </Toolbar.Root>,
-        );
-
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
-
-        const switchElement = screen.getByRole('switch');
-
-        expect(switchElement).not.toHaveAttribute('disabled');
-        expect(switchElement).toHaveAttribute('data-disabled');
-        expect(switchElement).toHaveAttribute('aria-disabled', 'true');
-
-        await user.keyboard('[Tab]');
-        expect(switchElement).toHaveAttribute('tabindex', '0');
-
-        await user.keyboard('[Enter]');
-        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
-        expect(handleClick).toHaveBeenCalledTimes(0);
-
-        await user.keyboard('[Space]');
-        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
-        expect(handleClick).toHaveBeenCalledTimes(0);
-
-        await user.click(switchElement);
-        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
-        expect(handleClick).toHaveBeenCalledTimes(0);
-      });
-    });
-
     describe('Menu', () => {
       it('renders a menu trigger', async () => {
         await render(

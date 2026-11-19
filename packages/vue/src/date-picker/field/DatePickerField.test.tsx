@@ -506,12 +506,7 @@ describe('<DatePicker.Field />', () => {
       ) {
         return (
           <Form data-testid="form" errors={errors}>
-            <Field.Root
-              data-testid="root"
-              name="when"
-              validate={validate}
-              validationMode="onChange"
-            >
+            <Field.Root data-testid="root" name="when" validate={validate} validationMode="change">
               <DatePicker.Root locale="en-US" referenceDate={day} {...pickerProps}>
                 <DatePicker.Field>
                   <DateField.Input />
@@ -603,7 +598,7 @@ describe('<DatePicker.Field />', () => {
           <DatePicker.Portal>
             <DatePicker.Positioner>
               <DatePicker.Popup aria-label="Choose date">
-                <Field.Root name="other" validate={() => 'Wrong date'} validationMode="onChange">
+                <Field.Root name="other" validate={() => 'Wrong date'} validationMode="change">
                   <DateField.Root locale="en-US">
                     <DateField.Input />
                   </DateField.Root>

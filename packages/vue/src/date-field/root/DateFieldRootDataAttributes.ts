@@ -38,7 +38,3 @@ export const dirty = 'data-dirty';
  * Present when the field has a value.
  */
 export const filled = 'data-filled';
-/**
- * Present when a segment of the field is focused.
- */
-export const focused = 'data-focused';

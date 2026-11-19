@@ -30,41 +30,47 @@ const CheckIcon: FunctionalComponent = () =>
     <div class="text-sm font-bold" :id="id">Apples</div>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Checkbox.Root
-        name="apple"
-        value="fuji-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Checkbox.Indicator class="flex data-unchecked:hidden">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span class="relative flex shrink-0">
+        <Checkbox
+          name="apple"
+          value="fuji-apple"
+          class="m-0 size-4 appearance-none rounded-none border border-neutral-950 bg-white p-0 checked:bg-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:focus-visible:outline-white peer"
+        />
+        <span
+          class="pointer-events-none absolute inset-0 hidden items-center justify-center text-white peer-checked:flex dark:text-neutral-950"
+          ><CheckIcon
+        /></span>
+      </span>
       Fuji
     </label>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Checkbox.Root
-        name="apple"
-        value="gala-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Checkbox.Indicator class="flex data-unchecked:hidden">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span class="relative flex shrink-0">
+        <Checkbox
+          name="apple"
+          value="gala-apple"
+          class="m-0 size-4 appearance-none rounded-none border border-neutral-950 bg-white p-0 checked:bg-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:focus-visible:outline-white peer"
+        />
+        <span
+          class="pointer-events-none absolute inset-0 hidden items-center justify-center text-white peer-checked:flex dark:text-neutral-950"
+          ><CheckIcon
+        /></span>
+      </span>
       Gala
     </label>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Checkbox.Root
-        name="apple"
-        value="granny-smith-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Checkbox.Indicator class="flex data-unchecked:hidden">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span class="relative flex shrink-0">
+        <Checkbox
+          name="apple"
+          value="granny-smith-apple"
+          class="m-0 size-4 appearance-none rounded-none border border-neutral-950 bg-white p-0 checked:bg-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:focus-visible:outline-white peer"
+        />
+        <span
+          class="pointer-events-none absolute inset-0 hidden items-center justify-center text-white peer-checked:flex dark:text-neutral-950"
+          ><CheckIcon
+        /></span>
+      </span>
       Granny Smith
     </label>
   </CheckboxGroup>

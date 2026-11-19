@@ -1,6 +1,7 @@
 import {
   computed,
   inject,
+  onMounted,
   shallowRef,
   toValue,
   watch,
@@ -34,23 +35,27 @@ export const fieldsetKey: InjectionKey<FieldsetForPart> = Symbol('fieldset');
 export function useInDisabledFieldset(element: MaybeRefOrGetter<Element | null | undefined>) {
   const fieldset = inject(fieldsetKey, null);
   const answerOfBrowser = shallowRef<boolean>();
-  watch(
-    () => toValue(element),
-    (el, _, onCleanup) => {
-      answerOfBrowser.value = undefined;
-      if (!el) return;
-      const update = () => (answerOfBrowser.value = inDisabledFieldset(el));
-      update();
-      // The browser sends no event when `:disabled` changes, so the part watches the `disabled`
-      // attribute of each fieldset around it.
-      const observer = new MutationObserver(update);
-      for (let around = fieldsetAround(el); around; around = fieldsetAround(around)) {
-        observer.observe(around, { attributeFilter: ['disabled'] });
-      }
-      onCleanup(() => observer.disconnect());
-    },
-    { flush: 'post' },
-  );
+  // A part can give a getter of an element that it declares after this call, so the watch starts
+  // at the mount.
+  onMounted(() => {
+    watch(
+      () => toValue(element),
+      (el, _, onCleanup) => {
+        answerOfBrowser.value = undefined;
+        if (!el) return;
+        const update = () => (answerOfBrowser.value = inDisabledFieldset(el));
+        update();
+        // The browser sends no event when `:disabled` changes, so the part watches the `disabled`
+        // attribute of each fieldset around it, and the children that can make a first legend.
+        const observer = new MutationObserver(update);
+        for (let around = fieldsetAround(el); around; around = fieldsetAround(around)) {
+          observer.observe(around, { attributeFilter: ['disabled'], childList: true });
+        }
+        onCleanup(() => observer.disconnect());
+      },
+      { flush: 'post', immediate: true },
+    );
+  });
   return computed(
     () => (answerOfBrowser.value ?? !!fieldset?.disabled) || !!fieldset?.disabledOutsideBrowser,
   );

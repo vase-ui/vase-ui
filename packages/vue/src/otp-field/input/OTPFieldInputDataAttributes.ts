@@ -34,7 +34,3 @@ export const touched = 'data-touched';
  * Present when the OTP field's value has changed (when wrapped in Field.Root).
  */
 export const dirty = 'data-dirty';
-/**
- * Present when any OTP field input is focused.
- */
-export const focused = 'data-focused';

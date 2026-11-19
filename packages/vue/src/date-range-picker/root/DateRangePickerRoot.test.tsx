@@ -877,7 +877,7 @@ describe('<DateRangePicker.Root />', () => {
 
     it('shows the error in a Field, with the message of the end field', async () => {
       const { user, container } = await render(
-        <Field.Root validationMode="onChange" data-testid="field">
+        <Field.Root validationMode="change" data-testid="field">
           <DateRangePickerAnatomy
             {...{
               locale: 'en-US',
@@ -1051,7 +1051,7 @@ describe('<DateRangePicker.Root />', () => {
                 data-testid="root"
                 name="trip"
                 validate={validate}
-                validationMode="onChange"
+                validationMode="change"
               >
                 <DateRangePickerAnatomy
                   {...{

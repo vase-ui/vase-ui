@@ -213,7 +213,7 @@ Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default sl
 - `componentField.name` goes to the `name` prop of `<Field.Root>`.
 - `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>` and to `match` of `<Field.Error>`.
 - `meta.touched` and `meta.dirty` go to `touched` and `dirty` of `<Field.Root>`.
-- Bind `componentField.modelValue` to `<Field.Control>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
+- Bind `componentField.modelValue` to `<Input>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
 
 <<< ../examples/forms/VeeValidateField.vue{9,11-14,22-24}
 

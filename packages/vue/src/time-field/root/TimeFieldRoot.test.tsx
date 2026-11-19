@@ -408,7 +408,7 @@ describe('<TimeField.Root />', () => {
 
     it('shows a missing value of a required field through Field', async () => {
       const { user } = await render(
-        <Field.Root name="alarm" validationMode="onChange">
+        <Field.Root name="alarm" validationMode="change">
           <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} required>
             <TimeField.Input />
             <TimeField.Clear />

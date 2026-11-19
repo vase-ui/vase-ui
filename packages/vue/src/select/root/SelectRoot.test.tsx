@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import { Input } from '@vase-ui/vue/input';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Select } from '@vase-ui/vue/select';
 import {
   createFormDataSpy,
@@ -1979,7 +1981,7 @@ describe('<Select.Root />', () => {
     });
 
     await render(
-      <Field.Root validationMode="onChange" validate={validateSpy}>
+      <Field.Root validationMode="change" validate={validateSpy}>
         <Select.Root name="country">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
@@ -2014,7 +2016,7 @@ describe('<Select.Root />', () => {
 
   it('does not update field state when autofill is canceled', async () => {
     await render(
-      <Form errors={{ country: 'server error' }}>
+      <ErrorsForm errors={{ country: 'server error' }}>
         <Field.Root name="country">
           <Select.Root
             onValueChange={(_value: unknown, eventDetails: ChangeDetails) => {
@@ -2035,7 +2037,7 @@ describe('<Select.Root />', () => {
           </Select.Root>
           <Field.Error data-testid="error" />
         </Field.Root>
-      </Form>,
+      </ErrorsForm>,
     );
 
     const trigger = screen.getByTestId('trigger');
@@ -2242,12 +2244,12 @@ describe('<Select.Root />', () => {
 
       await render(
         withField ? (
-          <Form errors={{ select: 'test' }}>
+          <ErrorsForm errors={{ select: 'test' }}>
             <Field.Root name="select">
               {select}
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>
+          </ErrorsForm>
         ) : (
           select
         ),
@@ -4108,7 +4110,12 @@ describe('<Select.Root />', () => {
       const handleFormSubmit = vi.fn();
 
       const { user } = await render(
-        <Form onFormSubmit={handleFormSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleFormSubmit(values)
+          )}
+        >
           <Field.Root name="country">
             <Select.Root
               defaultValue={items[0]}
@@ -4356,6 +4363,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -4589,180 +4597,9 @@ describe('<Select.Root />', () => {
       });
     });
 
-    it('[data-focused]', async () => {
-      await render(
-        <Field.Root>
-          <Select.Root>
-            <Select.Trigger data-testid="trigger" />
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="">Select</Select.Item>
-                  <Select.Item value="1">Option 1</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        </Field.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      expect(trigger).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(trigger);
-
-      expect(trigger).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(trigger);
-
-      expect(trigger).not.toHaveAttribute('data-focused');
-    });
-
-    describe('[data-focused] without a blur event', () => {
-      function Selects(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
-        const { firstMounted = true, firstDisabled = false } = props;
-        return (
-          <Field.Root data-testid="field">
-            {firstMounted && (
-              <Select.Root disabled={firstDisabled}>
-                <Select.Trigger data-testid="first" />
-              </Select.Root>
-            )}
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused trigger becomes disabled', async () => {
-        const { setProps } = await render(<Selects />);
-
-        const trigger = screen.getByTestId('first');
-        trigger.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-        expect(trigger).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused trigger unmounts', async () => {
-        const { setProps } = await render(<Selects />);
-
-        screen.getByTestId('first').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-      });
-    });
-
-    it('does not mark as touched when focus moves into the popup', async () => {
-      const validateSpy = vi.fn(() => 'error');
-
-      await render(
-        <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
-            <Select.Root>
-              <Select.Trigger data-testid="trigger" />
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    <Select.Item value="1">Option 1</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          </Field.Root>
-          <button type="button" data-testid="outside">
-            Outside
-          </button>
-        </>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await fireEvent.focusIn(trigger);
-      await fireEvent.click(trigger);
-
-      await flushMicrotasks();
-
-      const listbox = screen.getByRole('listbox');
-
-      await fireEvent.focusOut(trigger, { relatedTarget: listbox });
-      await fireEvent.focusIn(listbox);
-
-      await flushMicrotasks();
-
-      expect(validateSpy.mock.calls.length).toBe(0);
-      expect(trigger).toHaveAttribute('data-focused', '');
-      expect(trigger).not.toHaveAttribute('data-touched');
-      expect(trigger).not.toHaveAttribute('aria-invalid');
-    });
-
-    it('validates when the popup is blurred', async () => {
-      const validateSpy = vi.fn(() => 'error');
-
-      await render(
-        <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
-            <Select.Root>
-              <Select.Trigger data-testid="trigger" />
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    <Select.Item value="1">Option 1</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          </Field.Root>
-          <button type="button" data-testid="outside">
-            Outside
-          </button>
-        </>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-      const outside = screen.getByTestId('outside');
-
-      await fireEvent.focusIn(trigger);
-      await waitForLaterMillisecond(async () => {
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
-      });
-
-      const listbox = screen.getByRole('listbox');
-
-      // The four events go in one task, as in Base UI. The `focusout` of the list marks a focus
-      // change inside the popup, and the check of the first `focusout` clears that marker.
-      await Promise.all([
-        fireEvent.focusOut(trigger, { relatedTarget: listbox }),
-        fireEvent.focusIn(listbox),
-        fireEvent.focusOut(listbox, { relatedTarget: outside }),
-        fireEvent.focusIn(outside),
-      ]);
-
-      await waitFor(() => {
-        expect(validateSpy.mock.calls.length).toBe(1);
-      });
-
-      // The above `waitFor` might not ensure re-render has finished
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('data-touched', '');
-      });
-      expect(trigger).not.toHaveAttribute('data-focused');
-      expect(trigger).toHaveAttribute('aria-invalid', 'true');
-    });
-
     it('prop: validate', async () => {
       await render(
-        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+        <Field.Root validationMode="blur" validate={() => 'error'}>
           <Select.Root>
             <Select.Trigger data-testid="trigger" />
             <Select.Portal>
@@ -4778,6 +4615,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -4795,7 +4633,7 @@ describe('<Select.Root />', () => {
       });
 
       await render(
-        <Field.Root validationMode="onBlur" validate={validateSpy}>
+        <Field.Root validationMode="blur" validate={validateSpy}>
           <Select.Root
             defaultValue={items[0]}
             itemToStringLabel={(item) => item.label}
@@ -4815,6 +4653,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await waitFor(() => {
         expect(validateSpy.mock.calls.length).toBe(1);
@@ -4870,7 +4709,7 @@ describe('<Select.Root />', () => {
     it('prop: validationMode=onChange', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onChange"
+          validationMode="change"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -4916,7 +4755,7 @@ describe('<Select.Root />', () => {
 
         return () => (
           <>
-            <Field.Root validationMode="onChange" validate={validateSpy} name="flavor">
+            <Field.Root validationMode="change" validate={validateSpy} name="flavor">
               <Select.Root
                 modelValue={value.value}
                 onValueChange={(next: string | null) => {
@@ -4967,7 +4806,7 @@ describe('<Select.Root />', () => {
     it('prop: validationMode=onBlur', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onBlur"
+          validationMode="blur"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -5005,6 +4844,8 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusOut(trigger);
 
+      await wait(0);
+
       await flushMicrotasks();
 
       await waitFor(() => {
@@ -5021,7 +4862,7 @@ describe('<Select.Root />', () => {
               <Select.Positioner />
             </Select.Portal>
           </Select.Root>
-          <Field.Label data-testid="label" nativeLabel={false} as="span" />
+          <Field.Label data-testid="label" />
         </Field.Root>,
       );
 
@@ -5192,7 +5033,7 @@ describe('<Select.Root />', () => {
     it('marks the field as touched and validates it when an outside press closes the popup', async () => {
       const validate = vi.fn((_value: unknown) => 'Pick a font');
       const { user } = await render(
-        <Field.Root data-testid="field" validate={validate} validationMode="onBlur">
+        <Field.Root data-testid="field" validate={validate} validationMode="blur">
           <Select.Root defaultOpen defaultValue="sans">
             <Select.Trigger data-testid="trigger" />
           </Select.Root>
@@ -5215,7 +5056,7 @@ describe('<Select.Root />', () => {
 
     it('BUG-1425: makes a required select with no value invalid when an outside press closes the popup', async () => {
       const { user } = await render(
-        <Field.Root data-testid="field" validationMode="onBlur">
+        <Field.Root data-testid="field" validationMode="blur">
           <Select.Root defaultOpen required>
             <StoreProbe />
             <Select.Trigger data-testid="trigger" />
@@ -5279,9 +5120,14 @@ describe('<Select.Root />', () => {
           { mounted: name === 'deactivated' },
         );
         const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
+          <Form
+            onSubmit={(event: SubmitEvent, values: FormValues) => (
+              event.preventDefault(),
+              handleSubmit(values)
+            )}
+          >
             <Field.Root name="fruit" data-testid="field">
-              <Field.Control defaultValue="shown" />
+              <Input defaultValue="shown" />
               <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
@@ -7549,7 +7395,7 @@ describe('<Select.Root />', () => {
       const validate = vi.fn<(value: unknown) => null>(() => null);
       const value = shallowRef<string[] | null>(null);
       const App = defineComponent(() => () => (
-        <Field.Root validationMode="onBlur" validate={validate}>
+        <Field.Root validationMode="blur" validate={validate}>
           <Select.Root
             multiple
             modelValue={value.value}
@@ -7578,6 +7424,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       expect(validate.mock.calls[0]?.[0]).toEqual([]);
 
@@ -9110,7 +8957,7 @@ describe('<Select.Root />', () => {
       const validate = vi.fn((value: unknown) => (value === 'serif' ? 'Not serif' : null));
       await render(
         <Form data-testid="form">
-          <Field.Root data-testid="field" name="font" validate={validate} validationMode="onChange">
+          <Field.Root data-testid="field" name="font" validate={validate} validationMode="change">
             <Select.Root defaultValue="sans">
               <StoreProbe />
               <Select.Trigger />

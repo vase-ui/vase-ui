@@ -8,7 +8,7 @@ import type {
 } from '@vase-ui/vue/otp-field';
 
 defineProps<{
-  validationMode?: 'onSubmit' | 'onBlur' | 'onChange' | undefined;
+  validationMode?: 'submit' | 'blur' | 'change' | undefined;
 }>();
 
 const model = shallowRef('');

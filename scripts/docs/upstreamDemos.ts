@@ -42,6 +42,23 @@ const VUE_DEMO_EXTRA_CLASSES: Record<string, Record<string, ClassRow> | undefine
   },
 };
 
+/**
+ * The families whose parts are native form elements. A demo of such a family styles the parts with
+ * the pseudo-classes of these elements, such as `:checked`, and can add an element of its own for a
+ * mark or a thumb. Its classes thus differ from the classes of the Base UI demo.
+ */
+const NATIVE_FORM_FAMILIES = new Set([
+  'checkbox',
+  'checkbox-group',
+  'field',
+  'fieldset',
+  'form',
+  'handbook-forms',
+  'input',
+  'radio-group',
+  'switch',
+]);
+
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
 /** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
@@ -381,7 +398,9 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
-    for (const [key, row] of Object.entries(record.classes ?? {})) {
+    for (const [key, row] of NATIVE_FORM_FAMILIES.has(name)
+      ? []
+      : Object.entries(record.classes ?? {})) {
       const path = vueDemoPath(name, key);
       const vueRow = vueClasses.get(path);
       if (vueRow === undefined) {

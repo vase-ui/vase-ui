@@ -108,19 +108,10 @@
     "src/internals/date-time/field/useDateTimeFieldRoot.registration.test.tsx": {
       "fails": {}
     },
-    "src/internals/field-register-control/useFieldControl.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/field-root-context/FieldProvider.test.tsx": {
-      "fails": {}
-    },
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },
     "src/internals/useAnimationsFinished.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useCheckedInput.test.tsx": {
       "fails": {}
     },
     "src/internals/useFormReset.test.tsx": {

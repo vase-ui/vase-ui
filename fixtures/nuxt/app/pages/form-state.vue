@@ -57,7 +57,7 @@ function handleFilterInput(event: Event) {
     <form data-testid="form" @submit.prevent="submits += 1">
       <Field.Root>
         <Field.Label>Note</Field.Label>
-        <Field.Control name="note" data-testid="note" @value-change="count('note')" />
+        <Input name="note" data-testid="note" @value-change="count('note')" />
       </Field.Root>
       <Input
         v-model="text"
