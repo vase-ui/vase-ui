@@ -36,6 +36,13 @@ jobs:
         with:
           fetch-depth: 2
           persist-credentials: false
+      - name: Match the merge to the pull request event
+        id: merge
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/size/merge.sh "$BASE_SHA" "$HEAD_SHA"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -53,6 +60,7 @@ jobs:
           (cd "$base" && pnpm install --frozen-lockfile --filter @vase-ui/vue)
           node scripts/size/measure.ts "$base/packages/vue" "$RUNNER_TEMP/base-size.json"
       - name: Measure the merge build
+        if: steps.merge.outcome == 'success'
         timeout-minutes: 5
         run: node scripts/size/measure.ts packages/vue "$RUNNER_TEMP/merge-size.json"
       - name: Compare the builds
