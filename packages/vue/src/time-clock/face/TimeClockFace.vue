@@ -37,7 +37,7 @@ export interface TimeClockFaceProps
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, provide, shallowRef } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useAriaAfterHydration } from '../../common/hydration';
@@ -62,6 +62,7 @@ import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { useInputRender } from '../../internals/useInputRender';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { TimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
@@ -101,6 +102,7 @@ const HIDDEN_INPUT_STYLE = {
 
 const root = useTimeClockRootContext();
 const { grid, state } = root;
+const { isHeld } = useKeepAliveState();
 const formatLocale = useFormatLocale(root.locale);
 const ariaAfterHydration = useAriaAfterHydration();
 
@@ -203,18 +205,18 @@ function selectNumberOfEvent(event: PointerEvent) {
   }
 }
 
-function endPress(event: PointerEvent) {
+function endPress(face: HTMLElement) {
+  if (activePointerId === null) return;
+  const pointerId = activePointerId;
   activePointerId = null;
-  const face = event.currentTarget as HTMLElement;
-  // `pointercancel` releases the capture by itself, and a release of a capture that is gone throws.
-  if (face.hasPointerCapture(event.pointerId)) {
-    face.releasePointerCapture(event.pointerId);
+  if (face.hasPointerCapture(pointerId)) {
+    face.releasePointerCapture(pointerId);
   }
-  root.setDragging(false);
+  root.setDragging(face, false);
 }
 
 function onPointerdown(event: PointerEvent) {
-  if (event.button !== 0 || state.value.disabled || state.value.readOnly) {
+  if (event.button !== 0 || isHeld.value || state.value.disabled || state.value.readOnly) {
     return;
   }
   const face = event.currentTarget as HTMLElement;
@@ -231,7 +233,7 @@ function onPointerdown(event: PointerEvent) {
     // The method throws for a pointer that the browser does not know, such as the pointer of an
     // event that a script dispatched. The press then ends with the events of the face.
   }
-  root.setDragging(true);
+  root.setDragging(face, true);
   // The press cancels the default action, so the browser does not move the focus or select text.
   event.preventDefault();
   inputElement.value?.focus({ preventScroll: true });
@@ -249,7 +251,7 @@ function onPointerup(event: PointerEvent) {
   if (event.pointerId !== activePointerId) {
     return;
   }
-  endPress(event);
+  endPress(event.currentTarget as HTMLElement);
   if (pressSelected) {
     root.commit(createGenericEventDetails(REASONS.drag, event));
   }
@@ -257,7 +259,7 @@ function onPointerup(event: PointerEvent) {
 
 function onPointercancel(event: PointerEvent) {
   if (event.pointerId === activePointerId) {
-    endPress(event);
+    endPress(event.currentTarget as HTMLElement);
   }
 }
 
@@ -305,17 +307,14 @@ function onKeydown(event: KeyboardEvent) {
   event.preventDefault();
 }
 
-onScopeDispose(() => {
-  if (activePointerId !== null) {
-    root.setDragging(false);
-  }
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       onKeydown,
+      onLostpointercapture(event: PointerEvent) {
+        if (event.target === event.currentTarget) onPointercancel(event);
+      },
       onPointercancel,
       onPointerdown,
       onPointermove,
@@ -326,6 +325,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
   children: true,
 });
+
+// A held or replaced face can lose the pointer release.
+watch(
+  () => (isHeld.value ? null : element.value),
+  (face, _previous, onCleanup) => {
+    if (face) onCleanup(() => endPress(face));
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element, inputElement });
 </script>

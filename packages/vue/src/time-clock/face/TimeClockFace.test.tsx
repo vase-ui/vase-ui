@@ -6,6 +6,7 @@ import { TimeClock } from '@vase-ui/vue/time-clock';
 import type { TimeClockFaceNumber } from '@vase-ui/vue/time-clock';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -430,6 +431,90 @@ describe('<TimeClock.Face />', () => {
       expect(face).not.toHaveAttribute('data-dragging');
       expect(onValueCommitted).not.toHaveBeenCalled();
       expect(onViewChange).not.toHaveBeenCalled();
+    });
+
+    it('ends the press when KeepAlive holds the face', async () => {
+      const onCommit = vi.fn();
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <TimeClock.Face data-testid="face" style={faceStyle} />,
+        { mounted: true },
+      );
+      await render(
+        <TimeClock.Root onValueCommitted={onCommit}>
+          <HeldBranch />
+        </TimeClock.Root>,
+      );
+      const root = screen.getByRole('group');
+      const face = screen.getByTestId('face');
+      const pointer = { ...mouse, ...pointOnFace(face, 90) };
+      await fireEvent.pointerDown(face, pointer);
+      expect(root).toHaveAttribute('data-dragging');
+
+      await hide();
+      expect(root).not.toHaveAttribute('data-dragging');
+      await show();
+      await fireEvent.pointerUp(face, pointer);
+      expect(onCommit).not.toHaveBeenCalled();
+      await fireEvent.pointerDown(face, pointer);
+      await fireEvent.pointerUp(face, pointer);
+      expect(onCommit).toHaveBeenCalledTimes(1);
+    });
+
+    it('ends the press when the face renders another element', async () => {
+      const tag = shallowRef('div');
+      const onCommit = vi.fn();
+      await render(() => (
+        <TimeClock.Root onValueCommitted={onCommit}>
+          <TimeClock.Face as={tag.value} data-testid="face" style={faceStyle} />
+        </TimeClock.Root>
+      ));
+      const root = screen.getByRole('group');
+      const face = screen.getByTestId('face');
+      const pointer = { ...mouse, ...pointOnFace(face, 90) };
+      await fireEvent.pointerDown(face, pointer);
+      expect(root).toHaveAttribute('data-dragging');
+
+      tag.value = 'section';
+      await flushMicrotasks();
+      const next = screen.getByTestId('face');
+      expect(next).not.toBe(face);
+      expect(root).not.toHaveAttribute('data-dragging');
+      await fireEvent.pointerUp(next, pointer);
+      expect(onCommit).not.toHaveBeenCalled();
+    });
+
+    it('cancels the press when the face loses pointer capture', async () => {
+      const { result, onValueCommitted } = renderClock();
+      await result;
+      const face = screen.getByTestId('face');
+      const pointer = { ...mouse, ...pointOnFace(face, 90) };
+      await fireEvent.pointerDown(face, pointer);
+      await fireEvent.lostPointerCapture(screen.getByRole('slider'), pointer);
+      expect(face).toHaveAttribute('data-dragging');
+
+      await fireEvent.lostPointerCapture(face, pointer);
+      expect(face).not.toHaveAttribute('data-dragging');
+      await fireEvent.pointerUp(face, pointer);
+      expect(onValueCommitted).not.toHaveBeenCalled();
+    });
+
+    it('keeps dragging while another face still has a press', async () => {
+      await render(
+        <TimeClock.Root>
+          <TimeClock.Face data-testid="first" style={faceStyle} />
+          <TimeClock.Face data-testid="second" style={faceStyle} />
+        </TimeClock.Root>,
+      );
+      const root = screen.getByRole('group');
+      const first = screen.getByTestId('first');
+      const second = screen.getByTestId('second');
+      await fireEvent.pointerDown(first, { ...mouse, ...pointOnFace(first, 90) });
+      await fireEvent.pointerDown(second, { ...mouse, pointerId: 2, ...pointOnFace(second, 0) });
+
+      await fireEvent.pointerCancel(first, mouse);
+      expect(root).toHaveAttribute('data-dragging');
+      await fireEvent.pointerCancel(second, { ...mouse, pointerId: 2 });
+      expect(root).not.toHaveAttribute('data-dragging');
     });
 
     it('ends the press when the face goes away and the root stays', async () => {

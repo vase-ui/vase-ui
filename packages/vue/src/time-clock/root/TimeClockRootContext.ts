@@ -33,7 +33,7 @@ export interface TimeClockRootContext {
   focusInput: () => void;
   isNumberDisabled: (number: TimeClockFaceNumber) => boolean;
   isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriodValue) => boolean;
-  setDragging: (dragging: boolean) => void;
+  setDragging: (face: HTMLElement, dragging: boolean) => void;
   /**
    * Returns `false` when the clock does not take the number: a disabled number, a disabled or read
    * only clock, or a change that a listener cancels.

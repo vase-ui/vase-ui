@@ -148,7 +148,7 @@ import {
   PickerClockOwner,
   usePickerControl,
 } from '../../internals/date-time/picker/PickerControlContext';
-import { computed, provide, shallowRef, watchEffect } from 'vue';
+import { computed, provide, shallowReactive, watchEffect } from 'vue';
 import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -276,7 +276,7 @@ const currentView = useControlled<TimeClockView>({
   state: 'view',
 });
 
-const dragging = shallowRef(false);
+const draggingFaces = shallowReactive(new Set<HTMLElement>());
 const inputs = new Set<HTMLInputElement>();
 const lastInput = () => Array.from(inputs).at(-1);
 usePickerControl(PickerClockOwner, lastInput);
@@ -443,7 +443,7 @@ const state = computed<TimeClockRootState>(() => ({
   view: currentView.value,
   disabled: props.disabled,
   readOnly: props.readOnly,
-  dragging: dragging.value,
+  dragging: draggingFaces.size > 0,
   empty: currentValue.value === null,
 }));
 
@@ -466,8 +466,9 @@ provide(TimeClockRootContext, {
   },
   isNumberDisabled,
   isDayPeriodDisabled,
-  setDragging(newDragging) {
-    dragging.value = newDragging;
+  setDragging(face, dragging) {
+    if (dragging) draggingFaces.add(face);
+    else draggingFaces.delete(face);
   },
   selectNumber: (number, details) => selectNumber(number, details) !== null,
   stepNumber,
