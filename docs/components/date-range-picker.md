@@ -135,6 +135,10 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 - A picker that is `disabled`, in a disabled fieldset or `readOnly` has a disabled trigger, and Alt and Down does nothing.
 - The default labels are in English. The dates in them follow the locale.
 
+## Portal target
+
+Set `to` on `DateRangePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

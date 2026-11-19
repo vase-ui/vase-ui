@@ -198,7 +198,7 @@ watch(
     // assistive tech) is distinguishable from a physical release. This is deterministic, unlike
     // re-enabling on a timer that can race the synthesized click and dismiss at random.
     //
-    // `restore` runs in document capture, ahead of the outside-press check of `useDismiss` (which
+    // `restore` runs in document capture, ahead of the outside-press check of `useDismissLayer` (which
     // happens on the event target, after capture), so the triggering press still dismisses.
     doc.addEventListener('pointerdown', restore, true);
     doc.addEventListener('click', restore, true);

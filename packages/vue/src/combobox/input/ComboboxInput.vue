@@ -48,7 +48,6 @@ import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
-import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
@@ -325,7 +324,8 @@ function handleInput(event: Event) {
   }
 }
 
-function handleFocusin() {
+function handleFocusin(event: FocusEvent) {
+  if (element.value !== event.currentTarget) return;
   setFocused(true);
 
   if (!inline.value) {
@@ -346,7 +346,8 @@ function handleFocusin() {
   store.context.setIndices({ activeIndex: nextActiveIndex });
 }
 
-function handleFocusout() {
+function handleFocusout(event: FocusEvent) {
+  if (element.value !== event.currentTarget) return;
   setTouched(true);
   setFocused(false);
 
@@ -547,6 +548,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         form: store.select('form'),
         name: inputOwnsFormValue.value && name ? name : undefined,
         id: id.value,
+        onFocusin: handleFocusin,
+        onFocusout: handleFocusout,
         onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         onInput: handleInput,
@@ -561,21 +564,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
   },
   stateAttributesMapping: triggerStateAttributesMapping,
 });
-
-// Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
-// Vue listener stays on the removed input. The sync watcher removes the native listeners before
-// Vue removes the input.
-watch(
-  element,
-  (input, _previous, onCleanup) => {
-    if (input) {
-      onCleanup(
-        addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
-      );
-    }
-  },
-  { flush: 'sync' },
-);
 
 useFormEntryValue(element, () => displayText(inputValue.value));
 

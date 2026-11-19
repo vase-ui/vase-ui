@@ -1197,7 +1197,7 @@ async function expectPortalPageOnServer(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
 }
 
-// After the mount, each portal element is in its container. A `null` container has none.
+// Each portal uses its target after mount. An explicit null delays the portal.
 async function expectHydratedPortalPage(page: Page) {
   const readParent = (testId: string) =>
     page

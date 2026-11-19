@@ -314,10 +314,10 @@ describe('<Dialog.Portal />', () => {
     });
 
     it('does not read the container after the mount', async () => {
-      const container = vi.fn(() => document.body);
+      const query = vi.spyOn(document, 'querySelector');
       await render(
         <Dialog.Root defaultOpen modal={false}>
-          <Dialog.Portal disabled container={container}>
+          <Dialog.Portal disabled to="#unused-target">
             <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>,
@@ -325,7 +325,7 @@ describe('<Dialog.Portal />', () => {
       await nextTick();
       await nextTick();
 
-      expect(container).not.toHaveBeenCalled();
+      expect(query).not.toHaveBeenCalledWith('#unused-target');
     });
 
     it.each([

@@ -975,7 +975,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await render(
       <Drawer.Root open modal={false}>
         <Drawer.VirtualKeyboardProvider>
-          <Drawer.Portal container={shadowRoot}>
+          <Drawer.Portal to={shadowRoot}>
             <Drawer.Viewport>
               <Drawer.Popup>
                 <input data-testid="input" type="text" />

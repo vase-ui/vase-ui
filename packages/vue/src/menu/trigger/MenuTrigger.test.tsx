@@ -264,7 +264,7 @@ describe('<Menu.Trigger />', () => {
           <Menu.Trigger delay={0} openOnHover>
             Open
           </Menu.Trigger>
-          <Menu.Portal container={shadowRoot}>
+          <Menu.Portal to={shadowRoot}>
             <Menu.Positioner>
               <Menu.Popup />
             </Menu.Positioner>

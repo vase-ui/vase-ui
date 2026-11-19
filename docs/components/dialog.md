@@ -257,9 +257,21 @@ To show an element "outside" the colored area of the popup, keep it inside `Dial
 
 </DemoSource>
 
+### Portal targets
+
+Set `to` to a CSS selector, an element or a shadow root. Omit it to use the nearest portal element or the document body. Set `:to="null"` to wait for a target. Vue resolves a selector after the client mount.
+
+```vue-html
+<Dialog.Portal to="#overlays">
+  <Dialog.Popup>Account settings</Dialog.Popup>
+</Dialog.Portal>
+```
+
+Replace the former `container` prop with `to`. Pass the element directly. Vue templates unwrap refs.
+
 ### Render in place
 
-Set `disabled` on `Dialog.Portal` to render the portal element and its parts at the place of the component. The server HTML then includes an open popup, and the portal does not read `container`. The name follows [Vue's `Teleport` prop](https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport).
+Set `disabled` on `Dialog.Portal` to render the portal element and its parts at the place of the component. The server HTML then includes an open popup, and the portal ignores `to`. The name follows [Vue's `Teleport` prop](https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport).
 
 This panel stays beside a list on wide screens and becomes a modal sheet on narrow screens. It keeps one dialog tree and changes `modal` after hydration:
 

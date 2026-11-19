@@ -193,7 +193,11 @@ import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import {
@@ -558,7 +562,7 @@ const click = useTriggerPress(store, {
   event: 'mousedown',
 });
 
-const dismiss = useDismiss(store);
+const dismiss = useDismissLayer(store);
 
 const getActiveIndex = () => store.state.activeIndex;
 const getSelectedIndex = () => store.state.selectedIndex;
@@ -626,7 +630,7 @@ const triggerProps = computed<HTMLAttributes>(() =>
   mergeProps(
     typeahead.reference,
     listNavigation.value.reference,
-    dismiss.reference,
+    dismissTriggerBindings(dismiss),
     click,
     interactionTypeProps,
   ),
@@ -636,7 +640,7 @@ const popupProps = computed<HTMLAttributes>(() =>
     FOCUSABLE_POPUP_PROPS,
     typeahead.floating,
     listNavigation.value.floating,
-    dismiss.floating,
+    dismissPopupBindings(dismiss),
   ),
 );
 

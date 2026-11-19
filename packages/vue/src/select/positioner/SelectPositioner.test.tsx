@@ -13,7 +13,7 @@ import {
 } from '#test-utils';
 import {
   createScrollDocument,
-  getScrollLockRegistry,
+  scrollLockCount,
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
@@ -333,12 +333,6 @@ describe('<Select.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
-    // a change in the document of an iframe. Its check in each frame sees the change.
-    function lockCount() {
-      return getScrollLockRegistry()?.lockCount ?? 0;
-    }
-
     // The trigger and the portal are in the document of a frame, so the lock changes no style of
     // the test page. The trigger has room for the placement over it.
     function createSelect(
@@ -355,7 +349,7 @@ describe('<Select.Positioner />', () => {
                 <Select.Value />
               </Select.Trigger>
             </Teleport>
-            <Select.Portal container={page.body}>
+            <Select.Portal to={page.body}>
               <Select.Positioner data-testid="positioner" {...positioner}>
                 <Select.Popup>
                   <Select.Item value="a">a</Select.Item>
@@ -398,7 +392,7 @@ describe('<Select.Positioner />', () => {
 
       actions.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false));
-      expect(lockCount()).toBe(0);
+      expect(scrollLockCount(page)).toBe(0);
       expect(getPositioner(page)?.isConnected).toBe(true);
     });
 
@@ -418,7 +412,7 @@ describe('<Select.Positioner />', () => {
         open.value = true;
         await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side));
 
-        expect(lockCount()).toBe(locks);
+        expect(scrollLockCount(page)).toBe(locks);
       },
     );
 

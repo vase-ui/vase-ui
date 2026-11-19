@@ -5,7 +5,7 @@ import { isInaccessible } from '@testing-library/dom';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
 import type { InteractionType } from '../src/utils/popups/usePopupTrigger';
-import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../src/utils/popups/focus/usePopupFocus';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';

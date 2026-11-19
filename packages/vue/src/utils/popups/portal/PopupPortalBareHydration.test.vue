@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import FloatingPortalLite from './FloatingPortalLite.vue';
+import PopupPortal from './PopupPortal.vue';
 </script>
 
 <template>
   <button data-testid="trigger" type="button">trigger</button>
-  <FloatingPortalLite data-testid="portal">
+  <div id="hydrate-target" data-testid="target" />
+  <PopupPortal to="#hydrate-target" data-testid="portal">
     <div data-testid="content">content</div>
-  </FloatingPortalLite>
+  </PopupPortal>
   <button data-testid="after" type="button">after</button>
 </template>

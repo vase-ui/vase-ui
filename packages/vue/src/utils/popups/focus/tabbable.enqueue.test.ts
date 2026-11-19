@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { enqueueFocus } from './enqueueFocus';
+import { enqueueFocus } from './tabbable';
 
 function appendButtons() {
   const first = document.createElement('button');

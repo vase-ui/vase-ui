@@ -1,4 +1,3 @@
-import { bindPopupParts } from '../../utils/popups/popupBindings';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -10,12 +9,14 @@ import {
   defineComponent,
   onMounted,
   onUnmounted,
+  provide,
   shallowRef,
 } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import { Dialog } from '@vase-ui/vue/dialog';
+import { Drawer } from '@vase-ui/vue/drawer';
 import {
   createHeldBranch,
   createRenderer,
@@ -54,8 +55,7 @@ import * as Popover from '../../popover/index.parts';
 import * as Select from '../../select/index.parts';
 import { DialogStore } from '../store/DialogStore';
 import DialogRootHydration from './DialogRootHydration.test.vue';
-import { useDialogRootContext } from './DialogRootContext';
-import { useDialogInteractions } from './useDialogRoot';
+import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
 
 type Store = DialogStore<unknown>;
 
@@ -437,10 +437,6 @@ describe('<Dialog.Root />', () => {
   dialogRootSharedTests({ parts: Dialog, popupRole: 'dialog', render });
 
   it('reports nested drawer counts before passive effects', async () => {
-    const childStore = new DialogStore(
-      { open: true, mounted: true, modal: false, disablePointerDismissal: false },
-      undefined,
-    );
     const parentStore = new DialogStore(undefined, undefined);
     let taskAfterMountRan = false;
     let taskAfterUnmountRan = false;
@@ -476,15 +472,8 @@ describe('<Dialog.Root />', () => {
     });
     const Interactions = defineComponent({
       setup() {
-        useDialogInteractions({
-          store: childStore,
-          open: computed(() => childStore.select('open')),
-          mounted: computed(() => childStore.state.mounted),
-          bindParts: (parts) => bindPopupParts(childStore, parts),
-          parentContext: parentStore.context,
-          isDrawer: true,
-        });
-        return () => null;
+        provide(DialogRootContext, parentStore);
+        return () => <Drawer.Root defaultOpen modal={false} />;
       },
     });
 
@@ -892,7 +881,7 @@ describe('<Dialog.Root />', () => {
         await render(
           <TestDialog
             rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange, modal: true }}
-            portalProps={{ container: shadowRoot }}
+            portalProps={{ to: shadowRoot }}
             includeBackdrop
           />,
         );
@@ -918,7 +907,7 @@ describe('<Dialog.Root />', () => {
               <button data-testid="outside">Outside</button>
               <TestDialog
                 rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange, modal: false }}
-                portalProps={{ container: shadowRoot }}
+                portalProps={{ to: shadowRoot }}
               />
             </Teleport>,
           );
@@ -996,7 +985,7 @@ describe('<Dialog.Root />', () => {
             <Teleport to={container}>
               <TestDialog
                 rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange, modal: false }}
-                portalProps={{ container: shadowRoot }}
+                portalProps={{ to: shadowRoot }}
               />
             </Teleport>,
           );
@@ -1025,7 +1014,7 @@ describe('<Dialog.Root />', () => {
             <Teleport to={container}>
               <TestDialog
                 rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange, modal: true }}
-                portalProps={{ container: shadowRoot }}
+                portalProps={{ to: shadowRoot }}
               />
             </Teleport>,
           );
@@ -1913,7 +1902,7 @@ describe('<Dialog.Root />', () => {
         render: (portalContainer: ShadowRoot | HTMLElement | undefined) => (
           <Dialog.Root>
             <Dialog.Trigger data-testid="open-nested">Open nested</Dialog.Trigger>
-            <Dialog.Portal container={portalContainer}>
+            <Dialog.Portal to={portalContainer}>
               <Dialog.Backdrop />
               <Dialog.Popup data-testid="nested">
                 <Dialog.Close data-testid="close-nested">Close</Dialog.Close>
@@ -1928,7 +1917,7 @@ describe('<Dialog.Root />', () => {
         render: (portalContainer: ShadowRoot | HTMLElement | undefined) => (
           <Dialog.Root modal={false}>
             <Dialog.Trigger data-testid="open-nested">Open nested</Dialog.Trigger>
-            <Dialog.Portal container={portalContainer}>
+            <Dialog.Portal to={portalContainer}>
               <Dialog.Popup data-testid="nested">
                 <Dialog.Close data-testid="close-nested">Close</Dialog.Close>
               </Dialog.Popup>
@@ -1942,7 +1931,7 @@ describe('<Dialog.Root />', () => {
         render: (portalContainer: ShadowRoot | HTMLElement | undefined) => (
           <AlertDialog.Root>
             <AlertDialog.Trigger data-testid="open-nested">Open nested</AlertDialog.Trigger>
-            <AlertDialog.Portal container={portalContainer}>
+            <AlertDialog.Portal to={portalContainer}>
               <AlertDialog.Backdrop />
               <AlertDialog.Popup data-testid="nested">
                 <AlertDialog.Close data-testid="close-nested">Close</AlertDialog.Close>
@@ -1971,7 +1960,7 @@ describe('<Dialog.Root />', () => {
           await render(
             <Teleport to={container}>
               <Dialog.Root defaultOpen modal={nestedKind.modal} onOpenChange={handleOpenChange}>
-                <Dialog.Portal container={resolveContainer(outer)}>
+                <Dialog.Portal to={resolveContainer(outer)}>
                   {nestedKind.modal && <Dialog.Backdrop />}
                   <Dialog.Popup data-testid="outer">
                     {nestedKind.render(resolveContainer(nested))}
@@ -2001,7 +1990,7 @@ describe('<Dialog.Root />', () => {
         <Teleport to={container}>
           <div data-testid="outside">Outside</div>
           <Dialog.Root defaultOpen modal={false} onOpenChange={handleOpenChange}>
-            <Dialog.Portal container={shadowRoot}>
+            <Dialog.Portal to={shadowRoot}>
               <Dialog.Popup data-testid="outer" />
             </Dialog.Portal>
           </Dialog.Root>
@@ -3054,7 +3043,7 @@ describe('<Dialog.Root />', () => {
     function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
       return (
         <Dialog.Root defaultOpen {...rootProps}>
-          <Dialog.Portal container={scrollDocument.body}>
+          <Dialog.Portal to={scrollDocument.body}>
             <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>

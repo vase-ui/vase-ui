@@ -27,7 +27,7 @@ import {
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import {
   createScrollDocument,
-  getScrollLockRegistry,
+  scrollLockCount,
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
@@ -1079,12 +1079,6 @@ describe('<Menu.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
-    // a change in the document of an iframe. Its check in each frame sees the change.
-    function lockCount() {
-      return getScrollLockRegistry()?.lockCount ?? 0;
-    }
-
     // The trigger and the portal are in the document of a frame, so the lock changes no style of
     // the test page.
     function createMenu(
@@ -1101,7 +1095,7 @@ describe('<Menu.Positioner />', () => {
             <Teleport to={page.body}>
               <Menu.Trigger id="trigger">Open</Menu.Trigger>
             </Teleport>
-            <Menu.Portal container={page.body}>
+            <Menu.Portal to={page.body}>
               <Menu.Positioner {...positioner}>
                 <Menu.Popup />
               </Menu.Positioner>
@@ -1122,7 +1116,7 @@ describe('<Menu.Positioner />', () => {
 
       handle.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false));
-      expect(lockCount()).toBe(0);
+      expect(scrollLockCount(page)).toBe(0);
     });
 
     it.each([
@@ -1141,7 +1135,7 @@ describe('<Menu.Positioner />', () => {
       await flushMicrotasks();
 
       expect(probe.store.select('open')).toBe(true);
-      expect(lockCount()).toBe(0);
+      expect(scrollLockCount(page)).toBe(0);
     });
 
     // A trigger in a menubar is an item of the composite of the menubar. The menu thus opens from
@@ -1156,7 +1150,7 @@ describe('<Menu.Positioner />', () => {
         <MenubarProvider context={createMenubarContext({ modal: computed(() => modal) })}>
           <Menu.Root>
             <probe.Probe />
-            <Menu.Portal container={page.body}>
+            <Menu.Portal to={page.body}>
               <Menu.Positioner>
                 <Menu.Popup />
               </Menu.Positioner>
@@ -1172,7 +1166,7 @@ describe('<Menu.Positioner />', () => {
       await flushMicrotasks();
 
       expect(probe.store.select('modal')).toBe(false);
-      expect(lockCount()).toBe(locks);
+      expect(scrollLockCount(page)).toBe(locks);
     });
 
     it('VUE-5: releases the lock while KeepAlive holds the menu, and takes it back after', async () => {

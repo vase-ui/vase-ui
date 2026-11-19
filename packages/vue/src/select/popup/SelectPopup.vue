@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 
 export interface SelectPopupState {
   /**
@@ -61,7 +61,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
+import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
@@ -522,6 +522,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
         class: !hasList && isAligned ? styleDisableScrollbar.className : undefined,
       },
       getDisabledMountTransitionStyles(transitionStatus.value),
+      focusBindings(attrs),
       attrs,
     ];
   },
@@ -532,7 +533,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
 // hydrates.
 useStyleDisableScrollbar(element);
 
-useFloatingFocusManager(
+const focusBindings = usePopupFocus(
   () => ({
     store,
     modal: false,

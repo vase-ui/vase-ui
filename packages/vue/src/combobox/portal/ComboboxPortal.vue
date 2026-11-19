@@ -1,12 +1,13 @@
 <script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloatingPortalNode';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
 export interface ComboboxPortalState {}
 
 export interface ComboboxPortalProps
   extends
+    PortalTargetProps,
     VaseUIComponentProps<ComboboxPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
@@ -14,22 +15,21 @@ export interface ComboboxPortalProps
    * @default false
    */
   keepMounted?: boolean | undefined;
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
 }
 </script>
 
 <script setup lang="ts">
+import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
-import ComboboxPortalChildren from './ComboboxPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { ComboboxPortalContext } from './ComboboxPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -44,6 +44,25 @@ defineSlots<{
 const state: ComboboxPortalState = EMPTY_OBJECT;
 
 const store = useComboboxRootContext();
+provide(PopupBackdropContext, () => {
+  const positioner = store.select('positionerElement');
+  // A list without a positioner is its own positioner. It has no backdrop.
+  if (
+    !store.select('mounted') ||
+    !store.select('modal') ||
+    !positioner ||
+    positioner === store.select('listElement')
+  )
+    return null;
+  return {
+    inert: !store.select('open'),
+    cutout:
+      store.select('inputGroupElement') ??
+      store.select('inputElement') ??
+      store.select('triggerElement'),
+  };
+});
+
 const shouldRender = computed(
   () => store.select('mounted') || props.keepMounted || store.select('forceMounted'),
 );
@@ -64,20 +83,22 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortal
+  <PopupPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="ComboboxPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
-  </FloatingPortal>
-  <FloatingPortal
+  </PopupPortal>
+  <PopupPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <ComboboxPortalChildren><slot :state="state" /></ComboboxPortalChildren>
-  </FloatingPortal>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
+  </PopupPortal>
 </template>

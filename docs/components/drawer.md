@@ -446,6 +446,10 @@ Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer
 }
 ```
 
+## Portal target
+
+Set `to` on `Drawer.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

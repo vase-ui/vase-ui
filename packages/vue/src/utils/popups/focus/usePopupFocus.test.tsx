@@ -1,3 +1,4 @@
+import { usePopupFocus } from './usePopupFocus';
 import testingLibraryUserEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -37,11 +38,12 @@ import { createChangeEventDetails } from '../../../internals/createVaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { useDismiss } from '../interactions/useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 import { usePopupHover } from '../interactions/usePopupHover';
-import { usePortalContext } from '../portal/FloatingPortalContext';
-import type { PortalContextValue } from '../portal/FloatingPortalContext';
-import FloatingPortal from '../portal/FloatingPortal.vue';
+import { usePortalContext } from '../portal/PopupPortalContext';
+import type { PortalContextValue } from '../portal/PopupPortalContext';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -51,7 +53,7 @@ import {
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { PopupPositioningContext } from '../types';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager';
+import type { PopupFocusOptions, FocusOption } from './usePopupFocus';
 import FocusGuard from './FocusGuard.vue';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set the
@@ -83,7 +85,7 @@ function ignoreFocusOptions() {
   onTestFinished(() => spy.mockRestore());
 }
 
-type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
+type ManagerProps = Partial<Omit<PopupFocusOptions, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a
@@ -162,7 +164,9 @@ const Popup = defineComponent({
           </FloatingFocusManager>
         ) : null;
       const popup = props.portal ? (
-        <FloatingPortal container={props.container}>{content}</FloatingPortal>
+        <PopupPortal guards={usePortalFocus} to={props.container}>
+          {content}
+        </PopupPortal>
       ) : (
         content
       );
@@ -424,7 +428,7 @@ const Dialog = defineComponent({
 
     const { getReferenceProps, getFloatingProps } = useTestInteractions([
       useClick(context.rootStore),
-      useDismiss(context.rootStore, { bubbles: false }),
+      useTestDismiss(context.rootStore, { bubbles: false }),
     ]);
 
     provideFloatingNode(nodeId);
@@ -438,7 +442,7 @@ const Dialog = defineComponent({
               children,
               getReferenceProps({ ref: refs.setReference, ...children.props }),
             )}
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             {open() && (
               <FloatingFocusManager store={context.rootStore} modal={props.modal}>
                 <div {...getFloatingProps({ ref: refs.setFloating })}>
@@ -450,7 +454,7 @@ const Dialog = defineComponent({
                 </div>
               </FloatingFocusManager>
             )}
-          </FloatingPortal>
+          </PopupPortal>
           {slots.side?.()}
         </>
       );
@@ -491,7 +495,7 @@ const ClickDismissApp = defineComponent({
     });
 
     const click = useClick(context.rootStore);
-    const dismiss = useDismiss(context.rootStore);
+    const dismiss = useTestDismiss(context.rootStore);
 
     const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -532,7 +536,7 @@ const RemovedReferenceApp = defineComponent({
           <button ref={refs.setReference} {...getReferenceProps()} data-testid="reference" />
         )}
         {isOpen.value && (
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FloatingFocusManager store={context.rootStore} modal={props.modal}>
               <div ref={refs.setFloating} {...getFloatingProps()}>
                 <button
@@ -546,7 +550,7 @@ const RemovedReferenceApp = defineComponent({
                 </button>
               </div>
             </FloatingFocusManager>
-          </FloatingPortal>
+          </PopupPortal>
         )}
         <button data-testid="fallback" />
       </>
@@ -954,11 +958,11 @@ describe('FloatingFocusManager', () => {
       const hasFirst = shallowRef(true);
       const hasSecond = shallowRef(false);
       await render(() => (
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           <Probe />
           {hasFirst.value ? <Manager key="first" /> : null}
           {hasSecond.value ? <Manager key="second" /> : null}
-        </FloatingPortal>
+        </PopupPortal>
       ));
 
       // The second manager writes its guards in an update before the first manager unmounts. When
@@ -2706,9 +2710,9 @@ describe('FloatingFocusManager', () => {
               {{
                 default: () => [
                   <input data-testid="one" />,
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     <input data-testid="nested" />
-                  </FloatingPortal>,
+                  </PopupPortal>,
                 ],
               }}
             </Popup>
@@ -2932,9 +2936,9 @@ describe('FloatingFocusManager', () => {
             {{
               default: () => [
                 <input data-testid="one" />,
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <input data-testid="nested" />
-                </FloatingPortal>,
+                </PopupPortal>,
               ],
             }}
           </Popup>
@@ -3602,7 +3606,7 @@ describe('FloatingFocusManager', () => {
             return () => (
               <>
                 <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   {isOpen.value && (
                     <FloatingFocusManager store={context.rootStore} returnFocus={() => undefined}>
                       <div ref={refs.setFloating} {...getFloatingProps()}>
@@ -3615,7 +3619,7 @@ describe('FloatingFocusManager', () => {
                       </div>
                     </FloatingFocusManager>
                   )}
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -3650,7 +3654,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const click = useClick(context.rootStore);
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -3658,13 +3662,13 @@ describe('FloatingFocusManager', () => {
             <>
               {cloneElement(slots.default!()[0], getReferenceProps({ ref: refs.setReference }))}
               {open.value && (
-                <FloatingPortal container={props.portalRef}>
+                <PopupPortal guards={usePortalFocus} to={props.portalRef}>
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div ref={refs.setFloating} {...getFloatingProps()}>
                       {slots.popup?.()}
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -4374,7 +4378,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
 
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -4544,7 +4548,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
             return () => (
@@ -4562,7 +4566,7 @@ describe('FloatingFocusManager', () => {
                     isOpen.value = false;
                   }}
                 />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     disabled={!isOpen.value}
@@ -4572,7 +4576,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -4710,7 +4714,7 @@ describe('FloatingFocusManager', () => {
                     ref={refs.setReference}
                     {...getReferenceProps()}
                   />
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     {isOpen.value && (
                       <FloatingFocusManager store={context.rootStore} returnFocus={finalFocus}>
                         <div ref={refs.setFloating} {...getFloatingProps()}>
@@ -4718,7 +4722,7 @@ describe('FloatingFocusManager', () => {
                         </div>
                       </FloatingFocusManager>
                     )}
-                  </FloatingPortal>
+                  </PopupPortal>
                 </>
               );
             },
@@ -4755,7 +4759,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
             watch(
@@ -4779,13 +4783,13 @@ describe('FloatingFocusManager', () => {
                     reopenOnClose.value = true;
                   }}
                 />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager store={context.rootStore} disabled={!isOpen.value}>
                     <div ref={refs.setFloating} {...getFloatingProps()}>
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -4832,7 +4836,7 @@ describe('FloatingFocusManager', () => {
             readInsideComponentTree = () => context.rootStore.context.insideComponentTree;
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
 
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -4841,7 +4845,7 @@ describe('FloatingFocusManager', () => {
                 <span data-testid="open-state">{String(isOpen.value)}</span>
                 <button data-testid="before" />
                 <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     disabled={!isOpen.value}
@@ -4851,7 +4855,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="child" />
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
                 <button data-testid="after" />
               </>
             );
@@ -4911,7 +4915,7 @@ describe('FloatingFocusManager', () => {
                   open.value = true;
                 }}
               />
-              <FloatingPortal portalOwnerRole={props.portalOwnerRole}>
+              <PopupPortal guards={usePortalFocus} portalOwnerRole={props.portalOwnerRole}>
                 {open.value && (
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div data-testid="floating" ref={refs.setFloating}>
@@ -4919,7 +4923,7 @@ describe('FloatingFocusManager', () => {
                     </div>
                   </FloatingFocusManager>
                 )}
-              </FloatingPortal>
+              </PopupPortal>
               <span tabindex={0} data-testid="last" />
             </>
           );
@@ -4964,7 +4968,7 @@ describe('FloatingFocusManager', () => {
                   <span data-testid="reference-sibling-1" />
                   <span data-testid="reference-sibling-2" />
                 </div>
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   {open.value && (
                     <FloatingFocusManager store={context.rootStore} modal={false}>
                       <div data-testid="floating" ref={refs.setFloating}>
@@ -4972,7 +4976,7 @@ describe('FloatingFocusManager', () => {
                       </div>
                     </FloatingFocusManager>
                   )}
-                </FloatingPortal>
+                </PopupPortal>
               </>
             );
           },
@@ -5369,7 +5373,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const role = () => roleProps(isOpen.value, 'listbox');
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
@@ -5422,7 +5426,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const role = () => roleProps(isOpen.value, 'listbox');
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
@@ -5440,7 +5444,7 @@ describe('FloatingFocusManager', () => {
                 role="combobox"
               />
               {isOpen.value && (
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager
                     store={context.rootStore}
                     initialFocus={false}
@@ -5451,7 +5455,7 @@ describe('FloatingFocusManager', () => {
                       <button>two</button>
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
               <button>outside</button>
             </>
@@ -5482,7 +5486,7 @@ describe('FloatingFocusManager', () => {
             open: () => props.open,
             onOpenChange: (open) => props.onOpenChange(open),
           });
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const { getFloatingProps } = useTestInteractions([dismiss]);
 
           return () => (
@@ -5505,7 +5509,7 @@ describe('FloatingFocusManager', () => {
             onOpenChange: setOpenOf(isOpen),
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
@@ -5735,6 +5739,79 @@ describe('FloatingFocusManager', () => {
       expect(screen.getByText('outside')).toHaveAttribute('aria-hidden', 'true');
     });
 
+    test('uses the last rendered return target when removal and a policy change share one update', async () => {
+      const shown = shallowRef(true);
+      const target = shallowRef<HTMLElement | null>(null);
+      const Child = defineComponent(() => {
+        const { refs, context } = useFloating({ open: true });
+        const bindings = usePopupFocus(
+          () => ({ store: context.rootStore, returnFocus: target.value, initialFocus: false }),
+          refs.floating,
+        );
+        return () => (
+          <div ref={refs.setFloating} {...bindings({})}>
+            <button data-testid="inside" />
+          </div>
+        );
+      });
+      await render(() => (
+        <>
+          <button data-testid="first" />
+          <button data-testid="last" />
+          {shown.value && <Child />}
+        </>
+      ));
+      target.value = screen.getByTestId('first');
+      await nextTick();
+      screen.getByTestId('inside').focus();
+      shown.value = false;
+      target.value = screen.getByTestId('last');
+      await waitFor(() => expect(screen.getByTestId('first')).toHaveFocus());
+    });
+
+    test('updates the managed tabindex binding on the owned dialog element', async () => {
+      const content = shallowRef(false);
+      const role = shallowRef<'dialog' | 'listbox'>('dialog');
+      const manual = shallowRef<number>();
+      const Test = defineComponent(() => {
+        const { refs, context } = useFloating({ open: true });
+        const bindings = usePopupFocus(
+          () => ({ store: context.rootStore, modal: false, initialFocus: false }),
+          refs.floating,
+        );
+        return () => (
+          <div
+            role={role.value}
+            ref={refs.setFloating}
+            tabindex={manual.value}
+            {...bindings({ tabindex: manual.value })}
+          >
+            {content.value && <button>child</button>}
+          </div>
+        );
+      });
+      await render(<Test />);
+      const popup = screen.getByRole('dialog');
+      expect(popup).toHaveAttribute('tabindex', '0');
+      expect(popup).toHaveAttribute('data-tabindex', '0');
+      content.value = true;
+      await waitFor(() => expect(popup).toHaveAttribute('tabindex', '-1'));
+      expect(popup).toHaveAttribute('data-tabindex', '-1');
+      content.value = false;
+      await waitFor(() => expect(popup).toHaveAttribute('tabindex', '0'));
+
+      role.value = 'listbox';
+      await waitFor(() => expect(popup.getAttribute('tabindex')).toBeNull());
+      expect(popup).not.toHaveAttribute('data-tabindex');
+      manual.value = 3;
+      role.value = 'dialog';
+      await nextTick();
+      expect(popup).toHaveAttribute('tabindex', '3');
+      expect(popup).not.toHaveAttribute('data-tabindex');
+      manual.value = undefined;
+      await waitFor(() => expect(popup).toHaveAttribute('data-tabindex', '0'));
+    });
+
     test('floating element with no focusable elements and no listbox role gets tabIndex=0 when initialFocus is -1', async () => {
       const Test = defineComponent({
         setup() {
@@ -5923,7 +6000,7 @@ describe('FloatingFocusManager', () => {
             <>
               <button data-testid="reference" ref={refs.setReference} {...getReferenceProps()} />
               {isOpen.value && (
-                <FloatingPortal>
+                <PopupPortal guards={usePortalFocus}>
                   <FloatingFocusManager store={context.rootStore} modal={false}>
                     <div
                       ref={refs.setFloating}
@@ -5934,7 +6011,7 @@ describe('FloatingFocusManager', () => {
                       <button data-testid="inner">inner</button>
                     </div>
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );

@@ -30,8 +30,8 @@ import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import FloatingPortal from '../portal/FloatingPortal.vue';
-import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -39,8 +39,9 @@ import {
   useFloatingParentNodeId,
 } from '../tree/FloatingTree';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { normalizeProp, useDismiss } from './useDismiss';
-import type { UseDismissProps } from './useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
+import { dismissPopupBindings, normalizeProp, useDismissLayer } from './useDismissLayer';
+import type { DismissLayerOptions } from './useDismissLayer';
 import { useTriggerFocus as useFocus } from '../usePopupTrigger';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set
@@ -90,7 +91,7 @@ const DOCUMENT_LISTENER_TYPES = [
   'load',
 ];
 
-/** Counts the listeners of `useDismiss` that `doc` holds. */
+/** Counts the listeners of `useDismissLayer` that `doc` holds. */
 function countListeners(doc: Document = document) {
   let total = 0;
   const add = doc.addEventListener;
@@ -133,7 +134,7 @@ const Popup = defineComponent({
     portalContainer: { type: Object as PropType<HTMLElement>, default: undefined },
     portalBackdrop: { type: Boolean, default: false },
     node: { type: Boolean, default: false },
-    dismiss: { type: Object as PropType<UseDismissProps>, default: () => ({}) },
+    dismiss: { type: Object as PropType<DismissLayerOptions>, default: () => ({}) },
     toggleOn: { type: String as PropType<'click' | 'pointerdown'>, default: 'click' },
     onChange: { type: Function as PropType<(change: Change) => void>, default: undefined },
     allowPropagation: { type: Boolean, default: false },
@@ -159,7 +160,7 @@ const Popup = defineComponent({
     if (nodeId) {
       provideFloatingNode(nodeId);
     }
-    const dismiss = useDismiss(context.rootStore, props.dismiss);
+    const dismiss = useTestDismiss(context.rootStore, props.dismiss);
 
     function toggle() {
       open.value = !open.value;
@@ -189,10 +190,10 @@ const Popup = defineComponent({
           </button>
           {props.teleport && <Teleport to="body">{popup}</Teleport>}
           {props.portalContainer && (
-            <FloatingPortalLite container={props.portalContainer}>
+            <PopupPortal to={props.portalContainer}>
               {props.portalBackdrop && <div data-testid={`${props.name}-backdrop`} />}
               {popup}
-            </FloatingPortalLite>
+            </PopupPortal>
           )}
           {!props.teleport && !props.portalContainer && popup}
         </>
@@ -209,10 +210,10 @@ const Tree = defineComponent({
 });
 
 /**
- * A popup that a button opens. `dismiss` is `useDismiss`, or the function of a second copy of the
+ * A popup that a button opens. `dismiss` is `useDismissLayer`, or the function of a second copy of the
  * module.
  */
-function createLayer(dismiss: typeof useDismiss, name: string) {
+function createLayer(dismiss: typeof useDismissLayer, name: string) {
   return defineComponent({
     setup() {
       const open = shallowRef(false);
@@ -222,7 +223,7 @@ function createLayer(dismiss: typeof useDismiss, name: string) {
           open.value = nextOpen;
         },
       });
-      const { floating } = dismiss(context.rootStore);
+      const floating = dismissPopupBindings(dismiss(context.rootStore));
       return () => (
         <>
           <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
@@ -330,7 +331,7 @@ const App = defineComponent({
     escapeKey: { type: Boolean, default: undefined },
     referencePress: { type: Function as PropType<() => boolean>, default: undefined },
     outsidePress: {
-      type: [Boolean, Function] as PropType<UseDismissProps['outsidePress']>,
+      type: [Boolean, Function] as PropType<DismissLayerOptions['outsidePress']>,
       default: undefined,
     },
     outsidePressEvent: { type: String as PropType<'intentional' | 'sloppy'>, default: undefined },
@@ -356,7 +357,7 @@ const App = defineComponent({
       },
     });
     const { getReferenceProps, getFloatingProps } = useTestInteractions([
-      useDismiss(context.rootStore, {
+      useTestDismiss(context.rootStore, {
         escapeKey: () => props.escapeKey,
         referencePress: props.referencePress,
         outsidePress: props.outsidePress,
@@ -385,11 +386,11 @@ describe('useDismiss', () => {
     const active = shallowRef(true);
     const change = vi.fn();
     const Child = defineComponent(() => {
-      useDismiss(useFloatingRootStore({ elements: { positionerElement: childElement } }));
+      useTestDismiss(useFloatingRootStore({ elements: { positionerElement: childElement } }));
       return () => null;
     });
     const Parent = defineComponent(() => {
-      useDismiss(useFloatingRootStore({ open: true, onOpenChange: change }));
+      useTestDismiss(useFloatingRootStore({ open: true, onOpenChange: change }));
       return () => (active.value ? <Child /> : null);
     });
     await render(() => (
@@ -464,7 +465,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore),
+            useTestDismiss(context.rootStore),
           ]);
 
           return () => (
@@ -531,7 +532,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore),
+            useTestDismiss(context.rootStore),
           ]);
 
           return () => (
@@ -570,7 +571,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore),
+            useTestDismiss(context.rootStore),
           ]);
 
           return () => (
@@ -617,7 +618,7 @@ describe('useDismiss', () => {
               },
             });
             const { getReferenceProps, getFloatingProps } = useTestInteractions([
-              useDismiss(context.rootStore),
+              useTestDismiss(context.rootStore),
             ]);
 
             return () => (
@@ -686,7 +687,7 @@ describe('useDismiss', () => {
         },
         setup(props) {
           const { getFloatingProps } = useTestInteractions([
-            useDismiss(props.context.rootStore, {
+            useTestDismiss(props.context.rootStore, {
               outsidePress: props.outsidePress,
               outsidePressEvent: 'sloppy',
             }),
@@ -764,7 +765,7 @@ describe('useDismiss', () => {
             },
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
 
           return () => (
@@ -804,16 +805,16 @@ describe('useDismiss', () => {
             },
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
 
           return () => (
             <>
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {isOpen.value && (
-                <FloatingPortal container={props.shadowRoot}>
+                <PopupPortal guards={usePortalFocus} to={props.shadowRoot}>
                   <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -854,18 +855,18 @@ describe('useDismiss', () => {
             },
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
 
           return () => (
             <>
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {isOpen.value && (
-                <FloatingPortal container={props.shadowRoot}>
+                <PopupPortal guards={usePortalFocus} to={props.shadowRoot}>
                   <FloatingFocusManager store={context.rootStore}>
                     <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
                   </FloatingFocusManager>
-                </FloatingPortal>
+                </PopupPortal>
               )}
             </>
           );
@@ -910,7 +911,7 @@ describe('useDismiss', () => {
             },
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
 
@@ -1051,7 +1052,7 @@ describe('useDismiss', () => {
           });
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore),
+            useTestDismiss(context.rootStore),
           ]);
 
           return () => (
@@ -1059,9 +1060,9 @@ describe('useDismiss', () => {
               <button {...getReferenceProps({ ref: refs.setReference })} />
               {open.value && (
                 <div {...getFloatingProps({ ref: refs.setFloating })}>
-                  <FloatingPortal>
+                  <PopupPortal guards={usePortalFocus}>
                     <button data-testid="portaled-button" />
-                  </FloatingPortal>
+                  </PopupPortal>
                 </div>
               )}
             </>
@@ -1089,7 +1090,7 @@ describe('useDismiss', () => {
     const dialogProps = {
       testId: { type: String, required: true },
       bubbles: {
-        type: [Boolean, Object] as PropType<UseDismissProps['bubbles']>,
+        type: [Boolean, Object] as PropType<DismissLayerOptions['bubbles']>,
         default: undefined,
       },
     } as const;
@@ -1110,7 +1111,7 @@ describe('useDismiss', () => {
         provideFloatingNode(nodeId);
 
         const { getReferenceProps, getFloatingProps } = useTestInteractions([
-          useDismiss(context.rootStore, props),
+          useTestDismiss(context.rootStore, props),
         ]);
 
         return () => (
@@ -1275,11 +1276,11 @@ describe('useDismiss', () => {
             });
 
             const popoverInteractions = useTestInteractions([
-              useDismiss(popover.context.rootStore),
+              useTestDismiss(popover.context.rootStore),
             ]);
             const tooltipFocus = useFocus(tooltip.context.rootStore);
             const tooltipInteractions = useTestInteractions([
-              useDismiss(tooltip.context.rootStore),
+              useTestDismiss(tooltip.context.rootStore),
             ]);
 
             return () => (
@@ -1418,7 +1419,7 @@ describe('useDismiss', () => {
             });
             const { getReferenceProps, getFloatingProps } = useTestInteractions([
               useClick(context.rootStore),
-              useDismiss(context.rootStore, props),
+              useTestDismiss(context.rootStore, props),
             ]);
 
             return () => (
@@ -1602,21 +1603,21 @@ describe('useDismiss', () => {
         provideFloatingNode(nodeId);
 
         const { getReferenceProps, getFloatingProps } = useTestInteractions([
-          useDismiss(context.rootStore),
+          useTestDismiss(context.rootStore),
         ]);
 
         return () => (
           <>
             <button {...getReferenceProps({ ref: refs.setReference })} />
             {open.value && (
-              <FloatingPortal>
+              <PopupPortal guards={usePortalFocus}>
                 <FloatingFocusManager store={context.rootStore}>
                   <div {...getFloatingProps({ ref: refs.setFloating })}>
                     <span>{props.id}</span>
                     {slots.default?.()}
                   </div>
                 </FloatingFocusManager>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );
@@ -1752,7 +1753,7 @@ describe('useDismiss', () => {
       const input = screen.getByRole('textbox');
 
       // Another document capture listener, like a drag library's after a drop, stops the click
-      // after useDismiss has seen it but before it reaches its target.
+      // after useDismissLayer has seen it but before it reaches its target.
       const stopClick = (event: MouseEvent) => event.stopPropagation();
       document.addEventListener('click', stopClick, { capture: true, once: true });
       await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
@@ -1794,7 +1795,7 @@ describe('useDismiss', () => {
             },
           });
           const { getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -1858,7 +1859,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -1916,7 +1917,7 @@ describe('useDismiss', () => {
           });
           context = floating.context;
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -1969,7 +1970,7 @@ describe('useDismiss', () => {
           });
           context = floating.context;
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -2120,7 +2121,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -2173,7 +2174,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -2224,7 +2225,7 @@ describe('useDismiss', () => {
             },
           });
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
-            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+            useTestDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
           ]);
 
           return () => (
@@ -2308,7 +2309,7 @@ describe('useDismiss', () => {
         });
 
         const click = useClick(context.rootStore);
-        const dismiss = useDismiss(context.rootStore);
+        const dismiss = useTestDismiss(context.rootStore);
 
         const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -2318,13 +2319,13 @@ describe('useDismiss', () => {
               {props.triggerText}
             </button>
             {open.value && (
-              <FloatingPortal container={props.portalContainer}>
+              <PopupPortal guards={usePortalFocus} to={props.portalContainer}>
                 <FloatingFocusManager store={context.rootStore} modal={false}>
                   <div ref={refs.setFloating} {...getFloatingProps()}>
                     {slots.default?.()}
                   </div>
                 </FloatingFocusManager>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );
@@ -2539,10 +2540,10 @@ describe('useDismiss', () => {
   });
 
   describe('open change', () => {
-    /** The popup of the fixture family, with the props of `useDismiss` on its element. */
+    /** The popup of the fixture family, with the props of `useDismissLayer` on its element. */
     const DismissedPopupPart = defineComponent({
       setup() {
-        const { floating } = useDismiss(inject(PopupFixtureContext)!);
+        const { floating } = useTestDismiss(inject(PopupFixtureContext)!);
         return () => <PopupPart data-testid="popup" {...floating} />;
       },
     });
@@ -2823,7 +2824,7 @@ describe('useDismiss', () => {
 
     it.each<{
       name: string;
-      dismiss: UseDismissProps;
+      dismiss: DismissLayerOptions;
       press: (target: Element, outside: Element) => Promise<void>;
     }>([
       { name: 'a mouse press', dismiss: {}, press: pressAndClick },
@@ -2881,9 +2882,9 @@ describe('useDismiss', () => {
       const outside = addOutsideElement();
       await render(
         <Popup name="parent">
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <button type="button" data-testid="portaled" />
-          </FloatingPortal>
+          </PopupPortal>
         </Popup>,
       );
       expect(screen.getByTestId('parent').contains(screen.getByTestId('portaled'))).toBe(false);
@@ -2910,9 +2911,9 @@ describe('useDismiss', () => {
             dismiss={intentional}
             onChange={(change: Change) => parentChanges.push(change)}
           >
-            <FloatingPortal>
+            <PopupPortal guards={usePortalFocus}>
               <button type="button" data-testid="portaled" />
-            </FloatingPortal>
+            </PopupPortal>
           </Popup>,
         );
 
@@ -2932,13 +2933,13 @@ describe('useDismiss', () => {
     it('VUE-4: the suppression of a prevented press in a portal that no popup owns expires in the popup above', async () => {
       await render(
         <Popup name="parent" dismiss={intentional}>
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <button
               type="button"
               data-testid="portaled"
               onPointerdown={(event: PointerEvent) => event.preventDefault()}
             />
-          </FloatingPortal>
+          </PopupPortal>
         </Popup>,
       );
 
@@ -2956,7 +2957,7 @@ describe('useDismiss', () => {
     it('writes no marker to the frozen store of a popup that is above and never opens', async () => {
       const Above = defineComponent({
         setup(_, { slots }) {
-          useDismiss(getEmptyRootStore());
+          useTestDismiss(getEmptyRootStore());
           return () => slots.default?.();
         },
       });
@@ -3059,12 +3060,14 @@ describe('useDismiss', () => {
     });
 
     it('gives the same numbers to the popups of a second copy of the module', async () => {
-      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
-      expect(copy.useDismiss).not.toBe(useDismiss);
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
+      expect(copy.useDismissLayer).not.toBe(useDismissLayer);
 
-      const First = createLayer(useDismiss, 'first');
-      const Second = createLayer(copy.useDismiss, 'second');
-      const Third = createLayer(useDismiss, 'third');
+      const First = createLayer(useDismissLayer, 'first');
+      const Second = createLayer(copy.useDismissLayer, 'second');
+      const Third = createLayer(useDismissLayer, 'third');
       await render(
         <>
           <First />
@@ -3449,10 +3452,10 @@ describe('useDismiss', () => {
 
   describe('a store that changes', () => {
     /**
-     * A popup element with the props of `useDismiss` for the store that `current` names. Both
+     * A popup element with the props of `useDismissLayer` for the store that `current` names. Both
      * stores are open, and each records its changes.
      */
-    function renderSwitchingStores(dismissProps: UseDismissProps = {}) {
+    function renderSwitchingStores(dismissProps: DismissLayerOptions = {}) {
       const current = shallowRef<'a' | 'b'>('a');
       const changes: (Change & { store: string })[] = [];
       const stores: Record<'a' | 'b', ReturnType<typeof useFloatingRootStore>> = {} as never;
@@ -3473,7 +3476,7 @@ describe('useDismiss', () => {
             elements: { positionerElement: floating },
           });
         }
-        const dismiss = useDismiss(() => stores[current.value], dismissProps);
+        const dismiss = useTestDismiss(() => stores[current.value], dismissProps);
 
         return () => (
           <div
@@ -3603,7 +3606,7 @@ describe('useDismiss', () => {
     // event records the number of the newer popup.
     it.each<{
       name: string;
-      dismiss: UseDismissProps;
+      dismiss: DismissLayerOptions;
       press: (target: Element) => Promise<void>;
     }>([
       { name: 'a mouse press', dismiss: {}, press: pressAndClick },
@@ -3636,9 +3639,11 @@ describe('useDismiss', () => {
     );
 
     it('keeps the popup open for a press in a newer popup of a second copy of the module', async () => {
-      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
-      const First = createLayer(useDismiss, 'first');
-      const Second = createLayer(copy.useDismiss, 'second');
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
+      const First = createLayer(useDismissLayer, 'first');
+      const Second = createLayer(copy.useDismissLayer, 'second');
       await render(
         <>
           <First />
@@ -3657,9 +3662,11 @@ describe('useDismiss', () => {
     });
 
     it('VUE-79: keeps the popup open for a press in a newer popup of a second copy of the module in a closed shadow root', async () => {
-      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
-      const First = createLayer(useDismiss, 'first');
-      const Second = createLayer(copy.useDismiss, 'second');
+      const copy: typeof import('./useDismissLayer') = await import(
+        './useDismissLayer?copy' as string
+      );
+      const First = createLayer(useDismissLayer, 'first');
+      const Second = createLayer(copy.useDismissLayer, 'second');
       const host = document.createElement('div');
       document.body.append(host);
       onTestFinished(() => host.remove());
@@ -3704,7 +3711,7 @@ describe('press ownership across independent non-modal layers', () => {
         onOpenChange: props.onOpenChange,
       });
       const { getFloatingProps } = useTestInteractions([
-        useDismiss(context.rootStore, { outsidePressEvent: props.mode }),
+        useTestDismiss(context.rootStore, { outsidePressEvent: props.mode }),
       ]);
       return () => (
         <div

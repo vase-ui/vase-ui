@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { defineComponent, h, onMounted, shallowRef, watch } from 'vue';
-import type { Component, MaybeRefOrGetter, PropType } from 'vue';
+import { defineComponent, h, onMounted, onUnmounted, shallowRef, watch } from 'vue';
+import type { Component, PropType } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import FloatingPortal from './FloatingPortal.vue';
-import FloatingPortalLite from './FloatingPortalLite.vue';
-import type { FloatingPortalContainer } from './useFloatingPortalNode';
+import { usePortalFocus } from './usePortalFocus';
+import PopupPortal from './PopupPortal.vue';
+import type { PortalTarget } from './PopupPortal.vue';
 
 type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 const App = defineComponent({
   props: {
     container: {
-      type: [Object, Function] as PropType<MaybeRefOrGetter<FloatingPortalContainer>>,
+      type: [Object, String] as PropType<PortalTarget>,
       default: undefined,
     },
   },
@@ -29,9 +29,9 @@ const App = defineComponent({
             open.value = !open.value;
           }}
         />
-        <FloatingPortal container={props.container}>
+        <PopupPortal guards={usePortalFocus} to={props.container}>
           {open.value && <div data-testid="floating" />}
-        </FloatingPortal>
+        </PopupPortal>
       </>
     );
   },
@@ -53,19 +53,6 @@ describe('FloatingPortal', () => {
     expect(parent?.hasAttribute('data-vase-ui-portal')).toBe(true);
     expect(parent?.parentElement).toBe(customRoot);
     customRoot.remove();
-  });
-
-  test('allows refs as containers', async () => {
-    const el = document.createElement('div');
-    document.body.appendChild(el);
-    const ref = shallowRef(el);
-    await render(<App container={ref} />);
-    await fireEvent.click(screen.getByTestId('reference'));
-    await flushMicrotasks();
-    const parent = screen.getByTestId('floating').parentElement;
-    expect(parent?.hasAttribute('data-vase-ui-portal')).toBe(true);
-    expect(parent?.parentElement).toBe(el);
-    document.body.removeChild(el);
   });
 
   test('allows containers to be initially null', async () => {
@@ -111,7 +98,7 @@ describe('FloatingPortal', () => {
     try {
       const RootSwitcher = defineComponent({
         setup() {
-          const container = shallowRef<FloatingPortalContainer>(undefined);
+          const container = shallowRef<PortalTarget>();
 
           return () => (
             <>
@@ -157,9 +144,9 @@ describe('FloatingPortal', () => {
 
   test('forwards HTML props to the portal element', async () => {
     await render(
-      <FloatingPortal data-testid="portal-element" class="closed">
+      <PopupPortal guards={usePortalFocus} data-testid="portal-element" class="closed">
         <div />
-      </FloatingPortal>,
+      </PopupPortal>,
     );
 
     await flushMicrotasks();
@@ -176,11 +163,11 @@ describe('FloatingPortal', () => {
         const { context, refs } = useFloating({ open: true });
 
         return () => (
-          <FloatingPortal id="custom-portal">
+          <PopupPortal guards={usePortalFocus} id="custom-portal">
             <FloatingFocusManager store={context.rootStore} modal={false}>
               <div ref={refs.setFloating} />
             </FloatingFocusManager>
-          </FloatingPortal>
+          </PopupPortal>
         );
       },
     });
@@ -193,9 +180,9 @@ describe('FloatingPortal', () => {
 
   test('FloatingPortalLite forwards HTML props to the portal element', async () => {
     await render(
-      <FloatingPortalLite data-testid="lite-portal">
+      <PopupPortal data-testid="lite-portal">
         <div />
-      </FloatingPortalLite>,
+      </PopupPortal>,
     );
 
     await flushMicrotasks();
@@ -237,9 +224,9 @@ describe('focus in the millisecond of the mount', () => {
               open.value = true;
             }}
           />
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             {open.value && [<input data-testid="input" onFocusin={focusin} />, <FocusOnMount />]}
-          </FloatingPortal>
+          </PopupPortal>
         </>
       );
     });
@@ -256,14 +243,15 @@ describe('focus in the millisecond of the mount', () => {
 });
 
 describe.each([
-  { name: 'FloatingPortal', Portal: FloatingPortal },
-  { name: 'FloatingPortalLite', Portal: FloatingPortalLite },
-])('$name slot: render', ({ Portal }) => {
+  { name: 'FloatingPortal', guards: usePortalFocus },
+  { name: 'FloatingPortalLite', guards: undefined },
+])('$name slot: render', ({ guards }) => {
   const { render } = createRenderer();
 
   test('puts the content of children in the portal element of the #render slot', async () => {
     await render(
-      <Portal
+      <PopupPortal
+        guards={guards}
         v-slots={{
           render: ({ props, children }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element">
@@ -283,7 +271,8 @@ describe.each([
   test('warns when the #render slot does not mount children', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await render(
-      <Portal
+      <PopupPortal
+        guards={guards}
         v-slots={{
           render: ({ props }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element" />
@@ -299,10 +288,60 @@ describe.each([
 });
 
 describe.each([
-  { name: 'FloatingPortal', Portal: FloatingPortal },
-  { name: 'FloatingPortalLite', Portal: FloatingPortalLite },
-])('$name container resolution', ({ Portal }) => {
+  { name: 'FloatingPortal', guards: usePortalFocus },
+  { name: 'FloatingPortalLite', guards: undefined },
+])('$name container resolution', ({ guards }) => {
   const { render: renderPortal } = createRenderer();
+
+  test('mounts children once in a connected container when a later update replaces its ref', async () => {
+    const counts = { mounted: 0, unmounted: 0 };
+    const connectedAtMount: (boolean | undefined)[] = [];
+    const Content = defineComponent({
+      setup() {
+        const content = shallowRef<HTMLDivElement | null>(null);
+        onMounted(() => {
+          counts.mounted += 1;
+          connectedAtMount.push(content.value?.isConnected);
+        });
+        onUnmounted(() => {
+          counts.unmounted += 1;
+        });
+        return () => <div ref={content} data-testid="content" />;
+      },
+    });
+    const Test = defineComponent({
+      setup() {
+        const container = shallowRef<HTMLDivElement | null>(null);
+        const step = shallowRef(0);
+
+        function advance() {
+          if (step.value < 2) {
+            step.value += 1;
+          }
+        }
+        onMounted(advance);
+        watch(step, advance, { flush: 'post' });
+
+        return () => {
+          const containerId = step.value < 2 ? 'first' : 'second';
+          return (
+            <>
+              <PopupPortal guards={guards} to={container.value ?? undefined} data-testid="portal">
+                <Content />
+              </PopupPortal>
+              <div key={containerId} ref={container} data-testid={containerId} />
+            </>
+          );
+        };
+      },
+    });
+
+    await renderPortal(<Test />);
+
+    expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('second'));
+    expect(counts).toEqual({ mounted: 1, unmounted: 0 });
+    expect(connectedAtMount).toEqual([true]);
+  });
 
   test.each([
     { ancestor: true, strict: false },
@@ -328,9 +367,9 @@ describe.each([
           const container = shallowRef<HTMLDivElement | null>(null);
           return () => {
             const content = (
-              <Portal container={container}>
+              <PopupPortal guards={guards} to={container.value}>
                 <div data-testid="content" />
-              </Portal>
+              </PopupPortal>
             );
             return ancestor ? (
               <div ref={container} data-testid="container">
@@ -364,9 +403,9 @@ describe.each([
         const container = shallowRef<HTMLDivElement | null>(null);
         return () => (
           <div ref={container} data-testid="container">
-            <Portal container={container}>
+            <PopupPortal guards={guards} to={container.value}>
               <div data-testid="content" />
-            </Portal>
+            </PopupPortal>
           </div>
         );
       },
@@ -406,9 +445,9 @@ describe.each([
               .indicator[data-ending-style] { animation: indicator-exit 100ms paused; }
             `}</style>
             {visible.value && (
-              <Portal container={container}>
+              <PopupPortal guards={guards} to={container.value ?? undefined}>
                 <div ref={content} />
-              </Portal>
+              </PopupPortal>
             )}
             <Checkbox.Root defaultChecked>
               <Checkbox.Indicator class="indicator" data-testid="indicator">
@@ -451,13 +490,13 @@ describe.each([
         const container = shallowRef<HTMLDivElement | null>(null);
         return () => (
           <div ref={container} data-testid="nested-container">
-            <Portal container={container} data-testid="nested-portal">
+            <PopupPortal guards={guards} to={container.value} data-testid="nested-portal">
               {props.remaining > 1 ? (
                 <Nested remaining={props.remaining - 1} />
               ) : (
                 <div data-testid="leaf" />
               )}
-            </Portal>
+            </PopupPortal>
           </div>
         );
       },
@@ -483,9 +522,9 @@ describe.each([
         const container = shallowRef<HTMLDivElement | null>(null);
         return () => (
           <div ref={container} data-testid="container">
-            <Portal container={container}>
+            <PopupPortal guards={guards} to={container.value}>
               <div data-testid="content" />
-            </Portal>
+            </PopupPortal>
           </div>
         );
       },
@@ -521,13 +560,19 @@ describe.each([
     async ({ nested }) => {
       const container = shallowRef<HTMLDivElement | null>(null);
       const content = (
-        <Portal container={container} data-testid="portal">
+        <PopupPortal guards={guards} to={container.value ?? undefined} data-testid="portal">
           <div data-testid="content" />
-        </Portal>
+        </PopupPortal>
       );
 
       await renderPortal(
-        nested ? <FloatingPortal data-testid="parent">{content}</FloatingPortal> : content,
+        nested ? (
+          <PopupPortal guards={usePortalFocus} data-testid="parent">
+            {content}
+          </PopupPortal>
+        ) : (
+          content
+        ),
       );
 
       const fallback = nested ? screen.getByTestId('parent') : document.body;
@@ -558,12 +603,13 @@ describe.each([
             const nextContainer = clear ? null : secondContainer.value;
             return (
               <>
-                <Portal
-                  container={step.value < 2 ? firstContainer : nextContainer}
+                <PopupPortal
+                  guards={guards}
+                  to={step.value < 2 ? firstContainer.value : nextContainer}
                   data-testid="portal"
                 >
                   <div data-testid="content" />
-                </Portal>
+                </PopupPortal>
                 <div ref={firstContainer} data-testid="first" />
                 <div ref={secondContainer} data-testid="second" />
               </>

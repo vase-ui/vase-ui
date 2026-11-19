@@ -172,7 +172,8 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
     } else if (/^on[A-Z]/.test(row.name)) {
       addEvent(expected, row, rowNames);
     } else {
-      expected.props.set(models.has(row.name) ? modelName(row.name) : row.name, {
+      const name = part.name === 'Portal' && row.name === 'container' ? 'to' : row.name;
+      expected.props.set(models.has(name) ? modelName(name) : name, {
         required: row.required,
         default: row.default,
         compareDefault: !controlled.has(row.name) && row.default !== null,

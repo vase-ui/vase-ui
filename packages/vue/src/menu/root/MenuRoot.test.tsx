@@ -4010,7 +4010,7 @@ describe('<Menu.Root />', () => {
               <>
                 <Menu.Root defaultOpen onOpenChangeComplete={completed}>
                   <Menu.Trigger>Toggle</Menu.Trigger>
-                  <Menu.Portal container={container}>
+                  <Menu.Portal to={container.value}>
                     <Menu.Positioner>
                       <Menu.Popup>
                         <Menu.Item>Item</Menu.Item>

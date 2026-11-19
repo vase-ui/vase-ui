@@ -23,7 +23,7 @@ import {
   isTypeableElement,
 } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
-import { enqueueFocus } from '../focus/enqueueFocus';
+import { enqueueFocus } from '../focus/tabbable';
 import { useFloatingParentNodeId, useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { InteractionProps, ListNavigationElementProps, PopupInteractionStore } from '../types';

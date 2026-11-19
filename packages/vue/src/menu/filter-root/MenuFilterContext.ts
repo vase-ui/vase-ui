@@ -13,7 +13,7 @@ import type {
   UseFilterDropdownItemReturnValue,
 } from '../../filter-dropdown/item/useFilterDropdownItem';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuStore } from '../store/MenuStore';

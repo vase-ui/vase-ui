@@ -1,4 +1,4 @@
-import { onTestFinished } from 'vitest';
+import { expect, onTestFinished } from 'vitest';
 
 export type ScrollWindow = Window & typeof globalThis;
 
@@ -15,16 +15,33 @@ export interface ScrollLockRegistry {
  * The registry that all copies of the library share. It is `undefined` until the first lock. It
  * lives for the whole test file, so each lock test file checks in `afterEach` that no lock is left.
  */
-export function getScrollLockRegistry() {
-  return (globalThis as { [REGISTRY_KEY]?: ScrollLockRegistry })[REGISTRY_KEY];
+export function getScrollLockRegistry(win: Window = window) {
+  return (win as { [REGISTRY_KEY]?: ScrollLockRegistry })[REGISTRY_KEY];
+}
+
+export function scrollLockCount(page: ScrollDocument) {
+  return getScrollLockRegistry(page.win)?.lockCount ?? 0;
+}
+
+export function expectScrollLocksReleased() {
+  const windows = [
+    window,
+    ...Array.from(document.querySelectorAll('iframe'), (frame) => frame.contentWindow),
+  ];
+  for (const win of windows) {
+    const registry = win && getScrollLockRegistry(win);
+    if (registry) {
+      expect([registry.lockCount, registry.restore]).toEqual([0, null]);
+    }
+  }
 }
 
 /**
  * Records each value that the shared count of the locks gets, until the test ends. It makes the
  * registry when no lock has made it yet, in the form that `CONTRIBUTING.md` gives.
  */
-export function recordLockCounts() {
-  const holder = globalThis as { [REGISTRY_KEY]?: ScrollLockRegistry };
+export function recordLockCounts(win: Window) {
+  const holder = win as { [REGISTRY_KEY]?: ScrollLockRegistry };
   holder[REGISTRY_KEY] ??= {
     version: 1,
     lockCount: 0,

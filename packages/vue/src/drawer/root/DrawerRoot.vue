@@ -156,7 +156,7 @@ import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
+import { useDialogRoot } from '../../dialog/root/useDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
 import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';
@@ -347,7 +347,7 @@ function emitRootEvent(...[event, nextOpen, eventDetails]: RootEventArguments) {
   }
 }
 
-const { store, payload, actions } = useRenderDialogRoot<Payload>('drawer', props, emitRootEvent);
+const { store, payload, actions } = useDialogRoot<Payload>('drawer', props, emitRootEvent);
 // Drawer shares the dialog store but adds swipe and close watcher reasons.
 const setOpen = store.setOpen as DrawerRootContext['setOpen'];
 
@@ -411,7 +411,7 @@ onMounted(() => {
     ],
     ([open, frontmost, popup, held], _previous, onCleanup) => {
       // CloseWatcher enables the Android back gesture (Chromium-only).
-      // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismiss`.
+      // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismissLayer`.
       if (!open || !frontmost || held || !platform.os.android) {
         return;
       }

@@ -334,7 +334,7 @@ describe('<Drawer.Viewport />', () => {
 
     await render(
       <Drawer.Root open>
-        <Drawer.Portal container={shadowRoot}>
+        <Drawer.Portal to={shadowRoot}>
           <Drawer.Backdrop data-testid="backdrop" />
           <Drawer.Viewport>
             <Drawer.Popup>
@@ -386,7 +386,7 @@ describe('<Drawer.Viewport />', () => {
 
     await render(
       <Drawer.Root open swipeDirection="down">
-        <Drawer.Portal container={shadowRoot}>
+        <Drawer.Portal to={shadowRoot}>
           <Drawer.Backdrop data-testid="backdrop" />
           <Drawer.Viewport>
             <Drawer.Popup

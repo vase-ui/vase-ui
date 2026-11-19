@@ -18,7 +18,7 @@
       "describe": ["<Select.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "test": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx",
       "reason": "The case presses a plain element in a portal in the popup. Vue gives that event to no listener of the popup element, so that element is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
     },
     {
@@ -62,6 +62,11 @@
       "entry": "GroupLabel",
       "prop": "id",
       "reason": "The part gives `id` to the group for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the group label, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Portal",
+      "prop": "disabled",
+      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
     }
   ],
   "returnTypeDifferences": [],

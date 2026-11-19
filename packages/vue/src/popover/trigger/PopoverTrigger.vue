@@ -83,7 +83,7 @@ import {
   pressableTriggerOpenStateMapping,
   triggerOpenStateMapping,
 } from '../../utils/popups/popupStateMapping';
-import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
+import { useTriggerFocusGuards } from '../../utils/popups/focus/usePopupFocus';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import type { PopoverHandleStore } from '../store/PopoverStore';
 

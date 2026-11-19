@@ -213,6 +213,10 @@ A key goes over a disabled item.
 - A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing. A list and a column in a picker that the user cannot change have `aria-disabled` or `aria-readonly`, and their items do not select.
 - The default names of the trigger and of the list are in English, and the time in the name of the trigger follows the locale. The default name of a column is the name of its unit in the locale.
 
+## Portal target
+
+Set `to` on `TimePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

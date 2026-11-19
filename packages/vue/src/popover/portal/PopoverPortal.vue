@@ -1,12 +1,13 @@
 <script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloatingPortalNode';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
 export interface PopoverPortalState {}
 
 export interface PopoverPortalProps
   extends
+    PortalTargetProps,
     VaseUIComponentProps<PopoverPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
@@ -14,22 +15,22 @@ export interface PopoverPortalProps
    * @default false
    */
   keepMounted?: boolean | undefined;
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
 }
 </script>
 
 <script setup lang="ts">
+import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { REASONS } from '../../internals/reasons';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
-import PopoverPortalChildren from './PopoverPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { PopoverPortalContext } from './PopoverPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -43,7 +44,18 @@ defineSlots<{
 
 const state: PopoverPortalState = EMPTY_OBJECT;
 
-const { mounted } = usePopoverRootContext();
+const { store, open, mounted, trigger } = usePopoverRootContext();
+provide(PopupBackdropContext, () => {
+  if (
+    !mounted.value ||
+    store.state.modal !== true ||
+    !store.select('positionerElement') ||
+    store.state.openChangeReason === REASONS.triggerHover
+  )
+    return null;
+  return { inert: !open.value, cutout: trigger.value };
+});
+
 const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
@@ -62,20 +74,22 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortal
+  <PopupPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="PopoverPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
-  </FloatingPortal>
-  <FloatingPortal
+  </PopupPortal>
+  <PopupPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <PopoverPortalChildren><slot :state="state" /></PopoverPortalChildren>
-  </FloatingPortal>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
+  </PopupPortal>
 </template>

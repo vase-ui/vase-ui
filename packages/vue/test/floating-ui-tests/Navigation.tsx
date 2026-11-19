@@ -2,10 +2,11 @@ import { defineComponent, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { getEmptyRootStore } from '../../src/utils/popups/floating-root/getEmptyRootStore';
 import { FloatingFocusManager } from '../fixtures/floatingFocusManagerHarness';
-import { useDismiss } from '../../src/utils/popups/interactions/useDismiss';
+import { useTestDismiss } from '../fixtures/useTestDismiss';
 import { useTriggerFocus as useFocus } from '../../src/utils/popups/usePopupTrigger';
 import { usePopupHover } from '../../src/utils/popups/interactions/usePopupHover';
-import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';
+import { usePortalFocus } from '../../src/utils/popups/portal/usePortalFocus';
+import PopupPortal from '../../src/utils/popups/portal/PopupPortal.vue';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
 import type { InteractionProps } from '../../src/utils/popups/types';
 import { useTestInteractions } from '../useTestInteractions';
@@ -108,7 +109,7 @@ export const NavigationItem = defineComponent({
     const focusProps = useFocus(context.rootStore, { enabled: hasChildren });
     const { getReferenceProps, getFloatingProps } = useTestInteractions([
       { reference: hoverReferenceProps },
-      useDismiss(context.rootStore, { enabled: hasChildren }),
+      useTestDismiss(context.rootStore, { enabled: hasChildren }),
     ]);
 
     provideFloatingNode(nodeId);
@@ -126,7 +127,7 @@ export const NavigationItem = defineComponent({
             {props.label}
           </a>
         </li>
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           {open.value && (
             <FloatingFocusManager store={context.rootStore} modal={false} initialFocus={false}>
               <div
@@ -147,7 +148,7 @@ export const NavigationItem = defineComponent({
               </div>
             </FloatingFocusManager>
           )}
-        </FloatingPortal>
+        </PopupPortal>
       </>
     );
   },

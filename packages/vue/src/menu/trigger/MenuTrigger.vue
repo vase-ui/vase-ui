@@ -93,7 +93,7 @@ import {
   useFloatingTree,
 } from '../../utils/popups/tree/FloatingTree';
 import { FloatingTreeStore } from '../../utils/popups/tree/FloatingTreeStore';
-import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
+import { useTriggerFocusGuards } from '../../utils/popups/focus/usePopupFocus';
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuHandleStore } from '../store/MenuStore';
@@ -269,7 +269,7 @@ function stopListening() {
 }
 
 onMounted(followHoverOpen);
-// The default flush runs before the `post` watcher of `useDismiss` in the root, as the effect of
+// The default flush runs before the `post` watcher of `useDismissLayer` in the root, as the effect of
 // Base UI runs before the effect of its parent.
 watch([store, isOpenedByThisTrigger], followHoverOpen);
 const { isHeld } = useKeepAliveState();

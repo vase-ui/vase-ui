@@ -10,7 +10,8 @@ import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/index.parts';
 import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
-import FloatingPortal from './FloatingPortal.vue';
+import { usePortalFocus } from './usePortalFocus';
+import PopupPortal from './PopupPortal.vue';
 
 // Vue 3.5.41 and 3.6.0-rc.3 are the first versions that give a `Transition` to the element in a
 // `Teleport` that is the root node of a component (https://github.com/vuejs/core/pull/11959). An
@@ -41,7 +42,7 @@ const open = { defaultOpen: true };
 // A generic part, such as `Combobox.Root`, is a function that `Component` does not accept.
 type PartComponent = Component | ((...args: any[]) => any);
 
-interface FloatingPortalPart {
+interface PortalPart {
   name: string;
   root: PartComponent;
   portal: PartComponent;
@@ -49,7 +50,7 @@ interface FloatingPortalPart {
   portalProps?: Record<string, unknown>;
 }
 
-const floatingPortalParts: FloatingPortalPart[] = [
+const portalParts: PortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
@@ -71,11 +72,11 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     await render(
       <div data-testid="host">
         <Transition appear onEnter={(element: Element) => entered.push(element)}>
-          <FloatingPortal data-testid="portal">
+          <PopupPortal guards={usePortalFocus} data-testid="portal">
             <FocusManagerPart>
               <input />
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
         </Transition>
       </div>,
     );
@@ -86,7 +87,7 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     expect(entered).toEqual([screen.getByTestId('portal')]);
   });
 
-  it.each(floatingPortalParts)(
+  it.each(portalParts)(
     '$name gives a Transition of the consumer to its portal element',
     async (part) => {
       const entered: Element[] = [];

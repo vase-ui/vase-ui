@@ -1,13 +1,17 @@
 import { shallowReactive, watch } from 'vue';
-import type { Ref } from 'vue';
+import type { InjectionKey, Ref } from 'vue';
 import { closest } from '../../../common/shadowDom';
+
+export const PortalNode: InjectionKey<Readonly<Ref<HTMLElement | null>>> = Symbol();
+export const DismissPortalRegistration: InjectionKey<(portal: Element) => () => void> = Symbol();
 
 const portals = shallowReactive(new Map<Element, symbol>());
 
 export function usePortalRegistration(
   element: Readonly<Ref<HTMLElement | null>>,
   isHeld: Readonly<Ref<boolean>>,
-  container?: Readonly<Ref<HTMLElement | ShadowRoot | null>>,
+  container?: Readonly<Ref<Element | ShadowRoot | null>>,
+  registerDismiss?: (portal: Element) => () => void,
 ) {
   const owner = Symbol();
   watch(
@@ -17,7 +21,9 @@ export function usePortalRegistration(
         return;
       }
       portals.set(node, owner);
+      const releaseDismiss = registerDismiss?.(node);
       onCleanup(() => {
+        releaseDismiss?.();
         if (portals.get(node) === owner) {
           portals.delete(node);
         }
@@ -25,6 +31,23 @@ export function usePortalRegistration(
     },
     { flush: 'post' },
   );
+}
+
+function isPortal(element: Element) {
+  return portals.has(element);
+}
+
+// Teleport can move the same element, including its nested portals, to another container or document.
+export function getPortalLocation(element: Element | null | undefined) {
+  const targets: ParentNode[] = [];
+  for (
+    let portal = closest(element, isPortal);
+    portal?.parentNode;
+    portal = closest(portal.parentNode, isPortal)
+  ) {
+    targets.push(portal.parentNode);
+  }
+  return { document: element?.ownerDocument, targets };
 }
 
 export function getNestedPortals(parent: Element | null | undefined) {

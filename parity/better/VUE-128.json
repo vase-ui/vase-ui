@@ -6,6 +6,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L176-L181",
     "https://github.com/vuejs/core/blob/v3.5.12/packages/runtime-core/src/components/Teleport.ts#L387-L407"
   ],
-  "behavior": "Dialog.Portal, AlertDialog.Portal and Drawer.Portal take `disabled`. The portal element and its parts then render in the place of the part, on a server and before the mount. They hydrate with no mismatch, and the portal does not read `container`. The portal keeps no outside guards and no owner element. A popup that is not modal has no guards and keeps its place in the tab order. It closes when focus leaves it, unless `disablePointerDismissal` is true. The modal marks, focus trap and scroll lock follow changes of `modal` while the dialog is open. A plain element permits hydration on Vue 3.5.12, whose disabled Teleport still needs a target. A change of `disabled` mounts the content again. Base UI has no such prop. It renders the portal element in a container after the mount, so its server HTML has no popup.",
+  "behavior": "Every public Portal takes disabled. Its element renders at the source, including in server HTML. It hydrates in place and ignores to. A change of disabled mounts the content again. A nonmodal dialog keeps its place in the tab order. A modal dialog keeps its focus trap, outside marks and scroll lock. Base UI creates its portal after mount.",
   "dueWith": "packages/react/src/dialog/portal/DialogPortal.tsx"
 }

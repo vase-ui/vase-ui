@@ -799,7 +799,7 @@ describe('<PreviewCard.Positioner />', () => {
                 <PreviewCard.Trigger ref={triggerRef} href="#" delay={0} data-testid="trigger">
                   Trigger
                 </PreviewCard.Trigger>
-                <PreviewCard.Portal keepMounted container={portalContainer}>
+                <PreviewCard.Portal keepMounted to={portalContainer.value}>
                   <PreviewCard.Positioner
                     anchor={triggerRef}
                     collisionBoundary={{ x: 0, y: 0, width: 300, height: 120 }}

@@ -68,14 +68,18 @@ export type PreviewCardRootChangeEventDetails =
 <script setup lang="ts" generic="Payload = unknown">
 import { provide, watch } from 'vue';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { provideFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { PreviewCardStore } from '../store/PreviewCardStore';
 import { PreviewCardRootContext, usePreviewCardRootContext } from './PreviewCardContext';
 
 // A root inside another root uses the tree of that root. A component cannot inject a value that it
-// provides, so the outer root gives its own tree to `useDismiss`.
+// provides, so the outer root gives its own tree to `useDismissLayer`.
 const tree = usePreviewCardRootContext(true) ? undefined : provideFloatingTree();
 
 const props = withDefaults(defineProps<PreviewCardRootProps<Payload>>(), {
@@ -139,8 +143,11 @@ watch([isOpen, activeId], ([openNow, activeTriggerId]) => {
   }
 });
 
-const dismiss = useDismiss(store, { externalTree: tree });
-bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
+const dismiss = useDismissLayer(store, { externalTree: tree });
+bindParts({
+  trigger: () => dismissTriggerBindings(dismiss),
+  popup: () => dismissPopupBindings(dismiss),
+});
 
 provide(PreviewCardRootContext, owner);
 

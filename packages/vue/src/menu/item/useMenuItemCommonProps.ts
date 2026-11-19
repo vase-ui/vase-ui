@@ -107,7 +107,7 @@ export function useMenuItemCommonProps(
         // The press started on the trigger and was released over the item, so the item
         // needs a synthetic click. Its `closeOnClick` preference still applies.
         // `detail: 1` and `pointerType: 'mouse'` mark this as a mouse-gesture click so
-        // MenuRoot and FloatingFocusManager don't treat it as a keyboard activation.
+        // the menu and its focus manager handle it as a pointer press.
         dispatchClickWithModifiers(item, event, {
           detail: 1,
           pointerType: 'mouse',

@@ -1,4 +1,8 @@
-import { isPortalOfPart } from '../portal/portalElements';
+import {
+  DismissPortalRegistration,
+  getPortalLocation,
+  isPortalOfPart,
+} from '../portal/portalElements';
 import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
 import type { InjectionKey, MaybeRefOrGetter, WatchSource } from 'vue';
 import {
@@ -26,7 +30,7 @@ import { isVirtualClick } from '../event';
 import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import { getNodeChildren } from '../tree/nodes';
-import type { DismissElementProps, PopupInteractionStore } from '../types';
+import type { PopupInteractionStore } from '../types';
 import { useDomEffect } from '../useDomEffect';
 
 type PressType = 'intentional' | 'sloppy';
@@ -103,22 +107,13 @@ function hostsPopup(target: EventTarget) {
 interface DismissParent {
   addElementBelow(getElement: () => Element | null | undefined): () => void;
   markInsideComponentTree(): void;
-  markInsidePortal(portal: Element, event: Event): void;
-  markPortalPressStartPrevented(portal: Element, event: PointerEvent | MouseEvent): void;
   markPressStartedInside(event: PointerEvent | MouseEvent): void;
   markInsidePressStartPrevented(event: PointerEvent | MouseEvent): void;
   handleKeydown(event: KeyboardEvent): void;
 }
 
-// React gives an event of a portal child to the handlers of the popup around the component.
-// A DOM event of content that `Teleport` moved does not reach the popup element. Each
-// `useDismiss` call provides the handlers that need such an event, and the call or the portal
-// below it in the component tree calls them.
+// A Teleport moves the DOM event outside its parent popup.
 const DismissParentContext: InjectionKey<DismissParent> = Symbol();
-
-function alwaysFalse() {
-  return false;
-}
 
 export function normalizeProp(normalizable?: Bubbles) {
   return {
@@ -162,7 +157,7 @@ function getFrameOfEvent(event: Event, doc: Document): Element | null {
   return null;
 }
 
-export interface UseDismissProps {
+export interface DismissLayerOptions {
   /**
    * Whether the composable is enabled, including its document listeners and its event handlers.
    * @default true
@@ -208,47 +203,17 @@ export interface UseDismissProps {
   externalTree?: MaybeRefOrGetter<FloatingTreeStore | undefined>;
 }
 
-/**
- * Closes the floating element when a dismissal is requested — by default, when
- * the user presses the `escape` key or outside of the floating element.
- *
- * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
- * the popup, also when `Teleport` moved it, with each part in its portal, such as its backdrop. A
- * portal below that root that no popup owns also counts as inside the popup. The portal of the
- * popup itself does not: a press on its backdrop is outside the popup. Other content that
- * `Teleport` moved out of the popup is outside it.
- *
- * Base UI differs in its boundary. It counts only the React children of the popup element as
- * inside, and that includes content that a React portal moves out of the element. Here the
- * boundary is the root that calls this composable.
- *
- * A component calls it one time. A second call in the same component replaces the functions that
- * the first call provides.
- *
- * Some roots of Base UI, such as `PopoverRoot`, call the hook in a component of their own. That
- * component mounts only while the popup is open, is mounted or has a handle. The hook gives an
- * empty object while `enabled` is `false`. A root here calls the composable also while the popup
- * is closed, and each handler does nothing while the composable is not enabled. The object is
- * thus made one time.
- *
- * A press in a same-origin frame below the document of the popup counts as a press on the frame
- * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
- * a shadow tree.
- *
- * `store` is a store, a ref or a getter. A handler reads it when it runs. When it changes, the
- * composable moves its listeners to the new store.
- * @see https://floating-ui.com/docs/useDismiss
- */
-export function useDismiss(
+/** Owns the open layer, its gesture and the listeners in its document and frames. */
+export function useDismissLayer(
   store: MaybeRefOrGetter<PopupInteractionStore>,
-  props: UseDismissProps = {},
-): DismissElementProps {
+  props: DismissLayerOptions = {},
+) {
   const {
     enabled: enabledOption,
     escapeKey: escapeKeyOption,
     outsidePress = true,
     outsidePressEvent,
-    referencePress = alwaysFalse,
+    referencePress,
     bubbles,
     externalTree,
   } = props;
@@ -402,7 +367,7 @@ export function useDismiss(
   }
 
   function closeOnReferencePress(event: MouseEvent | PointerEvent) {
-    if (!isEnabled() || !referencePress()) {
+    if (!isEnabled() || !referencePress?.()) {
       return;
     }
 
@@ -463,8 +428,6 @@ export function useDismiss(
   provide(DismissParentContext, {
     addElementBelow,
     markInsideComponentTree,
-    markInsidePortal,
-    markPortalPressStartPrevented,
     markPressStartedInside,
     markInsidePressStartPrevented,
     handleKeydown(event) {
@@ -472,6 +435,21 @@ export function useDismiss(
         handleFloatingKeydown(event);
       }
     },
+  });
+
+  provide(DismissPortalRegistration, (portal) => {
+    // Native capture leaves a newly mounted child's Vue listener eligible for this same press.
+    const mark = (event: Event) => markInsidePortal(portal, event);
+    const markPrevented = (event: PointerEvent | MouseEvent) =>
+      markPortalPressStartPrevented(portal, event);
+    return mergeCleanups(
+      addElementBelow(() => portal),
+      ...PRESS_EVENTS.map((type) =>
+        addEventListener(portal, type, mark, { capture: true, passive: true }),
+      ),
+      addEventListener(portal, 'pointerdown', markPrevented),
+      addEventListener(portal, 'mousedown', markPrevented),
+    );
   });
 
   // The inside marker expires in its timer before the release of a held press. The record of the
@@ -1124,7 +1102,7 @@ export function useDismiss(
     getStore,
     () => getStore().select('open'),
     isEnabled,
-    () => ownerDocument(getStore().select('positionerElement')),
+    () => getPortalLocation(getPositionerElement()).document,
     isEscapeKeyEnabled,
     () => getBubbles().escapeKey,
     () => getBubbles().outsidePress,
@@ -1176,80 +1154,42 @@ export function useDismiss(
   });
   useDomEffect(listenerSources, listenToDocument, isHeld);
 
-  const reference: DismissElementProps['reference'] = {
-    onKeydown: closeOnEscapeKeyDown,
-    onPointerdown: closeOnReferencePress,
-    onClick: closeOnReferencePress,
-  };
-
-  const floating: DismissElementProps['floating'] = {
-    onKeydown: handleFloatingKeydown,
-    // `onMousedown` may be blocked if `event.preventDefault()` is called in
-    // `onPointerdown`, such as with <NumberField.ScrubArea>.
-    // See https://github.com/mui/base-ui/pull/3379
-    onPointerdown: markInsidePressStartPrevented,
-    onMousedown: markInsidePressStartPrevented,
-    onClickCapture: markPressInside,
-    onMousedownCapture(event: MouseEvent) {
-      markPressInside(event);
-      markPressStartedInside(event);
-    },
-    onPointerdownCapture(event: PointerEvent) {
-      markPressInside(event);
-      markPressStartedInside(event);
-    },
-    onMouseupCapture: markInsideComponentTree,
-    onTouchendCapture: markPressInside,
-    // React adds each `touchmove` listener as a passive listener. A listener of an element that
-    // is not passive makes the browser wait for it before each scroll step.
-    onTouchmoveCapturePassive: markPressInside,
-  };
-
-  return { reference, floating, trigger: reference };
-}
-
-/**
- * Registers a portal element with the `useDismiss` calls above it, and marks a press in the portal
- * element as inside them. Call it in the `setup` of the portal, with its element as a ref or a
- * getter. It does nothing when no `useDismiss` call is above the portal.
- *
- * The portal element can hold parts of the popup outside the popup element, such as the backdrop
- * and the positioner. A press on such a part reaches no listener of the popup element. The press
- * counts as outside the popup that owns the portal. The nearest portal of the popup element, its
- * positioner or either backdrop belongs to that popup. A portal that no popup owns counts as
- * inside each popup above it. A press in such a portal also records its start and prevented state.
- *
- * The composable adds its listeners with `addEventListener`. Vue stamps an event in the first Vue
- * listener that gets it. Vue then skips each later listener that it attached in that millisecond
- * or after it. A Vue listener on the portal element would get a press first. The listeners of the
- * popup element could then miss a press in the millisecond of the open.
- */
-export function useDismissPortal(portal: MaybeRefOrGetter<Element | null>): void {
-  const parent = inject(DismissParentContext, undefined);
-  if (!parent) {
-    return;
+  function startPress(event: PointerEvent | MouseEvent) {
+    markPressInside(event);
+    markPressStartedInside(event);
   }
 
-  watch(
-    () => toValue(portal),
-    (element, _previousElement, onCleanup) => {
-      if (!element) {
-        return;
-      }
-      const mark = (event: Event) => parent.markInsidePortal(element, event);
-      const markPrevented = (event: PointerEvent | MouseEvent) =>
-        parent.markPortalPressStartPrevented(element, event);
-      onCleanup(
-        mergeCleanups(
-          parent.addElementBelow(() => element),
-          ...PRESS_EVENTS.map((type) =>
-            addEventListener(element, type, mark, { capture: true, passive: true }),
-          ),
-          addEventListener(element, 'pointerdown', markPrevented),
-          addEventListener(element, 'mousedown', markPrevented),
-        ),
-      );
-    },
-    { flush: 'post' },
-  );
+  return {
+    closeOnEscapeKeyDown,
+    closeOnReferencePress,
+    handleFloatingKeydown,
+    markInsideComponentTree,
+    markInsidePressStartPrevented,
+    markPressInside,
+    startPress,
+  };
+}
+
+export type DismissLayer = ReturnType<typeof useDismissLayer>;
+
+export function dismissTriggerBindings(layer: DismissLayer) {
+  return {
+    onKeydown: layer.closeOnEscapeKeyDown,
+    onPointerdown: layer.closeOnReferencePress,
+    onClick: layer.closeOnReferencePress,
+  };
+}
+
+export function dismissPopupBindings(layer: DismissLayer) {
+  return {
+    onKeydown: layer.handleFloatingKeydown,
+    onPointerdown: layer.markInsidePressStartPrevented,
+    onMousedown: layer.markInsidePressStartPrevented,
+    onClickCapture: layer.markPressInside,
+    onMousedownCapture: layer.startPress,
+    onPointerdownCapture: layer.startPress,
+    onMouseupCapture: layer.markInsideComponentTree,
+    onTouchendCapture: layer.markPressInside,
+    onTouchmoveCapturePassive: layer.markPressInside,
+  };
 }

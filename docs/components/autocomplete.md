@@ -337,6 +337,10 @@ A child component that takes the item as a prop is a simpler alternative to virt
 
 :::
 
+## Portal target
+
+Set `to` on `Autocomplete.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

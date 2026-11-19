@@ -841,12 +841,12 @@ describe('<Popover.Root />', () => {
               }}
             >
               <TestPopover
-                portalProps={{ container: dialogNode.value ?? undefined }}
+                portalProps={{ to: dialogNode.value ?? undefined }}
                 popupProps={{
                   children: () => (
                     <Menu.Root>
                       <Menu.Trigger>Open nested</Menu.Trigger>
-                      <Menu.Portal container={dialogNode.value ?? undefined}>
+                      <Menu.Portal to={dialogNode.value ?? undefined}>
                         <Menu.Positioner>
                           <Menu.Popup data-testid="menu-popup">Nested Menu</Menu.Popup>
                         </Menu.Positioner>
@@ -896,12 +896,12 @@ describe('<Popover.Root />', () => {
               }}
             >
               <TestPopover
-                portalProps={{ container: dialogNode.value ?? undefined }}
+                portalProps={{ to: dialogNode.value ?? undefined }}
                 popupProps={{
                   children: () => (
                     <Menu.Root>
                       <Menu.Trigger>Open nested</Menu.Trigger>
-                      <Menu.Portal container={dialogNode.value ?? undefined}>
+                      <Menu.Portal to={dialogNode.value ?? undefined}>
                         <Menu.Positioner>
                           <Menu.Popup data-testid="menu-popup">
                             <Menu.Item closeOnClick={false}>Item</Menu.Item>
@@ -1719,7 +1719,7 @@ describe('<Popover.Root />', () => {
             <button data-testid="outside">Outside</button>
             <TestPopover
               rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange }}
-              portalProps={{ container: shadowRoot }}
+              portalProps={{ to: shadowRoot }}
             />
           </Teleport>,
         );
@@ -1752,7 +1752,7 @@ describe('<Popover.Root />', () => {
           <Teleport to={container}>
             <TestPopover
               rootProps={{ defaultOpen: true, onOpenChange: handleOpenChange }}
-              portalProps={{ container: shadowRoot }}
+              portalProps={{ to: shadowRoot }}
             />
           </Teleport>,
         );

@@ -60,7 +60,7 @@ describe('<Tooltip.Portal />', () => {
 
       await render(
         <Tooltip.Root open>
-          <Tooltip.Portal container={container} data-testid="portal" />
+          <Tooltip.Portal to={container} data-testid="portal" />
         </Tooltip.Root>,
       );
       await flushMicrotasks();

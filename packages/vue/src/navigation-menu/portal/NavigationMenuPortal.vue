@@ -1,12 +1,13 @@
 <script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloatingPortalNode';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
 export interface NavigationMenuPortalState {}
 
 export interface NavigationMenuPortalProps
   extends
+    PortalTargetProps,
     VaseUIComponentProps<NavigationMenuPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
@@ -14,20 +15,17 @@ export interface NavigationMenuPortalProps
    * @default false
    */
   keepMounted?: boolean | undefined;
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
 }
 </script>
 
 <script setup lang="ts">
+import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { NavigationMenuPortalContext } from './NavigationMenuPortalContext';
 
@@ -67,20 +65,22 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortal
+  <PopupPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-  </FloatingPortal>
-  <FloatingPortal
+  </PopupPortal>
+  <PopupPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as, container }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <slot :state="state" />
-  </FloatingPortal>
+  </PopupPortal>
 </template>

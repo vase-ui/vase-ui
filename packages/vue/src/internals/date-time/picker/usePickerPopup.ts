@@ -5,7 +5,7 @@ import { REASONS } from '../../reasons';
 import { ownerWindow } from '../../../common/owner';
 import type { InteractionType } from '../../../utils/popups/usePopupTrigger';
 import { usePopoverRootContext } from '../../../popover/root/PopoverRootContext';
-import type { FocusOption } from '../../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../../utils/popups/focus/usePopupFocus';
 import { createDefaultInitialFocus } from '../../../utils/popups/popupBindings';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { RegisterPickerFocusTarget } from './PickerControlContext';

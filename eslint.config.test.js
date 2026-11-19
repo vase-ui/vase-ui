@@ -1351,10 +1351,7 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
   {
     name: 'filtered attributes on a portal part',
     file: PORTAL_PART,
-    code: docsSfc(
-      '',
-      '<FloatingPortal v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), as }" />',
-    ),
+    code: docsSfc('', '<PopupPortal v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as }" />'),
   },
   {
     name: 'filtered attributes on the input part',
@@ -1849,8 +1846,8 @@ for (const { name, code } of [
 }
 
 for (const { part, file, tag, binding } of [
-  { part: 'a portal part', file: PORTAL_PART, tag: 'FloatingPortal', binding: '{ ...$attrs, as }' },
-  { part: 'a portal part', file: PORTAL_PART, tag: 'FloatingPortal', binding: '$attrs' },
+  { part: 'a portal part', file: PORTAL_PART, tag: 'PopupPortal', binding: '{ ...$attrs, as }' },
+  { part: 'a portal part', file: PORTAL_PART, tag: 'PopupPortal', binding: '$attrs' },
   {
     part: 'the input part',
     file: 'packages/vue/src/input/Input.vue',

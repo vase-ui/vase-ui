@@ -362,6 +362,10 @@ To stack toasts of different heights, clamp the height of each toast to the heig
 
 :::
 
+## Portal target
+
+Set `to` on `Toast.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

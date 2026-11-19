@@ -16,7 +16,11 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useTriggerModality } from '../../utils/popups/usePopupTrigger';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
@@ -393,7 +397,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     { immediate: true },
   );
 
-  const dismiss = useDismiss(store, {
+  const dismiss = useDismissLayer(store, {
     enabled: () => !disabled.value,
     bubbles: () => ({
       escapeKey: (props.closeParentOnEsc ?? false) && parent.value.type === 'menu',
@@ -561,7 +565,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   // a render when the menu opens.
   const inactiveTriggerProps = mergeProps(
     listNavigation.value.trigger,
-    dismiss.trigger,
+    dismissTriggerBindings(dismiss),
     interactionTypeProps,
     {
       'aria-haspopup': 'menu',
@@ -587,7 +591,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       mergeProps(
         typeahead.reference,
         getOpenTriggerProps(),
-        dismiss.reference,
+        dismissTriggerBindings(dismiss),
         {
           onMousemove: allowMouseEnter,
           'aria-haspopup': 'menu',
@@ -602,7 +606,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         popupListeners,
         typeahead.floating,
         listNavigation.value.floating,
-        dismiss.floating,
+        dismissPopupBindings(dismiss),
       ),
   });
   watch(

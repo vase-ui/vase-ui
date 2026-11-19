@@ -1,12 +1,13 @@
 <script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloatingPortalNode';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
 export interface DialogPortalState {}
 
 export interface DialogPortalProps
   extends
+    PortalTargetProps,
     VaseUIComponentProps<DialogPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
@@ -14,30 +15,21 @@ export interface DialogPortalProps
    * @default false
    */
   keepMounted?: boolean | undefined;
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
-  /**
-   * Whether the portal element renders in the place of the part instead of a container.
-   * The server HTML then has the popup, and the part does not read `container`.
-   * A popup that is not modal is at its place in the tab order.
-   * A change of this prop mounts the parts in the portal again.
-   * @default false
-   */
-  disabled?: boolean | undefined;
 }
 </script>
 
 <script setup lang="ts">
+import { usePortalFocus } from '../../utils/popups/portal/usePortalFocus';
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useDialogRootContext } from '../root/DialogRootContext';
-import DialogPortalChildren from './DialogPortalChildren.vue';
+import PopupBackdropChildren, {
+  PopupBackdropContext,
+} from '../../utils/popups/portal/PopupBackdropChildren.vue';
 import { DialogPortalContext } from './DialogPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -57,6 +49,11 @@ const state: DialogPortalState = EMPTY_OBJECT;
 
 const store = useDialogRootContext();
 
+provide(PopupBackdropContext, () => {
+  if (!store.select('mounted') || store.select('modal') !== true) return null;
+  return { inert: !store.select('open'), target: store.context.internalBackdropRef };
+});
+
 const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
 
 provide(
@@ -64,15 +61,6 @@ provide(
   computed(() => props.keepMounted),
 );
 
-const portalProps = computed(() => {
-  const { keepMounted, disabled, ...otherProps } = props;
-  return { ...otherProps, inPlace: disabled };
-});
-
-// As in Base UI, this part renders `FloatingPortal` and makes no element of its own.
-// The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of the portal dynamic. Each part below the portal that has slot content then
-// renders again with its parent.
 const portal = useTemplateRef('portal');
 const element = computed(() => portal.value?.element ?? null);
 
@@ -80,20 +68,22 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortal
+  <PopupPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), ...portalProps }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
     <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" :children="DialogPortalChildren" />
+      <slot name="render" v-bind="slotProps" :children="PopupBackdropChildren" />
     </template>
-  </FloatingPortal>
-  <FloatingPortal
+  </PopupPortal>
+  <PopupPortal
     v-else-if="shouldRender"
     ref="portal"
-    v-bind="{ ...withoutPropsOf($attrs, FloatingPortal), ...portalProps }"
+    :guards="usePortalFocus"
+    v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as, to, disabled }"
   >
-    <DialogPortalChildren><slot :state="state" /></DialogPortalChildren>
-  </FloatingPortal>
+    <PopupBackdropChildren><slot :state="state" /></PopupBackdropChildren>
+  </PopupPortal>
 </template>

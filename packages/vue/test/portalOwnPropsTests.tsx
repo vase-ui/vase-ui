@@ -5,15 +5,16 @@ import { screen } from './queries';
 
 export function portalOwnPropsTests({ render, createComponent }: PortalOwnPropsTestsConfig) {
   describe('VUE-135: internal portal props', () => {
-    it('keeps the portal in the body with an in-place attribute', async () => {
+    it('keeps private guards off the portal element', async () => {
       await render(
         <div data-testid="host">
-          {createComponent({ 'in-place': '', 'data-testid': 'portal' })}
+          {createComponent({ guards: 'external', 'data-testid': 'portal' })}
         </div>,
       );
 
       const portal = await screen.findByTestId('portal');
       expect(portal.parentElement).toBe(document.body);
+      expect(portal).not.toHaveAttribute('guards');
     });
   });
 }

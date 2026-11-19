@@ -334,7 +334,11 @@ import { provide } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { mergeProps } from '../../merge-props';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import { usePopupRoot, popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { TooltipStore, TooltipRootContext } from './TooltipRootContext';
 import type { State as TooltipStoreState } from './TooltipRootContext';
@@ -462,7 +466,7 @@ watch([isOpen, activeId], ([openNow, triggerId]) => {
   }
 });
 
-const dismiss = useDismiss(store, {
+const dismiss = useDismissLayer(store, {
   enabled: () => !props.disabled,
   referencePress: () => store.state.closeOnClick,
 });
@@ -485,8 +489,8 @@ const clientPoint = useTooltipCursor(
     axis: () => (props.trackCursorAxis === 'none' ? undefined : props.trackCursorAxis),
   },
 );
-const triggerProps = mergeProps(clientPoint, dismiss.reference);
-owner.bindParts({ trigger: () => triggerProps, popup: () => dismiss.floating });
+const triggerProps = mergeProps(clientPoint, dismissTriggerBindings(dismiss));
+owner.bindParts({ trigger: () => triggerProps, popup: () => dismissPopupBindings(dismiss) });
 
 provide(TooltipRootContext, owner);
 

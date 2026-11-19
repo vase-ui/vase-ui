@@ -18,7 +18,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 
 // As in Base UI, an attribute of a consumer wins over the role and the marker. The style of the
 // part replaces a `style` of the consumer.
-// The outside press check of `useDismiss` ignores a press on an element that a script added after
+// The outside press check of `useDismissLayer` ignores a press on an element that a script added after
 // the popup rendered. It takes an element for such an addition when none of the marked elements is
 // in the root ancestor of that element. The marker keeps a press on the backdrop out of that rule.
 defineOptions({ inheritAttrs: false });

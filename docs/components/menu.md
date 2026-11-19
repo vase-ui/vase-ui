@@ -521,6 +521,10 @@ Give the same handle from `Menu.createHandle()` to the root and to its detached 
 
 <<< ./menu/DetachedFilter.vue{4,8,11}
 
+## Portal target
+
+Set `to` on `Menu.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

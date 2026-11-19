@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, h, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
-import * as Dialog from '../../dialog/index.parts';
-import * as Menu from '../../menu/index.parts';
-import * as Popover from '../../popover/index.parts';
+import * as Dialog from '../../../dialog/index.parts';
+import * as Menu from '../../../menu/index.parts';
+import * as Popover from '../../../popover/index.parts';
 import {
   createHeldBranch,
   createRenderer,
@@ -13,13 +13,14 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
-import { createSlotHost } from '../../../test/fixtures/slotHost';
-import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
-import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { REASONS } from '../../internals/reasons';
-import { createAttribute } from './createAttribute';
-import type { FocusOption } from './focus/FloatingFocusManager';
-import FloatingPortal from './portal/FloatingPortal.vue';
+import { createSlotHost } from '../../../../test/fixtures/slotHost';
+import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
+import { createMenuStoreProbe } from '../../../../test/fixtures/MenuStoreProbe';
+import { REASONS } from '../../../internals/reasons';
+import { createAttribute } from '../createAttribute';
+import type { FocusOption } from './usePopupFocus';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 
 // After an element loses the focus, the Tab key starts at that element in some browsers. In others
 // it starts at the top of the page. A press on a button that gets no focus leaves the focus on no
@@ -63,7 +64,7 @@ describe('useTriggerFocusGuards', () => {
           onOpenChange={(_open, details) => reasons.push(details.reason)}
         >
           <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
-          <Popover.Portal container={root}>
+          <Popover.Portal to={root}>
             <Popover.Positioner>
               <Popover.Popup initialFocus={field}>{h('slot')}</Popover.Popup>
             </Popover.Positioner>
@@ -1221,11 +1222,11 @@ describe('useTriggerFocusGuards', () => {
             </Popover.Portal>
             <Popover.Trigger id="first">First</Popover.Trigger>
           </Popover.Root>
-          <FloatingPortal>
+          <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart>
               <button data-testid="inside">Inside</button>
             </FocusManagerPart>
-          </FloatingPortal>
+          </PopupPortal>
           <button data-testid="after">After</button>
         </div>
       ));

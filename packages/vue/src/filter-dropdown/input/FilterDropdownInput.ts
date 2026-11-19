@@ -1,11 +1,10 @@
-import { computed, shallowRef, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import type { HTMLProps, VaseUIEvent } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useInputRender } from '../../internals/useInputRender';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
@@ -47,19 +46,8 @@ export function useFilterDropdownInput(
     inputElement.value = element;
   }
 
-  watch(
-    inputElement,
-    (input, _previous, onCleanup) => {
-      if (input) {
-        onCleanup(
-          addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout }),
-        );
-      }
-    },
-    { flush: 'sync' },
-  );
-
   function handleFocusin(event: FocusEvent) {
+    if (inputElement.value !== event.currentTarget) return;
     context.setInputFocusVisible(true);
 
     // A screen reader that followed `aria-activedescendant` put real focus on the item, so
@@ -75,7 +63,8 @@ export function useFilterDropdownInput(
     }
   }
 
-  function handleFocusout() {
+  function handleFocusout(event: FocusEvent) {
+    if (inputElement.value !== event.currentTarget) return;
     context.setInputFocusVisible(false);
   }
 
@@ -140,6 +129,8 @@ export function useFilterDropdownInput(
   }
 
   const listeners = {
+    onFocusin: handleFocusin,
+    onFocusout: handleFocusout,
     onCompositionstart: handleCompositionstart,
     onCompositionend: handleCompositionend,
     onInput: handleInput,
@@ -198,38 +189,6 @@ export function useFilterDropdownInput(
         elementAttrs,
       ];
     },
-  };
-}
-
-/**
- * Adds the `focusin` and `focusout` listeners of a part to its input with `addEventListener`.
- * Returns the function that removes them. Call it in a sync watcher of the input element.
- *
- * Chromium sends `focusout` when it removes a focused input. Vue calls the function ref with `null`
- * before the removal, so that event reaches no listener and keeps the focus ring. React also drops
- * a focus event in the mutation phase of its commit.
- *
- * Vue attaches the listeners that the input has at its mount before it calls the function ref. A
- * listener of the consumer then runs first, and its `event.preventVaseUIHandler()` stops the
- * listener of the part.
- *
- * @internal
- */
-export function addInputFocusListeners(
-  input: HTMLElement,
-  listeners: Record<'focusin' | 'focusout', (event: FocusEvent) => void>,
-): () => void {
-  const removers = (['focusin', 'focusout'] as const).map((type) =>
-    addEventListener(input, type, (event) => {
-      if (!(event as VaseUIEvent<FocusEvent>).vaseUIHandlerPrevented) {
-        listeners[type](event);
-      }
-    }),
-  );
-  return () => {
-    for (const remove of removers) {
-      remove();
-    }
   };
 }
 

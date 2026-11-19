@@ -158,6 +158,20 @@
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "member": "RegisteredTrigger",
       "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.ts",
+      "member": "useTriggerFocusGuards",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx",
+      "behavior": "Moves focus through the guards beside a popup trigger."
     }
   ]
 }

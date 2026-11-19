@@ -5,6 +5,7 @@ import { createRenderer, flushMicrotasks, wait, waitFor } from '#test-utils';
 import {
   createScrollDocument,
   CUSTOM_SCROLLBARS_CSS,
+  expectScrollLocksReleased,
   getScrollLockRegistry,
   HIDDEN_SCROLLBARS_CSS,
   isPageLocked,
@@ -193,11 +194,7 @@ describe('useScrollLock', () => {
   // a case that leaves a lock would break each later case.
   afterEach(async () => {
     await wait(0);
-    const registry = getScrollLockRegistry();
-    expect({ lockCount: registry?.lockCount, restore: registry?.restore }).toEqual({
-      lockCount: 0,
-      restore: null,
-    });
+    expectScrollLocksReleased();
   });
 
   async function lock(page: ScrollDocument, enabled = shallowRef(true)) {
@@ -485,7 +482,7 @@ describe('useScrollLock', () => {
       const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
       // `render` waits only for microtasks, so the lock timer has not run when `lock` returns.
       const { enabled } = await lock(page);
-      expect(getScrollLockRegistry()?.lockCount).toBe(1);
+      expect(getScrollLockRegistry(page.win)?.lockCount).toBe(1);
       expect(isPageLocked(page)).toBe(false);
 
       await release(enabled);
@@ -829,7 +826,7 @@ describe('useScrollLock', () => {
         },
       });
       await render(<Part />);
-      const lockCounts = recordLockCounts();
+      const lockCounts = recordLockCounts(page.win);
 
       enabled.value = true;
       await nextTick();
@@ -871,7 +868,7 @@ describe('useScrollLock', () => {
     it('VUE-5: unlocks the page at the deactivation and locks it again at the activation', async () => {
       const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
       const visible = shallowRef(true);
-      const lockCounts = recordLockCounts();
+      const lockCounts = recordLockCounts(page.win);
       await render(() => (
         <KeepAlive>
           {visible.value ? (
@@ -886,12 +883,12 @@ describe('useScrollLock', () => {
 
       visible.value = false;
       await nextTick();
-      expect(getScrollLockRegistry()?.lockCount).toBe(0);
+      expect(getScrollLockRegistry(page.win)?.lockCount).toBe(0);
       await waitForUnlock(page);
 
       visible.value = true;
       await nextTick();
-      expect(getScrollLockRegistry()?.lockCount).toBe(1);
+      expect(getScrollLockRegistry(page.win)?.lockCount).toBe(1);
       await waitForLock(page);
     });
   });
@@ -916,7 +913,7 @@ describe('useScrollLock', () => {
         </>
       ));
       await waitForLock(page);
-      expect(getScrollLockRegistry()?.lockCount).toBe(2);
+      expect(getScrollLockRegistry(page.win)?.lockCount).toBe(2);
       const locked = snapshot(page);
 
       await release(enabled.a);
@@ -958,7 +955,7 @@ describe('useScrollLock', () => {
       await nextTick();
       await waitForLock(page);
       await wait(0);
-      expect(getScrollLockRegistry()?.lockCount).toBe(1);
+      expect(getScrollLockRegistry(page.win)?.lockCount).toBe(1);
       const lockWrites = countWrites();
 
       await release(enabled.b);

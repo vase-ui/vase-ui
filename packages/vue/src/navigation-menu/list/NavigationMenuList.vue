@@ -23,7 +23,10 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import {
+  dismissPopupBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
 import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
@@ -66,7 +69,7 @@ usePopupHover(store).popup({
   nodeId,
 });
 
-const dismiss = useDismiss(store, {
+const dismiss = useDismissLayer(store, {
   enabled: () => positionerElement.value != null || value.value == null,
   outsidePressEvent: 'intentional',
   outsidePress(event) {
@@ -107,7 +110,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('ul',
       onFocusout: composite?.onFocusout,
       onKeydown: composite?.onKeydown,
     },
-    dismissProps.value?.floating,
+    dismissProps.value && dismissPopupBindings(dismissProps.value),
     nested ? undefined : { onKeydown },
     attrs,
   ],

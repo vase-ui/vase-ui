@@ -90,5 +90,14 @@
       "reason": "`Dialog.Handle` is the class `DialogHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/dialog/root/useRenderDialogRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root/useDialogRoot.ts",
+      "member": "useDialogRoot",
+      "witness": "packages/vue/src/dialog/root/DialogRoot.test.tsx"
+    }
+  ]
 }

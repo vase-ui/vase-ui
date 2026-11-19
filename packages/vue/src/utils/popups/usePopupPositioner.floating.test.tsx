@@ -5,7 +5,7 @@ import type { Placement, VirtualElement } from '@floating-ui/vue';
 import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks } from '#test-utils';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { FloatingRootStore } from './floating-root/FloatingRootStore';
-import { useDismiss } from './interactions/useDismiss';
+import { useTestDismiss } from '../../../test/fixtures/useTestDismiss';
 import { PopupTriggerMap } from './usePopupRoot';
 import {
   provideFloatingNode,
@@ -129,7 +129,7 @@ function createParentPopup(tree: FloatingTreeStore, store: FloatingRootStore) {
         nodeId,
         externalTree: tree,
       });
-      useDismiss(store, { externalTree: tree });
+      useTestDismiss(store, { externalTree: tree });
       return () => slots.default?.();
     },
   });
@@ -378,7 +378,7 @@ describe('useVaseUIFloating', () => {
           positioning,
           nodeId: () => place.value.nodeId,
         });
-        useDismiss(popup.store);
+        useTestDismiss(popup.store);
         return () => null;
       },
     });
@@ -386,7 +386,7 @@ describe('useVaseUIFloating', () => {
       setup() {
         const nodeId = useFloatingNodeId();
         useVaseUIFloating({ rootStore: child.store, mounted: true, positioning, nodeId });
-        useDismiss(child.store);
+        useTestDismiss(child.store);
         return () => null;
       },
     });
@@ -797,7 +797,7 @@ describe('useVaseUIFloating', () => {
             nodeId,
             externalTree: tree,
           });
-          useDismiss(moved.store, { externalTree: tree });
+          useTestDismiss(moved.store, { externalTree: tree });
           return () => null;
         },
       });
@@ -843,7 +843,7 @@ describe('useVaseUIFloating', () => {
             nodeId: () => insideId,
             externalTree: tree,
           });
-          useDismiss(child.store, { externalTree: tree });
+          useTestDismiss(child.store, { externalTree: tree });
           return () => null;
         },
       });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { markOthers } from './markOthers';
+import { markOthers } from './usePopupFocus';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -357,7 +357,7 @@ test('gives inert to the elements that ariaHidden hides, and keeps an inert of t
 });
 
 test('shares the marks with a second copy of the module', async () => {
-  const copy: typeof import('./markOthers') = await import('./markOthers?copy' as string);
+  const copy: typeof import('./usePopupFocus') = await import('./usePopupFocus?copy' as string);
   expect(copy.markOthers).not.toBe(markOthers);
   const keep = document.createElement('div');
   const outside = document.createElement('div');

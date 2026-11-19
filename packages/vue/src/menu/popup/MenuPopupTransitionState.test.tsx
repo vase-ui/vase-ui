@@ -86,7 +86,7 @@ describe('Menu popup transition state', () => {
                 <Menu.Trigger>Toggle</Menu.Trigger>
                 <Menu.Portal
                   keepMounted={keepMounted}
-                  container={ancestorContainer ? container : undefined}
+                  to={ancestorContainer ? container.value : undefined}
                   data-testid="portal"
                 >
                   <Menu.Positioner>

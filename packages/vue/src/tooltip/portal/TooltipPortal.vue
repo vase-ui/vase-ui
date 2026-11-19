@@ -1,12 +1,13 @@
 <script lang="ts">
-import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloatingPortalNode';
+import type { PortalTargetProps } from '../../utils/popups/portal/PopupPortal.vue';
 
 export interface TooltipPortalState {}
 
 export interface TooltipPortalProps
   extends
+    PortalTargetProps,
     VaseUIComponentProps<TooltipPortalState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
@@ -14,10 +15,6 @@ export interface TooltipPortalProps
    * @default false
    */
   keepMounted?: boolean | undefined;
-  /**
-   * A parent element to render the portal element into.
-   */
-  container?: MaybeRefOrGetter<FloatingPortalContainer> | undefined;
 }
 </script>
 
@@ -27,7 +24,7 @@ import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
+import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
 import { useTooltipRootContext, TooltipPortalContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -60,28 +57,30 @@ defineExpose({ element });
 </script>
 
 <template>
-  <FloatingPortalLite
+  <PopupPortal
     v-if="shouldRender && $slots.render"
     ref="portal"
     v-bind="{
-      ...withoutPropsOf($attrs, FloatingPortalLite),
+      ...withoutPropsOf($attrs, PopupPortal),
       as,
-      container,
+      to,
+      disabled,
     }"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-  </FloatingPortalLite>
-  <FloatingPortalLite
+  </PopupPortal>
+  <PopupPortal
     v-else-if="shouldRender"
     ref="portal"
     v-bind="{
-      ...withoutPropsOf($attrs, FloatingPortalLite),
+      ...withoutPropsOf($attrs, PopupPortal),
       as,
-      container,
+      to,
+      disabled,
     }"
   >
     <slot :state="state" />
-  </FloatingPortalLite>
+  </PopupPortal>
 </template>

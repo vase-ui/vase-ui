@@ -181,6 +181,10 @@ To open an alert dialog from a menu, control the open state of the alert dialog 
 
 </DemoSource>
 
+## Portal target
+
+Set `to` on `AlertDialog.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

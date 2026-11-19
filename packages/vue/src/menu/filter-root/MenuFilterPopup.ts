@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import { mergeProps } from '../../merge-props';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
+import type { FocusOption } from '../../utils/popups/focus/usePopupFocus';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuFilterPopup } from './MenuFilterContext';
 import { useMenuFilterPopup } from './useMenuFilterPopup';

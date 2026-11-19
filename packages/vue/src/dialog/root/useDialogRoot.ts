@@ -1,37 +1,93 @@
-import { onMounted, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
+import { onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import type { usePopupRoot } from '../../utils/popups/usePopupRoot';
-import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
-import type { DialogStore } from '../store/DialogStore';
+import {
+  dismissPopupBindings,
+  dismissTriggerBindings,
+  useDismissLayer,
+} from '../../utils/popups/interactions/useDismissLayer';
+import {
+  popupStoreSelectors,
+  usePopupRoot,
+  usePopupRootSync,
+} from '../../utils/popups/usePopupRoot';
+import { DialogStore } from '../store/DialogStore';
+
+import type { DialogRootChangeEventDetails, DialogRootProps } from './DialogRoot.vue';
+import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
+
+type DialogRootMode = 'dialog' | 'drawer' | 'alert-dialog';
+
+const ROOT_NAMES: Record<DialogRootMode, string> = {
+  dialog: 'DialogRoot',
+  'alert-dialog': 'AlertDialogRoot',
+  drawer: 'DrawerRoot',
+};
+
+interface DialogRootEmit {
+  (event: 'openChange', open: boolean, eventDetails: DialogRootChangeEventDetails): void;
+  (event: 'update:open', open: boolean): void;
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- vue-tsc types the emit function with one signature for each event. A signature for two events does not accept that function.
+  (event: 'openChangeComplete', open: boolean): void;
+}
 
 /**
- * Gives a dialog its dismissal, its scroll lock, the count of the open dialogs below it, and the
- * registries of its titles and its descriptions. Call it in `setup` of the root.
+ * Does what the roots of Dialog, Alert Dialog and Drawer do. Call it in `setup` of the root. The
+ * part exposes `actions` and renders `<slot :payload="payload" />`.
  */
-export function useDialogInteractions({
-  store,
-  open,
-  mounted,
-  bindParts,
-  parentContext,
-  isDrawer,
-}: Pick<
-  ReturnType<typeof usePopupRoot<DialogStore<any>>>,
-  'store' | 'open' | 'mounted' | 'bindParts'
-> & {
-  parentContext: DialogStore<unknown>['context'] | undefined;
-  isDrawer: boolean;
-}) {
+export function useDialogRoot<Payload>(
+  mode: DialogRootMode,
+  props: DialogRootProps<Payload>,
+  emit: DialogRootEmit,
+) {
+  const isDrawer = mode === 'drawer';
+  const isAlertDialog = mode === 'alert-dialog';
+  const role: 'dialog' | 'alertdialog' = isAlertDialog ? 'alertdialog' : 'dialog';
+
+  const parentStore = useDialogRootContext(true);
+  const nested = parentStore != null;
+  const rootState = () => ({
+    modal: isAlertDialog ? true : (props.modal ?? true),
+    disablePointerDismissal: isAlertDialog || (props.disablePointerDismissal ?? false),
+    nested,
+    role,
+  });
+
+  const owner = usePopupRoot(
+    props,
+    (initialState, defaultPopupId) =>
+      new DialogStore<Payload>({ ...initialState, ...rootState() }, defaultPopupId),
+    {
+      name: ROOT_NAMES[mode],
+      handle: () => props.handle,
+      onOpenChange(nextOpen, eventDetails) {
+        emit('openChange', nextOpen, eventDetails);
+        if (!eventDetails.isCanceled) {
+          emit('update:open', nextOpen);
+        }
+      },
+      onOpenChangeComplete(nextOpen) {
+        emit('openChangeComplete', nextOpen);
+      },
+    },
+  );
+
+  const { store, open, mounted, payload, actions, bindParts } = owner;
+  const parentContext = parentStore?.context;
+  watch(rootState, (values) => store.update(values));
+
+  usePopupRootSync(store, open);
+
+  provide(DialogRootContext, store as DialogStore<unknown>);
+
   const ownNestedOpenDialogs = shallowRef(0);
   const ownNestedOpenDrawers = shallowRef(0);
   const isTopmost = () => ownNestedOpenDialogs.value === 0;
 
-  const dismiss = useDismiss(store, {
+  const dismiss = useDismissLayer(store, {
     outsidePressEvent() {
       if (store.context.internalBackdropRef.value || store.context.backdropRef.value) {
         return 'intentional';
@@ -139,8 +195,11 @@ export function useDialogInteractions({
     }
   }
 
-  onMounted(reportToParent);
-  watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, isHeld], reportToParent);
+  onMounted(() => {
+    watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, isHeld], reportToParent, {
+      immediate: true,
+    });
+  });
   onScopeDispose(() => {
     if (hasReported) {
       parentContext?.onNestedDialogOpen?.(0, 0);
@@ -161,7 +220,10 @@ export function useDialogInteractions({
     },
   );
 
-  bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
+  bindParts({
+    trigger: () => dismissTriggerBindings(dismiss),
+    popup: () => dismissPopupBindings(dismiss),
+  });
   watch(
     [ownNestedOpenDialogs, ownNestedOpenDrawers],
     ([nestedOpenDialogCount, nestedOpenDrawerCount]) => {
@@ -169,4 +231,5 @@ export function useDialogInteractions({
     },
     { immediate: true },
   );
+  return { store, payload, actions };
 }

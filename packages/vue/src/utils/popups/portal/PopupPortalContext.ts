@@ -23,7 +23,7 @@ export interface FocusManagerState {
 export interface PortalContextValue {
   /**
    * The portal element of the nearest portal that provides this context.
-   * A portal with no `container` renders inside it.
+   * A portal with no `to` renders inside it.
    */
   portalNode: Readonly<Ref<HTMLElement | null>>;
   /**

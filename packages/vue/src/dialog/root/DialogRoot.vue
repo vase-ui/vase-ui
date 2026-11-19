@@ -83,7 +83,7 @@ export type DialogRootChangeEventDetails = VaseUIChangeEventDetails<DialogRootCh
 
 <script setup lang="ts" generic="Payload = unknown">
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useRenderDialogRoot } from './useRenderDialogRoot';
+import { useDialogRoot } from './useDialogRoot';
 
 const props = withDefaults(defineProps<DialogRootProps<Payload>>(), {
   open: undefined,
@@ -122,7 +122,7 @@ defineSlots<{
   default(props: { payload: Payload | undefined }): unknown;
 }>();
 
-const { payload, actions } = useRenderDialogRoot<Payload>('dialog', props, emit);
+const { payload, actions } = useDialogRoot<Payload>('dialog', props, emit);
 
 defineExpose({ unmount: actions.unmount, close: actions.close });
 </script>

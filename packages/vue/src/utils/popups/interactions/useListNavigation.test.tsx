@@ -34,7 +34,8 @@ import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
-import FloatingPortal from '../portal/FloatingPortal.vue';
+import { usePortalFocus } from '../portal/usePortalFocus';
+import PopupPortal from '../portal/PopupPortal.vue';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -44,7 +45,7 @@ import {
 import type { InteractionProps } from '../types';
 import { navigateUniformGrid } from '../../../internals/composite/gridNavigation';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { useDismiss } from './useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 import { useListNavigation } from './useListNavigation';
 import type { UseListNavigationProps } from './useListNavigation';
 import { useTypeahead } from './useTypeahead';
@@ -316,7 +317,7 @@ function createGrid(options: {
           disabledIndices,
           grid: () => grid,
         }),
-        useDismiss(context.rootStore),
+        useTestDismiss(context.rootStore),
       ]);
 
       return () => (
@@ -409,7 +410,7 @@ const EmojiPicker = defineComponent(() => {
   // Handles opening the floating element via the Choose Emoji button.
   const { getReferenceProps, getFloatingProps } = useTestInteractions([
     useClick(context.rootStore),
-    useDismiss(context.rootStore),
+    useTestDismiss(context.rootStore),
     () => ({
       reference: { 'aria-haspopup': 'menu' as const, 'aria-expanded': open.value },
       floating: { role: 'menu' },
@@ -483,7 +484,7 @@ const EmojiPicker = defineComponent(() => {
           ☻
         </button>
         {selectedEmoji.value && <span>{selectedEmoji.value} selected</span>}
-        <FloatingPortal>
+        <PopupPortal guards={usePortalFocus}>
           {open.value && (
             <FloatingFocusManager store={context.rootStore} modal={false}>
               <div {...getFloatingProps({ ...getListFloatingProps(), ref: refs.setFloating })}>
@@ -534,7 +535,7 @@ const EmojiPicker = defineComponent(() => {
               </div>
             </FloatingFocusManager>
           )}
-        </FloatingPortal>
+        </PopupPortal>
       </>
     );
   };
@@ -1111,7 +1112,7 @@ describe('useListNavigation', () => {
       });
 
       const { getReferenceProps, getFloatingProps, getItemProps } = useTestInteractions([
-        useDismiss(context.rootStore),
+        useTestDismiss(context.rootStore),
         useListNavigation(context.rootStore, {
           listRef,
           activeIndex,
@@ -2903,7 +2904,7 @@ describe('useListNavigation', () => {
           <>
             <button {...getReferenceProps({ ref: refs.setReference })} />
             {open.value && (
-              <FloatingPortal>
+              <PopupPortal guards={usePortalFocus}>
                 <div role="menu" {...getFloatingProps({ ref: refs.setFloating })}>
                   <ul>
                     {['one', 'two', 'three'].map((string, index) => (
@@ -2924,7 +2925,7 @@ describe('useListNavigation', () => {
                   </ul>
                   <FocusSecondItemOnMount />
                 </div>
-              </FloatingPortal>
+              </PopupPortal>
             )}
           </>
         );

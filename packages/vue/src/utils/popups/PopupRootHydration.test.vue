@@ -4,7 +4,7 @@ import type { PopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
-import FloatingPortalLite from './portal/FloatingPortalLite.vue';
+import PopupPortal from './portal/PopupPortal.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -52,11 +52,11 @@ const handle = props.handle ?? createPopupFixtureHandle<unknown>();
     <PopupTriggerPart v-for="(id, index) in triggers" :key="index" :id="id ?? undefined">
       trigger {{ index }}
     </PopupTriggerPart>
-    <FloatingPortalLite>
+    <PopupPortal>
       <PopupPart :keep-mounted="keepMounted" v-bind="popupId ? { id: popupId } : {}">
         popup
       </PopupPart>
-    </FloatingPortalLite>
+    </PopupPortal>
   </PopupRootPart>
   <PopupTriggerPart v-if="detachedAfter" :id="detachedAfter" :handle="handle">
     detached after

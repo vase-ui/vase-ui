@@ -137,7 +137,7 @@ describe('<Select.Trigger />', () => {
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
-          <Select.Portal container={options.container}>
+          <Select.Portal to={options.container}>
             <Select.Positioner alignItemWithTrigger={false}>
               <Select.Popup>
                 <Select.Item value="a">a</Select.Item>

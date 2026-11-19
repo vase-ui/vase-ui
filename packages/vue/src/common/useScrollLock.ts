@@ -1,10 +1,10 @@
-import { toValue } from 'vue';
+import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { isOverflowElement } from '@floating-ui/utils/dom';
 import { addEventListener } from './addEventListener';
 import { platform } from './platform';
 import { ownerDocument, ownerWindow } from './owner';
-import { Timeout } from './useTimeout';
+import { getPortalLocation } from '../utils/popups/portal/portalElements';
 import { AnimationFrame } from './useAnimationFrame';
 import { useDomEffect } from '../utils/popups/useDomEffect';
 
@@ -22,11 +22,9 @@ interface ScrollLockRegistry {
 
 const SCROLL_LOCK_KEY = Symbol.for('vase-ui.scroll-lock');
 
-// Two copies of the library on one page share one count and one restore function. Each copy keeps
-// its own timers and reads the registry when a timer runs. Thus the result does not depend on
-// which copy started the timer.
-function getRegistry(): ScrollLockRegistry {
-  const holder = globalThis as { [SCROLL_LOCK_KEY]?: ScrollLockRegistry };
+// A frame locks its own viewport. Copies of the library in that window share the count and cleanup.
+function getRegistry(doc: Document): ScrollLockRegistry {
+  const holder = ownerWindow(doc.documentElement) as { [SCROLL_LOCK_KEY]?: ScrollLockRegistry };
   holder[SCROLL_LOCK_KEY] ??= {
     version: 1,
     lockCount: 0,
@@ -35,10 +33,6 @@ function getRegistry(): ScrollLockRegistry {
   };
   return holder[SCROLL_LOCK_KEY];
 }
-
-let originalHtmlStyles: Partial<CSSStyleDeclaration> = {};
-let originalBodyStyles: Partial<CSSStyleDeclaration> = {};
-let originalHtmlScrollBehavior = '';
 
 // The viewport's overflow comes from <html> when it establishes its own scroll container, and
 // propagates from <body> otherwise. An `overflow` style on the other element doesn't lock the page.
@@ -50,16 +44,14 @@ function isPageScrollLocked(win: OwnerWindow, html: HTMLElement, body: HTMLEleme
   return /hidden|clip/.test(win.getComputedStyle(getViewportScroller(html, body)).overflowY);
 }
 
-function hasInsetScrollbars(referenceElement: Element | null) {
-  const doc = ownerDocument(referenceElement);
+function hasInsetScrollbars(doc: Document) {
   // A document has no `ownerDocument`, so `ownerWindow` of a document gives the window of the page.
   // https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useScrollLock.ts#L29
   const win = ownerWindow(doc.documentElement);
   return win.innerWidth - doc.documentElement.clientWidth > 0;
 }
 
-function supportsStableScrollbarGutter(referenceElement: Element | null) {
-  const doc = ownerDocument(referenceElement);
+function supportsStableScrollbarGutter(doc: Document) {
   const html = doc.documentElement;
   const body = doc.body;
   const win = ownerWindow(html);
@@ -73,7 +65,7 @@ function supportsStableScrollbarGutter(referenceElement: Element | null) {
   // The probe writes styles and reads the layout. In WebKit, that can stop a transition that runs on
   // the page. Thus each document gets one probe, and the result stays for the life of the document.
   // https://github.com/mui/base-ui/issues/6119
-  const { stableGutter } = getRegistry();
+  const { stableGutter } = getRegistry(doc);
   const known = stableGutter.get(doc);
   if (known !== undefined) {
     return known;
@@ -100,8 +92,7 @@ function supportsStableScrollbarGutter(referenceElement: Element | null) {
   return stable;
 }
 
-function preventScrollOverlayScrollbars(referenceElement: Element | null) {
-  const doc = ownerDocument(referenceElement);
+function preventScrollOverlayScrollbars(doc: Document) {
   const html = doc.documentElement;
   const body = doc.body;
 
@@ -125,12 +116,14 @@ function preventScrollOverlayScrollbars(referenceElement: Element | null) {
   };
 }
 
-function preventScrollInsetScrollbars(referenceElement: Element | null) {
-  const doc = ownerDocument(referenceElement);
+function preventScrollInsetScrollbars(doc: Document) {
   const html = doc.documentElement;
   const body = doc.body;
   const win = ownerWindow(html);
 
+  let originalHtmlStyles: Partial<CSSStyleDeclaration> = {};
+  let originalBodyStyles: Partial<CSSStyleDeclaration> = {};
+  let originalHtmlScrollBehavior = '';
   let scrollTop = 0;
   let scrollLeft = 0;
   let updateGutterOnly = false;
@@ -189,7 +182,7 @@ function preventScrollInsetScrollbars(referenceElement: Element | null) {
       Number.parseFloat(bodyStyles.marginLeft) + Number.parseFloat(bodyStyles.marginRight);
     const elementToLock = getViewportScroller(html, body);
 
-    updateGutterOnly = supportsStableScrollbarGutter(referenceElement);
+    updateGutterOnly = supportsStableScrollbarGutter(doc);
 
     /*
      * DOM writes:
@@ -261,41 +254,30 @@ function preventScrollInsetScrollbars(referenceElement: Element | null) {
   };
 }
 
-const timeoutLock = Timeout.create();
-const timeoutUnlock = Timeout.create();
-
-function acquire(referenceElement: Element | null) {
-  const registry = getRegistry();
+function acquire(doc: Document) {
+  const registry = getRegistry(doc);
   registry.lockCount += 1;
   if (registry.lockCount === 1 && registry.restore === null) {
-    timeoutLock.start(0, () => lock(referenceElement));
+    setTimeout(() => lock(doc, registry), 0);
   }
-  return release;
+  return () => {
+    registry.lockCount -= 1;
+    if (registry.lockCount === 0 && registry.restore) {
+      setTimeout(() => {
+        if (registry.lockCount === 0 && registry.restore) {
+          registry.restore();
+          registry.restore = null;
+        }
+      }, 0);
+    }
+  };
 }
 
-function release() {
-  const registry = getRegistry();
-  registry.lockCount -= 1;
-  if (registry.lockCount === 0 && registry.restore) {
-    timeoutUnlock.start(0, unlock);
-  }
-}
-
-function unlock() {
-  const registry = getRegistry();
-  if (registry.lockCount === 0 && registry.restore) {
-    registry.restore();
-    registry.restore = null;
-  }
-}
-
-function lock(referenceElement: Element | null) {
-  const registry = getRegistry();
+function lock(doc: Document, registry: ScrollLockRegistry) {
   if (registry.lockCount === 0 || registry.restore !== null) {
     return;
   }
 
-  const doc = ownerDocument(referenceElement);
   const html = doc.documentElement;
   const body = doc.body;
   const win = ownerWindow(html);
@@ -308,7 +290,7 @@ function lock(referenceElement: Element | null) {
       }
       observer.disconnect();
       registry.restore = null;
-      lock(referenceElement);
+      lock(doc, registry);
     });
 
     // Watch every attribute: locks are applied through inline styles, classes, or attributes
@@ -322,7 +304,7 @@ function lock(referenceElement: Element | null) {
     return;
   }
 
-  const hasOverlayScrollbars = platform.os.ios || !hasInsetScrollbars(referenceElement);
+  const hasOverlayScrollbars = platform.os.ios || !hasInsetScrollbars(doc);
 
   // On iOS, scroll locking does not work if the navbar is collapsed. Due to numerous
   // side effects and bugs that arise on iOS, it must be researched extensively before
@@ -331,8 +313,8 @@ function lock(referenceElement: Element | null) {
   // - The navbar must not force itself into view and cause layout shift.
   // - Scroll containers must not flicker upon closing a popup when it has an exit animation.
   registry.restore = hasOverlayScrollbars
-    ? preventScrollOverlayScrollbars(referenceElement)
-    : preventScrollInsetScrollbars(referenceElement);
+    ? preventScrollOverlayScrollbars(doc)
+    : preventScrollInsetScrollbars(doc);
 }
 
 /**
@@ -345,7 +327,8 @@ export function useScrollLock(
   enabled: MaybeRefOrGetter<boolean> = true,
   referenceElement: MaybeRefOrGetter<Element | null> = null,
 ): void {
-  useDomEffect([() => toValue(enabled), () => toValue(referenceElement)], () =>
-    toValue(enabled) ? acquire(toValue(referenceElement)) : undefined,
+  const doc = computed(() => getPortalLocation(toValue(referenceElement)).document);
+  useDomEffect([() => toValue(enabled), doc], () =>
+    toValue(enabled) ? acquire(doc.value ?? ownerDocument(null)) : undefined,
   );
 }

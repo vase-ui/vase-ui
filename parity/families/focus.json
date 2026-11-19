@@ -14,5 +14,42 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.ts",
+      "member": "usePopupFocus",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/markOthers.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.ts",
+      "member": "markOthers",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.marks.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/enqueueFocus.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/focus/tabbable.ts",
+      "member": "enqueueFocus",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.test.tsx",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.test.tsx",
+      "behavior": "Moves, traps, repairs and returns focus in a popup."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/markOthers.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.marks.test.ts",
+      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.marks.test.ts",
+      "behavior": "Preserves and releases the outside modal marks."
+    }
+  ]
 }

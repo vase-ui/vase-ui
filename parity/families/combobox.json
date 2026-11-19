@@ -109,6 +109,11 @@
       "entry": "ChipRemove",
       "prop": "disabled",
       "reason": "The part reads `disabled` and disables its button when the prop or the root says so, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Portal",
+      "prop": "disabled",
+      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
     }
   ],
   "returnTypeDifferences": [
