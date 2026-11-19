@@ -12,6 +12,7 @@ export const REFACTORED_FOLDERS = [
   'fieldset',
   'form',
   'input',
+  'meter',
   'progress',
   'radio',
   'radio-group',
