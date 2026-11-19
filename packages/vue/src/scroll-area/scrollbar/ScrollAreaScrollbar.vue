@@ -36,16 +36,18 @@ export interface ScrollAreaScrollbarProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, watch } from 'vue';
+import { computed, provide } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import {
+  ScrollAreaScrollbarContext,
+  scrollAreaStateAttributesMapping,
+  useScrollAreaRootContext,
+} from '../root/ScrollAreaRootContext';
 import * as ScrollAreaRootCssVars from '../root/ScrollAreaRootCssVars';
-import { scrollAreaStateAttributesMapping } from '../root/stateAttributes';
 import { getOffset } from '../utils/getOffset';
-import { ScrollAreaScrollbarContext } from './ScrollAreaScrollbarContext';
 import * as ScrollAreaScrollbarCssVars from './ScrollAreaScrollbarCssVars';
 
 defineOptions({ inheritAttrs: false });
@@ -65,9 +67,7 @@ const {
   hovering,
   scrollingX,
   scrollingY,
-  hiddenState,
-  scrollbarYElement,
-  scrollbarXElement,
+  registerElement,
   viewportElement,
   thumbYElement,
   thumbXElement,
@@ -92,17 +92,15 @@ const state = computed<ScrollAreaScrollbarState>(() => ({
 const shouldRender = computed(
   () =>
     props.keepMounted ||
-    !(props.orientation === 'vertical' ? hiddenState.value.y : hiddenState.value.x),
+    (props.orientation === 'vertical'
+      ? viewportState.value.hasOverflowY
+      : viewportState.value.hasOverflowX),
 );
 
 provide(
   ScrollAreaScrollbarContext,
   computed(() => props.orientation),
 );
-
-function getElementHolder(orientation: 'vertical' | 'horizontal') {
-  return orientation === 'vertical' ? scrollbarYElement : scrollbarXElement;
-}
 
 function handleWheel(event: WheelEvent) {
   const viewport = viewportElement.value;
@@ -160,7 +158,7 @@ function handleTrackPointerDown(event: PointerEvent) {
     return;
   }
 
-  const scrollbar = getElementHolder(props.orientation).value;
+  const scrollbar = element.value;
 
   if (!thumb || !scrollbar) {
     return;
@@ -194,29 +192,17 @@ function handleTrackPointerDown(event: PointerEvent) {
 }
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  // `useRenderElement` calls this callback only when the element changes. The callback reads the
-  // orientation when it runs. While the scrollbar stays mounted, a change of `orientation` does not
-  // change the element, so the `watch` below moves the element to the other holder. If the change
-  // also mounts or removes the element, the callback runs after the `watch`, because the `watch`
-  // runs before the render. The callback then reads the new orientation and writes the right holder.
-  ref: (scrollbar) => {
-    getElementHolder(props.orientation).value = scrollbar;
-  },
   state,
   props: (attrs) => [
     {
       'data-id': `${rootId.value}-scrollbar`,
       'aria-hidden': true,
       onPointerdown: handleTrackPointerDown,
-      // A native scrollbar does not move focus when the user presses it, with any button.
-      // The track handles this and not the thumb, so that the press that bubbles from the thumb is
-      // covered too.
+      // A native scrollbar keeps focus on the active element for every mouse button.
       onMousedown(event: MouseEvent) {
         event.preventDefault();
       },
       onPointerup: handlePointerUp,
-      // When the browser cancels a gesture on the track, no thumb has the pointer capture.
-      // The track clears the drag state then, as `pointerup` does.
       onPointercancel: handlePointerUp,
       // A browser makes a `wheel` listener passive by default only on the window, the document, the
       // root element and the body. A listener on this element can call `preventDefault`.
@@ -234,13 +220,13 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
               top: 0,
               bottom: `var(${ScrollAreaRootCssVars.scrollAreaCornerHeight})`,
               insetInlineEnd: 0,
-              [ScrollAreaScrollbarCssVars.scrollAreaThumbHeight]: `${thumbSize.value.height}px`,
+              [ScrollAreaScrollbarCssVars.scrollAreaThumbHeight]: `${thumbSize.height}px`,
             }
           : {
               insetInlineStart: 0,
               insetInlineEnd: `var(${ScrollAreaRootCssVars.scrollAreaCornerWidth})`,
               bottom: 0,
-              [ScrollAreaScrollbarCssVars.scrollAreaThumbWidth]: `${thumbSize.value.width}px`,
+              [ScrollAreaScrollbarCssVars.scrollAreaThumbWidth]: `${thumbSize.width}px`,
             }),
       },
     },
@@ -249,20 +235,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   stateAttributesMapping: scrollAreaStateAttributesMapping,
 });
 
-watch(
-  () => props.orientation,
-  (orientation, previousOrientation) => {
-    const scrollbar = element.value;
-    if (!scrollbar) {
-      return;
-    }
-
-    const previousHolder = getElementHolder(previousOrientation);
-    if (previousHolder.value === scrollbar) {
-      previousHolder.value = null;
-    }
-    getElementHolder(orientation).value = scrollbar;
-  },
+registerElement(
+  () => (props.orientation === 'vertical' ? 'scrollbarYElement' : 'scrollbarXElement'),
+  element,
 );
 
 defineExpose({ element });

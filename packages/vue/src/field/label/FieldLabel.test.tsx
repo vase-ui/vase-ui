@@ -194,6 +194,23 @@ describe('<Field.Label />', () => {
       );
     });
 
+    it('checks the replacement element when its tag and nativeLabel change together', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const native = shallowRef(true);
+      await render(() => (
+        <Field.Root>
+          <Field.Control />
+          <Field.Label as={native.value ? 'label' : 'span'} nativeLabel={native.value}>
+            Name
+          </Field.Label>
+        </Field.Root>
+      ));
+      native.value = false;
+      await flushMicrotasks();
+      expect(screen.getByText('Name').tagName).toBe('SPAN');
+      expect(error).not.toHaveBeenCalled();
+    });
+
     it('reports a nativeLabel value that stops matching the element', async () => {
       const errorSpy = vi
         .spyOn(console, 'error')

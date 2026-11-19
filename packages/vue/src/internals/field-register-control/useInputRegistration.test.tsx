@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { createHeldBranch, createRenderer, screen } from '#test-utils';
-import { useInputRegistration } from './useInputRegistration';
+import { useInputRegistration } from '../field-register-control';
 
 const RegisteredControl = defineComponent(
   (props: { register: (input: HTMLInputElement) => (() => void) | void }, { expose }) => {

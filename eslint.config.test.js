@@ -234,14 +234,14 @@ const reported = [
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc('', '<input v-bind="inputProps()" />'),
     ruleId: 'vue/no-restricted-syntax',
-    hint: 'setter of the input',
+    hint: 'Give the input a named ref',
   },
   {
-    name: 'a spread on an input beside a static ref',
+    name: 'a spread on an input with an empty ref name',
     file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc('', '<input ref="input" v-bind="inputProps" />'),
+    code: docsSfc('', '<input v-bind="inputProps()" ref="" />'),
     ruleId: 'vue/no-restricted-syntax',
-    hint: 'setter of the input',
+    hint: 'Give the input a named ref',
   },
   {
     name: 'an import of getCurrentInstance',
@@ -1466,6 +1466,16 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     name: 'a spread on an input with the ref by name',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc('', '<input v-bind="inputProps()" :ref="setInputElement" />'),
+  },
+  {
+    name: 'a spread on an input beside a static ref',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input ref="input" v-bind="inputProps" />'),
+  },
+  {
+    name: 'a spread on an input with a static template ref',
+    file: `${SRC}/DialogRoot.vue`,
+    code: docsSfc('', '<input v-bind="inputProps()" ref="input" />'),
   },
   {
     name: 'an input with no spread and no ref',

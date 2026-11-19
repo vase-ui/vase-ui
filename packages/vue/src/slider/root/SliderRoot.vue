@@ -198,7 +198,7 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { given } from '../../internals/givenAttributes';
@@ -295,7 +295,6 @@ const { clearErrors } = useFormContext();
 const {
   state: fieldState,
   disabled: fieldDisabled,
-  name: fieldName,
   setTouched,
   setDirty,
   validityData,
@@ -313,7 +312,6 @@ const labelId = computed(
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
-const inputName = computed(() => fieldName.value ?? props.name);
 
 // The internal value is potentially unsorted, e.g. to support frozen arrays
 // https://github.com/mui/material-ui/pull/28472
@@ -377,14 +375,12 @@ const values = computed<readonly number[]>(() => {
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
 // The form focuses `validation.inputRef`.
-useRegisterFieldControl(
-  validation.inputRef,
-  rootId,
-  () => fieldValue.value,
-  undefined,
-  () => !isDisabled.value,
-  () => props.name,
-);
+const { name: inputName } = useFieldControl(validation.inputRef, {
+  id: rootId,
+  name: () => props.name,
+  value: fieldValue,
+  enabled: () => !isDisabled.value,
+});
 
 const clearFieldError = useClearFieldError(inputName);
 

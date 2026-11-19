@@ -45,12 +45,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FieldLabelState>;
 }>();
 
-const fieldRootContext = useFieldRootContext(false);
-const fieldItemContext = useFieldItemContext();
+const { state: fieldState, disabled: fieldDisabled } = useFieldRootContext(false);
+const { disabled: itemDisabled } = useFieldItemContext();
 
 const state = computed<FieldLabelState>(() => ({
-  ...fieldRootContext.state.value,
-  disabled: (fieldRootContext.disabled.value ?? false) || fieldItemContext.disabled.value,
+  ...fieldState.value,
+  disabled: fieldDisabled.value || itemDisabled.value,
 }));
 
 const labelProps = useLabel({
@@ -67,7 +67,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('labe
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Field.Label');
-  const checkElement = () => {
+  const checkElement = (native: boolean) => {
     const label = element.value;
     if (!label) {
       return;
@@ -75,13 +75,13 @@ if (process.env.NODE_ENV !== 'production') {
 
     const isLabelTag = label.tagName === 'LABEL';
 
-    if (props.nativeLabel && !isLabelTag) {
+    if (native && !isLabelTag) {
       error(
         '<Field.Label> expected a <label> element because the `nativeLabel` prop is true.',
         'A non-<label> element has no native label association, so `for` has no effect.',
         'Use a real <label> with the `as` prop or the `#render` slot, or set `nativeLabel` to `false`.',
       );
-    } else if (!props.nativeLabel && isLabelTag) {
+    } else if (!native && isLabelTag) {
       error(
         '<Field.Label> expected a non-<label> element because the `nativeLabel` prop is false.',
         'A <label> element has native label behavior, but Vase UI treats the label as non-native. This can cause unexpected pointer behavior.',
@@ -89,9 +89,7 @@ if (process.env.NODE_ENV !== 'production') {
       );
     }
   };
-
-  onMounted(checkElement);
-  watch(() => props.nativeLabel, checkElement, { flush: 'post' });
+  onMounted(() => watch(() => props.nativeLabel, checkElement, { immediate: true, flush: 'post' }));
 }
 
 defineExpose({ element });

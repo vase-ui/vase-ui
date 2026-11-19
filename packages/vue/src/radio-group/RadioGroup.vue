@@ -80,7 +80,7 @@ import { SHIFT } from '../internals/composite/listIndex';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
-import { useRegisterFieldControl } from '../internals/field-register-control';
+import { useFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
 import { given } from '../internals/givenAttributes';
@@ -125,7 +125,6 @@ const {
   setTouched: setFieldTouched,
   setFocused,
   validationMode,
-  name: fieldName,
   disabled: fieldDisabled,
   state: fieldState,
   validation,
@@ -142,9 +141,7 @@ useDeferredServerRender();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
-const inputName = computed(() => fieldName.value ?? props.name);
 const controlId = useVaseUiId(() => props.id);
-const clearFieldError = useClearFieldError(inputName);
 
 const checkedValue = useControlled<Value>({
   controlled: () => props.modelValue,
@@ -268,14 +265,14 @@ function getFormValue() {
   return null;
 }
 
-useRegisterFieldControl(
-  () => validation.getInputControl(),
-  controlId,
-  () => fieldValue.value,
-  getFormValue,
-  () => !isDisabled.value,
-  () => props.name,
-);
+const { name: inputName } = useFieldControl(() => validation.getInputControl(), {
+  id: controlId,
+  name: () => props.name,
+  value: fieldValue,
+  getValue: getFormValue,
+  enabled: () => !isDisabled.value,
+});
+const clearFieldError = useClearFieldError(inputName);
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout sets
