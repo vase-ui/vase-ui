@@ -320,7 +320,7 @@ describe('overflow', () => {
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
   });
 
-  test('a viewport whose height falls to 0 with its content loses its overflow', async () => {
+  test('VUE-169: a viewport whose height falls to 0 with its content loses its overflow', async () => {
     const scene = reactive({ width: 100, height: 1000 });
     const { viewport, area } = await mountArea({
       scene,
