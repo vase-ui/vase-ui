@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A range with no text, for NVDA and JAWS</title>
+  </head>
+  <body>
+    <h1>A range with no text, for NVDA and JAWS</h1>
+    <p>
+      This page measures whether a screen reader says the name of a range that has no text in it. It
+      uses native elements and no code of the library. Each range has an
+      <code>aria-label</code>. The first range of each pair has only an empty element in it. The
+      second has a text node too.
+    </p>
+    <h2>Procedure</h2>
+    <ol>
+      <li>Open this file in a browser on Windows.</li>
+      <li>Start the screen reader.</li>
+      <li>Move to each range with the down arrow key in the browse mode of the screen reader.</li>
+      <li>Write what the screen reader says in the table of results.</li>
+      <li>Do the procedure for NVDA with Chrome, NVDA with Firefox and JAWS with Chrome.</li>
+    </ol>
+
+    <h2>Ranges</h2>
+    <p>Before the progress bars.</p>
+    <div role="progressbar" aria-label="Upload" aria-valuenow="30">
+      <div></div>
+    </div>
+    <div role="progressbar" aria-label="Download" aria-valuenow="30">
+      <div></div>
+      30%
+    </div>
+    <p>Before the meters.</p>
+    <div role="meter" aria-label="Storage" aria-valuenow="30">
+      <div></div>
+    </div>
+    <div role="meter" aria-label="Battery" aria-valuenow="30">
+      <div></div>
+      30%
+    </div>
+    <p>After the meters.</p>
+
+    <h2>Results</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Screen reader and browser</th>
+          <th>Upload (no text)</th>
+          <th>Download (text)</th>
+          <th>Storage (no text)</th>
+          <th>Battery (text)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NVDA with Chrome</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+        </tr>
+        <tr>
+          <td>NVDA with Firefox</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+        </tr>
+        <tr>
+          <td>JAWS with Chrome</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+          <td>Not measured</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The roots of Progress and Meter render a visually hidden text node after their content. If
+      each screen reader says the name of each range with no text, remove that node, with its tests
+      and the sentences of the docs.
+    </p>
+  </body>
+</html>
