@@ -472,8 +472,7 @@ export function getHandleRange(
 }
 
 /**
- * Whether the handle after the panel `pivot` is at an end of its travel. `atMin`: the panel before
- * the handle is at the least size that the handle can give it. `atMax`: it is at the greatest size.
+ * The physical limits of the handle. A horizontal right-to-left layout reverses its two ends.
  */
 export function getHandleLimits(
   panels: readonly PanelConstraints[],

@@ -86,7 +86,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 
 <script setup lang="ts">
 import { computed, provide, shallowRef, watch } from 'vue';
-import type { Component, CSSProperties } from 'vue';
+import type { Component, CSSProperties, ShallowRef } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { formatNumber } from '../../common/formatNumber';
@@ -136,7 +136,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -233,7 +233,7 @@ const {
   elements: () => [element.value],
   hitArea: hitAreaElement,
 });
-root.registerHandle({ index, isHeld });
+root.registerPart({ index, isHeld });
 
 // While Vue hydrates the handle, the layout does not know the panel after it. The ends then come
 // from the server HTML, which has the layout of all the panels.
@@ -254,10 +254,6 @@ const ends = computed(() => {
   return hasTabStop.value ? limits.value : { atMin: true, atMax: true };
 });
 
-function setHitAreaElement(value: unknown) {
-  hitAreaElement.value = value as HTMLElement | null;
-}
-
 const hitAreaStyle = computed<CSSProperties>(() => {
   const size = `max(100%, ${root.hitAreaSize.value}px)`;
   return {
@@ -271,7 +267,12 @@ const hitAreaStyle = computed<CSSProperties>(() => {
   };
 });
 
-provide(ResizableHandleContext, { hitAreaStyle, hitAreaRef: setHitAreaElement });
+provide(ResizableHandleContext, {
+  hitAreaStyle,
+  hitAreaRef(element) {
+    hitAreaElement.value = element as HTMLElement | null;
+  },
+});
 
 // A positive delta grows the panel before the handle.
 function getKeyDelta(event: KeyboardEvent) {

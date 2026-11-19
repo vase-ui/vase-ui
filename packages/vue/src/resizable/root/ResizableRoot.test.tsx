@@ -1,6 +1,15 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, Teleport, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  Teleport,
+  createSSRApp,
+  defineComponent,
+  h,
+  nextTick,
+  onDeactivated,
+  shallowRef,
+} from 'vue';
 import type { ShallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -1265,6 +1274,29 @@ describe('<Resizable.Root />', () => {
     });
 
     // The panels stay in the document, so the handle keeps its panel on each side.
+    it('ends the press before the parent receives its deactivation hook', async () => {
+      const show = shallowRef(true);
+      const dragging = vi.fn();
+      const atHold = vi.fn();
+      const Handle = defineComponent(() => {
+        onDeactivated(() => atHold(dragging.mock.lastCall));
+        return () => <Resizable.Handle data-testid="handle" />;
+      });
+      await render(() => (
+        <Resizable.Root onDraggingChange={dragging}>
+          <Resizable.Panel id="a" />
+          <KeepAlive>{show.value ? <Handle /> : null}</KeepAlive>
+          <Resizable.Panel id="b" />
+        </Resizable.Root>
+      ));
+      await fireEvent.pointerDown(screen.getByTestId('handle'), { ...pointer, buttons: 1 });
+      expect(dragging).toHaveBeenLastCalledWith(true);
+
+      show.value = false;
+      await nextTick();
+      expect(atHold).toHaveBeenCalledExactlyOnceWith([false]);
+    });
+
     it('ends a drag when KeepAlive holds the handle', async () => {
       const Handle = defineComponent({
         setup: () => () => <Resizable.Handle data-testid="handle" />,

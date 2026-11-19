@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { computed, shallowReactive } from 'vue';
-import type { CSSProperties } from 'vue';
 import * as ResizableHandleCssVariables from '../handle/ResizableHandleCssVariables';
-import * as ResizableHandleDataAttributes from '../handle/ResizableHandleDataAttributes';
 import { useResizeHandle } from '../utils/useResizeHandle';
-import type { EdgeBoundary, EdgeBox } from '../utils/useEdges';
+import type { EdgeBoundary } from './ResizableRootContext';
 import { useResizableRootContext } from './ResizableRootContext';
 
 const props = defineProps<{
@@ -12,6 +10,7 @@ const props = defineProps<{
 }>();
 
 const root = useResizableRootContext();
+const { orientation } = root;
 
 // The index in `panels` of the panel before the boundary. A boundary that the panels lost has -1.
 const pivot = computed(() => {
@@ -31,31 +30,6 @@ const { dragging, crossing, ends, previewOffset, listeners } = useResizeHandle(r
   disabled: root.disabled,
   elements: nodes,
 });
-
-const attributes = computed(() => ({
-  [ResizableHandleDataAttributes.orientation]: root.orientation.value,
-  [ResizableHandleDataAttributes.dragging]: dragging.value ? '' : undefined,
-  [ResizableHandleDataAttributes.crossing]: crossing.value ? '' : undefined,
-  [ResizableHandleDataAttributes.atMin]: ends.value.atMin ? '' : undefined,
-  [ResizableHandleDataAttributes.atMax]: ends.value.atMax ? '' : undefined,
-  ...listeners,
-}));
-
-function getStyle(box: EdgeBox): CSSProperties {
-  return {
-    position: 'absolute',
-    left: `${box.left}px`,
-    top: `${box.top}px`,
-    width: `${box.width}px`,
-    height: `${box.height}px`,
-    zIndex: 1,
-    touchAction: 'none',
-    // Safari 16.4, a target of the build, has only the prefixed property.
-    '-webkit-user-select': 'none',
-    userSelect: 'none',
-    [ResizableHandleCssVariables.resizableHandlePreviewOffset]: previewOffset.value,
-  };
-}
 </script>
 
 <template>
@@ -64,7 +38,25 @@ function getStyle(box: EdgeBox): CSSProperties {
     :key="index"
     :ref="(value) => setNode(index, value)"
     data-vase-ui-resizable-edge
-    v-bind="attributes"
-    :style="getStyle(box)"
+    v-bind="listeners"
+    :data-orientation="orientation"
+    :data-dragging="dragging ? '' : undefined"
+    :data-crossing="crossing ? '' : undefined"
+    :data-at-min="ends.atMin ? '' : undefined"
+    :data-at-max="ends.atMax ? '' : undefined"
+    style="
+      position: absolute;
+      z-index: 1;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    "
+    :style="{
+      left: `${box.left}px`,
+      top: `${box.top}px`,
+      width: `${box.width}px`,
+      height: `${box.height}px`,
+      [ResizableHandleCssVariables.resizableHandlePreviewOffset]: previewOffset,
+    }"
   />
 </template>

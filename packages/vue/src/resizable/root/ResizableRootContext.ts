@@ -5,7 +5,6 @@ import type { TextDirection } from '../../internals/direction-context/DirectionC
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
 import type { ResizablePanelActions, ResizablePanelState } from '../panel/ResizablePanel.vue';
-import type { EdgeBoundary } from '../utils/useEdges';
 import type { Layout, PanelConstraints } from '../utils/layout';
 import type { RootMeasurement } from '../utils/measure';
 import type {
@@ -51,16 +50,8 @@ export interface ResizablePanelRegistration {
   isHeld: Readonly<Ref<boolean>>;
 }
 
-export interface ResizableHandleRegistration {
-  /**
-   * The position of the handle among the panels and the handles of the root.
-   */
-  index: ComputedRef<number>;
-  /**
-   * Whether `KeepAlive` holds the handle. Such a handle is not at its place.
-   */
-  isHeld: Readonly<Ref<boolean>>;
-}
+export type ResizableRegistration =
+  ResizablePanelRegistration | Pick<ResizablePanelRegistration, 'index' | 'isHeld'>;
 
 /**
  * A handle that moves a panel for a key or a double click.
@@ -73,6 +64,22 @@ export interface ResizableHandleMove {
   reason: typeof REASONS.keyboard | 'reset';
   event: KeyboardEvent | MouseEvent;
 }
+
+/**
+ * What `useParentPanel()` gives: the id, the state and the methods of the nearest panel.
+ */
+export interface ResizableParentPanel extends ResizablePanelActions {
+  /**
+   * The id of the panel element, and the key of the panel in the layout.
+   */
+  id: ComputedRef<string>;
+  /**
+   * The state of the panel.
+   */
+  state: ComputedRef<ResizablePanelState>;
+}
+
+export const ResizablePanelContext: InjectionKey<ResizableParentPanel> = Symbol();
 
 /**
  * What `useParentRoot()` gives: the orientation and the methods of the nearest root.
@@ -134,14 +141,9 @@ export interface ResizableRootContext {
    */
   measurement: Readonly<ShallowRef<RootMeasurement | undefined>>;
   /**
-   * Adds a panel to the root until the scope of the caller ends. Call it in `setup`.
+   * Registers a panel or handle until its scope ends.
    */
-  registerPanel: (panel: ResizablePanelRegistration) => void;
-  /**
-   * Adds a handle to the root until the scope of the caller ends. Call it in `setup`. The root
-   * needs the handles to know which boundaries of two panels have none.
-   */
-  registerHandle: (handle: ResizableHandleRegistration) => void;
+  registerPart: (part: ResizableRegistration) => void;
   /**
    * Reads the page again, before a drag, a key or a method. It gives the new measurement, or
    * `undefined` when the root has no room for its panels.
@@ -211,22 +213,6 @@ export function useResizableRootContext(): ResizableRootContext {
   return context;
 }
 
-/**
- * What `useParentPanel()` gives: the id, the state and the methods of the nearest panel.
- */
-export interface ResizableParentPanel extends ResizablePanelActions {
-  /**
-   * The id of the panel element, and the key of the panel in the layout.
-   */
-  id: ComputedRef<string>;
-  /**
-   * The state of the panel.
-   */
-  state: ComputedRef<ResizablePanelState>;
-}
-
-export const ResizablePanelContext: InjectionKey<ResizableParentPanel> = Symbol();
-
 export interface ResizableHandleContext {
   /**
    * The style of the hit area node: the area that takes a press on the handle.
@@ -250,6 +236,18 @@ export function useResizableHandleContext(): ResizableHandleContext {
   }
 
   return context;
+}
+
+export interface EdgeBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface EdgeBoundary {
+  before: ResizablePanelRegistration;
+  areas: readonly EdgeBox[];
 }
 
 export interface ResizableRootEdgesContext {
