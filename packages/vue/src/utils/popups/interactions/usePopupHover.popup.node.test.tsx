@@ -14,7 +14,7 @@ const Popup = defineComponent({
   },
 });
 
-describe('useHoverPopupInteraction on a server', () => {
+describe('usePopupHover popup on a server', () => {
   it('adds no listener to a store that two renders share', async () => {
     const on = vi.spyOn(sharedStore.context.events, 'on');
 

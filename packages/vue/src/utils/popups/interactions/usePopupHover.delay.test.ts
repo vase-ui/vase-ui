@@ -33,13 +33,6 @@ describe('getDelay', () => {
   });
 });
 
-describe('getRestMs', () => {
-  it('gives a number, and calls a function', () => {
-    expect(getDelay(50, 'open')).toBe(50);
-    expect(getDelay(() => 70, 'open')).toBe(70);
-  });
-});
-
 describe('isHoverOpenEvent', () => {
   it.each([
     { name: 'mouseenter', type: 'mouseenter', expected: true },

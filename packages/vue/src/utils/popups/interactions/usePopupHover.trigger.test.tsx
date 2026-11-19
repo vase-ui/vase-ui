@@ -678,6 +678,19 @@ describe('useHoverTriggerInteraction', () => {
       expect(isOpen()).toBe(true);
     });
 
+    it('uses the current rest delay when the pointer moves', async () => {
+      const restMs = shallowRef(100);
+      const { App } = createHoverApp({ restMs: () => restMs.value, move: false });
+      await render(<App />);
+      await enter(getTrigger());
+      restMs.value = 200;
+      await fireEvent.mouseMove(getTrigger());
+      await tick(199);
+      expect(isOpen()).toBe(false);
+      await tick(1);
+      expect(isOpen()).toBe(true);
+    });
+
     it('does not open while it is disabled', async () => {
       const { App } = createHoverApp({ enabled: false });
       await render(<App />);
@@ -1006,6 +1019,17 @@ describe('useHoverTriggerInteraction', () => {
 
         expect(getPopupHoverSession(getStore()).handleCloseOptions?.blockPointerEvents).toBe(true);
       });
+    });
+
+    it('VUE-159: a leave from another trigger keeps the pending open', async () => {
+      const { App, calls } = createHoverApp({ secondTrigger: true, delay: 100 });
+      await render(<App />);
+      await enter(screen.getByTestId('second'));
+      await fireEvent.mouseLeave(getTrigger(), { relatedTarget: document.body });
+      await tick(100);
+
+      expect(calls.map((call) => [call.open, call.trigger])).toEqual([[true, 'second']]);
+      expect(isOpen()).toBe(true);
     });
 
     it('moves the popup to the second trigger and does not close it on the way', async () => {

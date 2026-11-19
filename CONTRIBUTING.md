@@ -760,7 +760,6 @@ When a mount hook and a watcher call the same function, check whether one watche
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
 - Keep the range of `@floating-ui/utils` at the release that Base UI resolves at the tracked commit. Choose the range of `@floating-ui/vue` so that it uses the `@floating-ui/dom` of the `@floating-ui/react-dom` that Base UI resolves. The middleware is then the same: `@floating-ui/vue` 2.0 and `@floating-ui/react-dom` 2.1 depend on `@floating-ui/dom` 1.8.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
-- Call `usePopupPositioner(props, store, options)` with the reactive props of the part. It returns the element bindings, placement, open state and mounted state.
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
@@ -1270,7 +1269,7 @@ Trigger press, focus and modality actions live in `src/utils/popups/usePopupTrig
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
 - Pass a store getter to `usePopupHover` when ownership can change. `NavigationMenu.List` follows the active trigger this way.
 - Pass the current close delay to `usePopupHover(store).popup(policy)` as a getter.
-- Set `safePolygon` in the trigger policy to protect diagonal travel. The session cancels its corridor timer when the popup closes (`VUE-158`).
+- Set `safePolygon` in the trigger policy to protect diagonal travel. A close cancels the corridor, including a change to the `open` prop of a kept popup (`VUE-158`).
 - The popup releases the document listener, timers and outside pointer block on removal, owner change or deactivation.
 - While `KeepAlive` holds a popup part, the part blocks no pointer events and has no listener on its positioner element.
 - `useTooltipCursor` has no window listener while `KeepAlive` holds the part, also when the part mounts in a held branch.

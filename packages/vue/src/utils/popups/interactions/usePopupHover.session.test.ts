@@ -35,7 +35,7 @@ function readPointerEvents(elements: ReturnType<typeof createElements>) {
   ];
 }
 
-describe('HoverIntent', () => {
+describe('PopupHoverSession', () => {
   describe('pointer events', () => {
     it('VUE-138: blocks the nearest menu popup after its slotted trigger moves', () => {
       const { triggerElement, positionerElement, scopeElement: outer } = createElements();
@@ -78,7 +78,7 @@ describe('HoverIntent', () => {
         restore: (intent: PopupHoverSession) => intent.restoreOutsidePointerEvents(),
       },
       { name: 'reset', restore: (intent: PopupHoverSession) => intent.reset() },
-      { name: 'onPopupMouseEnter', restore: (intent: PopupHoverSession) => intent.enterPopup() },
+      { name: 'enterPopup', restore: (intent: PopupHoverSession) => intent.enterPopup() },
     ])('$name gives each element its value back', ({ restore }) => {
       const elements = createElements();
       const intent = createIntent();

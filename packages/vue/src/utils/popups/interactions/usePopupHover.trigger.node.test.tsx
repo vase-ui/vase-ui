@@ -17,7 +17,7 @@ const Trigger = defineComponent({
   },
 });
 
-describe('useHoverTriggerInteraction on a server', () => {
+describe('usePopupHover trigger on a server', () => {
   it('adds no listener to a store that two renders share', async () => {
     const on = vi.spyOn(sharedStore.context.events, 'on');
 

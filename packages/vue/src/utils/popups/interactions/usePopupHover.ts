@@ -440,6 +440,14 @@ export class PopupHoverSession {
   leaveTrigger(event: MouseEvent, options: HoverTriggerPolicy) {
     const store = this.#store;
 
+    // Nested triggers receive separate leaves for the same pointer movement.
+    if (
+      (this.#timerOwner && this.#timerOwner !== options) ||
+      (this.#polygonOwner && this.#polygonOwner !== options)
+    ) {
+      return;
+    }
+
     if (this.#isClickLikeOpen()) {
       this.restoreOutsidePointerEvents();
       return;

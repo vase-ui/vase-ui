@@ -16,7 +16,7 @@ async function movePointerTo(element: Element) {
   await userEvent.pointer({ coords: { x: clientX, y: clientY } });
 }
 
-describe('HoverIntent with a real pointer', () => {
+describe('usePopupHover with a real pointer', () => {
   const { render } = createRenderer();
 
   it('VUE-94: moves a menu to the next hover trigger with no close', async () => {

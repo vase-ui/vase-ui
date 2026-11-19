@@ -179,6 +179,38 @@ describe('<PreviewCard.Trigger />', () => {
       expect(link).toHaveAttribute('data-popup-open');
     });
 
+    it('VUE-159: keeps the inner trigger’s corridor when the pointer leaves both triggers', async () => {
+      await render(
+        <PreviewCard.Root>
+          <PreviewCard.Trigger as="span" data-testid="outer">
+            <PreviewCard.Trigger href="#preview" delay={0} closeDelay={0}>
+              Link
+            </PreviewCard.Trigger>
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner sideOffset={20}>
+              <PreviewCard.Popup>Card</PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      const outer = screen.getByTestId('outer');
+      const inner = screen.getByRole('link');
+      await enter(outer);
+      await enter(inner);
+      await flushMicrotasks();
+      expect(inner).toHaveAttribute('data-popup-open');
+
+      const rect = inner.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const leave = { clientX: x, clientY: rect.bottom + 1, relatedTarget: document.body };
+      await fireEvent.mouseLeave(inner, leave);
+      await fireEvent.mouseLeave(outer, leave);
+      await fireEvent.mouseMove(document, { clientX: x, clientY: rect.top - 10 });
+      await tick(CLOSE_DELAY);
+      expect(inner).not.toHaveAttribute('data-popup-open');
+    });
+
     it('stays open while the pointer crosses the gap to the card, and closes when it moves away', async () => {
       await render(
         <PreviewCard.Root>
