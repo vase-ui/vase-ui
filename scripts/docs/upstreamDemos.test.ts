@@ -321,7 +321,7 @@ test('a family whose Tailwind demos have the class strings of Base UI on the sam
 });
 
 const WAITING = makeDemoFamily({
-  record: { ...makeRecord(), entryPoints: { hero: ['button', 'toggle'] } },
+  record: { ...makeRecord(), entryPoints: { hero: ['button', 'menu'] } },
   files: new Map([[STYLE_PATH, sha256(STYLE)]]),
 });
 
@@ -330,7 +330,7 @@ test('the check has no problem for a demo with no Vue file while an entry point 
 });
 
 test('the check reports a demo with no Vue file when each entry point that it imports exists', () => {
-  assert.deepEqual(checkDemos([WAITING], new Set([...ENTRY_POINTS, 'toggle'])), [
+  assert.deepEqual(checkDemos([WAITING], new Set([...ENTRY_POINTS, 'menu'])), [
     'docs/demos/toggle/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
   ]);
 });

@@ -708,7 +708,7 @@ The element of a part:
 - Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
 - `src/common/` holds only what two callers use.
 - A part that acts as a button takes `useButton` of `button/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
-- A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. Its `click` listener runs first, and it stops `click`, `mousedown` and `mouseup` as the browser does for a native disabled button.
+- A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
 
 The public form:
 

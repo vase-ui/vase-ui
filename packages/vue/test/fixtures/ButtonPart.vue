@@ -19,5 +19,5 @@ const { mergeAttributes } = useButton({
 </script>
 
 <template>
-  <slot name="element" :props="mergeAttributes(own, attrs)" :element-ref="setElement" />
+  <slot name="element" :props="mergeAttributes(own, attrs)" :elementRef="setElement" />
 </template>

@@ -110,7 +110,7 @@ Some browser and screen reader combinations do not reliably announce a change of
 
 ### Styling the disabled state
 
-A native disabled button matches `:disabled`. A disabled button with `focusableWhenDisabled`, and a disabled element of the `element` slot, have `aria-disabled="true"`. Select the disabled state with `:disabled` and `[aria-disabled='true']`. Select each other state with `:not(:disabled, [aria-disabled='true'])`, because `:enabled` also matches a `<button>` with `aria-disabled="true"`.
+A native disabled button matches `:disabled`. A disabled button with `focusableWhenDisabled`, and a disabled element that is not a native button, have `aria-disabled="true"`. Select the disabled state with `:disabled` and `[aria-disabled='true']`. Select each other state with `:not(:disabled, [aria-disabled='true'])`, because `:enabled` also matches a `<button>` with `aria-disabled="true"`.
 
 ## API reference
 
