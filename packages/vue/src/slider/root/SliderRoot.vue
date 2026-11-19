@@ -249,17 +249,11 @@ const emit = defineEmits<{
    */
   'update:modelValue': [value: Value extends number ? number : Value];
   /**
-   * A pointer or touch press commits its last accepted value when the press ends.
-   * Keyboard edits, native input edits and form resets commit after the model update request.
-   * A controlled parent can keep its value.
-   *
-   * The `eventDetails.reason` indicates what triggered the commit:
-   *
-   * - `'drag'` while dragging a thumb
-   * - `'track-press'` when the control track is pressed
-   * - `'keyboard'` for keyboard input
-   * - `'input-change'` for an `input` event on a thumb
-   * - `'none'` when the commit occurs without a specific interaction
+   * Reports an accepted value and the event that completed the interaction.
+   * For a pointer or touch press, the reason comes from its last accepted change.
+   * Disabling or replacing the control discards the pending commit. A release also discards a
+   * proposal if the model type or the number of thumbs has changed.
+   * Keyboard and native input edits keep their own reason. A form reset uses `'none'`.
    */
   valueCommitted: [
     value: Value extends number ? number : Value,
