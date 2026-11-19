@@ -32,8 +32,8 @@ defineSlots<{
 }>();
 
 // A `Field` has one control that its label names, and the start field is that control. This field
-// gets the state and the descriptions of the `Field`, as an item of a group does, and has no part in
-// its control, its label or its value. `useDateRangePickerField` reads the label of the `Field` and
+// gets the name, the state and the descriptions of the `Field`, as an item of a group does, and has
+// no part in its control, its label or its value. `useDateRangePickerField` reads the label of the `Field` and
 // joins it to the name of this field.
 const outerField = inject(fieldKey, null);
 if (outerField) {
@@ -41,7 +41,10 @@ if (outerField) {
     get disabled() {
       return outerField.disabled;
     },
-    name: undefined,
+    // Both hidden inputs take the name of the `Field`.
+    get name() {
+      return outerField.name;
+    },
     controlId: undefined,
     labelId: undefined,
     labelledBy: undefined,

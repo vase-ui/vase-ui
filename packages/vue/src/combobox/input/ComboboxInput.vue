@@ -60,6 +60,7 @@ import { useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
+import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { stopEvent } from '../../utils/popups/event';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useComboboxChipsContext } from '../chips/ComboboxChipsContext';
@@ -515,7 +516,11 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         ...(writesValue.value ? valueProps(composingValue.value ?? inputValue.value) : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
-        'aria-labelledby': field?.labelId,
+        // In the popup, the label of the combobox also names the input.
+        'aria-labelledby': resolveAriaLabelledBy(
+          field?.labelId,
+          hasPositionerParent ? store.context.labelId.value : undefined,
+        ),
         disabled: isDisabled.value ? '' : undefined,
         readonly: readOnly.value ? '' : undefined,
         required: selectionMode.value === 'none' && required ? '' : undefined,

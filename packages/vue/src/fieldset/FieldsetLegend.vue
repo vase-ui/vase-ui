@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, onUnmounted, provide, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldsetKey } from './part';
 import { legendKey } from './root';
 import type { FieldsetLegendProps } from './types';
@@ -20,7 +21,7 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLLegendElement>();
 
-const id = computed(() => props.id || generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 
 const root = inject(legendKey, null);
 if (root) {
@@ -28,7 +29,7 @@ if (root) {
   onUnmounted(
     root.addLegend({
       get id() {
-        return id.value;
+        return elementId.value;
       },
     }),
   );
@@ -37,7 +38,7 @@ if (root) {
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps({ id: id.value }, attrs);
+  return mergeProps({ id: elementId.value }, attrs);
 }
 </script>
 

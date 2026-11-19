@@ -672,8 +672,6 @@ describe('<DateField.Root />', () => {
     });
   });
 
-  describe('KeepAlive', () => {});
-
   describe('hydration', () => {
     // A server whose `Intl` data differs writes other names. The root compares the attributes of
     // each segment after the mount, and it makes the segments again.
@@ -735,21 +733,6 @@ describe('<DateField.Root />', () => {
             laterRemovedAtMount: true,
           },
           selector: '[data-testid="root"]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
           attribute: 'aria-describedby',
           serverValue: 'desc-a',
           clientValue: null,

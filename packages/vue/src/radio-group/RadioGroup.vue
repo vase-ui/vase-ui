@@ -51,7 +51,7 @@ const tabStop = computed(() => {
 });
 const { field, labelledBy, onFocusout } = useFieldGroup({
   element,
-  disabled: () => disabled.value,
+  disabled: () => isDisabled.value,
   ownDisabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,
   name: () => props.name,
@@ -62,11 +62,11 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
   formValue: () =>
     radios.some((radio) => radio.value === value.value && !radio.disabled) ? value.value : null,
 });
-const disabled = computed<boolean>(
+const isDisabled = computed<boolean>(
   () => props.disabled || !!field?.disabled || inDisabledFieldset.value,
 );
 const state = computed<RadioGroupState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   readonly: props.readonly,
   required: props.required,
   touched: field?.state.touched ?? false,
@@ -88,7 +88,7 @@ provide(radioGroupKey, {
     return props.form;
   },
   get disabled() {
-    return disabled.value;
+    return isDisabled.value;
   },
   get readonly() {
     return props.readonly;
@@ -118,7 +118,7 @@ function elementProps() {
       'aria-labelledby': labelledBy(attrs),
       'aria-describedby': field?.describedBy,
       // WAI-ARIA gives these states to a radio group, and CSS matches them.
-      'aria-disabled': on(disabled.value),
+      'aria-disabled': on(isDisabled.value),
       'aria-readonly': on(props.readonly),
       // A radio with `required` makes its group required.
       'aria-required': on(props.required || radios.some((radio) => radio.required)),

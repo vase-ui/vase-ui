@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
 import type { FieldErrorProps, FieldErrorState } from './types';
@@ -22,7 +23,7 @@ const field = injectFieldRoot('Error');
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
-const id = computed(() => props.id || generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 const shows = computed(() =>
   props.match ? field.validity[props.match] : field.state.valid === false,
 );
@@ -33,7 +34,7 @@ const messages = computed(() =>
 onUnmounted(
   field.addDescriber({
     get id() {
-      return id.value;
+      return elementId.value;
     },
     get shown() {
       return shows.value;
@@ -45,7 +46,7 @@ defineExpose({ element });
 
 function elementProps() {
   return mergeProps(
-    { id: id.value, ...fieldStateAttributes(field.state, field.state.disabled) },
+    { id: elementId.value, ...fieldStateAttributes(field.state, field.state.disabled) },
     attrs,
   );
 }

@@ -503,8 +503,10 @@ describe('<Slider.Thumb />', () => {
         expect(validate).not.toHaveBeenCalled();
 
         within(target).getByRole('button', { name: 'After input' }).focus();
-        await flushMicrotasks();
-        expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything());
+        // The field validates after the blur listeners of the developer.
+        await waitFor(() =>
+          expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything()),
+        );
       });
 
       it.skipIf(isJSDOM)(

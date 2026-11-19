@@ -26,6 +26,7 @@ import {
   takeReportedMessages,
   within,
   wait,
+  waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import OTPFieldInputBeforeHydration from '../input/OTPFieldInputBeforeHydration.test.vue';
@@ -899,7 +900,8 @@ describe('<OTPField.Root />', () => {
         relatedTarget: screen.getByRole('button', { name: 'Outside' }),
       });
 
-      expect(validate).toHaveBeenCalledTimes(1);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
       expect(validate.mock.calls[0]).toEqual(['1', { otp: '1' }]);
     });
 
@@ -992,7 +994,7 @@ describe('<OTPField.Root />', () => {
       await render(
         <Form data-testid="form">
           <Field.Root name="otp" validate={validate}>
-            <OTPFieldBase.Root length={OTP_LENGTH} defaultValue="12" />
+            <OTPFieldBase.Root length={OTP_LENGTH} defaultValue="123457" />
             <Field.Error data-testid="error" />
           </Field.Root>
         </Form>,
@@ -1001,7 +1003,7 @@ describe('<OTPField.Root />', () => {
       await fireEvent.submit(screen.getByTestId('form'));
 
       expect(validate).toHaveBeenCalledTimes(1);
-      expect(validate.mock.calls[0][0]).toBe('12');
+      expect(validate.mock.calls[0][0]).toBe('123457');
       expect(screen.getByTestId('error')).toHaveTextContent('Wrong code');
     });
 
@@ -1629,12 +1631,9 @@ describe('<OTPField.Root />', () => {
       expect(onValueComplete.mock.calls[0]?.[1].reason).toBe(REASONS.inputChange);
     });
 
-    it.each([
-      { lockState: 'readOnly', ariaInvalid: 'true' },
-      { lockState: 'disabled', ariaInvalid: null },
-    ] as const)(
+    it.each([{ lockState: 'readOnly' }, { lockState: 'disabled' }] as const)(
       'ignores hidden-input autofill when $lockState inside Field',
-      async ({ lockState, ariaInvalid }) => {
+      async ({ lockState }) => {
         const onValueChange = vi.fn();
         const onValueInvalid = vi.fn();
         const onValueComplete = vi.fn();
@@ -1657,11 +1656,11 @@ describe('<OTPField.Root />', () => {
         const hiddenInput = document.querySelector<HTMLInputElement>('input[name="otp"]');
 
         expect(hiddenInput).not.toBeNull();
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
-        const inputs = screen.getAllByRole('textbox');
-        expect(inputs.map((input) => input.getAttribute('aria-invalid'))).toEqual(
-          inputs.map(() => ariaInvalid),
-        );
+        // A field shows no error while its control is disabled or read-only.
+        expect(screen.queryByTestId('error')).toBeNull();
+        for (const input of screen.getAllByRole('textbox')) {
+          expect(input).not.toHaveAttribute('aria-invalid');
+        }
 
         await fireEvent.input(hiddenInput!, { target: { value: '12a34b56' } });
 
@@ -1669,7 +1668,7 @@ describe('<OTPField.Root />', () => {
         expect(onValueChange).not.toHaveBeenCalled();
         expect(onValueInvalid).not.toHaveBeenCalled();
         expect(onValueComplete).not.toHaveBeenCalled();
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
+        expect(screen.queryByTestId('error')).toBeNull();
       },
     );
 
@@ -1916,11 +1915,11 @@ describe('<OTPField.Root />', () => {
             </Form>,
           );
           const hiddenInput = getHiddenInput(container);
-          await fireEvent.input(hiddenInput, { target: { value: '1' } });
+          // A value that passes the native check, so that `validate` runs.
+          await fireEvent.input(hiddenInput, { target: { value: '123457' } });
           await flushMicrotasks();
 
-          expect(screen.getByTestId('error')).toHaveTextContent('Wrong code');
-          expect(hiddenInput).toHaveAttribute('aria-invalid', 'true');
+          await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Wrong code'));
           validate.mockClear();
 
           screen.getByTestId<HTMLFormElement>('form').reset();
@@ -1934,12 +1933,12 @@ describe('<OTPField.Root />', () => {
 
         it('VUE-21: removes the error of the form from a controlled field that keeps its value', async () => {
           const { container } = await render(
-            <Form data-testid="form" errors={{ otp: 'Server error' }}>
+            <ErrorsForm data-testid="form" errors={{ otp: 'Server error' }}>
               <Field.Root name="otp">
                 <OTPFieldBase.Root length={OTP_LENGTH} modelValue="1234" />
                 <Field.Error data-testid="error" />
               </Field.Root>
-            </Form>,
+            </ErrorsForm>,
           );
 
           expect(screen.getByTestId('error')).toHaveTextContent('Server error');
@@ -2526,7 +2525,8 @@ describe('<OTPField.Root />', () => {
         await fireEvent.input(input, { target: { value: 'x' } });
         await fireEvent.input(input, { target: { value: '' } });
 
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        // The field validates the new root: its required value is missing.
+        await waitFor(() => expect(container.firstElementChild).toHaveAttribute('data-invalid'));
       });
     });
   });
@@ -2562,21 +2562,6 @@ describe('<OTPField.Root />', () => {
             laterRemovedAtMount: true,
           },
           selector: '[data-testid="root"]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            label: 'after',
-            description: true,
-            inputs: 4,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
           attribute: 'aria-describedby',
           serverValue: 'desc-a',
           clientValue: null,

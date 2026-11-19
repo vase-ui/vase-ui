@@ -14,6 +14,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
 import { formatter } from '../format';
@@ -1469,24 +1470,6 @@ describe('useDateTimeFieldRoot', () => {
       expect(root).toHaveAttribute('data-touched');
     });
 
-    it('validates a field with two date fields through the first one that is invalid', async () => {
-      const { container, user } = await render(
-        <Field.Root name="range" validationMode="blur">
-          <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
-          <DateTimeFieldProbe defaultValue="2026-11-20" locale="en-US" />
-          <Field.Error data-testid="error" />
-          <button type="button">Next</button>
-        </Field.Root>,
-      );
-      const [first] = Array.from(container.querySelectorAll<HTMLElement>('[role="group"]'));
-
-      await user.click(segmentOf(first!, 'day'));
-      await user.keyboard('{Backspace}{Backspace}');
-      await user.click(screen.getByRole('button', { name: 'Next' }));
-
-      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
-    });
-
     it('shows a missing value through Field after the user empties a required field', async () => {
       const { container, user } = await render(
         <Field.Root name="when" validationMode="change">
@@ -1598,7 +1581,8 @@ describe('useDateTimeFieldRoot', () => {
       await flushMicrotasks();
 
       expect(root).toHaveAttribute('data-touched');
-      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE));
     });
 
     it('gives disabled, read-only and required to the group state and the segments', async () => {

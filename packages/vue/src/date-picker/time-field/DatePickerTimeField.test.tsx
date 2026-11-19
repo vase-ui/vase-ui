@@ -160,7 +160,11 @@ describe('<DatePicker.TimeField />', () => {
         .getAllByRole('spinbutton')
         .filter((segment) => !screen.getByTestId('time').contains(segment));
       const label = screen.getByTestId('label');
-      expect(label).toHaveAttribute('for', fieldSegments[0]!.id);
+      // The group of the segments of the picker is the control of the field.
+      expect(fieldSegments[0]!.closest('[role="group"]')).toHaveAttribute(
+        'aria-labelledby',
+        label.id,
+      );
       // The time field has no label of the field, and no id of the field.
       expect(screen.getByTestId('time')).not.toHaveAttribute('aria-labelledby');
       expect(screen.getByTestId('time')).toHaveAttribute('aria-label', 'Time');

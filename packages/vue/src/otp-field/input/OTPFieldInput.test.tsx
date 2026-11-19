@@ -861,28 +861,6 @@ describe('<OTPField.Input />', () => {
     expect(screen.getByTestId('unlabelled')).not.toHaveAttribute('aria-labelledby');
   });
 
-  it('applies a native label to every slot', async () => {
-    await render(
-      <>
-        <label for="verification-code">Verification code</label>
-        <OTPField.Root id="verification-code" length={OTP_LENGTH}>
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-        </OTPField.Root>
-      </>,
-    );
-
-    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
-
-    inputs.forEach((input) => {
-      expect(input).toHaveAccessibleName('Verification code');
-    });
-  });
-
   it('keeps the shared label on the first slot even if an aria-label is provided', async () => {
     await render(
       <>

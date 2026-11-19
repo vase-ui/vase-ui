@@ -166,6 +166,7 @@ import {
   watchPostEffect,
 } from 'vue';
 import { clamp } from '../../common/clamp';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
 import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
@@ -252,6 +253,8 @@ defineSlots<{
 }>();
 
 const field = inject(fieldKey, null);
+// The label and the messages of the field can come after the OTP field.
+if (field) useDeferredServerRender();
 const invalid = computed(() => field?.state.valid === false);
 
 const fieldsetDisabled = useInDisabledFieldset(() => element.value);
@@ -279,7 +282,7 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
 const generatedId = useId();
-const controlId = computed(() => props.id || field?.controlId || generatedId);
+const controlId = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
 const ariaLabelledBy = computed(
   () => given('aria-labelledby', props.ariaLabelledby) ?? field?.labelId,
 );

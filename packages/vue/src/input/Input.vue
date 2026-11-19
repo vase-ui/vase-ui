@@ -4,6 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement } from '../common/element';
 import { useFormReset } from '../common/formEvents';
+import { givenId } from '../common/id';
 import { useModel } from '../common/model';
 import { controlAttributes, fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
@@ -39,11 +40,11 @@ const { value, setOwn } = useModel(
   firstValue,
 );
 
-const id = computed(() => props.id || field?.controlId || generatedId);
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 const inDisabledFieldset = useInDisabledFieldset(element);
-const disabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
+const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
 const state = computed<InputState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   touched: field?.state.touched ?? false,
   dirty: field?.state.dirty ?? false,
   valid: field?.state.valid ?? null,
@@ -51,9 +52,9 @@ const state = computed<InputState>(() => ({
 }));
 
 const ownProps = computed(() => ({
-  id: id.value,
+  id: elementId.value,
   name: field?.name ?? props.name,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   readonly: props.readonly,
   value: value.value,
   ...(field && controlAttributes(field)),
@@ -69,7 +70,7 @@ useFormReset(element, () => {
 });
 
 useFieldControl(field, element, {
-  id: () => id.value,
+  id: () => elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,

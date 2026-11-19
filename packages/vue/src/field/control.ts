@@ -32,6 +32,8 @@ export interface FieldControl {
   readonly focusElement?: HTMLElement | undefined;
   /** The value in the values of a form, when it is not the value that `setValue` gave. */
   formValue?(): unknown;
+  /** Two values of the control are the same, when the control compares its values in its own way. */
+  sameValue?(a: unknown, b: unknown): boolean;
 }
 
 /**

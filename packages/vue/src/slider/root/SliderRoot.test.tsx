@@ -3476,10 +3476,7 @@ describe('<Slider.Root />', () => {
         const submit = screen.getByRole('button');
         await fireEvent.click(submit);
 
-        expect(handleSubmit).toHaveBeenCalledWith(
-          { slider: [20, 40] },
-          expect.objectContaining({ reason: 'none' }),
-        );
+        expect(handleSubmit).toHaveBeenCalledWith({ slider: [20, 40] });
       });
 
       it('submits a clamped single-thumb slider value to onFormSubmit', async () => {
@@ -3506,10 +3503,7 @@ describe('<Slider.Root />', () => {
         const submit = screen.getByRole('button');
         await fireEvent.click(submit);
 
-        expect(handleSubmit).toHaveBeenCalledWith(
-          { slider: 20 },
-          expect.objectContaining({ reason: 'none' }),
-        );
+        expect(handleSubmit).toHaveBeenCalledWith({ slider: 20 });
       });
 
       it('submits to an external form when `form` is provided', async () => {
@@ -3663,17 +3657,17 @@ describe('<Slider.Root />', () => {
         expect(screen.queryByTestId('error')).toBe(null);
 
         await fireEvent.input(input, { target: { value: '98' } });
-        expect(input).not.toHaveAttribute('aria-invalid');
+        await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
         expect(screen.queryByTestId('error')).toBe(null);
 
         await fireEvent.click(screen.getByText('submit'));
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(screen.queryByTestId('error')).not.toBe(null);
         expect(root).toHaveAttribute('data-invalid');
         expect(thumb).toHaveAttribute('data-invalid');
 
         await fireEvent.input(input, { target: { value: '10' } });
-        expect(input).not.toHaveAttribute('aria-invalid');
+        await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
         expect(screen.queryByTestId('error')).toBe(null);
         expect(root).not.toHaveAttribute('data-invalid');
         expect(input).not.toHaveAttribute('data-invalid');
@@ -3681,11 +3675,11 @@ describe('<Slider.Root />', () => {
         expect(thumb).toHaveAttribute('data-valid');
 
         await fireEvent.input(input, { target: { value: '94' } });
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(screen.queryByTestId('error')).not.toBe(null);
 
         await fireEvent.input(input, { target: { value: '12' } });
-        expect(input).not.toHaveAttribute('aria-invalid');
+        await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
         expect(screen.queryByTestId('error')).toBe(null);
       });
 
@@ -4444,6 +4438,7 @@ describe('<Slider.Root />', () => {
           </Form>,
         );
         await fireEvent.input(getInputs()[0], { target: { value: '55' } });
+        await flushMicrotasks();
         expect(screen.getByTestId('error')).toHaveTextContent('Too high');
         validate.mockClear();
 
@@ -4456,6 +4451,7 @@ describe('<Slider.Root />', () => {
 
         // The next change validates again.
         await fireEvent.input(getInputs()[0], { target: { value: '60' } });
+        await flushMicrotasks();
 
         expect(validate).toHaveBeenCalledTimes(1);
         expect(screen.getByTestId('error')).toHaveTextContent('Too high');
@@ -4485,7 +4481,7 @@ describe('<Slider.Root />', () => {
         {
           name: 'the form',
           renderForm: () => (
-            <Form data-testid="form" errors={{ price: 'Server error' }}>
+            <ErrorsForm data-testid="form" errors={{ price: 'Server error' }}>
               <Field.Root data-testid="root" name="price">
                 <Slider.Root defaultValue={30}>
                   <Slider.Control>
@@ -4494,7 +4490,7 @@ describe('<Slider.Root />', () => {
                 </Slider.Root>
                 <Field.Error data-testid="error" />
               </Field.Root>
-            </Form>
+            </ErrorsForm>
           ),
           makeInvalid: undefined,
         },

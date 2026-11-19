@@ -17,7 +17,7 @@ import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/visuallyHidden';
-import { fieldKey } from '../../../field/control';
+import { describedByWith, fieldKey } from '../../../field/control';
 import { useInDisabledFieldset } from '../../../fieldset/part';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
@@ -890,8 +890,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       {
         role: 'group',
         id: host?.groupId,
-        'aria-describedby':
-          [ariaDescribedBy, field?.describedBy].filter(Boolean).join(' ') || undefined,
+        'aria-describedby': field ? describedByWith(field, ariaDescribedBy) : ariaDescribedBy,
         'aria-labelledby': ariaLabelledBy.value,
         onFocusout: handleFocusout,
       },

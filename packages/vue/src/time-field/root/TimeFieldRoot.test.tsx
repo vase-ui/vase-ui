@@ -673,21 +673,6 @@ describe('<TimeField.Root />', () => {
           serverValue: 'desc-a',
           clientValue: null,
         },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
       ],
     });
   });

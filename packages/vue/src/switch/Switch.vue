@@ -3,6 +3,7 @@ import { computed, inject, mergeProps, useAttrs, useId } from 'vue';
 import { useChecked } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { SwitchChangeEventDetails, SwitchProps, SwitchState } from './types';
@@ -44,11 +45,11 @@ const { checked, attributes } = useChecked({
   emitChange: (next, details) => emit('checkedChange', next, details),
   emitModel: (next) => emit('update:modelValue', next),
 });
-const disabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
-const id = computed(() => props.id || field?.controlId || generatedId);
+const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 const state = computed<SwitchState>(() => ({
   checked: checked.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   readonly: props.readonly,
   required: props.required,
   touched: field?.state.touched ?? false,
@@ -58,7 +59,7 @@ const state = computed<SwitchState>(() => ({
 }));
 
 useFieldControl(field, element, {
-  id: () => id.value,
+  id: () => elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,
@@ -71,9 +72,9 @@ function elementProps() {
     {
       type: 'checkbox',
       role: 'switch',
-      id: id.value,
+      id: elementId.value,
       name: field?.name ?? props.name,
-      disabled: disabled.value,
+      disabled: isDisabled.value,
       ...attributes.value,
     },
     attrs,

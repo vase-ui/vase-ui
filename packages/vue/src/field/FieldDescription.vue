@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
 import type { FieldDescriptionProps, FieldDescriptionState } from './types';
@@ -21,12 +22,12 @@ const field = injectFieldRoot('Description');
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLParagraphElement>();
-const id = computed(() => props.id || generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 
 onUnmounted(
   field.addDescriber({
     get id() {
-      return id.value;
+      return elementId.value;
     },
     shown: true,
   }),
@@ -36,7 +37,7 @@ defineExpose({ element });
 
 function elementProps() {
   return mergeProps(
-    { id: id.value, ...fieldStateAttributes(field.state, field.state.disabled) },
+    { id: elementId.value, ...fieldStateAttributes(field.state, field.state.disabled) },
     attrs,
   );
 }

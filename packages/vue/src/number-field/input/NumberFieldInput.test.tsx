@@ -2579,6 +2579,7 @@ describe('<NumberField.Input />', () => {
         );
         const input = screen.getByRole('textbox');
         await fireEvent.input(input, { target: { value: '9' } });
+        await flushMicrotasks();
         expect(validate).toHaveBeenCalledTimes(1);
         expect(screen.getByTestId('error')).toHaveTextContent('Too big');
 
@@ -2612,19 +2613,6 @@ describe('<NumberField.Input />', () => {
       file: 'src/number-field/input/NumberFieldInputHydration.test.vue',
       component: NumberFieldInputHydration,
       cases: [
-        {
-          name: 'a removed label',
-          props: {
-            parts: ['input', 'label', 'description'],
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: '[data-testid="input"]',
-          attribute: 'aria-labelledby',
-          serverValue: 'label-a',
-          clientValue: null,
-        },
         {
           name: 'a removed description',
           props: {
@@ -2661,7 +2649,8 @@ describe('<NumberField.Input />', () => {
       const serverInput = template.content.querySelector('[data-testid="input"]');
       const serverId = (testId: string) =>
         template.content.querySelector(`[data-testid="${testId}"]`)?.id;
-      expect(serverInput?.getAttribute('aria-labelledby')).toBe(serverId('label'));
+      // The label names the input with `for`.
+      expect(serverInput?.hasAttribute('aria-labelledby')).toBe(false);
       expect(serverInput?.getAttribute('aria-describedby')).toBe(serverId('description'));
       expect(template.content.querySelector('[data-testid="label"]')?.getAttribute('for')).toBe(
         serverInput?.id,
@@ -2671,7 +2660,7 @@ describe('<NumberField.Input />', () => {
       const { container } = await hydrate(NumberFieldInputHydration, { serverHtml, props });
 
       const input = within(container).getByTestId('input');
-      expect(input).toHaveAttribute('aria-labelledby', serverId('label'));
+      expect(input).not.toHaveAttribute('aria-labelledby');
       expect(input).toHaveAttribute('aria-describedby', serverId('description'));
       expect(input).toHaveValue('5');
     });

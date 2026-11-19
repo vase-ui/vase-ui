@@ -193,7 +193,7 @@ import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useDeferredServerRender } from '../../common/deferredServerRender';
-import { fieldKey } from '../../field/control';
+import { describedByWith, fieldKey } from '../../field/control';
 import { useFieldGroup } from '../../field/group';
 import { fieldsetKey, useInDisabledFieldset } from '../../fieldset/part';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -575,11 +575,12 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         (isHydrating.value && typeof attrs['aria-label'] !== 'string'
           ? rootLabelId.value
           : undefined),
-      'aria-describedby': field?.describedBy,
       id: rootId.value,
       role: 'group',
     },
     attrs,
+    // The ids of the field come after the ids of the developer.
+    field ? { 'aria-describedby': describedByWith(field, attrs['aria-describedby']) } : undefined,
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });

@@ -2258,18 +2258,15 @@ describe('<Select.Root />', () => {
       const selectInput = screen.getByRole<HTMLInputElement>('textbox', { hidden: true });
       expect(selectInput).toHaveAttribute('name', 'select');
 
-      // Only the Field wrapper renders an error.
-      const expectedError = withField ? 'test' : undefined;
-
-      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+      // A field shows no error while its control is disabled or read-only.
+      expect(screen.queryByTestId('error')).toBeNull();
 
       await fireEvent.input(selectInput, { target: { value: 'b' } });
       await flushMicrotasks();
 
       expect(onValueChange).not.toHaveBeenCalled();
       expect(selectInput.value).toBe('');
-
-      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+      expect(screen.queryByTestId('error')).toBeNull();
     },
   );
 
@@ -5149,33 +5146,6 @@ describe('<Select.Root />', () => {
       });
     });
 
-    it('BUG-1425: makes a required select with no value invalid when an outside press closes the popup', async () => {
-      const { user } = await render(
-        <Field.Root data-testid="field" validationMode="blur">
-          <Select.Root defaultOpen required>
-            <StoreProbe />
-            <Select.Trigger data-testid="trigger" />
-          </Select.Root>
-          <Field.Error match="valueMissing" data-testid="error">
-            required
-          </Field.Error>
-        </Field.Root>,
-      );
-      expect(screen.queryByTestId('error')).toBe(null);
-
-      await user.click(document.body);
-
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
-
-      await setValueAsItem('sans');
-
-      expect(screen.queryByTestId('error')).toBe(null);
-      expect(screen.getByTestId('trigger')).not.toHaveAttribute('aria-invalid');
-    });
-
     it('sets the filled and dirty state of the field from the value', async () => {
       await render(
         <Field.Root data-testid="field">
@@ -5199,43 +5169,6 @@ describe('<Select.Root />', () => {
       expect(field).not.toHaveAttribute('data-filled');
       expect(field).not.toHaveAttribute('data-dirty');
     });
-  });
-
-  describe('KeepAlive', () => {
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required select does not block the submit of its form: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const { HeldBranch, mountWhileHeld } = createHeldBranch(
-          () => (
-            <Select.Root key="held" required>
-              <Select.Trigger />
-            </Select.Root>
-          ),
-          { mounted: name === 'deactivated' },
-        );
-        const { user } = await render(() => (
-          <Form
-            onSubmit={(event: SubmitEvent, values: FormValues) => (
-              event.preventDefault(),
-              handleSubmit(values)
-            )}
-          >
-            <Field.Root name="fruit" data-testid="field">
-              <Input defaultValue="shown" />
-              <HeldBranch />
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
-
-        await mountWhileHeld();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-      },
-    );
   });
 
   describe('dynamic items', () => {

@@ -4,6 +4,7 @@ import { checkboxGroupKey } from '../checkbox-group/checkbox';
 import { useChecked, type CheckedOwner } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { CheckboxChangeEventDetails, CheckboxProps, CheckboxState } from './types';
@@ -74,7 +75,7 @@ const owner = computed<CheckedOwner | undefined>(() => {
   };
 });
 
-const indeterminate = computed(
+const isIndeterminate = computed(
   () => props.indeterminate || (isParent.value && !!group?.parent.indeterminate),
 );
 const { checked, attributes } = useChecked({
@@ -93,16 +94,16 @@ const { checked, attributes } = useChecked({
     if (props.indeterminate) emit('update:indeterminate', false);
   },
   // A click clears the `indeterminate` of the element.
-  show: (el) => (el.indeterminate = indeterminate.value),
+  show: (el) => (el.indeterminate = isIndeterminate.value),
 });
-const disabled = computed(
+const isDisabled = computed(
   () => !!field?.disabled || !!group?.disabled || props.disabled || inDisabledFieldset.value,
 );
-const id = computed(() => props.id || field?.controlId || generatedId);
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 const state = computed<CheckboxState>(() => ({
   checked: checked.value,
-  indeterminate: indeterminate.value,
-  disabled: disabled.value,
+  indeterminate: isIndeterminate.value,
+  disabled: isDisabled.value,
   readonly: props.readonly,
   required: props.required,
   touched: field?.state.touched ?? false,
@@ -113,20 +114,29 @@ const state = computed<CheckboxState>(() => ({
 
 const ownProps = computed(() => ({
   type: 'checkbox',
-  id: id.value,
+  id: elementId.value,
   // A form gets no entry from the parent checkbox.
   name: isParent.value ? undefined : (field?.name ?? props.name),
   value: props.value,
-  indeterminate: indeterminate.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   'aria-controls': isParent.value ? group?.parent.controls : undefined,
   // The server HTML has no `:indeterminate`.
-  'data-indeterminate': indeterminate.value ? '' : undefined,
+  'data-indeterminate': isIndeterminate.value ? '' : undefined,
   ...attributes.value,
 }));
 
+// HTML has no attribute for `indeterminate`, so the server HTML has none, and the property comes
+// after the mount.
+watch(
+  [element, isIndeterminate],
+  ([el, value]) => {
+    if (el) el.indeterminate = value;
+  },
+  { flush: 'post', immediate: true },
+);
+
 useFieldControl(field, element, {
-  id: () => id.value,
+  id: () => elementId.value,
   name: () => props.name,
   disabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => props.readonly,
@@ -140,7 +150,7 @@ watch(
       group.addCheckbox({
         value,
         get id() {
-          return id.value;
+          return elementId.value;
         },
         element: el,
         get disabled() {

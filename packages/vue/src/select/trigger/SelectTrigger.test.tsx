@@ -751,7 +751,8 @@ describe('<Select.Trigger />', () => {
       await flushMicrotasks();
 
       expect(field).toHaveAttribute('data-touched', '');
-      expect(validate).toHaveBeenCalledTimes(1);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
       expect(validate.mock.lastCall?.[0]).toBe('sans');
     });
   });

@@ -213,6 +213,7 @@ import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { getMaxScrollOffset, normalizeScrollOffset } from '../../utils/scrollEdges';
 import { SelectStore, selectors } from '../store';
 import { SelectRootContext } from './SelectRootContext';
+import { given } from '../../internals/givenAttributes';
 
 const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   open: undefined,
@@ -265,7 +266,7 @@ defineSlots<{ default(): unknown }>();
 const field = inject(fieldKey, null);
 
 const generatedId = useId();
-const controlId = computed(() => props.id || field?.controlId || generatedId);
+const controlId = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
 
 // The root has no element. Its hidden input is at the place of the root.
 const fieldsetDisabled = useInDisabledFieldset(() => inputElement.value);
@@ -432,8 +433,9 @@ watch(
     onCleanup(
       field.setControl({
         element: trigger,
+        // The trigger can have an `id` of its own.
         get id() {
-          return controlId.value;
+          return (trigger === store.state.triggerElement && trigger.id) || controlId.value;
         },
         get name() {
           return props.name;
@@ -451,6 +453,7 @@ watch(
           return store.state.triggerElement ?? undefined;
         },
         formValue: () => fieldStringValue.value,
+        sameValue: (a, b) => !isSelectedValueDirty(a, b, comparer.value),
       }),
     );
   },

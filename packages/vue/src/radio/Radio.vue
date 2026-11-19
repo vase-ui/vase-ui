@@ -3,6 +3,7 @@ import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement } from '../common/element';
 import { useFormReset } from '../common/formEvents';
+import { givenId } from '../common/id';
 import { fieldKey, fieldStateAttributes, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey } from '../radio-group/radio';
@@ -29,16 +30,16 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const id = computed(() => props.id || field?.controlId || generatedId);
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 const checked = computed(() => group.value === props.value);
-const disabled = computed(
+const isDisabled = computed(
   () => !!field?.disabled || group.disabled || props.disabled || inDisabledFieldset.value,
 );
-const readonly = computed(() => group.readonly || props.readonly);
+const isReadonly = computed(() => group.readonly || props.readonly);
 const state = computed<RadioState>(() => ({
   checked: checked.value,
-  disabled: disabled.value,
-  readonly: readonly.value,
+  disabled: isDisabled.value,
+  readonly: isReadonly.value,
   required: group.required || props.required,
   touched: field?.state.touched ?? false,
   dirty: field?.state.dirty ?? false,
@@ -50,21 +51,21 @@ const ownProps = computed(() => {
   const tabStop = group.tabStop;
   return {
     type: 'radio',
-    id: id.value,
+    id: elementId.value,
     // WebKit gives no other radio of a named group the focus from the Tab key while the checked
     // radio of the group is disabled. A disabled radio gives its form no entry.
-    name: disabled.value && checked.value ? undefined : group.name,
+    name: isDisabled.value && checked.value ? undefined : group.name,
     form: group.form,
     value: props.value,
     checked: checked.value,
     // A read-only radio is not validated.
-    required: state.value.required && !readonly.value,
-    disabled: disabled.value,
+    required: state.value.required && !isReadonly.value,
+    disabled: isDisabled.value,
     // One tab stop for the group, after the mount of its radios. Before the mount, the browser
     // gives the tab stop to the checked radio of a named group.
     tabindex: tabStop && tabStop.element !== element.value ? -1 : undefined,
     // WAI-ARIA gives a radio no `aria-readonly`, and deprecates `aria-invalid` on it.
-    'data-readonly': readonly.value ? '' : undefined,
+    'data-readonly': isReadonly.value ? '' : undefined,
     ...(field && {
       ...fieldStateAttributes(field.state),
       // `:checked` matches a filled radio.
@@ -87,7 +88,7 @@ watch(
         },
         element: el,
         get disabled() {
-          return disabled.value;
+          return isDisabled.value;
         },
         get required() {
           return props.required;
@@ -100,10 +101,10 @@ watch(
 
 // A `Field.Item` names the radio with its label.
 useFieldControl(field, element, {
-  id: () => id.value,
+  id: () => elementId.value,
   name: () => undefined,
-  disabled: () => disabled.value,
-  readOnly: () => readonly.value,
+  disabled: () => isDisabled.value,
+  readOnly: () => isReadonly.value,
 });
 
 useFormReset(element, (event) => group.onReset(event));
@@ -125,7 +126,7 @@ function injectGroup() {
 }
 
 function onClick(event: MouseEvent) {
-  group.onClick(event, readonly.value);
+  group.onClick(event, isReadonly.value);
 }
 
 function onChange(event: Event) {

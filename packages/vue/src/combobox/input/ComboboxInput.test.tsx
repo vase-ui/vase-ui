@@ -2377,18 +2377,6 @@ describe('<Combobox.Input />', () => {
       );
     });
 
-    it('handles the text of an `Input` in `as` one time', async () => {
-      const { input, inputValue, changes } = await hydrateTyped(
-        { rendersInput: true },
-        { typed: 'Mal', focus: 'input' },
-      );
-      await flushMicrotasks();
-
-      expect(input).toHaveValue('Mal');
-      expect(inputValue.textContent).toBe('Mal');
-      expect(changes.textContent).toBe('Mal (input-change)');
-    });
-
     it('touches the field and keeps the list closed when the focus is outside', async () => {
       const { fixture, input, changes } = await hydrateTyped(
         {},

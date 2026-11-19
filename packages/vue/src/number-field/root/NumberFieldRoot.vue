@@ -191,6 +191,7 @@ import { useFormatLocale } from '../../utils/useFormatLocale';
 import { parseNumber, toValidatedNumber } from '../utils/parse';
 import { stateAttributesMapping, NumberFieldRootContext } from './NumberFieldRootContext';
 import type { EventWithOptionalKeyState, IncrementValueParameters } from '../utils/parse';
+import { given } from '../../internals/givenAttributes';
 
 defineOptions({ inheritAttrs: false });
 
@@ -273,7 +274,7 @@ function registerInput(input: HTMLInputElement) {
 }
 
 const generatedId = useId();
-const controlId = computed(() => props.id || field?.controlId || generatedId);
+const controlId = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
 const inputId = useReferencedId(() => controlId.value, inputRef);
 
 // The text input is the control of the field, or the hidden input of a root with no text input.

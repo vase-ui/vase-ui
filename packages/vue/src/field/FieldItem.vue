@@ -38,13 +38,13 @@ const control = shallowRef<FieldControl>();
 const describers = shallowReactive<{ readonly id: string; readonly shown: boolean }[]>([]);
 const labels = shallowReactive<FieldLabel[]>([]);
 
-const disabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
-const state = computed<FieldItemState>(() => ({ ...parts.state, disabled: disabled.value }));
+const isDisabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
+const state = computed<FieldItemState>(() => ({ ...parts.state, disabled: isDisabled.value }));
 
 // The control in the item has the label, the id and the descriptions of the item.
 provide(fieldKey, {
   get disabled() {
-    return disabled.value;
+    return isDisabled.value;
   },
   get name() {
     return field?.name;
@@ -102,7 +102,7 @@ provide(fieldPartsKey, {
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(fieldStateAttributes(state.value, disabled.value), attrs);
+  return mergeProps(fieldStateAttributes(state.value, isDisabled.value), attrs);
 }
 </script>
 

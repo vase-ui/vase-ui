@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
 import type { FieldLabelProps, FieldLabelState } from './types';
@@ -22,7 +23,7 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLLabelElement>();
 
-const id = computed(() => props.id || generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 // The element of the `element` slot is known after the mount. A `<label for>` names the control
 // and moves the focus to it. Another element names the control by `aria-labelledby`.
 const native = computed(() => !element.value || element.value.localName === 'label');
@@ -30,7 +31,7 @@ const native = computed(() => !element.value || element.value.localName === 'lab
 onUnmounted(
   field.addLabel({
     get id() {
-      return id.value;
+      return elementId.value;
     },
     get native() {
       return native.value;
@@ -39,14 +40,15 @@ onUnmounted(
 );
 
 const ownProps = computed(() => ({
-  id: id.value,
+  id: elementId.value,
   for: native.value ? field.controlId : undefined,
   ...fieldStateAttributes(field.state, field.state.disabled),
   onClick,
 }));
 
+// With no `for`, the browser does not move the focus at a click.
 function onClick(event: MouseEvent) {
-  if (!native.value && !event.defaultPrevented) field.focusControl();
+  if ((!native.value || !field.controlId) && !event.defaultPrevented) field.focusControl();
 }
 
 defineExpose({ element });

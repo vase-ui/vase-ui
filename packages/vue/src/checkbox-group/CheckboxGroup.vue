@@ -53,11 +53,11 @@ let selection = firstValue;
 // The last reset that the group followed. Each checkbox of the group tells the group a reset.
 let lastReset: Event | undefined;
 
-const allValues = computed(() => props.allValues ?? []);
+const childValues = computed(() => props.allValues ?? []);
 const inputs = computed(() => checkboxes.map((checkbox) => checkbox.element));
 const { field, labelledBy, onFocusout } = useFieldGroup({
   element,
-  disabled: () => disabled.value,
+  disabled: () => isDisabled.value,
   ownDisabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => false,
   inputs: () => inputs.value,
@@ -67,18 +67,18 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
       checkboxes.some((checkbox) => checkbox.value === v && !checkbox.disabled),
     ),
 });
-const disabled = computed<boolean>(
+const isDisabled = computed<boolean>(
   () => props.disabled || !!field?.disabled || inDisabledFieldset.value,
 );
 const state = computed<CheckboxGroupState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   touched: field?.state.touched ?? false,
   dirty: field?.state.dirty ?? false,
   valid: field?.state.valid ?? null,
   filled: field?.state.filled ?? false,
 }));
 const parentChecked = computed(
-  () => allValues.value.length > 0 && allValues.value.every((v) => value.value.includes(v)),
+  () => childValues.value.length > 0 && childValues.value.every((v) => value.value.includes(v)),
 );
 
 watch(value, (next) => field?.setValue([...next], next.length > 0), {
@@ -91,7 +91,7 @@ provide(checkboxGroupKey, {
     return value.value;
   },
   get disabled() {
-    return disabled.value;
+    return isDisabled.value;
   },
   get hasAllValues() {
     return props.allValues !== undefined;
@@ -101,10 +101,10 @@ provide(checkboxGroupKey, {
       return parentChecked.value;
     },
     get indeterminate() {
-      return !parentChecked.value && allValues.value.some((v) => value.value.includes(v));
+      return !parentChecked.value && childValues.value.some((v) => value.value.includes(v));
     },
     get controls() {
-      const ids = allValues.value.flatMap((v) =>
+      const ids = childValues.value.flatMap((v) =>
         checkboxes.filter((checkbox) => checkbox.value === v).map((checkbox) => checkbox.id),
       );
       return ids.join(' ') || undefined;
@@ -128,7 +128,7 @@ function elementProps() {
       role: 'group',
       'aria-labelledby': labelledBy(attrs),
       'aria-describedby': field?.describedBy,
-      ...fieldStateAttributes(state.value, disabled.value),
+      ...fieldStateAttributes(state.value, isDisabled.value),
       onFocusout,
     },
     attrs,
@@ -144,18 +144,18 @@ function nextOfParent() {
   const none = (v: string) => current.includes(v) && keeps(v);
   const given = (v: string) => (keeps(v) ? current.includes(v) : selection.includes(v));
   const matches = (include: (v: string) => boolean) =>
-    allValues.value.every((v) => include(v) === current.includes(v));
+    childValues.value.every((v) => include(v) === current.includes(v));
   const partial =
-    allValues.value.some((v) => selection.includes(v)) &&
-    !allValues.value.every((v) => selection.includes(v));
+    childValues.value.some((v) => selection.includes(v)) &&
+    !childValues.value.every((v) => selection.includes(v));
   // A selection that changes nothing does not count.
   const include = matches(all) ? none : matches(none) && partial && !matches(given) ? given : all;
   // A value that is not in `allValues` stays.
   const next = [
-    ...current.filter((v) => !allValues.value.includes(v) || include(v)),
-    ...allValues.value.filter((v) => include(v) && !current.includes(v)),
+    ...current.filter((v) => !childValues.value.includes(v) || include(v)),
+    ...childValues.value.filter((v) => include(v) && !current.includes(v)),
   ];
-  return { value: next, checked: allValues.value.every((v) => next.includes(v)) };
+  return { value: next, checked: childValues.value.every((v) => next.includes(v)) };
 }
 
 function change(next: string[], details: ChangeEventDetails<'none'>, byChild: boolean) {

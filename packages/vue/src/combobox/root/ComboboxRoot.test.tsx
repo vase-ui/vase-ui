@@ -6569,8 +6569,9 @@ describe('<Combobox.Root />', () => {
   });
 
   it.each([
-    { lockState: 'readOnly', label: 'inside Field', withField: true, expectedError: 'test' },
-    { lockState: 'disabled', label: 'inside Field', withField: true, expectedError: 'test' },
+    // A field shows no error while its control is disabled or read-only.
+    { lockState: 'readOnly', label: 'inside Field', withField: true, expectedError: null },
+    { lockState: 'disabled', label: 'inside Field', withField: true, expectedError: null },
     { lockState: 'readOnly', label: 'outside Field', withField: false, expectedError: null },
     { lockState: 'disabled', label: 'outside Field', withField: false, expectedError: null },
   ] as const)(
@@ -10451,7 +10452,8 @@ describe('<Combobox.Root />', () => {
 
       input.focus();
       input.blur();
-      await wait(0);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(validate).toHaveBeenCalled());
 
       expect(validate.mock.calls[0]?.[0]).toEqual([]);
 

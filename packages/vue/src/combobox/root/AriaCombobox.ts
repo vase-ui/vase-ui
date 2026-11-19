@@ -92,6 +92,7 @@ import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import { createCollatorItemFilter } from './utils';
 import type { FilterItemToString } from './utils';
 import { INITIAL_LAST_HIGHLIGHT, NO_ACTIVE_VALUE } from './utils/constants';
+import { given } from '../../internals/givenAttributes';
 
 export namespace AriaCombobox {
   export type Props<Value, Mode extends SelectionMode = 'none', Item = Value> = AriaComboboxProps<
@@ -448,7 +449,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const field = inject(fieldKey, null);
 
   const generatedId = useId();
-  const id = computed(() => props.id || field?.controlId || generatedId);
+  const id = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
@@ -893,10 +894,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   // The input is the control of the field, or the trigger when the input is in the popup. The
   // hidden input holds the value for the validation.
-  watch(
+  const fieldControlElement = computed(
     () =>
       (inputInsidePopup.value ? store.state.triggerElement : inputRef.value) ??
       hiddenInputElement.value,
+  );
+  watch(
+    fieldControlElement,
     (control, _, onCleanup) => {
       if (!control || !field) return;
       onCleanup(
@@ -923,6 +927,12 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             );
           },
           formValue: () => fieldStringValue.value,
+          // With a selection mode, the order of the values counts, and `isItemEqualToValue`
+          // compares two items.
+          sameValue: (a, b) =>
+            selectionMode.value === 'none'
+              ? a === b
+              : !isSelectedValueDirty(a, b, isItemEqualToValue.value),
         }),
       );
     },
@@ -1202,8 +1212,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       state.inputInsidePopup &&
       (eventDetails.reason === REASONS.focusOut || eventDetails.reason === REASONS.outsidePress)
     ) {
-      const trigger = state.triggerElement;
-      if (trigger) field?.onLeave(trigger);
+      const control = fieldControlElement.value;
+      if (control) field?.onLeave(control);
     }
   }
 

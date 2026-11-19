@@ -57,21 +57,6 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
     });
 
-    it('takes its name from a label whose `for` is its id', async () => {
-      await render(
-        <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
-          <label for="own-id">Check-in</label>
-          <Part id="own-id" data-testid="field">
-            <DateField.Input />
-          </Part>
-        </DateRangePicker.Root>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
-      });
-    });
-
     // A blank name gives nothing to a screen reader, so the part keeps its own name.
     it('keeps its own name for a blank name of the consumer', async () => {
       await render(

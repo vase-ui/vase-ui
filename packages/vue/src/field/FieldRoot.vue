@@ -94,12 +94,12 @@ let waiting: ReturnType<typeof setTimeout> | undefined;
 // The input that has the message of `validate`.
 let messageInput: NativeControl | undefined;
 
-const name = computed(() => props.name ?? control.value?.name);
+const fieldName = computed(() => props.name ?? control.value?.name);
 const inDisabledFieldset = useInDisabledFieldset(element);
-const disabled = computed(() => props.disabled || inDisabledFieldset.value);
+const isDisabled = computed(() => props.disabled || inDisabledFieldset.value);
 // The browser bars a disabled or read-only element from constraint validation.
 const barred = computed(
-  () => disabled.value || !!control.value?.disabled || !!control.value?.readOnly,
+  () => isDisabled.value || !!control.value?.disabled || !!control.value?.readOnly,
 );
 const mode = computed(() => props.validationMode ?? form?.validationMode ?? 'submit');
 const validatesOnChange = computed(
@@ -107,21 +107,23 @@ const validatesOnChange = computed(
 );
 const formErrors = computed(() => {
   const errors = form?.errors;
-  if (!name.value || !errors) return [];
+  if (!fieldName.value || !errors) return [];
   // The read of the key comes first: Vue tracks it, and it does not track `Object.hasOwn`.
-  const messages = errors[name.value];
-  if (!Object.hasOwn(errors, name.value)) return [];
+  const messages = errors[fieldName.value];
+  if (!Object.hasOwn(errors, fieldName.value)) return [];
   return [messages].flat().filter((error): error is string => !!error);
 });
 
-const foundDirty = computed(() => !sameValue(value.value, firstValue.value));
+const same = (a: unknown, b: unknown) =>
+  control.value?.sameValue ? control.value.sameValue(a, b) : sameValue(a, b);
+const foundDirty = computed(() => !same(value.value, firstValue.value));
 const valid = computed(() => {
   if (barred.value) return null;
   if (props.invalid || formErrors.value.length > 0) return false;
   return result.value && result.value.errors.length === 0;
 });
 const state = computed<FieldRootState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   touched: props.touched ?? ownTouched.value,
   dirty: props.dirty ?? foundDirty.value,
   valid: valid.value,
@@ -143,7 +145,7 @@ watch(foundDirty, (dirty) => {
 
 const formField: FormField = {
   get name() {
-    return name.value;
+    return fieldName.value;
   },
   get element() {
     return control.value?.focusElement ?? validationInput();
@@ -152,7 +154,7 @@ const formField: FormField = {
     return control.value?.formValue ? control.value.formValue() : value.value;
   },
   get disabled() {
-    return disabled.value || !!control.value?.disabled;
+    return isDisabled.value || !!control.value?.disabled;
   },
   validate: validateAtOnce,
   get invalid() {
@@ -162,10 +164,10 @@ const formField: FormField = {
 
 provide(fieldKey, {
   get disabled() {
-    return disabled.value;
+    return isDisabled.value;
   },
   get name() {
-    return name.value;
+    return fieldName.value;
   },
   controlId,
   get labelId() {
@@ -196,7 +198,7 @@ provide(fieldKey, {
       value.value = next;
       return;
     }
-    if (sameValue(next, value.value)) return;
+    if (same(next, value.value)) return;
     value.value = next;
     if (validatesOnChange.value) validateAfterChange();
   },
@@ -265,14 +267,16 @@ provide(fieldPartsKey, {
     return () => labels.splice(labels.indexOf(label), 1);
   },
   focusControl() {
-    if (labelable.value) control.value?.element.focus();
+    // A group of controls gets the focus at the element that it names.
+    const target = labelable.value ? control.value?.element : control.value?.focusElement;
+    target?.focus();
   },
 });
 
 defineExpose({ element, validate: validateAtOnce });
 
 function elementProps() {
-  return mergeProps(fieldStateAttributes(state.value, disabled.value), attrs);
+  return mergeProps(fieldStateAttributes(state.value, isDisabled.value), attrs);
 }
 
 function dropValidation() {
@@ -378,7 +382,7 @@ function removeMessages() {
 }
 
 function onEdit() {
-  form?.onEdit(name.value);
+  form?.onEdit(fieldName.value);
   // An invalid field that does not validate at each change takes back only `valueMissing`.
   if (validatesOnChange.value || valid.value !== false) return;
   removeMessages();
