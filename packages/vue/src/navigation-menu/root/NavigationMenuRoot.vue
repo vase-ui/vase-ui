@@ -113,7 +113,6 @@ import {
 import type {
   NavigationMenuActivationDirection,
   NavigationMenuSizes,
-  NavigationMenuPopupAutoSizeResetState,
 } from './NavigationMenuRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -184,11 +183,6 @@ const beforeInsideRef = shallowRef<HTMLElement | null>(null);
 const afterInsideRef = shallowRef<HTMLElement | null>(null);
 const beforeOutsideRef = shallowRef<HTMLElement | null>(null);
 const afterOutsideRef = shallowRef<HTMLElement | null>(null);
-const popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState = {
-  abortController: null,
-  owner: null,
-};
-
 const preventUnmountOnClose = shallowRef(false);
 // With no popup part, the positioner is the part that shows, and with no positioner, the backdrop.
 const transitionElement = () =>
@@ -248,9 +242,12 @@ useOpenChangeComplete({
 });
 
 watch(open, (isOpen) => {
+  if (isOpen) return;
+  activationDirection.value = null;
+  floatingRootStore.value = undefined;
   // The exit can already have a zero box. Keep the last target for that frame.
   const target = sizes.value.positioner;
-  if (!isOpen && target && target.width > 0 && target.height > 0) {
+  if (target && target.width > 0 && target.height > 0) {
     sizes.value = { popup: target, positioner: target };
   }
 });
@@ -263,10 +260,6 @@ function setValue(
   nextValue: Value | null,
   eventDetails: Omit<NavigationMenuRootChangeEventDetails, 'preventUnmountOnClose'>,
 ) {
-  if (nextValue == null) {
-    closeReason = eventDetails.reason;
-  }
-
   const previousValue = currentValue.value;
   const changeEventDetails = eventDetails as NavigationMenuRootChangeEventDetails;
   // Navigation Menu only takes the request from `valueChange` itself, not after an `await`.
@@ -285,13 +278,12 @@ function setValue(
   }
 
   if (nextValue == null) {
+    closeReason = eventDetails.reason;
     // A redundant close (for example the trigger's blur after an imperative close) skips
     // `valueChange`, so it can't opt out again and must not discard the recorded opt-out.
     if (previousValue != null) {
       preventUnmountOnClose.value = unmountPrevented;
     }
-    activationDirection.value = null;
-    floatingRootStore.value = undefined;
   }
 
   if (changed) {
@@ -337,10 +329,17 @@ provide(NavigationMenuRootContext, {
     activationDirection.value = direction;
   },
   floatingRootStore,
-  setFloatingRootStore(store) {
+  setActiveTrigger(store, trigger) {
     floatingRootStore.value = store;
+    prevTriggerElementRef.value = trigger;
   },
   currentContentRef,
+  registerContent(content) {
+    currentContentRef.value = content;
+    return () => {
+      if (currentContentRef.value === content) currentContentRef.value = null;
+    };
+  },
   prevTriggerElementRef,
   nested,
   rootRef,
@@ -348,8 +347,10 @@ provide(NavigationMenuRootContext, {
   afterInsideRef,
   beforeOutsideRef,
   afterOutsideRef,
-  popupAutoSizeResetRef,
   sizes,
+  setSizes(next) {
+    sizes.value = next;
+  },
   delay: computed(() => props.delay),
   closeDelay: computed(() => props.closeDelay),
   orientation: computed(() => props.orientation),

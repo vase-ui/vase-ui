@@ -1,0 +1,8 @@
+{
+  "id": "VUE-181",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts#L130-L140"
+  ],
+  "dueWith": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+  "behavior": "An inline Navigation Menu viewport binds its hover handlers to its element. A consumer can call preventVaseUIHandler() on mouseenter to keep the pointer lock. Base UI attaches a separate native listener."
+}

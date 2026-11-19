@@ -5,6 +5,7 @@ import type {
   VaseUIComponentProps,
   WithVaseUIEvent,
 } from '../../internals/types';
+import type { Dimensions } from '@floating-ui/utils';
 import type { HandleCloseContextBase } from '../../utils/popups/interactions/usePopupHover';
 
 export interface NavigationMenuTriggerState {
@@ -30,40 +31,7 @@ export interface NavigationMenuTriggerProps
   disabled?: boolean | undefined;
 }
 
-function getPlacementFromElements(
-  anchorElement: Element,
-  positionerElement: HTMLElement,
-): HandleCloseContextBase['placement'] {
-  const referenceRect = anchorElement.getBoundingClientRect();
-  const floatingRect = positionerElement.getBoundingClientRect();
-  const referenceCenterX = referenceRect.left + referenceRect.width / 2;
-  const referenceCenterY = referenceRect.top + referenceRect.height / 2;
-  const floatingCenterX = floatingRect.left + floatingRect.width / 2;
-  const floatingCenterY = floatingRect.top + floatingRect.height / 2;
-  const deltaX = floatingCenterX - referenceCenterX;
-  const deltaY = floatingCenterY - referenceCenterY;
-
-  if (Math.abs(deltaX) >= Math.abs(deltaY)) {
-    return deltaX >= 0 ? 'right' : 'left';
-  }
-
-  return deltaY >= 0 ? 'bottom' : 'top';
-}
-
-function getHandleCloseContext(
-  anchorElement: Element,
-  positionerElement: HTMLElement,
-  nodeId: string | undefined,
-): HandleCloseContextBase {
-  return {
-    placement: getPlacementFromElements(anchorElement, positionerElement),
-    elements: {
-      domReference: anchorElement,
-      floating: positionerElement,
-    },
-    nodeId,
-  };
-}
+const EMPTY_SIZE: Dimensions = { width: 0, height: 0 };
 
 // The listeners of the hover interaction read `currentTarget`, and an event that no one
 // dispatched has none.
@@ -77,18 +45,19 @@ function createHoverEvent(type: 'mouseenter' | 'mousemove', currentTarget: HTMLE
 <script setup lang="ts">
 import { dismissTriggerBindings } from '../../utils/popups/interactions/useDismissLayer';
 import { useElementRegistration } from '../../internals/useElementRegistration';
-import {
-  computed,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  watch,
-  type ShallowRef,
-} from 'vue';
+import { computed, inject, nextTick, watchPostEffect, shallowRef, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
+import { addEventListener } from '../../common/addEventListener';
+import { ownerWindow } from '../../common/owner';
+import { useAnimationFrame } from '../../common/useAnimationFrame';
+import { useMutationObserver } from '../../common/useMutationObserver';
+import { useResizeObserver } from '../../common/useResizeObserver';
+import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
+import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
+import { getCssDimensions } from '../../utils/getCssDimensions';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
+import type { NavigationMenuSizes } from '../root/NavigationMenuRootContext';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
@@ -113,7 +82,6 @@ import {
 } from '../../utils/popups/focus/tabbable';
 import type { FocusableElement } from '../../utils/popups/focus/tabbable';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
-import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { usePopupHover, useHoverPointerStyle } from '../../utils/popups/interactions/usePopupHover';
 import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
@@ -126,7 +94,6 @@ import {
   NAVIGATION_MENU_TRIGGER_IDENTIFIER,
 } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootChangeEventDetails } from '../root/NavigationMenuRoot.vue';
-import { useNavigationMenuPopupSize } from './useNavigationMenuPopupSize';
 
 defineOptions({ inheritAttrs: false });
 
@@ -145,15 +112,20 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuTriggerState>;
 }>();
 
+const root = useNavigationMenuRootContext();
 const {
   nodeId,
   value,
   setValue,
+  sizes,
+  setSizes,
+  currentContentRef,
+  transitionStatus,
   mounted,
   open,
   positionerElement,
   setActivationDirection,
-  setFloatingRootStore,
+  setActiveTrigger,
   popupElement,
   popupElementId,
   viewportElement,
@@ -169,16 +141,16 @@ const {
   orientation,
   setViewportInert,
   nested,
-} = useNavigationMenuRootContext();
+} = root;
 const { value: itemValue } = useNavigationMenuItemContext();
-const handleFocusout = useNavigationMenuFocusout();
+const handleFocusout = useNavigationMenuFocusout(root);
 const dismissProps = inject(NavigationMenuDismissContext, undefined);
 const direction = useDirection();
 
 const stickIfOpenTimeout = useTimeout();
 
 const triggerId = useVaseUiId();
-const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
+const triggerElement = shallowRef<HTMLElement | null>(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
@@ -194,9 +166,7 @@ const hoverInteractionsEnabled = computed(
 );
 const shouldBlockSafePolygonPointerEvents = computed(() => pointerType.value !== 'touch');
 
-// A handler of Base UI reads the state of the last render, also after an earlier handler of the
-// same event wrote the value. A direct read of the ref gives the new value. A `watch` with the
-// default flush writes these variables.
+// Press and key handlers share an event. Each needs the item from before the first handler ran.
 let renderedMounted = mounted.value;
 let renderedIsActiveItem = isActiveItem.value;
 let renderedValue = value.value;
@@ -207,7 +177,185 @@ watch([mounted, isActiveItem, value], ([isMounted, isActive, currentValue]) => {
 });
 
 const { isHeld } = useKeepAliveState();
-useNavigationMenuPopupSize(computed(() => isActiveItem.value && !isHeld.value));
+const starting = computed(() => transitionStatus.value === 'starting');
+const canMeasure = computed(() => isActiveItem.value && !isHeld.value);
+const mutationFrame = useAnimationFrame();
+const resizeFrame = useAnimationFrame();
+const sizeFrame = useAnimationFrame();
+const runOnceAnimationsFinish = useAnimationsFinished(popupElement);
+let previousSize = EMPTY_SIZE;
+let switchFrom: Dimensions | undefined;
+let pendingMeasurement: NavigationMenuSizes | undefined;
+let autoSizeReset: AbortController | undefined;
+
+watch(
+  canMeasure,
+  (active, _, onCleanup) => {
+    if (!active) return;
+
+    // The old item still determines the popup size before Vue patches the content.
+    const popup = popupElement.value;
+    if (popup?.isConnected) {
+      switchFrom = getCssDimensions(popup);
+      if (switchFrom.width && switchFrom.height) previousSize = switchFrom;
+    }
+
+    onCleanup(() => {
+      if (pendingMeasurement && sizes.value === pendingMeasurement) {
+        setSizes({ popup: pendingMeasurement.popup, positioner: pendingMeasurement.positioner });
+      }
+      pendingMeasurement = undefined;
+      switchFrom = undefined;
+      mutationFrame.cancel();
+      resizeFrame.cancel();
+      sizeFrame.cancel();
+      autoSizeReset?.abort();
+    });
+  },
+  { immediate: true, flush: 'sync' },
+);
+
+function ownsPopup(popup: HTMLElement, positioner: HTMLElement) {
+  return (
+    canMeasure.value &&
+    popupElement.value === popup &&
+    positionerElement.value === positioner &&
+    popup.isConnected
+  );
+}
+
+function measure(popup: HTMLElement, positioner: HTMLElement, commit: (size: Dimensions) => void) {
+  if (!ownsPopup(popup, positioner)) return;
+  autoSizeReset?.abort();
+  const previous = sizes.value;
+  const measurement = { ...previous, measuring: true };
+  setSizes(measurement);
+  pendingMeasurement = measurement;
+  void nextTick(() => {
+    if (sizes.value !== measurement) return;
+    pendingMeasurement = undefined;
+    setSizes({ popup: previous.popup, positioner: previous.positioner });
+    if (ownsPopup(popup, positioner)) commit(getCssDimensions(popup));
+  });
+}
+
+function commitTarget(popup: HTMLElement, positioner: HTMLElement, target: Dimensions) {
+  if (!ownsPopup(popup, positioner)) return;
+  autoSizeReset?.abort();
+  setSizes({ popup: target, positioner: target });
+  const reset = new AbortController();
+  autoSizeReset = reset;
+  void nextTick(() => {
+    if (reset.signal.aborted) return;
+    runOnceAnimationsFinish(() => {
+      if (ownsPopup(popup, positioner)) setSizes({ popup: 'auto', positioner: target });
+    }, reset.signal);
+  });
+}
+
+function animateSize(popup: HTMLElement, positioner: HTMLElement, from: Dimensions) {
+  measure(popup, positioner, ({ width, height }) => {
+    const target = { width: width || previousSize.width, height: height || previousSize.height };
+    setSizes({ popup: from.width && from.height ? from : target, positioner: target });
+    sizeFrame.request(() => commitTarget(popup, positioner, target));
+  });
+}
+
+function syncSize(popup: HTMLElement, positioner: HTMLElement) {
+  sizeFrame.cancel();
+  measure(popup, positioner, (size) => {
+    if (!size.width || !size.height) return;
+    previousSize = size;
+    if (sizes.value.positioner === null) commitTarget(popup, positioner, size);
+    else setSizes({ popup: 'auto', positioner: size });
+  });
+}
+
+watch(mounted, (isMounted) => {
+  if (!isMounted) previousSize = EMPTY_SIZE;
+});
+
+useResizeObserver(
+  () => (canMeasure.value ? popupElement.value : null),
+  () => {
+    const popup = popupElement.value;
+    if (popup) previousSize = { width: popup.offsetWidth, height: popup.offsetHeight };
+  },
+);
+
+useDomEffect(
+  [canMeasure, popupElement, positionerElement],
+  () => {
+    const popup = popupElement.value;
+    const positioner = positionerElement.value;
+    if (!canMeasure.value || !popup || !positioner) return;
+    const unsubscribe = addEventListener(ownerWindow(positioner), 'resize', () => {
+      resizeFrame.request(() => syncSize(popup, positioner));
+    });
+    return () => {
+      resizeFrame.cancel();
+      unsubscribe();
+    };
+  },
+  isHeld,
+);
+
+useMutationObserver(
+  () =>
+    canMeasure.value && popupElement.value && positionerElement.value
+      ? currentContentRef.value
+      : null,
+  {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['hidden'],
+  },
+  () => {
+    const popup = popupElement.value;
+    const positioner = positionerElement.value;
+    if (!popup || !positioner) return;
+    // A render slot can retain the marker after the root finishes its enter phase.
+    if (starting.value || popup.hasAttribute(TransitionStatusDataAttributes.startingStyle)) {
+      syncSize(popup, positioner);
+    } else if (sizes.value.popup && sizes.value.popup !== 'auto') {
+      const current = {
+        width: popup.offsetWidth || previousSize.width,
+        height: popup.offsetHeight || previousSize.height,
+      };
+      sizeFrame.cancel();
+      mutationFrame.cancel();
+      autoSizeReset?.abort();
+      if (!current.width || !current.height || !ownsPopup(popup, positioner)) return;
+      setSizes({ popup: current, positioner: current });
+      // Paint the interrupted size before the next transition starts.
+      mutationFrame.request(() =>
+        mutationFrame.request(() => {
+          measure(popup, positioner, ({ width, height }) => {
+            const target = { width: width || current.width, height: height || current.height };
+            sizeFrame.request(() => commitTarget(popup, positioner, target));
+          });
+        }),
+      );
+    } else {
+      animateSize(popup, positioner, previousSize);
+    }
+  },
+);
+
+useDomEffect(
+  [canMeasure, popupElement, positionerElement, starting],
+  () => {
+    const popup = popupElement.value;
+    const positioner = positionerElement.value;
+    if (!canMeasure.value || !popup || !positioner) return;
+    const from = switchFrom ?? getCssDimensions(popup);
+    switchFrom = undefined;
+    animateSize(popup, positioner, from);
+  },
+  isHeld,
+);
 
 function handleOpenChange(
   nextOpen: boolean,
@@ -259,8 +407,6 @@ function restoreOutsidePointerEvents() {
   hover.session.value.restoreOutsidePointerEvents();
 }
 
-// A change of `open` and the unmount release the pointer events that the safe polygon blocked. A
-// server render calls no `onBeforeUnmount` hook, so a server makes no hover intent.
 watch(open, (isOpen) => {
   restoreOutsidePointerEvents();
   if (!isOpen) {
@@ -271,7 +417,6 @@ watch(open, (isOpen) => {
     hover.session.value.cancelPendingOpen();
   }
 });
-onBeforeUnmount(restoreOutsidePointerEvents);
 
 function getScope() {
   if (nested && positionerElement.value) {
@@ -281,14 +426,24 @@ function getScope() {
   return closest(triggerElement.value, 'ul');
 }
 
-function getInlineHandleCloseContext() {
+function getInlineHandleCloseContext(): HandleCloseContextBase | null {
   const trigger = triggerElement.value;
   const popup = hoverPopupElement.value;
   if (!nested || positionerElement.value || !trigger || !popup) {
     return null;
   }
 
-  return getHandleCloseContext(trigger, popup, nodeId);
+  const anchor = trigger.getBoundingClientRect();
+  const panel = popup.getBoundingClientRect();
+  const dx = panel.left + panel.width / 2 - (anchor.left + anchor.width / 2);
+  const dy = panel.top + panel.height / 2 - (anchor.top + anchor.height / 2);
+  const horizontal = dx >= 0 ? 'right' : 'left';
+  const vertical = dy >= 0 ? 'bottom' : 'top';
+  return {
+    placement: Math.abs(dx) >= Math.abs(dy) ? horizontal : vertical,
+    elements: { domReference: trigger, floating: popup },
+    nodeId,
+  };
 }
 
 const hoverStyle = useHoverPointerStyle(triggerElement);
@@ -314,8 +469,7 @@ watch(
   [isActiveItem, triggerElement],
   () => {
     if (isActiveItem.value) {
-      setFloatingRootStore(floatingRootStore);
-      prevTriggerElementRef.value = triggerElement.value;
+      setActiveTrigger(floatingRootStore, triggerElement.value);
     }
   },
   { immediate: true },
@@ -470,98 +624,54 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   ],
 });
 
-// The browser sends no enter event for a pointer that is already over the trigger when the
-// hydration ends or when `KeepAlive` brings the trigger back. The hover interaction needs the
-// enter, and then a move that starts its rest timer.
-function openHoveredTrigger() {
-  const trigger = triggerElement.value;
-  if (!trigger?.matches(':hover') || !hoverInteractionsEnabled.value || value.value != null) {
-    return;
-  }
-
-  hoverProps.onMouseenter?.(createHoverEvent('mouseenter', trigger));
-  hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
-}
-
-onMounted(openHoveredTrigger);
-
-watch(
-  isHeld,
-  (held) => {
-    if (held) {
+useDomEffect(
+  [],
+  () => {
+    // A stationary pointer gets no enter event after hydration or activation.
+    const trigger = triggerElement.value;
+    if (trigger?.matches(':hover') && hoverInteractionsEnabled.value && value.value == null) {
+      hoverProps.onMouseenter?.(createHoverEvent('mouseenter', trigger));
+      hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
+    }
+    return () => {
       stickIfOpenTimeout.clear();
       restoreOutsidePointerEvents();
-    } else {
-      openHoveredTrigger();
-    }
+    };
   },
-  { flush: 'sync' },
+  isHeld,
 );
 
-// Script makes the two guards and the owner element after the trigger, so the trigger has one root
-// node.
-let outsideNodes: {
-  before: HTMLSpanElement;
-  owner: HTMLSpanElement;
-  after: HTMLSpanElement;
-  siblings: ElementSiblings;
-} | null = null;
-
-const outsideSiblings = computed(() => {
-  const trigger = triggerElement.value;
-  if (!isActiveItem.value || !trigger) {
-    return null;
-  }
-  if (!outsideNodes) {
-    const before = createFocusGuardElement(trigger.ownerDocument);
-    const owner = trigger.ownerDocument.createElement('span');
-    const after = createFocusGuardElement(trigger.ownerDocument);
-    Object.assign(owner.style, ownerVisuallyHidden);
-    before.addEventListener('focusin', handleBeforeOutsideFocusin);
-    after.addEventListener('focusin', (event) => void handleAfterOutsideFocusin(event));
-    outsideNodes = { before, owner, after, siblings: { after: [before, owner, after] } };
-  }
-  return outsideNodes.siblings;
+// Siblings preserve the single root for directives, transitions and scoped styles.
+const outsideNodes = computed(() => {
+  const doc = triggerElement.value?.ownerDocument;
+  if (!doc) return null;
+  const before = createFocusGuardElement(doc);
+  const owner = doc.createElement('span');
+  const after = createFocusGuardElement(doc);
+  Object.assign(owner.style, ownerVisuallyHidden);
+  before.addEventListener('focusin', handleBeforeOutsideFocusin);
+  after.addEventListener('focusin', (event) => void handleAfterOutsideFocusin(event));
+  return { after: [before, owner, after] as const };
 });
-
+const outsideSiblings = computed(() => (isActiveItem.value ? outsideNodes.value : null));
 useElementSiblings(triggerElement, outsideSiblings);
 
-// Another trigger of the root can write the refs in the same DOM update, so a trigger clears a ref
-// only while the ref holds its own guard.
-function releaseOutsideGuards() {
-  if (beforeOutsideRef.value === outsideNodes?.before) {
-    beforeOutsideRef.value = null;
-  }
-  if (afterOutsideRef.value === outsideNodes?.after) {
-    afterOutsideRef.value = null;
-  }
-}
-
-watch(
-  [outsideSiblings, viewportElementId],
-  ([siblings, viewportId]) => {
-    if (!outsideNodes) {
-      return;
-    }
-    if (!siblings) {
-      releaseOutsideGuards();
-      return;
-    }
-    beforeOutsideRef.value = outsideNodes.before;
-    afterOutsideRef.value = outsideNodes.after;
-    if (viewportId) {
-      outsideNodes.owner.setAttribute('aria-owns', viewportId);
-    } else {
-      outsideNodes.owner.removeAttribute('aria-owns');
-    }
-  },
-  { flush: 'post' },
-);
-
-onScopeDispose(releaseOutsideGuards);
+const setBeforeOutside = createElementSetter(beforeOutsideRef, { keepWhileHeld: true });
+const setAfterOutside = createElementSetter(afterOutsideRef, { keepWhileHeld: true });
+watchPostEffect(() => {
+  const nodes = outsideSiblings.value?.after;
+  setBeforeOutside(nodes?.[0] ?? null);
+  setAfterOutside(nodes?.[2] ?? null);
+  if (!nodes) return;
+  const owner = nodes[1];
+  const id = viewportElementId.value;
+  if (id) owner.setAttribute('aria-owns', id);
+  else owner.removeAttribute('aria-owns');
+});
 
 function isOutsideGuard(element: Element) {
-  return element === outsideNodes?.before || element === outsideNodes?.after;
+  const nodes = outsideNodes.value?.after;
+  return element === nodes?.[0] || element === nodes?.[2];
 }
 
 // `KeepAlive` takes the inside guards out of the document with the viewport, and a root with no

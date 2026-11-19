@@ -32,8 +32,7 @@ export interface NavigationMenuArrowProps
 import { computed } from 'vue';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useRenderElement } from '../../internals/useRenderElement';
-import { popupStateMapping } from '../../utils/popups/popupStateMapping';
+import { usePopupArrow } from '../../utils/popups/usePopupArrow';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 
@@ -47,25 +46,13 @@ defineSlots<{
 }>();
 
 const { open, transitionStatus } = useNavigationMenuRootContext();
-const { createArrowRef, side, align, arrowUncentered, arrowStyles } =
-  useNavigationMenuPositionerContext();
-
-const state = computed<NavigationMenuArrowState>(() => ({
-  open: open.value,
-  side: side.value,
-  align: align.value,
-  uncentered: arrowUncentered.value,
-}));
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  stateAttributesMapping: popupStateMapping,
-  ref: createArrowRef(),
-  props: (attrs) => [
-    { style: arrowStyles.value, 'aria-hidden': true },
-    getDisabledMountTransitionStyles(transitionStatus.value),
-    attrs,
-  ],
+const positioner = useNavigationMenuPositionerContext();
+const { state, element, elementProps, setRef, usesRenderSlot } = usePopupArrow(props, open, {
+  ...positioner,
+  arrowStyles: computed(() => ({
+    ...positioner.arrowStyles.value,
+    ...getDisabledMountTransitionStyles(transitionStatus.value).style,
+  })),
 });
 
 defineExpose({ element });

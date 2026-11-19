@@ -187,6 +187,38 @@ describe('<NavigationMenu.Content />', () => {
       expect(rootContext!.currentContentRef.value).toBe(screen.getByTestId('content-two'));
     });
 
+    it('releases removed content while its item stays open', async () => {
+      const shown = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              {shown.value && (
+                <NavigationMenu.Content data-testid="content">Panel</NavigationMenu.Content>
+              )}
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Viewport />
+          <ContextProbe />
+        </NavigationMenu.Root>
+      ));
+      const first = screen.getByTestId('content');
+      expect(rootContext!.currentContentRef.value).toBe(first);
+
+      shown.value = false;
+      await flushMicrotasks();
+      expect(screen.getByRole('button', { name: 'One' })).toHaveAttribute('aria-expanded', 'true');
+      expect(first).not.toBeInTheDocument();
+      expect(rootContext!.currentContentRef.value).toBeNull();
+
+      shown.value = true;
+      await flushMicrotasks();
+      const replacement = screen.getByTestId('content');
+      expect(replacement).not.toBe(first);
+      expect(rootContext!.currentContentRef.value).toBe(replacement);
+    });
+
     it('holds the element of a content that opens again while its exit transition runs', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { container } = await render(<Menu />);

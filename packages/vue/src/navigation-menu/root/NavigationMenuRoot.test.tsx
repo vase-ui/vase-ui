@@ -1965,6 +1965,33 @@ describe('<NavigationMenu.Root />', () => {
       },
     );
 
+    it('VUE-180: keeps Escape active when the parent refuses the first close', async () => {
+      const value = shallowRef<string | null>('item-1');
+      const requests: string[] = [];
+      const { user } = await render(() => (
+        <TestNavigationMenu
+          modelValue={value.value}
+          onValueChange={(nextValue, details) => {
+            requests.push(details.reason);
+            if (requests.length === 2) value.value = nextValue;
+          }}
+        />
+      ));
+      const trigger = screen.getByTestId('trigger-1');
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+
+      await user.keyboard('{Escape}');
+      expect(requests).toEqual(['escape-key']);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(link).toHaveFocus();
+
+      await user.keyboard('{Escape}');
+      expect(requests).toEqual(['escape-key', 'escape-key']);
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
     it('should be controlled by value prop', async () => {
       const { setProps } = await render(<TestNavigationMenu modelValue="item-1" />);
 

@@ -11,7 +11,10 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { TOP_LEVEL_VIEWPORT_WARNING, allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
+import {
+  TOP_LEVEL_VIEWPORT_WARNING,
+  allowTopLevelViewportWarning,
+} from '../../../test/navigation-menuTestUtils';
 import NavigationMenuViewportScoped from './NavigationMenuViewportScoped.test.vue';
 
 type ViewportRenderSlotProps = Parameters<
@@ -88,6 +91,25 @@ describe('<NavigationMenu.Viewport />', () => {
     await fireEvent.click(trigger);
 
     expect(getOwner(trigger)).toHaveAttribute('aria-owns', viewport.id);
+  });
+
+  it('VUE-181: lets an inline viewport keep the hover lock on pointer entry', async () => {
+    let prevent = true;
+    const onMouseenter: NavigationMenu.Viewport.Props['onMouseenter'] = (event) => {
+      if (prevent) event.preventVaseUIHandler();
+    };
+    await renderMenu({ onMouseenter });
+    await openMenu();
+    const list = screen.getByRole('list');
+    const viewport = screen.getByTestId('viewport');
+    await fireEvent.mouseEnter(screen.getByTestId('trigger'));
+    expect(list.style.pointerEvents).toBe('none');
+
+    await fireEvent.mouseEnter(viewport);
+    expect(list.style.pointerEvents).toBe('none');
+    prevent = false;
+    await fireEvent.mouseEnter(viewport);
+    expect(list.style.pointerEvents).toBe('');
   });
 
   it('takes the id of its prop', async () => {

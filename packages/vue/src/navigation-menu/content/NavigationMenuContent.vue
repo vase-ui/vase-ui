@@ -48,7 +48,7 @@ const stateAttributesMapping: StateAttributesMapping<NavigationMenuContentState>
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue';
+import { computed, shallowRef, watchPostEffect, watchSyncEffect } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -78,7 +78,7 @@ const {
   viewportElement,
   value,
   activationDirection,
-  currentContentRef,
+  registerContent,
   viewportTargetElement,
 } = useNavigationMenuRootContext();
 const { value: itemValue } = useNavigationMenuItemContext();
@@ -89,15 +89,9 @@ const open = computed(() => popupMounted.value && value.value === itemValue.valu
 const portalContainer = computed(() => viewportTargetElement.value || viewportElement.value);
 const hasMountedInPortal = shallowRef(false);
 
-watch(
-  [() => props.keepMounted, portalContainer],
-  ([keepMounted, container]) => {
-    if (keepMounted && container) {
-      hasMountedInPortal.value = true;
-    }
-  },
-  { flush: 'sync', immediate: true },
-);
+watchSyncEffect(() => {
+  if (props.keepMounted && portalContainer.value) hasMountedInPortal.value = true;
+});
 
 const shouldRenderInline = computed(
   () => props.keepMounted && !portalContainer.value && !hasMountedInPortal.value,
@@ -118,17 +112,12 @@ const { mounted, setMounted, transitionStatus } = useTransitionStatus(
 
 // When the popup unmounts before the exit animation of the content ends, the content resets its
 // mounted state. The next open can then enter with the transition status `starting`.
-watch(
-  [mounted, popupMounted],
-  () => {
-    if (mounted.value && !popupMounted.value) {
-      setMounted(false);
-    }
-  },
-  { flush: 'sync', immediate: true },
-);
+watchSyncEffect(() => {
+  if (mounted.value && !popupMounted.value) setMounted(false);
+});
 
 useOpenChangeComplete({
+  enabled: () => !open.value,
   ref: contentElement,
   open,
   onComplete() {
@@ -138,18 +127,10 @@ useOpenChangeComplete({
   },
 });
 
-// Inactive `keepMounted` content also mounts in the viewport, and only the active content owns
-// `currentContentRef`. A content that opens again while it is still mounted keeps its element, so
-// the watcher reads `open` too.
-watch(
-  [open, contentElement],
-  () => {
-    if (open.value && contentElement.value) {
-      currentContentRef.value = contentElement.value;
-    }
-  },
-  { flush: 'post' },
-);
+watchPostEffect((onCleanup) => {
+  const content = contentElement.value;
+  if (open.value && content) onCleanup(registerContent(content));
+});
 
 const state = computed<NavigationMenuContentState>(() => ({
   open: open.value,

@@ -12,11 +12,6 @@ import type { FloatingRootStore } from '../../utils/popups/floating-root/Floatin
 import type { Orientation } from '../../internals/types';
 import type { NavigationMenuRootChangeEventDetails } from './NavigationMenuRoot.vue';
 
-export type NavigationMenuPopupAutoSizeResetState = {
-  abortController: AbortController | null;
-  owner: symbol | null;
-};
-
 export type NavigationMenuActivationDirection = 'left' | 'right' | 'up' | 'down' | null;
 
 export interface NavigationMenuSizes {
@@ -74,16 +69,17 @@ export interface NavigationMenuRootContext<Value = any> {
   activationDirection: ComputedRef<NavigationMenuActivationDirection>;
   setActivationDirection: (direction: NavigationMenuActivationDirection) => void;
   floatingRootStore: Readonly<Ref<FloatingRootStore | undefined>>;
-  setFloatingRootStore: (store: FloatingRootStore | undefined) => void;
+  setActiveTrigger: (store: FloatingRootStore, trigger: HTMLElement | null) => void;
   /**
    * Only handlers, hooks and `watch` callbacks read this ref. A template does not read it, so a
    * write wakes no render.
    */
-  currentContentRef: ShallowRef<HTMLElement | null>;
+  currentContentRef: Readonly<Ref<HTMLElement | null>>;
+  registerContent: (content: HTMLElement) => () => void;
   /**
    * The popup reads this ref in its render for its name. A write thus renders the popup again.
    */
-  prevTriggerElementRef: ShallowRef<Element | null | undefined>;
+  prevTriggerElementRef: Readonly<Ref<Element | null | undefined>>;
   nodeId: string;
   nested: boolean;
   rootRef: ShallowRef<HTMLElement | null>;
@@ -91,12 +87,8 @@ export interface NavigationMenuRootContext<Value = any> {
   afterInsideRef: ShallowRef<HTMLElement | null>;
   beforeOutsideRef: ShallowRef<HTMLElement | null>;
   afterOutsideRef: ShallowRef<HTMLElement | null>;
-  /**
-   * Shared across triggers, so that a newly active trigger can cancel a stale popup auto-size
-   * reset that the previously active trigger scheduled. Code changes it in place.
-   */
-  popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState;
-  sizes: ShallowRef<NavigationMenuSizes>;
+  sizes: Readonly<Ref<NavigationMenuSizes>>;
+  setSizes: (sizes: NavigationMenuSizes) => void;
   delay: ComputedRef<number>;
   closeDelay: ComputedRef<number>;
   orientation: ComputedRef<Orientation>;
@@ -140,9 +132,8 @@ export function useNavigationMenuPortalContext() {
   return keepMounted;
 }
 
-export function useNavigationMenuFocusout() {
-  const { positionerElement, popupElement, rootRef, nodeId, setValue } =
-    useNavigationMenuRootContext();
+export function useNavigationMenuFocusout(root: NavigationMenuRootContext) {
+  const { positionerElement, popupElement, rootRef, nodeId, setValue } = root;
   const tree = useFloatingTree();
 
   return (event: FocusEvent) => {

@@ -1,8 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
-import type { PopupInteractionStore } from '../../utils/popups/types';
 
 export interface NavigationMenuViewportState {}
 
@@ -15,12 +13,10 @@ export interface NavigationMenuViewportProps
    */
   id?: string | undefined;
 }
-
-const EMPTY_ROOT_STORE = getEmptyRootStore();
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { onMounted, shallowReactive } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { contains } from '../../common/shadowDom';
@@ -28,12 +24,15 @@ import { warn } from '../../common/warn';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/usePopupHover';
+import { useElementRegistration } from '../../internals/useElementRegistration';
+import { positionerHandlers } from '../../utils/popups/registeredParts';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
-import NavigationMenuViewportChildren from './NavigationMenuViewportChildren.vue';
-import { useNavigationMenuViewportSiblingGuards } from './useNavigationMenuViewportGuards';
+import NavigationMenuViewportChildren, {
+  useNavigationMenuViewportSiblingGuards,
+} from './NavigationMenuViewportChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -57,11 +56,11 @@ const {
   viewportElement,
   shownViewportElement,
   floatingRootStore,
-  prevTriggerElementRef,
   viewportInert,
   setViewportInert,
 } = useNavigationMenuRootContext();
 
+const hoverHandlers = shallowReactive(new Set<Record<string, unknown>>());
 const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
 
 if (process.env.NODE_ENV !== 'production' && !nested && !inPositioner) {
@@ -74,21 +73,6 @@ if (process.env.NODE_ENV !== 'production' && !nested && !inPositioner) {
   });
 }
 
-const domReference = computed(() => {
-  const store: PopupInteractionStore = floatingRootStore.value ?? EMPTY_ROOT_STORE;
-  return store.select('anchorElement');
-});
-
-watch(
-  domReference,
-  (reference) => {
-    if (reference) {
-      prevTriggerElementRef.value = reference;
-    }
-  },
-  { immediate: true },
-);
-
 function handleFocusout(event: FocusEvent) {
   const relatedTarget = event.relatedTarget as Element | null;
   const currentTarget = event.currentTarget as Element;
@@ -98,7 +82,7 @@ function handleFocusout(event: FocusEvent) {
   if (
     relatedTarget &&
     !contains(currentTarget, relatedTarget) &&
-    relatedTarget !== domReference.value
+    relatedTarget !== floatingRootStore.value?.select('anchorElement')
   ) {
     setViewportInert(true);
   }
@@ -114,6 +98,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
     createElementSetter(shownViewportElement),
   ],
   props: (attrs) => [
+    ...hoverHandlers,
     { style: hoverStyle.value },
     {
       id: viewportId.value,
@@ -130,6 +115,8 @@ const hoverStyle = useHoverPointerStyle(element);
 // there, so the part has one root node. With no positioner, the element holds them.
 if (inPositioner) {
   useNavigationMenuViewportSiblingGuards(element);
+} else {
+  useElementRegistration(positionerHandlers, element, () => hoverHandlers);
 }
 
 defineExpose({ element });

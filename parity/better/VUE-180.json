@@ -1,0 +1,8 @@
+{
+  "id": "VUE-180",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx#L201-L235"
+  ],
+  "dueWith": "packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx",
+  "behavior": "A controlled Navigation Menu keeps its dismissal handlers while the parent retains the open value. A second Escape can close the popup and return focus to the trigger. Base UI clears the active store on the first close request."
+}

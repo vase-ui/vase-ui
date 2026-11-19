@@ -51,8 +51,8 @@ defineSlots<{
   render: ComponentRenderFn<AnchorHTMLAttributes & Pick<HTMLProps, 'ref'>, NavigationMenuLinkState>;
 }>();
 
-const { setValue } = useNavigationMenuRootContext();
-const onFocusout = useNavigationMenuFocusout();
+const root = useNavigationMenuRootContext();
+const onFocusout = useNavigationMenuFocusout(root);
 
 const state = computed<NavigationMenuLinkState>(() => ({ active: props.active }));
 
@@ -71,7 +71,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
       tabindex: undefined,
       onClick(event: MouseEvent) {
         if (props.closeOnClick) {
-          setValue(null, createChangeEventDetails(REASONS.linkPress, event));
+          root.setValue(null, createChangeEventDetails(REASONS.linkPress, event));
         }
       },
       onFocusout,

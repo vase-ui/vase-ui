@@ -176,6 +176,8 @@ The popup stays in the DOM until its closing animation ends. See [JavaScript ani
 
 `NavigationMenu.Root` exposes `close()` and `unmount()` through a template ref. Call `unmount()` when your animation ends. To close the menu from your code, call `close()`. A change of `modelValue` to `null` closes the menu without a `valueChange` event.
 
+If you keep the current `modelValue` after Escape, the menu stays open. Press Escape again to request another close.
+
 ## Portal target
 
 Set `to` on `NavigationMenu.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).

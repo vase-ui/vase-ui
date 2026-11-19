@@ -202,6 +202,9 @@
         "<NavigationMenu.Positioner /> > resets data-instant after the first activation of a held mount": "vue-16305-keep-alive"
       }
     },
+    "src/navigation-menu/trigger/NavigationMenuTrigger.guards.test.tsx": {
+      "fails": {}
+    },
     "src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx": {
       "fails": {
         "<NumberField.ScrubAreaCursor /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",

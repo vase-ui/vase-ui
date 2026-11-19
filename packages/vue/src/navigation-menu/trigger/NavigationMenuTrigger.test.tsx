@@ -1645,6 +1645,43 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(positioner.style.getPropertyValue('--positioner-height')).toBe('80px');
     });
 
+    it('keeps intrinsic popup size while a consumer supplies the start marker', async () => {
+      const expanded = shallowRef(false);
+      await render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <div style={{ width: '90px', height: '20px' }} />
+                {expanded.value && <div style={{ width: '180px', height: '20px' }} />}
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup data-testid="popup" data-starting-style="">
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+      const popup = screen.getByTestId('popup');
+      const positioner = screen.getByTestId('positioner');
+      await waitFor(() => expect(popup.style.getPropertyValue('--popup-width')).toBe('auto'));
+      expect(positioner.style.getPropertyValue('--positioner-width')).toBe('90px');
+      expect(popup).toHaveAttribute('data-starting-style');
+      const widths = recordStyleProperty(popup, '--popup-width');
+
+      expanded.value = true;
+      await waitFor(() => {
+        expect(positioner.style.getPropertyValue('--positioner-width')).toBe('180px');
+        expect(popup.style.getPropertyValue('--popup-width')).toBe('auto');
+      });
+      expect(widths.filter((width) => width.endsWith('px'))).toEqual([]);
+    });
+
     it('keeps the size variables when the window resizes while KeepAlive holds the menu', async () => {
       const visible = shallowRef(true);
       // `KeepAlive` caches only a stateful component.
