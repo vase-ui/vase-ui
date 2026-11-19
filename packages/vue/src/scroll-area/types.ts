@@ -31,7 +31,10 @@ export type ScrollAreaViewportState = ScrollAreaRootState;
 export type ScrollAreaContentState = ScrollAreaRootState;
 
 export interface ScrollAreaScrollbarProps extends /* @vue-ignore */ HTMLAttributes {
-  /** @default 'vertical' */
+  /**
+   * The axis that the scrollbar scrolls.
+   * @default 'vertical'
+   */
   orientation?: 'vertical' | 'horizontal';
   /**
    * The scrollbar renders also while its axis has no overflow.
