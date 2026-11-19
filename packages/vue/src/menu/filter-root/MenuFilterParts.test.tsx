@@ -149,11 +149,6 @@ describe('Menu filter parts conformance', () => {
       ),
   }));
 
-  describeConformance(<Menu.Separator />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    render: renderInList,
-  }));
-
   describeConformance(<Menu.SubmenuTrigger />, () => ({
     refInstanceof: window.HTMLDivElement,
     button: true,

@@ -1,54 +1,40 @@
-<script lang="ts">
-import type { HTMLAttributes } from 'vue';
-import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
-
-export interface SeparatorState {
-  /**
-   * The orientation of the separator.
-   */
-  orientation: Orientation;
-}
-
-export interface SeparatorProps
-  extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
-  /**
-   * The orientation of the separator.
-   * @default 'horizontal'
-   */
-  orientation?: Orientation | undefined;
-}
-</script>
-
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useRenderElement } from '../internals/useRenderElement';
+import { computed, mergeProps, useAttrs } from 'vue';
+import { useElement } from '../common/element';
+import type { SeparatorProps, SeparatorState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<SeparatorProps>(), {
-  as: 'div',
-  orientation: 'horizontal',
-});
-
+const props = withDefaults(defineProps<SeparatorProps>(), { orientation: 'horizontal' });
 defineSlots<{
-  default(props: { state: SeparatorState }): unknown;
-  render: ComponentRenderFn<HTMLProps, SeparatorState>;
+  default?(scope: { state: SeparatorState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: SeparatorState;
+  }): unknown;
 }>();
 
+const attrs = useAttrs();
+const { element, setElement } = useElement<HTMLDivElement>();
 const state = computed<SeparatorState>(() => ({ orientation: props.orientation }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  props: (attrs) => [{ role: 'separator', 'aria-orientation': props.orientation }, attrs],
-});
-
 defineExpose({ element });
+
+function elementProps() {
+  return mergeProps({ role: 'separator', 'aria-orientation': props.orientation }, attrs);
+}
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
-  </component>
+  </div>
 </template>

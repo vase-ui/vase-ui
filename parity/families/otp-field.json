@@ -94,6 +94,12 @@
       "entry": "OTPFieldRootDataAttributes",
       "kind": "not-applicable",
       "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "OTPFieldSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [

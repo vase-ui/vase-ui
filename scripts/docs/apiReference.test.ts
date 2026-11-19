@@ -571,9 +571,22 @@ test('the reference of a family with one part has the part under the name of the
   );
 });
 
-test('the reference of separator has data-orientation with its type', () => {
-  const [separator] = read('separator').parts;
-  assert.deepEqual(separator.dataAttributes, [
+test('the reference of a part that other families export again has the description of its JSDoc', () => {
+  const parts = ['separator', 'menu', 'context-menu', 'otp-field'].map((family) =>
+    read(family).parts.find(({ name }) => name.endsWith('Separator')),
+  );
+  assert.deepEqual(
+    parts.map((part) => [part?.name, part?.description]),
+    ['Separator', 'Menu.Separator', 'ContextMenu.Separator', 'OTPField.Separator'].map((name) => [
+      name,
+      'A separator element accessible to screen readers.\nRenders a `<div>` element.',
+    ]),
+  );
+});
+
+test('the reference of Select.Separator has data-orientation with its type', () => {
+  const separator = read('select').parts.find(({ name }) => name === 'Select.Separator');
+  assert.deepEqual(separator?.dataAttributes, [
     {
       name: 'data-orientation',
       type: "'horizontal' | 'vertical'",
