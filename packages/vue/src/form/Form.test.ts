@@ -127,14 +127,17 @@ describe('submit', () => {
     expect(submitsPrevented).toEqual([true, true]);
   });
 
-  test('two listeners, as mergeProps gives them, each run one time, and the form prevents the submit', async () => {
-    const first = vi.fn();
-    const second = vi.fn();
-    const { submit } = await mountForm({ form: { onSubmit: [first, second] }, fields: [] });
+  test('with two listeners and two .once listeners, as mergeProps gives them, each listener runs at each submit, each .once listener runs one time, and the form prevents each submit', async () => {
+    const [first, second, firstOnce, secondOnce] = [vi.fn(), vi.fn(), vi.fn(), vi.fn()];
+    const { submit } = await mountForm({
+      form: { onSubmit: [first, second], onSubmitOnce: [firstOnce, secondOnce] },
+      fields: [],
+    });
     submit();
-    expect(first).toHaveBeenCalledTimes(1);
-    expect(second).toHaveBeenCalledTimes(1);
-    expect(submitsPrevented).toEqual([true]);
+    submit();
+    for (const listener of [first, second]) expect(listener).toHaveBeenCalledTimes(2);
+    for (const listener of [firstOnce, secondOnce]) expect(listener).toHaveBeenCalledTimes(1);
+    expect(submitsPrevented).toEqual([true, true]);
   });
 
   test('a press, Enter in a text input, a submit button outside with the form attribute, and requestSubmit() run the listener with the event and the values, and the form prevents each native submit', async () => {

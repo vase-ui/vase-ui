@@ -121,7 +121,7 @@ Give `name` to `<Field.Root>` to include the value of the control that it wraps 
 
 ## Submitting data
 
-`Form` emits `submit` only when each field is valid. The first argument is the native `SubmitEvent`. A `submit` listener prevents the native submit, so the page stays. Send the `FormData` of the form in the listener:
+`Form` emits `submit` only when each field is valid. The first argument is the native `SubmitEvent`. While `Form` has a `submit` listener, it prevents the native submit, so the page stays. Send the `FormData` of the form in the listener:
 
 <<< ../examples/forms/NativeSubmit.vue{7,8,17}
 

@@ -721,7 +721,7 @@ The public form:
 10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
 12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
-13. A form gives the typed values of its fields at its submit: `submit(event, values)`. A `submit` listener prevents the native submit. With no listener, the browser submits the form. `validate` of a field gets the value of its control and the same values.
+13. A form gives the typed values of its fields at its submit: `submit(event, values)`. While a form has a `submit` listener, it prevents the native submit. With no listener, the browser submits the form. `validate` of a field gets the value of its control and the same values.
 
 Measure before you write code that guards, tracks, repairs or copies a behavior:
 
