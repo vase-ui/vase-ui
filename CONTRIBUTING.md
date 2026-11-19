@@ -692,7 +692,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter and Button follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter and Button follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -1504,7 +1504,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 - Choose the watcher from the change that must trigger it. During server setup, a default `watchEffect` or an immediate default-flush `watch` runs once. A lazy callback watcher observes later changes there only with a synchronous flush.
 - For work that requires a mount, start the watcher in `onMounted`. For a later DOM read, choose a post-flush effect or an explicit post-flush source. Check whether one watcher can cover mount and replacement.
-- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and the preload in `Avatar.Image` use this order.
+- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and the load effect in `Avatar.Image` use this order.
 - `useAnchorPositioning` updates `isPositioned` synchronously. `usePopupRoot` also copies `mounted` and `transitionStatus` in the same task.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. A change while `KeepAlive` holds the part waits for the activation. The callback then gets the value before the hold, or the value of the mount when the part mounts in a held branch.
 - A parent update can leave a child with stable props and slots untouched. Track the reactive value that changes the part's own DOM.
@@ -1532,7 +1532,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Await `nextTick()` after the write when the next operation needs the patched DOM for a read or focus. Test that order.
 - Measure after mount when the DOM reflects the inputs to the measurement. A `ResizeObserver` reports size changes only. `Tabs.Indicator` reads a size-change counter, the tab order and the orientation. A change in order or orientation can move the selected tab without a resize.
 - Measure a mounted scroll area track again after its overflow attribute or corner size changes. Either change can resize the track through CSS.
-- A render slot can set an attribute that no prop tracks. `AvatarImage.vue` checks its rendered image at mount and after updates, and acts only on a changed value. For a referenced id, follow [Actions, handles, slots, composables and ids](#actions-handles-slots-composables-and-ids).
+- A render slot can set an attribute that no prop tracks. Read the element at mount and after updates. A component in the slot can change an attribute with no update of the part, so `AvatarImage.vue` observes the request attributes of its kept element with a `MutationObserver`. For a referenced id, follow [Actions, handles, slots, composables and ids](#actions-handles-slots-composables-and-ids).
 - In a development build, `Menu.SubmenuTrigger` warns in this way about a disabled element of its `#render` slot. The warning comes only one time, so the hooks compare no values.
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.
 - A transition must sometimes start from a value that an earlier DOM update set. Then read the layout of the element after that update. `useCollapsiblePanel` calls `getBoundingClientRect()` in `nextTick` after it writes the measured size. Without that read, the exit transition does not start.
@@ -1553,7 +1553,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A submenu sends focus events and unhandled navigation keys through the popup tree. A filterable parent uses the registered popup, trigger and event path for a navigation key. This also works when a portal places the submenu in another document.
 - The transition-status watcher runs synchronously so an interrupted transition sees each state change.
 - `Field.Error` retains the last message for its exit, even when the default slot supplies other text. It copies message lists because the consumer can clear them in place.
-- A synchronous watcher sees each write. Publish the final image status once per run. An intermediate `'loading'` before `'loaded'` would give a loaded image `data-ending-style`.
+- Firefox sends the `load` event of a source after a new source of the same `<img>` replaced it. `Avatar.Image` reads its element at each `load` and `error` event, so that event gives no `loaded` status. `test/measurements/avatar.test.ts` has the measurement.
 - `useTransitionStatus` has a fifth parameter, `element`, that upstream does not have. It is the element that gets `data-starting-style`, or a ref or a getter for it. Its JSDoc and its comments give the reason for the read of the layout. Omit `element` only when the element has no enter transition, as `Accordion.Item` does.
 - `useUnmountAfterClose` keeps a popup mounted until its exit animation ends. Then it sets `mounted` to `false` and calls `onUnmount` one time. A `forceUnmount()` call while the popup is open is a request. Its JSDoc and its comments give the rules for that request, and for the last element that attached (`VUE-92`).
 - Do not decide that request in `nextTick`. With no flush in the queue, `nextTick` runs before the flush of a write that comes later in the same task.
@@ -1905,7 +1905,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - Such a case that clicks a link adds a `click` listener on `window` that calls `preventDefault()`. A browser otherwise loads the `href`, and Vitest then cannot run the test file.
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
-- A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
+- A case of an `<img>` gives it a real picture and fires no `load` or `error` event of its own. `test/pictures.ts` gives a picture that the document has, a picture that must load and a URL with no file.
 - The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
@@ -2000,7 +2000,7 @@ The hydration helpers:
 6. Assert that the element is the same node. After a mismatch, Vue discards the server nodes.
 7. Assert that `takeReportedMessages()` returns an empty list.
 
-A case that acts between the server render and the hydration calls `hydrateAfter` with the action in `before`. A case that must assert before the two ticks hydrates by hand. An example is a wait for the load of an `<img>` of the server HTML. Such a case does steps 1 to 4. Where Base UI asserts immediately after `hydrate()`, it then calls `await nextTick()` and makes its assertions. Step 7 is its last step. See `avatar/image/AvatarImage.test.tsx`.
+A case that acts between the server render and the hydration calls `hydrateAfter` with the action in `before`. A case that must assert before the two ticks hydrates by hand. Such a case does steps 1 to 4. Where Base UI asserts immediately after `hydrate()`, it then calls `await nextTick()` and makes its assertions. Step 7 is its last step.
 
 ### Test rules
 
@@ -2096,9 +2096,8 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - `probeFrameAfterExit` cannot show that a part that hides its element waits for an animation that a script made, such as a `motion-v` animation. `hidden` does not cancel such an animation, so the probe does not see a hide that comes too early.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
 - A ported case that Base UI writes with `createTouches` keeps the call. The helper is in `packages/vue/test/sliderTestUtils.ts`. For WebKit, the helper uses `document.createTouch` and `document.createTouchList` when both are available. Otherwise it uses `new Touch`.
-- A case that needs a cached image first loads the source with `new Image()` and waits for its `load` event. An earlier case of the file can load the same source, but the case must also pass when it runs alone.
+- A case that needs a picture that the document has calls `pictureThatBrowserHas` of `test/pictures.ts`. Each call gives a new picture, so the case does not depend on an earlier case.
 - A case that needs the answer of the server for an image waits for the `load` or `error` event with a listener. Attach the listener before the source changes. Do not use `waitFor`: the server answers in its own time, and the page renders frames during that time. The 180 frames of `waitFor` can pass before the answer. After the event, call `await nextTick()` before you assert. `nextTick()` resolves after Vue renders the state that the part set in its listener.
-- A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - A `waitFor` on a state that the action makes before the awaited change passes at once. The `mousedown` of a press gives the focus to a `Combobox.Trigger` whose input is in the popup, and an open popup closes one frame later. A wait for the focus of the trigger after that press thus ends while the popup is open. Such a case first waits with `waitFor` for `aria-expanded="false"` on the trigger. Then it asserts the focus directly.
 - A popup that closes with the focus in it returns the focus, as [Focus helpers](#focus-helpers) says. An assertion on the focus after the close thus passes also when a part gave the focus to an element of the popup. To assert that an element gets no focus, add a `focus` listener to it before the action. After the close, assert that the listener has no call. `does not focus input when closing via trigger click (input inside popup)` of `combobox/root/ComboboxRoot.test.tsx` is the model of both rules.

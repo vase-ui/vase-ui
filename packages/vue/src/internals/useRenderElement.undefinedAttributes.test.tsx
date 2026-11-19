@@ -5,7 +5,6 @@ import { createRenderer, screen, waitFor } from '#test-utils';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Avatar } from '@vase-ui/vue/avatar';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
@@ -37,10 +36,6 @@ import { NOOP } from '../common/empty';
 import * as Resizable from '../resizable/index.parts';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
-
-// 1x1 transparent PNG
-const TRANSPARENT_IMAGE_DATA_URI =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 const Note = defineComponent(
   (props: VaseUIComponentProps<object> & WithVaseUIEvent<HTMLAttributes>) => {
@@ -101,16 +96,6 @@ const rows: Row[] = [
       </Autocomplete.Root>
     ),
     expected: () => 'combobox',
-  },
-  {
-    name: 'Avatar.Image alt',
-    attribute: 'alt',
-    createNode: () => (
-      <Avatar.Root>
-        <Avatar.Image src={TRANSPARENT_IMAGE_DATA_URI} alt={undefined} data-testid="part" />
-      </Avatar.Root>
-    ),
-    expected: () => '',
   },
   {
     name: 'Calendar.Grid role',

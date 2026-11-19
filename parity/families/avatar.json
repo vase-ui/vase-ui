@@ -4,7 +4,100 @@
     "docs/src/app/(docs)/react/components/avatar/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImageDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/avatar/root/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "No part writes an attribute from a mapping of its state. The state is in the slots, and `Avatar.Image` writes `data-loading` and `data-error` itself."
+    },
+    {
+      "upstream": "packages/react/src/avatar/fallback/AvatarFallback.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.test.ts",
+      "reason": "`Avatar.test.ts` tests the element of the fallback, when it shows, and its `delay`."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.test.ts",
+      "reason": "`Avatar.test.ts` tests the element of the image, the status and its event in the two modes, a new source, the `element` slot and `<Transition>` with real pictures."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "prop: keepMounted"],
+      "title": "renders the image in the server HTML and resolves cached images on hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.hydration.test.ts",
+      "reason": "`Avatar.hydration.test.ts` tests the server HTML of a kept image and the hydration over a picture that the browser has."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "animations"],
+      "title": "does not replay the enter animation for a cached image on hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.hydration.test.ts",
+      "reason": "`Avatar.hydration.test.ts` tests that the image never has `data-loading` at the hydration over a picture that the browser has."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "cached images"],
+      "title": "does not flash fallback for a cached image during SSR hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.hydration.test.ts",
+      "reason": "`Avatar.hydration.test.ts` tests that the fallback leaves in the first update after the hydration."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "prop: keepMounted"],
+      "title": "lets a user handler prevent the status update",
+      "kind": "not-applicable",
+      "reason": "The status is not a change that a listener cancels, and `preventVaseUIHandler` does not exist (rule 8.7). A developer who wants no picture renders no `Avatar.Image`."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "animations"],
+      "title": "triggers enter animation via data-starting-style when mounting",
+      "kind": "not-applicable",
+      "reason": "A `<Transition>` around `Avatar.Image` gives the enter classes (rule 8.9). `Avatar.test.ts` tests them."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "animations"],
+      "title": "applies data-ending-style before unmount",
+      "kind": "not-applicable",
+      "reason": "A `<Transition>` around `Avatar.Image` gives the leave classes (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "describe": ["<Avatar.Image />", "animations"],
+      "title": "does not apply data-ending-style with keepMounted",
+      "kind": "not-applicable",
+      "reason": "The part has no `data-ending-style` (rule 8.9). With `keepMounted`, a CSS transition on `[data-loading]` animates the image."
+    },
+    {
+      "upstream": "packages/react/src/avatar/root/AvatarRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/avatar/Avatar.test.ts",
+      "reason": "`Avatar.test.ts` tests the element of the root, its attributes, its template ref and its slots."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/avatar/types.md",
+      "entry": "Image",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the image has no `data-starting-style` or `data-ending-style`: a `<Transition>` around `Avatar.Image` gives the enter and the leave with its classes and hooks (rule 8.9). With `keepMounted`, a CSS transition on `[data-loading]` animates the image. A Boolean prop of Vue is `false` when the developer does not give it, so `keepMounted` has no default of its own."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/avatar/types.md",
+      "entry": "AvatarImageDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Image",
@@ -36,18 +129,46 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/avatar/root/stateAttributesMapping.ts",
+      "upstream": "packages/react/src/avatar/index.parts.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/avatar/root/AvatarRootContext.ts",
-      "member": "avatarStateAttributesMapping",
-      "witness": "packages/vue/src/avatar/root/AvatarRoot.test.tsx"
+      "destination": "packages/vue/src/avatar/parts.ts",
+      "behavior": "The parts of the namespace `Avatar`.",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/avatar/root/AvatarRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/avatar/AvatarRoot.vue",
+      "behavior": "The root holds the status of the image for its parts.",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/avatar/root/AvatarRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/avatar/root.ts",
+      "member": "avatarKey",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/avatar/image/AvatarImage.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/avatar/AvatarImage.vue",
+      "behavior": "The image renders a loaded picture, or keeps its element with `keepMounted`.",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
     },
     {
       "upstream": "packages/react/src/avatar/image/useImageLoadingStatus.ts",
       "relation": "inlined-into",
-      "destination": "packages/vue/src/avatar/image/AvatarImage.vue",
-      "behavior": "Track the image request and release its handlers on replacement or removal.",
-      "witness": "packages/vue/src/avatar/image/AvatarImage.test.tsx"
+      "destination": "packages/vue/src/avatar/AvatarImage.vue",
+      "behavior": "An image outside the document loads the picture, and the part releases its listeners at each new source and at the unmount.",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/avatar/fallback/AvatarFallback.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/avatar/AvatarFallback.vue",
+      "behavior": "The fallback shows while the picture is not loaded, after its delay.",
+      "witness": "packages/vue/src/avatar/Avatar.test.ts"
     }
   ]
 }
