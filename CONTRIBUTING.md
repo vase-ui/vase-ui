@@ -241,7 +241,7 @@ A family whose upstream folder has no `index.parts.ts` declares the constant and
 
 A family can land in more than one pull request. Its `index.ts` then comes with the last part of the family, or in a later pull request, so the package exports nothing of the family before then. The exception is an entry point that a demo of another family imports. That `index.ts` comes with the last part that the demo renders. The tests of the pull requests before the `index.ts` import `../index.parts`.
 
-A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type, the state type and the data attributes of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps`, `OTPFieldSeparatorState` and `OTPFieldSeparatorDataAttributes`. `pnpm parity:check` needs the last two, because the `types.md` of the family names them.
+A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type and the state type of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps` and `OTPFieldSeparatorState`. `pnpm parity:check` needs the state type, because the `types.md` of the family names it.
 
 ## API convention
 
@@ -267,7 +267,7 @@ The families of [the rules of the refactored families](#the-rules-of-the-refacto
 - An `aria-label` or an `aria-labelledby` that is blank is not given: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own value (`VUE-106`). In Base UI, the blank value replaces the value of the part.
 - An ID reference attribute that is blank is not given either: `aria-activedescendant`, `aria-controls`, `aria-describedby`, `aria-details`, `aria-errormessage`, `aria-flowto`, `aria-owns` or `for`. Such a value refers to no element, so the part keeps its own value (`VUE-110`). In Base UI, the blank value replaces the value of the part. A blank `form` attribute stays, because HTML gives it a meaning: the control then has no form owner.
 - The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`.
-- The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
+- The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface MenuGroupProps extends VaseUIComponentProps<MenuGroupState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
 - A part that types an attribute in an interface of its own adds `null` to that type: `autocomplete?: string | null | undefined` of `Combobox.Input`.
@@ -310,12 +310,12 @@ The template of each such part has the `#render` slot, then the element, and no 
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A provider whose only output is its children renders `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
-A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
+A part that Base UI writes as another part renders that part and no element of its own. `AlertDialog.Trigger` is the example:
 
-- Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper. For example, `Input` declares `id`, `name` and `disabled`.
-- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
+- Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper.
+- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC that its `exceptions` do not name. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
-- Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot, such as `Input`, has no slot template in the second form.
+- Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot has no slot template in the second form.
 - Do not write `v-if` on a slot template, as in `<template v-if="$slots.render" #render>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
 - If that part reads `$slots.default`, as `SelectScrollArrow` does, add a third form. The second form then has `v-else-if="$slots.default"`, and the third form has `v-else` and no slot. Without the third form, that part always gets a default slot, so it never shows its own content.
 - Fallback content in the `<slot>` of that part needs no third form. Vue shows the fallback when the slot renders nothing. The check mark of `ItemIndicator.vue` is an example.
@@ -337,7 +337,7 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
 - Its props and state types are aliases of the types of the other part. Where the Base UI state type has fewer keys, the Vase UI state type omits the other keys: `AutocompleteItemState` is `Omit<ComboboxItemState, 'selected'>`.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
-- The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `Toolbar.Separator` does. Its props interface then holds the text of Base UI for those props.
+- The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `AlertDialog.Trigger` does. Its props interface then holds the text of Base UI for those props.
 
 A part whose new types change a prop is the exception. `AlertDialog.Trigger` is the example: its `handle` takes only a handle of Alert Dialog.
 
@@ -459,7 +459,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Input` forwards its render slot to the inner part and exposes the inner element.
+- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `AlertDialog.Trigger` forwards its render slot to the inner part and exposes the inner element.
 - Supply `useButton(element, options)` through the `button` option of `useRenderElement`. The button checks its disabled state before it calls the merged click, pointerdown, mousedown, keydown or keyup listener. A key listener can veto keyboard activation.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
@@ -691,7 +691,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Slider and Switch follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Slider and Switch follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 

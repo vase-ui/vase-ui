@@ -100,11 +100,11 @@ Vase UI ships no styles.
 
 The `class` and `style` that you set on a part go to its element.
 
-A part sets data attributes for its state, such as `data-disabled` on Button and `data-orientation` on Separator.
+A part sets attributes for its state, such as `data-disabled` on Button and `aria-orientation` on Separator.
 
 A selector can use these attributes, as the two examples above do.
 
-To calculate a class or style from state, bind `:class` or `:style` on your element in the `#render` slot.
+To calculate a class or style from state, bind `:class` or `:style` on your element in the slot that replaces the element. That slot is `#render` on Button and `#element` on Separator.
 
 The [styling guide](/handbook/styling) has more on styling.
 

@@ -38,7 +38,7 @@ import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
-import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
+import * as SelectSeparatorDataAttributes from '../../utils/listbox-separator/ListboxSeparatorDataAttributes';
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
 import SelectRootBeforeHydration from './SelectRootBeforeHydration.test.vue';

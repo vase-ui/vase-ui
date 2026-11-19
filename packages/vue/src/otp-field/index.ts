@@ -9,8 +9,7 @@ export type * from './input/OTPFieldInput.vue';
 export type {
   SeparatorProps as OTPFieldSeparatorProps,
   SeparatorState as OTPFieldSeparatorState,
-} from '../separator/Separator.vue';
+} from '../separator';
 
 export * as OTPFieldRootDataAttributes from './root/OTPFieldRootDataAttributes';
 export * as OTPFieldInputDataAttributes from './input/OTPFieldInputDataAttributes';
-export * as OTPFieldSeparatorDataAttributes from '../separator/SeparatorDataAttributes';

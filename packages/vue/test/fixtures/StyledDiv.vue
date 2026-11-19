@@ -6,5 +6,5 @@ defineExpose({ element });
 </script>
 
 <template>
-  <div ref="element" class="StyledDiv"><slot /></div>
+  <div ref="element" class="StyledDiv" />
 </template>
