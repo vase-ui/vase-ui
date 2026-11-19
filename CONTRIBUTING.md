@@ -105,7 +105,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - The job `pr-title` of CI fails when the title is not a Conventional Commit. It does not compare the scope with a family folder. After a change of the title, run the job again.
 - Write the body in three parts: Why, What and Tests.
 - The check `required` must pass.
-- The informational size comment compares tarball and public entry sizes before and after the proposed merge. For fork and Dependabot pull requests, read the report in the job summary.
+- When the `Package size` workflow runs, its informational report compares tarball and public import sizes for the base and proposed merge. Read the report in the pull request comment, or in the job summary for forks and Dependabot.
 - On a pull request, CI runs only the test files that the changed files can affect. [Where a test runs](#where-a-test-runs) gives the rules.
 - A pull request merges through the merge queue, which runs each check and each test file on the pull request on top of `main`.
 - When the checks pass, `main` moves to the commit that the merge queue tested. That commit thus has the checks of the merge queue.

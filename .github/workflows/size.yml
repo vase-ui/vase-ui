@@ -41,17 +41,19 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter @vase-ui/vue
       - name: Measure the base build
+        timeout-minutes: 5
         continue-on-error: true
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           base="$RUNNER_TEMP/size-base"
           git worktree add --detach "$base" "$BASE_SHA"
-          (cd "$base" && pnpm install --frozen-lockfile)
+          (cd "$base" && pnpm install --frozen-lockfile --filter @vase-ui/vue)
           node scripts/size/measure.ts "$base/packages/vue" "$RUNNER_TEMP/base-size.json"
       - name: Measure the merge build
+        timeout-minutes: 5
         run: node scripts/size/measure.ts packages/vue "$RUNNER_TEMP/merge-size.json"
       - name: Compare the builds
         id: report
