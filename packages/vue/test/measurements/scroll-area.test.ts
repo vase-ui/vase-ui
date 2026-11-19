@@ -87,10 +87,14 @@ describe('pointer capture of a thumb during a press', () => {
       const outside = { x: start.x + 100, y: start.y + 200 };
       await userEvent.pointer({ coords: outside });
       await release(outside);
-      expect([...new Set(events)]).toEqual(
-        change === 'removed'
-          ? ['document lostpointercapture', 'other pointermove', 'other pointerup']
-          : ['thumb pointermove', 'thumb pointerup', 'thumb lostpointercapture'],
+      // The case states which target gets each event. For a removed thumb, WebKit can send
+      // `lostpointercapture` before or after the next move.
+      expect(new Set(events)).toEqual(
+        new Set(
+          change === 'removed'
+            ? ['document lostpointercapture', 'other pointermove', 'other pointerup']
+            : ['thumb pointermove', 'thumb pointerup', 'thumb lostpointercapture'],
+        ),
       );
     },
   );
