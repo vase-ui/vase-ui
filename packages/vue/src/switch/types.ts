@@ -13,7 +13,6 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
   | 'readonly'
   | 'required'
   | 'type'
-  | 'value'
 > {
   modelValue?: boolean;
   defaultChecked?: boolean;

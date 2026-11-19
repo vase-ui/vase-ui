@@ -1016,7 +1016,7 @@ describe('<NumberField />', () => {
         await settleReset();
       }
 
-      // The field is neutral, as after a reset of `Field.Control`.
+      // The field is neutral, as after a reset of `Input`.
       function expectNeutralField() {
         expect(screen.queryByTestId('error')).toBe(null);
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
