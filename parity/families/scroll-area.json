@@ -31,5 +31,35 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/scroll-area/constants.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
+      "member": "SCROLL_TIMEOUT",
+      "witness": "packages/vue/src/scroll-area/root/ScrollAreaRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/stateAttributes.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
+      "member": "scrollAreaStateAttributesMapping",
+      "witness": "packages/vue/src/scroll-area/root/ScrollAreaRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
+      "member": "ScrollAreaScrollbarContext",
+      "witness": "packages/vue/src/scroll-area/thumb/ScrollAreaThumb.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
+      "member": "ScrollAreaViewportContext",
+      "witness": "packages/vue/src/scroll-area/content/ScrollAreaContent.test.tsx"
+    }
+  ]
 }

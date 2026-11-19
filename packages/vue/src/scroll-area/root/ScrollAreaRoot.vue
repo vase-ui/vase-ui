@@ -83,21 +83,24 @@ function normalizeOverflowEdgeThreshold(threshold: ScrollAreaRootProps['overflow
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowReactive, shallowRef, toValue, watch } from 'vue';
 import type { Component } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
+import { useListenerSession } from '../../common/useListenerSession';
 import { useTimeout } from '../../common/useTimeout';
 import type { HTMLProps, Orientation } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useStyleDisableScrollbar } from '../../utils/styles';
-import { SCROLL_TIMEOUT } from '../constants';
+import {
+  SCROLL_TIMEOUT,
+  ScrollAreaRootContext,
+  scrollAreaStateAttributesMapping,
+} from './ScrollAreaRootContext';
 import { getOffset } from '../utils/getOffset';
 import ScrollAreaRootChildren from './ScrollAreaRootChildren.vue';
-import { ScrollAreaRootContext } from './ScrollAreaRootContext';
 import * as ScrollAreaRootCssVars from './ScrollAreaRootCssVars';
-import { scrollAreaStateAttributesMapping } from './stateAttributes';
 
 defineOptions({ inheritAttrs: false });
 
@@ -123,17 +126,23 @@ const scrollingX = shallowRef(false);
 const scrollingY = shallowRef(false);
 const touchModality = shallowRef(false);
 const hasMeasuredScrollbar = shallowRef(false);
-const cornerSize = shallowRef<Size>(DEFAULT_SIZE);
-const thumbSize = shallowRef<Size>(DEFAULT_SIZE);
-const overflowEdges = shallowRef<OverflowEdges>(DEFAULT_OVERFLOW_EDGES);
-const hiddenState = shallowRef<HiddenState>(DEFAULT_HIDDEN_STATE);
+const cornerSize = shallowReactive({ ...DEFAULT_SIZE });
+const thumbSize = shallowReactive({ ...DEFAULT_SIZE });
+const overflowXStart = shallowRef(DEFAULT_OVERFLOW_EDGES.xStart);
+const overflowXEnd = shallowRef(DEFAULT_OVERFLOW_EDGES.xEnd);
+const overflowYStart = shallowRef(DEFAULT_OVERFLOW_EDGES.yStart);
+const overflowYEnd = shallowRef(DEFAULT_OVERFLOW_EDGES.yEnd);
+const hiddenX = shallowRef(DEFAULT_HIDDEN_STATE.x);
+const hiddenY = shallowRef(DEFAULT_HIDDEN_STATE.y);
 
-const viewportElement = shallowRef<HTMLElement | null>(null);
-const scrollbarYElement = shallowRef<HTMLElement | null>(null);
-const scrollbarXElement = shallowRef<HTMLElement | null>(null);
-const thumbYElement = shallowRef<HTMLElement | null>(null);
-const thumbXElement = shallowRef<HTMLElement | null>(null);
-const cornerElement = shallowRef<HTMLElement | null>(null);
+const elements = {
+  viewportElement: shallowRef<HTMLElement | null>(null),
+  scrollbarYElement: shallowRef<HTMLElement | null>(null),
+  scrollbarXElement: shallowRef<HTMLElement | null>(null),
+  thumbYElement: shallowRef<HTMLElement | null>(null),
+  thumbXElement: shallowRef<HTMLElement | null>(null),
+  cornerElement: shallowRef<HTMLElement | null>(null),
+};
 
 interface ScrollAreaPress {
   id: number;
@@ -159,18 +168,9 @@ function startScrolling(vertical: boolean) {
 }
 
 function handleScroll(scrollPosition: Coords) {
-  const offsetX = scrollPosition.x - lastScrollPosition.x;
-  const offsetY = scrollPosition.y - lastScrollPosition.y;
-
+  if (scrollPosition.y !== lastScrollPosition.y) startScrolling(true);
+  if (scrollPosition.x !== lastScrollPosition.x) startScrolling(false);
   lastScrollPosition = scrollPosition;
-
-  if (offsetY !== 0) {
-    startScrolling(true);
-  }
-
-  if (offsetX !== 0) {
-    startScrolling(false);
-  }
 }
 
 const { isHeld } = useKeepAliveState();
@@ -180,46 +180,23 @@ watch(
     if (held) {
       scrollYTimeout.clear();
       scrollXTimeout.clear();
-      // The timers that were cleared would have ended the scrolling state.
       scrollingY.value = false;
       scrollingX.value = false;
-      // `KeepAlive` took the element out of the document, so the browser dropped the
-      // pointer capture. No release event and no leave event comes.
-      if (press.value) {
-        finishPress(press.value);
-      }
       hovering.value = false;
     }
   },
   { flush: 'sync' },
 );
 
-watch(
-  () => {
-    const active = press.value;
-    if (!active) {
-      return null;
-    }
-    const thumb = active.orientation === 'vertical' ? thumbYElement : thumbXElement;
-    return active.viewport !== viewportElement.value || active.thumb !== thumb.value
-      ? active
-      : null;
-  },
-  (retired) => {
-    if (retired) {
-      finishPress(retired);
-    }
-  },
-  { flush: 'sync' },
-);
+const session = useListenerSession(isHeld);
 
 function handlePointerDown(event: PointerEvent, orientation: Orientation, trackPosition?: number) {
   if (event.button !== 0 || press.value?.thumb.hasPointerCapture(press.value.id)) {
     return;
   }
   const vertical = orientation === 'vertical';
-  const thumb = vertical ? thumbYElement.value : thumbXElement.value;
-  const viewport = viewportElement.value;
+  const thumb = vertical ? elements.thumbYElement.value : elements.thumbXElement.value;
+  const viewport = elements.viewportElement.value;
   if (!viewport || !thumb) {
     return;
   }
@@ -234,8 +211,21 @@ function handlePointerDown(event: PointerEvent, orientation: Orientation, trackP
     startScroll: viewport[axis],
     pendingOffset: 0,
   };
-  press.value = active;
-  thumb.setPointerCapture(event.pointerId);
+  session.start((onCleanup, end) => {
+    const stop = watch(
+      [elements.viewportElement, vertical ? elements.thumbYElement : elements.thumbXElement],
+      end,
+      { flush: 'sync' },
+    );
+    onCleanup(() => {
+      stop();
+      press.value = null;
+      (vertical ? scrollingY : scrollingX).value = false;
+      if (thumb.hasPointerCapture(active.id)) thumb.releasePointerCapture(active.id);
+    });
+    press.value = active;
+    thumb.setPointerCapture(active.id);
+  });
 
   // A track jump or an early move must wait for the snap style of this press.
   nextTick(() => {
@@ -254,19 +244,12 @@ function handlePointerDown(event: PointerEvent, orientation: Orientation, trackP
   });
 }
 
-function finishPress(active: ScrollAreaPress) {
-  press.value = null;
-  (active.orientation === 'vertical' ? scrollingY : scrollingX).value = false;
-  if (active.thumb.hasPointerCapture(active.id)) {
-    active.thumb.releasePointerCapture(active.id);
-  }
-}
-
 function handlePointerUp(event: PointerEvent) {
   const active = press.value;
-  if (active && event.pointerId === active.id) {
-    finishPress(active);
-  }
+  if (!active || active.id !== event.pointerId) return;
+  // A previous thumb can lose capture after the pointer starts a new drag.
+  if (event.type === 'lostpointercapture' && event.currentTarget !== active.thumb) return;
+  session.stop();
 }
 
 function handlePointerMove(event: PointerEvent) {
@@ -275,9 +258,7 @@ function handlePointerMove(event: PointerEvent) {
     return;
   }
 
-  // The release can go missing. The browser can drop the pointer capture while the scrollbar is
-  // hidden in a drag. A move over the thumb with no button would then scroll the viewport.
-  // A move with the primary button up is the missed release.
+  // A hidden scrollbar can lose capture without a release event.
   if (event.buttons % 2 === 0) {
     handlePointerUp(event);
     return;
@@ -285,7 +266,7 @@ function handlePointerMove(event: PointerEvent) {
 
   const { thumb, viewport } = active;
   const vertical = active.orientation === 'vertical';
-  const scrollbar = vertical ? scrollbarYElement.value : scrollbarXElement.value;
+  const scrollbar = vertical ? elements.scrollbarYElement.value : elements.scrollbarXElement.value;
   if (!scrollbar) {
     return;
   }
@@ -328,54 +309,68 @@ function handlePointerEnterOrMove(event: PointerEvent) {
 
 const state = computed<ScrollAreaRootState>(() => ({
   scrolling: scrollingX.value || scrollingY.value,
-  hasOverflowX: !hiddenState.value.x,
-  hasOverflowY: !hiddenState.value.y,
-  overflowXStart: overflowEdges.value.xStart,
-  overflowXEnd: overflowEdges.value.xEnd,
-  overflowYStart: overflowEdges.value.yStart,
-  overflowYEnd: overflowEdges.value.yEnd,
-  cornerHidden: hiddenState.value.corner,
+  hasOverflowX: !hiddenX.value,
+  hasOverflowY: !hiddenY.value,
+  overflowXStart: overflowXStart.value,
+  overflowXEnd: overflowXEnd.value,
+  overflowYStart: overflowYStart.value,
+  overflowYEnd: overflowYEnd.value,
+  cornerHidden: hiddenX.value || hiddenY.value,
 }));
 
 provide(ScrollAreaRootContext, {
   cornerSize,
   setCornerSize(size) {
-    cornerSize.value = size;
+    Object.assign(cornerSize, size);
   },
   thumbSize,
   setThumbSize(size) {
-    thumbSize.value = size;
+    Object.assign(thumbSize, size);
   },
   hasMeasuredScrollbar,
-  setHasMeasuredScrollbar(hasMeasured) {
-    hasMeasuredScrollbar.value = hasMeasured;
+  markMeasured() {
+    hasMeasuredScrollbar.value = true;
   },
   touchModality,
   hovering,
-  setHovering(isHovering) {
-    hovering.value = isHovering;
+  markHovered() {
+    hovering.value = true;
   },
   scrollingX,
   scrollingY,
-  viewportElement,
-  scrollbarYElement,
-  thumbYElement,
-  scrollbarXElement,
-  thumbXElement,
-  cornerElement,
+  ...elements,
+  registerElement(name, element) {
+    const { isHeld: partHeld } = useKeepAliveState();
+    watch(
+      [() => toValue(name), () => toValue(element), partHeld],
+      ([key, node, held], _, onCleanup) => {
+        if (!node || held) return;
+        const holder = elements[key];
+        holder.value = node;
+        onCleanup(() => {
+          if (holder.value !== node) return;
+          holder.value = null;
+          if (key === 'cornerElement') Object.assign(cornerSize, DEFAULT_SIZE);
+        });
+      },
+      { flush: 'post' },
+    );
+  },
   handlePointerDown,
   handlePointerMove,
   handlePointerUp,
   handleScroll,
   press,
   rootId,
-  hiddenState,
-  setHiddenState(next) {
-    hiddenState.value = next;
+  setHiddenAxes(x, y) {
+    hiddenX.value = x;
+    hiddenY.value = y;
   },
-  overflowEdges,
-  setOverflowEdges(next) {
-    overflowEdges.value = next;
+  setOverflowEdges(edges) {
+    overflowXStart.value = edges.xStart;
+    overflowXEnd.value = edges.xEnd;
+    overflowYStart.value = edges.yStart;
+    overflowYEnd.value = edges.yEnd;
   },
   viewportState: state,
   overflowEdgeThreshold: edgeThresholds,
@@ -394,8 +389,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       },
       style: {
         position: 'relative',
-        [ScrollAreaRootCssVars.scrollAreaCornerHeight]: `${cornerSize.value.height}px`,
-        [ScrollAreaRootCssVars.scrollAreaCornerWidth]: `${cornerSize.value.width}px`,
+        [ScrollAreaRootCssVars.scrollAreaCornerHeight]: `${cornerSize.height}px`,
+        [ScrollAreaRootCssVars.scrollAreaCornerWidth]: `${cornerSize.width}px`,
       },
     },
     attrs,

@@ -11,6 +11,7 @@ export interface ScrollAreaCornerProps
 </script>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -27,14 +28,10 @@ defineSlots<{
 
 const state: ScrollAreaCornerState = EMPTY_OBJECT;
 
-const { cornerElement, cornerSize, hiddenState } = useScrollAreaRootContext();
+const { registerElement, cornerSize, viewportState } = useScrollAreaRootContext();
+const visible = computed(() => !viewportState.value.cornerHidden);
 
-// The viewport writes the corner size only while `cornerElement` has an element. A hidden corner
-// has no element, so the viewport then stops its writes.
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  ref: (corner) => {
-    cornerElement.value = corner;
-  },
   props: (attrs) => [
     {
       'aria-hidden': true,
@@ -42,25 +39,22 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
         position: 'absolute',
         bottom: 0,
         insetInlineEnd: 0,
-        width: `${cornerSize.value.width}px`,
-        height: `${cornerSize.value.height}px`,
+        width: `${cornerSize.width}px`,
+        height: `${cornerSize.height}px`,
       },
     },
     attrs,
   ],
 });
 
+registerElement('cornerElement', element);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <slot
-    v-if="!hiddenState.corner && usesRenderSlot()"
-    name="render"
-    :props="elementProps()"
-    :state="state"
-  />
-  <component :is="as" v-else-if="!hiddenState.corner" v-bind="elementProps()" :ref="setRef">
+  <slot v-if="visible && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="visible" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
 </template>

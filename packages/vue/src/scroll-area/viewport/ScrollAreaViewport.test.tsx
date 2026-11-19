@@ -20,7 +20,7 @@ import {
 import type { VaseUIRenderResult } from '#test-utils';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
-import { SCROLL_TIMEOUT } from '../constants';
+import { SCROLL_TIMEOUT } from '../root/ScrollAreaRootContext';
 import ScrollAreaViewportHydration from './ScrollAreaViewportHydration.test.vue';
 
 // `data-id` holds an id that Vue generates, so it can differ between two apps.
@@ -53,6 +53,23 @@ describe('<ScrollArea.Viewport />', () => {
 
     expect(viewport).not.toHaveAttribute('role', 'presentation');
     expect(viewport).toHaveAttribute('tabindex', '0');
+  });
+
+  it('restores the measured overflow distance and its priority on scroll', async () => {
+    await render(
+      <ScrollArea.Root>
+        <ScrollArea.Viewport data-testid="viewport" style={{ height: '100px' }}>
+          <div style={{ height: '300px' }} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>,
+    );
+    const viewport = screen.getByTestId('viewport');
+    const key = '--scroll-area-overflow-y-end';
+    await waitFor(() => expect(viewport.style.getPropertyValue(key)).toBe('200px'));
+    viewport.style.setProperty(key, '200px', 'important');
+    await fireEvent.scroll(viewport);
+    expect(viewport.style.getPropertyPriority(key)).toBe('');
+    expect(viewport.style.getPropertyValue(key)).toBe('200px');
   });
 
   it('handles a user scroll callback unmounting the viewport', async () => {
@@ -133,6 +150,38 @@ describe('<ScrollArea.Viewport />', () => {
         expect(viewport.firstElementChild!.getAnimations()[0].playState).toBe('paused');
       },
     );
+
+    it('ignores an animation from the previous viewport', async () => {
+      vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(() => {});
+      const animation = document.body.animate({ opacity: [1, 1] }, 10000);
+      animation.pause();
+      onTestFinished(() => animation.cancel());
+      const read = vi.spyOn(Element.prototype, 'getAnimations').mockImplementation(function (
+        this: Element,
+      ) {
+        return this.localName === 'section' ? [animation] : [];
+      });
+      const tag = shallowRef<'section' | 'article'>('section');
+      await render(() => (
+        <ScrollArea.Root>
+          <ScrollArea.Viewport as={tag.value} data-testid="viewport" style={{ height: '100px' }}>
+            <div data-testid="content" />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      ));
+      const previous = screen.getByTestId('viewport');
+      await waitFor(() => expect(read.mock.contexts).toContain(previous));
+      tag.value = 'article';
+      await nextTick();
+      const viewport = screen.getByTestId('viewport');
+      screen.getByTestId('content').style.height = '300px';
+      animation.finish();
+      await animation.finished;
+      await flushMicrotasks();
+      expect(viewport.tabIndex).toBe(-1);
+      await fireEvent.scroll(viewport);
+      expect(viewport.tabIndex).toBe(0);
+    });
 
     it.each([
       ['no infinite animation', undefined],
