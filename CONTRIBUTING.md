@@ -349,8 +349,8 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
-- Put the extra nodes in an internal SFC. Meter uses `RangeLabelChildren.vue` for its screen reader text.
-- A part of a refactored family writes the extra nodes in its own template, and its `element` slot gets none. `Progress.Root` renders its screen reader text after its default slot.
+- Put the extra nodes in an internal SFC, `<Part>Children.vue`.
+- A part of a refactored family writes the extra nodes in its own template, and its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot.
 - Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
@@ -369,7 +369,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 </component>
 ```
 
-A part whose own node is text, such as `Meter.Value`, has four more rules:
+A part whose own node is text, such as `Slider.Value`, has four more rules:
 
 - `<Part>Children.vue` shows the default slot of the consumer when there is one. If there is none, it shows the text. Write the two as one `v-if` chain: `<slot v-if="$slots.default" … />`, then `<template v-else-if="…">{{ text }}</template>`.
 - The part gives a default slot to `<Part>Children.vue` only when the consumer has one: `<template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template>`.
@@ -690,7 +690,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress and Scroll Area follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter and Scroll Area follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -908,8 +908,9 @@ The label of a root:
 - The root names the last label in the document that has an id (`VUE-131`). When that label unmounts, `KeepAlive` holds it, or its element gets an empty `id`, the root names the last label that stays. Before a label has an element, it counts in the order of the registrations. A move of the label elements with no other change does not update the order.
 - A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
-- This rule covers `Meter.Root`, `Fieldset.Root` and `Slider.Root`.
-- `Progress.Root` keeps its labels in the order of their registration and names the first one. Until the mount, it names the id that it made, and a label with no `id` prop takes that id. An `aria-label` or `aria-labelledby` of the developer stops its `aria-labelledby`, also when the value is blank. `test/measurements/range.test.ts` shows that the server HTML has no id that a label gives in `setup`.
+- This rule covers `Fieldset.Root` and `Slider.Root`.
+- `Progress.Root` and `Meter.Root` make the same assumption with no `useLabelId()`. Each makes an id with `useId()`, and a label with no `id` prop takes that id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name. `test/measurements/range.test.ts` shows that the server HTML has no id that a label gives in `setup`.
+- An `aria-label` of the consumer on such a root, also a blank one, replaces the name of the label, before and after the mount. An `aria-label` of `null` or `undefined` does not replace it. An `aria-labelledby` of the consumer replaces the id of the label, also a blank one, and `undefined` removes it.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser makes the same assumption so its `aria-labelledby` matches the server HTML.
 - `Slider.Root` is the exception while Vue hydrates it. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render. `useRenderElement` gives that render the value of the server HTML.

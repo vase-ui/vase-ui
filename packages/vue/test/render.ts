@@ -81,9 +81,9 @@ export function mount(
 }
 
 /** Mounts a component that throws, and returns the error. */
-export function mountError(component: vue.Component) {
+export function mountError(component: vue.Component, props: Record<string, unknown> = {}) {
   const root = document.body.appendChild(document.createElement('div'));
-  const app = createAppOf(component, {}, false);
+  const app = createAppOf(component, props, false);
   let error: unknown;
   app.config.errorHandler = (thrown) => {
     error ??= thrown;
