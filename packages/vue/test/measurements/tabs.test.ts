@@ -33,7 +33,10 @@ describe('an element that leaves in a <Transition>', () => {
   test('keeps the attribute that it had: Vue does not patch it in the render that removes it', async () => {
     const scene = reactive({ shown: true, direction: 'left' });
     const log: (string | null)[] = [];
-    mount(MeasureLeaveAttribute, { scene, log });
+    mount(MeasureLeaveAttribute, {
+      scene,
+      log: { add: (entry: string | null) => log.push(entry) },
+    });
     await nextTick();
     Object.assign(scene, { shown: false, direction: 'right' });
     await nextTick();

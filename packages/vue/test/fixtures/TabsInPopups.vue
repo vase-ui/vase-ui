@@ -9,7 +9,7 @@ import { Toolbar } from '../../src/toolbar';
 // beside the panels and a button after the root.
 defineProps({
   host: { type: String as PropType<'popover' | 'dialog' | 'toolbar'>, required: true },
-  log: { type: Array as PropType<string[]>, default: () => [] },
+  log: { type: Object as PropType<{ add(entry: string): void }>, default: () => new Set() },
 });
 </script>
 
@@ -46,11 +46,11 @@ defineProps({
       </Dialog.Popup>
     </Dialog.Portal>
   </Dialog.Root>
-  <div v-else @keydown="log.push(`ancestor ${$event.key}`)">
+  <div v-else @keydown="log.add(`ancestor ${$event.key}`)">
     <Toolbar.Root>
       <Tabs.Root default-value="overview">
-        <Tabs.List @keydown="log.push(`list ${$event.key}`)">
-          <Tabs.Tab value="overview" @keydown="log.push(`tab ${$event.key}`)">Overview</Tabs.Tab>
+        <Tabs.List @keydown="log.add(`list ${$event.key}`)">
+          <Tabs.Tab value="overview" @keydown="log.add(`tab ${$event.key}`)">Overview</Tabs.Tab>
           <Tabs.Tab value="projects">Projects</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="overview">

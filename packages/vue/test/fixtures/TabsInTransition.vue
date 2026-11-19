@@ -7,11 +7,11 @@ import { Tabs } from '../../src/tabs';
 const props = defineProps({
   root: Object as PropType<Record<string, unknown>>,
   scene: { type: Object as PropType<{ shown: boolean }>, default: () => ({ shown: true }) },
-  log: { type: Array as PropType<string[]>, default: () => [] },
+  log: { type: Object as PropType<{ add(entry: string): void }>, default: () => new Set() },
 });
 
 function record(phase: string, element: Element) {
-  props.log.push(
+  props.log.add(
     `${phase} ${element.getAttribute('data-key')} ${element.getAttribute('data-activation-direction')} ${element.className}`,
   );
 }

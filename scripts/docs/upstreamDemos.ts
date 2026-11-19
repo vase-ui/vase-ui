@@ -30,11 +30,12 @@ const TAILWIND_FOLDER = 'tailwind';
 const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate']]);
 
 /**
- * The families whose parts are native form elements. A demo of such a family styles the parts with
- * the pseudo-classes of these elements, such as `:checked`, and can add an element of its own for a
- * mark or a thumb. Its classes and its style sheets thus differ from those of the Base UI demo.
+ * The families whose demos style the parts with the selectors of native elements and ARIA
+ * attributes, such as `:checked` and `[aria-selected="true"]`, in place of the data attributes of
+ * Base UI. A demo can add an element of its own for a mark or a thumb, and animate a part with
+ * `<Transition>`. Its classes and its style sheets thus differ from those of the Base UI demo.
  */
-const NATIVE_FORM_FAMILIES = new Set([
+const RESTYLED_FAMILIES = new Set([
   'checkbox',
   'checkbox-group',
   'field',
@@ -44,6 +45,7 @@ const NATIVE_FORM_FAMILIES = new Set([
   'input',
   'radio-group',
   'switch',
+  'tabs',
 ]);
 
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
@@ -343,7 +345,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
-      } else if (files.get(path) !== hash && !NATIVE_FORM_FAMILIES.has(name)) {
+      } else if (files.get(path) !== hash && !RESTYLED_FAMILIES.has(name)) {
         problems.push(
           `${folder}/${path} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${rerun}`,
         );
@@ -372,7 +374,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
-    for (const [key, row] of NATIVE_FORM_FAMILIES.has(name)
+    for (const [key, row] of RESTYLED_FAMILIES.has(name)
       ? []
       : Object.entries(record.classes ?? {})) {
       const path = vueDemoPath(name, key);

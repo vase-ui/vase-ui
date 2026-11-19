@@ -21,7 +21,7 @@ defineProps({
   slotted: Boolean,
   late: Boolean,
   nonce: String,
-  renders: Array as PropType<string[]>,
+  renders: Object as PropType<{ add(entry: string): void }>,
 });
 
 const AsyncIndicator = defineAsyncComponent(() => Promise.resolve(Tabs.Indicator));
@@ -68,7 +68,7 @@ const AsyncIndicator = defineAsyncComponent(() => Promise.resolve(Tabs.Indicator
                   class="Indicator"
                   data-testid="indicator-1"
                   :data-render="
-                    renders?.push(`${state.activeTabSize?.width} ${state.activeTabPosition?.left}`)
+                    renders?.add(`${state.activeTabSize?.width} ${state.activeTabPosition?.left}`)
                   "
                 />
               </template>

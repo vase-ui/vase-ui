@@ -101,7 +101,7 @@ function onKeydown(event: KeyboardEvent, from: RootTab) {
 // The tabs that can take the focus, in the order in which the key asks for them.
 function candidates(elements: HTMLElement[], from: HTMLElement | null, step: Step) {
   if (step === 'first') return elements;
-  if (step === 'last') return elements.toReversed();
+  if (step === 'last') return [...elements].reverse();
   const index = from ? elements.indexOf(from) : -1;
   const forward = step === 'next';
   const after = forward ? elements.slice(index + 1) : elements.slice(0, index).reverse();

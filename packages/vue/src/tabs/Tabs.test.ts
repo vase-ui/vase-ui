@@ -18,6 +18,9 @@ type Item = { key: string; value?: unknown; attrs?: Record<string, unknown> };
 
 const items = (...keys: string[]): Item[] => keys.map((key) => ({ key }));
 
+/** A log for a fixture, which adds each entry to `entries`. */
+const recorder = (entries: string[]) => ({ add: (entry: string) => entries.push(entry) });
+
 interface Setup {
   root?: Record<string, unknown>;
   list?: Record<string, unknown>;
@@ -692,7 +695,7 @@ describe('keys', () => {
 
   test('a handled key reaches a keydown listener on the tab and on the list, and no ancestor', async () => {
     const log: string[] = [];
-    mount(TabsInPopups, { host: 'toolbar', log });
+    mount(TabsInPopups, { host: 'toolbar', log: recorder(log) });
     await nextTick();
     screen.getByRole('tab', { name: 'Overview' }).focus();
     await press('{ArrowRight}');
@@ -838,7 +841,7 @@ describe('the scroll at the mount', () => {
 });
 
 describe('the names', () => {
-  test('a tab names the panel of its value in aria-controls, and a panel names its tab in aria-labelledby', async () => {
+  test('VUE-14: a tab names the panel of its value in aria-controls, also with an id of the developer; a panel names its tab in aria-labelledby', async () => {
     const { tab, panel } = await mountTabs({
       root: { defaultValue: 'a' },
       tabs: [{ key: 'a', attrs: { id: 'tab-a' } }, { key: 'b' }],
@@ -892,6 +895,27 @@ describe('the names', () => {
     await nextTick();
     expect(tab('one')).toHaveAttribute('aria-controls', panel('third').id);
   });
+  test('a replaced, removed and mounted again panel gives each tab the name of the panel in the DOM', async () => {
+    const panels = reactive<Item[]>([{ key: 'one', value: 'a', attrs: { keepMounted: true } }]);
+    const { tab, panel } = await mountTabs({
+      root: { modelValue: 'a' },
+      tabs: items('a', 'b'),
+      panels,
+    });
+    expect(tab('a')).toHaveAttribute('aria-controls', panel('one')!.id);
+    expect(tab('b')).not.toHaveAttribute('aria-controls');
+    panels.splice(0, 1, { key: 'two', value: 'b', attrs: { keepMounted: true } });
+    await nextTick();
+    expect(tab('a')).not.toHaveAttribute('aria-controls');
+    expect(tab('b')).toHaveAttribute('aria-controls', panel('two')!.id);
+    panels.splice(0, 1);
+    await nextTick();
+    expect(tab('b')).not.toHaveAttribute('aria-controls');
+    panels.push({ key: 'three', value: 'b', attrs: { keepMounted: true } });
+    await nextTick();
+    expect(tab('a')).not.toHaveAttribute('aria-controls');
+    expect(tab('b')).toHaveAttribute('aria-controls', panel('three')!.id);
+  });
 });
 
 describe('the panels', () => {
@@ -910,7 +934,7 @@ describe('the panels', () => {
 
   test('<Transition> gives the enter and leave classes; the leave and the enter have the new direction', async () => {
     const log: string[] = [];
-    mount(TabsInTransition, { root: { defaultValue: 'a' }, log });
+    mount(TabsInTransition, { root: { defaultValue: 'a' }, log: recorder(log) });
     await nextTick();
     await userEvent.click(screen.getByRole('tab', { name: 'B' }));
     expect(log).toEqual([

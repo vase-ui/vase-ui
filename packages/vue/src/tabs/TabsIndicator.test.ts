@@ -9,6 +9,9 @@ import { script } from './prehydrationScript.min';
 
 type LayoutTab = { value: unknown; style?: string; anchor?: boolean };
 
+/** A log for a fixture, which adds each entry to `entries`. */
+const recorder = (entries: string[]) => ({ add: (entry: string) => entries.push(entry) });
+
 const fixedTabs = (style: string, count = 3): LayoutTab[] =>
   Array.from({ length: count }, (_, index) => ({ value: index + 1, style }));
 
@@ -89,7 +92,7 @@ describe('<Tabs.Indicator />', () => {
       root,
       tabs: [{ value: 'one', style: 'width: 50px' }],
       slotted: true,
-      renders,
+      renders: recorder(renders),
     });
     expect(indicator()).toHaveAttribute('hidden');
     expect(variable(indicator(), 'width')).toBe('');
@@ -236,7 +239,7 @@ describe('<Tabs.Indicator />', () => {
     ])('follows the active tab when $name', async ({ style }) => {
       placeIndicatorOverActiveTab();
       const tabs = fixedTabs('width: 80px; height: 32px');
-      tabs[2]!.style += `; ${style}`;
+      tabs[2] = { value: 3, style: `width: 80px; height: 32px; ${style}` };
       const { indicator, activeTab } = await mountLayout({ root: { modelValue: 3 }, tabs });
       await waitForIndicatorOverActiveTab(indicator(), activeTab());
     });
@@ -351,7 +354,7 @@ describe('<Tabs.Indicator />', () => {
         root: { modelValue: 50 },
         tabs: fixedTabs('width: 120px; flex-shrink: 0', 100),
         slotted: true,
-        renders,
+        renders: recorder(renders),
       });
       await nextFrame();
       await nextFrame();

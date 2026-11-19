@@ -8,13 +8,13 @@ defineProps({
     type: Object as PropType<{ shown: boolean; direction: string }>,
     required: true,
   },
-  log: { type: Array as PropType<(string | null)[]>, required: true },
+  log: { type: Object as PropType<{ add(entry: string | null): void }>, required: true },
 });
 </script>
 
 <template>
   <Transition
-    @leave="(element: Element) => log.push(element.getAttribute('data-activation-direction'))"
+    @leave="(element: Element) => log.add(element.getAttribute('data-activation-direction'))"
   >
     <div v-if="scene.shown" :data-activation-direction="scene.direction">Panel</div>
   </Transition>
