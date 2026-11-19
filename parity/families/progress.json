@@ -21,5 +21,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/progress/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/root/ProgressRootContext.ts",
+      "member": "progressStateAttributesMapping",
+      "witness": "packages/vue/src/progress/root/ProgressRoot.test.tsx"
+    }
+  ]
 }

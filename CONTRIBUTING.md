@@ -344,8 +344,8 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
-- Each such part has one internal SFC, `<Part>Children.vue`.
-- That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
+- Put the extra nodes in an internal SFC. Meter and Progress share `RangeLabelChildren.vue` for their screen reader text.
+- Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
 - A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
@@ -843,7 +843,7 @@ The hydration state:
 - For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
 - The server HTML and the first client render then have the same text.
 - A composable that filters text with a locale calls `useFormatLocale` too. The first client render then gives the list that the server HTML has. `Combobox.useFilter` and `Autocomplete.useFilter` are examples.
-- A composable that reads another value of the browser obeys the same rule. It gives the server value in the first client render, and it reads the real value in `onMounted`. `useMediaQuery` does this. A client-only mount thus renders again when the two values differ.
+- Read browser values in `onMounted` so the first client render uses the server value. By default, `useMediaQuery` takes its initial value from `ssrMatchMedia` or `defaultMatches` and updates at mount if the values differ. With `noSsr`, it uses an available `matchMedia` for the initial value.
 - A server can give a value in another way than the browser. When the first client render needs the value of the server, the value goes into the server HTML. Get it with `useServerValue(attribute, read, parse, write)` of `src/common/hydration.ts`. Bind `attributes()` to the element of the part. While `useIsHydrating()` is `true`, the element has the value in `attribute`, a `data-vase-ui-*` name. While Vue hydrates the part, the value is the one of that attribute, when `parse` accepts its text. On a server, in a client-only mount and after the mount, the value is `read()`. A calendar root keeps the day of the clock of the server in `data-vase-ui-today`.
 - The hour cycle, the calendar, the first day of the week and the weekend of a locale change the elements of a part, and Node and a browser can have other `Intl` data for them. `TimeClock.Root` keeps its hour cycle in this way. `Calendar.Root` and `RangeCalendar.Root` keep the calendar, the first day of the week and the weekend of their grid. `read` applies the props that replace the data of the locale, such as `hourCycle`, `calendar` and `firstDayOfWeek`.
 - After the mount, the part renders with the value of the browser. Vue patches that render as any other update, with no warning. The hydrated DOM is then equal to a client-only render. A part below it that mounts again after the mount, such as a page of a calendar, gets new generated ids.
@@ -997,7 +997,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - To test for a field or labelable provider, call `inject(key, null)`. A required field reader throws if the result is `null`.
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
-- The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
+- `DirectionProvider` provides a computed ref of the text direction. `CSPProvider` provides a computed ref of its `nonce` and `disableStyleElements` settings. Each composable returns the nearest provider's ref.
 - A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
@@ -1520,7 +1520,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 - Choose the watcher from the change that must trigger it. During server setup, a default `watchEffect` or an immediate default-flush `watch` runs once. A lazy callback watcher observes later changes there only with a synchronous flush.
 - For work that requires a mount, start the watcher in `onMounted`. For a later DOM read, choose a post-flush effect or an explicit post-flush source. Check whether one watcher can cover mount and replacement.
-- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and `useImageLoadingStatus` use this order.
+- A default-flush watcher runs before its owner's render. A state change that it publishes can reach that same render. `useMediaQuery` and the preload in `Avatar.Image` use this order.
 - `useAnchorPositioning` updates `isPositioned` synchronously. `usePopupRoot` also copies `mounted` and `transitionStatus` in the same task.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. A change while `KeepAlive` holds the part waits for the activation. The callback then gets the value before the hold, or the value of the mount when the part mounts in a held branch.
 - A parent update can leave a child with stable props and slots untouched. Track the reactive value that changes the part's own DOM.
@@ -2070,7 +2070,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot. In a Vapor app, a part of a later case can also find the context of the earlier case.
 - A case that fails with virtual DOM parts in a Vapor app gets `{ fails: isVaporApp && !isVaporParts }`. Give the cause in a comment. `#test-utils` exports both flags. Vitest fails such a case when it passes, so the fix also removes the option. A case that fails only with Vapor parts gets an entry in `expectedFailures.json`, as [Where a test runs](#where-a-test-runs) describes. Do not use the modifier `it.fails`, because `pnpm parity:check` refuses it.
 - After a `Maximum recursive updates exceeded` error, Vue runs no post-flush job in a later case of the file. Put a case that can give that error last in its file.
-- A mock of a composable keeps the contract of the composable. The mock of `useImageLoadingStatus` in `avatar/fallback/AvatarFallback.test.tsx` gives `'idle'` until the mount, as the composable does.
+- A mock of a composable keeps the contract of the composable.
 - A test that expects a `Vase UI:` message on the console asserts the list of `takeReportedMessages()`, or it uses a console spy that has `mockImplementation`.
 - In the list, such a message is one string that starts with `console.warn: Vase UI:` or `console.error: Vase UI:`. Assert the whole list. The test then fails on a message that it does not expect.
 - A console spy that has `mockImplementation` takes each call of its method, so those calls are not in the list. The test then fails on a call that it does not expect only if it asserts each call of the spy. A spy with no implementation passes the call to the console, and the test fails unless it takes the message from the list.

@@ -9,6 +9,10 @@ export interface AvatarRootContext {
 
 export const AvatarRootContext: InjectionKey<AvatarRootContext> = Symbol();
 
+export const avatarStateAttributesMapping = {
+  imageLoadingStatus: () => null,
+};
+
 export function useAvatarRootContext(): AvatarRootContext {
   // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(AvatarRootContext, undefined);
