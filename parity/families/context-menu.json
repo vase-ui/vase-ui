@@ -11,6 +11,12 @@
       "prop": "side",
       "kind": "not-applicable",
       "reason": "The row gives the default `'bottom'`. The part has no Vue default: a prop that is absent lets `Menu.Positioner` take `'bottom'` for a root context menu and `'inline-end'` for a submenu, as in Base UI. Only an absent `side` gives a root context menu the offsets `-5` and `2`. With a Vue default, a submenu opens below its trigger and a root context menu loses those offsets."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
