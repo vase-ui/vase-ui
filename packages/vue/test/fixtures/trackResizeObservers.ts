@@ -28,6 +28,8 @@ export function trackResizeObservers() {
     }
   }
   vi.stubGlobal('ResizeObserver', TrackedResizeObserver);
-  onTestFinished(() => vi.unstubAllGlobals());
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
   return () => Array.from(targets, (elements) => [...elements]);
 }

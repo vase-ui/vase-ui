@@ -2868,6 +2868,45 @@ describe('<Tabs.Root />', () => {
   });
 
   describe('events', () => {
+    it('emits each automatic model update even when the change listener cancels', async () => {
+      const disabled = shallowRef(false);
+      const visible = shallowRef(true);
+      const events: [string, Tabs.Tab.Value][] = [];
+      await render(() => (
+        <Tabs.Root
+          onValueChange={(value, details) => {
+            events.push([details.reason, value]);
+            details.cancel();
+          }}
+          {...{ 'onUpdate:modelValue': (value: Tabs.Tab.Value) => events.push(['update', value]) }}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="first" disabled={disabled.value}>
+              First
+            </Tabs.Tab>
+            {visible.value && <Tabs.Tab value="second">Second</Tabs.Tab>}
+          </Tabs.List>
+        </Tabs.Root>
+      ));
+      expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('First');
+
+      disabled.value = true;
+      await flushMicrotasks();
+      expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Second');
+
+      visible.value = false;
+      await flushMicrotasks();
+      expect(screen.queryByRole('tab', { selected: true })).toBeNull();
+      expect(events).toEqual([
+        ['initial', 'first'],
+        ['update', 'first'],
+        ['disabled', 'second'],
+        ['update', 'second'],
+        ['missing', null],
+        ['update', null],
+      ]);
+    });
+
     it('emits valueChange and then update:modelValue, and a canceled change emits no update:modelValue', async () => {
       const calls: string[] = [];
       let cancel = false;

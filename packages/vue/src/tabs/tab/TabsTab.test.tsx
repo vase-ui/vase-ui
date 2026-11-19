@@ -252,7 +252,7 @@ describe('<Tabs.Tab />', () => {
       expect(secondTab).toHaveAttribute('aria-selected', 'true');
     });
 
-    it('VUE-144: removes both document listeners when a tab unmounts during a secondary press', async () => {
+    it('VUE-158: removes both document listeners when a tab unmounts during a secondary press', async () => {
       const { unmount } = await render(<TwoTabs />);
       const tab = screen.getByRole('tab', { name: 'Two' });
       const doc = tab.ownerDocument;
