@@ -110,14 +110,17 @@ describe('drag of the thumb', () => {
   );
 
   // The automation of Firefox and WebKit makes no touch drag.
-  test.runIf(server.browser === 'chromium')('a touch drag of the thumb scrolls the viewport, and its end ends the press', async () => {
-    const { get, viewport, area } = await mountArea();
-    const start = centre(get('thumb-y')!);
-    await touchDrag(start, { x: start.x, y: start.y + 40 });
-    expect(viewport.scrollTop).toBe(200);
-    expect(area).not.toHaveAttribute('data-scrolling');
-    expect(snap(viewport)).toEqual(['', '']);
-  });
+  test.runIf(server.browser === 'chromium')(
+    'a touch drag of the thumb scrolls the viewport, and its end ends the press',
+    async () => {
+      const { get, viewport, area } = await mountArea();
+      const start = centre(get('thumb-y')!);
+      await touchDrag(start, { x: start.x, y: start.y + 40 });
+      expect(viewport.scrollTop).toBe(200);
+      expect(area).not.toHaveAttribute('data-scrolling');
+      expect(snap(viewport)).toEqual(['', '']);
+    },
+  );
 
   test('a lost capture ends the press', async () => {
     const { get, viewport } = await mountArea();
@@ -142,6 +145,8 @@ describe('drag of the thumb', () => {
     await hold(start);
     // The second pointer is not active, so a capture for it would throw.
     await fireEvent.pointerDown(thumb, { pointerId: mouse + 1, button: 0 });
+    await fireEvent.pointerMove(thumb, { pointerId: mouse + 1, clientY: start.y + 100 });
+    expect(viewport.scrollTop).toBe(0);
     await moveTo({ x: start.x, y: start.y + 20 });
     expect(viewport.scrollTop).toBe(100);
     expect(thumb.hasPointerCapture(mouse)).toBe(true);
@@ -271,9 +276,13 @@ describe('press on the track', () => {
     const start = centre(thumb);
     const release = await hold(start);
     await moveTo({ x: start.x, y: start.y + 5 });
+    // A move that scrolls nothing does not make the axis scrolling.
+    expect(get('vertical')).not.toHaveAttribute('data-scrolling');
     await release({ x: start.x, y: start.y + 5 });
     expect(viewport.scrollTop).toBe(400);
-    await fireEvent.pointerDown(get('vertical')!, { pointerId: 1, button: 0, clientY: 5 });
+    // A press on the track starts nothing, so scroll snap stays on.
+    await fireEvent.pointerDown(get('vertical')!, { pointerId: mouse, button: 0, clientY: 5 });
+    expect(snap(viewport)).toEqual(['', '']);
     await settle();
     expect(viewport.scrollTop).toBe(400);
   });

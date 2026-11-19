@@ -146,9 +146,11 @@ function measure() {
     if (read.track === undefined || !read.thumb) continue;
     const length = thumbLength(read.track, read.client, read.scroll);
     const place = thumbPlace(read.position, read.max, read.track, length, read.scroll);
-    const variable = axis === 'y' ? '--scroll-area-thumb-height' : '--scroll-area-thumb-width';
-    if (place.length === length) read.thumb.style.removeProperty(variable);
-    else read.thumb.style.setProperty(variable, `${place.length}px`);
+    // Out of the range the thumb is shorter than the length of the state.
+    read.thumb.style.setProperty(
+      axis === 'y' ? '--scroll-area-thumb-height' : '--scroll-area-thumb-width',
+      `${place.length}px`,
+    );
     read.thumb.style.translate =
       axis === 'y' ? `0 ${place.offset}px` : `${rtl ? -place.offset : place.offset}px 0`;
     thumbLengths[axis] = length;

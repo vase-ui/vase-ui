@@ -257,6 +257,8 @@ describe('overflow', () => {
     expect(area).toHaveAttribute('data-overflow-x-start');
     // A negative threshold counts as `0`.
     expect(area).toHaveAttribute('data-overflow-y-end');
+    await scrollViewport(viewport, 35, 800);
+    expect(area).not.toHaveAttribute('data-overflow-y-end');
 
     // The edges follow a new threshold with no scroll.
     root.overflowEdgeThreshold = 40;
@@ -333,34 +335,34 @@ describe('overflow', () => {
 
 describe('animations in the viewport', () => {
   // A transform adds to the scroll size, and the end of the animation takes it away. No observer
-  // report and no `scroll` event come at that end.
-  function addKeyframes() {
+  // report and no `scroll` event come at that end. The classes keep the styles out of the render.
+  function addStyles() {
     const style = document.head.appendChild(document.createElement('style'));
-    style.textContent =
-      '@keyframes scroll-area-slide { from { transform: translateX(600px) } to { transform: none } }';
+    style.textContent = `
+      @keyframes scroll-area-slide { from { transform: translateX(600px) } to { transform: none } }
+      .moved { transform: translateX(600px) }
+      .moved.animated { animation: scroll-area-slide 200ms; transform: none }
+      .moved.transition { transition: transform 200ms; transform: none }`;
     onTestFinished(() => style.remove());
   }
 
   test.each([
-    { name: 'a CSS animation', content: { style: 'animation: scroll-area-slide 200ms' } },
-    { name: 'a CSS transition', content: { style: 'transform: translateX(600px)' } },
-  ])('the end of $name measures the viewport', async ({ name, content }) => {
-    addKeyframes();
-    const { get, viewport, area } = await mountArea({
-      scene: { width: 100, height: 100 },
-      content,
-    });
-    expect(area).toHaveAttribute('data-has-overflow-x');
-    const type = name === 'a CSS animation' ? 'animationend' : 'transitionend';
-    await nextEvent(viewport, type, {
-      action: () => {
-        if (type === 'transitionend')
-          get('content')!.style.cssText += ';transition: transform 200ms; transform: none';
-      },
-    });
-    await nextTick();
-    expect(area).not.toHaveAttribute('data-has-overflow-x');
-  });
+    { name: 'a CSS animation', type: 'animationend', added: 'animated' },
+    { name: 'a CSS transition', type: 'transitionend', added: 'transition' },
+  ])(
+    'the end of $name that starts after the mount measures the viewport',
+    async ({ type, added }) => {
+      addStyles();
+      const { get, viewport, area } = await mountArea({
+        scene: { width: 100, height: 100 },
+        content: { class: 'moved' },
+      });
+      expect(area).toHaveAttribute('data-has-overflow-x');
+      await nextEvent(viewport, type, { action: () => get('content')!.classList.add(added) });
+      await nextTick();
+      expect(area).not.toHaveAttribute('data-has-overflow-x');
+    },
+  );
 
   test('a script animation that runs at the mount measures at its end, beside one with no end', async () => {
     const mounted = mount(ScrollAreaParts, { scene: { width: 100, height: 100 } });
@@ -525,6 +527,26 @@ describe('corner and tracks', () => {
     await settle();
     expect(get('corner')!.offsetWidth).toBe(0);
   });
+
+  test.each([
+    { name: 'a thumb', scene: { thumb: false, corner: true }, show: { thumb: true } },
+    {
+      name: 'a scrollbar',
+      scene: { vertical: false, thumb: false, corner: true },
+      show: { vertical: true },
+    },
+  ])(
+    '$name that mounts after the first measurement gives a measurement',
+    async ({ name, scene, show }) => {
+      const parts = reactive<Record<string, boolean>>({ ...scene });
+      const { get } = await mountArea({ scene: parts });
+      Object.assign(parts, show);
+      // The measurement comes in the flush of the render, before the next frame.
+      await nextTick();
+      if (name === 'a thumb') expect(get('thumb-y')!.offsetHeight).toBe(38);
+      else expect(get('corner')!.offsetWidth).toBe(10);
+    },
+  );
 
   test('a scrollbar and its thumb serve the new axis when the orientation changes', async () => {
     const vertical = reactive<Record<string, unknown>>({ orientation: 'vertical' });
