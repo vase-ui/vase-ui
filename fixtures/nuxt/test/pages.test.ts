@@ -2710,7 +2710,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it.each(RANGE_PAGES)(
+  it.each(RANGE_PAGES.filter(({ path }) => path !== '/meter'))(
     'formats a value of $path with the locale of the visitor after hydration',
     async ({ path, rootAttributes }) => {
       const page = await createPage(undefined, { locale: 'de-DE' });
@@ -2728,6 +2728,21 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       expect(messages).toEqual([]);
     },
   );
+
+  it('keeps the en-US text of /meter for a visitor with another locale after hydration', async () => {
+    const page = await createPage(undefined, { locale: 'de-DE' });
+    const messages = collectMessages(page);
+
+    await page.goto(url('/meter'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
+    expect(await page.getByTestId('percent-root').getAttribute('aria-valuetext')).toBe(
+      PERCENT_TEXT,
+    );
+    await expectCurrencyRoot(page, { role: 'meter', 'data-progressing': null });
+    expect(messages).toEqual([]);
+  });
 
   it('formats the text of /number-field with the locale of the visitor after hydration', async () => {
     const page = await createPage(undefined, { locale: 'de-DE' });
