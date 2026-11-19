@@ -75,12 +75,13 @@ async function onPointerDown(event: PointerEvent) {
       : event.clientX - rect.left - start;
   const thumbLength = vertical.value ? thumb.offsetHeight : thumb.offsetWidth;
   const distance = trackPressPosition(point, length, thumbLength, max - min);
-  if (distance === undefined || !root.startPress(event, vertical.value)) return;
+  if (distance === undefined) return;
+  const press = root.startPress(event, vertical.value);
+  if (!press) return;
   // The jump comes after the render that turns scroll snap off.
   await nextTick();
   root.scrollTo(vertical.value, rtl ? -distance : distance);
-  const press = root.press;
-  if (press) press.startPosition = vertical.value ? viewport.scrollTop : viewport.scrollLeft;
+  press.startPosition = vertical.value ? viewport.scrollTop : viewport.scrollLeft;
 }
 
 function onWheel(event: WheelEvent) {

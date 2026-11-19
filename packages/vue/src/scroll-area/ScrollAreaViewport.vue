@@ -92,7 +92,7 @@ defineExpose({ element });
 
 function elementProps() {
   const { hasOverflowX, hasOverflowY } = root.state;
-  const props = mergeProps(
+  return mergeProps(
     {
       // A viewport that cannot scroll is not a tab stop.
       tabindex: hasOverflowX || hasOverflowY ? 0 : -1,
@@ -110,15 +110,10 @@ function elementProps() {
       onTransitionend: root.measure,
     },
     attrs,
+    // During a press the thumb follows the pointer, so scroll snap is off. Vue writes the style
+    // keys in order, so this key comes after a `scroll-snap-type` of the developer.
+    root.press ? { style: { scrollSnapType: 'none !important' } } : {},
   );
-  if (!root.press) return props;
-  // During a press the thumb follows the pointer, so scroll snap is off.
-  const {
-    scrollSnapType: _,
-    'scroll-snap-type': __,
-    ...style
-  } = props.style as Record<string, unknown>;
-  return { ...props, style: { ...style, scrollSnapType: 'none !important' } };
 }
 </script>
 

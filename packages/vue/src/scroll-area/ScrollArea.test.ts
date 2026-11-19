@@ -320,6 +320,20 @@ describe('overflow', () => {
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
   });
 
+  test('a viewport whose height falls to 0 with its content loses its overflow', async () => {
+    const scene = reactive({ width: 100, height: 1000 });
+    const { viewport, area } = await mountArea({
+      scene,
+      root: { style: 'height: auto' },
+      viewport: { style: 'height: auto; max-height: 200px' },
+    });
+    expect(area).toHaveAttribute('data-has-overflow-y');
+    scene.height = 0;
+    await waitFor(() => expect(distance(viewport, 'y-end')).toBe('0px'));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+  });
+
   test('a viewport that changes its height, with no change of its content, gives a measurement', async () => {
     const root = reactive<Record<string, unknown>>({});
     const { viewport, area } = await mountArea({ root });
@@ -507,12 +521,16 @@ describe('corner and tracks', () => {
     expect(get('vertical')!.offsetHeight).toBe(186);
     expect(get('horizontal')!.offsetWidth).toBe(190);
     expect(get('thumb-x')!.offsetWidth).toBe(38);
+    const thumbWidth = () =>
+      get('horizontal')!.style.getPropertyValue('--scroll-area-thumb-width');
+    expect(thumbWidth()).toBe('38px');
 
     scene.height = 100;
     await waitFor(() => expect(get('corner')).toBeNull());
     expect(area.style.getPropertyValue('--scroll-area-corner-width')).toBe('0px');
     expect(get('horizontal')!.offsetWidth).toBe(200);
     expect(get('thumb-x')!.offsetWidth).toBe(40);
+    expect(thumbWidth()).toBe('40px');
   });
 
   test('VUE-146: the tracks get their whole edges when ScrollArea.Corner leaves', async () => {
@@ -622,6 +640,8 @@ describe('thumb', () => {
   ])('the length of the thumb counts $name', async ({ vertical, thumbY, height, length }) => {
     const { get } = await mountArea({ scene: { height }, vertical, thumbY });
     expect(get('thumb-y')!.getBoundingClientRect().height).toBeCloseTo(length, 1);
+    const variable = get('vertical')!.style.getPropertyValue('--scroll-area-thumb-height');
+    expect(parseFloat(variable)).toBeCloseTo(length, 1);
   });
 
   test('the thumb moves with translate: down, and from the inline start', async () => {
@@ -757,6 +777,14 @@ describe('lifetime', () => {
     mounted.unmount();
     expect(vi.getTimerCount()).toBe(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  test('a viewport that unmounts before it reads its animations leaves no timer', () => {
+    vi.useFakeTimers();
+    const mounted = mount(ScrollAreaParts);
+    expect(vi.getTimerCount()).toBe(1);
+    mounted.unmount();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

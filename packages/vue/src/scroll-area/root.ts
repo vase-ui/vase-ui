@@ -47,8 +47,8 @@ export interface ScrollAreaForParts {
   scroll(vertical: boolean): void;
   /** Scrolls the viewport on the axis, and makes the axis scrolling when its position changes. */
   scrollTo(vertical: boolean, position: number): void;
-  /** Starts a press and gives the pointer capture to the thumb. Returns `false` when it does not. */
-  startPress(event: PointerEvent, vertical: boolean): boolean;
+  /** Starts a press and gives the pointer capture to the thumb. Returns `null` when it does not. */
+  startPress(event: PointerEvent, vertical: boolean): ScrollAreaPress | null;
   endPress(): void;
   /** Each `add*` function adds a part and returns the function that removes it. */
   addViewport(part: ScrollAreaPart): () => void;

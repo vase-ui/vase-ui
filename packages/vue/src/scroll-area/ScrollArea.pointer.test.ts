@@ -147,6 +147,8 @@ describe('drag of the thumb', () => {
     await fireEvent.pointerDown(thumb, { pointerId: mouse + 1, button: 0 });
     await fireEvent.pointerMove(thumb, { pointerId: mouse + 1, clientY: start.y + 100 });
     expect(viewport.scrollTop).toBe(0);
+    // A second touch on the thumb gets an implicit capture. The loss of that capture ends nothing.
+    await fireEvent.lostPointerCapture(thumb, { pointerId: mouse + 1 });
     await moveTo({ x: start.x, y: start.y + 20 });
     expect(viewport.scrollTop).toBe(100);
     expect(thumb.hasPointerCapture(mouse)).toBe(true);
@@ -170,6 +172,31 @@ describe('drag of the thumb', () => {
     release = await hold(at(track, 5, 150));
     expect(mounted.root.querySelector<HTMLElement>('.viewport')!.scrollTop).toBe(0);
     await release();
+    // The thumb keeps its length and its place when the viewport leaves.
+    scene.thumb = true;
+    await settle();
+    scene.viewport = false;
+    await settle();
+    release = await hold(centre(mounted.root.querySelector('.thumb-y')!));
+    await release();
+  });
+
+  test('a press and a drag on a scrollbar whose element slot binds no elementRef scroll nothing', async () => {
+    // The thumb gets no length from a scrollbar with no element.
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '.thumb-y { height: 20px !important }';
+    onTestFinished(() => style.remove());
+    const { root } = mount(ScrollAreaInSlots, { unbound: true });
+    await waitFor(() => expect(root.querySelector('aside')).not.toBeNull());
+    await settle();
+    const viewport = root.querySelector<HTMLElement>('.viewport')!;
+    let release = await hold(at(root.querySelector('aside')!, 5, 150));
+    await release();
+    const start = centre(root.querySelector('.thumb-y')!);
+    release = await hold(start);
+    await moveTo({ x: start.x, y: start.y + 20 });
+    await release({ x: start.x, y: start.y + 20 });
+    expect(viewport.scrollTop).toBe(0);
   });
 
   test('a drag goes on when the thumb of the other axis unmounts', async () => {

@@ -123,8 +123,8 @@ function readAxis(target: HTMLElement, vertical: boolean, rtl: boolean) {
 
 function measure() {
   const target = viewport.value;
-  // An element with `display: none` has no scroll size.
-  if (!target || target.scrollWidth === 0 || target.scrollHeight === 0) return;
+  // An element with `display: none` has no box, so it has no sizes to read.
+  if (!target || target.getClientRects().length === 0) return;
   const rtl = getComputedStyle(target).direction === 'rtl';
   const x = readAxis(target, false, rtl);
   const y = readAxis(target, true, rtl);
@@ -205,11 +205,9 @@ function scroll(vertical: boolean) {
 
 function endPress() {
   const ended = press.value;
-  if (!ended) return;
+  if (ended) stopScroll(ended.vertical ? 'y' : 'x');
   press.value = null;
-  stopScroll(ended.vertical ? 'y' : 'x');
-  // A press that ends with the capture held is a press whose viewport left.
-  (ended.vertical ? thumbY.value : thumbX.value)?.releasePointerCapture(ended.pointerId);
+  return ended;
 }
 
 provide(scrollAreaKey, {
@@ -255,7 +253,7 @@ provide(scrollAreaKey, {
   startPress(event, vertical) {
     const target = viewport.value;
     const thumb = vertical ? thumbY.value : thumbX.value;
-    if (event.button !== 0 || press.value || !target || !thumb) return false;
+    if (event.button !== 0 || press.value || !target || !thumb) return null;
     press.value = {
       pointerId: event.pointerId,
       vertical,
@@ -263,14 +261,18 @@ provide(scrollAreaKey, {
       startPosition: vertical ? target.scrollTop : target.scrollLeft,
     };
     thumb.setPointerCapture(event.pointerId);
-    return true;
+    return press.value;
   },
   endPress,
   addViewport(part) {
     const remove = add(viewports, part);
     return () => {
       remove();
-      endPress();
+      // The thumb keeps the capture of a press whose viewport leaves.
+      const ended = endPress();
+      if (ended) {
+        (ended.vertical ? thumbY.value : thumbX.value)?.releasePointerCapture(ended.pointerId);
+      }
     };
   },
   addScrollbar: (part) => add(scrollbars, part),
