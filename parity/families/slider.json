@@ -27,6 +27,14 @@
       "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. Firefox moves the focus off a disabled input itself, so the root has nothing to blur there. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
     },
     {
+      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "describe": ["<Slider.Root />", "prop: onValueChange"],
+      "title": "should pass \"name\" and \"value\" as part of the event.target for onValueChange",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
+      "reason": "VUE-147 keeps the original event. The case with the same title checks its identity, the value argument and the input name."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Thumb",
       "prop": "aria-valuetext",

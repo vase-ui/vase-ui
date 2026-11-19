@@ -232,12 +232,9 @@ const props = withDefaults(defineProps<SliderRootProps<Value>>(), {
 
 const emit = defineEmits<{
   /**
-   * Callback function that is fired when the slider's value changed.
-   * Receives the new value as the first argument; the originating event is
-   * available as `eventDetails.event`. The value is also reflected on
-   * `eventDetails.event.target.value` for form integration.
-   *
-   * The `eventDetails.reason` indicates what triggered the change:
+   * The first argument is the new value. Read the field name from the thumb input.
+   * `eventDetails.event` is the original browser event, or a new `Event('vase-ui')` for a change without one.
+   * The reason identifies the source of the change.
    *
    * - `'input-change'` when the hidden range input emits a change event (for example, via form integration)
    * - `'track-press'` when the control track is pressed
@@ -418,21 +415,6 @@ function setValue(newValue: number | number[], details: SliderRootChangeEventDet
   if (Number.isNaN(newValue) || areValuesEqual(newValue, valueUnwrapped.value)) {
     return false;
   }
-
-  // Redefine target to allow name and value to be read.
-  // This allows seamless integration with the most popular form libraries.
-  // https://github.com/mui/material-ui/issues/13485#issuecomment-676048492
-  // Clone the event to not override `target` of the original event.
-  const nativeEvent = details.event;
-  const EventConstructor = nativeEvent.constructor as typeof Event;
-  const clonedEvent = new EventConstructor(nativeEvent.type, nativeEvent);
-
-  Object.defineProperty(clonedEvent, 'target', {
-    writable: true,
-    value: { value: newValue, name: inputName.value },
-  });
-
-  details.event = clonedEvent as typeof details.event;
 
   emit('valueChange', newValue as Value extends number ? number : Value, details);
 

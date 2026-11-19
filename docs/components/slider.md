@@ -70,6 +70,8 @@ A reset of the form puts an uncontrolled slider back to `defaultValue`, or to `m
 
 Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
+Read the new value from the first argument of `valueChange` and the field name from the thumb input. `eventDetails.event` is the original browser event. A change without a browser event supplies a new `Event('vase-ui')`.
+
 In the server HTML, a root with no name of its own from `aria-label` or `aria-labelledby` already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no name of its own from `aria-label`, `aria-labelledby` or `getAriaLabel`. The label can come before or after the control. Until the root is mounted, a root with no label and no `aria-label` has an `aria-labelledby` with an id that no element has. The attribute gives the root no name.
 
 Each thumb takes a value that a program or the browser writes into its input before the page hydrates. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` with the reason `input-change` and `update:modelValue` one time, with the value of each thumb that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.

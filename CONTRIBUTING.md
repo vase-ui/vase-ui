@@ -531,6 +531,7 @@ Base UI has prop trios such as `checked`, `defaultChecked` and `onCheckedChange`
 - Declare each controlled prop with `default: undefined` through `withDefaults`. Without it, Vue changes an absent Boolean prop to `false`.
 - When the model prop returns to `undefined`, the part keeps the last value from the parent. An update listener alone leaves the part in control.
 - Emit the change event first. Emit the model update in the same task.
+- Pass the original browser event to `Slider.Root` change listeners. The first argument gives the value. The thumb input supplies the field name.
 - Skip the model update when `details.isCanceled` is true. `Tabs.Root` always emits the update for an automatic selection with reason `initial`, `disabled` or `missing`.
 - `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:modelValue` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
 - To stop a cancelable change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.

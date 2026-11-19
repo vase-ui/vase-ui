@@ -1,0 +1,8 @@
+{
+  "id": "VUE-147",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/root/SliderRoot.tsx#L199-L218"
+  ],
+  "behavior": "Slider.Root gives each valueChange listener the original browser event. The first argument gives the new value. Each thumb retains its native form name. Base UI copies the event and gives the copy a target with name and value fields.",
+  "dueWith": "packages/react/src/slider/root/SliderRoot.tsx"
+}
