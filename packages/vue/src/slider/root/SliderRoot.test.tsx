@@ -44,7 +44,8 @@ import {
   END,
 } from '../../internals/composite/listIndex';
 import type { Orientation } from '../../internals/types';
-import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import { createTouches, getHorizontalSliderRect } from '../../../test/sliderTestUtils';
+import { useSliderRootContext } from './SliderRootContext';
 import SliderRootHydration from './SliderRootHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -2390,30 +2391,150 @@ describe('<Slider.Root />', () => {
       },
     );
 
-    it('should pass "name" and "value" as part of the event.target for onValueChange', async () => {
-      const handleValueChange = vi
-        .fn()
-        .mockImplementation((_newValue, data: Slider.Root.ChangeEventDetails) => data.event.target);
+    describe('VUE-147: native change events', () => {
+      it('should pass "name" and "value" as part of the event.target for onValueChange', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        await render(<TestSlider name="volume" modelValue={3} onValueChange={change} />);
+        const input = screen.getByRole<HTMLInputElement>('slider');
+        const event = new Event('input', { bubbles: true });
 
-      await render(
-        <TestSlider onValueChange={handleValueChange} name="change-testing" modelValue={3} />,
-      );
+        input.focus();
+        await flushMicrotasks();
+        input.value = '4';
+        await fireEvent(input, event);
 
-      const slider = screen.getByRole('slider');
-
-      slider.focus();
-      await flushMicrotasks();
-      await fireEvent.input(slider, {
-        target: {
-          value: 4,
-        },
+        expect(change).toHaveBeenCalledTimes(1);
+        const [value, details] = change.mock.calls[0];
+        expect(value).toBe(4);
+        expect(details.event).toBe(event);
+        expect(event.target).toBe(input);
+        expect(input.name).toBe('volume');
+        expect(input.valueAsNumber).toBe(3);
       });
 
-      expect(handleValueChange.mock.calls.length).toBe(1);
-      const target = handleValueChange.mock.results[0]?.value;
-      expect(target).toEqual({
-        name: 'change-testing',
-        value: 4,
+      it('passes the track press and drag events with the range that the form submits', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        await render(
+          <form data-testid="form">
+            <TestRangeSlider name="price" defaultValue={[20, 80]} onValueChange={change} />
+          </form>,
+        );
+        const control = screen.getByTestId('control');
+        const [first, second] = screen.getAllByTestId('thumb');
+        vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+        vi.spyOn(first, 'getBoundingClientRect').mockReturnValue(new DOMRect(15, 0, 10, 10));
+        vi.spyOn(second, 'getBoundingClientRect').mockReturnValue(new DOMRect(75, 0, 10, 10));
+        const press = new PointerEvent('pointerdown', { bubbles: true, buttons: 1, clientX: 90 });
+        const move = new PointerEvent('pointermove', { bubbles: true, buttons: 1, clientX: 70 });
+
+        await fireEvent(control, press);
+        await fireEvent(document.body, move);
+        await fireEvent.pointerUp(document.body);
+
+        expect(change).toHaveBeenCalledTimes(2);
+        const [[pressed, pressDetails], [dragged, dragDetails]] = change.mock.calls;
+        expect(pressed).toEqual([20, 90]);
+        expect(pressDetails.event).toBe(press);
+        expect(press.target).toBe(control);
+        expect(dragged).toEqual([20, 70]);
+        expect(dragDetails.event).toBe(move);
+        expect(move.target).toBe(document.body);
+        expect(new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('price')).toEqual([
+          '20',
+          '70',
+        ]);
+      });
+
+      it('passes the touch event from the track', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        await render(<TestSlider defaultValue={0} onValueChange={change} />);
+        const control = screen.getByTestId('control');
+        vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+        const touch = vi.fn();
+        control.addEventListener('touchstart', touch, { capture: true, once: true });
+        const finger = createTouches([{ identifier: 1, clientX: 40, clientY: 0 }]);
+        await fireEvent.touchStart(control, finger);
+        await fireEvent.touchEnd(control, finger);
+
+        expect(change).toHaveBeenCalledTimes(1);
+        const [value, details] = change.mock.calls[0];
+        expect(value).toBe(40);
+        expect(details.event).toBe(touch.mock.calls[0][0]);
+        expect(details.event.target).toBe(control);
+      });
+
+      it('creates an event for each change without a browser event', async () => {
+        const change = vi.fn<NonNullable<TestSliderProps['onValueChange']>>();
+        const ProgrammaticEdit = defineComponent(() => {
+          const { setValue } = useSliderRootContext();
+          onMounted(() => {
+            setValue(2, 0, REASONS.none);
+            setValue(3, 0, REASONS.none);
+          });
+          return () => <Slider.Thumb />;
+        });
+        await render(
+          <Slider.Root defaultValue={1} onValueChange={change}>
+            <ProgrammaticEdit />
+          </Slider.Root>,
+        );
+
+        expect(change).toHaveBeenCalledTimes(2);
+        const [[firstValue, first], [secondValue, second]] = change.mock.calls;
+        expect([firstValue, secondValue]).toEqual([2, 3]);
+        expect(first.event).toBeInstanceOf(Event);
+        expect(first.event.type).toBe('vase-ui');
+        expect(second.event.type).toBe('vase-ui');
+        expect(second.event).not.toBe(first.event);
+        expect(first.event.target).toBeNull();
+        expect(second.event.target).toBeNull();
+        expect(screen.getByRole<HTMLInputElement>('slider').valueAsNumber).toBe(3);
+      });
+
+      it('keeps the input and both form entries when the listener cancels a key press', async () => {
+        const change = vi.fn(
+          (_value: readonly number[], details: Slider.Root.ChangeEventDetails) => {
+            details.cancel();
+          },
+        );
+        const update = vi.fn();
+        const commit = vi.fn();
+        await render(
+          <form data-testid="form">
+            <Slider.Root
+              name="price"
+              defaultValue={[20, 80]}
+              onValueChange={change}
+              onUpdate:modelValue={update}
+              onValueCommitted={commit}
+            >
+              <Slider.Control>
+                <Slider.Thumb />
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          </form>,
+        );
+        const input = screen.getAllByRole<HTMLInputElement>('slider')[1];
+        const key = new KeyboardEvent('keydown', {
+          key: ARROW_RIGHT,
+          bubbles: true,
+          cancelable: true,
+        });
+        await fireEvent(input, key);
+
+        expect(change).toHaveBeenCalledTimes(1);
+        const [value, details] = change.mock.calls[0];
+        expect(value).toEqual([20, 81]);
+        expect(details.event).toBe(key);
+        expect(key.target).toBe(input);
+        expect(input.valueAsNumber).toBe(80);
+        expect(update).not.toHaveBeenCalled();
+        expect(commit).not.toHaveBeenCalled();
+        expect(new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('price')).toEqual([
+          '20',
+          '80',
+        ]);
       });
     });
 

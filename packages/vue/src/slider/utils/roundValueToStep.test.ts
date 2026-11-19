@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { roundValueToStep } from './roundValueToStep';
+import { roundValueToStep } from './thumbValues';
 
 describe('roundValueToStep', () => {
   it('preserves precision from the step origin', () => {

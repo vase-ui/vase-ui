@@ -2,7 +2,7 @@
 import PrehydrationScript from '../../internals/PrehydrationScript.vue';
 import { markChildrenMounted } from '../../internals/useRenderElement';
 import { script as prehydrationScript } from './prehydrationScript.min';
-import { useSliderThumbContext } from './SliderThumbContext';
+import { useSliderThumbContext } from '../root/SliderRootContext';
 
 defineSlots<{
   default?(): unknown;

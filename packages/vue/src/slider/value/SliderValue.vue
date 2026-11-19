@@ -15,8 +15,7 @@ export interface SliderValueProps
 import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useSliderRootContext } from '../root/SliderRootContext';
-import { sliderStateAttributesMapping } from '../root/stateAttributesMapping';
+import { sliderStateAttributesMapping, useSliderRootContext } from '../root/SliderRootContext';
 import SliderValueChildren from './SliderValueChildren.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -32,7 +31,7 @@ defineSlots<{
   render(props: { props: HTMLProps; state: SliderValueState; children: Component }): unknown;
 }>();
 
-const { thumbMap, state } = useSliderRootContext();
+const { thumbList, state } = useSliderRootContext();
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('output', props, {
   state,
@@ -42,7 +41,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('outp
       // and also when the value is changing (but not yet committed)
       'aria-live': 'off',
       for:
-        Array.from(thumbMap.value.values(), ({ inputId }) => inputId)
+        Array.from(thumbList.map.value.values(), ({ inputId }) => inputId)
           .join(' ')
           .trim() || undefined,
     },

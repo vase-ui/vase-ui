@@ -9,14 +9,14 @@ defineSlots<{
   default?(props: { formattedValues: readonly string[]; values: readonly number[] }): unknown;
 }>();
 
-const { values, format, locale } = useSliderRootContext();
+const { props: rootProps, values } = useSliderRootContext();
 
 // This part resolves the locale itself, because it can hydrate after the root, for example in an
 // async component in `<Suspense>`.
-const formatLocale = useFormatLocale(locale);
+const formatLocale = useFormatLocale(() => rootProps.locale);
 
 const formattedValues = computed(() =>
-  values.value.map((value) => formatNumber(value, formatLocale.value, format.value)),
+  values.value.map((value) => formatNumber(value, formatLocale.value, rootProps.format)),
 );
 
 markChildrenMounted();

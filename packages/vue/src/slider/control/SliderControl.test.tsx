@@ -1,5 +1,5 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, reactive, shallowRef } from 'vue';
 import { Slider } from '@vase-ui/vue/slider';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
@@ -7,13 +7,14 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  waitSingleFrame,
   isJSDOM,
   screen,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import { ownerDocument } from '../../common/owner';
-import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import { createTouches, getHorizontalSliderRect } from '../../../test/sliderTestUtils';
 
 // The mock calls through, so that a case can count the reads of the document.
 vi.mock('../../common/owner', async () => {
@@ -725,6 +726,347 @@ describe('<Slider.Control />', () => {
       );
     },
   );
+
+  it.each(['disable', 'replace'] as const)(
+    'VUE-149: ends the press when the control changes (%s)',
+    async (action) => {
+      const disabled = shallowRef(false);
+      const tag = shallowRef('div');
+      const change = vi.fn();
+      const commit = vi.fn();
+      await render(() => (
+        <Slider.Root
+          defaultValue={[20, 80]}
+          disabled={disabled.value}
+          onValueChange={change}
+          onValueCommitted={commit}
+        >
+          <Slider.Control
+            as={tag.value}
+            data-testid="control"
+            style={{ position: 'relative', width: '100px' }}
+          >
+            <Slider.Thumb data-testid="first" style={{ width: '10px' }} />
+            <Slider.Thumb style={{ width: '10px' }} />
+          </Slider.Control>
+        </Slider.Root>
+      ));
+      const control = screen.getByTestId('control');
+      const { left } = control.getBoundingClientRect();
+      const release = vi.fn();
+      Object.defineProperties(control, {
+        setPointerCapture: { configurable: true, value: vi.fn() },
+        hasPointerCapture: { configurable: true, value: (id: number) => id === 7 },
+        releasePointerCapture: { configurable: true, value: release },
+      });
+      await fireEvent.pointerDown(screen.getByTestId('first'), {
+        buttons: 1,
+        pointerId: 7,
+        clientX: left + 20,
+      });
+      expect(control).toHaveAttribute('data-dragging');
+
+      if (action === 'disable') disabled.value = true;
+      else tag.value = 'section';
+      await flushMicrotasks();
+
+      const nextControl = screen.getByTestId('control');
+      expect(nextControl).not.toHaveAttribute('data-dragging');
+      expect(release).toHaveBeenCalledExactlyOnceWith(7);
+      await fireEvent.pointerUp(document.body, { pointerId: 7 });
+      expect(commit).not.toHaveBeenCalled();
+
+      disabled.value = false;
+      await flushMicrotasks();
+      await fireEvent.pointerDown(nextControl, { buttons: 1, clientX: left + 90 });
+      await fireEvent.pointerUp(document.body);
+      expect(change).toHaveBeenCalledExactlyOnceWith(
+        [20, 90],
+        expect.objectContaining({ activeThumbIndex: 1 }),
+      );
+    },
+  );
+
+  it('VUE-149: a press that never reaches the control leaves the next thumb choice free', async () => {
+    const change = vi.fn();
+    await render(
+      <Slider.Root defaultValue={[20, 80]} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <div onPointerdown={(event: PointerEvent) => event.stopPropagation()}>
+            <Slider.Thumb data-testid="first" />
+          </div>
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    const first = screen.getByTestId('first');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(first, 'getBoundingClientRect').mockReturnValue(new DOMRect(15, 0, 10, 10));
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(75, 0, 10, 10),
+    );
+
+    await fireEvent.pointerDown(first, { buttons: 1, clientX: 20 });
+    await fireEvent.pointerUp(first);
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 90 });
+    await fireEvent.pointerUp(control);
+
+    expect(change).toHaveBeenCalledExactlyOnceWith(
+      [20, 90],
+      expect.objectContaining({ activeThumbIndex: 1 }),
+    );
+  });
+
+  it('VUE-149: only the pointer that started the press can move or release it', async () => {
+    const change = vi.fn();
+    const commit = vi.fn();
+    await render(
+      <Slider.Root defaultValue={20} onValueChange={change} onValueCommitted={commit}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    const first = { pointerId: 3, pointerType: 'pen', buttons: 1 };
+    const other = { pointerId: 7, pointerType: 'touch', buttons: 1 };
+
+    await fireEvent.pointerDown(control, { ...first, clientX: 40 });
+    await fireEvent.pointerDown(control, { ...other, clientX: 90 });
+    await fireEvent.pointerMove(document.body, { ...other, clientX: 95 });
+    await fireEvent.pointerCancel(document.body, other);
+    await fireEvent.pointerUp(document.body, other);
+    expect(control).toHaveAttribute('data-dragging');
+    expect(commit).not.toHaveBeenCalled();
+
+    await fireEvent.pointerMove(document.body, { ...first, clientX: 60 });
+    await fireEvent.pointerUp(document.body, first);
+    expect(change.mock.calls.map(([value]) => value)).toEqual([40, 60]);
+    expect(commit).toHaveBeenCalledExactlyOnceWith(60, expect.objectContaining({ reason: 'drag' }));
+    expect(control).not.toHaveAttribute('data-dragging');
+  });
+
+  it('VUE-149: grabs an enabled thumb when thumbs overlap at the maximum', async () => {
+    const change = vi.fn();
+    await render(
+      <Slider.Root defaultValue={[100, 100, 100]} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb disabled />
+          <Slider.Thumb />
+          <Slider.Thumb data-testid="last" />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    const last = screen.getByTestId('last');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(last, 'getBoundingClientRect').mockReturnValue(new DOMRect(95, 0, 10, 10));
+    await fireEvent.pointerDown(last, { buttons: 1, clientX: 100 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 70 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change).toHaveBeenCalledExactlyOnceWith(
+      [70, 70, 100],
+      expect.objectContaining({ activeThumbIndex: 1 }),
+    );
+  });
+
+  it('VUE-149: keeps focus on the swapped thumb after the track press frame', async () => {
+    await render(
+      <Slider.Root defaultValue={[20, 60]} thumbCollisionBehavior="swap">
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="first" />
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('first'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(15, 0, 10, 10),
+    );
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(55, 0, 10, 10),
+    );
+    control.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, buttons: 1, clientX: 25 }),
+    );
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true, buttons: 1, clientX: 80 }),
+    );
+    await waitSingleFrame();
+
+    expect(screen.getAllByRole('slider')[1]).toHaveFocus();
+    await fireEvent.pointerUp(document.body);
+  });
+
+  it('VUE-148: keeps the range value when an inset thumb has no room to move', async () => {
+    const change = vi.fn();
+    await render(
+      <Slider.Root defaultValue={[20]} thumbAlignment="edge" onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="thumb" />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('thumb'), 'getBoundingClientRect').mockReturnValue(
+      getHorizontalSliderRect(),
+    );
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 50 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change).not.toHaveBeenCalled();
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '20');
+  });
+
+  it('VUE-149: commits the pointer change with its reason after a key press', async () => {
+    const commit = vi.fn();
+    await render(
+      <Slider.Root defaultValue={20} onValueCommitted={commit}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>,
+    );
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 40 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 50 });
+    await fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowRight' });
+    const release = new PointerEvent('pointerup', { bubbles: true });
+    await fireEvent(document.body, release);
+
+    expect(commit).toHaveBeenCalledTimes(2);
+    expect(commit).toHaveBeenNthCalledWith(1, 51, expect.objectContaining({ reason: 'keyboard' }));
+    expect(commit).toHaveBeenNthCalledWith(
+      2,
+      50,
+      expect.objectContaining({ reason: 'drag', event: release }),
+    );
+  });
+
+  it.each([
+    { name: 'a range replaces a number', initial: 20, next: [40] },
+    { name: 'a number replaces a range', initial: [20], next: 40 },
+  ])('VUE-149: drops the old value on release when $name', async ({ initial, next }) => {
+    const model = shallowRef(initial);
+    const change = vi.fn();
+    const commit = vi.fn();
+    await render(() => (
+      <Slider.Root modelValue={model.value} onValueChange={change} onValueCommitted={commit}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>
+    ));
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 50 });
+    expect(change).toHaveBeenCalledTimes(1);
+
+    model.value = next;
+    await flushMicrotasks();
+    await fireEvent.pointerUp(document.body);
+
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('VUE-148: uses the full control for a press after the alignment changes to center', async () => {
+    const alignment = shallowRef<'edge' | 'center'>('edge');
+    const change = vi.fn();
+    await render(() => (
+      <Slider.Root defaultValue={50} thumbAlignment={alignment.value} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="thumb" />
+        </Slider.Control>
+      </Slider.Root>
+    ));
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('thumb'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(40, 0, 20, 10),
+    );
+
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 30 });
+    await fireEvent.pointerUp(document.body);
+    alignment.value = 'center';
+    await flushMicrotasks();
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 30 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change.mock.calls.map(([value]) => value)).toEqual([25, 30]);
+  });
+
+  it('VUE-149: uses a range the parent edits in place during valueChange', async () => {
+    const model = reactive([20, 40]);
+    const change = vi.fn((_value: readonly number[], details: Slider.Root.ChangeEventDetails) => {
+      if (details.reason === 'track-press') model[1] = 90;
+    });
+    await render(() => (
+      <Slider.Root modelValue={model} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="first" />
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>
+    ));
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('first'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(15, 0, 10, 10),
+    );
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(35, 0, 10, 10),
+    );
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 25 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 50 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change.mock.calls.map(([value]) => value)).toEqual([
+      [25, 40],
+      [50, 90],
+    ]);
+  });
+
+  it('uses the last pushed range until the parent supplies a new value', async () => {
+    const model = shallowRef([20, 40]);
+    const change = vi.fn();
+    const App = defineComponent(() => () => (
+      <Slider.Root modelValue={model.value} onValueChange={change}>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb data-testid="first" />
+          <Slider.Thumb data-testid="second" />
+        </Slider.Control>
+      </Slider.Root>
+    ));
+    await render(<App />);
+    const control = screen.getByTestId('control');
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue(getHorizontalSliderRect());
+    vi.spyOn(screen.getByTestId('first'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(15, 0, 10, 10),
+    );
+    vi.spyOn(screen.getByTestId('second'), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(35, 0, 10, 10),
+    );
+    await fireEvent.pointerDown(control, { buttons: 1, clientX: 25 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 60 });
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 30 });
+    model.value = [10, 90];
+    await flushMicrotasks();
+    await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 35 });
+    await fireEvent.pointerUp(document.body);
+
+    expect(change.mock.calls.map(([value]) => value)).toEqual([
+      [25, 40],
+      [60, 60],
+      [30, 60],
+      [35, 90],
+    ]);
+  });
 
   it('adds its touchstart listener as a passive listener', async () => {
     const addEventListener = vi.spyOn(EventTarget.prototype, 'addEventListener');
