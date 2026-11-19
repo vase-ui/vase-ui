@@ -103,15 +103,15 @@ If no visible label is rendered, give `aria-label` to the part that is the form 
 
 ### Labeling control groups
 
-To label a group of controls, compose `<Fieldset.Root>` with the group. Examples are a range slider with more than one thumb and a section that combines several inputs. The slider has a prop of its own, so render it in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
+To label a group of controls, put the group in `<Fieldset.Root>`, and its label in `<Fieldset.Legend>`. The legend names the fieldset, and also a group in it that nothing else names. Examples are a range slider with more than one thumb and a section that combines several inputs:
 
-<<< ../examples/forms/RangeInFieldset.vue{11-14,17-18}
+<<< ../examples/forms/RangeInFieldset.vue{11-13}
 
-Give a checkbox group or a radio group with no props of its own to the `as` prop of `Fieldset.Root`. Wrap each option in `<Field.Item>`. Each control then has its own label and description:
+Put a checkbox group or a radio group in `Fieldset.Root`. Wrap each option in `<Field.Item>`. Each control then has its own label and description:
 
-<<< ../components/radio-group/FieldsetLegend.vue{12,17-18,23}
+<<< ../components/radio-group/FieldsetLegend.vue{11,15,19}
 
-<<< ../components/checkbox-group/FieldsetLegend.vue{12,16-17,21}
+<<< ../components/checkbox-group/FieldsetLegend.vue{11,15,20}
 
 ## Building form fields
 
@@ -121,13 +121,11 @@ Give `name` to `<Field.Root>` to include the value of the control that it wraps 
 
 ## Submitting data
 
-You can take over the submission with the native `submit` event or with the `formSubmit` event of Vase UI.
-
-`Form` emits `submit` only when each field is valid. It does not prevent the default action of the event, so call `event.preventDefault()` yourself:
+`Form` emits `submit` only when each field is valid. The first argument is the native `SubmitEvent`. `Form` does not prevent the default action of the event, so call `event.preventDefault()` yourself, or use `@submit.prevent`:
 
 <<< ../examples/forms/NativeSubmit.vue{7-10,19}
 
-When a `formSubmit` listener exists, `Form` gives it the values of the named fields as an object, with `eventDetails` as the second argument. `Form` also calls `preventDefault()` on the native submit event:
+The second argument has the values of the named fields of the form as an object. Each value has the type that its control gives:
 
 <<< ../examples/forms/FormSubmit.vue{4-9,17}
 
@@ -140,9 +138,9 @@ Vase UI form components support the native HTML validation attributes for many v
 - `pattern` specifies a regular expression that the value of the field must match.
 - `step` specifies an increment that the values of a numeric field must be an integral multiple of.
 
-<<< ../examples/forms/ConstraintValidation.vue{7}
+<<< ../examples/forms/ConstraintValidation.vue{8}
 
-A form component such as `Select`, `Switch` or `Checkbox` uses a hidden input to take part in native form submission and validation. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
+A form component such as `Select` or `NumberField` uses a hidden input to take part in native form submission and validation. `Input`, `Checkbox`, `Radio` and `Switch` are native inputs, so the browser places their messages. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
 
 `Select.Root` renders its hidden input after its children. Put the container around `Select.Root`, not only around `Select.Trigger`:
 
@@ -154,25 +152,23 @@ You can add custom validation logic with a synchronous or an asynchronous functi
 
 Use the `validationMode` prop to set when the validation runs:
 
-- `onSubmit` (default) validates the fields when the parent `<Form>` is submitted. Afterward, the fields validate again when their value changes.
-- `onBlur` validates the field when the focus moves away.
-- `onChange` validates the field when its value changes. A key press in a text field is an example. So is a click on a checkbox.
+- `submit` (default) validates the fields when the parent `<Form>` is submitted. Afterward, the fields validate again when their value changes.
+- `blur` validates the field when the focus moves away.
+- `change` validates the field when its value changes. A key press in a text field is an example. So is a click on a checkbox.
 
-`validationDebounceTime` sets, in milliseconds, how long to wait between `validate` calls in `onChange` mode. Use it for asynchronous requests and for text fields that validate on change.
+`validationDebounceTime` sets, in milliseconds, how long to wait between `validate` calls in `change` mode. Use it for asynchronous requests and for text fields that validate on change.
 
-An asynchronous `validate` function does not stop the submission of a form in `onSubmit` mode.
+`validate` gets the value of the field and the values of its form. An asynchronous `validate` function does not stop the submission of a form in `submit` mode.
 
-<<< ../examples/forms/CustomValidation.vue{23-25}
+<<< ../examples/forms/CustomValidation.vue{24-26}
 
 ## Server-side validation
 
-You can give the errors that a server returns after a submission to the `errors` prop of `Form`. The form merges them into the state of each field for display.
+Bind the errors that a server returns after a submission with `v-model:errors` of `Form`. The form gives them to each field for display.
 
-`errors` is an object. Its keys are field names, and each value is an error string or an array of error strings. When the value of a field changes, the form clears the error of that field.
+`errors` is an object. Its keys are field names, and each value is an error string or an array of error strings. An edit of a field asks to remove the key of that field with `update:errors`.
 
-<<< ../examples/forms/ServerErrors.vue{14,18,23}
-
-After a change of a field clears its error, a write of an equal error value shows no error again, because Vue reports no change. Give a new object, or change a value.
+<<< ../examples/forms/ServerErrors.vue{15,19,24}
 
 A demo on the [Form page](/components/form#submit-to-a-server) shows the errors of a server after a submission.
 
@@ -180,7 +176,7 @@ A demo on the [Form page](/components/form#submit-to-a-server) shows the errors 
 
 Use `<Field.Error>` with no content to show the native error message of the field while it is invalid. The `match` prop customizes the message for a validity state, so that you can manage internationalization in your application:
 
-<<< ../examples/forms/ErrorMatch.vue{8}
+<<< ../examples/forms/ErrorMatch.vue{9}
 
 ## VeeValidate
 
@@ -211,19 +207,19 @@ Initialize the form with the `useForm` function. Give the initial value of each 
 Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default slot gives the state of the field. Give the slot props to these parts:
 
 - `componentField.name` goes to the `name` prop of `<Field.Root>`.
-- `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>` and to `match` of `<Field.Error>`.
+- `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>`, and the error then shows.
 - `meta.touched` and `meta.dirty` go to `touched` and `dirty` of `<Field.Root>`.
-- Bind `componentField.modelValue` to `<Field.Control>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
+- Bind `componentField.modelValue` to `<Input>`. Use `componentField['onUpdate:modelValue']` for its model update and `componentField.onBlur` for blur. VeeValidate then receives each accepted edit once.
 
-<<< ../examples/forms/VeeValidateField.vue{9,11-14,22-24}
+<<< ../examples/forms/VeeValidateField.vue{10,12-15,23-25}
 
 For a composite control, pass `value` to `modelValue` and `handleChange` to `update:modelValue`. Attach `handleBlur` to the part that takes focus.
 
 ### Field validation
 
-Give `<Field>` a `rules` function. It returns `true` when the value is valid, or an error message. Use the `match` prop of `<Field.Error>` to show the message:
+Give `<Field>` a `rules` function. It returns `true` when the value is valid, or an error message. Give `!!errorMessage` to `invalid` of `<Field.Root>` to show the message:
 
-<<< ../examples/forms/VeeValidateRules.vue{7-15,22,32-34,36}
+<<< ../examples/forms/VeeValidateRules.vue{8-16,23,33-35,37}
 
 VeeValidate gives the function a value of the type `unknown`. Check the type in the function.
 
@@ -271,7 +267,7 @@ Use the `<form.Field>` component of the form instance. Its default slot gives `f
 - `field.state.meta.isValid`, `isDirty` and `isTouched` go to `invalid`, `dirty` and `touched` of `<Field.Root>`. `invalid` takes the opposite of `isValid`.
 - `field.state.value`, `field.handleChange` and `field.handleBlur` go to the `modelValue` prop, the `valueChange` event and the `blur` event of the control.
 
-<<< ../examples/forms/TanstackField.vue{10-16,19,21,22,24}
+<<< ../examples/forms/TanstackField.vue{11-17,20,22,23,25}
 
 The `Form` component of Vase UI is not needed with TanStack Form.
 

@@ -1,7 +1,6 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
 import { Teleport, defineComponent, shallowRef } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
-import { Field } from '@vase-ui/vue/field';
 import {
   createHeldBranch,
   createRenderer,
@@ -12,12 +11,9 @@ import {
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
 import * as Select from '../../select/index.parts';
-import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
-import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
-import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
-import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
-import { useLabelableContext } from './LabelableContext';
+import LabelPosition from './LabelPosition.test.vue';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
+import type { RegisterId } from './createIdRegistry';
 import { useLabel } from './useLabel';
 
 // A container for `<Teleport>` in a shadow root. The shadow root is in the document, or in another
@@ -32,55 +28,87 @@ function createShadowContainer(parent: Node = document.body) {
   return { host, shadowRoot, container };
 }
 
+/** A label part: a `<label>`, or a `<div>` when `native` is `false`. */
+const TestLabel = defineComponent(
+  (
+    props: { id?: string; native?: boolean; controlId?: string; registerLabelId?: RegisterId },
+    { attrs, slots },
+  ) => {
+    const element = shallowRef<HTMLElement | null>(null);
+    const labelProps = useLabel({
+      id: () => props.id,
+      element,
+      native: () => props.native ?? true,
+      fallbackControlId: () => props.controlId,
+      registerLabelId: (source, getId) => props.registerLabelId?.(source, getId),
+    });
+    return () =>
+      props.native === false ? (
+        <div ref={element} {...labelProps.value} {...attrs}>
+          {slots.default?.()}
+        </div>
+      ) : (
+        <label ref={element} {...labelProps.value} {...attrs}>
+          {slots.default?.()}
+        </label>
+      );
+  },
+  { props: ['id', 'native', 'controlId', 'registerLabelId'], inheritAttrs: false },
+);
+
+/** A control that a label names by its id. */
+function Control(props: { id: string; testid?: string }) {
+  return (
+    <span
+      role="checkbox"
+      tabindex="0"
+      aria-checked="false"
+      id={props.id}
+      data-testid={props.testid}
+    />
+  );
+}
+
 describe('useLabel', () => {
   const { render } = createRenderer();
 
-  describe.each(['Select.Label', 'Combobox.Label', 'Field.Label'])('%s', (labelType) => {
+  describe.each(['Select.Label', 'Combobox.Label'])('%s', (labelType) => {
     const TestControl = defineComponent(() => () => {
       if (labelType === 'Combobox.Label') {
         return (
-          <Field.Root name="country">
-            <Combobox.Root>
-              <Combobox.Label>Country</Combobox.Label>
-              <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-              <Combobox.Portal>
-                <Combobox.Positioner>
-                  <Combobox.Popup>
-                    <Combobox.Input aria-label="Search countries" />
-                    <Combobox.List>
-                      <Combobox.Item value="fr">France</Combobox.Item>
-                    </Combobox.List>
-                  </Combobox.Popup>
-                </Combobox.Positioner>
-              </Combobox.Portal>
-            </Combobox.Root>
-          </Field.Root>
+          <Combobox.Root>
+            <Combobox.Label>Country</Combobox.Label>
+            <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.Input aria-label="Search countries" />
+                  <Combobox.List>
+                    <Combobox.Item value="fr">France</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
         );
       }
 
       return (
-        <Field.Root name="country">
-          {labelType === 'Field.Label' && (
-            <Field.Label nativeLabel={false} as="div">
-              Country
-            </Field.Label>
-          )}
-          <Select.Root>
-            {labelType === 'Select.Label' && <Select.Label>Country</Select.Label>}
-            <Select.Trigger id="country">Choose a country</Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.List>
-                    <Select.Item value="fr">
-                      <Select.ItemText>France</Select.ItemText>
-                    </Select.Item>
-                  </Select.List>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        </Field.Root>
+        <Select.Root>
+          <Select.Label>Country</Select.Label>
+          <Select.Trigger id="country">Choose a country</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.List>
+                  <Select.Item value="fr">
+                    <Select.ItemText>France</Select.ItemText>
+                  </Select.Item>
+                </Select.List>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
       );
     });
 
@@ -117,19 +145,15 @@ describe('useLabel', () => {
     );
   });
 
-  it('does not throw when a label is clicked in a detached React root', async () => {
+  it('does not throw when a label is clicked in a detached root', async () => {
     const container = document.createElement('div');
 
     const { unmount } = await render(
       <Teleport to={container}>
-        <Field.Root>
-          <Field.Label nativeLabel={false} as="div">
-            Country
-          </Field.Label>
-          <Select.Root>
-            <Select.Trigger id="country">Choose a country</Select.Trigger>
-          </Select.Root>
-        </Field.Root>
+        <Select.Root>
+          <Select.Label>Country</Select.Label>
+          <Select.Trigger id="country">Choose a country</Select.Trigger>
+        </Select.Root>
       </Teleport>,
     );
 
@@ -193,23 +217,6 @@ describe('useLabel', () => {
     expect(control).not.toHaveFocus();
   });
 
-  it('preserves native label activation inside a shadow root', async () => {
-    const { shadowRoot, container } = createShadowContainer();
-    const { user } = await render(
-      <Teleport to={container}>
-        <Field.Root>
-          <Field.Label>Name</Field.Label>
-          <Field.Control />
-        </Field.Root>
-      </Teleport>,
-    );
-    const control = within(container).getByRole('textbox', { name: 'Name' });
-
-    await user.click(within(container).getByText('Name'));
-
-    expect(shadowRoot.activeElement).toBe(control);
-  });
-
   it('focuses a control in the light DOM from a label in a shadow root', async () => {
     const { container } = createShadowContainer();
     const { user } = await render(
@@ -245,15 +252,15 @@ describe('useLabel', () => {
     expect(outer.shadowRoot.activeElement).toBe(within(outer.container).getByRole('combobox'));
   });
 
-  describe('with a fixture label and control', () => {
-    it('focuses the control of the provider when a label that is not native is clicked', async () => {
+  describe('with a label and a control', () => {
+    it('focuses the control when a label that is not native is clicked', async () => {
       const { user } = await render(
-        <LabelableScope>
-          <LabelableLabel native={false} data-testid="label">
+        <>
+          <TestLabel native={false} controlId="control" data-testid="label">
             Label
-          </LabelableLabel>
-          <LabelableControl data-testid="control" />
-        </LabelableScope>,
+          </TestLabel>
+          <Control id="control" testid="control" />
+        </>,
       );
 
       await user.click(screen.getByTestId('label'));
@@ -269,13 +276,15 @@ describe('useLabel', () => {
       async ({ outerMatchingId }) => {
         const { host, shadowRoot, container } = createShadowContainer();
         const { user } = await render(
-          <LabelableScope>
+          <>
             {outerMatchingId && <input id="country" aria-label="Unrelated control" />}
             <Teleport to={container}>
-              <LabelableLabel native={false}>Country</LabelableLabel>
-              <LabelableControl id="country" data-testid="control" />
+              <TestLabel native={false} controlId="country">
+                Country
+              </TestLabel>
+              <Control id="country" testid="control" />
             </Teleport>
-          </LabelableScope>,
+          </>,
         );
 
         await user.click(within(container).getByText('Country'));
@@ -288,12 +297,14 @@ describe('useLabel', () => {
     it('focuses a control in the light DOM from a label in a shadow root', async () => {
       const { container } = createShadowContainer();
       const { user } = await render(
-        <LabelableScope>
+        <>
           <Teleport to={container}>
-            <LabelableLabel native={false}>Country</LabelableLabel>
+            <TestLabel native={false} controlId="country">
+              Country
+            </TestLabel>
           </Teleport>
-          <LabelableControl id="country" data-testid="control" />
-        </LabelableScope>,
+          <Control id="country" testid="control" />
+        </>,
       );
 
       await user.click(within(container).getByText('Country'));
@@ -305,14 +316,16 @@ describe('useLabel', () => {
       const outer = createShadowContainer();
       const inner = createShadowContainer(outer.shadowRoot);
       const { user } = await render(
-        <LabelableScope>
+        <>
           <Teleport to={inner.container}>
-            <LabelableLabel native={false}>Country</LabelableLabel>
+            <TestLabel native={false} controlId="country">
+              Country
+            </TestLabel>
           </Teleport>
           <Teleport to={outer.container}>
-            <LabelableControl id="country" data-testid="control" />
+            <Control id="country" testid="control" />
           </Teleport>
-        </LabelableScope>,
+        </>,
       );
 
       await user.click(within(inner.container).getByText('Country'));
@@ -323,12 +336,14 @@ describe('useLabel', () => {
     it('reports nothing and focuses nothing when a label in a container outside the document is clicked', async () => {
       const container = document.createElement('div');
       await render(
-        <LabelableScope>
+        <>
           <Teleport to={container}>
-            <LabelableLabel native={false}>Country</LabelableLabel>
-            <LabelableControl id="country" />
+            <TestLabel native={false} controlId="country">
+              Country
+            </TestLabel>
+            <Control id="country" />
           </Teleport>
-        </LabelableScope>,
+        </>,
       );
 
       const errors: ErrorEvent[] = [];
@@ -351,10 +366,12 @@ describe('useLabel', () => {
 
     it('gives a native label `for` with the id of the control and moves no focus itself', async () => {
       await render(
-        <LabelableScope>
-          <LabelableLabel data-testid="label">Label</LabelableLabel>
-          <LabelableControl data-testid="control" />
-        </LabelableScope>,
+        <>
+          <TestLabel controlId="control" data-testid="label">
+            Label
+          </TestLabel>
+          <Control id="control" testid="control" />
+        </>,
       );
       const label = screen.getByTestId('label');
       const control = screen.getByTestId('control');
@@ -372,11 +389,9 @@ describe('useLabel', () => {
       { name: 'a label that is not native', native: false, type: 'click' },
     ] as const)('prevents the default of a double $type on $name', async ({ native, type }) => {
       await render(
-        <LabelableScope>
-          <LabelableLabel native={native} data-testid="label">
-            Label
-          </LabelableLabel>
-        </LabelableScope>,
+        <TestLabel native={native} data-testid="label">
+          Label
+        </TestLabel>,
       );
       const label = screen.getByTestId('label');
 
@@ -386,12 +401,12 @@ describe('useLabel', () => {
 
     it('prevents the default of a pointerdown on a label that is not native, and on no other label', async () => {
       await render(
-        <LabelableScope>
-          <LabelableLabel data-testid="native">Label</LabelableLabel>
-          <LabelableLabel native={false} data-testid="not-native">
+        <>
+          <TestLabel data-testid="native">Label</TestLabel>
+          <TestLabel native={false} data-testid="not-native">
             Label
-          </LabelableLabel>
-        </LabelableScope>,
+          </TestLabel>
+        </>,
       );
 
       expect(await fireEvent.pointerDown(screen.getByTestId('native'))).toBe(true);
@@ -416,23 +431,13 @@ describe('useLabel', () => {
         { props: ['focusControl'] },
       );
 
-      it.each([
-        { name: 'the id of the control of the provider', withProvider: true, controlId: 'own' },
-        {
-          name: 'the fallback id when there is no provider',
-          withProvider: false,
-          controlId: 'fallback',
-        },
-      ])('gets the event and $name, and the control gets no focus', async (row) => {
+      it('gets the event and the id of the control, and the control gets no focus', async () => {
         const focusControl = vi.fn();
-        const parts = (
+        const { user } = await render(
           <>
             <FocusLabel focusControl={focusControl} />
-            <LabelableControl id={row.controlId} data-testid="control" />
-          </>
-        );
-        const { user } = await render(
-          row.withProvider ? <LabelableScope>{parts}</LabelableScope> : parts,
+            <Control id="fallback" testid="control" />
+          </>,
         );
 
         await user.click(screen.getByTestId('label'));
@@ -440,7 +445,7 @@ describe('useLabel', () => {
         expect(focusControl).toHaveBeenCalledTimes(1);
         const [event, controlId] = focusControl.mock.lastCall!;
         expect(event.type).toBe('click');
-        expect(controlId).toBe(row.controlId);
+        expect(controlId).toBe('fallback');
         expect(screen.getByTestId('control')).not.toHaveFocus();
       });
     });
@@ -474,9 +479,7 @@ describe('useLabel', () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const Test = defineComponent(
           (props: { show: boolean }) => () =>
-            props.show ? (
-              <LabelableLabel registerLabelId={registerLabelId} data-testid="label" />
-            ) : null,
+            props.show ? <TestLabel registerLabelId={registerLabelId} data-testid="label" /> : null,
           { props: ['show'] },
         );
 
@@ -495,10 +498,8 @@ describe('useLabel', () => {
         const Test = defineComponent(
           (props: { first: boolean; second: boolean }) => () => (
             <>
-              {props.first && <LabelableLabel id="first-label" registerLabelId={registerLabelId} />}
-              {props.second && (
-                <LabelableLabel id="second-label" registerLabelId={registerLabelId} />
-              )}
+              {props.first && <TestLabel id="first-label" registerLabelId={registerLabelId} />}
+              {props.second && <TestLabel id="second-label" registerLabelId={registerLabelId} />}
             </>
           ),
           { props: ['first', 'second'] },
@@ -521,7 +522,7 @@ describe('useLabel', () => {
       it('keeps the id of the label when a label before the control replaces a label after it', async () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const tree = (labelBeforeControl: boolean) => (
-          <LabelableLabelPosition
+          <LabelPosition
             labelBeforeControl={labelBeforeControl}
             labelId="part-label"
             registerLabelId={registerLabelId}
@@ -539,12 +540,10 @@ describe('useLabel', () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const Test = defineComponent(
           (props: { ownLabel: boolean }) => () => (
-            <LabelableScope>
-              <LabelableLabel id="field-label" />
-              {props.ownLabel && (
-                <LabelableLabel id="own-label" registerLabelId={registerLabelId} />
-              )}
-            </LabelableScope>
+            <>
+              <TestLabel id="other-label" />
+              {props.ownLabel && <TestLabel id="own-label" registerLabelId={registerLabelId} />}
+            </>
           ),
           { props: ['ownLabel'] },
         );
@@ -559,8 +558,7 @@ describe('useLabel', () => {
     });
 
     describe('KeepAlive', () => {
-      // The label registers with the field outside the branch and with the registry of a root.
-      it('gives no id to the field or to the root while KeepAlive holds a label that mounted in a held branch', async () => {
+      it('gives no id to the root while KeepAlive holds a label that mounted in a held branch', async () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const HeldLabel = defineComponent(() => {
           const element = shallowRef<HTMLElement | null>(null);
@@ -568,24 +566,12 @@ describe('useLabel', () => {
           return () => <div ref={element} {...labelProps.value} />;
         });
         const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <HeldLabel />);
-        const FieldLabelId = defineComponent(() => {
-          const context = useLabelableContext();
-          return () => <output data-testid="field-label-id">{context.labelId.value}</output>;
-        });
-        await render(() => (
-          <Field.Root>
-            <FieldLabelId />
-            <HeldBranch />
-          </Field.Root>
-        ));
-        const fieldLabelId = screen.getByTestId('field-label-id');
+        await render(() => <HeldBranch />);
 
         await mountWhileHeld();
-        expect(fieldLabelId.textContent).toBe('');
         expect(labelId.value).toBeUndefined();
 
         await show();
-        expect(fieldLabelId.textContent).toBe('held-label');
         expect(labelId.value).toBe('held-label');
       });
     });

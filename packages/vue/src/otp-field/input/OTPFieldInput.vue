@@ -45,7 +45,6 @@ import {
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -86,16 +85,11 @@ const {
   pattern,
   reportValueInvalid,
   inputRender,
-  setFocused: setRootFocused,
+  setFocused,
   setValue,
   state,
 } = useOTPFieldRootContext();
 
-const setFocused = useSetFieldFocused(
-  () => state.value.disabled,
-  () => element.value,
-  setRootFocused,
-);
 const direction = useDirection();
 
 // During an IME composition, Safari gives the text through `input` events as a string that grows:

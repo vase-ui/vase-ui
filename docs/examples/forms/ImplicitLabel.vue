@@ -6,7 +6,7 @@ import { Switch } from '@vase-ui/vue/switch';
 <template>
   <Field.Root>
     <Field.Label>
-      <Switch.Root />
+      <Switch />
       Developer mode
     </Field.Label>
     <Field.Description>Enables extra tools for web developers</Field.Description>

@@ -123,11 +123,14 @@ async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) 
   expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
+// HTML takes the first `<legend>` of a `<fieldset>` as its name.
 async function expectFieldsetPage(page: Page) {
-  const legendId = await page.getByTestId('legend').getAttribute('id');
+  const readTag = (testId: string) =>
+    page.getByTestId(testId).evaluate((element) => element.localName);
 
-  expect(legendId).toBeTruthy();
-  expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
+  expect(await readTag('fieldset')).toBe('fieldset');
+  expect(await readTag('legend')).toBe('legend');
+  expect(await page.getByTestId('legend').getAttribute('id')).toBeTruthy();
   expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
@@ -367,10 +370,8 @@ async function expectHydratedScrollAreaPage(page: Page) {
 async function expectLabelledField(page: Page, name: string) {
   const readId = (part: string) => page.getByTestId(`${name}-${part}`).getAttribute('id');
   const controlId = await readId('control');
-  const labelId = await readId('label');
 
   expect(controlId).toBeTruthy();
-  expect(labelId).toBeTruthy();
   expect(await page.getByTestId(`${name}-label`).getAttribute('for')).toBe(controlId);
   expect(
     await readAttributes(page.getByTestId(`${name}-control`), [
@@ -378,7 +379,7 @@ async function expectLabelledField(page: Page, name: string) {
       'aria-describedby',
     ]),
   ).toEqual({
-    'aria-labelledby': labelId,
+    'aria-labelledby': null,
     'aria-describedby': `${await readId('description')} ${await readId('error')}`,
   });
 }
@@ -395,7 +396,7 @@ async function expectFieldPage(page: Page) {
   expect(control).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
   expect(
     await readAttributes(page.getByTestId('invalid-control'), ['data-invalid', 'aria-invalid']),
-  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+  ).toEqual({ 'data-invalid': null, 'aria-invalid': 'true' });
   await expectLabelledField(page, 'label-first');
   await expectLabelledField(page, 'label-last');
 }
@@ -520,7 +521,7 @@ async function expectInputPage(page: Page) {
   expect(input).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
   expect(
     await readAttributes(page.getByTestId('invalid-input'), ['data-invalid', 'aria-invalid']),
-  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+  ).toEqual({ 'data-invalid': null, 'aria-invalid': 'true' });
 }
 
 async function expectProvidersPage(page: Page) {
@@ -566,158 +567,83 @@ async function expectMediaQueryPage(page: Page) {
 
 async function readSwitchPage(page: Page) {
   const read = (testId: string) =>
-    readAttributes(page.getByTestId(testId), [
-      'role',
-      'aria-checked',
-      'data-checked',
-      'aria-label',
-    ]);
+    readAttributes(page.getByTestId(testId), ['type', 'role', 'checked', 'aria-label']);
 
   return {
     notifications: await read('notifications'),
-    thumb: await page.getByTestId('thumb').getAttribute('data-unchecked'),
     wifi: await read('wifi'),
-    // The entries that a submit of the server HTML sends.
-    formData: await page
-      .getByTestId('form')
-      .evaluate((form) =>
-        Array.from(
-          new FormData(form as HTMLFormElement),
-          ([name, value]) => `${name}=${String(value)}`,
-        ),
-      ),
+    formData: await readFormData(page),
   };
 }
 
+// The `formdata` listener that gives the entry of `uncheckedValue` runs after the hydration.
 async function expectSwitchPage(page: Page) {
   expect(await readSwitchPage(page)).toEqual({
-    notifications: {
-      role: 'switch',
-      'aria-checked': 'false',
-      'data-checked': null,
-      'aria-label': null,
-    },
-    thumb: '',
-    wifi: { role: 'switch', 'aria-checked': 'true', 'data-checked': '', 'aria-label': 'Wi-Fi' },
-    formData: ['notifications=no', 'wifi=on'],
+    notifications: { type: 'checkbox', role: 'switch', checked: null, 'aria-label': null },
+    wifi: { type: 'checkbox', role: 'switch', checked: '', 'aria-label': 'Wi-Fi' },
+    formData: ['wifi=on'],
   });
-  // A server has no DOM, so it cannot find a native label.
-  expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(null);
 }
 
 async function expectHydratedSwitchPage(page: Page) {
-  expect((await readSwitchPage(page)).formData).toEqual(['notifications=no', 'wifi=on']);
-  const labelId = await page.getByTestId('label').getAttribute('id');
-  expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(labelId);
+  expect((await readSwitchPage(page)).formData).toEqual(['wifi=on', 'notifications=no']);
 }
-
-// The attributes of an indicator, or `null` when the page has no element for it.
-async function readIndicator(page: Page, testId: string, attributeNames: string[]) {
-  const indicator = page.getByTestId(testId);
-  if ((await indicator.count()) === 0) {
-    return null;
-  }
-
-  return readAttributes(indicator, attributeNames);
-}
-
-const CHECKBOX_INDICATOR_ATTRIBUTES = ['data-checked', 'data-unchecked', 'data-indeterminate'];
-const RADIO_INDICATOR_ATTRIBUTES = [
-  'data-checked',
-  'data-unchecked',
-  'data-starting-style',
-  'data-ending-style',
-];
 
 async function readCheckboxPage(page: Page) {
   const read = (testId: string) =>
     readAttributes(page.getByTestId(testId), [
-      'role',
-      'aria-checked',
-      'data-checked',
+      'type',
+      'checked',
       'data-indeterminate',
       'aria-label',
     ]);
-  const form = page.getByTestId('form');
 
   return {
     terms: await read('terms'),
     news: await read('news'),
     some: await read('some'),
-    indicators: {
-      terms: await readIndicator(page, 'terms-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
-      news: await readIndicator(page, 'news-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
-      some: await readIndicator(page, 'some-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
-      kept: await readIndicator(page, 'kept-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
-    },
-    // The entries that a submit of the server HTML sends.
-    formData: await form.evaluate((element) =>
-      Array.from(
-        new FormData(element as HTMLFormElement),
-        ([name, value]) => `${name}=${String(value)}`,
+    formData: await readFormData(page),
+    indeterminate: await page
+      .getByTestId('form')
+      .evaluate((element) =>
+        Array.from(
+          element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+          (input) => input.indeterminate,
+        ),
       ),
-    ),
-    indeterminate: await form.evaluate((element) =>
-      Array.from(
-        element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
-        (input) => input.indeterminate,
-      ),
-    ),
   };
 }
 
+// The `formdata` listener that gives the entry of `uncheckedValue` runs after the hydration.
 async function expectCheckboxPage(page: Page) {
   expect(await readCheckboxPage(page)).toEqual({
-    terms: {
-      role: 'checkbox',
-      'aria-checked': 'false',
-      'data-checked': null,
-      'data-indeterminate': null,
-      'aria-label': null,
-    },
-    news: {
-      role: 'checkbox',
-      'aria-checked': 'true',
-      'data-checked': '',
-      'data-indeterminate': null,
-      'aria-label': 'News',
-    },
-    some: {
-      role: 'checkbox',
-      'aria-checked': 'mixed',
-      'data-checked': null,
-      'data-indeterminate': '',
-      'aria-label': 'Some',
-    },
-    indicators: {
-      terms: null,
-      news: { 'data-checked': '', 'data-unchecked': null, 'data-indeterminate': null },
-      some: { 'data-checked': null, 'data-unchecked': null, 'data-indeterminate': '' },
-      kept: { 'data-checked': null, 'data-unchecked': '', 'data-indeterminate': null },
-    },
-    formData: ['terms=no', 'news=on'],
+    terms: { type: 'checkbox', checked: null, 'data-indeterminate': null, 'aria-label': null },
+    news: { type: 'checkbox', checked: '', 'data-indeterminate': null, 'aria-label': 'News' },
+    some: { type: 'checkbox', checked: null, 'data-indeterminate': '', 'aria-label': 'Some' },
+    formData: ['news=on'],
     // HTML has no attribute for `indeterminate`, so a server cannot write it.
-    indeterminate: [false, false, false, false],
+    indeterminate: [false, false, false],
   });
-  // A server has no DOM, so it cannot find a native label.
-  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(null);
 }
 
 async function expectHydratedCheckboxPage(page: Page) {
   const { formData, indeterminate } = await readCheckboxPage(page);
-  expect(formData).toEqual(['terms=no', 'news=on']);
-  expect(indeterminate).toEqual([false, false, true, false]);
-  const labelId = await page.getByTestId('label').getAttribute('id');
-  expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(formData).toEqual(['news=on', 'terms=no']);
+  expect(indeterminate).toEqual([false, false, true]);
 }
 
 function readRadios(page: Page, testId: string, attributeName: string) {
   return page
     .getByTestId(testId)
-    .locator('[role="radio"]')
+    .locator('input[type="radio"]')
     .evaluateAll((radios, name) => radios.map((radio) => radio.getAttribute(name)), attributeName);
+}
+
+function readCheckedRadios(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[type="radio"]')
+    .evaluateAll((radios) => radios.map((radio) => (radio as HTMLInputElement).checked));
 }
 
 // The entries that a submit of the form sends.
@@ -732,69 +658,43 @@ function readFormData(page: Page) {
     );
 }
 
-// The tab stop is on the checked radio, or on the first radio that is not disabled when no radio is
-// checked. The label comes after the group, and the server HTML names the group with it.
-async function expectRadioGroupPage(page: Page) {
+// The label comes after the group, and the server HTML names the group with it. The server HTML
+// has no `tabindex`: the browser gives the tab stop to the checked radio of a named group. After
+// the mount, the tab stop has no `tabindex`, and each other radio has `-1`.
+async function expectRadioGroupPage(page: Page, { hydrated }: { hydrated: boolean }) {
   const labelId = await page.getByTestId('label').getAttribute('id');
   expect(labelId).toBeTruthy();
   expect(await readAttributes(page.getByTestId('fruit'), ['role', 'aria-labelledby'])).toEqual({
     role: 'radiogroup',
     'aria-labelledby': labelId,
   });
-  expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['false', 'true', 'false']);
-  expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', '0', '-1']);
+  const tabStops = hydrated ? ['-1', null, '-1'] : [null, null, null];
+  expect(await readCheckedRadios(page, 'fruit')).toEqual([false, true, false]);
+  expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(tabStops);
   expect(await readFormData(page)).toEqual(['fruit=banana']);
-  // The indicator of a radio that is not checked has no element, unless it has `keepMounted`. No
-  // indicator has a transition attribute, because a radio that is checked at the mount does not
-  // animate in.
-  expect({
-    apple: await readIndicator(page, 'apple-indicator', RADIO_INDICATOR_ATTRIBUTES),
-    banana: await readIndicator(page, 'banana-indicator', RADIO_INDICATOR_ATTRIBUTES),
-    cherry: await readIndicator(page, 'cherry-indicator', RADIO_INDICATOR_ATTRIBUTES),
-  }).toEqual({
-    apple: null,
-    banana: {
-      'data-checked': '',
-      'data-unchecked': null,
-      'data-starting-style': null,
-      'data-ending-style': null,
-    },
-    cherry: {
-      'data-checked': null,
-      'data-unchecked': '',
-      'data-starting-style': null,
-      'data-ending-style': null,
-    },
-  });
-
-  expect(await readRadios(page, 'empty', 'aria-checked')).toEqual(['false', 'false', 'false']);
-  expect(await readRadios(page, 'empty', 'tabindex')).toEqual(['-1', '0', '-1']);
+  expect(await readCheckedRadios(page, 'empty')).toEqual([false, false, false]);
+  expect(await readRadios(page, 'empty', 'tabindex')).toEqual(tabStops);
 }
 
 const APPLE_TEST_IDS = ['fuji', 'gala', 'granny-smith'];
 
 async function readCheckboxGroupPage(page: Page) {
+  const readState = (testId: string) =>
+    page.getByTestId(testId).evaluate((element) => {
+      const input = element as HTMLInputElement;
+      return input.indeterminate ? 'mixed' : String(input.checked);
+    });
+
   return {
     group: await readAttributes(page.getByTestId('group'), ['role', 'aria-labelledby']),
     parent: await readAttributes(page.getByTestId('parent'), [
-      'aria-checked',
-      'data-checked',
+      'name',
       'data-indeterminate',
-      'data-parent',
       'aria-controls',
     ]),
-    apples: await Promise.all(
-      APPLE_TEST_IDS.map((testId) => page.getByTestId(testId).getAttribute('aria-checked')),
-    ),
+    parentState: await readState('parent'),
+    apples: await Promise.all(APPLE_TEST_IDS.map(readState)),
     formData: await readFormData(page),
-    indeterminate: await page
-      .getByTestId('form')
-      .evaluate((form) =>
-        Array.from(
-          form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
-          (input) => input.indeterminate,
-        ),
-      ),
   };
 }
 
@@ -812,15 +712,13 @@ async function expectCheckboxGroupPage(page: Page, { hydrated }: { hydrated: boo
   expect(await readCheckboxGroupPage(page)).toEqual({
     group: { role: 'group', 'aria-labelledby': labelId },
     parent: {
-      'aria-checked': 'mixed',
-      'data-checked': null,
+      name: null,
       'data-indeterminate': '',
-      'data-parent': '',
       'aria-controls': hydrated ? childIds.join(' ') : null,
     },
+    parentState: hydrated ? 'mixed' : 'false',
     apples: ['true', 'false', 'false'],
     formData: ['apples=fuji'],
-    indeterminate: [hydrated, false, false, false],
   });
 }
 
@@ -1075,32 +973,20 @@ async function expectTimePickerPage(page: Page) {
   expect(await page.getByTestId('start-popup').count()).toBe(0);
 }
 
-async function expectDateFieldPageOnServer(page: Page) {
+// A native label outside a field names only the element that its `for` names.
+async function expectDateFieldPageWithNativeLabel(page: Page) {
   await expectDateFieldPage(page);
-  // A server has no DOM, so it cannot find a native label.
   expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
 }
 
-async function expectHydratedDateFieldPage(page: Page) {
-  await expectDateFieldPage(page);
-  const labelId = await page.getByTestId('card-label').getAttribute('id');
-  expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(labelId);
-}
-
-async function expectOTPFieldPageOnServer(page: Page) {
+// A native label outside a field names only the element that its `for` names: the first slot.
+async function expectOTPFieldPageWithNativeLabel(page: Page) {
   await expectOTPFieldPage(page);
-  // A server has no DOM, so it cannot find a native label.
   expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(null);
   expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(null));
-}
-
-async function expectHydratedOTPFieldPage(page: Page) {
-  await expectOTPFieldPage(page);
-  const labelId = await page.getByTestId('pin-label').getAttribute('id');
-  expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(labelId);
-  expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(labelId));
+  expect(await page.getByTestId('pin-label').getAttribute('for')).toBe(
+    await page.getByTestId('pin-1').getAttribute('id'),
+  );
 }
 
 // The label and the messages name the input in the server HTML, in each order of the parts. The
@@ -1791,14 +1677,6 @@ async function expectHydratedComboboxPage(page: Page) {
 // The text that the case types into each control before hydration, and the value that the
 // control and the model of the page have after hydration.
 const TEXT_BEFORE_HYDRATION = [
-  { control: 'input', text: 'Ada', value: 'Ada', output: 'input-value', model: 'Ada' },
-  {
-    control: 'field-control',
-    text: 'ada@example.com',
-    value: 'ada@example.com',
-    output: 'field-value',
-    model: 'ada@example.com',
-  },
   // The input lost the focus before hydration, so the root formats its text.
   {
     control: 'number-input',
@@ -1833,19 +1711,12 @@ interface FormState {
   formData: Record<string, string[]>;
   models: Record<string, unknown>;
   changes: Record<string, number>;
-  checked: Record<string, string | null>;
-  newsDirty: boolean;
   submits: string;
   completes: string;
 }
 
 const FORM_STATE_INITIAL_MODELS = {
-  text: '',
   filter: '',
-  agree: false,
-  letters: [],
-  notify: false,
-  size: 's',
   font: 'serif',
   fruit: null,
   quantity: 1,
@@ -1856,18 +1727,11 @@ const FORM_STATE_INITIAL_MODELS = {
   alarm: null,
 };
 
-// The state of /form-state after a visitor presses each native label, types into each text control
-// and writes each hidden input. `code` is the hidden input of OTP Field.
+// The state of /form-state after a visitor types into the text control and writes each hidden
+// input. `code` is the hidden input of OTP Field.
 const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
   formData: {
-    note: ['typed'],
-    text: ['typed'],
     filter: ['typed'],
-    agree: ['on'],
-    news: ['on'],
-    letters: ['a', 'b'],
-    notify: ['on'],
-    size: ['l'],
     font: ['mono'],
     fruit: ['Cherry'],
     quantity: ['7'],
@@ -1878,12 +1742,7 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     alarm: ['09:30'],
   },
   models: {
-    text: 'typed',
     filter: 'typed',
-    agree: true,
-    letters: ['a', 'b'],
-    notify: true,
-    size: 'l',
     font: 'mono',
     fruit: 'Cherry',
     quantity: 7,
@@ -1894,14 +1753,7 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     alarm: '09:30',
   },
   changes: {
-    note: 1,
-    text: 1,
     filter: 1,
-    agree: 1,
-    news: 1,
-    letters: 2,
-    notify: 1,
-    size: 1,
     font: 1,
     fruit: 1,
     quantity: 1,
@@ -1911,27 +1763,7 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     when: 1,
     alarm: 1,
   },
-  checked: {
-    agree: 'true',
-    news: 'true',
-    'letter-a': 'true',
-    'letter-b': 'true',
-    notify: 'true',
-    'size-s': 'false',
-    'size-m': 'false',
-    'size-l': 'true',
-  },
-  newsDirty: true,
 };
-
-const FORM_STATE_LABELS = [
-  'agree-label',
-  'news-label',
-  'letter-a-label',
-  'letter-b-label',
-  'notify-label',
-  'size-l-label',
-];
 
 const FORM_STATE_ENGINES: { name: string; engine: BrowserType }[] = [
   { name: 'Chromium', engine: chromium },
@@ -1955,19 +1787,10 @@ async function readFormState(page: Page): Promise<FormState> {
     for (const [name, value] of new FormData(form ?? undefined)) {
       (formData[name] ??= []).push(String(value));
     }
-    const parts = document.querySelectorAll('[role="checkbox"], [role="switch"], [role="radio"]');
     return {
       formData,
       models: JSON.parse(read('models')) as Record<string, unknown>,
       changes: JSON.parse(read('changes')) as Record<string, number>,
-      checked: Object.fromEntries(
-        Array.from(parts, (part) => [
-          part.getAttribute('data-testid') ?? '',
-          part.getAttribute('aria-checked'),
-        ]),
-      ),
-      newsDirty:
-        document.querySelector('[data-testid="news-field"]')?.hasAttribute('data-dirty') ?? false,
       submits: read('submits'),
       completes: read('completes'),
     };
@@ -1977,12 +1800,7 @@ async function readFormState(page: Page): Promise<FormState> {
 // What a visitor and a program do to /form-state before its scripts run. A program writes a
 // hidden input with no event, as a browser restores it.
 async function changeFormStateBeforeHydration(page: Page) {
-  for (const label of FORM_STATE_LABELS) {
-    await page.getByTestId(label).click();
-  }
-  for (const control of ['note', 'text', 'filter']) {
-    await page.getByTestId(control).fill('typed');
-  }
+  await page.getByTestId('filter').fill('typed');
   await page.evaluate(() => {
     const write = (name: string, values: string[]) => {
       document
@@ -2004,12 +1822,7 @@ async function changeFormStateBeforeHydration(page: Page) {
 
 // What a visitor does to /form-state after the hydration.
 async function changeHydratedFormState(page: Page) {
-  for (const label of FORM_STATE_LABELS) {
-    await page.getByTestId(label).click();
-  }
-  for (const control of ['note', 'text', 'filter']) {
-    await page.getByTestId(control).fill('typed');
-  }
+  await page.getByTestId('filter').fill('typed');
   await page.getByTestId('font-trigger').click();
   await page.getByRole('option', { name: 'Monospace' }).click();
   await page.getByTestId('fruit-input').click();
@@ -2156,7 +1969,11 @@ const PAGES: PageCase[] = [
     expectPage: (page) => expectCheckboxGroupPage(page, { hydrated: false }),
     expectHydratedPage: (page) => expectCheckboxGroupPage(page, { hydrated: true }),
   },
-  { path: '/radio-group', expectPage: expectRadioGroupPage },
+  {
+    path: '/radio-group',
+    expectPage: (page) => expectRadioGroupPage(page, { hydrated: false }),
+    expectHydratedPage: (page) => expectRadioGroupPage(page, { hydrated: true }),
+  },
   {
     path: '/slider',
     expectPage: expectSliderPage,
@@ -2172,8 +1989,7 @@ const PAGES: PageCase[] = [
   { path: '/input', expectPage: expectInputPage },
   {
     path: '/otp-field',
-    expectPage: expectOTPFieldPageOnServer,
-    expectHydratedPage: expectHydratedOTPFieldPage,
+    expectPage: expectOTPFieldPageWithNativeLabel,
   },
   { path: '/calendar', expectPage: expectCalendarPage },
   {
@@ -2183,8 +1999,7 @@ const PAGES: PageCase[] = [
   },
   {
     path: '/date-field',
-    expectPage: expectDateFieldPageOnServer,
-    expectHydratedPage: expectHydratedDateFieldPage,
+    expectPage: expectDateFieldPageWithNativeLabel,
   },
   { path: '/date-picker', expectPage: expectDatePickerPage },
   { path: '/date-range-picker', expectPage: expectDateRangePickerPage },
@@ -2351,54 +2166,45 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.getByTestId('label').click();
     await page.getByTestId('wifi').click();
 
-    expect(await page.getByTestId('notifications').getAttribute('aria-checked')).toBe('true');
-    expect(await page.getByTestId('wifi').getAttribute('aria-checked')).toBe('false');
+    expect(await page.getByTestId('notifications').isChecked()).toBe(true);
+    expect(await page.getByTestId('wifi').isChecked()).toBe(false);
     expect(await page.getByTestId('wifi-value').textContent()).toBe('false');
     expect((await readSwitchPage(page)).formData).toEqual(['notifications=on']);
     expect(messages).toEqual([]);
   });
 
-  it('changes a checkbox on a click on its label and on the checkbox after hydration, and mounts and unmounts its indicator', async () => {
+  it('changes a checkbox on a click on its label and on the checkbox after hydration', async () => {
     const page = await createPage('/checkbox');
     const messages = collectMessages(page);
 
     await page.getByTestId('label').click();
     await page.getByTestId('news').click();
-    await page.getByTestId('news-indicator').waitFor({ state: 'detached' });
 
-    expect(await page.getByTestId('terms').getAttribute('aria-checked')).toBe('true');
-    expect(await page.getByTestId('terms-indicator').getAttribute('data-checked')).toBe('');
-    expect(await page.getByTestId('news').getAttribute('aria-checked')).toBe('false');
+    expect(await page.getByTestId('terms').isChecked()).toBe(true);
+    expect(await page.getByTestId('news').isChecked()).toBe(false);
     expect(await page.getByTestId('news-value').textContent()).toBe('false');
     expect((await readCheckboxPage(page)).formData).toEqual(['terms=on']);
     expect(messages).toEqual([]);
   });
 
-  it('selects a radio of /radio-group with a click and with an arrow key after hydration, and moves its indicator', async () => {
+  it('selects a radio of /radio-group with a click and with an arrow key after hydration', async () => {
     const page = await createPage('/radio-group');
     const messages = collectMessages(page);
     const readFocusedTestId = () =>
       page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
-    const readRadioIndicator = (testId: string) =>
-      readIndicator(page, testId, RADIO_INDICATOR_ATTRIBUTES);
 
     await page.getByTestId('apple').click();
-    await page.getByTestId('banana-indicator').waitFor({ state: 'detached' });
 
-    expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['true', 'false', 'false']);
-    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['0', '-1', '-1']);
-    expect(await readRadioIndicator('apple-indicator')).toMatchObject({ 'data-checked': '' });
-    expect(await readRadioIndicator('cherry-indicator')).toMatchObject({ 'data-unchecked': '' });
+    expect(await readCheckedRadios(page, 'fruit')).toEqual([true, false, false]);
+    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual([null, '-1', '-1']);
     expect(await page.getByTestId('value').textContent()).toBe('apple');
     expect(await readFormData(page)).toEqual(['fruit=apple']);
 
     await page.keyboard.press('ArrowDown');
-    await page.getByTestId('apple-indicator').waitFor({ state: 'detached' });
 
     expect(await readFocusedTestId()).toBe('banana');
-    expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['false', 'true', 'false']);
-    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', '0', '-1']);
-    expect(await readRadioIndicator('banana-indicator')).toMatchObject({ 'data-checked': '' });
+    expect(await readCheckedRadios(page, 'fruit')).toEqual([false, true, false]);
+    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', null, '-1']);
     expect(await page.getByTestId('value').textContent()).toBe('banana');
     expect(await readFormData(page)).toEqual(['fruit=banana']);
     expect(messages).toEqual([]);
@@ -2409,7 +2215,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     const messages = collectMessages(page);
     const expectSelection = async (parent: string, selected: string[]) => {
       expect(await readCheckboxGroupPage(page)).toMatchObject({
-        parent: { 'aria-checked': parent },
+        parentState: parent,
         apples: APPLE_TEST_IDS.map((apple) => String(selected.includes(apple))),
         formData: selected.map((apple) => `apples=${apple}`),
       });
@@ -3064,17 +2870,9 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         await page.goBack();
         await waitForFormStateHydration(page);
 
-        // Each engine restores the checkboxes, the radios and a text control that no part
-        // controls. Firefox also restores each other value.
+        // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        expect(state.checked).toEqual(FORM_STATE_CHANGED.checked);
-        expect(state.newsDirty).toBe(true);
-        for (const name of ['note', 'agree', 'news', 'letters', 'notify', 'size']) {
-          expect(state.formData[name]).toEqual(FORM_STATE_CHANGED.formData[name]);
-          expect(state.changes[name]).toBe(FORM_STATE_CHANGED.changes[name]);
-        }
         for (const name of [
-          'text',
           'filter',
           'font',
           'fruit',
@@ -3093,7 +2891,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
           expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
           expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
         }
-        expect(state.models).toMatchObject({ agree: true, letters: ['a', 'b'], code: '' });
+        expect(state.models).toMatchObject({ code: '' });
         expect(state.formData.code).toEqual(['']);
         expect([state.submits, state.completes]).toEqual(['0', '0']);
         expect(messages).toEqual([]);

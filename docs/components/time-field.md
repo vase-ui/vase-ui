@@ -52,7 +52,7 @@ Base UI has no time field. This one follows the [spinbutton pattern](https://www
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the field a `<label>` element, or put it in a `Field`. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, or give `TimeField.Root` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 

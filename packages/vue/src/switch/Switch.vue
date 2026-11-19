@@ -1,0 +1,97 @@
+<script setup lang="ts">
+import { computed, inject, mergeProps, useAttrs, useId } from 'vue';
+import { useChecked } from '../common/checked';
+import { useDeferredServerRender } from '../common/deferredServerRender';
+import { useElement } from '../common/element';
+import { givenId } from '../common/id';
+import { fieldKey, useFieldControl } from '../field/control';
+import { useInDisabledFieldset } from '../fieldset/part';
+import type { SwitchChangeEventDetails, SwitchProps, SwitchState } from './types';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<SwitchProps>(), {
+  // An absent `modelValue` makes the switch uncontrolled.
+  modelValue: undefined,
+});
+const emit = defineEmits<{
+  /** The user presses the switch. `details.cancel()` keeps the state as it was. */
+  checkedChange: [checked: boolean, details: SwitchChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [checked: boolean];
+}>();
+const slots = defineSlots<{
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: SwitchState;
+  }): unknown;
+}>();
+
+const attrs = useAttrs();
+const field = inject(fieldKey, null);
+// The label and the messages of the field can come after the switch.
+useDeferredServerRender();
+const generatedId = useId();
+const { element, setElement } = useElement<HTMLInputElement>();
+const inDisabledFieldset = useInDisabledFieldset(element);
+
+const { checked, attributes } = useChecked({
+  model: () => props.modelValue,
+  defaultChecked: () => props.defaultChecked,
+  readonly: () => props.readonly,
+  required: () => props.required,
+  uncheckedValue: () => props.uncheckedValue,
+  element,
+  field,
+  emitChange: (next, details) => emit('checkedChange', next, details),
+  emitModel: (next) => emit('update:modelValue', next),
+});
+const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const state = computed<SwitchState>(() => ({
+  checked: checked.value,
+  disabled: isDisabled.value,
+  readonly: props.readonly,
+  required: props.required,
+  touched: field?.state.touched ?? false,
+  dirty: field?.state.dirty ?? false,
+  valid: field?.state.valid ?? null,
+  filled: field?.state.filled ?? false,
+}));
+
+useFieldControl(field, element, {
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
+  name: () => props.name,
+  disabled: () => props.disabled || inDisabledFieldset.value,
+  readOnly: () => props.readonly,
+});
+
+defineExpose({ element });
+
+function elementProps() {
+  return mergeProps(
+    {
+      type: 'checkbox',
+      role: 'switch',
+      id: elementId.value,
+      name: field?.name ?? props.name,
+      disabled: isDisabled.value,
+      ...attributes.value,
+    },
+    attrs,
+  );
+}
+</script>
+
+<template>
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <input v-else v-bind="elementProps()" :ref="setElement" />
+</template>

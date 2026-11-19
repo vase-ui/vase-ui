@@ -8,6 +8,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
 import siteConfig from './docs/.vitepress/config.ts';
+import { REFACTORED_FOLDERS } from './packages/vue/test/refactoredFolders.ts';
 
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
@@ -75,7 +76,6 @@ const MESSAGES = {
     "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
-  checkedInput: 'Use `useCheckedInput` for a native click that changes an equal checked binding.',
   inputValueWrite: 'Restore the input through its Vue value binding.',
   handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
@@ -354,11 +354,6 @@ const RESTRICTED_SYNTAX = [
   },
   {
     selector:
-      'AssignmentExpression > MemberExpression.left[computed=false][property.name=/^(checked|indeterminate)$/]',
-    message: MESSAGES.checkedInput,
-  },
-  {
-    selector:
       'AssignmentExpression > MemberExpression.left[computed=false][property.name="value"] > TSAsExpression.object:has(TSTypeReference[typeName.name=/^HTML(Input|TextArea)Element$/])',
     message: MESSAGES.inputValueWrite,
   },
@@ -457,6 +452,14 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   },
   ...RESTRICTED_EXPRESSION_SYNTAX,
 ];
+
+// The rules of the forms that the families of `REFACTORED_FOLDERS` replace.
+const OLD_FORM_MESSAGES = new Set([
+  MESSAGES.renderSlotCall,
+  MESSAGES.conditionalForms,
+  MESSAGES.transition,
+  MESSAGES.keepAliveHook,
+]);
 
 // The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer
 // API, which also render a string as HTML. The list has `execCommand` for each command, not only
@@ -1131,6 +1134,26 @@ export default defineConfig([
     // for a parameter of `generic`, and a fix then removes a type argument that vue-tsc needs.
     files: ['**/*.{js,mjs,vue}', 'fixtures/nuxt/**'],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    // The families of `REFACTORED_FOLDERS` render one native element for each part, take the
+    // `element` slot and animate with `<Transition>`. These rules state the older forms that the
+    // other families still have.
+    files: REFACTORED_FOLDERS.map((folder) => `packages/vue/src/${folder}/**/*.{ts,vue}`),
+    ignores: TEST_FILES,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: RESTRICTED_IMPORTS.filter(({ message }) => !OLD_FORM_MESSAGES.has(message)),
+          patterns: RESTRICTED_IMPORT_PATTERNS,
+        },
+      ],
+      'vue/no-restricted-syntax': [
+        'error',
+        ...RESTRICTED_TEMPLATE_SYNTAX.filter(({ message }) => !OLD_FORM_MESSAGES.has(message)),
+      ],
+    },
   },
   eslintConfigPrettier,
 ]);

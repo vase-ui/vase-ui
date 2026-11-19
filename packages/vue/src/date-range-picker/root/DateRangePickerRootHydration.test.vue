@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Field from '../../field/index.parts';
+import { Field } from '../../field';
 import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
 
 // The props of a server render go to Node as JSON, so an end is a text. The form of the text gives

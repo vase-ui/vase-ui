@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 
 export type ComboboxLabelState = FieldRootState;
@@ -12,10 +12,10 @@ export interface ComboboxLabelProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, inject, onMounted, watch } from 'vue';
 import { error } from '../../common/error';
-import { fieldValidityMapping } from '../../internals/field-constants';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { fieldKey } from '../../field/control';
+import { DEFAULT_FIELD_ROOT_STATE, fieldValidityMapping } from '../../internals/field-constants';
 import { useLabel } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -31,7 +31,10 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ComboboxLabelState>;
 }>();
 
-const { state } = useFieldRootContext();
+const field = inject(fieldKey, null);
+const state = computed<ComboboxLabelState>(() =>
+  field ? { ...field.state, disabled: field.disabled } : DEFAULT_FIELD_ROOT_STATE,
+);
 const store = useComboboxRootContext();
 
 const inputInsidePopup = computed(() => store.select('inputInsidePopup'));
@@ -57,7 +60,12 @@ const labelProps = useLabel({
   fallbackControlId: () =>
     store.select('triggerElement')?.id ?? (inputInsidePopup.value ? store.select('id') : undefined),
   // While the input is outside the popup, the input is the control of a field.
-  controlElement: () => (inputInsidePopup.value ? store.select('triggerElement') : null),
+  controlElement: () =>
+    inputInsidePopup.value
+      ? store.select('triggerElement')
+      : field
+        ? store.select('inputElement')
+        : null,
   registerLabelId: store.context.registerLabelId,
 });
 

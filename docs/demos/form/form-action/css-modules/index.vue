@@ -2,16 +2,22 @@
 import { shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import { Input } from '@vase-ui/vue/input';
+import { Form, type FormErrors } from '@vase-ui/vue/form';
 import styles from './index.module.css';
 
 interface FormState {
-  serverErrors?: Form.Props['errors'];
+  serverErrors?: FormErrors;
 }
 
 const form = useTemplateRef('form');
 const state = shallowRef<FormState>({});
 const loading = shallowRef(false);
+
+// An edit of a field removes its error.
+function updateErrors(serverErrors: FormErrors) {
+  state.value = { ...state.value, serverErrors };
+}
 
 async function formAction(event: SubmitEvent) {
   event.preventDefault();
@@ -53,10 +59,16 @@ async function submitForm(_previousState: FormState, formData: FormData) {
 </script>
 
 <template>
-  <Form ref="form" :errors="state.serverErrors" :class="styles.Form" @submit="formAction">
+  <Form
+    ref="form"
+    :errors="state.serverErrors"
+    :class="styles.Form"
+    @update:errors="updateErrors"
+    @submit="formAction"
+  >
     <Field.Root name="username" :class="styles.Field">
       <Field.Label :class="styles.Label">Username</Field.Label>
-      <Field.Control
+      <Input
         type="text"
         autocomplete="username"
         required

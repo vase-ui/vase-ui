@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { InputHTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Side } from '../../internals/useAnchorPositioning';
 
@@ -44,19 +44,15 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { triggerBindings } from '../../utils/popups/popupBindings';
-import { computed, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, inject, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
-import {
-  FieldRootContext,
-  useFieldRootContext,
-} from '../../internals/field-root-context/FieldRootContext';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
-import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useVaseUiId';
@@ -64,6 +60,7 @@ import { useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
+import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { stopEvent } from '../../utils/popups/event';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useComboboxChipsContext } from '../chips/ComboboxChipsContext';
@@ -86,14 +83,7 @@ defineSlots<{
   render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, ComboboxInputState>;
 }>();
 
-const {
-  state: fieldState,
-  disabled: fieldDisabled,
-  setTouched,
-  validationMode,
-  validation,
-} = useFieldRootContext();
-const { labelId: fieldLabelId } = useLabelableContext();
+const field = inject(fieldKey, null);
 const chipsContext = useComboboxChipsContext();
 const hasPositionerParent = useComboboxPositionerContext(true) !== undefined;
 const store = useComboboxRootContext();
@@ -105,7 +95,7 @@ const direction = useDirection();
 // An input in the popup is not the control of the field. A part that the input renders, such as
 // a field control in its `as`, then gets no field.
 if (hasPositionerParent) {
-  provide(FieldRootContext, null);
+  provide(fieldKey, null);
 }
 
 // The input binds `aria-labelledby` and `aria-describedby`, and a label or a message can come
@@ -120,10 +110,8 @@ const inline = computed(() => store.select('inline'));
 const popupSide = usePopupSide(store);
 const listEmpty = useListEmpty();
 const isDisabled = computed(() =>
-  Boolean(fieldDisabled.value || store.select('disabled') || props.disabled),
+  Boolean(field?.disabled || store.select('disabled') || props.disabled),
 );
-
-const setFocused = useSetFieldFocused(isDisabled, () => store.context.inputRef.value);
 
 const isInsidePopup = computed(() => hasPositionerParent || inline.value);
 const focusManagerModal = computed(() => !isInsidePopup.value || store.select('modal'));
@@ -131,7 +119,7 @@ const generatedId = useVaseUiId();
 const id = computed(() => (isInsidePopup.value ? generatedId.value : store.select('id')));
 
 const state = computed<ComboboxInputState>(() => ({
-  ...(hasPositionerParent ? DEFAULT_FIELD_STATE_ATTRIBUTES : fieldState.value),
+  ...((!hasPositionerParent && field?.state) || DEFAULT_FIELD_STATE_ATTRIBUTES),
   open: open.value,
   disabled: isDisabled.value,
   readOnly: readOnly.value,
@@ -326,7 +314,6 @@ function handleInput(event: Event) {
 
 function handleFocusin(event: FocusEvent) {
   if (element.value !== event.currentTarget) return;
-  setFocused(true);
 
   if (!inline.value) {
     return;
@@ -348,25 +335,12 @@ function handleFocusin(event: FocusEvent) {
 
 function handleFocusout(event: FocusEvent) {
   if (element.value !== event.currentTarget) return;
-  setTouched(true);
-  setFocused(false);
+  field?.onLeave(event.currentTarget as Element);
 
   const activeIndex = toRaw(store.state).activeIndex;
   if (inline.value && activeIndex !== null && autoHighlightMode.value !== 'always') {
     lastActiveIndex = activeIndex;
     store.context.setIndices({ activeIndex: null });
-  }
-
-  // With a selection mode, an input in the popup is not the control of the field. The trigger and
-  // the root validate in its place, and they count a missing value (BUG-1425). A validation here
-  // would not count it, and it can come after theirs.
-  if (
-    validationMode.value === 'onBlur' &&
-    !(hasPositionerParent && selectionMode.value !== 'none')
-  ) {
-    const valueToValidate =
-      selectionMode.value === 'none' ? inputValue.value : toRaw(store.state).selectedValue;
-    void validation.commit(valueToValidate);
   }
 }
 
@@ -537,11 +511,16 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
     return [
       store.select('inputProps'),
       triggerBindings(store, true),
+      !hasPositionerParent && field ? controlAria(field) : undefined,
       {
         ...(writesValue.value ? valueProps(composingValue.value ?? inputValue.value) : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
-        'aria-labelledby': fieldLabelId.value,
+        // In the popup, the label of the combobox also names the input.
+        'aria-labelledby': resolveAriaLabelledBy(
+          field?.labelId,
+          hasPositionerParent ? store.context.labelId.value : undefined,
+        ),
         disabled: isDisabled.value ? '' : undefined,
         readonly: readOnly.value ? '' : undefined,
         required: selectionMode.value === 'none' && required ? '' : undefined,
@@ -557,9 +536,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
       },
       autocorrect === undefined ? undefined : { autoCorrect: autocorrect },
       elementAttrs,
-      hasPositionerParent
-        ? undefined
-        : (merged) => validation.getValidationProps(isDisabled.value, merged),
+      !hasPositionerParent && field
+        ? { 'aria-describedby': describedByWith(field, elementAttrs['aria-describedby']) }
+        : undefined,
     ];
   },
   stateAttributesMapping: triggerStateAttributesMapping,

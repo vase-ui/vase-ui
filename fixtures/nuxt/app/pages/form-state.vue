@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { reactive, ref, shallowRef } from 'vue';
-import { Checkbox } from '@vase-ui/vue/checkbox';
-import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
-import { Input } from '@vase-ui/vue/input';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
-import { Radio } from '@vase-ui/vue/radio';
-import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { Switch } from '@vase-ui/vue/switch';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
@@ -20,16 +14,10 @@ import { Toolbar } from '@vase-ui/vue/toolbar';
 // the form data, the model of each part and the count of its change events.
 const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
-const SIZES = ['s', 'm', 'l'];
 const CONTROL_STYLE = 'position: relative; width: 200px; height: 10px';
 const THUMB_STYLE = 'width: 20px; height: 10px';
 
-const text = ref('');
 const filter = ref('');
-const agree = ref(false);
-const letters = ref<string[]>([]);
-const notify = ref(false);
-const size = ref('s');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
 const quantity = ref<number | null>(1);
@@ -55,17 +43,6 @@ function handleFilterInput(event: Event) {
 <template>
   <main>
     <form data-testid="form" @submit.prevent="submits += 1">
-      <Field.Root>
-        <Field.Label>Note</Field.Label>
-        <Field.Control name="note" data-testid="note" @value-change="count('note')" />
-      </Field.Root>
-      <Input
-        v-model="text"
-        name="text"
-        aria-label="Text"
-        data-testid="text"
-        @value-change="count('text')"
-      />
       <Toolbar.Root>
         <Toolbar.Input
           :value="filter"
@@ -75,44 +52,6 @@ function handleFilterInput(event: Event) {
           @input="handleFilterInput"
         />
       </Toolbar.Root>
-
-      <label data-testid="agree-label">
-        <Checkbox.Root
-          v-model="agree"
-          name="agree"
-          data-testid="agree"
-          @checked-change="count('agree')"
-        />
-        Agree
-      </label>
-      <Field.Root data-testid="news-field">
-        <label data-testid="news-label">
-          <Checkbox.Root name="news" data-testid="news" @checked-change="count('news')" />
-          News
-        </label>
-      </Field.Root>
-      <CheckboxGroup v-model="letters" @value-change="count('letters')">
-        <label data-testid="letter-a-label">
-          <Checkbox.Root name="letters" value="a" data-testid="letter-a" />A
-        </label>
-        <label data-testid="letter-b-label">
-          <Checkbox.Root name="letters" value="b" data-testid="letter-b" />B
-        </label>
-      </CheckboxGroup>
-      <label data-testid="notify-label">
-        <Switch.Root
-          v-model="notify"
-          name="notify"
-          data-testid="notify"
-          @checked-change="count('notify')"
-        />
-        Notify
-      </label>
-      <RadioGroup v-model="size" name="size" @value-change="count('size')">
-        <label v-for="item in SIZES" :key="item" :data-testid="`size-${item}-label`">
-          <Radio.Root :value="item" :data-testid="`size-${item}`" />{{ item }}
-        </label>
-      </RadioGroup>
 
       <Select.Root v-model="font" name="font" :items="FONTS" @value-change="count('font')">
         <Select.Trigger data-testid="font-trigger"><Select.Value /></Select.Trigger>
@@ -193,12 +132,7 @@ function handleFilterInput(event: Event) {
 
     <output data-testid="models">{{
       JSON.stringify({
-        text,
         filter,
-        agree,
-        letters,
-        notify,
-        size,
         font,
         fruit,
         quantity,

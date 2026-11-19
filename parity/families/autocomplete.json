@@ -28,6 +28,49 @@
       "kind": "replaced",
       "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
       "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
+      "describe": ["<Autocomplete.Root />", "Field"],
+      "title": "[data-focused]",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Trigger",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Input",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "InputGroup",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteInputGroupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     }
   ],
   "surfaceAdditions": [

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, Transition, defineComponent, nextTick, shallowRef } from 'vue';
-import { Switch } from '@vase-ui/vue/switch';
 import {
   createHeldBranch,
   createRenderer,
@@ -13,11 +12,41 @@ import {
 import { TestElement } from '../../test/testElement';
 import { useFormReset } from './useFormReset';
 
-// `Switch.Root` calls the composable.
+// A switch with a hidden input whose reset gives the default state again.
+const ResetSwitch = defineComponent(() => {
+  const checked = shallowRef(true);
+  const input = shallowRef<HTMLInputElement | null>(null);
+  useFormReset(input, () => {
+    checked.value = true;
+  });
+  return () => (
+    <>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked.value ? 'true' : 'false'}
+        onClick={() => {
+          checked.value = !checked.value;
+        }}
+      >
+        Notifications
+      </button>
+      <input
+        ref={input}
+        type="checkbox"
+        name="notifications"
+        checked={checked.value}
+        hidden
+        aria-hidden="true"
+      />
+    </>
+  );
+});
+
 function renderSwitchForm() {
   return (
     <form data-testid="form">
-      <Switch.Root name="notifications" defaultChecked />
+      <ResetSwitch />
     </form>
   );
 }

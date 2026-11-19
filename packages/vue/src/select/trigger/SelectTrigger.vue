@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ButtonHTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type {
   NativeButtonProps,
   VaseUIComponentProps,
@@ -50,20 +50,18 @@ export interface SelectTriggerProps<Value = any>
 <script setup lang="ts" generic="Value = any">
 import { selectors as selectSelectors } from '../store';
 import { triggerBindings } from '../../utils/popups/popupBindings';
-import { computed, onMounted, onScopeDispose, toRaw, watch } from 'vue';
+import { computed, inject, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { fieldValidityMapping } from '../../internals/field-constants';
-import { useFieldRootContext } from '../../internals/field-root-context';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
-import { given } from '../../internals/givenAttributes';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import {
-  useDeferredServerRender,
-  useLabelableContext,
-  useLabelableId,
-} from '../../internals/labelable-provider';
+  DEFAULT_FIELD_STATE_ATTRIBUTES,
+  fieldValidityMapping,
+} from '../../internals/field-constants';
+import { given } from '../../internals/givenAttributes';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
@@ -96,21 +94,14 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SelectTriggerState<Value>>;
 }>();
 
-const {
-  setTouched,
-  validationMode,
-  validation,
-  state: fieldState,
-  disabled: fieldDisabled,
-} = useFieldRootContext();
-const { labelId: fieldLabelId } = useLabelableContext();
+const field = inject(fieldKey, null);
 // The trigger binds the id of a label and the ids of the messages of a field, which can come after
 // it. `Select.Label` registers its id with the root, so the trigger defers also with no field.
 useDeferredServerRender();
 const { store, open: isOpen, requestOpen } = useSelectRootOwner();
 
 const isDisabled = computed(
-  () => Boolean(fieldDisabled.value) || store.state.disabled || props.disabled,
+  () => Boolean(field?.disabled) || store.state.disabled || props.disabled,
 );
 const isReadOnly = computed(() => store.state.readOnly);
 const hasSelectedValue = computed(() => selectSelectors.hasSelectedValue(store.state));
@@ -130,10 +121,6 @@ const ariaControls = computed(() => {
     ? store.state.listElementId || undefined
     : selectSelectors.popupId(store.state);
 });
-
-useLabelableId({ id: () => props.id });
-
-const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 // A compiled template can mount a new trigger before it unmounts the trigger that it replaces.
 // The old trigger then clears only its own element.
@@ -236,7 +223,7 @@ watch(
 );
 
 const state = computed<SelectTriggerState<Value>>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   open: isOpen.value,
   disabled: isDisabled.value,
   value: store.state.selectedValue,
@@ -264,19 +251,18 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
   stateAttributesMapping,
   props: (attrs) => [
     triggerBindings(store, true),
+    field ? controlAria(field) : {},
     {
       id: triggerId.value,
       role: 'combobox',
       'aria-expanded': isOpen.value,
       'aria-haspopup': 'listbox',
       'aria-controls': ariaControls.value,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': resolveAriaLabelledBy(field?.labelId, store.context.labelId.value),
       'aria-readonly': isReadOnly.value || undefined,
       'aria-required': store.state.required || undefined,
       tabindex: isDisabled.value ? -1 : 0,
       onFocusin(event: FocusEvent) {
-        setFocused(true);
-
         // The popup element shouldn't obscure the focused trigger.
         if (isOpen.value && store.context.alignItemWithTriggerActiveRef.value) {
           requestOpen(false, createChangeEventDetails(REASONS.none, event));
@@ -295,14 +281,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
           return;
         }
 
-        setTouched(true);
-        setFocused(false);
-
-        // The field is not marked dirty when the user leaves a select that has no value, so a
-        // missing value counts with no earlier change.
-        if (validationMode.value === 'onBlur') {
-          void validation.commit(toRaw(store.state).selectedValue, true);
-        }
+        field?.onLeave(event.currentTarget as Element);
       },
       onMousedown(event: MouseEvent) {
         if (isOpen.value) {
@@ -316,7 +295,8 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    (merged) => ({ ...validation.getValidationProps(isDisabled.value, merged), role: 'combobox' }),
+    field ? { 'aria-describedby': describedByWith(field, attrs['aria-describedby']) } : undefined,
+    (merged) => ({ ...merged, role: 'combobox' }),
   ],
 });
 

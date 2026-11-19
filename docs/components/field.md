@@ -50,19 +50,38 @@ Import the component and assemble its parts:
 
 <<< ./field/Anatomy.vue
 
-In the server HTML, `Field.Control` already has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`. The parts can be in any order. A screen reader can name the control before the page hydrates. `Field.Control` has the id of `Field.Error` in `aria-describedby` only while the error shows.
+A field has one control, such as an `Input`, a `Checkbox` or a `RadioGroup`: the control that mounted last. A `Field.Label` that is a `<label>` names the control with `for`. A label that the `element` slot renders as another element names the control with `aria-labelledby`, and a click on it moves the focus to the control. A group, such as a `RadioGroup`, gets the label in `aria-labelledby`.
 
-An `id` that the `#render` slot of a part gives replaces the id of the part on its element. The other parts of the field name that `id` after the part mounts. In the server HTML, they name the id of the part. To name the element in the server HTML too, give the `id` prop to the part.
+The control has the ids of the descriptions, and of each error that shows, in `aria-describedby`. The parts can be in any order, and the server HTML already has these ids.
 
-A native reset of the form puts an uncontrolled `Field.Control` back to its default value. The field then clears its error, and `data-filled` and `data-dirty` follow the new value. The reset starts no validation.
+The field validates its control at the moments of `validationMode`: `submit` (the default), `blur` or `change`. The native check comes first. When it passes, `validate(value, formValues)` runs, and its strings are the errors. `formValues` has the values of the form of the field, or `{}` with no form. `validationDebounceTime` waits for the last change.
 
-In a [wrapper of `Field.Root`](/handbook/composition#wrap-a-part), give `dirty` and `touched` the default `undefined` so the field tracks these states.
+`touched` is true after the focus left the control while the control stayed in the document. `dirty` is true while the value differs from the first value. Bind them with `v-model:touched` and `v-model:dirty`, or let the field track them.
 
-`Field.Root` exposes `validate()`. Call it through a template ref to validate the field.
+A native reset of the form puts the field back to the state of its mount, and starts no validation.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Field.Control`. After the hydration, `Field.Control` emits `valueChange` and `update:modelValue` with that text. When the visitor left the control before the page hydrated, the control then also gets `change`, `blur` and `focusout`.
+The template ref of `Field.Root` has `validate()`. Call it to validate the field at once.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Field.Control` takes a restored value as one `input` event, and it emits `valueChange` and `update:modelValue`. A control that does not have the focus then also gets `change`, `blur` and `focusout`. A control that `KeepAlive` holds at that event takes the value when `KeepAlive` shows it again.
+### The slot of `Field.Root`
+
+The default slot of `Field.Root` gives `state`, `validity`, `errors`, `value` and `initialValue`. Use it to show a message for one failure:
+
+<<< ./field/RootSlot.vue
+
+## Styling
+
+Each part of the field has these attributes:
+
+| Selector          | State                                                                         |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `[data-disabled]` | The field is disabled.                                                        |
+| `[data-valid]`    | The field is valid.                                                           |
+| `[data-invalid]`  | The field is invalid. The control has `[aria-invalid="true"]` in place of it. |
+| `[data-touched]`  | The focus left the control.                                                   |
+| `[data-dirty]`    | The value differs from the first value.                                       |
+| `[data-filled]`   | The control has a value.                                                      |
+
+Select a field that has the focus with `:focus-within`.
 
 ## API reference
 

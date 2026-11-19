@@ -95,12 +95,7 @@ describe('useDateTimePickerRoot', () => {
         const resets = recordResetListeners(document);
         const { container } = await render(
           <Form data-testid="form">
-            <Field.Root
-              data-testid="root"
-              name="range"
-              validate={validate}
-              validationMode="onChange"
-            >
+            <Field.Root data-testid="root" name="range" validate={validate} validationMode="change">
               <PickerOfTwoFields />
               <Field.Error data-testid="error" />
             </Field.Root>

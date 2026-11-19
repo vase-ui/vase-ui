@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ButtonHTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type {
   NativeButtonProps,
   VaseUIComponentProps,
@@ -56,20 +56,16 @@ export interface ComboboxTriggerProps
 <script setup lang="ts">
 import { selectors as comboboxSelectors } from '../store';
 import { triggerBindings } from '../../utils/popups/popupBindings';
-import { computed, onScopeDispose, toRaw, watch } from 'vue';
+import { computed, inject, onScopeDispose, toRaw, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { useFieldRootContext } from '../../internals/field-root-context';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import { given } from '../../internals/givenAttributes';
-import {
-  useDeferredServerRender,
-  useLabelableContext,
-  useLabelableId,
-} from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
@@ -82,7 +78,7 @@ import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
-import { useComboboxInputValueContext, useComboboxRootOwner } from '../root/ComboboxRootContext';
+import { useComboboxRootOwner } from '../root/ComboboxRootContext';
 import { useListEmpty, usePopupSide } from '../utils/parts';
 import { triggerStateAttributesMapping } from '../utils/stateAttributesMapping';
 
@@ -103,19 +99,11 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ComboboxTriggerState>;
 }>();
 
-const {
-  state: fieldState,
-  disabled: fieldDisabled,
-  setTouched,
-  validationMode,
-  validation,
-} = useFieldRootContext();
-const { labelId: fieldLabelId } = useLabelableContext();
+const field = inject(fieldKey, null);
 // The trigger binds the id of a label and the ids of the messages of a field, which can come after
 // it. `Combobox.Label` registers its id with the root, so the trigger defers also with no field.
 useDeferredServerRender();
 const { store, open: isOpen, requestOpen } = useComboboxRootOwner();
-const inputValue = useComboboxInputValueContext();
 
 const selectionMode = computed(() => store.state.selectionMode);
 const comboboxDisabled = computed(() => store.state.disabled);
@@ -123,16 +111,11 @@ const isReadOnly = computed(() => store.state.readOnly);
 const inputInsidePopup = computed(() => store.state.inputInsidePopup);
 const hasSelectedValue = computed(() => comboboxSelectors.hasSelectedValue(store.state));
 const isDisabled = computed(
-  () => Boolean(fieldDisabled.value) || comboboxDisabled.value || props.disabled,
+  () => Boolean(field?.disabled) || comboboxDisabled.value || props.disabled,
 );
 const listEmpty = useListEmpty();
 const popupSide = usePopupSide(store);
 
-const setFocused = useSetFieldFocused(isDisabled, () => element.value);
-
-useLabelableId({
-  id: () => (inputInsidePopup.value ? props.id : undefined),
-});
 const triggerId = computed(() =>
   inputInsidePopup.value ? (given('id', props.id) ?? store.state.id) : given('id', props.id),
 );
@@ -253,7 +236,7 @@ watch(
 );
 
 const state = computed<ComboboxTriggerState>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   readOnly: isReadOnly.value,
   open: isOpen.value,
   disabled: isDisabled.value,
@@ -275,6 +258,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     triggerBindings(store, true),
     click,
     typeahead.reference,
+    field ? controlAria(field) : undefined,
     {
       id: triggerId.value,
       tabindex: inputInsidePopup.value ? 0 : -1,
@@ -286,12 +270,10 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       // Only valid alongside the `combobox` role; without it the trigger is a plain button, and
       // the `Combobox.Input` outside the popup already carries `aria-readonly`.
       'aria-readonly': inputInsidePopup.value ? isReadOnly.value || undefined : undefined,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': resolveAriaLabelledBy(field?.labelId, store.context.labelId.value),
       onPointerdown: trackPointerType,
       onPointerenter: trackPointerType,
       onFocusin() {
-        setFocused(true);
-
         if (isDisabled.value) {
           return;
         }
@@ -304,20 +286,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
           return;
         }
 
-        setTouched(true);
-        setFocused(false);
-
-        // A combobox that the user leaves with no value is not marked dirty. A trigger that is the
-        // control of a selection mode is a select, so the field counts `valueMissing` with no mark
-        // (BUG-1425). An input outside the popup is the control in its place, and the user can
-        // empty it.
-        if (validationMode.value === 'onBlur') {
-          const selectsValues = selectionMode.value !== 'none';
-          void validation.commit(
-            selectsValues ? toRaw(store.state).selectedValue : inputValue.value,
-            selectsValues && inputInsidePopup.value,
-          );
-        }
+        field?.onLeave(event.currentTarget as Element);
       },
       onMousedown(event: MouseEvent) {
         if (isDisabled.value) {
@@ -358,7 +327,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       },
     },
     attrs,
-    (merged) => validation.getValidationProps(isDisabled.value, merged),
+    field ? { 'aria-describedby': describedByWith(field, attrs['aria-describedby']) } : undefined,
   ],
 });
 

@@ -9,6 +9,7 @@ import {
   heldMountListTests,
   screen,
   waitFor,
+  wait,
 } from '#test-utils';
 import type { ComboboxStore } from '../store';
 import ComboboxChipsReplacement from './ComboboxChipsReplacement.test.vue';
@@ -86,6 +87,7 @@ describe('<Combobox.Chips />', () => {
 
     // Blur and click on a chip: input should still receive focus.
     input.blur();
+    await wait(0);
     expect(document.activeElement).not.toBe(input);
     await fireEvent.mouseDown(chip);
     expect(input).toHaveFocus();

@@ -13,7 +13,7 @@ const CheckIcon: FunctionalComponent = () =>
       viewBox: '0 0 16 16',
       fill: 'none',
       stroke: 'currentColor',
-      style: { display: 'block' },
+      'aria-hidden': 'true',
     },
     [h('path', { d: 'm2.5 8.5 4 4 7-9' })],
   );
@@ -21,11 +21,10 @@ const CheckIcon: FunctionalComponent = () =>
 
 <template>
   <label :class="styles.Label">
-    <Checkbox.Root default-checked :class="styles.Checkbox">
-      <Checkbox.Indicator :class="styles.Indicator">
-        <CheckIcon />
-      </Checkbox.Indicator>
-    </Checkbox.Root>
+    <span :class="styles.Box">
+      <Checkbox default-checked :class="styles.Checkbox" />
+      <CheckIcon :class="styles.Indicator" />
+    </span>
     Enable notifications
   </label>
 </template>

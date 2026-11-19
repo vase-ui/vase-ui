@@ -38,7 +38,7 @@ describe('the wrappers of the Forms demos', () => {
     expect(getComputedStyle(options[0]).flexDirection).toBe('column');
   });
 
-  it('gives the props and the content of the #render slot of Fieldset.Root to the wrapper, and puts the class of the wrapper first', async () => {
+  it('gives the props and the content of the element slot of Fieldset.Root to the wrapper, and puts the class of the wrapper first', async () => {
     await renderHero();
 
     const group = screen.getByRole('group', { name: 'Scaling threshold' });
@@ -119,7 +119,19 @@ function DescriptionWithSlot({ useRender }: { useRender: boolean }) {
         data-testid="description"
         v-slots={
           useRender
-            ? { render: ({ props }: { props: object }) => <span {...props}>custom</span> }
+            ? {
+                element: ({
+                  props,
+                  elementRef,
+                }: {
+                  props: object;
+                  elementRef: (target: unknown) => void;
+                }) => (
+                  <span {...props} ref={elementRef}>
+                    custom
+                  </span>
+                ),
+              }
             : { default: () => 'plain' }
         }
       />

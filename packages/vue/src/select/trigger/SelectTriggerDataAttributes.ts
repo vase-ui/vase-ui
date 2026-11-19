@@ -46,10 +46,6 @@ export const dirty = 'data-dirty';
  */
 export const filled = 'data-filled';
 /**
- * Present when the select trigger is focused (when wrapped in Field.Root).
- */
-export const focused = 'data-focused';
-/**
  * Present when the select doesn't have a value.
  */
 export const placeholder = 'data-placeholder';

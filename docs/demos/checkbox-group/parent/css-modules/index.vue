@@ -57,43 +57,41 @@ const HorizontalRuleIcon: FunctionalComponent = () =>
     :style="{ marginLeft: '1rem' }"
   >
     <label :class="styles.Item" :id="id" :style="{ marginLeft: '-1rem' }">
-      <Checkbox.Root :class="styles.Checkbox" parent>
-        <Checkbox.Indicator :class="styles.Indicator">
-          <template #render="{ props, state }">
-            <span v-bind="props">
+      <Checkbox parent>
+        <template #element="{ props, elementRef, state }">
+          <span :class="styles.Box">
+            <input v-bind="props" :ref="elementRef" :class="styles.Checkbox" />
+            <span :class="styles.Indicator">
               <HorizontalRuleIcon v-if="state.indeterminate" />
               <CheckIcon v-else />
             </span>
-          </template>
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+          </span>
+        </template>
+      </Checkbox>
       Apples
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root value="fuji-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox value="fuji-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Fuji
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root value="gala-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox value="gala-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Gala
     </label>
 
     <label :class="styles.Item">
-      <Checkbox.Root value="granny-smith-apple" :class="styles.Checkbox">
-        <Checkbox.Indicator :class="styles.Indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
+      <span :class="styles.Box">
+        <Checkbox value="granny-smith-apple" :class="styles.Checkbox" />
+        <span :class="styles.Indicator"><CheckIcon /></span>
+      </span>
       Granny Smith
     </label>
   </CheckboxGroup>

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { REFACTORED_FOLDERS } from '../../test/refactoredFolders';
 
 const modules = import.meta.glob<Record<string, unknown>>('../*/index.ts', { eager: true });
 const sources = import.meta.glob<string>('../**/*.vue', {
@@ -7,13 +8,8 @@ const sources = import.meta.glob<string>('../**/*.vue', {
   eager: true,
 });
 
-const exceptions: Record<string, { props: string[]; reason: string }> = {
-  '../field/root/FieldRoot.vue': { props: ['invalid'], reason: 'The part reads invalid === true.' },
-  '../field/error/FieldError.vue': {
-    props: ['match'],
-    reason: 'Only true or a string selects an error.',
-  },
-};
+// These families read no private field of a component instance, so they do not call the helper.
+const refactored = new Set(REFACTORED_FOLDERS.map((folder) => `../${folder}/`));
 
 it('each part with a covered prop calls the helper', () => {
   const checked = new Set<string>();
@@ -26,12 +22,12 @@ it('each part with a covered prop calls the helper', () => {
         continue;
       }
       const file = `../${part.__file.split('/src/')[1]}`;
-      if (checked.has(file)) {
+      if (checked.has(file) || [...refactored].some((folder) => file.startsWith(folder))) {
         continue;
       }
       checked.add(file);
-      const covered = Object.entries(part.props).filter(([name, option]) => {
-        if (!option || typeof option !== 'object' || exceptions[file]?.props.includes(name)) {
+      const covered = Object.values(part.props).filter((option) => {
+        if (!option || typeof option !== 'object') {
           return false;
         }
         const types = Array.isArray(option.type) ? option.type : [option.type];
@@ -41,17 +37,9 @@ it('each part with a covered prop calls the helper', () => {
       });
       const source = sources[file];
       expect(source, file).toBeDefined();
-      const calls = source.match(/useCastBooleanWarning\('[^']+'(?:,\s*\[[^\]]*\])?\)/g) ?? [];
+      const calls = source.match(/useCastBooleanWarning\('[^']+'\)/g) ?? [];
       expect(calls, file).toHaveLength(covered.length > 0 ? 1 : 0);
-      if (covered.length > 0 && exceptions[file]) {
-        expect(calls[0], exceptions[file].reason).toContain(
-          JSON.stringify(exceptions[file].props).replaceAll('"', "'"),
-        );
-      }
     }
   }
-  expect(checked.size).toBeGreaterThan(85);
-  for (const file of Object.keys(exceptions)) {
-    expect(checked.has(file), file).toBe(true);
-  }
+  expect(checked.size).toBeGreaterThan(75);
 });

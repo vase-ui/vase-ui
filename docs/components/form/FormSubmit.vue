@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form } from '@vase-ui/vue/form';
 
-async function onFormSubmit(formValues: { id: string; quantity: number }) {
+async function onSubmit(_event: SubmitEvent, formValues: { id: string; quantity: number }) {
   const payload = {
     product_id: formValues.id,
     order_quantity: formValues.quantity,
@@ -16,5 +16,5 @@ async function onFormSubmit(formValues: { id: string; quantity: number }) {
 </script>
 
 <template>
-  <Form @form-submit="onFormSubmit" />
+  <Form @submit.prevent="onSubmit" />
 </template>

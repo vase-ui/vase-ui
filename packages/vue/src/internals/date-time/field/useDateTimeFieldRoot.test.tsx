@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import ErrorsForm from '../../../../test/fixtures/ErrorsForm.vue';
 import {
   createFormDataSpy,
   createRenderer,
@@ -14,6 +14,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
 import { formatter } from '../format';
@@ -1450,7 +1451,7 @@ describe('useDateTimeFieldRoot', () => {
 
     it('shows the error of a partial entry through Field at the blur', async () => {
       const { container, user } = await render(
-        <Field.Root name="when" validationMode="onBlur">
+        <Field.Root name="when" validationMode="blur">
           <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
           <Field.Error data-testid="error" />
           <button type="button">Next</button>
@@ -1469,27 +1470,9 @@ describe('useDateTimeFieldRoot', () => {
       expect(root).toHaveAttribute('data-touched');
     });
 
-    it('validates a field with two date fields through the first one that is invalid', async () => {
-      const { container, user } = await render(
-        <Field.Root name="range" validationMode="onBlur">
-          <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
-          <DateTimeFieldProbe defaultValue="2026-11-20" locale="en-US" />
-          <Field.Error data-testid="error" />
-          <button type="button">Next</button>
-        </Field.Root>,
-      );
-      const [first] = Array.from(container.querySelectorAll<HTMLElement>('[role="group"]'));
-
-      await user.click(segmentOf(first!, 'day'));
-      await user.keyboard('{Backspace}{Backspace}');
-      await user.click(screen.getByRole('button', { name: 'Next' }));
-
-      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
-    });
-
     it('shows a missing value through Field after the user empties a required field', async () => {
       const { container, user } = await render(
-        <Field.Root name="when" validationMode="onChange">
+        <Field.Root name="when" validationMode="change">
           <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" required />
           <Field.Error match="valueMissing" data-testid="error">
             Enter a date
@@ -1505,12 +1488,12 @@ describe('useDateTimeFieldRoot', () => {
 
     it('shows the error of a Form for the name of the field, and takes it away at a change', async () => {
       const { container, user } = await render(
-        <Form errors={{ when: 'This date is taken' }}>
+        <ErrorsForm errors={{ when: 'This date is taken' }}>
           <Field.Root name="when">
             <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('This date is taken');
@@ -1557,7 +1540,7 @@ describe('useDateTimeFieldRoot', () => {
       expect(field).not.toHaveAttribute('data-filled');
     });
 
-    it('marks the field as focused, dirty, filled and touched', async () => {
+    it('marks the field as dirty, filled and touched', async () => {
       const { container, user } = await render(
         <Field.Root name="when">
           <DateTimeFieldProbe locale="en-US" />
@@ -1569,19 +1552,17 @@ describe('useDateTimeFieldRoot', () => {
 
       await user.click(segmentOf(container, 'month'));
       await user.keyboard('05172027');
-      expect(root).toHaveAttribute('data-focused');
       expect(root).toHaveAttribute('data-filled');
       expect(root).toHaveAttribute('data-dirty');
       expect(root).not.toHaveAttribute('data-touched');
 
       await user.click(screen.getByRole('button', { name: 'Next' }));
-      expect(root).not.toHaveAttribute('data-focused');
       expect(root).toHaveAttribute('data-touched');
     });
 
-    it('marks the field as not focused and touched when the focus leaves from a button in the group', async () => {
+    it('marks the field as touched when the focus leaves from a button in the group', async () => {
       const { container, user } = await render(
-        <Field.Root name="when" validationMode="onBlur">
+        <Field.Root name="when" validationMode="blur">
           <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
           <Field.Error data-testid="error" />
           <button type="button">Next</button>
@@ -1594,14 +1575,14 @@ describe('useDateTimeFieldRoot', () => {
       // A focus by script, because Safari does not give a button the focus with Tab by default.
       screen.getByTestId('clear').focus();
       await flushMicrotasks();
-      expect(root).toHaveAttribute('data-focused');
+      expect(root).not.toHaveAttribute('data-touched');
 
       screen.getByRole('button', { name: 'Next' }).focus();
       await flushMicrotasks();
 
-      expect(root).not.toHaveAttribute('data-focused');
       expect(root).toHaveAttribute('data-touched');
-      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE));
     });
 
     it('gives disabled, read-only and required to the group state and the segments', async () => {

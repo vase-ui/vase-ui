@@ -408,7 +408,7 @@ describe('<TimeField.Root />', () => {
 
     it('shows a missing value of a required field through Field', async () => {
       const { user } = await render(
-        <Field.Root name="alarm" validationMode="onChange">
+        <Field.Root name="alarm" validationMode="change">
           <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')} required>
             <TimeField.Input />
             <TimeField.Clear />
@@ -669,21 +669,6 @@ describe('<TimeField.Root />', () => {
             laterRemovedAtMount: true,
           },
           selector: '[data-testid="root"]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
           attribute: 'aria-describedby',
           serverValue: 'desc-a',
           clientValue: null,

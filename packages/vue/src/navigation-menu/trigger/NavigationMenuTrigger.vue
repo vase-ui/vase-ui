@@ -89,7 +89,7 @@ import {
 } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { useCompositeItem } from '../../internals/composite/root/useCompositeRoot';
 import { ownerVisuallyHidden, PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -181,7 +181,7 @@ const triggerId = useVaseUiId();
 const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const isActiveItem = computed(() => open.value && value.value === itemValue.value);

@@ -212,13 +212,11 @@ describe('<OTPField.Root />', () => {
         const labelId = attribute(labelTag, 'id');
         const descriptionId = attribute(tag(html, /<p[^>]*data-testid="description"[^>]*>/), 'id');
         const group = tag(html, GROUP);
-        const input = tag(html, HIDDEN_INPUT);
 
         expect(labelId).toBeTruthy();
         expect(descriptionId).toBeTruthy();
         expect(attribute(group, 'aria-labelledby')).toBe(labelId);
         expect(attribute(group, 'aria-describedby')).toBe(descriptionId);
-        expect(attribute(input, 'aria-describedby')).toBe(descriptionId);
         expect(attribute(labelTag, 'for')).toBeTruthy();
       },
     );

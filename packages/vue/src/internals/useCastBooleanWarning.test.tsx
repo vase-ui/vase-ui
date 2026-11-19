@@ -6,7 +6,6 @@ import { Button } from '../button';
 import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
-import { Field } from '../field';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
@@ -207,21 +206,6 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([
       message('MyDatePickerPopup', 'DatePicker.Popup', 'finalFocus'),
     ]);
-  });
-
-  it('gives no warning for an excepted prop', async () => {
-    const Wrapper = defineComponent({
-      props: { invalid: Boolean, match: Boolean },
-      setup(props) {
-        return () => (
-          <Field.Root invalid={props.invalid}>
-            <Field.Error match={props.match}>Error</Field.Error>
-          </Field.Root>
-        );
-      },
-    });
-    await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([]);
   });
 
   it('warns for the default true of Dialog.Root modal', async () => {

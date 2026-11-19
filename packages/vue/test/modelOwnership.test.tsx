@@ -3,22 +3,23 @@ import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import DefaultModel from './fixtures/DefaultModel.vue';
 
 const { render } = createRenderer();
 
-it('VUE-141: Field.Control keeps the last parent text and accepts typed edits after release', async () => {
+it('VUE-141: Input keeps the last parent text and accepts typed edits after release', async () => {
   const value = shallowRef<string | undefined>('first');
   const hint = shallowRef('before');
   const updates = vi.fn();
   await render(() => (
     <form>
       <Field.Root>
-        <Field.Control
+        <Input
           modelValue={value.value}
           defaultValue="reset"
-          placeholder={hint.value}
+          {...{ placeholder: hint.value }}
           onUpdate:modelValue={updates}
         />
       </Field.Root>
@@ -32,16 +33,17 @@ it('VUE-141: Field.Control keeps the last parent text and accepts typed edits af
   value.value = undefined;
   await flushMicrotasks();
   expect(input).toHaveValue('parent');
-  window.dispatchEvent(new PageTransitionEvent('pageshow'));
-  await flushMicrotasks();
   expect(updates).not.toHaveBeenCalled();
   await userEvent.type(input, '{End}x');
   expect(updates).toHaveBeenLastCalledWith('parentx');
   hint.value = 'after';
   await flushMicrotasks();
   expect(input).toHaveValue('parentx');
+  // A native reset gives the value of the mount.
   input.form?.reset();
-  expect(input).toHaveValue('reset');
+  await new Promise((resolve) => setTimeout(resolve));
+  await flushMicrotasks();
+  expect(input).toHaveValue('first');
 });
 
 it('VUE-142: a lone dialog trigger waits for the parent to select it', async () => {
@@ -94,7 +96,7 @@ it('binds the group, pressed and checked values with the default model', async (
   expect(output).toHaveTextContent('bold,italic / true / true');
 
   await userEvent.click(email);
-  expect(email).toHaveAttribute('aria-checked', 'false');
+  expect(email).not.toBeChecked();
   expect(new FormData(form).has('notifications')).toBe(false);
   expect(output).toHaveTextContent('bold,italic / true / false');
 });

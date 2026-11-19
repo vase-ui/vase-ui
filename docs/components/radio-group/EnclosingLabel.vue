@@ -4,9 +4,9 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 </script>
 
 <template>
-  <RadioGroup>
+  <RadioGroup aria-label="Storage type">
     <label>
-      <Radio.Root value="ssd" />
+      <Radio value="ssd" />
       SSD
     </label>
   </RadioGroup>

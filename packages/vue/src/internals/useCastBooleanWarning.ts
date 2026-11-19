@@ -39,7 +39,7 @@ function findCastingWrapper(part: CallerInstance, prop: string): CallerInstance 
  * Warns when a wrapper casts an absent Boolean prop that replaces a default or parent value.
  * Call it in `setup`, inside `if (process.env.NODE_ENV !== 'production')`.
  */
-export function useCastBooleanWarning(partName: string, except: readonly string[] = []): void {
+export function useCastBooleanWarning(partName: string): void {
   const part = getCallerInstance();
   if (!part) {
     return;
@@ -53,8 +53,7 @@ export function useCastBooleanWarning(partName: string, except: readonly string[
       !option ||
       !hasBooleanType(option) ||
       !Object.hasOwn(option, 'default') ||
-      option.default === false ||
-      except.includes(prop)
+      option.default === false
     ) {
       continue;
     }

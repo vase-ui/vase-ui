@@ -34,7 +34,3 @@ export const dirty = 'data-dirty';
  * Present when the number field is filled (when wrapped in Field.Root).
  */
 export const filled = 'data-filled';
-/**
- * Present when the number field is focused (when wrapped in Field.Root).
- */
-export const focused = 'data-focused';

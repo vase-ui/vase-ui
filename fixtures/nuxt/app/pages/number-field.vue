@@ -9,7 +9,7 @@ const amount = ref<number | null>(1234.5);
 <template>
   <main>
     <form data-testid="form">
-      <Field.Root name="amount" data-testid="label-first">
+      <Field.Root name="amount" invalid data-testid="label-first">
         <Field.Label data-testid="label-first-label">Amount</Field.Label>
         <NumberField.Root v-model="amount" :format="{ style: 'currency', currency: 'EUR' }">
           <NumberField.Group>
@@ -17,11 +17,11 @@ const amount = ref<number | null>(1234.5);
           </NumberField.Group>
         </NumberField.Root>
         <Field.Description data-testid="label-first-description">Description</Field.Description>
-        <Field.Error match data-testid="label-first-error">Error</Field.Error>
+        <Field.Error data-testid="label-first-error">Error</Field.Error>
       </Field.Root>
-      <Field.Root name="quantity" data-testid="label-last">
+      <Field.Root name="quantity" invalid data-testid="label-last">
         <Field.Description data-testid="label-last-description">Description</Field.Description>
-        <Field.Error match data-testid="label-last-error">Error</Field.Error>
+        <Field.Error data-testid="label-last-error">Error</Field.Error>
         <NumberField.Root :default-value="7">
           <NumberField.Group>
             <NumberField.Input data-testid="label-last-control" />

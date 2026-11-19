@@ -2,7 +2,7 @@ import { computed, onMounted, onScopeDispose, shallowRef, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useElementId } from '../../utils/popups/useElementId';
 import { useKeepAliveState } from '../useKeepAliveState';
-import type { RegisterId } from './LabelableContext';
+import type { RegisterId } from './createIdRegistry';
 
 /**
  * Registers the id that a reference to a part names. Call it in `setup`.

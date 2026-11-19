@@ -69,7 +69,7 @@ import { selectors as popoverSelectors } from '../store/PopoverStore';
 import { clickTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, shallowRef } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -126,7 +126,7 @@ const hasFocusGuards = computed(() =>
 );
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const {

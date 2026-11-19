@@ -1,7 +1,7 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
-import type { FieldRootState } from '../../field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../../field/types';
 import type { REASONS } from '../../reasons';
 import type { DayPeriod, EditableSegmentType, NumericSegmentType } from './segmentLayout';
 
@@ -129,6 +129,11 @@ export interface DateTimeFieldHost {
    * name of the group holds the `aria-label` of the group and a label.
    */
   groupId: string;
+  /**
+   * The hidden input of the end field of a range. The start field is the control of a `Field`
+   * around the range, and the field validates this input with the input of the start field.
+   */
+  endInput?: () => HTMLInputElement | null;
 }
 
 export const DateTimeFieldHostContext: InjectionKey<DateTimeFieldHost> = Symbol();

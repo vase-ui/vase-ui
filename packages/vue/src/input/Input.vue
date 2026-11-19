@@ -1,112 +1,125 @@
-<script lang="ts">
-import type { InputHTMLAttributes } from 'vue';
-import type {
-  FieldControlChangeEventDetails,
-  FieldControlChangeEventReason,
-  FieldControlState,
-} from '../field';
-import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
-
-export interface InputState extends FieldControlState {}
-
-export type InputChangeEventReason = FieldControlChangeEventReason;
-
-export type InputChangeEventDetails = FieldControlChangeEventDetails;
-
-// The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
-// With it, `defineProps` gives the error TS2590.
-interface InputAutocomplete {
-  autocomplete?: string | null | undefined;
-}
-
-export interface InputProps
-  extends
-    VaseUIComponentProps<InputState>,
-    /* @vue-ignore */ Omit<
-      WithVaseUIEvent<InputHTMLAttributes>,
-      'autocomplete' | 'disabled' | 'id' | 'name' | 'value'
-    >,
-    /* @vue-ignore */ InputAutocomplete {
-  /**
-   * The `id` of the input. The label of the field names the input with it.
-   */
-  id?: string | undefined;
-  /**
-   * Identifies the field when a form is submitted.
-   * The `name` prop on `<Field.Root>` takes precedence over this.
-   */
-  name?: string | undefined;
-  /**
-   * The default value of the input. Use when uncontrolled.
-   */
-  defaultValue?: string | number | string[] | undefined;
-  /**
-   * The value of the input. Use when controlled.
-   */
-  modelValue?: string | number | readonly string[] | undefined;
-  /**
-   * Whether the component should ignore user interaction.
-   * The `disabled` prop on `<Field.Root>` takes precedence over this.
-   * @default false
-   */
-  disabled?: boolean | undefined;
-}
-</script>
-
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
-import { FieldControl } from '../field';
-import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { withoutPropsOf } from '../internals/withoutPropsOf';
+import { computed, inject, mergeProps, nextTick, useAttrs, useId, watch } from 'vue';
+import { createChangeEventDetails } from '../common/changeEventDetails';
+import { useDeferredServerRender } from '../common/deferredServerRender';
+import { useElement } from '../common/element';
+import { useFormReset } from '../common/formEvents';
+import { givenId } from '../common/id';
+import { useModel } from '../common/model';
+import { controlAttributes, fieldKey, useFieldControl } from '../field/control';
+import { useInDisabledFieldset } from '../fieldset/part';
+import type { InputChangeEventDetails, InputProps, InputState } from './types';
+
+type TextElement = HTMLInputElement | HTMLTextAreaElement;
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<InputProps>(), {
-  as: 'input',
-  disabled: false,
-  modelValue: undefined,
-});
-
+const props = defineProps<InputProps>();
 const emit = defineEmits<{
-  /**
-   * The input emits this event when the user edits its value.
-   */
-  valueChange: [value: string, eventDetails: InputChangeEventDetails];
-  /**
-   * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model` uses it.
-   */
+  /** The user changes the text. `details.cancel()` keeps the text as it was. */
+  valueChange: [value: string, details: InputChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: string];
 }>();
-
-defineSlots<{
-  render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, InputState>;
+const slots = defineSlots<{
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: InputState;
+  }): unknown;
 }>();
 
-// Separate branches keep the child slots stable across updates.
-const control = useTemplateRef('control');
-const element = computed(() => control.value?.element ?? null);
+const attrs = useAttrs();
+const field = inject(fieldKey, null);
+// The label and the messages of the field can come after the input.
+useDeferredServerRender();
+const generatedId = useId();
+const { element, setElement } = useElement<TextElement>();
+
+const firstValue = String(props.modelValue ?? props.defaultValue ?? '');
+const { value, setOwn } = useModel(
+  () => (props.modelValue === undefined ? undefined : String(props.modelValue)),
+  firstValue,
+);
+
+const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const inDisabledFieldset = useInDisabledFieldset(element);
+const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
+const state = computed<InputState>(() => ({
+  disabled: isDisabled.value,
+  touched: field?.state.touched ?? false,
+  dirty: field?.state.dirty ?? false,
+  valid: field?.state.valid ?? null,
+  filled: field?.state.filled ?? false,
+}));
+
+const ownProps = computed(() => ({
+  id: elementId.value,
+  name: field?.name ?? props.name,
+  disabled: isDisabled.value,
+  readonly: props.readonly,
+  value: value.value,
+  ...(field && controlAttributes(field)),
+  onInput,
+  onBlur,
+}));
+
+watch(value, (next) => field?.setValue(next, next !== ''), { immediate: true });
+
+useFormReset(element, () => {
+  field?.onReset(firstValue);
+  if (value.value !== firstValue) changeValue(firstValue);
+});
+
+useFieldControl(field, element, {
+  // The `element` slot can give the element another `id`.
+  id: () => (slots.element && element.value?.id) || elementId.value,
+  name: () => props.name,
+  disabled: () => props.disabled || inDisabledFieldset.value,
+  readOnly: () => props.readonly,
+});
 
 defineExpose({ element });
+
+function elementProps() {
+  return mergeProps(ownProps.value, attrs);
+}
+
+// The binding of `value` writes only a value that changed. When the parent refuses a value, or a
+// listener cancels an edit, the element must show the value again.
+function showValue() {
+  if (element.value) element.value.value = value.value;
+}
+
+function changeValue(next: string) {
+  setOwn(next);
+  emit('update:modelValue', next);
+}
+
+function onInput(event: Event) {
+  const next = (event.currentTarget as TextElement).value;
+  const details = createChangeEventDetails('none', event);
+  emit('valueChange', next, details);
+  if (!details.isCanceled) changeValue(next);
+  // The parent can refuse or change a controlled value. Its answer arrives with its next render.
+  nextTick(() => {
+    showValue();
+    if (!details.isCanceled) field?.onEdit();
+  });
+}
+
+function onBlur(event: FocusEvent) {
+  field?.onLeave(event.currentTarget as Element);
+}
 </script>
 
 <template>
-  <FieldControl
-    v-if="$slots.render"
-    ref="control"
-    v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
-    @value-change="(value, details) => emit('valueChange', value, details)"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </FieldControl>
-  <FieldControl
-    v-else
-    ref="control"
-    v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }"
-    @value-change="(value, details) => emit('valueChange', value, details)"
-    @update:model-value="emit('update:modelValue', $event)"
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
   />
+  <input v-else v-bind="elementProps()" :ref="setElement" />
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 
 async function submitToServer() {
@@ -13,16 +14,16 @@ async function submitToServer() {
 
 const errors = ref<Record<string, string | string[]>>();
 
-async function onFormSubmit() {
+async function onSubmit() {
   const response = await submitToServer();
   errors.value = response.errors;
 }
 </script>
 
 <template>
-  <Form :errors="errors" @form-submit="onFormSubmit">
+  <Form v-model:errors="errors" @submit.prevent="onSubmit">
     <Field.Root name="promoCode">
-      <Field.Control />
+      <Input />
       <Field.Error />
     </Field.Root>
   </Form>

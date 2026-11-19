@@ -1,0 +1,51 @@
+<script setup lang="ts">
+import { computed, inject, mergeProps, onUnmounted, provide, useAttrs, useId } from 'vue';
+import { useElement } from '../common/element';
+import { givenId } from '../common/id';
+import { fieldsetKey } from './part';
+import { legendKey } from './root';
+import type { FieldsetLegendProps } from './types';
+
+defineOptions({ inheritAttrs: false });
+
+const props = defineProps<FieldsetLegendProps>();
+defineSlots<{
+  default?(): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+  }): unknown;
+}>();
+
+const attrs = useAttrs();
+const generatedId = useId();
+const { element, setElement } = useElement<HTMLLegendElement>();
+
+const elementId = computed(() => givenId(props.id) ?? generatedId);
+
+const root = inject(legendKey, null);
+if (root) {
+  provide(fieldsetKey, root.forParts);
+  // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the
+  // part registers before the call.
+  const unregister = root.addLegend({
+    get id() {
+      return elementId.value;
+    },
+  });
+  onUnmounted(unregister);
+}
+
+defineExpose({ element });
+
+function elementProps() {
+  return mergeProps({ id: elementId.value }, attrs);
+}
+</script>
+
+<template>
+  <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
+  <legend v-else v-bind="elementProps()" :ref="setElement">
+    <slot />
+  </legend>
+</template>

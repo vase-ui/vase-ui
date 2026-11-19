@@ -9,9 +9,7 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
-import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
@@ -453,7 +451,7 @@ describe('<Slider.Thumb />', () => {
       it('does not commit field validation when moving focus between range thumbs', async () => {
         const validateSpy = vi.fn(() => null);
         const { user } = await render(
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
+          <Field.Root validationMode="blur" validate={validateSpy}>
             <Slider.Root defaultValue={[20, 50]}>
               <Slider.Control>
                 <Slider.Thumb index={0} />
@@ -487,7 +485,7 @@ describe('<Slider.Thumb />', () => {
         onTestFinished(() => target.remove());
         const validate = vi.fn(() => null);
         await render(
-          <Field.Root validationMode="onBlur" validate={validate}>
+          <Field.Root validationMode="blur" validate={validate}>
             <Slider.Root defaultValue={[20, 50]}>
               <Slider.Control>
                 <Slider.Thumb aria-label="Minimum" />
@@ -505,8 +503,10 @@ describe('<Slider.Thumb />', () => {
         expect(validate).not.toHaveBeenCalled();
 
         within(target).getByRole('button', { name: 'After input' }).focus();
-        await flushMicrotasks();
-        expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything());
+        // The field validates after the blur listeners of the developer.
+        await waitFor(() =>
+          expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything()),
+        );
       });
 
       it.skipIf(isJSDOM)(
@@ -515,7 +515,7 @@ describe('<Slider.Thumb />', () => {
           const validateSpy = vi.fn(() => null);
           const { user } = await render(
             <>
-              <Field.Root validationMode="onBlur" validate={validateSpy} data-testid="field">
+              <Field.Root validationMode="blur" validate={validateSpy} data-testid="field">
                 <Slider.Root defaultValue={[20, 50]}>
                   <Slider.Control>
                     <Slider.Thumb index={0} />
@@ -544,7 +544,6 @@ describe('<Slider.Thumb />', () => {
             expect(validateSpy).toHaveBeenCalledTimes(1);
           });
           expect(screen.getByTestId('field')).toHaveAttribute('data-touched');
-          expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
 
           await user.keyboard('[Tab]');
           expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
@@ -2079,52 +2078,6 @@ describe('<Slider.Thumb />', () => {
       await waitFor(() => {
         expect(thumb.style.getPropertyValue('--position')).toBe('59.5%');
       });
-    });
-
-    async function submitWithHeldSlider(name: string, shownControl: () => VNode) {
-      const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld } = createHeldBranch(
-        () => (
-          <Slider.Root key="held" defaultValue={5}>
-            <Slider.Control>
-              <Slider.Thumb />
-            </Slider.Control>
-          </Slider.Root>
-        ),
-        { mounted: name === 'deactivated' },
-      );
-      const { user } = await render(() => (
-        <Form onFormSubmit={handleSubmit}>
-          <Field.Root name="volume" data-testid="field">
-            {shownControl()}
-            <HeldBranch />
-          </Field.Root>
-          <button type="submit">Submit</button>
-        </Form>
-      ));
-
-      await mountWhileHeld();
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      return handleSubmit;
-    }
-
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held slider keeps the input of a shown required control: $name',
-      async ({ name }) => {
-        const handleSubmit = await submitWithHeldSlider(name, () => <Field.Control required />);
-
-        expect(handleSubmit).not.toHaveBeenCalled();
-        expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
-      },
-    );
-
-    it('a slider that mounts while KeepAlive holds it gives no value to its form', async () => {
-      const handleSubmit = await submitWithHeldSlider('held mount', () => (
-        <Field.Control defaultValue="shown" />
-      ));
-
-      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 'shown' });
     });
   });
 

@@ -296,6 +296,10 @@ jobs:
         with:
           command: ${{ needs.select.outputs.vitest-command }}
           project: vapor
+      # The tests that mount with `test/render.ts` run in four setups of Vue 3.6: a virtual DOM
+      # app or a Vapor app, with the parts compiled as virtual DOM or Vapor components.
+      - if: ${{ !cancelled() }}
+        run: pnpm --filter @vase-ui/vue test:vue-3.6
 
   # The project `vapor-parts` compiles each part as a Vapor component, with the Vue of `test-vue-rc`.
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.

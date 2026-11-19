@@ -34,7 +34,3 @@ export const dirty = 'data-dirty';
  * Present when the OTP field contains at least one character.
  */
 export const filled = 'data-filled';
-/**
- * Present when one of the OTP field inputs is focused.
- */
-export const focused = 'data-focused';

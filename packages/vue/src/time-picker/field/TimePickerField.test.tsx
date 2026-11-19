@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
@@ -499,13 +499,8 @@ describe('<TimePicker.Field />', () => {
         errors?: Record<string, string>,
       ) {
         return (
-          <Form data-testid="form" errors={errors}>
-            <Field.Root
-              data-testid="root"
-              name="when"
-              validate={validate}
-              validationMode="onChange"
-            >
+          <ErrorsForm data-testid="form" errors={errors}>
+            <Field.Root data-testid="root" name="when" validate={validate} validationMode="change">
               <TimePicker.Root locale="en-US" hourCycle={24} referenceDate={time} {...pickerProps}>
                 <TimePicker.Field>
                   <TimeField.Input />
@@ -513,7 +508,7 @@ describe('<TimePicker.Field />', () => {
               </TimePicker.Root>
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>
+          </ErrorsForm>
         );
       }
 

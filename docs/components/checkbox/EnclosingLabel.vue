@@ -4,7 +4,7 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 
 <template>
   <label>
-    <Checkbox.Root />
-    Accept terms and conditions
+    <Checkbox name="newsletter" />
+    Get the newsletter
   </label>
 </template>

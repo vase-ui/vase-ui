@@ -1,12 +1,8 @@
-import { Radio } from '@vase-ui/vue/radio';
+import { Radio as RadioBase } from '@vase-ui/vue/radio';
 import { withProps } from './withProps';
 
-export const Root = withProps(Radio.Root, {
+// An inner ring leaves a dot in the middle of a checked radio.
+export const Radio = withProps(RadioBase, {
   class:
-    'flex size-4 shrink-0 items-center justify-center rounded-full border border-neutral-950 bg-white p-0 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-checked:bg-neutral-950 data-checked:text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 dark:data-checked:bg-white dark:data-checked:text-neutral-950',
-});
-
-export const Indicator = withProps(Radio.Indicator, {
-  class:
-    'flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current',
+    'm-0 size-4 shrink-0 appearance-none rounded-full border border-neutral-950 bg-white p-0 checked:bg-neutral-950 checked:shadow-[inset_0_0_0_0.1875rem_white] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:checked:shadow-[inset_0_0_0_0.1875rem_var(--color-neutral-950)]',
 });

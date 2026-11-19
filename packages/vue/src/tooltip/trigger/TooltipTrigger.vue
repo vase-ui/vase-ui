@@ -70,7 +70,7 @@ import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, onMounted, useSlots, watch } from 'vue';
 import { closestInEventPath } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useVaseUiId';
@@ -149,7 +149,7 @@ function writeIsInstantPhase() {
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
-const fieldsetDisabled = useFieldsetDisabled(triggerElement);
+const fieldsetDisabled = useInDisabledFieldset(triggerElement);
 const slots = useSlots();
 // The part has no element in a server render and in the first client render. The default tag
 // then gives the answer, so the server HTML follows `Fieldset.Root`.

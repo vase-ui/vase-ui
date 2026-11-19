@@ -1,5 +1,5 @@
 import { basename, dirname, join } from 'node:path';
-import { expectedSurface, normalizeDefault } from './mapping.ts';
+import { acceptElementSlot, expectedSurface, normalizeDefault } from './mapping.ts';
 import type { ExpectedSurface } from './mapping.ts';
 import { COMPONENT_MEMBER_KINDS, labelOf, memberOf, targetOf } from './parityFiles.ts';
 import type {
@@ -335,6 +335,7 @@ function comparePart(
   }
   if (actual) {
     context.read.add(keyOf(file.file, part.name));
+    acceptElementSlot(expected, actual);
     const members = membersOf(expected, actual);
     context.members.set(part.name, [...(context.members.get(part.name) ?? []), members]);
     compareProps(expected, actual, add);

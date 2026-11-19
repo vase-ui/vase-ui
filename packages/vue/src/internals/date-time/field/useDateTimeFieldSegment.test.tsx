@@ -825,20 +825,6 @@ describe('useDateTimeFieldSegment', () => {
       await fireEvent.mouseDown(input);
       expect(segmentOf(container, 'month')).toHaveFocus();
     });
-
-    it('marks the root focused while a segment has the focus, and not between two segments', async () => {
-      const { container, user } = await setup({ defaultValue: '2026-11-14' });
-      const root = container.querySelector('[role="group"]')!;
-
-      await user.click(segmentOf(container, 'month'));
-      expect(root).toHaveAttribute('data-focused');
-      await user.keyboard('{ArrowRight}');
-      expect(root).toHaveAttribute('data-focused');
-
-      segmentOf(container, 'day').blur();
-      await flushMicrotasks();
-      expect(root).not.toHaveAttribute('data-focused');
-    });
   });
 
   describe('attributes', () => {

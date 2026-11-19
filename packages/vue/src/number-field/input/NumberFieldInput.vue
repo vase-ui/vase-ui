@@ -19,7 +19,7 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, shallowRef, watch } from 'vue';
+import { computed, inject, nextTick, shallowRef, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrated, useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
@@ -29,11 +29,8 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
-import { useFieldRootContext } from '../../internals/field-root-context';
-import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
-import { useFormContext } from '../../internals/form-context';
-import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
+import { useDeferredServerRender } from '../../common/deferredServerRender';
+import { controlAria, describedByWith, fieldKey } from '../../field/control';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useInputRender } from '../../internals/useInputRender';
@@ -83,18 +80,14 @@ const {
   getStepAmount,
   id,
   incrementValue,
-  name,
   setValue,
   state,
-  value: numberValue,
-  disabled: isDisabled,
   options,
   setInputValue,
   setEditing,
   prepareStep,
   registerInput,
   locale,
-  inputRef,
   onValueCommitted,
   lastChangedValueRef,
   hasPendingCommitRef,
@@ -168,27 +161,11 @@ const allowedNonNumericKeys = computed(() => {
   return keys;
 });
 
-const { clearErrors } = useFormContext();
-const { validationMode, setTouched, invalid, shouldValidateOnChange, validation } =
-  useFieldRootContext();
-const { labelId } = useLabelableContext();
+const field = inject(fieldKey, null);
 
 // The input binds `aria-labelledby` and `aria-describedby`, and a label or a message can come after
 // it.
 useDeferredServerRender();
-
-const setFocused = useSetFieldFocused(() => state.value.disabled, inputRef);
-
-let blockRevalidation = false;
-
-useRegisterFieldControl(
-  inputRef,
-  id,
-  () => numberValue.value,
-  undefined,
-  () => !isDisabled.value,
-  () => options.name,
-);
 
 const { valueProps, renderValue } = useInputRender();
 
@@ -203,24 +180,9 @@ useValueChanged(
       return;
     }
 
-    clearErrors(name.value);
-
-    if (blockRevalidation && !shouldValidateOnChange()) {
-      blockRevalidation = false;
-      return;
-    }
-
-    validation.change(state.value.value);
+    field?.onEdit();
   },
 );
-
-function handleFocusin(event: FocusEvent) {
-  if (event.defaultPrevented || state.value.disabled) {
-    return;
-  }
-
-  setFocused(true);
-}
 
 function handleFocusout(event: FocusEvent) {
   const { disabled, readOnly, value, inputValue } = state.value;
@@ -228,8 +190,7 @@ function handleFocusout(event: FocusEvent) {
     return;
   }
 
-  setTouched(true);
-  setFocused(false);
+  field?.onLeave(event.currentTarget as Element);
 
   if (readOnly) {
     return;
@@ -244,9 +205,6 @@ function handleFocusout(event: FocusEvent) {
     // Respect a canceled clear, mirroring the non-empty blur path below.
     if (clearDetails.isCanceled) {
       return;
-    }
-    if (validationMode.value === 'onBlur') {
-      void validation.commit(null);
     }
     // Don't report a commit when blurring an already-empty field that the user never
     // interacted with: nothing was cleared and no programmatic change is pending.
@@ -282,21 +240,11 @@ function handleFocusout(event: FocusEvent) {
   let committedValue = committed;
   if (shouldUpdateValue) {
     const changeDetails = createChangeEventDetails(REASONS.inputBlur, event);
-    blockRevalidation = true;
     setValue(committed, changeDetails);
     if (changeDetails.isCanceled) {
-      blockRevalidation = false;
       return;
     }
     committedValue = lastChangedValueRef.value;
-    // If validation normalized back to the current value, `useValueChanged` won't fire to
-    // reset the flag, so reset it here or the next external change won't revalidate.
-    if (committedValue === value) {
-      blockRevalidation = false;
-    }
-  }
-  if (validationMode.value === 'onBlur') {
-    void validation.commit(committedValue);
   }
   if (shouldCommit) {
     onValueCommitted(committedValue, nextEventDetails);
@@ -562,9 +510,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
         spellcheck: 'false',
         'aria-roledescription': 'Number field',
-        'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
-        'aria-labelledby': labelId.value,
-        onFocusin: handleFocusin,
+        ...(field && controlAria(field)),
         onFocusout: handleFocusout,
         onInput: handleInput,
         onKeydown: handleKeydown,
@@ -576,7 +522,9 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('inpu
         onWheel: isWheelScrubEnabled.value ? onInputWheel : undefined,
       },
       elementAttrs,
-      (merged) => validation.getValidationProps(state.value.disabled, merged),
+      field
+        ? { 'aria-describedby': describedByWith(field, elementAttrs['aria-describedby']) }
+        : undefined,
     ];
   },
   stateAttributesMapping,

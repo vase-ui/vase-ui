@@ -2,6 +2,7 @@
 import { ref, shallowRef, useTemplateRef } from 'vue';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import { Form } from '@vase-ui/vue/form';
 
 const form = useTemplateRef('form');
@@ -47,7 +48,7 @@ async function submitForm(value: string) {
   <Form ref="form" class="flex w-full max-w-64 flex-col gap-4" :errors="errors" @submit="onSubmit">
     <Field.Root name="url" class="flex flex-col items-start gap-1">
       <Field.Label class="text-sm font-bold text-neutral-950 dark:text-white">Homepage</Field.Label>
-      <Field.Control
+      <Input
         type="url"
         required
         default-value="https://example.com"

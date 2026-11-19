@@ -26,6 +26,131 @@
       "prop": "aria-roledescription",
       "kind": "not-applicable",
       "reason": "The row documents a native attribute and its default. In Vase UI the attribute goes to the element through the attributes, with its type from `InputHTMLAttributes`, and it replaces the default `'Number field'`. A declared prop would take it out of the attributes."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
+      "title": "does not mark the field focused when the focus default is prevented",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "prop: readOnly"],
+      "title": "keeps focus state in sync on a readOnly field",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "Field"],
+      "title": "[data-filled]",
+      "kind": "not-applicable",
+      "reason": "The case asserts the focused state of the field, which is cut (rule 8.15). `[data-filled]` of the field has the cases of the input in a field."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "Field"],
+      "title": "adds [data-focused] attribute on every focus",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "Field", "[data-focused] without a blur event"],
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "hidden input"],
+      "title": "validates the autofilled value even when the change is canceled",
+      "kind": "not-applicable",
+      "reason": "The field validates the value of its control. A cancelled autofill keeps the value of the root, so the field has no new value to validate."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Input",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Group",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "ScrubArea",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "ScrubAreaCursor",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Decrement",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Increment",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldDecrementDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldGroupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldIncrementDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldScrubAreaCursorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldScrubAreaDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     }
   ],
   "surfaceAdditions": [

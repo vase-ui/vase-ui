@@ -202,6 +202,8 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
 ## Entry points
 
+The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use the flat names of that part. This section holds for each other family until its refactor.
+
 The package is `@vase-ui/vue`. It is ESM only.
 
 - Each upstream folder that has a package export is one entry point with the same name: `@vase-ui/vue/dialog`, `@vase-ui/vue/merge-props`, `@vase-ui/vue/use-render`.
@@ -243,6 +245,8 @@ A part that Base UI takes from another family is exported again and not copied: 
 
 ## API convention
 
+The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use the `element` slot and the one root element of that part. This section holds for each other family until its refactor.
+
 ### Parts that render an element
 
 | API | Function | Base UI form |
@@ -275,7 +279,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
-- These native button parts read `useFieldsetDisabled` with their own element (`VUE-112`): `Button`, `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, `Tabs.Tab`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup. `Tabs.Tab` gives only its `disabled` prop to the metadata that the root reads for the selection, so a disabled fieldset does not change the selected panel.
+- These native button parts read `useInDisabledFieldset` with their own element (`VUE-112`): `Button`, `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, `Tabs.Tab`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup. `Tabs.Tab` gives only its `disabled` prop to the metadata that the root reads for the selection, so a disabled fieldset does not change the selected panel.
 - `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. Before the mount it has no element. It is then a native button when `as` is `button` and it has no `#render` slot, so the server HTML follows `Fieldset.Root`. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
 The template of each such part has the `#render` slot, then the element, and no wrapper component:
@@ -377,7 +381,9 @@ A part of a component that Base UI does not have follows the same rules for its 
 
 ### Parts with a hidden input
 
-Some upstream parts render a hidden `<input>` beside their element. `Switch.Root` is the model. The input gives the part the form behavior of a native control.
+Checkbox, Radio and Switch are the native input itself and have no hidden input. This section holds for each other family until its refactor.
+
+Some upstream parts render a hidden `<input>` beside their element. `NumberField.Root` is an example. The input gives the part the form behavior of a native control.
 
 - The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
 - The template has the `#render` slot and the element of a part. The inputs come after them.
@@ -387,17 +393,14 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - A part that keeps its focus guards beside its element with `useElementSiblings`, such as a trigger or a popup part, has one root node. See [Focus helpers](#focus-helpers).
 - `Combobox.Input` keeps its dismiss button before its element with `useElementSiblings`, so it has one root node. Its `#render` slot gets the element only.
 - `Combobox.Popup` gives its dismiss button to its focus manager, which keeps it after the element and before the last inside guard.
-- A part that is its own control declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row. A root whose control is another part, such as `NumberField.Root`, declares neither. `OTPField.Root` declares `aria-labelledby` only, because the root of Base UI reads no `aria-label`. [Props](#props) gives the form of each prop.
-- Use `useCheckedInput` for Checkbox.Root, Radio.Root and Switch.Root. It forwards focus to the visible control and sends its click modifiers to the native input. The input must have a parent node before it can receive that click. This also permits activation in a detached app.
-- Bind `checkedProps` from `useCheckedInput` with `v-bind`. Vue can overwrite a native click during hydration if the compiler emits a direct `checked` property. Bind `indeterminate` after mount. The root decides whether to accept a click. After the model update, `useCheckedInput` restores `checked` and `indeterminate` only if their values differ. Before the first repair, compare `checked` with `defaultChecked` to detect an edit before hydration. A radio group reads its inputs together before a write can uncheck a peer.
 - A root gives its input a `value` binding after `useHiddenValueBeforeHydration` allows it. In a number field, an edit in the visible input that changes the model during hydration also supplies the new value to the hidden input.
 - A part takes the state of its input into its model, with its change events one time, when the input changed with no event that the part handled. A press on a native label before the hydration does this. A form state that the browser restores after a move in the history or a reload does this too.
 - The part takes the input at two moments. At the hydration, the input differs from its server HTML. At a `pageshow` event that does not come from the back/forward cache, the input differs from the value that the part handled.
 - Firefox and WebKit restore the form state of a page during the parse, before the scripts run. Chromium restores it in a task after the parse or right after `load`, the earlier of the two, and always before `pageshow`. An app that mounts in its entry module, as `create-vue` makes it, is thus mounted before Chromium restores the inputs.
-- `useFormRestore(input, onRestore)` of `src/internals` calls the part at the page show or the next activation. `useFormRestoreAsInput` sends the restored text through the control's native `input` event. At a take with no event, `Checkbox.Root`, `Switch.Root` and `RadioGroup` give the event `vase-ui` in the details of the change.
+- `useFormRestore(input, onRestore)` of `src/internals` calls the part at the page show or the next activation. `useFormRestoreAsInput` sends the restored text through the control's native `input` event.
 - While the part waits for the page show, its binding keeps the live text through an unrelated render. A new model or a request to restore a refused edit gives the binding the model value again. Vue also sets the value attribute when it binds the live text of an input. After that render, the part puts the model value back in `defaultValue` so a native form reset still uses it.
 - The take of one part at `pageshow` can render a later part before the listener of that part runs. The flag of each part stays set until its own listener, so the later part keeps its restored value.
-- Compare the restored text with the model after the input type's value sanitization. An uncontrolled `Field.Control` or `Toolbar.Input` keeps the text of its last `input` event for this comparison. Before the first edit and after a native reset, it uses the input's default value.
+- Compare the restored text with the model after the input type's value sanitization. An uncontrolled `Toolbar.Input` keeps the text of its last `input` event for this comparison. Before the first edit and after a native reset, it uses the input's default value.
 - A text input also removes CR and LF from the value that the form gets. `Select.Root`, `useAriaCombobox` and `Combobox.Input` thus call `useFormEntryValue(input, getValue)` of `src/internals`. The form then gets the value of the part, as it gets the value of the option of a `<select>` (`VUE-102`). The JSDoc and the comments of the composable say how it finds the entry of the input.
 - A part keeps the name on its text input. Chromium and WebKit restore a state only into a control with the same name and type. With a name that moves to a `type="hidden"` input for some values, two pages can give the name to inputs of two types. The restore is then lost.
 - `Select.Root`, `useAriaCombobox`, `RadioGroup` and `Slider.Root` each have a take of their own. The comments at each take give its rules. The JSDoc of `queueInputTake` gives the sequence of the takes of the hydration.
@@ -411,20 +414,19 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - In `CheckboxGroup`, register the disabled state of each child separately. When two children share a value, removing one must preserve the other child's registration (`VUE-153`).
-- A control whose field can have more than one input calls `useInputRegistration(input, register)` of `src/internals/field-register-control` in `setup`. `register` registers the input with `validation.registerInput`, and `Radio.Root` also registers it with its group. `register` returns a function that ends these registrations. The composable calls that function when the input changes or goes away. The control does not write `validation.inputRef`.
-- Such a field takes the first invalid input in the document, or else the first input in the document. It skips a disabled input and an input of another form. The field reads the validity of that input, and the form focuses the part of that input. `RadioGroup` exposes the checked input when that input is enabled, or else the first enabled input in the document, or else `null` (`VUE-101`). An enabled input does not match `:disabled`. In a disabled `<fieldset>`, only an input in its first `<legend>` counts. A keyed move runs no registration, and a radio follows a change of a native `<fieldset>` only after its observer calls back. The group thus finds that input at each read of `inputElement`. The order of the registrations decides only between inputs in two trees, such as two shadow roots. Base UI takes the first registration (`VUE-78`).
-- A disabled fieldset disables a form part as its `disabled` prop does (`VUE-112`): `Fieldset.Root` with `disabled`, also with no `Field.Root`, and a native `<fieldset disabled>` as HTML disables a form control. A root calls `useFieldsetDisabled` of `fieldset/root` with its element. A root that renders no element gives its hidden input. `DatePicker.Root`, `DateRangePicker.Root` and `TimePicker.Root` give their first field element in document order. A range picker uses its start field. With no such field, each picker gives its first trigger in document order. A part in a group or a field, such as `Radio.Root`, reads the fieldset itself. A fieldset in the group or the field can hold that part alone. The other parts follow their root. The JSDoc and the comments of the composable give the rest.
-- Use `useFieldControl` to register a control and get its native input name. Bind that name to the input. A part that supplies the field's native validation input can also pass its ref as `input`. With separate owners, give the field its input through `useFieldInput`. [What differs from the React source](#what-differs-from-the-react-source) gives the rules.
+- A part that registers each of its inputs with a root calls `useInputRegistration(input, register)` of `src/internals/useInputRegistration.ts` in `setup`. `register` returns a function that ends the registration. The composable calls that function when the input changes or goes away. The segments of a date or time field and the faces of a time clock do this.
+- Such a field takes the first invalid input in the document, or else the first input in the document. It skips a disabled input and an input of another form. The field reads the validity of that input, and the form focuses the part of that input. An enabled input does not match `:disabled`. In a disabled `<fieldset>`, only an input in its first `<legend>` counts. The order of the registrations decides only between inputs in two trees, such as two shadow roots. Base UI takes the first registration (`VUE-78`).
+- A disabled fieldset disables a form part as its `disabled` prop does (`VUE-112`): `Fieldset.Root` with `disabled`, also with no `Field.Root`, and a native `<fieldset disabled>` as HTML disables a form control. A root calls `useInDisabledFieldset` of `fieldset/part` with its element. A root that renders no element gives its hidden input. `DatePicker.Root`, `DateRangePicker.Root` and `TimePicker.Root` give their first field element in document order. A range picker uses its start field. With no such field, each picker gives its first trigger in document order. A part in a group or a field, such as `Radio`, reads the fieldset itself. A fieldset in the group or the field can hold that part alone. The other parts follow their root. The JSDoc and the comments of the composable give the rest.
+- A control gives its field its element, its id, its name and its inputs with `field.setControl` of `field/control.ts` while the element is mounted. It gives each value with `field.setValue(value, filled)`, each edit with `field.onEdit()`, each leave with `field.onLeave(element)` and each reset with `field.onReset(value)`. The field validates the inputs and reads their native validity.
 - A part that gives no value to the form, such as the parent checkbox of a group, has no name on its input and does not register the input with the field.
-- `KeepAlive` takes the input out of the document and calls no `ref` setter. `useInputRegistration` registers no input while `KeepAlive` holds the control, and it releases a registered input at the hold. It registers the input at each activation. The field then does not validate an input that the user cannot reach. `Checkbox.Root`, `Radio.Root` and `useDateTimeFieldRoot` call it.
+- `KeepAlive` takes the input out of the document and calls no `ref` setter. `useInputRegistration` registers no input while `KeepAlive` holds the control, and it releases a registered input at the hold. It registers the input at each activation. The field then does not validate an input that the user cannot reach. `useDateTimeFieldRoot` calls it.
 - The part calls `useFormReset(input, onReset)` of `src/internals` in `setup`. A ref or getter can already point to the input at mount. The composable listens to `reset` on the root node of the input, because the form of the input can change. The listener follows the input to another root node. While `KeepAlive` holds the part, it listens on the form of the input. A form in the held branch moves with the input. A leave transition keeps the input in the document until the transition ends, and no hook runs at that end. A root node that the composable reads at the deactivation can thus be the document. The composable keeps a reset that waits when `KeepAlive` hides and shows the part. It ignores an event whose target is not the form of the input when the event arrives. Each reset has its own 0 ms timeout. After the event listeners run, the composable calls `onReset` for each event that they allowed. In `onReset`, an uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change. After each reset that the part follows, the part clears the error of its field with `useClearFieldError`, also when its value does not change. The change of a reset starts no validation.
 - With `selectionMode: 'none'`, `useAriaCombobox` gives the default text to the root at each reset that it follows, also when the input shows that text. The input can show an inline completion. `Autocomplete.Root` thus compares the default text with its typed text.
 - A root that clears its reset flag in the callback of `useValueChanged` sets the flag only when the reset changes the value that the callback watches. `useValueChanged` calls no callback for a value that stays, and a flag that stays set skips the validation of the next change. `Slider.Root` and `useDateTimeFieldRoot` compare that value before and after the reset. With `selectionMode: 'none'`, `useAriaCombobox` compares the text of the input before and after the reset. A date or time field root below a picker gets the value of a reset with the next render, so it sets the flag when the picker counts the reset. It compares the value after that flush, and it clears the flag when the value stayed.
 - A part that has one input for each item, such as `RadioGroup`, `CheckboxGroup` and `Slider.Root`, does not call `useFormReset` itself. The input that `RadioGroup` exposes changes with the value, and it can be absent. `CheckboxGroup` exposes no input. The composite list of `Slider.Root` has no thumb while `KeepAlive` holds the slider. `useFormReset` also drops a reset that waits when its input changes. Each item thus calls `useFormReset` with its own input. The part handles the first call for each `reset` event.
 - `CheckboxGroup` follows the reset of each form that has an input of one of its items. An uncontrolled item whose state the group does not hold goes back to its default value through its own change event. A checkbox with no `value`, and with no `name` of its own or of its field, is such an item. The group clears the error of the field, so such an item does not. When an uncontrolled group goes back to its default value, its parent checkbox goes back to the state that it has at the mount.
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
-- A field counts `valueMissing` only after it is marked dirty. A value that differs from its initial value marks the field. A call of `validate()` on the field or on the form marks it too, and a submit calls `validate()` for each field. The `dirty` prop with the value `true` also marks it. A part that the user cannot empty, such as `RadioGroup`, gives `true` as the second argument of `validation.commit` at its blur. The field then counts `valueMissing` with no mark.
-- `Select.Trigger`, `Select.Root` and a combobox with a selection mode whose trigger is the control do the same. The comment at each call gives its case.
+- A field counts `valueMissing` only after its value differs from its first value, after a submit, or after a call of `validate()` on the field or on the form. In `blur` mode, a leave also counts it for a control whose value the user picks (`BUG-1425`). Such a control gives `countsMissingAtLeave` to `field.setControl`: `RadioGroup`, `Select.Root`, and a combobox with a selection mode whose trigger is the control.
 
 ```vue
 <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
@@ -464,7 +466,7 @@ Rules:
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), a blank `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
 - The list `BLANK_IS_NOT_GIVEN` of that file has one entry for each attribute whose blank value is not given. A new such attribute needs a new entry.
 - `givenAttributes` does not get a declared prop, a value that a part reads with `useAttrs()` or a parameter of a composable. A part reads such a value through `given(attribute, value)` of the same file. `OTPFieldInput.vue` does this for the `aria-label` of its warning.
-- A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `Field.Control` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
+- A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `NumberField.Input` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - Register each scroll area viewport, corner, scrollbar and thumb with the root after the patch. Track the axis of each scrollbar and thumb.
 - Release a scroll area registration on replacement, hold and unmount. Clear only the element that the part registered.
@@ -508,11 +510,11 @@ Rules:
 - Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - Declare the prop of an `aria-*` attribute in camel case: `ariaLabel` for `aria-label`. Vue gives the attribute `aria-label` to that prop.
-- Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Switch.Root aria-label="Wi-Fi">` fails the type check of a consumer that sets `strictTemplates`.
+- Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Toggle aria-label="Bold">` fails the type check of a consumer that sets `strictTemplates`.
 - A template and TSX then accept `aria-label` and `ariaLabel`, each as a `string`.
 - Add each such prop to the type tests `packages/vue/test/AriaAttributesInTemplate.spec.vue` and `packages/vue/test/ariaAttributes.spec.tsx`.
 - The `aria-*` key reaches the prop, so name it in the second type argument of `WithVaseUIEvent`. See [Parts that render an element](#parts-that-render-an-element). Add a line that gives the attribute `null` and must fail to `packages/vue/src/internals/NullAttributeInTemplate.spec.vue`.
-- A part reads a declared `ariaLabel`, `ariaLabelledby` or `ariaDescribedby` through `given` with the name of the attribute, as in `given('aria-label', props.ariaLabel)`. It can also give `ariaLabel` and `ariaLabelledby` to `useAriaLabelledBy`, which does so. A blank value is then `undefined`, as if the consumer gave none (`VUE-106`, `VUE-110`). `Slider.Thumb` and `TimeClock.Face` do this for `ariaDescribedby`.
+- A part reads a declared `ariaLabel`, `ariaLabelledby` or `ariaDescribedby` through `given` with the name of the attribute, as in `given('aria-label', props.ariaLabel)`. A blank value is then `undefined`, as if the consumer gave none (`VUE-106`, `VUE-110`). `Slider.Thumb` and `TimeClock.Face` do this for `ariaDescribedby`.
 - vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that function when the SFC has a required slot. `as` also accepts `GenericComponent` of `src/internals/types.ts`, so `<Toolbar.Button :as="Select.Trigger">` passes the type check.
 - `GenericComponent` has `/* @vue-ignore */`, so the SFC compiler writes no run-time type for `as`. Without it, the type is `[String, Function]`. The build of the package keeps the type but not `skipCheck`, so Vue warns for a component object in the development build of a consumer. `pnpm check:package` gives `Select.Trigger` to `as` of `Toolbar.Button` in a development build, and fails on a warning.
 - `Toggle` is not a generic SFC, because no other prop, event or slot of `Toggle` follows `Value`. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
@@ -545,7 +547,6 @@ Base UI has prop trios such as `checked`, `defaultChecked` and `onCheckedChange`
 - With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `modelValue` and `defaultValue` as an empty array (`VUE-115`). A `null` `modelValue` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
 - `Combobox.Input` in `Combobox.Chips` moves the focus to a chip only when the value is an array (`VUE-122`). With each other value, such as the `null` of a combobox with no `multiple` prop, the arrow key keeps its default action.
 - `Combobox.Chip` and `Combobox.ChipRemove` remove a value only when the value of the combobox is an array (`VUE-122`). With each other value, the chip ignores Backspace and Delete, and the remove button ignores a press.
-- When a parent releases `Field.Control.modelValue`, the native input keeps the last parent text. A later render preserves typed edits, and a form reset applies `defaultValue`.
 
 The change event carries these details:
 
@@ -565,9 +566,7 @@ The change event carries these details:
 - An emit can report a state that the part derives from other state, such as `collapsedChange` of `Resizable.Panel`. It has the new value and no `details`, and the part has no `update:x` for it. The part emits it after the DOM update of each change of the state, also a change that comes from the `layout` prop of the root. It does not emit it at the mount.
 - An emit and an exposed method can have one name. `Resizable.Panel` emits `resize` and exposes `resize(size)`. Vue keeps the two apart: the emit is the listener `onResize`, and the method is a member of the exposed object.
 - A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
-- Declare a listener prop beside an emit only when native behavior depends on its presence. After validation passes, `Form` prevents native submission if it has a `formSubmit` listener. It reads the listener props for that check.
-- Vue gives the listener to the prop, and the emit still calls it. Type the prop as a function or an array of functions, because Vue gives the prop an array for two listeners.
-- A listener with `.once` has the key `onFormSubmitOnce`. Declare that prop too, and read both props. The emit calls the `.once` listener one time.
+- Declare a listener prop beside an emit only when native behavior depends on its presence.
 - A callback whose result the component uses stays a function prop: `validate`, `format`, `getAriaValueText`, `filter`, `itemToStringValue`, `isItemEqualToValue`, `initialFocus`, `finalFocus`.
 
 ### Actions, handles, slots, composables and ids
@@ -577,7 +576,7 @@ The change event carries these details:
 - A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` is the model, with the type `Resizable.Panel.Actions`.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
-- Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
+- Function children become a default scoped slot with named props: `{ payload }` on a root, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
 - A part that renders a list has a slot that has the name of its item. `Combobox.List` has the slot `item`, and `Calendar.Week` has the slot `day`. Its props are the item and its `index`, such as `{ day, index }`.
 - A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
@@ -607,7 +606,7 @@ The change event carries these details:
 - Do not call a getter of the consumer that can read the DOM before the component is mounted. A server render must never call it. Keep a flag that `onMounted` sets, and read the getter only while the flag is set.
 - Upstream calls some functions of the consumer only while a popup is mounted, such as the `anchor` function. Read such a getter only while the popup is mounted too. A getter that reads an element that exists only while the popup is open then does not run for a closed popup. A getter that has no such upstream rule, such as the one of `collisionBoundary`, also runs while the popup is closed, after the mount.
 - Call `useVaseUiId(() => props.id)` in setup when a part needs a generated id. It prefixes the id from `useId()` with `vase-ui-`. Derive associated ids from the root id. Keep the same allocation order on the server and client. For a command outside setup, use an imperative allocator, as `createToastManager` does.
-- An `id` prop or attribute counts as absent when `trim()` gives an empty string (`VUE-93`). HTML requires a nonempty id with no ASCII white space. ASCII white space separates ids in a list such as `aria-labelledby`. `useVaseUiId` gives the generated id for a blank override. `useLabel`, `useLabelableId` and `useRegisteredLabelId` also treat a blank `id` prop as absent. A part that reads its `id` prop in another way reads it through `given('id', props.id)` of `src/internals/givenAttributes.ts` before its own default, as `Select.Trigger` does.
+- An `id` prop or attribute counts as absent when `trim()` gives an empty string (`VUE-93`). HTML requires a nonempty id with no ASCII white space. ASCII white space separates ids in a list such as `aria-labelledby`. `useVaseUiId` gives the generated id for a blank override. `useLabel` and `useRegisteredLabelId` also treat a blank `id` prop as absent. The parts of the refactored families read their `id` prop through `givenId` of `src/common/id.ts`. A part that reads its `id` prop in another way reads it through `given('id', props.id)` of `src/internals/givenAttributes.ts` before its own default, as `Select.Trigger` does.
 - A part that another part names calls `useRegisteredId(getId, register, element)` in `setup`. `getId` gives the id that the part binds to its element. `register` is the function of a registry, such as `registerId` of `createIdRegistry()`. `element` is a ref or a getter of the element of the part.
 - A part binds its own id to its element, such as the `id` prop or a generated id. It never binds the registered id. A `#render` slot can give the element another `id`, and the attribute that comes last wins on the element. With the registered id, the element would keep the `id` of a slot after the slot drops it.
 - Before the mount, the registered id is the id that the part binds. A server has no element, so the server HTML names that id. From the mount on, the registered id is the `id` that the element has now, and it follows each change (`VUE-118`, `VUE-119`, `VUE-121`). Base UI registers the id that the part binds, so a `render` element with another `id` leaves a reference that names no element.
@@ -690,67 +689,84 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Give each listener and observer to the watcher or scope that creates it. Release it when its target changes and when its owner stops.
 - Give a detached `effectScope` an owner that calls `stop()`. Use `onScopeDispose` for the lifetime of the whole scope.
 
-#### Parts and their elements
+#### The rules of the refactored families
 
-- Put the element, its attributes and its default content in the SFC template. Group the code in `<script setup lang="ts">` by behavior.
-- Render a node for each part, or let `v-if` render its comment. Put logic with no node in a composable.
-- Remove an unnecessary `Fragment` from a render function. If it groups siblings, normalize its children so none is `null`, `undefined` or a Boolean.
-- Type props with `defineProps`. Read `props.x` or pass a getter for a destructured prop across a reactive boundary.
-- Give mutable defaults a factory with `withDefaults`. Use `default: undefined` when a Boolean prop must distinguish absence from `false`.
-- Declare component notifications with typed emits. Give a return-valued callback or an imperative command option a function type.
-- Use `v-model` for two-way data flow. Pair each model prop with its matching `update:` event.
-- Use a writable computed for a package model. Read the defined prop as the value. Let the part own the value while the prop is `undefined`. Vue's `useModel` permits a local write with only the prop, so ESLint refuses `defineModel` in `packages/vue/src`. A demo can use `defineModel` for Vue's own model contract.
-- Emit a cancelable change before the model write. Check the veto as soon as the listener returns. A listener's return value cannot veto a Vue emit.
-- Place undeclared attributes and native listeners on their intended element once. A wrapper or a part with multiple roots must choose that element.
-- Bind state-dependent classes and styles in the template. The consumer can use the state of a scoped slot on its own element.
-- Type named slot props with `defineSlots`. Render default or fallback content through a slot outlet. Check slot presence by name.
-- Give a polymorphic slot its element bindings and state. Bind `:ref="props.ref"` on the chosen element in a Vapor slot.
-- Provide a typed `InjectionKey` for compound parts. Give readers readonly state and named actions for the writes.
-- Use `useTemplateRef` for one node the SFC owns. Pass the readonly ref to local composables. Bind a setter for a public render slot, several owners, indexed items or a tested patch-time requirement. Give each owner `null` on removal.
-- Key a list of refs by item identity when order can change. Vue does not promise that a template ref array follows list order.
-- Call `defineExpose` with the required element or actions before an `await`. Use the exposed interface of a component ref.
-- Allocate component ids with `useId()` during `setup`, in the same order on the server and client. Preserve the app prefix on both sides.
-- Bind attributes, values, styles and listeners through Vue on each element the part owns. Use DOM APIs for focus, selection, scroll, measurement and resources outside that element.
+Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group and Switch follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+
+Lifetime:
+
+- Each part works in `<Transition>` and `<Teleport>`, and when a `v-if` replaces one part with another. No listener or registration of a removed part stays.
+- A part keeps no state about a hold of `KeepAlive` and has no code for one. The browser takes a held control out of its form. A control or a field counts for a form when the form of its element is that form (`element.form`).
+- Nuxt removes the call of a client hook, such as `onUnmounted`, from its server build, with its arguments. Call a registration before the hook, and give the hook the function that it returns: `const unregister = field.addLabel(label); onUnmounted(unregister);`.
+
+The element of a part:
+
+- A part renders one root element. Scoped styles, `v-show`, directives, `<Transition>` and the attributes of the developer reach it. A part with a form value is the native input itself.
+- The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part.
+- A template ref on a part has `element`.
+- The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
+- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
+- `src/common/` holds only what two callers use.
+
+The public form:
+
+1. A prop that mirrors a native attribute has the name of the attribute in a Vue template: `readonly`, `autocomplete`. An ARIA attribute is a plain attribute, not a prop.
+2. No prop says what the developer renders, such as `nativeButton` or `nativeLabel`. A part reads its element after the mount.
+3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element.
+4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:errors`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`.
+5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change.
+6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
+7. `<Transition>` animates a part that appears and goes. The parts have no `data-starting-style`, `data-ending-style` or `transitionStatus`.
+8. A component is `Family.Part`, or the family name when the family has one part. A type is flat, such as `FieldRootProps`. No namespace types, and no constants for the names of data attributes.
+9. A part gives a form what the matching native control gives: the same name and value rules, the same constraint validation, the same implicit submit, the same reset. `uncheckedValue` of a checkbox and a switch adds an entry in a `formdata` listener of the form.
+10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
+11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
+12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
+13. A form gives the typed values of its fields at its submit: `submit(event, values)`. `validate` of a field gets the value of its control and the same values.
+
+Measure before you write code that guards, tracks, repairs or copies a behavior:
+
+- Build the smallest case with plain Vue and native elements, and see what Chromium, Firefox and WebKit do. Keep the case as a test in `packages/vue/test/measurements/`.
+- When the browser or Vue does the right thing in the three browsers, write no code.
+- When the browsers differ and a person notices it, write the least code that makes them agree with the HTML Standard and the WAI-ARIA Authoring Practices. A setting of the user, such as the macOS setting for the Tab key, is not a difference to smooth over.
+- A part handles the events that the browser sends. It detects no value that an element got with no event: text before the hydration, a press on a label before the hydration, and form state that the browser restores.
+
+Platform and parity:
+
+- A behavior of a part rests only on features that MDN marks "Baseline Widely available". `Temporal` is the one exception.
+- Each feature of Base UI stays, in the form of Vue. A feature is cut only for a better way that gives the developer or the user the same thing, and the family file of `parity/families` names that way.
 
 #### Mount, hydration and render modes
 
 - Register composables that need component hooks synchronously in `setup`. Start browser work after mount. Keep mutable server state local to each request.
 - Match the server HTML and the first client render. Use `data-allow-mismatch` only for an expected difference in the named category.
+- A part that names a label or a message that can come after it in the server HTML calls `useDeferredServerRender()` in `setup`.
 - Check the first interaction with a part that hydrates late. Vue can replay the event that starts hydration.
 - Put a Teleport target in place before the Teleport needs it. With `defer`, the target must exist in the same mount or update tick.
-- Tie effects that need a visible part to `useKeepAliveState`. Cover a first mount in a held branch and the next activation.
-- Use the package presence helpers for an enter, exit or interrupted close. ESLint refuses `<Transition>` and `<TransitionGroup>` in package source.
+- Allocate component ids with `useId()` during `setup`, in the same order on the server and client.
 - Use APIs available in Vue 3.5.12 in the shared package entry. Keep VDOM-specific code within the exceptions in [Vapor mode](#vapor-mode).
-- Give children stable props when their state stays equal. Measure component updates before a performance change.
 
 ### Review checklist
 
 Apply the state, effect, server and compatibility checks to each source file. Apply the part and feature checks where the part has that behavior.
 
-1. Locate the element, attributes and default content in the template. Check the reason for each render function.
-2. Check that each handler reads its current prop, ref or getter at the call.
-3. Trace each derived value to a pure computed. Identify the owner of each write.
-4. Check each live composable input for `MaybeRefOrGetter` and a tracked `toValue` read. Pass a destructured prop through a getter.
-5. Destructure the composable result. Check that its refs still update and its actions still reach the owner.
-6. Check the source, depth and flush of each watcher. Register invalidation before an async wait.
-7. Check each listener, observer and scope at replacement and final disposal.
-8. Run server setup without browser globals or shared request state. Compare the first client render with the server HTML.
-9. Check prop types, one-way data flow, absent Booleans and mutable defaults.
-10. Check the matching model update for a bound model, an unbound model, a prop alone and a refused request.
-11. Check that the veto precedes the write. After a refusal, inspect the input, focus or popup in a browser.
-12. Check each component event declaration. Follow each native listener to one call on the intended element.
-13. Inspect the element that receives `class`, `style`, `id` and ARIA attributes through a wrapper or multiple roots.
-14. Check the slot's state and bindings. Render its fallback through an outlet. Count calls across the slot bridge. Keep slot calls out of setup and watchers.
-15. Check the injection key's type. Trace each mutation to a named action of the provider.
-16. Test a null ref, conditional removal and a new item order. Check that the exposed element clears on removal.
-17. Compare the server and client ids for each label, description and control, with the same app prefix.
-18. Check when the Teleport target exists. Check resource release at a KeepAlive hold and recovery at activation.
-19. Check shared imports against Vue 3.5.12. Check Vapor code for private instance fields, slot inspection, `v-memo` and VDOM directives.
-20. In each claimed render mode, test the public DOM, update events, slots, refs and first interaction after hydration.
-
-When a mount hook and a watcher call the same function, check whether one watcher can own the work. Identify the DOM or child state that each `nextTick`, `onUpdated` or `onBeforeUpdate` needs. Pass a single ref callback directly when it has one owner. Check the reason for each ESLint exception. Describe each timing constraint and development message in terms of the behavior the user sees.
+1. Check that the part renders one root element, and that the attributes of the developer reach it and win.
+2. Check the `element` slot: `props`, `elementRef` and `state`, and `element` on the template ref.
+3. Check that each handler reads its current prop, ref or getter at the call. Trace each derived value to a pure computed.
+4. Check the source, depth and flush of each watcher, and each listener, observer and registration at replacement and at unmount.
+5. Check that each registration runs before its client hook, so that the server build of Nuxt keeps it.
+6. Check the model: an update for a bound model, an unbound model and a refused change. Check that `details.cancel()` precedes the write.
+7. Check the native behavior: the label, the keyboard, the form data, the constraint validation, the reset and the implicit submit. A test in a browser shows each one.
+8. Check each `data-*` attribute against the CSS selector and the ARIA attribute of the same element.
+9. Check each piece of code that guards or repairs a behavior against a measurement in `packages/vue/test/measurements/`.
+10. Run the server render. Compare the server HTML and the first client render, with the ids of each label, description and control.
+11. Check the injection key of each contract, and trace each write to a named action of the provider.
+12. Check shared imports against Vue 3.5.12, and Vapor code for private instance fields, slot inspection and VDOM directives.
+13. In each render mode, test the public DOM, the events, the slots, the refs and the first interaction after hydration.
 
 ### Files
+
+The refactored families have the layout `<Part>.vue`, `types.ts`, `index.ts` and `parts.ts` in the folder of the family. This section holds for each other family until its refactor.
 
 - Each part is an SFC with `<script setup lang="ts">`.
 - The exported types of a part are in a `<script lang="ts">` block of the same file.
@@ -859,7 +875,7 @@ The hydration state:
 A part that binds the id of a part that comes after it:
 
 - A server writes the attributes of an element before the `setup` of each part that comes after the element.
-- A part that binds the id of such a part calls `useDeferredServerRender()` of `src/internals/labelable-provider` in `setup`. Examples are the id of a label, of a message and of a legend.
+- A part that binds the id of such a part calls `useDeferredServerRender()` of `src/common/deferredServerRender.ts` in `setup`. Examples are the id of a label, of a message and of a legend.
 - Vue then renders the part on a server in a later microtask. Before that render, Vue runs the `setup` of each part that it reaches in the same synchronous pass. The server HTML has the id, in each order of the parts.
 - The part that binds the attribute makes the call. A call in a component around it does not help.
 - Make the call with no condition on the environment. Vue makes a component that has the hook a boundary for `useId`, on a server and in a browser. With the hook only on a server, a part below the part gets another id in the browser. Vue then reports a hydration mismatch.
@@ -867,7 +883,7 @@ A part that binds the id of a part that comes after it:
 - `Collapsible.Trigger` and `Accordion.Trigger` call `useDeferredServerRender()` for the id of the panel in `aria-controls`. `Accordion.Panel` calls it for the id of the trigger in `aria-labelledby`. The server HTML then names a part that has an `id` prop, in each order of the two parts (`VUE-80`).
 - `Tabs.Tab` calls `useDeferredServerRender()` for the id of its panel in `aria-controls`. `Tabs.Panel` calls it for the id of its tab in `aria-labelledby`. The server HTML then names the tab and the panel in each other, in each order of the two parts (`VUE-80`).
 - Such a part gives each `aria-*` value that a later part gives to `useRenderElement`, with no other call. `useRenderElement` gives the render before the mount the server value of each such key whose value differs, as [`useRenderElement` and `useRender`](#userenderelement-and-userender) says. A part below a part that defers is the same, such as `OTPField.Input`. The server also renders it after the later parts.
-- A part that renders an element with no `useRenderElement`, such as a hidden input, gives each such `aria-*` value to the function that `useAriaAfterHydration()` of `src/common/hydration.ts` returns. `Checkbox.Root`, `Switch.Root`, `OTPField.Root`, `DateField.Root`, `TimeField.Root` and `Slider.Thumb` do this for an input. While Vue hydrates the part from server HTML, the function gives `null`. On a server, in a client-only mount and after the mount, it gives the value. With `null` in the first client render, the render after the mount always writes its value. Give the function only the value of an attribute that Vue does not compare when it hydrates, or of an attribute that the element allows to differ with `data-allow-mismatch` and the category `attribute`. Vue compares the attributes of its lists of known attributes, such as `id` and `tabindex`, and it warns when they differ.
+- A part that renders an element with no `useRenderElement`, such as a hidden input, gives each such `aria-*` value to the function that `useAriaAfterHydration()` of `src/common/hydration.ts` returns. `OTPField.Root`, `DateField.Root`, `TimeField.Root` and `Slider.Thumb` do this for an input. While Vue hydrates the part from server HTML, the function gives `null`. On a server, in a client-only mount and after the mount, it gives the value. With `null` in the first client render, the render after the mount always writes its value. Give the function only the value of an attribute that Vue does not compare when it hydrates, or of an attribute that the element allows to differ with `data-allow-mismatch` and the category `attribute`. Vue compares the attributes of its lists of known attributes, such as `id` and `tabindex`, and it warns when they differ.
 - Each family with such a part calls `removedPartHydrationTests` in the test of the part. See [Test helpers](#test-helpers).
 - A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 - A popup trigger does not call it. Each value that the trigger lacks on a server comes from a registration, an attachment or an element. A server has none of them. A deferral adds none of them.
@@ -912,30 +928,13 @@ The label of a root:
 
 The label, the control and the messages of a field:
 
-- `provideLabelableContext()` of `src/internals/labelable-provider` makes the labelable context and provides it. A root that owns a control and its label calls it in `setup`, such as the root of a field and `Field.Item`. A label and a control in an item pair with each other and not with a control of another item.
-- The provider makes one id, for the control. A control with no `id` prop takes that id. The label and the control then agree in the server HTML, in each order of the two parts. A label with no `id` prop makes its own id, so two labels in one provider have two ids.
-- A control calls `useLabelableId({ id })` and binds the result to `id`. A label calls `useLabel({ element, native })`. A native `<label>` gets `for` with the id of the control. An element that is not a `<label>` gets a click handler that focuses the control.
-- The click handler of a label that is not native finds the control by its id. In a field, that id is `controlElementId`. A click on `Field.Label` thus focuses a control whose `#render` slot gives another `id` (`VUE-118`). A `#render` slot can also give the element of a control an empty `id`, and a label with no field has no control id. `Select.Label` thus gives the trigger element of its root to `useLabel` as `controlElement`. The handler then focuses that element, and the id of the element does not matter. `Combobox.Label` does the same only while the input is inside the popup, because the input outside the popup is the control of a field. Base UI finds the trigger by an id. In a field, a click on its label thus focuses nothing when the `render` element of the trigger has another id than the control id (`VUE-116`).
-- A `#render` slot can give the element of a part another `id` than the part gives. The parts of a field then name the `id` of the element (`VUE-118`). Base UI keeps the id of the part.
-- A control gives its element to `useLabelableId` as `element`. A root gives a ref or a getter of the element of its child part. `Select.Root` gives the trigger. `useAriaCombobox` gives the trigger while the input is inside the popup, and the input at other times. `NumberField.Root` gives its input, `OTPField.Root` its first input, and `useDateTimeFieldRoot` its first segment.
-- A checkbox, a radio or a switch gives its element only with `nativeButton`. Without `nativeButton`, the hidden input has the control id, and the part gives `null`.
-- A label names `controlElementId` of the context. It is the control id when that id is `null`, when an element of a control has that id, or when no control element has an `id`. At other times, it is the `id` of the first control element.
-- A control binds the control id, and not the `id` of its element. With the `id` of its element, a control would keep an `id` that its slot no longer gives.
-- `useLabel({ element })` and `useRegisteredMessageId(id, element)` register the id with `useRegisteredId`. After the mount, that id is the `id` that the element has now. An element with an empty `id` registers nothing. A message with no id registers nothing, also while its element animates out.
-- A control with an `id` prop has the id of the provider until the control is mounted. Then it registers a getter for its own id, and the label follows. With its own id from the start, the control would not match a label that comes before it.
-- A label and a message register a getter for their id one time in `setup`. Each part that Vue renders after that `setup` has the id in the server HTML. `useLabel({ element })` registers the label. A message calls `useRegisteredMessageId(id, element)`. A message that can be hidden gives `undefined` as its id while it is hidden. `Field.Error` does this, so the control names it only while it shows.
-- `labelId` of the context is the id of the last label that has one. `messageIds` lists the ids of the messages in the order of the registrations, which is the order of the mount.
-- A control gets `aria-describedby` from `getDescriptionProps` of the context. The result also has the messages of the provider above. A control in `Field.Item` that calls `getDescriptionProps` of its context thus names the messages of the item and of the field.
-- `Field.Control` gets `aria-describedby` through `getValidationProps` of `useFieldValidation`, which calls `getDescriptionProps` of the labelable context of `Field.Root`, as in Base UI. In an item, the control thus names only the messages of the field.
-- A group that is the control of its field and takes its name from `aria-labelledby`, such as `CheckboxGroup`, calls `useLabelableId({ id: null })`. The label then has no `for`. An item of the group does not claim the control id of that scope. It passes `enabled: false` to `useLabelableId` when its `registerControlId` is the function of the group. A `Field.Item` opens a scope that the item owns.
-- A control that renders a labelable element, such as `Field.Control`, binds `labelId` of the context to `aria-labelledby`. It does not call `useControlLabelId()`. It calls `useDeferredServerRender()` itself, so that the server HTML has the ids of the label and of the messages that come after it.
-- A control calls `useControlLabelId()` when its element is not a labelable element of HTML, such as a `<span>` with a role. It gives the result to `useAriaLabelledBy`, which follows this list. The result is the id of the registered label, and `undefined` with no label. The control defers when it has a provider. A label that comes after it then names it in the server HTML, also with an `id` prop.
-- When the field has no label, the control has no `aria-labelledby`, in the server HTML also.
-- A control that defers has the id of a message that comes after it in `aria-describedby` in the server HTML. In a client-only mount, it has that id after the first flush, before a paint.
-- A control whose element is not a labelable element calls `useAriaLabelledBy` and binds the result to `aria-labelledby`.
-- It passes `useControlLabelId()` as `labelId`, the `shallowRef` of its hidden input as the source, and the id of that input as the source id.
-- A native `<label>` names the control only after the mount. A server has no DOM, and the label of the consumer has no id.
-- The composable writes an id to a label that has none.
+- `Field.Root` provides the contract of `field/control.ts` with `fieldKey`. A control reads it with `inject(fieldKey, null)` and gives itself with `field.setControl` while its element is mounted.
+- The field makes one id for its control. A control with no `id` prop takes that id, so the label and the control agree in the server HTML, in each order of the parts. The `element` slot of a part can give its element another `id`, and the other parts name that `id` after the mount (`VUE-118`).
+- A `Field.Label` that renders a `<label>` names the control with `for`. A label that renders another element names the control with `aria-labelledby`, and a click on it moves the focus to the control. A group, such as `CheckboxGroup`, is not a labelable element: the label then has no `for`, and the group gets the label in `aria-labelledby`.
+- `Field.Description` and `Field.Error` register their ids in `setup`. The control has them in `aria-describedby`, an error only while it shows. `controlAria(field)` gives the `aria-*` attributes of a control, and `describedByWith(field, given)` puts the ids of the field after the ids of the developer.
+- A part that names a label or a message calls `useDeferredServerRender()` in `setup`, so that a label or a message that comes after it has its id in the server HTML.
+- `Field.Item` gives one control of a group a field of its own, with its label, its description and its disabled state.
+- A native `<label>` outside a field names only the element that its `for` names. A group with no field has no name from it.
 
 The state of a field:
 
@@ -971,7 +970,7 @@ A date or time field and the `Intl` data of the server:
 - Direction and CSP stay as `DirectionProvider` and `CSPProvider`. There is no global configuration provider.
 - Read live state through its prop, ref or getter at the point of use.
 - Give a reader a `Readonly<Ref<T>>` when it needs a ref. Replace the value of a shallow ref to notify readers of a new array.
-- A reader that accepts a value, ref or getter takes `MaybeRefOrGetter<T>`. Read it with `toValue` when the operation runs. `focusTargetRef` of `useSetFieldFocused` accepts these forms.
+- A reader that accepts a value, ref or getter takes `MaybeRefOrGetter<T>`. Read it with `toValue` when the operation runs.
 - Provide a named action for a write that belongs to the provider.
 - Clear a shared element only when the registration still holds the element of the departing part. A compiled template can mount a new part before it unmounts the part that it replaces. The old part then does not clear the element of the new part. `Dialog.Viewport` does this for the key `viewportElement` of the popup store.
 - Keep pointer-session data local to the gesture unless another owner or a render needs it.
@@ -990,13 +989,11 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - Type the key as `InjectionKey<Context>`. When a context has one reader, that part can call `inject(key, undefined)` directly. Shared context readers can use a `use<Root>Context()` function.
 - Pass an explicit default to `inject` to suppress Vue's missing-provider warning. A part that requires the provider throws an error that follows [Error messages](#error-messages).
 - A radio or checkbox can render outside its group. Both roots use `undefined` as the default for the group context. `useCompositeListContext()` and `useCompositeRootContext(true)` also return `undefined` when the provider is absent.
-- `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` return stateless defaults for optional readers.
+- A control reads its field with `inject(fieldKey, null)`, and a field reads its form with `inject(formKey, null)`. With no provider, the reader gets `null`.
 - The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does. The default delay group is the exception, because the default context of Base UI holds state too. Only a mounted part writes it. See [Popup interactions](#popup-interactions).
-- A field owns its focus and its validation input. Controls use `setFocusOwner` and `validation.setFieldInput`. A reader gets the current input from `validation.inputRef`.
-- Base UI keeps three things in its default field and form contexts: the fields of the page that have no form, one focus owner and one input. Vase UI keeps none. With no form, `fields` is empty. With no field, `useSetFieldFocused` keeps the owner of its control.
-- To test for a field or labelable provider, call `inject(key, null)`. A required field reader throws if the result is `null`.
+- To test for a provider, call `inject(key, null)`. A required field reader throws if the result is `null`.
 - Name the action for the change the caller requests. Read a ref at the call when the action needs its current value.
-- A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
+- A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns.
 - `DirectionProvider` provides a computed ref of the text direction. `CSPProvider` provides a computed ref of its `nonce` and `disableStyleElements` settings. Each composable returns the nearest provider's ref.
 - Use one `ComputedRef` for a context that holds one changing value. `ScrollAreaScrollbarContext` gives each thumb the orientation of its nearest scrollbar.
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
@@ -1060,10 +1057,10 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - The `closeOnSelect` of `DatePicker.Root` is `true` for a value with no time and `false` for a value with a time. The calendar reports each accepted selection to the picker, including a press on the selected day. With `closeOnSelect`, the picker requests a close with the reason `imperative-action`. A canceled selection keeps the popup open.
 - A picker popup gives `usePickerInitialFocus` to `Popover.Popup` through `initialFocus`. Its default is the first connected target in document order. A held part gives no target. The calendar gives the day, month or year cell that has the tab stop in its current view. Without a target the picker uses the default of `Popover.Popup`. The consumer can give a focus target or turn initial focus off with `false`. An omitted value, an empty ref, `true` or `null` uses the picker default. A function can return `true` or `null` to ask for that default.
 - `Alt` with `ArrowDown` opens the popup from the field, as a press of the first trigger does. The segment ignores a key with `Alt`, so the key reaches the field. A disabled or read-only picker opens no popup: its trigger is disabled, and its field ignores the key.
-- A portal preserves the component ancestry of the popup. The popup time field provides `null` for `FieldRootContext` and creates its own labelable context. Its control and label belong to that scope.
+- A portal preserves the component ancestry of the popup. The popup time field provides `null` for `fieldKey`, so it is no control of the field of the picker.
 - A part of a picker that renders a field root declares the `aria-*` props of that root: `DatePicker.Field`, `DatePicker.TimeField`, `DateRangePicker.StartField`, `DateRangePicker.EndField` and `TimePicker.Field` declare `ariaLabelledby`. TSX then takes `ariaLabelledby` on the part, as on the root.
 - A range picker holds one range, the first end and the last end, and an end is `null` while it has no value. Its start field and its end field are each controlled with one end. A change of one end gives the root the range with that end changed. The two fields call `useFormReset` for the same `reset` event, so the root handles the first call only.
-- A `Field` has one control that its label names, so the end field of a range picker provides a labelable context of its own. The label of the `Field` names the picker, so it joins the name of each field, as in React Aria. The group of a field has an `id` from `DateTimeFieldHostContext`, and its `aria-labelledby` holds that `id` and the `id` of the label. The name is then the `aria-label` of the group and the text of the label. A name that the consumer gives with `aria-labelledby` replaces both. The descriptions and the errors of the `Field` still reach the end field.
+- A `Field` has one control that its label names, so the end field of a range picker gives its content a field of its own through `fieldKey`: the name, the state and the descriptions of the `Field`, and no part in its label or its value. The start field gives the `Field` the hidden input of the end field through `DateTimeFieldHostContext`, so the `Field` validates both ends. An edit and a leave of the end field count for the `Field`. The label of the `Field` names the picker, so it joins the name of each field, as in React Aria. The group of a field has an `id` from `DateTimeFieldHostContext`, and its `aria-labelledby` holds that `id` and the `id` of the label. The name is then the `aria-label` of the group and the text of the label. A name that the consumer gives with `aria-labelledby` replaces both. The descriptions and the errors of the `Field` still reach the end field.
 - A range with no end gives no kind to a new end, so the template of a range picker skips it. The `isEmpty` parameter of `useDateTimePickerRoot` says which values are empty.
 - The calendar of a range picker renders `RangeCalendar.Root`. The first press makes a range with one end, so the popup stays open. The popup closes after a press or a drag that makes a range with two ends, unless `closeOnSelect` is `false`. `closeOnSelect` is `true` by default, also for a range with a time, because the popup has no part for a time and the user sets a time in a field. A key that extends the range does not close the popup, because the user can extend it more.
 - A drag that makes the range that the picker already has gives no change, so no `valueChange` closes the popup. `useRangeSelection` thus calls `onSameRange` of the host that the calendar of the picker provides with `RangeCalendarHostContext`, and the picker closes the popup as it does after a change. The host is internal: `RangeCalendar.Root` has no prop and no event for it.
@@ -1386,7 +1383,6 @@ The composite item:
 A part that is in a composite only in some trees:
 
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
-- `Radio.Root` is an item only in a `RadioGroup`.
 - `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - Read the optional context in setup. Call `useCompositeItem(element, options)` or `useCompositeRoot(options)` when that context requires it.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
@@ -1482,7 +1478,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 #### Derive a value
 
-- Keep a last-rendered value only when a handler needs that phase. A direct ref read sees the latest write. `useFieldValidation` keeps `renderedValid` for the validity before a change. The comments in `useMenuRoot`, `NavigationMenuTrigger.vue` and `useAriaCombobox` name their cases.
+- Keep a last-rendered value only when a handler needs that phase. A direct ref read sees the latest write. The comments in `useMenuRoot`, `NavigationMenuTrigger.vue` and `useAriaCombobox` name their cases.
 - Read the current value in a handler. Keep a separate value only for an independent writer or a specific phase of a gesture.
 - Capture a setup constant only for a real initial snapshot. A submenu reads its parent's initial transition status and `instantType` from raw state in `useMenuRoot`.
 - An object prop can be a reactive proxy that the consumer changes in place. Read the keys, entries or array elements the result uses. `Object.hasOwn` alone does not track a new key. Track key presence when it affects the result.
@@ -1491,7 +1487,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 #### Share behavior and markup
 
-- Use a composable for shared state or behavior. For example, a root calls `provideLabelableContext()` to provide labels.
+- Use a composable for shared state or behavior. For example, a control calls `useFieldControl` to give itself to its field.
 - `useMenuRoot` serves both menu roots. `useAriaCombobox` serves roots that share combobox behavior. Give a shared helper getters for the props it reads. A spread reads every prop at once.
 - Use an SFC or a scoped slot for markup that a part owns. Forward an element, public render slot or declared event at the boundary that exposes it.
 - `useFilterDropdownInput` shares the input behavior. The public part supplies the markup. [Vapor mode](#vapor-mode) gives the two exceptions that need render functions.
@@ -1556,7 +1552,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useTransitionStatus` has a fifth parameter, `element`, that upstream does not have. It is the element that gets `data-starting-style`, or a ref or a getter for it. Its JSDoc and its comments give the reason for the read of the layout. Omit `element` only when the element has no enter transition, as `Accordion.Item` does.
 - `useUnmountAfterClose` keeps a popup mounted until its exit animation ends. Then it sets `mounted` to `false` and calls `onUnmount` one time. A `forceUnmount()` call while the popup is open is a request. Its JSDoc and its comments give the rules for that request, and for the last element that attached (`VUE-92`).
 - Do not decide that request in `nextTick`. With no flush in the queue, `nextTick` runs before the flush of a write that comes later in the same task.
-- A real key press can run microtasks between native listeners. Use a zero-delay timer for a decision that needs every ancestor's handler to finish. On Enter, `Checkbox.Root` prevents the button's native click. An ancestor initially reads `defaultPrevented` as `false` and can call `preventDefault()` to stop the form submission. The timer removes the two properties from the event.
+- A real key press can run microtasks between native listeners. Use a zero-delay timer for a decision that needs every ancestor's handler to finish.
 
 #### Read hidden slot content
 
@@ -1603,7 +1599,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 #### Reconcile a native input
 
-- An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
+- An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` is the example.
 - A controlled input requests a render when an edit can leave the model unchanged. `useInputRender` gives the part a `valueProps` binding and a `renderValue` function. Vue compares that binding with the input's live value and restores the text in the same element.
 - Call `renderValue` after the change event. Vue renders a parent that accepts the edit before it renders the input. Move the caret or select a character after that flush.
 - A value write can stop an active composition. `NumberField.Input` delays a refused edit during composition. Its timer requests a render after WebKit sends the final `input` event.
@@ -1611,7 +1607,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue writes `value` of an input when it hydrates. The range input of `Slider.Thumb` thus keeps a value of before the hydration with `useHiddenValueBeforeHydration`. It takes a value that the browser restores after the mount with `useFormRestoreAsInput`. See [Parts with a hidden input](#parts-with-a-hidden-input).
 - A part takes a pre-hydration edit after the mount flush because Vue writes the input value at hydration. A text input receives one `input` event. [Server render](#server-render) and [Parts with a hidden input](#parts-with-a-hidden-input) give the rules.
 - The listener of the element itself gets each of these events. A Vue listener of an ancestor can skip one, because of the rule for the millisecond of the attach in [`useRenderElement` and `useRender`](#userenderelement-and-userender).
-- A native reset of a form changes the value of an input and sends no `input` event. A part that holds state for that value follows the reset with `useFormReset` of `src/internals`. It clears the error of its field with the function that `useClearFieldError` returns. [Parts with a hidden input](#parts-with-a-hidden-input) gives the rules. `Field.Control` is the example.
+- A native reset of a form changes the value of an input and sends no `input` event. A part that holds state for that value follows the reset with `useFormReset` of `src/internals`. It tells its field with `field.onReset(value)`. [Parts with a hidden input](#parts-with-a-hidden-input) gives the rules. `NumberField.Root` is the example.
 
 #### Release and restore work across a KeepAlive hold
 
@@ -1631,35 +1627,33 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A part that mounts in a branch that `KeepAlive` holds gets no `onDeactivated` call. Its first `onActivated` call comes with no `onDeactivated` call before it, so a flag that only `onDeactivated` sets is not set at that call. `useKeepAliveState()` of `src/internals` starts `isHeld` with `isInHeldBranch()` in `setup`. It ignores the call in the flush of the mount only when the part mounts with its branch. A deactivation in that flush ends this rule, so a show after it sets `isHeld` to `false`. `shown` counts each other activation. An app that mounts in a detached element is not held, because no `KeepAlive` holds it.
 - A part that stops an effect that reaches out of the branch reads `isHeld`. At a mount in a held branch, `isHeld` is `true` from `setup`. `PopupPortal`, `useDomEffect`, `useScrollLock`, `useDismissLayer`, `usePopupFocus`, `useDialogRoot`, `DrawerRoot.vue`, `DrawerPopup.vue` and `DrawerViewport.vue` do this. A popup that mounts in a held branch thus stays out of the document until the activation. Until then it takes no scroll lock, no modal marks and no focus, and it does not close on a press outside it. It reports no open state to a dialog or a drawer above it, or to `Drawer.Provider`. At the activation, it takes the place that a popup that mounts in a shown branch has (`VUE-5`). `useTooltipCursor` adds no window listener until the activation. `ToastRoot.vue` and `usePopupAutoResize` measure nothing until the activation, because a read of the layout in a held branch gives 0. `Resizable.Root` registers panels and handles through one action. It excludes held parts before it assigns panel sizes and edge hit areas. `ResizableRoot.vue` takes the panels of its first activation as the panels of its mount, so that activation emits no change. `useFloatingNodeId`, `Toast.Provider` and `useFormRestore` also read `isHeld`. The node of a popup that mounts in a held branch counts as open only from the activation, so a popup above it closes on Escape. A provider that mounts in a held branch starts no timer of a toast until the activation. `useFormRestore` adds no `pageshow` listener until the activation.
 - The handle attach of `usePopupRoot` is the exception. A root that mounts in a held branch attaches until its `onMounted` hook, so that a part below it can call the handle in `onMounted`. [Popup store](#popup-store) gives the rule.
-- A part does work that a user meets at the show, such as a read of `:hover`, in a `watch` of `isHeld` with `flush: 'sync'`. A part that mounted in a held branch thus does that work at its first activation. `NavigationMenuTrigger.vue` does this. `useSetFieldFocused` does this for a focus that no focus event reported.
+- A part does work that a user meets at the show, such as a read of `:hover`, in a `watch` of `isHeld` with `flush: 'sync'`. A part that mounted in a held branch thus does that work at its first activation. `NavigationMenuTrigger.vue` does this.
 - A part that mounts in the flush of an activation also starts held. Vue clears `isDeactivated` after the renders of that flush, and the part then gets `onActivated` in the same flush. `useKeepAliveState` reads `isInHeldBranch()` in `setup` to find such a part, and that `onActivated` call sets `isHeld` to `false`. The order of `onActivated` and `onMounted` cannot show such a part, because that order changes. The part gets `onActivated` first when a component of the branch mounts the part from its own state. It gets `onMounted` first when the root of the branch gets the part from a prop. `KeepAlive` then mounts the part in its patch of the root, before it queues the hooks of the show.
 - Where the effect is a `watch` with `onCleanup`, `isHeld` is in the sources of that `watch`, and the callback returns while it is `true`. `useInputRegistration` does this for the registration of an input, and `useCollapsiblePanel` does this for the timer and the frame of the revert of a reveal.
-- While `KeepAlive` holds a part, `useFormReset` and `useFormEntryValue` listen on the form of the input. At activation, the change of `isHeld` starts their root subscriptions. `useAriaLabelledBy` and `useFieldsetDisabled` have no observer while `isHeld` is true. This includes a part that detects a held branch at mount. A part compiled as a Vapor component does not know that it mounts in a held branch. Its root node is then the detached element of `KeepAlive`. The observer on the last document or shadow root, or on the owner document, sees the branch return there.
+- While `KeepAlive` holds a part, `useFormReset` and `useFormEntryValue` listen on the form of the input. At activation, the change of `isHeld` starts their root subscriptions. `useInDisabledFieldset` starts its observer after the mount. This includes a part that detects a held branch at mount. A part compiled as a Vapor component does not know that it mounts in a held branch. Its root node is then the detached element of `KeepAlive`. The observer on the last document or shadow root, or on the owner document, sees the branch return there.
 - `KeepAlive` moves a branch out of the document before it calls `onDeactivated`. An effect that a change queued earlier in the same flush can run in that gap. A read of the layout of an element of the branch then gives 0 or an empty value. An effect that runs again at the activation and only writes a measured value can run in the gap. An effect that keeps a choice from such a read returns while the element is not in the document (`isConnected`). `SelectPopup.vue` does this for the trigger in its placement. Its popup is in a `Teleport` and stays in the document in that gap.
 
 #### Choose among registrations
 
-- `useLabel` registers a label with the labelable context. With `registerLabelId`, it also registers the label with a root of its own.
+- `useLabel` registers a label with a root of its own through `registerLabelId`.
 - `useElementRegistration` watches the resolved element. If a getter still returns the same element, a later owner keeps its registration.
-- A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` and `useRegisteredMessageId` do this.
+- A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` does this.
 - A server stops an immediate watcher with the default or post flush after its first run in `setup`. A cleanup that removes the registration would run before the children render.
-- A registration from which a provider picks one value among many parts runs in `onMounted`. A control that replaces another control then registers after the old control left the registrations. `useLabelableId` does this for the id of a control, with a `watch` for a later change. `useRegisterFieldControl` does it for the control of a field. It registers one getter for all the values of the control. A `watch` registers the same getter again when the `id`, the `name`, the value or `enabled` of the control changes. `useLabelableId` registers the `id` of the control element in `setup` with `useRegisteredId`. That getter gives the id that the control binds before the mount, and the `id` of the control element from the mount on.
+- A registration from which a provider picks one value among many parts runs after the mount. A control that replaces another control then registers after the old control left the registrations. A control gives itself to its field with `field.setControl` in a `watch` of its element with `flush: 'post'`, and the field takes the control that registered last.
 - `Collapsible.Panel` registers its id in `setup` with `useRegisteredId`, and the root takes the id of the last registration. A panel that replaces another panel then registers after it. The root has no panel id while no panel is registered, and an item of an accordion has no trigger id while no trigger is registered. Base UI gives a generated id until the first such part mounts, and that id can be the id of no element (`VUE-80`).
 - `Dialog.Title` and `Dialog.Description` register a getter of the `id` of their element in `setup` with `useRegisteredId`. `useDialogRoot` of `dialog/root/useDialogRoot.ts` makes one registry for each kind. It writes the id of the last registration to `titleElementId` or `descriptionElementId` of the store. Base UI clears that id when any part of the kind unmounts, also when another part of the kind stays.
 - `Popover.Title` and `Popover.Description` register their ids in the same way. `Popover.Root` makes the two registries.
 - Release a registration on watcher invalidation when its source changes. Release a lifetime registration on scope disposal. Vue disposes the old scope before the replacement's mount hook.
 - A compiled template can mount a new part before it unmounts the part that it replaces. A removal by value then removes the value of the new part.
-- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the controls, the labels and the messages, for the controls of a field, for the panels of a collapsible, for the triggers of an accordion item, for the titles and the descriptions of a dialog, of a popover and of a toast, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
+- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the labels of a root, for the panels of a collapsible, for the triggers of an accordion item, for the titles and the descriptions of a dialog, of a popover and of a toast, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
 - `KeepAlive` takes the DOM of a deactivated part out of the document. The id of that part then must not stay in a `for`, an `aria-controls`, an `aria-owns`, an `aria-labelledby` or an `aria-describedby`.
-- A registration with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while `KeepAlive` holds the part. `useRegisteredId` does this for a label, a message and the panel of a collapsible, and `useLabelableId` does it for the id of a control. `usePickerPartElement` does it for the element of a picker field or trigger. `useRegisterFieldControl` does it for the control of a field, with one difference. It registers the getter again when a value of the control changes, and the entry then goes to the end of the registry.
+- A registration with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while `KeepAlive` holds the part. `useRegisteredId` does this for a label, a message and the panel of a collapsible. `usePickerPartElement` does it for the element of a picker field or trigger.
 - The getter of such a registration reads `isHeld` of `useKeepAliveState`. `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A new entry in that hook would reverse the order of the parts.
 - `useRegisteredLabelId` registers a getter of the referenced id and the element with the root, by source, and removes the entry in `onScopeDispose`. While the root is not mounted, the label registers in `setup`, for the server HTML and the hydration. After the root is mounted, the label registers in `onMounted`, so that the root does not name it before it has an element. The getter gives no value while `KeepAlive` holds the label.
 - `useLabelId` computes `labelId` as the last registered label in document order (`VUE-131`). React runs the effects of a branch that `Activity` shows in tree order, so the last label of the branch wins there too. `KeepAlive` runs its hooks from the last part to the first part, and a label that mounted later can be before another label. A `computed` in document order does not depend on the order of the hooks or of the mounts.
 - Use a computed to read the current registrations at the time of the read. The labelable provider computes `controlElementId` from the selected id and the ids on the elements. Its default-flush watcher waits for the batch of control registrations and keeps the selected id while a control still claims it.
-- An action of a part that needs the registrations of other parts runs in a `watch` of `shown`. In its own hook, the parts before it are still held and give no value. `useLabelableId` does this for a control with no id: it takes the default id of the provider again.
-- The first active control supplies the initial value for dirty comparisons, even when several controls mount in one patch. The active control of a field is the last control of its registry that gives a registration. A control registers again when its `id`, its `name`, its value or `enabled` changes, as the effect of Base UI does. When the active control goes away, the field uses the control that was active before it and is still there. Base UI has no control then.
-- A field gives no value to its form while it has no active control. `fields` of the form context then does not list the field, so a form does not validate it, submit its value or focus its control. A form finds the first invalid control by the position of the controls in the document, as Base UI does.
-- When `validation.registeredInputs` is empty, native validation uses the last input that a control gave to the field. A control releases its input before a parent deactivation hook can validate the field. The previous visible input takes its place (`VUE-83`). Inputs from the same activation return in document order.
+- A field has one control: the control that registered last. When that control goes away, the field has no control until another control registers. The first value that the control gives is the first value of the field, for `dirty`.
+- A form validates each field whose control the browser lists in `form.elements`, and focuses the first invalid control in the document.
 - The registry of a composite is different: it holds elements and sorts them by their position in the document. See [Composite](#composite).
 
 ### What stays from Base UI
@@ -1954,11 +1948,11 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `popupListConformanceTests`: the tests of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox.
   - `portalOwnPropsTests` checks that public portal parts filter the private guard prop. Dialog.Portal also checks the owner role (`VUE-135`).
   - `dialogRootSharedTests`: the tests of the roots of Dialog and Alert Dialog.
-  - `fieldsetDisabledTests`: the test of each native button part that reads `useFieldsetDisabled` (`VUE-112`).
+  - `fieldsetDisabledTests`: the test of each native button part that reads `useInDisabledFieldset` (`VUE-112`).
   - `nestedPopupCloseTests`: the tests of Dialog and Drawer, for a popup that closes in the same update as a popup in it, before that popup, or alone (`BUG-5519`). The `BUG-6037` cases check that a popup with no trigger returns focus to the earlier menu trigger at close.
   - `hiddenInputSizeTests`: the test of a part with a hidden input that has no `name`.
   - `hiddenInputTypeTests`: the test of a part with a hidden input that `getHiddenInputType` types.
-  - `heldMountFormResetTests`: the test of each family whose part calls `useFormReset`. `RadioGroup.test.tsx` calls it for `Radio.Root`, which follows a reset only in a group.
+  - `heldMountFormResetTests`: the test of each family whose part calls `useFormReset`.
   - `heldMountListTests`: the test of each part that calls `useCompositeList` or `useCompositeRoot`.
   - `removedPartHydrationTests`: the test of a part that binds an `aria-*` value or a state attribute that a later part gives.
   - `popupFocusPropsTests`: the test of a popup that has `initialFocus` and `finalFocus`.
@@ -2021,7 +2015,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A part can end a flag of such an event in a 0 ms timer. A case that depends on such a flag follows the tasks of the browser. It dispatches the events of one task in one call of `Promise.all`: `await Promise.all([fireEvent.pointerUp(…), fireEvent.mouseUp(…), fireEvent.click(…)])`. Each dispatch runs at its call, in the sequence of the list, so no task runs between them. For a press that moves the focus, the call that moves the focus is in the list, after the event. Between the press and the release, the case calls `await wait(0)`, so the timers of the press run first.
 - A case of a drag whose result depends on the target of the click uses the real pointer. Call `userEvent.pointer` of `vitest/browser` with `[MouseLeft>]` and the start element as `target`. Then call it with `[/MouseLeft]` and the end element as `target`. The command scrolls to a target, and it does not scroll to coordinates. The browser selects the target of the click and sends the events of the release. Between the two calls, call `await wait(0)`. A person holds the button for more than one task, so each 0 ms timer of the press runs before the release. `dragOnto` of `utils/popups/interactions/useDismissLayer.test.tsx` is the model.
 - A new or changed case of Vase UI's own that asserts what a part does when an element loses the focus moves the real focus. It waits until the element has the focus. Then it calls `blur()`, or `focus()` on another element. A dispatched `focusout` event does not move the focus, so `document.activeElement` is still the element.
-- A part can also do other work in a 0 ms timer, such as the validation of `Field.Control` after Enter. `flushMicrotasks()` and a command of `userEvent` of `vitest/browser` do not wait for that timer. Wait for the result of that work with `waitFor`. To assert that the timer did no work, call `await wait(0)` after the action. The browser runs timers of equal delay in the order in which they started.
+- A part can also do other work in a 0 ms timer, such as the validation of a field in the mode `blur`. `flushMicrotasks()` and a command of `userEvent` of `vitest/browser` do not wait for that timer. Wait for the result of that work with `waitFor`. To assert that the timer did no work, call `await wait(0)` after the action. The browser runs timers of equal delay in the order in which they started.
 - To find a case that needs such a wait, wrap `window.setTimeout` in `test/setup.ts`. Add 5 ms to each delay. A message task, such as the task of `flushMicrotasks()`, then runs before a 0 ms timer. A case that then fails needs a wait. Do not commit the wrapper.
 - A case that asserts that a timer did no work can pass with a broken part when the timer is late. The wrapper thus cannot find such a case. To check it, change the part so that the timer does the work that it must not do. Run the file of the case with the wrapper. The case must fail. Do not commit the change.
 - Count runs, not repeats. Vitest reports a case as failed when one of its repeats fails, so `--repeats` cannot show that a case fails each time. Run the file 10 times. A case that sees the changed part fails in each run.

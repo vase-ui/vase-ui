@@ -49,7 +49,7 @@ export interface DialogTriggerProps<Payload = unknown>
 import { clickTriggers } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed } from 'vue';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
@@ -96,7 +96,7 @@ const {
   popupId,
 } = usePopupTrigger(thisTriggerId, store, () => ({ payload: props.payload }));
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const click = usePress();

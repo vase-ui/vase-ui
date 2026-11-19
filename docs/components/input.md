@@ -54,9 +54,26 @@ Import the component and use it as a single part:
 
 <<< ./input/Anatomy.vue
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in the input. After the hydration, `Input` emits `valueChange` and `update:modelValue` with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+`Input` renders one `<input>`. Each attribute and listener that you give goes to the input, such as `type`, `placeholder` and `required`.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Input` takes a restored value as one `input` event, and it emits `valueChange` and `update:modelValue`. An input that does not have the focus then also gets `change`, `blur` and `focusout`. An input that `KeepAlive` holds at that event takes the value when `KeepAlive` shows it again.
+Bind the text with `v-model`, or give `defaultValue` to an uncontrolled input. Each edit emits `valueChange` and then `update:modelValue`. To keep the text, call `details.cancel()` in `valueChange`.
+
+In a `Field`, the input is the control of the field. The field gets its value and its state, and validates it. A native reset of the form puts an uncontrolled input back to its first text, and emits only `update:*`.
+
+## Styling
+
+Select the states of the input with these selectors:
+
+| Selector                | State                                                   |
+| ----------------------- | ------------------------------------------------------- |
+| `:disabled`             | The input is disabled.                                  |
+| `:read-only`            | The input is read-only.                                 |
+| `:placeholder-shown`    | The input is empty and shows its placeholder.           |
+| `[data-filled]`         | The input has text. This selector applies in a `Field`. |
+| `[data-valid]`          | The field is valid.                                     |
+| `[aria-invalid="true"]` | The field is invalid.                                   |
+| `[data-touched]`        | The focus left the input.                               |
+| `[data-dirty]`          | The text differs from the first text.                   |
 
 ## API reference
 

@@ -4,8 +4,6 @@ import type { Component, Ref, VNode } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Field } from '@vase-ui/vue/field';
-import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { Meter } from '@vase-ui/vue/meter';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -318,15 +316,6 @@ describe('useRegisteredId', () => {
         ),
       },
       {
-        name: 'Fieldset.Legend',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Fieldset.Root data-testid="named">
-            <Fieldset.Legend v-slots={slot('div', id)} />
-          </Fieldset.Root>
-        ),
-      },
-      {
         name: 'Meter.Label',
         attribute: 'aria-labelledby',
         render: (id) => (
@@ -379,26 +368,6 @@ describe('useRegisteredId', () => {
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>
-        ),
-      },
-      {
-        name: 'Field.Label',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Field.Root>
-            <Field.Label v-slots={slot('label', id)} />
-            <Field.Control data-testid="named" />
-          </Field.Root>
-        ),
-      },
-      {
-        name: 'Field.Description',
-        attribute: 'aria-describedby',
-        render: (id) => (
-          <Field.Root>
-            <Field.Control data-testid="named" />
-            <Field.Description v-slots={slot('p', id)} />
-          </Field.Root>
         ),
       },
       {

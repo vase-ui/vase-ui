@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { shallowRef } from 'vue';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Popover } from '@vase-ui/vue/popover';
@@ -875,31 +876,65 @@ describe('<DateRangePicker.Root />', () => {
       expect(end).toHaveAttribute('min', '2026-11-18T09:00');
     });
 
-    it('shows the error in a Field, with the message of the end field', async () => {
+    it('shows the error of the end field in a Field after a leave, and an edit of the end removes it', async () => {
       const { user, container } = await render(
-        <Field.Root validationMode="onChange" data-testid="field">
-          <DateRangePickerAnatomy
-            {...{
-              locale: 'en-US',
-              timeZone: 'UTC',
-              defaultValue: range('2026-11-18', '2026-11-20'),
-            }}
-          />
-          <Field.Error match="rangeUnderflow" data-testid="error" />
-        </Field.Root>,
+        <div>
+          <Field.Root validationMode="blur" data-testid="field">
+            <DateRangePickerAnatomy
+              {...{
+                locale: 'en-US',
+                timeZone: 'UTC',
+                defaultValue: range('2026-11-18', '2026-11-20'),
+              }}
+            />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
       );
-      expect(screen.queryByTestId('error')).toBe(null);
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
 
       segmentOf('end', 'day').focus();
       await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+      screen.getByRole('button', { name: 'After' }).focus();
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).toBeInTheDocument();
+        expect(screen.getByTestId('error')).toHaveTextContent(end.validationMessage);
       });
-      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
-      expect(end.validationMessage).not.toBe('');
-      expect(screen.getByTestId('error').textContent).toBe(end.validationMessage);
+      expect(end.validity.rangeUnderflow).toBe(true);
       expect(screen.getByTestId('field')).toHaveAttribute('data-invalid');
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}');
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-valid');
+    });
+
+    it('a Form blocks the submit of a Field whose required range has no end', async () => {
+      const onSubmit = vi.fn((event: Event) => event.preventDefault());
+      await render(
+        <Form onSubmit={onSubmit}>
+          <Field.Root name="trip">
+            <DateRangePickerAnatomy
+              {...{
+                locale: 'en-US',
+                timeZone: 'UTC',
+                required: true,
+                defaultValue: [day('2026-11-18'), null],
+              }}
+            />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">Send</button>
+        </Form>,
+      );
+
+      screen.getByRole('button', { name: 'Send' }).click();
+      await flushMicrotasks();
+
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('error')).toBeInTheDocument();
     });
 
     // A zoned value has a text input, so the field reports its limit with a custom error.
@@ -1046,12 +1081,12 @@ describe('<DateRangePicker.Root />', () => {
           errors?: Record<string, string>,
         ) {
           return (
-            <Form data-testid="form" errors={errors}>
+            <ErrorsForm data-testid="form" errors={errors}>
               <Field.Root
                 data-testid="root"
                 name="trip"
                 validate={validate}
-                validationMode="onChange"
+                validationMode="change"
               >
                 <DateRangePickerAnatomy
                   {...{
@@ -1063,7 +1098,7 @@ describe('<DateRangePicker.Root />', () => {
                 />
                 <Field.Error data-testid="error" />
               </Field.Root>
-            </Form>
+            </ErrorsForm>
           );
         }
 
@@ -1102,6 +1137,7 @@ describe('<DateRangePicker.Root />', () => {
           const [start, end] = hiddenInputElements(container);
           await fill(start!, '2026-11-14');
           await fill(end!, '2026-11-20');
+          await flushMicrotasks();
           expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
           validate.mockClear();
 
@@ -1111,7 +1147,9 @@ describe('<DateRangePicker.Root />', () => {
           expect(validate).not.toHaveBeenCalled();
           expectNeutralField();
 
-          await fill(end!, '2026-11-21');
+          // The start field is the control of the field.
+          await fill(start!, '2026-11-15');
+          await flushMicrotasks();
 
           expect(validate).toHaveBeenCalledTimes(1);
           expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
@@ -1134,7 +1172,9 @@ describe('<DateRangePicker.Root />', () => {
           expect(validate).not.toHaveBeenCalled();
           expectNeutralField();
 
-          await fill(hiddenInputElements(container)[1]!, '2026-11-21');
+          // The start field is the control of the field.
+          await fill(hiddenInputElements(container)[0]!, '2026-11-15');
+          await flushMicrotasks();
 
           expect(validate).toHaveBeenCalledTimes(1);
           expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');

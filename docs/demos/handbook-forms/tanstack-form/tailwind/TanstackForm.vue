@@ -5,17 +5,18 @@ import { h, useTemplateRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import * as Autocomplete from '../../components/autocomplete';
 import { Button } from '../../components/button';
-import * as Checkbox from '../../components/checkbox';
+import { Checkbox } from '../../components/checkbox';
 import { CheckboxGroup } from '../../components/checkbox-group';
 import * as Combobox from '../../components/combobox';
 import * as Field from '../../components/field';
 import * as Fieldset from '../../components/fieldset';
+import { Input } from '../../components/input';
 import * as NumberField from '../../components/number-field';
-import * as Radio from '../../components/radio';
+import { Radio } from '../../components/radio';
 import { RadioGroup } from '../../components/radio-group';
 import * as Select from '../../components/select';
 import * as Slider from '../../components/slider';
-import * as Switch from '../../components/switch';
+import { Switch } from '../../components/switch';
 import { useToastManager } from '../../components/toast';
 
 interface FormValues {
@@ -189,14 +190,14 @@ const SERVER_TYPES = [
         :touched="field.state.meta.isTouched"
       >
         <Field.Label>Server name</Field.Label>
-        <Field.Control
+        <Input
           :model-value="field.state.value"
           placeholder="e.g. api-server-01"
           @value-change="field.handleChange"
           @blur="field.handleBlur"
         />
         <Field.Description>Must be 3 or more characters long</Field.Description>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -246,7 +247,7 @@ const SERVER_TYPES = [
             </Combobox.Positioner>
           </Combobox.Portal>
         </Combobox.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -289,7 +290,7 @@ const SERVER_TYPES = [
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -333,7 +334,7 @@ const SERVER_TYPES = [
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -363,7 +364,7 @@ const SERVER_TYPES = [
             </NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -377,9 +378,10 @@ const SERVER_TYPES = [
         :touched="field.state.meta.isTouched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
+          <template #element="{ props, elementRef }">
             <Slider.Root
               v-bind="props"
+              :ref="elementRef"
               :model-value="field.state.value"
               thumb-alignment="edge"
               :min="0"
@@ -410,7 +412,7 @@ const SERVER_TYPES = [
             </Slider.Root>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -424,9 +426,10 @@ const SERVER_TYPES = [
         :touched="field.state.meta.isTouched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
+          <template #element="{ props, elementRef }">
             <RadioGroup
               v-bind="props"
+              :ref="elementRef"
               :model-value="field.state.value"
               class="gap-4"
               @value-change="field.handleChange"
@@ -434,16 +437,14 @@ const SERVER_TYPES = [
               <Fieldset.Legend class="-mt-px">Storage type</Fieldset.Legend>
               <Field.Item v-for="storageType in storageTypes" :key="storageType">
                 <Field.Label class="uppercase">
-                  <Radio.Root :value="storageType">
-                    <Radio.Indicator />
-                  </Radio.Root>
+                  <Radio :value="storageType" />
                   {{ storageType }}
                 </Field.Label>
               </Field.Item>
             </RadioGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -458,15 +459,15 @@ const SERVER_TYPES = [
       >
         <Field.Label class="gap-2">
           Restart on failure
-          <Switch.Root
-            :model-value="field.state.value"
-            @checked-change="field.handleChange"
-            @blur="field.handleBlur"
-          >
-            <Switch.Thumb />
-          </Switch.Root>
+          <span class="relative flex shrink-0"
+            ><Switch
+              :model-value="field.state.value"
+              @checked-change="field.handleChange"
+              @blur="field.handleBlur" /><span
+              class="pointer-events-none absolute top-[0.1875rem] left-[0.1875rem] size-3.5 bg-neutral-950 transition-[translate,background-color] duration-150 ease-[ease] peer-checked:translate-x-4 peer-checked:bg-white dark:bg-white dark:peer-checked:bg-neutral-950"
+          /></span>
         </Field.Label>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -480,9 +481,10 @@ const SERVER_TYPES = [
         :touched="field.state.meta.isTouched"
       >
         <Fieldset.Root>
-          <template #render="{ props }">
+          <template #element="{ props, elementRef }">
             <CheckboxGroup
               v-bind="props"
+              :ref="elementRef"
               :model-value="field.state.value"
               @value-change="field.handleChange"
             >
@@ -490,11 +492,10 @@ const SERVER_TYPES = [
               <div class="flex gap-4">
                 <Field.Item v-for="protocol in protocols" :key="protocol">
                   <Field.Label class="uppercase">
-                    <Checkbox.Root :value="protocol" @blur="field.handleBlur">
-                      <Checkbox.Indicator>
-                        <CheckIcon />
-                      </Checkbox.Indicator>
-                    </Checkbox.Root>
+                    <span class="relative flex shrink-0"
+                      ><Checkbox :value="protocol" @blur="field.handleBlur" /><CheckIcon
+                        class="pointer-events-none absolute inset-0 hidden text-white peer-checked:block dark:text-neutral-950"
+                    /></span>
                     {{ protocol }}
                   </Field.Label>
                 </Field.Item>
@@ -502,7 +503,7 @@ const SERVER_TYPES = [
             </CheckboxGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>

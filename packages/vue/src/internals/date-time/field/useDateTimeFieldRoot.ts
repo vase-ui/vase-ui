@@ -6,29 +6,25 @@ import {
   shallowReactive,
   shallowRef,
   toValue,
+  useId,
   watch,
   watchPostEffect,
 } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { clamp } from '../../../common/clamp';
-import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../../common/hydration';
+import { useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/visuallyHidden';
-import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
+import { describedByWith, fieldKey } from '../../../field/control';
+import { useInDisabledFieldset } from '../../../fieldset/part';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
-import { useFieldControl, useInputRegistration } from '../../field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../field-root-context';
-import { useFormContext } from '../../form-context';
+import { useDeferredServerRender } from '../../../common/deferredServerRender';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../field-constants';
 import { handleHiddenInputInvalid } from '../../handleHiddenInputInvalid';
-import {
-  useAriaLabelledBy,
-  useControlLabelId,
-  useLabelableContext,
-  useLabelableId,
-} from '../../labelable-provider';
+import { given } from '../../givenAttributes';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
 import { useFormRestoreAsInput } from '../../useFormRestore';
@@ -216,28 +212,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   parameters: UseDateTimeFieldRootParameters<Value>,
 ): DateTimeFieldContext {
   const { family, hiddenInputElement, valueChange, updateValue } = parameters;
-  const {
-    setDirty,
-    validityData,
-    disabled: fieldDisabled,
-    setFilled,
-    invalid: fieldInvalid,
-    state: fieldState,
-    validation,
-    validationMode,
-    setFocused: setFieldFocused,
-    setTouched,
-  } = useFieldRootContext();
-  const { clearErrors } = useFormContext();
-  const { getDescriptionProps } = useLabelableContext();
+  const field = inject(fieldKey, null);
+  // In a field, the root defers its server render. The label and the messages of the field can
+  // come after the root.
+  if (field) useDeferredServerRender();
   const host = inject(DateTimeFieldHostContext, null);
 
-  const fieldsetDisabled = useFieldsetDisabled(() => rootElement.value);
+  const fieldsetDisabled = useInDisabledFieldset(() => rootElement.value);
   const isDisabled = computed(
-    () =>
-      (fieldDisabled.value ?? false) ||
-      fieldsetDisabled.value ||
-      (toValue(parameters.disabled) ?? false),
+    () => !!field?.disabled || fieldsetDisabled.value || (toValue(parameters.disabled) ?? false),
   );
   const isReadOnly = computed(() => toValue(parameters.readOnly) ?? false);
   const isRequired = computed(() => toValue(parameters.required) ?? false);
@@ -387,10 +370,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const rootElement = shallowRef<HTMLElement | null>(null);
 
-  const controlId = useLabelableId({
-    id: () => toValue(parameters.id),
-    element: () => firstSegment.value,
-  });
+  const generatedId = useId();
+  const controlId = computed(() => toValue(parameters.id) || field?.controlId || generatedId);
 
   // The name of a month depends on its year in a calendar with leap months. The value can have
   // another calendar than the field, so the date goes into the calendar of the field first.
@@ -658,34 +639,52 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     if (!focused.value || contains(rootElement.value, event.relatedTarget as Element | null)) {
       return;
     }
-    setTouched(true);
     focused.value = false;
-    setFieldFocused(false);
-    if (validationMode.value === 'onBlur') {
-      syncCustomValidity();
-      void validation.commit(value.value);
-    }
+    syncCustomValidity();
+    field?.onLeave(event.currentTarget as Element);
   }
 
-  const ariaAfterHydration = useAriaAfterHydration();
-  const ariaLabelledBy = useAriaLabelledBy(
-    () => toValue(parameters.ariaLabelledby),
-    useControlLabelId(),
-    firstSegment,
-    true,
-    controlId,
+  const ariaLabelledBy = computed(
+    () => given('aria-labelledby', toValue(parameters.ariaLabelledby)) ?? field?.labelId,
   );
 
   const filled = computed(() => value.value !== null);
-  watch(filled, setFilled, { immediate: true });
+  watch(value, (next) => field?.setValue(next, next !== null), { immediate: true });
 
-  const { name: inputName } = useFieldControl(firstSegment, {
-    id: controlId,
-    name: () => toValue(parameters.name),
-    value,
-    enabled: () => !isDisabled.value,
-  });
-  const clearFieldError = useClearFieldError(inputName);
+  const inputName = computed(() => field?.name ?? toValue(parameters.name));
+  // The root is the control of the field: a group of segments. The hidden input holds the value
+  // for the form and its validation.
+  watch(
+    rootElement,
+    (element, _, onCleanup) => {
+      if (!element || !field) return;
+      onCleanup(
+        field.setControl({
+          element,
+          get id() {
+            return element.id;
+          },
+          get name() {
+            return toValue(parameters.name);
+          },
+          get disabled() {
+            return fieldsetDisabled.value || (toValue(parameters.disabled) ?? false);
+          },
+          get readOnly() {
+            return isReadOnly.value;
+          },
+          get inputs() {
+            return [hiddenInputElement.value, host?.endInput?.()].filter((input) => !!input);
+          },
+          get focusElement() {
+            return firstSegment.value ?? undefined;
+          },
+          sameValue: (a, b) => isSameValue(a as TemporalValue | null, b),
+        }),
+      );
+    },
+    { flush: 'post' },
+  );
 
   // A field that shows no time compares days, because the user cannot change the time of its
   // value. A limit then loses its time.
@@ -759,14 +758,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   useValueChanged(validityKey, () => {
-    clearErrors(inputName.value);
-    setDirty(!isSameValue(value.value, validityData.value.initialValue));
     syncCustomValidity();
     if (isResetChangePending) {
       isResetChangePending = false;
-      clearFieldError(value.value);
+      field?.onReset(value.value);
     } else {
-      validation.change(value.value);
+      field?.onEdit();
     }
   });
 
@@ -807,7 +804,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       );
     }
     if (validityKey.value === before) {
-      clearFieldError(value.value);
+      field?.onReset(value.value);
     } else {
       isResetChangePending = true;
     }
@@ -845,26 +842,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     renderValue();
   }
 
-  // A field can have more than one input, such as two date fields of a range. The input goes to the
-  // registry of the field and not to `validation.inputRef`. The registry gives the field the first
-  // invalid input in the document.
-  useInputRegistration(hiddenInputElement, (input) =>
-    validation.registerInput(input, {
-      controlRef: () => firstSegment.value,
-      get value() {
-        return hiddenText.value;
-      },
-    }),
-  );
-
   watchPostEffect(syncCustomValidity);
 
   function hiddenInputProps() {
     const type = INPUT_TYPES[kind.value] ?? 'text';
-    const validationProps = validation.getValidationProps(isDisabled.value);
     return {
-      ...validationProps,
-      'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
       type,
       id:
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
@@ -893,15 +875,14 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   const state = computed<DateTimeFieldRootState>(() => ({
-    ...fieldState.value,
+    ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
     disabled: isDisabled.value,
     filled: filled.value,
-    focused: focused.value,
     readOnly: isReadOnly.value,
     required: isRequired.value,
     empty: value.value === null && !hasDraft.value,
     complete: value.value !== null,
-    invalid: Boolean(fieldInvalid.value),
+    invalid: field?.state.valid === false,
   }));
 
   function getRootProps(attrs: Record<string, any>): Record<string, any>[] {
@@ -910,9 +891,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       {
         role: 'group',
         id: host?.groupId,
-        'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
-          'aria-describedby'
-        ],
+        'aria-describedby': field ? describedByWith(field, ariaDescribedBy) : ariaDescribedBy,
         'aria-labelledby': ariaLabelledBy.value,
         onFocusout: handleFocusout,
       },
@@ -961,7 +940,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     disabled: isDisabled,
     readOnly: isReadOnly,
     required: isRequired,
-    invalid: computed(() => Boolean(fieldInvalid.value)),
+    invalid: computed(() => field?.state.valid === false),
     digits,
     dayPeriodTexts,
     getView: (type) => views.value[type] ?? EMPTY_VIEW,

@@ -2,33 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Button } from '@vase-ui/vue/button';
-import { Checkbox } from '@vase-ui/vue/checkbox';
-import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
-import { Fieldset } from '@vase-ui/vue/fieldset';
+import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { NumberField } from '@vase-ui/vue/number-field';
-import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Progress } from '@vase-ui/vue/progress';
-import { Radio } from '@vase-ui/vue/radio';
-import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { Switch } from '@vase-ui/vue/switch';
 import { Tabs } from '@vase-ui/vue/tabs';
-import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
@@ -251,11 +241,9 @@ const comboboxParts = (part: string) => (k: string, blankId: BlankId) => (
 const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root invalid>
     <Field.Label {...blankIdIf(part === 'Label', blankId)}>Name {k}</Field.Label>
-    <Field.Control {...blankIdIf(part === 'Control', blankId)} data-testid={`control${k}`} />
+    <Input {...blankIdIf(part === 'Input', blankId)} data-testid={`control${k}`} />
     <Field.Description {...blankIdIf(part === 'Description', blankId)}>Hint {k}</Field.Description>
-    <Field.Error {...blankIdIf(part === 'Error', blankId)} match>
-      Wrong {k}
-    </Field.Error>
+    <Field.Error {...blankIdIf(part === 'Error', blankId)}>Wrong {k}</Field.Error>
   </Field.Root>
 );
 
@@ -444,30 +432,8 @@ const rows: Row[] = [
     tree: comboboxParts('GroupLabel'),
     named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
   },
-  {
-    name: 'Autocomplete.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Search {k}</Field.Label>
-        <Autocomplete.Root defaultOpen items={['a', 'b']} {...blankId}>
-          <Autocomplete.Input data-testid={`input${k}`} />
-          <Autocomplete.Portal>
-            <Autocomplete.Positioner>
-              <Autocomplete.Popup>
-                <Autocomplete.List>
-                  <Autocomplete.Item value="a">A</Autocomplete.Item>
-                </Autocomplete.List>
-              </Autocomplete.Popup>
-            </Autocomplete.Positioner>
-          </Autocomplete.Portal>
-        </Autocomplete.Root>
-      </Field.Root>
-    ),
-    named: labelled('input', 'Search'),
-  },
-  ...(['Control', 'Label', 'Description', 'Error'] as const).map((part): Row => ({
-    name: `Field.${part}`,
+  ...(['Input', 'Label', 'Description', 'Error'] as const).map((part): Row => ({
+    name: part === 'Input' ? part : `Field.${part}`,
     tree: fieldParts(part),
     twice: true,
     named: (k) => ({
@@ -477,127 +443,6 @@ const rows: Row[] = [
       nativeLabel: true,
     }),
   })),
-  {
-    name: 'Fieldset.Legend',
-    tree: (k, blankId) => (
-      <Fieldset.Root data-testid={`fieldset${k}`}>
-        <Fieldset.Legend {...blankId}>Address {k}</Fieldset.Legend>
-      </Fieldset.Root>
-    ),
-    named: (k) => ({ testId: `fieldset${k}`, name: `Address ${k}` }),
-  },
-  {
-    name: 'Checkbox.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Terms {k}</Field.Label>
-        <Checkbox.Root {...blankId} data-testid={`control${k}`} />
-      </Field.Root>
-    ),
-    named: labelled('control', 'Terms'),
-  },
-  {
-    name: 'CheckboxGroup',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Fruits {k}</Field.Label>
-        <CheckboxGroup {...blankId} data-testid={`control${k}`}>
-          <Checkbox.Root value="a" />
-        </CheckboxGroup>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Fruits'),
-  },
-  {
-    name: 'Radio.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Small {k}</Field.Label>
-        <Radio.Root value="a" {...blankId} data-testid={`control${k}`} />
-      </Field.Root>
-    ),
-    named: labelled('control', 'Small'),
-  },
-  {
-    name: 'RadioGroup',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Size {k}</Field.Label>
-        <RadioGroup {...blankId} data-testid={`control${k}`}>
-          <Radio.Root value="a" />
-        </RadioGroup>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Size'),
-  },
-  {
-    name: 'Switch.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Wifi {k}</Field.Label>
-        <Switch.Root {...blankId} data-testid={`control${k}`} />
-      </Field.Root>
-    ),
-    named: labelled('control', 'Wifi'),
-  },
-  {
-    name: 'NumberField.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Amount {k}</Field.Label>
-        <NumberField.Root {...blankId}>
-          <NumberField.Input data-testid={`control${k}`} />
-        </NumberField.Root>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Amount'),
-  },
-  {
-    name: 'OTPField.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Code {k}</Field.Label>
-        <OTPField.Root length={2} {...blankId}>
-          <OTPField.Input data-testid={`control${k}`} />
-          <OTPField.Input />
-        </OTPField.Root>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Code'),
-  },
-  {
-    name: 'DateField.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Arrival {k}</Field.Label>
-        <DateField.Root {...blankId} data-testid={`control${k}`}>
-          <DateField.Input />
-        </DateField.Root>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Arrival'),
-  },
-  {
-    name: 'TimeField.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Field.Root>
-        <Field.Label>Start {k}</Field.Label>
-        <TimeField.Root {...blankId} data-testid={`control${k}`}>
-          <TimeField.Input />
-        </TimeField.Root>
-      </Field.Root>
-    ),
-    named: labelled('control', 'Start'),
-  },
   {
     name: 'Slider.Root',
     twice: true,

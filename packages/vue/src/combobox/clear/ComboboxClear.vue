@@ -45,10 +45,10 @@ export interface ComboboxClearProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import type { Component } from 'vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { fieldKey } from '../../field/control';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { REASONS } from '../../internals/reasons';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
@@ -89,7 +89,7 @@ defineSlots<{
   render(props: { props: HTMLProps; state: ComboboxClearState; children: Component }): unknown;
 }>();
 
-const { disabled: fieldDisabled } = useFieldRootContext();
+const field = inject(fieldKey, null);
 const store = useComboboxRootContext();
 const inputValue = useComboboxInputValueContext();
 
@@ -106,7 +106,7 @@ const visible = computed(() => {
 });
 
 const isDisabled = computed(() =>
-  Boolean(fieldDisabled.value || store.select('disabled') || props.disabled),
+  Boolean(field?.disabled || store.select('disabled') || props.disabled),
 );
 
 // The element is in the DOM until the exit animation ends.

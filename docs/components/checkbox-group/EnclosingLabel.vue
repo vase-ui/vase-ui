@@ -4,9 +4,9 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 </script>
 
 <template>
-  <CheckboxGroup>
+  <CheckboxGroup aria-label="Allowed network protocols">
     <label>
-      <Checkbox.Root value="http" />
+      <Checkbox value="http" />
       HTTP
     </label>
   </CheckboxGroup>

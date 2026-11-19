@@ -1,12 +1,8 @@
-import { Switch } from '@vase-ui/vue/switch';
+import { Switch as SwitchBase } from '@vase-ui/vue/switch';
 import { withProps } from './withProps';
 
-export const Root = withProps(Switch.Root, {
+// The thumb is an element beside the switch. `peer-checked` moves it.
+export const Switch = withProps(SwitchBase, {
   class:
-    'flex h-5 w-9 shrink-0 border border-neutral-950 bg-white p-0.5 transition-colors duration-150 ease-[ease] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-checked:bg-neutral-950 dark:border-white dark:bg-neutral-950 dark:data-checked:bg-white',
-});
-
-export const Thumb = withProps(Switch.Thumb, {
-  class:
-    'size-3.5 bg-neutral-950 transition-[translate,background-color] duration-150 ease-[ease] data-checked:translate-x-4 data-checked:bg-white dark:bg-white dark:data-checked:bg-neutral-950',
+    'peer m-0 h-5 w-9 shrink-0 appearance-none rounded-none border border-neutral-950 bg-white transition-colors duration-150 ease-[ease] checked:bg-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:checked:bg-white',
 });

@@ -7,6 +7,7 @@ import {
   provide,
   shallowRef,
   toRaw,
+  useId,
   watch,
 } from 'vue';
 import type { ComputedRef, HTMLAttributes, ShallowRef } from 'vue';
@@ -19,7 +20,7 @@ import { ownerWindow } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -29,14 +30,8 @@ import type {
   VaseUIHighlightEventDetails,
 } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
-import {
-  DEFAULT_FIELD_ROOT_CONTEXT,
-  FieldRootContext,
-  useClearFieldError,
-} from '../../internals/field-root-context';
+import { fieldKey } from '../../field/control';
 import { getFilter } from '../../internals/filter';
-import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
@@ -48,7 +43,7 @@ import {
   removeItem,
   selectedValueIncludes,
 } from '../../internals/itemEquality';
-import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
+import { createLabelIdRegistry } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { REASONS } from '../../internals/reasons';
 import {
@@ -97,6 +92,7 @@ import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import { createCollatorItemFilter } from './utils';
 import type { FilterItemToString } from './utils';
 import { INITIAL_LAST_HIGHLIGHT, NO_ACTIVE_VALUE } from './utils/constants';
+import { given } from '../../internals/givenAttributes';
 
 export namespace AriaCombobox {
   export type Props<Value, Mode extends SelectionMode = 'none', Item = Value> = AriaComboboxProps<
@@ -450,24 +446,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   props: AriaComboboxPropsView<Value, Mode, Item>,
   callbacks: AriaComboboxCallbacks,
 ): UseAriaComboboxReturnValue {
-  const { clearErrors } = useFormContext();
-  const field = inject(FieldRootContext, null);
-  const {
-    setDirty,
-    validityData,
-    setFilled,
-    name: fieldName,
-    disabled: fieldDisabled,
-    setTouched,
-    setFocused,
-    validationMode,
-    validation,
-  } = field ?? DEFAULT_FIELD_ROOT_CONTEXT;
+  const field = inject(fieldKey, null);
 
-  const id = useLabelableId({
-    id: () => props.id,
-    element: () => (store.state.inputInsidePopup ? store.state.triggerElement : inputRef.value),
-  });
+  const generatedId = useId();
+  const id = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
@@ -477,13 +459,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const multiple = computed(() => selectionMode.value === 'multiple');
   const single = computed(() => selectionMode.value === 'single');
   // The root has no element. Its hidden input is at the place of the root.
-  const fieldsetDisabled = useFieldsetDisabled(() => hiddenInputElement.value);
+  const fieldsetDisabled = useInDisabledFieldset(() => hiddenInputElement.value);
   const disabled = computed(() =>
-    Boolean(fieldDisabled.value || fieldsetDisabled.value || props.disabled),
+    Boolean(field?.disabled || fieldsetDisabled.value || props.disabled),
   );
   const readOnly = computed(() => props.readOnly ?? false);
   const required = computed(() => props.required ?? false);
-  const name = computed(() => fieldName.value ?? props.name);
+  const name = computed(() => field?.name ?? props.name);
   const grid = computed(() => props.grid ?? false);
   const inlineProp = computed(() => props.inline ?? false);
   const limit = computed(() => props.limit ?? -1);
@@ -497,7 +479,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
     return props.autoHighlight ? 'input-change' : false;
   });
-  const clearFieldError = useClearFieldError(name);
 
   // Plain items are arrays; normalized `createItems()` collections are objects.
   const collection = computed(() => {
@@ -911,13 +892,57 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const { openMethod, triggerProps } = useOpenInteractionType(open);
   const isHydrating = useIsHydrating();
 
-  useRegisterFieldControl(
-    computed(() => (inputInsidePopup.value ? store.state.triggerElement : inputRef.value)),
-    id,
-    () => fieldRawValue.value,
-    () => fieldStringValue.value,
-    () => !disabled.value,
-    () => props.name,
+  // The input is the control of the field, or the trigger when the input is in the popup. The
+  // hidden input holds the value for the validation.
+  const fieldControlElement = computed(
+    () =>
+      (inputInsidePopup.value ? store.state.triggerElement : inputRef.value) ??
+      hiddenInputElement.value,
+  );
+  watch(
+    fieldControlElement,
+    (control, _, onCleanup) => {
+      if (!control || !field) return;
+      onCleanup(
+        field.setControl({
+          element: control,
+          get id() {
+            return id.value;
+          },
+          get name() {
+            return props.name;
+          },
+          get disabled() {
+            return props.disabled || fieldsetDisabled.value;
+          },
+          get readOnly() {
+            return readOnly.value;
+          },
+          get inputs() {
+            return hiddenInputElement.value ? [hiddenInputElement.value] : [];
+          },
+          get focusElement() {
+            return (
+              (inputInsidePopup.value ? store.state.triggerElement : inputRef.value) ?? undefined
+            );
+          },
+          formValue: () => fieldStringValue.value,
+          // With a selection mode, the order of the values counts, and `isItemEqualToValue`
+          // compares two items.
+          sameValue: (a, b) =>
+            selectionMode.value === 'none'
+              ? a === b
+              : !isSelectedValueDirty(a, b, isItemEqualToValue.value),
+          // A trigger with a selection mode is a select: the user picks an item, so the combobox
+          // with no value is never dirty (BUG-1425). The user can empty an input outside the
+          // popup, so that input keeps the rule of a text field.
+          get countsMissingAtLeave() {
+            return selectionMode.value !== 'none' && inputInsidePopup.value;
+          },
+        }),
+      );
+    },
+    { flush: 'post' },
   );
 
   // A handler of Base UI reads the query of the last render. A selection writes the input value
@@ -1193,17 +1218,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       state.inputInsidePopup &&
       (eventDetails.reason === REASONS.focusOut || eventDetails.reason === REASONS.outsidePress)
     ) {
-      setTouched(true);
-      setFocused(false);
-      // A combobox that the user leaves with no value is not marked dirty. With a selection mode,
-      // the trigger is a select, so the field counts `valueMissing` with no mark (BUG-1425).
-      if (validationMode.value === 'onBlur') {
-        const selectsValues = selectionMode.value !== 'none';
-        void validation.commit(
-          selectsValues ? selectedValue.value : inputValue.value,
-          selectsValues,
-        );
-      }
+      const control = fieldControlElement.value;
+      if (control) field?.onLeave(control);
     }
   }
 
@@ -1614,8 +1630,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const value = selectedValue.value;
     return multiple.value ? Array.isArray(value) && value.length > 0 : value != null;
   });
-  setFilled(filled.value);
-  watch(filled, setFilled);
+  watch([fieldRawValue, filled], ([value, isFilled]) => field?.setValue(value, isFilled), {
+    immediate: true,
+  });
 
   // Ensures that the active index is not set to 0 when the list is empty.
   // This avoids needing to press ArrowDown twice under certain conditions.
@@ -1681,19 +1698,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (selectionMode.value === 'none') {
       return;
     }
-    clearErrors(name.value);
-    setDirty(
-      isSelectedValueDirty(
-        selectedValue.value,
-        validityData.value.initialValue,
-        isItemEqualToValue.value,
-      ),
-    );
     if (isResetChangePending) {
       isResetChangePending = false;
-      clearFieldError(selectedValue.value);
+      field?.onReset(selectedValue.value);
     } else {
-      validation.change(selectedValue.value);
+      field?.onEdit();
     }
     if (single.value && !hasInputValue.value && !inputInsidePopup.value) {
       syncInputToSelectedLabel();
@@ -1705,13 +1714,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (selectionMode.value !== 'none') {
       return;
     }
-    clearErrors(name.value);
-    setDirty(inputValue.value !== validityData.value.initialValue);
     if (isResetChangePending) {
       isResetChangePending = false;
-      clearFieldError(inputValue.value);
+      field?.onReset(inputValue.value);
     } else {
-      validation.change(inputValue.value);
+      field?.onEdit();
     }
   });
 
@@ -1935,8 +1942,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     return value.map((current) => stringifyAsValue(current, props.itemToStringValue));
   });
 
-  const giveFieldInput = useFieldInput();
-
   function setHiddenInputElement(value: unknown) {
     const input = value as HTMLInputElement | null;
     // Vue calls a function ref again on each patch, with the same element.
@@ -1944,7 +1949,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       return;
     }
     hiddenInputElement.value = input;
-    giveFieldInput(input);
   }
 
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
@@ -2071,7 +2075,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (hasChanged) {
       isResetChangePending = true;
     } else {
-      clearFieldError(fieldRawValue.value);
+      field?.onReset(fieldRawValue.value);
     }
   });
 
@@ -2079,7 +2083,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   function hiddenInputProps() {
     return {
-      ...validation.getValidationProps(disabled.value),
       id: id.value && hiddenInputName.value == null ? `${id.value}-hidden-input` : undefined,
       form: props.form,
       name: hiddenInputName.value,

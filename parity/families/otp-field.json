@@ -29,6 +29,71 @@
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/root/OTPFieldRoot.node.test.tsx",
       "reason": "A server render runs in Node with no DOM. The two cases are in the test file that the Node project runs, with the same titles."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "allows a composed focus handler to prevent internal focus state",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "allows a composed blur handler to preserve internal focus state",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "applies a native label to every slot",
+      "kind": "not-applicable",
+      "reason": "A `<label for>` names the first input only. A `Field.Label` names each input with `aria-labelledby`, and the cases of the inputs in a field test it."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "prop: readOnly"],
+      "title": "tracks focus state when a readonly slot receives focus",
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "[data-focused] without a blur event"],
+      "kind": "not-applicable",
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />"],
+      "title": "updates standalone filled and focused state on the root",
+      "kind": "not-applicable",
+      "reason": "The case asserts the focused state of the root, which is cut (rule 8.15). The cases of the filled state test `data-filled`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "Input",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "OTPFieldInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "OTPFieldRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     }
   ],
   "surfaceAdditions": [

@@ -1,7 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Ref } from 'vue';
-import { Field } from '@vase-ui/vue/field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
@@ -221,42 +220,6 @@ interface RestoredFamily {
 
 const RESTORED_FAMILIES: RestoredFamily[] = [
   {
-    name: 'Field.Control with v-model',
-    family: 'field',
-    inputName: 'name',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (none)',
-    events: LEAVES,
-  },
-  {
-    name: 'Field.Control with a new default value',
-    family: 'field-default',
-    inputName: 'name',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (none)',
-    events: LEAVES,
-  },
-  {
-    name: 'Input with v-model',
-    family: 'input',
-    inputName: 'text',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (none)',
-    events: LEAVES,
-  },
-  {
-    name: 'Input with a new default value',
-    family: 'input-default',
-    inputName: 'text',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (none)',
-    events: LEAVES,
-  },
-  {
     name: 'Toolbar.Input with a value',
     family: 'toolbar',
     inputName: 'filter',
@@ -342,34 +305,28 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
 describe('VUE-81: a render before the page show', () => {
   const { render } = createRenderer();
 
-  it.each([
-    { name: 'Field.Control', family: 'field-default', inputName: 'name' },
-    { name: 'Toolbar.Input', family: 'toolbar-default', inputName: 'filter' },
-  ] as const)('takes only a silent edit of uncontrolled $name', async ({ family, inputName }) => {
-    const { container } = await render(<FormRestoreRender family={family} revision={0} />);
-    const [input] = getInputs(container, inputName);
-    input!.value = 'typed';
-    input!.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    await flushMicrotasks();
-    const events = recordInputEvents(container);
+  it.each([{ name: 'Toolbar.Input', family: 'toolbar-default', inputName: 'filter' }] as const)(
+    'takes only a silent edit of uncontrolled $name',
+    async ({ family, inputName }) => {
+      const { container } = await render(<FormRestoreRender family={family} revision={0} />);
+      const [input] = getInputs(container, inputName);
+      input!.value = 'typed';
+      input!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
 
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-    expect(events).toEqual([]);
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      expect(events).toEqual([]);
 
-    input!.value = input!.defaultValue;
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-    expect(events).toEqual(LEAVES);
-  });
-
-  it.each([
-    {
-      name: 'Field.Control',
-      Part: Field.Control,
-      Root: Field.Root,
-      valueProps: { modelValue: 'model' },
+      input!.value = input!.defaultValue;
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      expect(events).toEqual(LEAVES);
     },
+  );
+
+  it.each([
     {
       name: 'Toolbar.Input',
       Part: Toolbar.Input,

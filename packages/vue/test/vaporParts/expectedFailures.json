@@ -54,21 +54,6 @@
     "src/calendar/root/CalendarRoot.focusTargets.test.tsx": {
       "fails": {}
     },
-    "src/checkbox/root/CheckboxRoot.test.tsx": {
-      "fails": {
-        "<Checkbox.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Checkbox.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Checkbox.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not block the form of its group while held, and blocks it after the show": "vue-16305-keep-alive",
-        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not block the form while held, and blocks it after the show": "vue-16305-keep-alive",
-        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > does not give its id to the `for` of the label while held": "vue-16305-keep-alive",
-        "<Checkbox.Root /> > a checkbox that mounts while KeepAlive holds its branch > is not in `aria-controls` of the parent checkbox while held": "vue-16305-keep-alive",
-        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
-        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description after another": "vue-16305-hydration",
-        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration",
-        "<Checkbox.Root /> > server-side rendering > writes the client value of an attribute after the hydration, the input, a removed description": "vue-16305-hydration"
-      }
-    },
     "src/combobox/chip-remove/ComboboxChipRemove.test.tsx": {
       "fails": {
         "<Combobox.ChipRemove /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -108,19 +93,6 @@
         "<Drawer.Trigger /> > VUE-73: aria-controls names only an element in the document > has no aria-controls while the popup mounts in a branch that KeepAlive holds": "vue-16305-keep-alive"
       }
     },
-    "src/field/label/FieldLabel.test.tsx": {
-      "fails": {
-        "<Field.Label /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Field.Label /> > KeepAlive > names the control with a label that mounts while held only after the show: a label outside": "vue-16305-keep-alive",
-        "<Field.Label /> > KeepAlive > names the control with a label that mounts while held only after the show: no label outside": "vue-16305-keep-alive"
-      }
-    },
-    "src/fieldset/root/FieldsetDisabled.test.tsx": {
-      "fails": {}
-    },
-    "src/fieldset/root/useFieldsetDisabled.test.tsx": {
-      "fails": {}
-    },
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },
@@ -136,19 +108,10 @@
     "src/internals/date-time/field/useDateTimeFieldRoot.registration.test.tsx": {
       "fails": {}
     },
-    "src/internals/field-register-control/useFieldControl.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/field-root-context/FieldProvider.test.tsx": {
-      "fails": {}
-    },
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },
     "src/internals/useAnimationsFinished.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useCheckedInput.test.tsx": {
       "fails": {}
     },
     "src/internals/useFormReset.test.tsx": {
@@ -223,15 +186,6 @@
         "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
-    "src/radio/root/RadioRoot.test.tsx": {
-      "fails": {
-        "<Radio.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Radio.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Radio.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Radio.Root /> > hydration > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
-        "<Radio.Root /> > hydration > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration"
-      }
-    },
     "src/range-calendar/day-button/RangeCalendarDayButton.test.tsx": {
       "fails": {
         "<RangeCalendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
@@ -278,18 +232,6 @@
     },
     "src/select/trigger/SelectTrigger.press.test.tsx": {
       "fails": {}
-    },
-    "src/switch/root/SwitchRoot.test.tsx": {
-      "fails": {
-        "<Switch.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Switch.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Switch.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Switch.Root /> > KeepAlive > a held required switch does not block the submit of its form: held mount": "vue-16305-keep-alive",
-        "<Switch.Root /> > KeepAlive > the label does not name a switch that mounts while KeepAlive holds it": "vue-16305-keep-alive",
-        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed description": "vue-16305-hydration",
-        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, a removed label": "vue-16305-hydration",
-        "<Switch.Root /> > server-side rendering > writes the client value of an attribute after the hydration, the input, a removed description": "vue-16305-hydration"
-      }
     },
     "src/tabs/indicator/TabsIndicator.test.tsx": {
       "fails": {

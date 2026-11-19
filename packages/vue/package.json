@@ -57,6 +57,7 @@
     "test:webkit": "vitest run --project webkit",
     "test:vapor-parts": "vitest run --project vapor-parts",
     "test:vapor": "vitest run --project vapor",
+    "test:vue-3.6": "vitest run --config vitest.vue-3.6.config.ts",
     "prepack": "pnpm build && cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ../../README.md ."
   },
   "dependencies": {
@@ -88,6 +89,7 @@
     "vite": "8.3.7",
     "vitest": "5.1.0",
     "vue": "3.5.45",
+    "vue-3.6": "npm:vue@3.6.0-rc.15",
     "vue-tsc": "3.3.14"
   }
 }

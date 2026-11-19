@@ -3,46 +3,88 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
-      "describe": ["<Radio.Root />"],
-      "title": "prefers a render element's `aria-label` over an associated label",
+      "upstream": "packages/react/src/radio/index.parts.ts",
       "kind": "not-applicable",
-      "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
-    }
-  ],
-  "surfaceAdditions": [
-    {
-      "entry": "Root",
-      "prop": "id",
-      "reason": "The part reads `id` to name its hidden input and its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The family has one part, and `index.ts` exports it. No namespace holds the parts."
     },
     {
-      "entry": "Root",
-      "prop": "ariaLabel",
-      "reason": "The part reads `aria-label` to find out if a label names the radio, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "upstream": "packages/react/src/radio/indicator/RadioIndicator.tsx",
+      "kind": "not-applicable",
+      "reason": "`Radio.Indicator` is cut. CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
     },
     {
+      "upstream": "packages/react/src/radio/indicator/RadioIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/radio/root/RadioRootContext.ts",
+      "kind": "not-applicable",
+      "reason": "The context gives the state of the radio to `Radio.Indicator`, which is cut. The `element` slot gives the state."
+    },
+    {
+      "upstream": "packages/react/src/radio/root/RadioRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/radio/utils/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes its data attributes itself. A native state, such as `checked`, has a CSS pseudo-class and no data attribute."
+    },
+    {
+      "upstream": "packages/react/src/radio/indicator/RadioIndicator.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests `Radio.Indicator`, which is cut."
+    },
+    {
+      "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/radio/Radio.test.ts",
+      "reason": "`Radio` is one native `<input type=\"radio\">`. `Radio.test.ts` and `RadioGroup.test.ts` test the disabled and read-only radio, a click and the required state."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "Root",
-      "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to find out if a label names the radio, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "kind": "not-applicable",
+      "reason": "`Radio` is the part: one `<input type=\"radio\">` (rules 8.1, 8.3). The flat types `RadioProps` and `RadioState` replace the namespace types. `readonly` replaces `readOnly`. The `element` of the template ref replaces `inputRef`. CSS selects `:checked`, `:disabled` and `:required`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
+      "entry": "Indicator",
+      "kind": "not-applicable",
+      "reason": "`Radio.Indicator` is cut. CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
+      "entry": "RadioIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
+      "entry": "RadioRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
+  "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/radio/root/RadioRootContext.ts",
+      "upstream": "packages/react/src/radio/root/RadioRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/radio-group/radioContext.ts",
-      "member": "RadioRootContext",
-      "witness": "packages/vue/src/radio/indicator/RadioIndicator.test.tsx"
+      "destination": "packages/vue/src/radio/Radio.vue",
+      "behavior": "The radio is one native input of its group.",
+      "witness": "packages/vue/src/radio/Radio.test.ts"
     },
     {
-      "upstream": "packages/react/src/radio/utils/stateAttributesMapping.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/radio-group/radioContext.ts",
-      "member": "stateAttributesMapping",
-      "witness": "packages/vue/src/radio/indicator/RadioIndicator.test.tsx"
+      "upstream": "packages/react/src/radio/root/RadioRoot.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/radio/Radio.spec.tsx",
+      "behavior": "The type of the `value` of a radio.",
+      "witness": "packages/vue/src/radio/Radio.spec.tsx"
     }
   ]
 }

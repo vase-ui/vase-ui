@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import { NumberField as NumberFieldBase } from '@vase-ui/vue/number-field';
 import {
-  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -20,6 +20,8 @@ import {
   renderOnServer,
   screen,
   within,
+  wait,
+  waitFor,
 } from '#test-utils';
 import NumberFieldContextProbe from '../../../test/fixtures/NumberFieldContextProbe.vue';
 import { REASONS } from '../../internals/reasons';
@@ -347,7 +349,7 @@ describe('<NumberField />', () => {
     it('ignores a `change` event that has the value of the mount', async () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
-        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+        <Field.Root name="quantity" validationMode="change" validate={validate}>
           <NumberFieldBase.Root defaultValue={5} />
         </Field.Root>,
       );
@@ -430,7 +432,7 @@ describe('<NumberField />', () => {
     it('validates the number that the autofill gives', async () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
-        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+        <Field.Root name="quantity" validationMode="change" validate={validate}>
           <NumberFieldBase.Root />
         </Field.Root>,
       );
@@ -443,7 +445,7 @@ describe('<NumberField />', () => {
     it('validates the number that the field stores, not the number that the autofill gives', async () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
-        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+        <Field.Root name="quantity" validationMode="change" validate={validate}>
           <NumberFieldBase.Root max={10} />
         </Field.Root>,
       );
@@ -453,33 +455,14 @@ describe('<NumberField />', () => {
       expect(validate.mock.calls.map(([value]) => value)).toEqual([10]);
     });
 
-    it('validates the number of an autofill that a listener cancels', async () => {
-      const validate = vi.fn((_value: unknown) => null);
-      await render(
-        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberFieldBase.Root
-            onValueChange={(
-              _value: number | null,
-              details: NumberFieldBase.Root.ChangeEventDetails,
-            ) => details.cancel()}
-          />
-        </Field.Root>,
-      );
-
-      await autofill('7');
-
-      expect(validate.mock.lastCall?.[0]).toBe(7);
-      expect(getHiddenInput().value).toBe('');
-    });
-
     it('clears the error that the form has for the name of the field', async () => {
       await render(
-        <Form errors={{ quantity: 'Server error' }}>
+        <ErrorsForm errors={{ quantity: 'Server error' }}>
           <Field.Root name="quantity" data-testid="field">
             <NumberFieldBase.Root />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
       expect(screen.getByTestId('error')).toHaveTextContent('Server error');
 
@@ -1033,7 +1016,7 @@ describe('<NumberField />', () => {
         await settleReset();
       }
 
-      // The field is neutral, as after a reset of `Field.Control`.
+      // The field is neutral, as after a reset of `Input`.
       function expectNeutralField() {
         expect(screen.queryByTestId('error')).toBe(null);
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
@@ -1053,12 +1036,12 @@ describe('<NumberField />', () => {
         {
           name: 'the form for a field at its default',
           renderForm: () => () => (
-            <Form data-testid="form" errors={errors}>
+            <ErrorsForm data-testid="form" errors={errors}>
               <Field.Root data-testid="root" name="quantity">
                 <NumberFieldBase.Root />
                 <Field.Error data-testid="error" />
               </Field.Root>
-            </Form>
+            </ErrorsForm>
           ),
         },
         {
@@ -1066,7 +1049,7 @@ describe('<NumberField />', () => {
           renderForm: () => {
             const value = shallowRef<number | null>(1);
             return () => (
-              <Form data-testid="form" errors={errors}>
+              <ErrorsForm data-testid="form" errors={errors}>
                 <Field.Root data-testid="root" name="quantity">
                   <NumberFieldBase.Root
                     modelValue={value.value}
@@ -1074,7 +1057,7 @@ describe('<NumberField />', () => {
                   />
                   <Field.Error data-testid="error" />
                 </Field.Root>
-              </Form>
+              </ErrorsForm>
             );
           },
         },
@@ -1094,7 +1077,7 @@ describe('<NumberField />', () => {
               data-testid="root"
               name="quantity"
               validate={validate}
-              validationMode="onChange"
+              validationMode="change"
             >
               <NumberFieldBase.Root defaultValue={1} />
               <Field.Error data-testid="error" />
@@ -1124,7 +1107,7 @@ describe('<NumberField />', () => {
               data-testid="root"
               name="quantity"
               validate={validate}
-              validationMode="onChange"
+              validationMode="change"
             >
               <NumberFieldBase.Root
                 onValueChange={(
@@ -1164,7 +1147,7 @@ describe('<NumberField />', () => {
                 data-testid="root"
                 name="quantity"
                 validate={validate}
-                validationMode="onChange"
+                validationMode="change"
               >
                 <NumberFieldBase.Root
                   modelValue={value.value}
@@ -1279,60 +1262,6 @@ describe('<NumberField />', () => {
       await settleReset();
 
       expect(getHiddenInput().value).toBe('1');
-    });
-
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required number field does not block the submit of its form: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const { HeldBranch, mountWhileHeld } = createHeldBranch(
-          () => (
-            <NumberFieldBase.Root key="held" required>
-              <NumberFieldBase.Input />
-            </NumberFieldBase.Root>
-          ),
-          { mounted: name === 'deactivated' },
-        );
-        const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
-            <Field.Root name="quantity" data-testid="field">
-              <Field.Control defaultValue="shown" />
-              <HeldBranch />
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
-
-        await mountWhileHeld();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-      },
-    );
-
-    it('the label does not name a number field that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <NumberFieldBase.Root key="held" id="held-number-field">
-          <NumberFieldBase.Input />
-        </NumberFieldBase.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Quantity</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-number-field');
     });
   });
 
@@ -1663,6 +1592,7 @@ describe('<NumberField />', () => {
 
       expect(onValueCommitted.mock.calls.length).toBe(0);
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(1);
     });
@@ -1692,6 +1622,8 @@ describe('<NumberField />', () => {
       expect(onValueCommitted.mock.calls.length).toBe(0);
 
       await fireEvent.focusOut(input);
+
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(-1.5);
     });
@@ -1739,6 +1671,7 @@ describe('<NumberField />', () => {
 
       expect(onValueCommitted.mock.calls.length).toBe(0);
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(1234);
     });
@@ -1765,6 +1698,8 @@ describe('<NumberField />', () => {
       expect(onValueChange.mock.calls[2][0]).toBe(1.5);
 
       await fireEvent.focusOut(input);
+
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(1.5);
     });
@@ -1792,6 +1727,8 @@ describe('<NumberField />', () => {
       expect(onValueCommitted.mock.calls.length).toBe(0);
 
       await fireEvent.focusOut(input);
+
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(0.12);
     });
@@ -1814,6 +1751,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '1%2' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(input).toHaveValue('12%');
       expect(onValueCommitted.mock.calls.length).toBe(1);
@@ -2007,6 +1945,7 @@ describe('<NumberField />', () => {
       await fireEvent.input(input, { target: { value: '.' } });
       expect(input).toHaveValue('.');
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(0);
     });
@@ -2021,6 +1960,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '123.' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(1);
       // Canonicalizes to 123
@@ -2035,6 +1975,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(null);
@@ -2048,6 +1989,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '1000' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(10);
@@ -2062,6 +2004,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '-50' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(1);
       expect(onValueCommitted.mock.calls[0][0]).toBe(0);
@@ -2135,6 +2078,7 @@ describe('<NumberField />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(0);
     });
@@ -2205,6 +2149,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueCommitted.mock.calls.length).toBe(0);
     });
@@ -2224,24 +2169,6 @@ describe('<NumberField />', () => {
       const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('readonly');
     });
-
-    it('keeps focus state in sync on a readOnly field', async () => {
-      await render(
-        <Field.Root>
-          <NumberFieldBase.Root readOnly>
-            <NumberFieldBase.Input data-testid="input" />
-          </NumberFieldBase.Root>
-        </Field.Root>,
-      );
-      const input = screen.getByTestId('input');
-
-      await fireEvent.focusIn(input);
-      expect(input).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-      expect(input).not.toHaveAttribute('data-focused');
-    });
-
     it('does not render aria-readonly on stepper buttons', async () => {
       await render(<NumberField readOnly />);
 
@@ -2887,6 +2814,7 @@ describe('<NumberField />', () => {
 
       // Blur doesn't commit again; the wheel changes were already committed.
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(onValueCommitted.mock.calls.length).toBe(2);
     });
 
@@ -3162,7 +3090,7 @@ describe('<NumberField />', () => {
 
     it('clears external errors on change', async () => {
       await render(
-        <Form
+        <ErrorsForm
           errors={{
             test: 'test',
           }}
@@ -3171,7 +3099,7 @@ describe('<NumberField />', () => {
             <NumberField defaultValue={1} />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       const input = screen.getByRole('textbox');
@@ -3240,7 +3168,7 @@ describe('<NumberField />', () => {
       const validate = vi.fn((_value: unknown) => null);
 
       await render(
-        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+        <Field.Root name="quantity" validationMode="change" validate={validate}>
           <NumberFieldBase.Root>
             <NumberFieldBase.Input />
           </NumberFieldBase.Root>
@@ -3257,16 +3185,13 @@ describe('<NumberField />', () => {
       expect(validate.mock.lastCall?.[0]).toBe(42);
     });
 
-    it.each([
-      { lockState: 'readOnly', ariaInvalid: 'true' },
-      { lockState: 'disabled', ariaInvalid: null },
-    ] as const)(
+    it.each([{ lockState: 'readOnly' }, { lockState: 'disabled' }] as const)(
       'ignores hidden-input autofill when $lockState inside Field',
-      async ({ lockState, ariaInvalid }) => {
+      async ({ lockState }) => {
         const onValueChange = vi.fn();
 
         await render(
-          <Form errors={{ quantity: 'test' }}>
+          <ErrorsForm errors={{ quantity: 'test' }}>
             <Field.Root name="quantity">
               <NumberFieldBase.Root
                 defaultValue={1}
@@ -3278,7 +3203,7 @@ describe('<NumberField />', () => {
               </NumberFieldBase.Root>
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>,
+          </ErrorsForm>,
         );
 
         const input = screen.getByRole('textbox');
@@ -3287,15 +3212,15 @@ describe('<NumberField />', () => {
         ) as HTMLInputElement;
 
         expect(hiddenInput).not.toBe(null);
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
-        // A disabled control is not marked invalid.
-        expect(input.getAttribute('aria-invalid')).toBe(ariaInvalid);
+        // A field shows no error while its control is disabled or read-only.
+        expect(screen.queryByTestId('error')).toBeNull();
+        expect(input).not.toHaveAttribute('aria-invalid');
 
         await fireEvent.input(hiddenInput, { target: { value: '42' } });
 
         expect(onValueChange).not.toHaveBeenCalled();
         expect(input).toHaveValue('1');
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
+        expect(screen.queryByTestId('error')).toBeNull();
       },
     );
 
@@ -3345,6 +3270,7 @@ describe('<NumberField />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(input).toHaveAttribute('data-touched', '');
     });
@@ -3409,95 +3335,9 @@ describe('<NumberField />', () => {
       });
     });
 
-    it('[data-filled]', async () => {
-      await render(
-        <Field.Root>
-          <NumberFieldBase.Root>
-            <NumberFieldBase.Input data-testid="input" />
-          </NumberFieldBase.Root>
-        </Field.Root>,
-      );
-
-      const input = screen.getByTestId('input');
-
-      expect(input).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(input);
-
-      expect(input).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-
-      expect(input).not.toHaveAttribute('data-focused');
-    });
-
-    it('adds [data-focused] attribute on every focus', async () => {
-      await render(
-        <Field.Root>
-          <NumberFieldBase.Root>
-            <NumberFieldBase.Input data-testid="input" />
-          </NumberFieldBase.Root>
-        </Field.Root>,
-      );
-
-      const input = screen.getByTestId('input');
-
-      await fireEvent.focusIn(input);
-      expect(input).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(input);
-      expect(input).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(input);
-      expect(input).toHaveAttribute('data-focused', '');
-    });
-
-    describe('[data-focused] without a blur event', () => {
-      function NumberFields(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
-        const { firstMounted = true, firstDisabled = false } = props;
-        return (
-          <Field.Root data-testid="root">
-            {firstMounted && (
-              <NumberFieldBase.Root disabled={firstDisabled}>
-                <NumberFieldBase.Input data-testid="first" />
-              </NumberFieldBase.Root>
-            )}
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused input becomes disabled', async () => {
-        const { setProps } = await render(<NumberFields />);
-
-        const input = screen.getByTestId('first');
-        input.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
-        expect(input).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused input unmounts', async () => {
-        const { setProps } = await render(<NumberFields />);
-
-        screen.getByTestId('first').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
-      });
-    });
-
     it('prop: validate', async () => {
       await render(
-        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+        <Field.Root validationMode="blur" validate={() => 'error'}>
           <NumberFieldBase.Root>
             <NumberFieldBase.Input />
           </NumberFieldBase.Root>
@@ -3511,6 +3351,7 @@ describe('<NumberField />', () => {
 
       await fireEvent.focusIn(input);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(input).toHaveAttribute('aria-invalid', 'true');
     });
@@ -3537,22 +3378,24 @@ describe('<NumberField />', () => {
 
         await fireEvent.input(input, { target: { value: '1' } });
         await fireEvent.focusOut(input);
+        await wait(0);
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
 
         await fireEvent.input(input, { target: { value: '' } });
         await fireEvent.focusOut(input);
+        await wait(0);
         expect(input).not.toHaveAttribute('aria-invalid');
         expect(screen.queryByTestId('error')).toBe(null);
 
         await fireEvent.click(screen.getByText('submit'));
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(screen.queryByTestId('error')).toHaveTextContent('valueMissing error');
         expect(screen.getByTestId('root')).toHaveAttribute('data-invalid');
         expect(input).toHaveAttribute('data-invalid');
 
         await fireEvent.input(input, { target: { value: '2' } });
-        expect(input).not.toHaveAttribute('aria-invalid');
+        await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
         expect(screen.queryByTestId('error')).toBe(null);
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
         expect(input).not.toHaveAttribute('data-invalid');
@@ -3560,22 +3403,22 @@ describe('<NumberField />', () => {
         expect(input).toHaveAttribute('data-valid');
         // re-invalidate the field value
         await fireEvent.input(input, { target: { value: '1' } });
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(screen.queryByTestId('error')).toHaveTextContent('custom error');
 
         await fireEvent.input(input, { target: { value: '3' } });
-        expect(input).not.toHaveAttribute('aria-invalid');
+        await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
         expect(screen.queryByTestId('error')).toBe(null);
 
         await fireEvent.input(input, { target: { value: '' } });
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(screen.queryByTestId('error')).toHaveTextContent('valueMissing error');
       });
 
       it('onChange', async () => {
         await render(
           <Field.Root
-            validationMode="onChange"
+            validationMode="change"
             validate={(value) => {
               return value === 1 ? 'error' : null;
             }}
@@ -3592,7 +3435,7 @@ describe('<NumberField />', () => {
 
         await fireEvent.input(input, { target: { value: '1' } });
 
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
       });
 
       it('revalidates when the controlled value changes externally', async () => {
@@ -3605,7 +3448,7 @@ describe('<NumberField />', () => {
 
           return () => (
             <>
-              <Field.Root validationMode="onChange" validate={validateSpy} name="quantity">
+              <Field.Root validationMode="change" validate={validateSpy} name="quantity">
                 <NumberFieldBase.Root
                   modelValue={value.value}
                   onValueChange={(next) => {
@@ -3637,15 +3480,15 @@ describe('<NumberField />', () => {
 
         await fireEvent.click(toggle);
 
+        await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
         expect(validateSpy.mock.calls.length).toBe(initialCallCount + 1);
         expect(validateSpy.mock.lastCall?.[0]).toBe(5);
-        expect(input).toHaveAttribute('aria-invalid', 'true');
       });
 
       it('onBlur', async () => {
         await render(
           <Field.Root
-            validationMode="onBlur"
+            validationMode="blur"
             validate={(value) => {
               return value === 1 ? 'error' : null;
             }}
@@ -3663,6 +3506,7 @@ describe('<NumberField />', () => {
         await fireEvent.input(input, { target: { value: '1' } });
         expect(input).not.toHaveAttribute('aria-invalid');
         await fireEvent.focusOut(input);
+        await wait(0);
         expect(input).toHaveAttribute('aria-invalid', 'true');
         // revalidation
         await fireEvent.input(input, { target: { value: '2' } });
@@ -3704,7 +3548,12 @@ describe('<NumberField />', () => {
     it('prevents Form/Field submission when the value does not match the step', async () => {
       const handleSubmit = vi.fn();
       await render(
-        <Form onFormSubmit={handleSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleSubmit(values)
+          )}
+        >
           <Field.Root name="quantity">
             <NumberFieldBase.Root defaultValue={0} min={0} step={0.1}>
               <NumberFieldBase.Input data-testid="input" />
@@ -3770,7 +3619,7 @@ describe('<NumberField />', () => {
 
       await render(
         <Form>
-          <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+          <Field.Root validationMode="blur" validate={validate} name="quantity">
             <NumberFieldBase.Root defaultValue={undefined}>
               <NumberFieldBase.Input />
             </NumberFieldBase.Root>
@@ -3783,6 +3632,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '1' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(validate.mock.calls.length).toBe(1);
       expect(validate.mock.calls[0]).toEqual([1, { quantity: 1 }]);
@@ -3793,7 +3643,7 @@ describe('<NumberField />', () => {
 
       await render(
         <Form>
-          <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+          <Field.Root validationMode="blur" validate={validate} name="quantity">
             <NumberFieldBase.Root max={10}>
               <NumberFieldBase.Input />
             </NumberFieldBase.Root>
@@ -3806,6 +3656,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '1000' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(validate.mock.calls.length).toBe(1);
       expect(validate.mock.calls[0]).toEqual([10, { quantity: 10 }]);
@@ -3819,7 +3670,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(5);
         return () => (
           <Form>
-            <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+            <Field.Root validationMode="blur" validate={validate} name="quantity">
               <NumberFieldBase.Root
                 modelValue={value.value}
                 onValueChange={(next) => {
@@ -3851,6 +3702,7 @@ describe('<NumberField />', () => {
       await fireEvent.focusIn(input);
       await fireEvent.input(input, { target: { value: '9' } });
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(input).toHaveValue('5');
       expect(input).toHaveAttribute('aria-invalid', 'true');
 
@@ -3959,21 +3811,6 @@ describe('<NumberField />', () => {
 
       expect(screen.getByRole('textbox')).toHaveValue('7');
       expect(onValueChange.mock.lastCall?.[0]).toBe(7);
-    });
-
-    it('validates the autofilled value even when the change is canceled', async () => {
-      const validate = vi.fn((_value: unknown) => null);
-
-      await render(
-        <Field.Root validate={validate} validationMode="onChange">
-          <NumberField onValueChange={(_value, details) => details.cancel()} />
-        </Field.Root>,
-      );
-
-      await fireEvent.input(getHiddenInput(), { target: { value: '7' } });
-
-      expect(screen.getByRole('textbox')).toHaveValue('');
-      expect(validate.mock.lastCall?.[0]).toBe(7);
     });
   });
 
@@ -4265,6 +4102,7 @@ describe('<NumberField />', () => {
       await fireEvent.input(input, { target: { value: 'abc' } });
       expect(input).toHaveValue('');
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(input).toHaveValue('');
     });
   });

@@ -12,23 +12,17 @@ const captionId = useId();
     <div :class="styles.Caption" :id="captionId">Best apple</div>
 
     <label :class="styles.Item">
-      <Radio.Root value="fuji-apple" :class="styles.Radio">
-        <Radio.Indicator :class="styles.Indicator" />
-      </Radio.Root>
+      <Radio value="fuji-apple" :class="styles.Radio" />
       Fuji
     </label>
 
     <label :class="styles.Item">
-      <Radio.Root value="gala-apple" :class="styles.Radio">
-        <Radio.Indicator :class="styles.Indicator" />
-      </Radio.Root>
+      <Radio value="gala-apple" :class="styles.Radio" />
       Gala
     </label>
 
     <label :class="styles.Item">
-      <Radio.Root value="granny-smith-apple" :class="styles.Radio">
-        <Radio.Indicator :class="styles.Indicator" />
-      </Radio.Root>
+      <Radio value="granny-smith-apple" :class="styles.Radio" />
       Granny Smith
     </label>
   </RadioGroup>

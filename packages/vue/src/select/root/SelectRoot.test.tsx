@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Select } from '@vase-ui/vue/select';
 import {
   createFormDataSpy,
-  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -1979,7 +1979,7 @@ describe('<Select.Root />', () => {
     });
 
     await render(
-      <Field.Root validationMode="onChange" validate={validateSpy}>
+      <Field.Root validationMode="change" validate={validateSpy}>
         <Select.Root name="country">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
@@ -2014,7 +2014,7 @@ describe('<Select.Root />', () => {
 
   it('does not update field state when autofill is canceled', async () => {
     await render(
-      <Form errors={{ country: 'server error' }}>
+      <ErrorsForm errors={{ country: 'server error' }}>
         <Field.Root name="country">
           <Select.Root
             onValueChange={(_value: unknown, eventDetails: ChangeDetails) => {
@@ -2035,7 +2035,7 @@ describe('<Select.Root />', () => {
           </Select.Root>
           <Field.Error data-testid="error" />
         </Field.Root>
-      </Form>,
+      </ErrorsForm>,
     );
 
     const trigger = screen.getByTestId('trigger');
@@ -2242,12 +2242,12 @@ describe('<Select.Root />', () => {
 
       await render(
         withField ? (
-          <Form errors={{ select: 'test' }}>
+          <ErrorsForm errors={{ select: 'test' }}>
             <Field.Root name="select">
               {select}
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>
+          </ErrorsForm>
         ) : (
           select
         ),
@@ -2256,18 +2256,15 @@ describe('<Select.Root />', () => {
       const selectInput = screen.getByRole<HTMLInputElement>('textbox', { hidden: true });
       expect(selectInput).toHaveAttribute('name', 'select');
 
-      // Only the Field wrapper renders an error.
-      const expectedError = withField ? 'test' : undefined;
-
-      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+      // A field shows no error while its control is disabled or read-only.
+      expect(screen.queryByTestId('error')).toBeNull();
 
       await fireEvent.input(selectInput, { target: { value: 'b' } });
       await flushMicrotasks();
 
       expect(onValueChange).not.toHaveBeenCalled();
       expect(selectInput.value).toBe('');
-
-      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+      expect(screen.queryByTestId('error')).toBeNull();
     },
   );
 
@@ -4108,7 +4105,12 @@ describe('<Select.Root />', () => {
       const handleFormSubmit = vi.fn();
 
       const { user } = await render(
-        <Form onFormSubmit={handleFormSubmit}>
+        <Form
+          onSubmit={(event: SubmitEvent, values: FormValues) => (
+            event.preventDefault(),
+            handleFormSubmit(values)
+          )}
+        >
           <Field.Root name="country">
             <Select.Root
               defaultValue={items[0]}
@@ -4238,7 +4240,7 @@ describe('<Select.Root />', () => {
 
     it('clears external errors on change', async () => {
       const { user } = await render(
-        <Form
+        <ErrorsForm
           errors={{
             select: 'test',
           }}
@@ -4259,7 +4261,7 @@ describe('<Select.Root />', () => {
             </Select.Root>
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('test');
@@ -4356,6 +4358,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -4589,85 +4592,12 @@ describe('<Select.Root />', () => {
       });
     });
 
-    it('[data-focused]', async () => {
-      await render(
-        <Field.Root>
-          <Select.Root>
-            <Select.Trigger data-testid="trigger" />
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="">Select</Select.Item>
-                  <Select.Item value="1">Option 1</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        </Field.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      expect(trigger).not.toHaveAttribute('data-focused');
-
-      await fireEvent.focusIn(trigger);
-
-      expect(trigger).toHaveAttribute('data-focused', '');
-
-      await fireEvent.focusOut(trigger);
-
-      expect(trigger).not.toHaveAttribute('data-focused');
-    });
-
-    describe('[data-focused] without a blur event', () => {
-      function Selects(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
-        const { firstMounted = true, firstDisabled = false } = props;
-        return (
-          <Field.Root data-testid="field">
-            {firstMounted && (
-              <Select.Root disabled={firstDisabled}>
-                <Select.Trigger data-testid="first" />
-              </Select.Root>
-            )}
-          </Field.Root>
-        );
-      }
-
-      it('is removed when the focused trigger becomes disabled', async () => {
-        const { setProps } = await render(<Selects />);
-
-        const trigger = screen.getByTestId('first');
-        trigger.focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstDisabled: true });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-        expect(trigger).not.toHaveAttribute('data-focused');
-      });
-
-      it('is removed when the focused trigger unmounts', async () => {
-        const { setProps } = await render(<Selects />);
-
-        screen.getByTestId('first').focus();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-      });
-    });
-
     it('does not mark as touched when focus moves into the popup', async () => {
       const validateSpy = vi.fn(() => 'error');
 
       await render(
         <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
+          <Field.Root validationMode="blur" validate={validateSpy}>
             <Select.Root>
               <Select.Trigger data-testid="trigger" />
               <Select.Portal>
@@ -4700,7 +4630,6 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
 
       expect(validateSpy.mock.calls.length).toBe(0);
-      expect(trigger).toHaveAttribute('data-focused', '');
       expect(trigger).not.toHaveAttribute('data-touched');
       expect(trigger).not.toHaveAttribute('aria-invalid');
     });
@@ -4710,7 +4639,7 @@ describe('<Select.Root />', () => {
 
       await render(
         <>
-          <Field.Root validationMode="onBlur" validate={validateSpy}>
+          <Field.Root validationMode="blur" validate={validateSpy}>
             <Select.Root>
               <Select.Trigger data-testid="trigger" />
               <Select.Portal>
@@ -4756,13 +4685,11 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(trigger).toHaveAttribute('data-touched', '');
       });
-      expect(trigger).not.toHaveAttribute('data-focused');
       expect(trigger).toHaveAttribute('aria-invalid', 'true');
     });
-
     it('prop: validate', async () => {
       await render(
-        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+        <Field.Root validationMode="blur" validate={() => 'error'}>
           <Select.Root>
             <Select.Trigger data-testid="trigger" />
             <Select.Portal>
@@ -4778,6 +4705,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await flushMicrotasks();
 
@@ -4795,7 +4723,7 @@ describe('<Select.Root />', () => {
       });
 
       await render(
-        <Field.Root validationMode="onBlur" validate={validateSpy}>
+        <Field.Root validationMode="blur" validate={validateSpy}>
           <Select.Root
             defaultValue={items[0]}
             itemToStringLabel={(item) => item.label}
@@ -4815,6 +4743,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       await waitFor(() => {
         expect(validateSpy.mock.calls.length).toBe(1);
@@ -4870,7 +4799,7 @@ describe('<Select.Root />', () => {
     it('prop: validationMode=onChange', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onChange"
+          validationMode="change"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -4916,7 +4845,7 @@ describe('<Select.Root />', () => {
 
         return () => (
           <>
-            <Field.Root validationMode="onChange" validate={validateSpy} name="flavor">
+            <Field.Root validationMode="change" validate={validateSpy} name="flavor">
               <Select.Root
                 modelValue={value.value}
                 onValueChange={(next: string | null) => {
@@ -4967,7 +4896,7 @@ describe('<Select.Root />', () => {
     it('prop: validationMode=onBlur', async () => {
       const { user } = await render(
         <Field.Root
-          validationMode="onBlur"
+          validationMode="blur"
           validate={(value) => {
             return value === '1' ? 'error' : null;
           }}
@@ -5005,6 +4934,8 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusOut(trigger);
 
+      await wait(0);
+
       await flushMicrotasks();
 
       await waitFor(() => {
@@ -5021,7 +4952,7 @@ describe('<Select.Root />', () => {
               <Select.Positioner />
             </Select.Portal>
           </Select.Root>
-          <Field.Label data-testid="label" nativeLabel={false} as="span" />
+          <Field.Label data-testid="label" />
         </Field.Root>,
       );
 
@@ -5192,7 +5123,7 @@ describe('<Select.Root />', () => {
     it('marks the field as touched and validates it when an outside press closes the popup', async () => {
       const validate = vi.fn((_value: unknown) => 'Pick a font');
       const { user } = await render(
-        <Field.Root data-testid="field" validate={validate} validationMode="onBlur">
+        <Field.Root data-testid="field" validate={validate} validationMode="blur">
           <Select.Root defaultOpen defaultValue="sans">
             <Select.Trigger data-testid="trigger" />
           </Select.Root>
@@ -5215,7 +5146,7 @@ describe('<Select.Root />', () => {
 
     it('BUG-1425: makes a required select with no value invalid when an outside press closes the popup', async () => {
       const { user } = await render(
-        <Field.Root data-testid="field" validationMode="onBlur">
+        <Field.Root data-testid="field" validationMode="blur">
           <Select.Root defaultOpen required>
             <StoreProbe />
             <Select.Trigger data-testid="trigger" />
@@ -5230,7 +5161,9 @@ describe('<Select.Root />', () => {
       await user.click(document.body);
 
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('required');
+      });
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
 
@@ -5262,62 +5195,6 @@ describe('<Select.Root />', () => {
 
       expect(field).not.toHaveAttribute('data-filled');
       expect(field).not.toHaveAttribute('data-dirty');
-    });
-  });
-
-  describe('KeepAlive', () => {
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required select does not block the submit of its form: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const { HeldBranch, mountWhileHeld } = createHeldBranch(
-          () => (
-            <Select.Root key="held" required>
-              <Select.Trigger />
-            </Select.Root>
-          ),
-          { mounted: name === 'deactivated' },
-        );
-        const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
-            <Field.Root name="fruit" data-testid="field">
-              <Field.Control defaultValue="shown" />
-              <HeldBranch />
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
-
-        await mountWhileHeld();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-      },
-    );
-
-    it('the label does not name a select that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Select.Root key="held" id="held-select">
-          <Select.Trigger />
-        </Select.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Fruit</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-select');
     });
   });
 
@@ -7549,7 +7426,7 @@ describe('<Select.Root />', () => {
       const validate = vi.fn<(value: unknown) => null>(() => null);
       const value = shallowRef<string[] | null>(null);
       const App = defineComponent(() => () => (
-        <Field.Root validationMode="onBlur" validate={validate}>
+        <Field.Root validationMode="blur" validate={validate}>
           <Select.Root
             multiple
             modelValue={value.value}
@@ -7578,6 +7455,7 @@ describe('<Select.Root />', () => {
 
       await fireEvent.focusIn(trigger);
       await fireEvent.focusOut(trigger);
+      await wait(0);
 
       expect(validate.mock.calls[0]?.[0]).toEqual([]);
 
@@ -9110,7 +8988,7 @@ describe('<Select.Root />', () => {
       const validate = vi.fn((value: unknown) => (value === 'serif' ? 'Not serif' : null));
       await render(
         <Form data-testid="form">
-          <Field.Root data-testid="field" name="font" validate={validate} validationMode="onChange">
+          <Field.Root data-testid="field" name="font" validate={validate} validationMode="change">
             <Select.Root defaultValue="sans">
               <StoreProbe />
               <Select.Trigger />

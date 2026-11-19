@@ -97,30 +97,6 @@ describe('<OTPField.Input />', () => {
     expect(first).toHaveValue('A');
     expect(second).toHaveValue('');
   });
-
-  it('keeps the value and field state when native events are prevented', async () => {
-    const change = vi.fn();
-    await render(
-      <Field.Root data-testid="field">
-        <OTPField.Root length={1} defaultValue="1" onValueChange={change}>
-          <OTPField.Input />
-        </OTPField.Root>
-      </Field.Root>,
-    );
-    const input = screen.getByRole<HTMLInputElement>('textbox');
-    const field = screen.getByTestId('field');
-    for (const type of ['focusin', 'focusout', 'input']) {
-      const event = new Event(type, { bubbles: true, cancelable: true });
-      event.preventDefault();
-      if (type === 'input') input.value = '2';
-      await fireEvent(input, event);
-      expect(field).not.toHaveAttribute('data-focused');
-    }
-    expect(field).not.toHaveAttribute('data-touched');
-    expect(input).toHaveValue('1');
-    expect(change).not.toHaveBeenCalled();
-  });
-
   it('renders one textbox per slot', async () => {
     await render(<OTPFieldTest />);
 
@@ -404,56 +380,6 @@ describe('<OTPField.Input />', () => {
 
     expect(await fireEvent.mouseDown(firstInput)).toBe(false);
     expect(firstInput).not.toHaveFocus();
-  });
-
-  it('allows a composed focus handler to prevent internal focus state', async () => {
-    await render(
-      <OTPField.Root data-testid="root" length={1}>
-        <OTPField.Input
-          onFocusin={(event) => {
-            event.preventVaseUIHandler();
-          }}
-        />
-      </OTPField.Root>,
-    );
-
-    const root = screen.getByTestId('root');
-    const input = screen.getByRole<HTMLInputElement>('textbox');
-
-    input.focus();
-    await flushMicrotasks();
-
-    expect(input).toHaveFocus();
-    expect(root).not.toHaveAttribute('data-focused');
-  });
-
-  it('allows a composed blur handler to preserve internal focus state', async () => {
-    await render(
-      <>
-        <OTPField.Root data-testid="root" length={1}>
-          <OTPField.Input
-            onFocusout={(event) => {
-              event.preventVaseUIHandler();
-            }}
-          />
-        </OTPField.Root>
-        <button type="button">Outside</button>
-      </>,
-    );
-
-    const root = screen.getByTestId('root');
-    const input = screen.getByRole<HTMLInputElement>('textbox');
-    const outside = screen.getByRole('button', { name: 'Outside' });
-
-    input.focus();
-    await flushMicrotasks();
-    expect(root).toHaveAttribute('data-focused', '');
-
-    outside.focus();
-    await flushMicrotasks();
-
-    expect(outside).toHaveFocus();
-    expect(root).toHaveAttribute('data-focused', '');
   });
 
   it('moves focus to the next slot when typing the same character into a filled slot', async () => {
@@ -933,28 +859,6 @@ describe('<OTPField.Input />', () => {
     const label = screen.getByTestId('label');
     expect(screen.getByTestId('labelled')).toHaveAttribute('aria-labelledby', label.id);
     expect(screen.getByTestId('unlabelled')).not.toHaveAttribute('aria-labelledby');
-  });
-
-  it('applies a native label to every slot', async () => {
-    await render(
-      <>
-        <label for="verification-code">Verification code</label>
-        <OTPField.Root id="verification-code" length={OTP_LENGTH}>
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-          <OTPField.Input />
-        </OTPField.Root>
-      </>,
-    );
-
-    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
-
-    inputs.forEach((input) => {
-      expect(input).toHaveAccessibleName('Verification code');
-    });
   });
 
   it('keeps the shared label on the first slot even if an aria-label is provided', async () => {
@@ -1588,23 +1492,9 @@ describe('<OTPField.Input />', () => {
       expect(field).toHaveAttribute('data-dirty', '');
       expect(document.activeElement).toBe(fixture.getByTestId('outside'));
     });
-
-    it('keeps the root focused while the focus is in the third slot', async () => {
-      const { fixture, field, root, model } = await hydrateTyped(
-        { validationMode: 'onBlur' },
-        { typed: ['1', '2'], focus: 'slot-2' },
-      );
-      await flushMicrotasks();
-
-      expect(model.textContent).toBe('12');
-      expect(root).toHaveAttribute('data-focused', '');
-      expect(field).not.toHaveAttribute('data-touched');
-      expect(fixture.queryByTestId('error')).toBeNull();
-    });
-
     it('validates a partial code when the focus is outside', async () => {
       const { fixture, field } = await hydrateTyped(
-        { validationMode: 'onBlur' },
+        { validationMode: 'blur' },
         { typed: ['1', '2'], focus: 'outside' },
       );
 

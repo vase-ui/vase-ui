@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
@@ -505,13 +506,8 @@ describe('<DatePicker.Field />', () => {
         errors?: Record<string, string>,
       ) {
         return (
-          <Form data-testid="form" errors={errors}>
-            <Field.Root
-              data-testid="root"
-              name="when"
-              validate={validate}
-              validationMode="onChange"
-            >
+          <ErrorsForm data-testid="form" errors={errors}>
+            <Field.Root data-testid="root" name="when" validate={validate} validationMode="change">
               <DatePicker.Root locale="en-US" referenceDate={day} {...pickerProps}>
                 <DatePicker.Field>
                   <DateField.Input />
@@ -519,7 +515,7 @@ describe('<DatePicker.Field />', () => {
               </DatePicker.Root>
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>
+          </ErrorsForm>
         );
       }
 
@@ -603,7 +599,7 @@ describe('<DatePicker.Field />', () => {
           <DatePicker.Portal>
             <DatePicker.Positioner>
               <DatePicker.Popup aria-label="Choose date">
-                <Field.Root name="other" validate={() => 'Wrong date'} validationMode="onChange">
+                <Field.Root name="other" validate={() => 'Wrong date'} validationMode="change">
                   <DateField.Root locale="en-US">
                     <DateField.Input />
                   </DateField.Root>

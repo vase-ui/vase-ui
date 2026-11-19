@@ -39,10 +39,6 @@ export const dirty = 'data-dirty';
  */
 export const filled = 'data-filled';
 /**
- * Present when a segment of the field is focused.
- */
-export const focused = 'data-focused';
-/**
  * The type of the segment: `year`, `month`, `day`, `hour`, `minute`, `second` or `dayPeriod`.
  */
 export const type = 'data-type';

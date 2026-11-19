@@ -183,7 +183,7 @@ describe('<Combobox.Trigger />', () => {
   ])('validates the $name value when blurred', async ({ control, expectedValue }) => {
     const validate = vi.fn();
     await render(
-      <Field.Root validationMode="onBlur" validate={validate}>
+      <Field.Root validationMode="blur" validate={validate}>
         {control()}
       </Field.Root>,
     );
@@ -191,6 +191,7 @@ describe('<Combobox.Trigger />', () => {
     const trigger = screen.getByTestId('trigger');
     await fireEvent.focusIn(trigger);
     await fireEvent.focusOut(trigger);
+    await wait(0);
 
     expect(validate).toHaveBeenCalledWith(expectedValue, expect.anything());
   });
@@ -1728,7 +1729,7 @@ describe('<Combobox.Trigger />', () => {
     it('is invalid when the focus leaves the trigger, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Trigger data-testid="trigger" />
             </Combobox.Root>
@@ -1750,7 +1751,8 @@ describe('<Combobox.Trigger />', () => {
       await user.tab();
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('required'));
       expect(trigger).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
@@ -1759,7 +1761,7 @@ describe('<Combobox.Trigger />', () => {
     it('is invalid when an outside press closes the popup, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Trigger data-testid="trigger" />
               <Combobox.Portal>
@@ -1791,7 +1793,8 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('required'));
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
     });
@@ -1799,7 +1802,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves an input outside the popup, with no change before', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Input data-testid="input" />
             </Combobox.Root>
@@ -1817,6 +1820,7 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
       expect(screen.queryByTestId('error')).toBe(null);
       expect(input).not.toHaveAttribute('aria-invalid');
     });
@@ -1824,7 +1828,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves a trigger beside an input outside the popup', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Combobox.Root required>
               <Combobox.Input data-testid="input" />
               <Combobox.Trigger data-testid="trigger" />
@@ -1842,6 +1846,7 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
       expect(screen.queryByTestId('error')).toBe(null);
       expect(screen.getByTestId('input')).not.toHaveAttribute('aria-invalid');
     });
@@ -1867,6 +1872,7 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
       expect(screen.queryByTestId('error')).toBe(null);
       expect(trigger).not.toHaveAttribute('aria-invalid');
     });
@@ -1874,7 +1880,7 @@ describe('<Combobox.Trigger />', () => {
     it('stays valid when the focus leaves the trigger of a root with no selection mode', async () => {
       const { user } = await render(
         <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
+          <Field.Root validationMode="blur" data-testid="field">
             <Autocomplete.Root required>
               <Combobox.Trigger data-testid="trigger" />
             </Autocomplete.Root>
@@ -1892,6 +1898,7 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      await wait(0);
       expect(screen.queryByTestId('error')).toBe(null);
       expect(trigger).not.toHaveAttribute('aria-invalid');
     });
@@ -1926,6 +1933,7 @@ describe('<Combobox.Trigger />', () => {
     disabled.value = false;
     await flushMicrotasks();
     trigger.blur();
+    await wait(0);
     trigger.focus();
 
     await waitFor(() => expect(onMount).toHaveBeenCalledOnce());
@@ -2004,32 +2012,6 @@ describe('<Combobox.Trigger />', () => {
       await waitFor(() => {
         expect(store.select('forceMounted')).toBe(true);
       });
-    });
-
-    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
-      // the control of the field.
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Combobox.Root key="held" items={['apple']}>
-          <Combobox.Trigger id="held-trigger" />
-        </Combobox.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Fruit</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-trigger');
     });
   });
 

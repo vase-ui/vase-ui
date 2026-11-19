@@ -7,10 +7,9 @@ import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useInputRender } from '../../useInputRender';
-import { useInputRegistration } from '../../field-register-control';
+import { useInputRegistration } from '../../useInputRegistration';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { fieldValidityMapping } from '../../field-constants';
-import { useSetFieldFocused } from '../../field-root-context/useSetFieldFocused';
 import type { StateAttributesMapping } from '../../getStateAttributesProps';
 import { REASONS } from '../../reasons';
 import { useDateTimeFieldContext } from './DateTimeFieldContext';
@@ -72,7 +71,6 @@ export function useDateTimeFieldSegment(
   const isHydrating = useIsHydrating();
   const elementRef = shallowRef<HTMLInputElement | null>(null);
   const writesValue = useValueBeforeHydration(componentProps, () => elementRef.value);
-  const setFocused = useSetFieldFocused(context.disabled, elementRef, context.setFocused);
 
   const type = computed(() => toValue(segment).type);
   const view = computed(() => context.getView(type.value));
@@ -334,7 +332,7 @@ export function useDateTimeFieldSegment(
           return;
         }
         typedDigits = '';
-        setFocused(true);
+        context.setFocused(true);
         // A focus by script leaves the caret at the start in Chrome and Firefox, and selects the
         // whole text in Safari. A segment selects its whole text in each engine.
         (event.currentTarget as HTMLInputElement).select();

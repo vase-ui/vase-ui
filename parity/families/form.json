@@ -5,7 +5,20 @@
     "docs/src/app/(docs)/react/components/form/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/form/Form.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/form/Form.test.ts",
+      "reason": "`Form.test.ts` tests the submit with the values, the errors, the validation and the focus of a blocked submit. The values are the second argument of `submit`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/form/types.md",
+      "entry": "Form",
+      "kind": "not-applicable",
+      "reason": "`submit(event, values)` replaces `onFormSubmit`: the first argument is the native `SubmitEvent`, and `@submit.prevent` prevents the default. `v-model:errors` replaces `errors`. The modes are `submit`, `blur` and `change` (rule 8.17). The form has no state to read, so the family has no `FormState`."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Form",
@@ -14,15 +27,26 @@
     },
     {
       "entry": "Form",
-      "prop": "onFormSubmit",
-      "reason": "The part must know that a `formSubmit` listener exists before it prevents the native submit. Vue gives a listener to a declared prop with that name, and the emit `formSubmit` still calls it. The row `onFormSubmit` of `types.md` maps to the emit."
-    },
-    {
-      "entry": "Form",
-      "prop": "onFormSubmitOnce",
-      "reason": "A template gives this key to a listener that it binds with `@form-submit.once`. The part reads it for the same reason as `onFormSubmit`. The emit `formSubmit` still calls the listener one time."
+      "emit": "update:errors",
+      "reason": "`v-model:errors` controls the errors. An edit asks to remove the key of its field. Base UI takes the `errors` prop and has no event for the change."
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/internals/form-context/FormContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/form/field.ts",
+      "member": "formKey",
+      "witness": "packages/vue/src/form/Form.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/form-context/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/form/field.ts",
+      "member": "formKey",
+      "witness": "packages/vue/src/form/Form.test.ts"
+    }
+  ]
 }

@@ -3,23 +3,24 @@ import { h } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import * as Autocomplete from '../../components/autocomplete';
 import { Button } from '../../components/button';
-import * as Checkbox from '../../components/checkbox';
+import { Checkbox } from '../../components/checkbox';
 import { CheckboxGroup } from '../../components/checkbox-group';
 import * as Combobox from '../../components/combobox';
 import * as Field from '../../components/field';
 import * as Fieldset from '../../components/fieldset';
+import { Input } from '../../components/input';
 import { Form } from '../../components/form';
 import * as NumberField from '../../components/number-field';
-import * as Radio from '../../components/radio';
+import { Radio } from '../../components/radio';
 import { RadioGroup } from '../../components/radio-group';
 import * as Select from '../../components/select';
 import * as Slider from '../../components/slider';
-import * as Switch from '../../components/switch';
+import { Switch } from '../../components/switch';
 import { useToastManager } from '../../components/toast';
 
 const toastManager = useToastManager();
 
-function onFormSubmit(formValues: Record<string, unknown>) {
+function onSubmit(_event: SubmitEvent, formValues: Record<string, unknown>) {
   toastManager.add({
     title: 'Form submitted',
     description: 'The form contains these values:',
@@ -107,10 +108,10 @@ const protocols = ['http', 'https', 'ssh'];
 </script>
 
 <template>
-  <Form aria-label="Launch new cloud server" @form-submit="onFormSubmit">
+  <Form aria-label="Launch new cloud server" @submit.prevent="onSubmit">
     <Field.Root name="serverName">
       <Field.Label>Server name</Field.Label>
-      <Field.Control
+      <Input
         default-value=""
         placeholder="e.g. api-server-01"
         required
@@ -237,9 +238,10 @@ const protocols = ['http', 'https', 'ssh'];
 
     <Field.Root name="scalingThreshold">
       <Fieldset.Root>
-        <template #render="{ props }">
+        <template #element="{ props, elementRef }">
           <Slider.Root
             v-bind="props"
+            :ref="elementRef"
             :default-value="[0.2, 0.8]"
             thumb-alignment="edge"
             :min="0"
@@ -264,22 +266,18 @@ const protocols = ['http', 'https', 'ssh'];
 
     <Field.Root name="storageType">
       <Fieldset.Root>
-        <template #render="{ props }">
-          <RadioGroup v-bind="props" class="gap-4" default-value="ssd">
+        <template #element="{ props, elementRef }">
+          <RadioGroup v-bind="props" :ref="elementRef" class="gap-4" default-value="ssd">
             <Fieldset.Legend class="-mt-px">Storage type</Fieldset.Legend>
             <Field.Item>
               <Field.Label>
-                <Radio.Root value="ssd">
-                  <Radio.Indicator />
-                </Radio.Root>
+                <Radio value="ssd" />
                 SSD
               </Field.Label>
             </Field.Item>
             <Field.Item>
               <Field.Label>
-                <Radio.Root value="hdd">
-                  <Radio.Indicator />
-                </Radio.Root>
+                <Radio value="hdd" />
                 HDD
               </Field.Label>
             </Field.Item>
@@ -291,25 +289,25 @@ const protocols = ['http', 'https', 'ssh'];
     <Field.Root name="restartOnFailure">
       <Field.Label class="gap-2">
         Restart on failure
-        <Switch.Root default-checked>
-          <Switch.Thumb />
-        </Switch.Root>
+        <span class="relative flex shrink-0"
+          ><Switch default-checked /><span
+            class="pointer-events-none absolute top-[0.1875rem] left-[0.1875rem] size-3.5 bg-neutral-950 transition-[translate,background-color] duration-150 ease-[ease] peer-checked:translate-x-4 peer-checked:bg-white dark:bg-white dark:peer-checked:bg-neutral-950"
+        /></span>
       </Field.Label>
     </Field.Root>
 
     <Field.Root name="allowedNetworkProtocols">
       <Fieldset.Root>
-        <template #render="{ props }">
-          <CheckboxGroup v-bind="props" :default-value="[]">
+        <template #element="{ props, elementRef }">
+          <CheckboxGroup v-bind="props" :ref="elementRef" :default-value="[]">
             <Fieldset.Legend class="mb-2">Allowed network protocols</Fieldset.Legend>
             <div class="flex gap-4">
               <Field.Item v-for="protocol in protocols" :key="protocol">
                 <Field.Label class="uppercase">
-                  <Checkbox.Root :value="protocol">
-                    <Checkbox.Indicator>
-                      <CheckIcon />
-                    </Checkbox.Indicator>
-                  </Checkbox.Root>
+                  <span class="relative flex shrink-0"
+                    ><Checkbox :value="protocol" /><CheckIcon
+                      class="pointer-events-none absolute inset-0 hidden text-white peer-checked:block dark:text-neutral-950"
+                  /></span>
                   {{ protocol }}
                 </Field.Label>
               </Field.Item>

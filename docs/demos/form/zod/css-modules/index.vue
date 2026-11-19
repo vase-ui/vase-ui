@@ -3,7 +3,8 @@ import { ref } from 'vue';
 import { z } from 'zod';
 import { Button } from '@vase-ui/vue/button';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
+import { Input } from '@vase-ui/vue/input';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 import styles from './index.module.css';
 
 const schema = z.object({
@@ -11,7 +12,7 @@ const schema = z.object({
   age: z.coerce.number('Age must be a number').positive('Age must be a positive number'),
 });
 
-async function submitForm(formValues: Form.Values) {
+async function submitForm(formValues: FormValues) {
   const result = schema.safeParse(formValues);
 
   if (!result.success) {
@@ -27,22 +28,22 @@ async function submitForm(formValues: Form.Values) {
 
 const errors = ref({});
 
-async function onFormSubmit(formValues: Form.Values) {
+async function onSubmit(_event: SubmitEvent, formValues: FormValues) {
   const response = await submitForm(formValues);
   errors.value = response.errors;
 }
 </script>
 
 <template>
-  <Form :class="styles.Form" :errors="errors" @form-submit="onFormSubmit">
+  <Form :class="styles.Form" :errors="errors" @submit.prevent="onSubmit">
     <Field.Root name="name" :class="styles.Field">
       <Field.Label :class="styles.Label">Name</Field.Label>
-      <Field.Control placeholder="Enter name" :class="styles.Input" />
+      <Input placeholder="Enter name" :class="styles.Input" />
       <Field.Error :class="styles.Error" />
     </Field.Root>
     <Field.Root name="age" :class="styles.Field">
       <Field.Label :class="styles.Label">Age</Field.Label>
-      <Field.Control placeholder="Enter age" :class="styles.Input" />
+      <Input placeholder="Enter age" :class="styles.Input" />
       <Field.Error :class="styles.Error" />
     </Field.Root>
     <Button type="submit" :class="styles.Button">Submit</Button>

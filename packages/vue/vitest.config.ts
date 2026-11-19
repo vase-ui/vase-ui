@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
-import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { postcssFollowSiteTheme } from '../../docs/.vitepress/postcssFollowSiteTheme.ts';
 import { compilePartsAsVapor } from './test/server/compilePartsAsVapor.ts';
@@ -12,8 +11,8 @@ import expectations from './test/vaporParts/expectedFailures.json' with { type: 
 import { collectGarbage } from './test/server/collectGarbage.ts';
 import { inspectBrowserFrame } from './test/server/inspectBrowserFrame.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
+import { contextOptions, engineInstances } from './test/server/engineInstances.ts';
 
-const contextOptions = { timezoneId: 'UTC' };
 const browserOptions = {
   enabled: true as const,
   provider: playwright({ contextOptions }),
@@ -73,52 +72,22 @@ export default defineConfig({
         extends: true,
         test: {
           include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'],
-          provide: { testApp: 'vdom', testParts: 'vdom' },
+          provide: { testApp: 'vdom', testParts: 'vdom', app: 'vdom' },
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             ...browserOptions,
             instances: [
-              { browser: 'chromium', name: 'chromium' },
-              {
-                browser: 'firefox',
-                name: 'firefox',
-                // Firefox has one mouse for all its windows, and each test file that runs at the
-                // same time gets a window of its own. When the real pointer leaves the page of one
-                // window, Firefox can send the leave events to the page of another window.
-                fileParallelism: false,
-                provider: playwright({
-                  contextOptions,
-                  launchOptions: {
-                    firefoxUserPrefs: {
-                      // Vitest sets this preference to `true`. With that value, Firefox sometimes
-                      // crashes a page when the page starts. With `false`, Vitest mocks a module by
-                      // request interception, not by import map.
-                      'dom.multiple_import_maps.enabled': false,
-                      // Without this preference, a test in Firefox has no `Touch` and no
-                      // `TouchEvent`. The ported touch cases of Base UI construct a `Touch`.
-                      'dom.w3c_touch_events.enabled': 1,
-                    },
-                  },
-                }),
-              },
-              {
-                browser: 'webkit',
-                name: 'webkit',
-                // On macOS, the Tab key of WebKit skips a button or a checkbox while full keyboard
-                // access is off, and it is off by default. WebKit on Linux does not skip them.
-                ...(process.platform === 'darwin' && {
-                  provider: playwright({
-                    contextOptions,
-                    launchOptions: {
-                      executablePath: `${import.meta.dirname}/test/webkitFullKeyboardAccess.sh`,
-                      env: { ...process.env, VASE_UI_WEBKIT_EXECUTABLE: webkit.executablePath() },
-                    },
-                  }),
-                }),
-              },
+              ...engineInstances(),
               // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
               // leaves it out.
-              { browser: 'chromium', name: 'vapor', provide: { testApp: 'vapor' } },
+              // The helpers of `test/render.ts` mount a fixture in an app of its own mode. This
+              // project compiles no fixture as Vapor, so it gives `app: 'vdom'`.
+              // `vitest.vue-3.6.config.ts` runs those tests in Vapor apps.
+              {
+                browser: 'chromium',
+                name: 'vapor',
+                provide: { testApp: 'vapor', app: 'vdom' },
+              },
             ],
           },
         },
@@ -131,7 +100,7 @@ export default defineConfig({
         test: {
           include: vaporPartsFiles,
           setupFiles: ['./test/vaporParts/expectFailures.ts'],
-          provide: { testApp: 'vapor', testParts: 'vapor' },
+          provide: { testApp: 'vapor', testParts: 'vapor', app: 'vapor-interop' },
           browser: {
             ...browserOptions,
             instances: [{ browser: 'chromium', name: 'vapor-parts' }],

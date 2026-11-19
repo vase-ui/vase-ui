@@ -76,6 +76,10 @@ if (typeof document !== 'undefined') {
     hadInvalidEvent = false;
   }
 
+  // A submit that no listener prevents loads another page in the frame of the tests. This listener
+  // on the window runs after each listener of the document and of the form.
+  window.addEventListener('submit', (event) => event.preventDefault());
+
   // Whether a browser gives a pointer lock to the page of a test depends on the engine and on the
   // platform. With a lock, Firefox puts a second pointer in the page. The move below does not take
   // that pointer off the page, and it gives hover events to each later test file of the page.

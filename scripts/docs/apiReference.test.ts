@@ -554,17 +554,20 @@ test('the reference of progress has its parts in the sequence of the Base UI pag
   );
 });
 
-test('the reference of radio-group has the parts that its types.md repeats from radio, in the sequence of the Base UI page', () => {
+test('the reference of radio-group has the part that its types.md repeats from radio, in the sequence of the Base UI page', () => {
   const { parts } = read('radio-group');
   assert.deepEqual(
     parts.map(({ name }) => name),
-    ['RadioGroup', 'Radio.Root', 'Radio.Indicator'],
+    ['RadioGroup', 'Radio'],
   );
-  const [, root] = parts;
-  assert.equal(root.props.find(({ name }) => name === 'value')?.required, true);
-  assert.equal(
-    root.dataAttributes.some(({ name }) => name === 'data-checked'),
-    true,
+  const [, radio] = parts;
+  assert.equal(radio.props.find(({ name }) => name === 'value')?.required, true);
+});
+
+test('the reference of a family with one part has the part under the name of the family', () => {
+  assert.deepEqual(
+    read('switch').parts.map(({ name }) => name),
+    ['Switch'],
   );
 });
 

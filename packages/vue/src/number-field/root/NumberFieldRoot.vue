@@ -4,7 +4,7 @@ import type {
   VaseUIChangeEventDetails,
   VaseUIGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { ChangeEventCustomProperties } from '../utils/parse';
@@ -166,24 +166,22 @@ export type NumberFieldRootCommitEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, inject, nextTick, provide, shallowRef, useId, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { fieldKey } from '../../field/control';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
 import type { ReasonToEvent } from '../../internals/createVaseUIEventDetails';
-import { useFieldInput } from '../../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
-import { useFormContext } from '../../internals/form-context';
+import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
-import { useLabelableId } from '../../internals/labelable-provider';
 import { useReferencedId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
@@ -193,6 +191,7 @@ import { useFormatLocale } from '../../utils/useFormatLocale';
 import { parseNumber, toValidatedNumber } from '../utils/parse';
 import { stateAttributesMapping, NumberFieldRootContext } from './NumberFieldRootContext';
 import type { EventWithOptionalKeyState, IncrementValueParameters } from '../utils/parse';
+import { given } from '../../internals/givenAttributes';
 
 defineOptions({ inheritAttrs: false });
 
@@ -249,23 +248,11 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NumberFieldRootState>;
 }>();
 
-const {
-  setDirty,
-  validityData,
-  disabled: fieldDisabled,
-  setFilled,
-  name: fieldName,
-  state: fieldState,
-  validation,
-} = useFieldRootContext();
-const { clearErrors } = useFormContext();
+const field = inject(fieldKey, null);
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(
-  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
-);
-const inputName = computed(() => fieldName.value ?? props.name);
-const clearFieldError = useClearFieldError(inputName);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
+const isDisabled = computed(() => !!field?.disabled || fieldsetDisabled.value || props.disabled);
+const inputName = computed(() => field?.name ?? props.name);
 
 const isScrubbing = shallowRef(false);
 
@@ -275,11 +262,8 @@ const maxWithDefault = computed(() => props.max ?? Number.MAX_SAFE_INTEGER);
 const inputRef = shallowRef<HTMLInputElement | null>(null);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 
-const giveFieldInput = useFieldInput();
 function setHiddenInputElement(node: unknown) {
-  const input = node as HTMLInputElement | null;
-  giveFieldInput(input);
-  hiddenInputElement.value = input;
+  hiddenInputElement.value = node as HTMLInputElement | null;
 }
 
 function registerInput(input: HTMLInputElement) {
@@ -289,8 +273,42 @@ function registerInput(input: HTMLInputElement) {
   };
 }
 
-const controlId = useLabelableId({ id: () => props.id, element: inputRef });
+const generatedId = useId();
+const controlId = computed(() => given('id', props.id) ?? field?.controlId ?? generatedId);
 const inputId = useReferencedId(() => controlId.value, inputRef);
+
+// The text input is the control of the field, or the hidden input of a root with no text input.
+// The hidden input holds the value for the form and its validation.
+watch(
+  () => inputRef.value ?? hiddenInputElement.value,
+  (input, _, onCleanup) => {
+    if (!input || !field) return;
+    onCleanup(
+      field.setControl({
+        element: input,
+        get id() {
+          return controlId.value;
+        },
+        get name() {
+          return props.name;
+        },
+        get disabled() {
+          return props.disabled || fieldsetDisabled.value;
+        },
+        get readOnly() {
+          return props.readOnly;
+        },
+        get inputs() {
+          return hiddenInputElement.value ? [hiddenInputElement.value] : [];
+        },
+        get focusElement() {
+          return inputRef.value ?? undefined;
+        },
+      }),
+    );
+  },
+  { flush: 'post' },
+);
 
 const numberValue = useControlled<number | null>({
   controlled: () => props.modelValue,
@@ -305,7 +323,7 @@ watch(
   numberValue,
   (value) => {
     stepValue = value;
-    setFilled(value !== null);
+    field?.setValue(value, value !== null);
   },
   { immediate: true },
 );
@@ -419,7 +437,6 @@ function setValue(
 
     emit('update:modelValue', validatedValue);
     numberValue.value = validatedValue;
-    setDirty(validatedValue !== validityData.value.initialValue);
     hasPendingCommitRef.value = true;
   }
 
@@ -522,7 +539,7 @@ function onInputWheel(event: WheelEvent) {
 }
 
 const state = computed<NumberFieldRootState>(() => ({
-  ...fieldState.value,
+  ...(field?.state ?? DEFAULT_FIELD_STATE_ATTRIBUTES),
   disabled: isDisabled.value,
   readOnly: props.readOnly,
   required: props.required,
@@ -598,8 +615,7 @@ function onHiddenInputChange(event: Event) {
     // `setValue` updates the dirty flag from the stored (clamped) value, so validate with
     // that same value rather than the raw autofilled one.
     setValue(parsedValue, details);
-    clearErrors(inputName.value);
-    validation.change(lastChangedValueRef.value ?? parsedValue);
+    void nextTick(() => field?.onEdit());
   }
 
   renderValue();
@@ -623,7 +639,7 @@ useFormReset(hiddenInputElement, (event) => {
     }
   }
 
-  clearFieldError(numberValue.value);
+  field?.onReset(numberValue.value);
 });
 
 defineExpose({ element, inputElement: hiddenInputElement });
@@ -636,10 +652,7 @@ defineExpose({ element, inputElement: hiddenInputElement });
   </component>
   <input
     :ref="setHiddenInputElement"
-    v-bind="{
-      ...validation.getValidationProps(isDisabled),
-      ...(hiddenInputText === null ? undefined : valueProps()),
-    }"
+    v-bind="hiddenInputText === null ? undefined : valueProps()"
     type="number"
     :form="props.form"
     :name="inputName"

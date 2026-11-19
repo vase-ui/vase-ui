@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
@@ -24,6 +25,8 @@ import {
   screen,
   takeReportedMessages,
   within,
+  wait,
+  waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import OTPFieldInputBeforeHydration from '../input/OTPFieldInputBeforeHydration.test.vue';
@@ -874,7 +877,7 @@ describe('<OTPField.Root />', () => {
       await render(
         <>
           <Form>
-            <Field.Root name="otp" validationMode="onBlur" validate={validate}>
+            <Field.Root name="otp" validationMode="blur" validate={validate}>
               <OTPField validationType="none" />
             </Field.Root>
           </Form>
@@ -889,13 +892,16 @@ describe('<OTPField.Root />', () => {
       await fireEvent.input(inputs[0], { target: { value: '1' } });
 
       await fireEvent.focusOut(inputs[1], { relatedTarget: inputs[2] });
+
+      await wait(0);
       expect(validate).not.toHaveBeenCalled();
 
       await fireEvent.focusOut(inputs[1], {
         relatedTarget: screen.getByRole('button', { name: 'Outside' }),
       });
 
-      expect(validate).toHaveBeenCalledTimes(1);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
       expect(validate.mock.calls[0]).toEqual(['1', { otp: '1' }]);
     });
 
@@ -988,7 +994,7 @@ describe('<OTPField.Root />', () => {
       await render(
         <Form data-testid="form">
           <Field.Root name="otp" validate={validate}>
-            <OTPFieldBase.Root length={OTP_LENGTH} defaultValue="12" />
+            <OTPFieldBase.Root length={OTP_LENGTH} defaultValue="123457" />
             <Field.Error data-testid="error" />
           </Field.Root>
         </Form>,
@@ -997,18 +1003,18 @@ describe('<OTPField.Root />', () => {
       await fireEvent.submit(screen.getByTestId('form'));
 
       expect(validate).toHaveBeenCalledTimes(1);
-      expect(validate.mock.calls[0][0]).toBe('12');
+      expect(validate.mock.calls[0][0]).toBe('123457');
       expect(screen.getByTestId('error')).toHaveTextContent('Wrong code');
     });
 
     it('shows the error of the form for the name of the root', async () => {
       await render(
-        <Form errors={{ otp: 'Server error' }}>
+        <ErrorsForm errors={{ otp: 'Server error' }}>
           <Field.Root>
             <OTPFieldBase.Root length={OTP_LENGTH} name="otp" />
             <Field.Error data-testid="error" />
           </Field.Root>
-        </Form>,
+        </ErrorsForm>,
       );
 
       expect(screen.getByTestId('error')).toHaveTextContent('Server error');
@@ -1110,18 +1116,6 @@ describe('<OTPField.Root />', () => {
 
       expect(getValues()).toBe('');
       expect(onValueChange).not.toHaveBeenCalled();
-    });
-
-    it('tracks focus state when a readonly slot receives focus', async () => {
-      await render(<OTPField readOnly />);
-
-      const root = screen.getByRole('group');
-      const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
-
-      firstInput.focus();
-      await flushMicrotasks();
-
-      expect(root).toHaveAttribute('data-focused', '');
     });
   });
 
@@ -1637,18 +1631,15 @@ describe('<OTPField.Root />', () => {
       expect(onValueComplete.mock.calls[0]?.[1].reason).toBe(REASONS.inputChange);
     });
 
-    it.each([
-      { lockState: 'readOnly', ariaInvalid: 'true' },
-      { lockState: 'disabled', ariaInvalid: null },
-    ] as const)(
+    it.each([{ lockState: 'readOnly' }, { lockState: 'disabled' }] as const)(
       'ignores hidden-input autofill when $lockState inside Field',
-      async ({ lockState, ariaInvalid }) => {
+      async ({ lockState }) => {
         const onValueChange = vi.fn();
         const onValueInvalid = vi.fn();
         const onValueComplete = vi.fn();
 
         await render(
-          <Form errors={{ otp: 'test' }}>
+          <ErrorsForm errors={{ otp: 'test' }}>
             <Field.Root name="otp">
               <OTPField
                 readOnly={lockState === 'readOnly'}
@@ -1659,17 +1650,17 @@ describe('<OTPField.Root />', () => {
               />
               <Field.Error data-testid="error" />
             </Field.Root>
-          </Form>,
+          </ErrorsForm>,
         );
 
         const hiddenInput = document.querySelector<HTMLInputElement>('input[name="otp"]');
 
         expect(hiddenInput).not.toBeNull();
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
-        const inputs = screen.getAllByRole('textbox');
-        expect(inputs.map((input) => input.getAttribute('aria-invalid'))).toEqual(
-          inputs.map(() => ariaInvalid),
-        );
+        // A field shows no error while its control is disabled or read-only.
+        expect(screen.queryByTestId('error')).toBeNull();
+        for (const input of screen.getAllByRole('textbox')) {
+          expect(input).not.toHaveAttribute('aria-invalid');
+        }
 
         await fireEvent.input(hiddenInput!, { target: { value: '12a34b56' } });
 
@@ -1677,7 +1668,7 @@ describe('<OTPField.Root />', () => {
         expect(onValueChange).not.toHaveBeenCalled();
         expect(onValueInvalid).not.toHaveBeenCalled();
         expect(onValueComplete).not.toHaveBeenCalled();
-        expect(screen.getByTestId('error')).toHaveTextContent('test');
+        expect(screen.queryByTestId('error')).toBeNull();
       },
     );
 
@@ -1917,18 +1908,18 @@ describe('<OTPField.Root />', () => {
           const validate = vi.fn((value: unknown) => (value === '123456' ? null : 'Wrong code'));
           const { container } = await render(
             <Form data-testid="form">
-              <Field.Root name="otp" validationMode="onChange" validate={validate}>
+              <Field.Root name="otp" validationMode="change" validate={validate}>
                 <OTPFieldBase.Root length={OTP_LENGTH} />
                 <Field.Error data-testid="error" />
               </Field.Root>
             </Form>,
           );
           const hiddenInput = getHiddenInput(container);
-          await fireEvent.input(hiddenInput, { target: { value: '1' } });
+          // A value that passes the native check, so that `validate` runs.
+          await fireEvent.input(hiddenInput, { target: { value: '123457' } });
           await flushMicrotasks();
 
-          expect(screen.getByTestId('error')).toHaveTextContent('Wrong code');
-          expect(hiddenInput).toHaveAttribute('aria-invalid', 'true');
+          await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Wrong code'));
           validate.mockClear();
 
           screen.getByTestId<HTMLFormElement>('form').reset();
@@ -1942,12 +1933,12 @@ describe('<OTPField.Root />', () => {
 
         it('VUE-21: removes the error of the form from a controlled field that keeps its value', async () => {
           const { container } = await render(
-            <Form data-testid="form" errors={{ otp: 'Server error' }}>
+            <ErrorsForm data-testid="form" errors={{ otp: 'Server error' }}>
               <Field.Root name="otp">
                 <OTPFieldBase.Root length={OTP_LENGTH} modelValue="1234" />
                 <Field.Error data-testid="error" />
               </Field.Root>
-            </Form>,
+            </ErrorsForm>,
           );
 
           expect(screen.getByTestId('error')).toHaveTextContent('Server error');
@@ -2332,7 +2323,7 @@ describe('<OTPField.Root />', () => {
           <Form>
             <Field.Root name="email" validate={() => 'Required'}>
               <Field.Label>Email</Field.Label>
-              <Field.Control />
+              <Input />
               <Field.Error />
             </Field.Root>
             <Field.Root name="otp">
@@ -2534,7 +2525,8 @@ describe('<OTPField.Root />', () => {
         await fireEvent.input(input, { target: { value: 'x' } });
         await fireEvent.input(input, { target: { value: '' } });
 
-        expect(input).toHaveAttribute('aria-invalid', 'true');
+        // The field validates the new root: its required value is missing.
+        await waitFor(() => expect(container.firstElementChild).toHaveAttribute('data-invalid'));
       });
     });
   });
@@ -2570,21 +2562,6 @@ describe('<OTPField.Root />', () => {
             laterRemovedAtMount: true,
           },
           selector: '[data-testid="root"]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            label: 'after',
-            description: true,
-            inputs: 4,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
           attribute: 'aria-describedby',
           serverValue: 'desc-a',
           clientValue: null,
@@ -2708,194 +2685,7 @@ describe('<OTPField.Root />', () => {
       expect(getValues()).toBe('1234');
       expect(document.activeElement).toBe(inputs[4]);
     });
-
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required OTP field does not block the submit of its form: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const { HeldBranch, mountWhileHeld } = createHeldBranch(
-          () => (
-            <OTPFieldBase.Root key="held" length={1} required>
-              <OTPFieldBase.Input />
-            </OTPFieldBase.Root>
-          ),
-          { mounted: name === 'deactivated' },
-        );
-        const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
-            <Field.Root name="code" data-testid="field">
-              <Field.Control defaultValue="shown" />
-              <HeldBranch />
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
-
-        await mountWhileHeld();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
-      },
-    );
-
-    it('the label does not name an OTP field that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
-          <OTPFieldBase.Input />
-        </OTPFieldBase.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Code</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-otp-field');
-    });
   });
-
-  describe('[data-focused] without a blur event', () => {
-    function Fields(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
-      const { firstMounted = true, firstDisabled = false } = props;
-      return (
-        <Field.Root data-testid="field">
-          {firstMounted && <OTPField data-testid="first" disabled={firstDisabled} />}
-        </Field.Root>
-      );
-    }
-
-    it('is removed when the focused field becomes disabled', async () => {
-      const { setProps } = await render(<Fields />);
-
-      screen.getAllByRole<HTMLInputElement>('textbox')[0].focus();
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-      expect(screen.getByTestId('first')).toHaveAttribute('data-focused', '');
-
-      await setProps({ firstDisabled: true });
-
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-      expect(screen.getByTestId('first')).not.toHaveAttribute('data-focused');
-    });
-
-    it('is removed when the focused field unmounts', async () => {
-      const { setProps } = await render(<Fields />);
-
-      screen.getAllByRole<HTMLInputElement>('textbox')[0].focus();
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-
-      await setProps({ firstMounted: false });
-
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-    });
-
-    it('is kept when a previously focused slot unmounts after focus moves to a sibling', async () => {
-      function TestCase(props: { firstMounted?: boolean }) {
-        const { firstMounted = true } = props;
-        return (
-          <Field.Root data-testid="field">
-            <OTPFieldBase.Root length={firstMounted ? 3 : 2} defaultValue="1" data-testid="otp">
-              {firstMounted && <OTPFieldBase.Input key="first" />}
-              <OTPFieldBase.Input key="second" />
-              <OTPFieldBase.Input key="third" />
-            </OTPFieldBase.Root>
-          </Field.Root>
-        );
-      }
-
-      const { setProps } = await render(<TestCase />);
-      const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
-
-      first.focus();
-      await flushMicrotasks();
-      second.focus();
-      await flushMicrotasks();
-
-      expect(second).toHaveFocus();
-      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-      expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
-
-      await setProps({ firstMounted: false });
-
-      expect(second).toHaveFocus();
-      expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-      expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
-    });
-
-    it('is removed when the focused slot unmounts but its field remains', async () => {
-      // After one slot unmounts, `length` is larger than the number of inputs, so the root warns.
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      function TestCase(props: { firstMounted?: boolean }) {
-        const { firstMounted = true } = props;
-        return (
-          <Field.Root data-testid="field">
-            <OTPFieldBase.Root length={3} data-testid="otp">
-              {firstMounted && <OTPFieldBase.Input />}
-              <OTPFieldBase.Input />
-              <OTPFieldBase.Input />
-            </OTPFieldBase.Root>
-          </Field.Root>
-        );
-      }
-
-      try {
-        const { setProps } = await render(<TestCase />);
-
-        screen.getAllByRole<HTMLInputElement>('textbox')[0].focus();
-        await flushMicrotasks();
-        expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
-        expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
-
-        await setProps({ firstMounted: false });
-
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-        expect(screen.getByTestId('otp')).not.toHaveAttribute('data-focused');
-        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
-          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={3}` but rendered 2 inputs.',
-        );
-      } finally {
-        warnSpy.mockRestore();
-      }
-    });
-  });
-
-  it('updates standalone filled and focused state on the root', async () => {
-    await render(<OTPField data-testid="root" />);
-
-    const root = screen.getByTestId('root');
-    const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
-
-    expect(root).not.toHaveAttribute('data-filled');
-    expect(root).not.toHaveAttribute('data-focused');
-
-    firstInput.focus();
-    await flushMicrotasks();
-
-    expect(root).toHaveAttribute('data-focused', '');
-
-    await fireEvent.input(firstInput, { target: { value: '1' } });
-
-    expect(root).toHaveAttribute('data-filled', '');
-
-    await fireEvent.focusOut(firstInput);
-
-    expect(root).not.toHaveAttribute('data-focused');
-  });
-
   it('sets `data-complete` when all slots are filled', async () => {
     await render(<OTPField data-testid="root" defaultValue="123456" />);
 

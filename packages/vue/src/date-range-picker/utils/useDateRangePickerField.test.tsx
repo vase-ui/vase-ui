@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, screen, waitFor } from '#test-utils';
+import { createRenderer, screen } from '#test-utils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const range = (start: string, end: string) => [day(start), day(end)] as const;
@@ -55,21 +55,6 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       );
 
       expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
-    });
-
-    it('takes its name from a label whose `for` is its id', async () => {
-      await render(
-        <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
-          <label for="own-id">Check-in</label>
-          <Part id="own-id" data-testid="field">
-            <DateField.Input />
-          </Part>
-        </DateRangePicker.Root>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
-      });
     });
 
     // A blank name gives nothing to a screen reader, so the part keeps its own name.

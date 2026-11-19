@@ -5,8 +5,6 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 
 <template>
   <RadioGroup>
-    <Radio.Root value="ssd">
-      <Radio.Indicator />
-    </Radio.Root>
+    <Radio value="a" />
   </RadioGroup>
 </template>

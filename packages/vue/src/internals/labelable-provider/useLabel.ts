@@ -5,8 +5,7 @@ import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
 import { given } from '../givenAttributes';
 import { useVaseUiId } from '../useVaseUiId';
-import { useLabelableContext } from './LabelableContext';
-import type { RegisterId } from './LabelableContext';
+import type { RegisterId } from './createIdRegistry';
 import { useRegisteredId } from './useRegisteredId';
 
 /**
@@ -14,22 +13,17 @@ import { useRegisteredId } from './useRegisteredId';
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
 export function useLabel(params: UseLabelParameters): ComputedRef<UseLabelReturnValue> {
-  const { controlElementId, registerLabelId: registerContextLabelId } = useLabelableContext();
-
   const ownId = useVaseUiId();
 
   const id = computed(() => given('id', toValue(params.id)) ?? ownId.value);
 
   useRegisteredId(
     () => id.value,
-    (source, getId) => {
-      registerContextLabelId(source, getId);
-      params.registerLabelId?.(source, getId);
-    },
+    (source, getId) => params.registerLabelId?.(source, getId),
     params.element,
   );
 
-  const resolveControlId = () => controlElementId.value ?? toValue(params.fallbackControlId);
+  const resolveControlId = () => toValue(params.fallbackControlId);
 
   function focusControl(event: MouseEvent) {
     const resolvedControlId = resolveControlId();
@@ -98,7 +92,7 @@ export interface UseLabelParameters {
    */
   element: MaybeRefOrGetter<Element | null | undefined>;
   /**
-   * The id of the control when the provider has none.
+   * The id of the control.
    */
   fallbackControlId?: MaybeRefOrGetter<string | undefined> | undefined;
   /**

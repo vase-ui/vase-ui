@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { Switch } from '@vase-ui/vue/switch';
+import { Toggle } from '@vase-ui/vue/toggle';
 </script>
 
 <template>
-  <Switch.Root>
-    <Switch.Thumb>
-      <template #render="{ props, state }">
-        <span v-bind="props" :ref="props.ref">
-          <template v-if="state.checked">On</template>
-          <template v-else>Off</template>
-        </span>
-      </template>
-    </Switch.Thumb>
-  </Switch.Root>
+  <Toggle aria-label="Bold">
+    <template #render="{ props, state }">
+      <button v-bind="props" :ref="props.ref">
+        <template v-if="state.pressed">On</template>
+        <template v-else>Off</template>
+      </button>
+    </template>
+  </Toggle>
 </template>

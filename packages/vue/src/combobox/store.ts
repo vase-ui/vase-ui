@@ -1,7 +1,7 @@
 import { toRaw } from 'vue';
 import type { ComputedRef, HTMLAttributes, ShallowRef } from 'vue';
 import { compareItemEquality } from '../internals/itemEquality';
-import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../internals/labelable-provider/createIdRegistry';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AdaptiveOriginMiddleware } from '../utils/popups/positioning/adaptiveOriginMiddleware';
 import { createElementIdObserver, popupStoreSelectors } from '../utils/popups/usePopupRoot';

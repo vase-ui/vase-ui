@@ -3,7 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { given } from '../internals/givenAttributes';
 import { createIdRegistry } from '../internals/labelable-provider/createIdRegistry';
-import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../internals/labelable-provider/createIdRegistry';
 import { useReferencedId } from '../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../internals/useVaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';

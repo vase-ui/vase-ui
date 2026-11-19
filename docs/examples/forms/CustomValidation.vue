@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 
 declare function isUsernameAvailable(username: string): Promise<boolean>;
 
@@ -20,11 +21,11 @@ async function validate(value: unknown) {
 <template>
   <Field.Root
     name="username"
-    validation-mode="onChange"
+    validation-mode="change"
     :validation-debounce-time="300"
     :validate="validate"
   >
-    <Field.Control required :minlength="3" />
+    <Input required :minlength="3" />
     <Field.Error />
   </Field.Root>
 </template>

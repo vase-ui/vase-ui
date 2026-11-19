@@ -68,7 +68,7 @@ import { computed, onMounted, onScopeDispose, shallowRef, watch, type ShallowRef
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
-import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { useInDisabledFieldset } from '../../fieldset/part';
 import {
   useCompositeItem,
   useCompositeRootContext,
@@ -170,7 +170,7 @@ const controlsId = computed(() =>
   menuSelectors.triggerControlsId(store.value.state, thisTriggerId.value),
 );
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(
   () =>
     props.disabled ||

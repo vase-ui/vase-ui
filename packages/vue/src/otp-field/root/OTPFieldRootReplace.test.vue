@@ -7,7 +7,7 @@ defineProps<{ swapped: boolean }>();
 </script>
 
 <template>
-  <Field.Root validation-mode="onChange">
+  <Field.Root validation-mode="change">
     <OTPField.Root v-if="swapped" key="new" :length="4" validation-type="none" required />
     <OTPField.Root v-if="!swapped" key="old" :length="4" validation-type="none" required />
   </Field.Root>

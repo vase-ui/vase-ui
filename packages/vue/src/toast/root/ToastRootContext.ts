@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
+import type { RegisterId } from '../../internals/labelable-provider/createIdRegistry';
 import type { ToastObject } from '../useToastManager';
 
 export interface ToastRootContext {

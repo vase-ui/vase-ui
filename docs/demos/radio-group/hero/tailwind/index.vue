@@ -15,38 +15,26 @@ const captionId = useId();
     <div class="text-sm font-bold" :id="captionId">Best apple</div>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Radio.Root
+      <Radio
         value="fuji-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Radio.Indicator
-          class="flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current"
-        />
-      </Radio.Root>
+        class="m-0 size-4 shrink-0 appearance-none rounded-full border border-neutral-950 bg-white p-0 checked:bg-neutral-950 checked:shadow-[inset_0_0_0_0.1875rem_white] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:checked:shadow-[inset_0_0_0_0.1875rem_var(--color-neutral-950)] dark:focus-visible:outline-white"
+      />
       Fuji
     </label>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Radio.Root
+      <Radio
         value="gala-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Radio.Indicator
-          class="flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current"
-        />
-      </Radio.Root>
+        class="m-0 size-4 shrink-0 appearance-none rounded-full border border-neutral-950 bg-white p-0 checked:bg-neutral-950 checked:shadow-[inset_0_0_0_0.1875rem_white] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:checked:shadow-[inset_0_0_0_0.1875rem_var(--color-neutral-950)] dark:focus-visible:outline-white"
+      />
       Gala
     </label>
 
     <label class="flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white">
-      <Radio.Root
+      <Radio
         value="granny-smith-apple"
-        class="flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-      >
-        <Radio.Indicator
-          class="flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current"
-        />
-      </Radio.Root>
+        class="m-0 size-4 shrink-0 appearance-none rounded-full border border-neutral-950 bg-white p-0 checked:bg-neutral-950 checked:shadow-[inset_0_0_0_0.1875rem_white] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:checked:bg-white dark:checked:shadow-[inset_0_0_0_0.1875rem_var(--color-neutral-950)] dark:focus-visible:outline-white"
+      />
       Granny Smith
     </label>
   </RadioGroup>

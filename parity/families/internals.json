@@ -266,6 +266,27 @@
       "title": "accepts style as function that returns undefined",
       "kind": "not-applicable",
       "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
+    },
+    {
+      "upstream": "packages/react/src/internals/field-root-context/useSetFieldFocused.ts",
+      "kind": "not-applicable",
+      "reason": "A field has no focused state (rule 8.15). CSS selects `:focus-within`."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "preserves native label activation inside a shadow root",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "The case tests `Field.Label`. A `<label for>` moves the focus natively, also in a shadow root. `Field.test.ts` tests the label."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "does not throw when a label is clicked in a detached React root",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/Field.test.ts",
+      "reason": "The case tests a click on a `Field.Label` that is not a `<label>`. `Field.test.ts` tests such a label."
     }
   ],
   "surfaceAdditions": [],
@@ -350,32 +371,74 @@
       "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
     },
     {
-      "upstream": "packages/react/src/internals/field-register-control/index.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/field-register-control.ts",
-      "member": "useRegisterFieldControl",
-      "witness": "packages/vue/src/internals/field-register-control/useRegisterFieldControl.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/field-register-control/useFieldControlRegistration.ts",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/field/root/FieldRoot.vue",
-      "member": "registerFieldControl",
-      "witness": "packages/vue/src/internals/field-register-control/useFieldControlRegistration.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/field-register-control/useRegisterFieldControl.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/field-register-control.ts",
-      "member": "useRegisterFieldControl",
-      "witness": "packages/vue/src/internals/field-register-control/useRegisterFieldControl.test.tsx"
-    },
-    {
       "upstream": "packages/react/src/internals/useTriggerSwitchTransition.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
       "member": "useTriggerSwitchTransition",
       "witness": "packages/vue/src/utils/popups/usePopupPositioner.triggerSwitch.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "useFieldControl",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/useFieldControlRegistration.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The field takes the control that mounted last, and a control that goes away leaves the field.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-register-control/useRegisterFieldControl.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "useFieldControl",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-root-context/FieldRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "fieldKey",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/field-root-context/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "fieldKey",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/LabelableContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "controlAria",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/LabelableProvider.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The field gives the id of its control, its labels and its messages to the parts.",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/control.ts",
+      "member": "controlAria",
+      "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabelableId.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/field/FieldRoot.vue",
+      "behavior": "The field gives its control an id, and the control can give its own.",
+      "witness": "packages/vue/src/field/Field.test.ts"
     }
   ]
 }

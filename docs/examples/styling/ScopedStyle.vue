@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { Switch } from '@vase-ui/vue/switch';
+import { NumberField } from '@vase-ui/vue/number-field';
 </script>
 
 <template>
   <div class="field">
-    <Switch.Root class="switch">
-      <Switch.Thumb class="thumb" />
-    </Switch.Root>
+    <NumberField.Root class="root">
+      <NumberField.Input class="input" aria-label="Amount" />
+    </NumberField.Root>
   </div>
 </template>
 
 <style scoped>
-.thumb {
+.input {
   background-color: green;
 }
 
-.field :deep(.switch) {
+.field :deep(.root) {
   border: 1px solid green;
 }
 </style>

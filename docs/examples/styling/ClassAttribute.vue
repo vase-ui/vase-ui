@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { Switch } from '@vase-ui/vue/switch';
+import { Toggle } from '@vase-ui/vue/toggle';
 </script>
 
 <template>
-  <Switch.Root>
-    <Switch.Thumb class="SwitchThumb" />
-  </Switch.Root>
+  <Toggle class="Toggle" aria-label="Bold" />
 </template>

@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type { FieldRootState } from '../../field/types';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 
 export type SelectLabelState = FieldRootState;
@@ -12,8 +12,9 @@ export interface SelectLabelProps
 </script>
 
 <script setup lang="ts">
-import { fieldValidityMapping } from '../../internals/field-constants';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { computed, inject } from 'vue';
+import { fieldKey } from '../../field/control';
+import { DEFAULT_FIELD_ROOT_STATE, fieldValidityMapping } from '../../internals/field-constants';
 import { useLabel } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -29,7 +30,10 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SelectLabelState>;
 }>();
 
-const { state } = useFieldRootContext();
+const field = inject(fieldKey, null);
+const state = computed<SelectLabelState>(() =>
+  field ? { ...field.state, disabled: field.disabled } : DEFAULT_FIELD_ROOT_STATE,
+);
 const store = useSelectRootContext();
 
 const labelProps = useLabel({

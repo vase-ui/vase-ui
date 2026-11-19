@@ -19,6 +19,7 @@ import {
   takeReportedMessages,
   waitFor,
   within,
+  wait,
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
@@ -293,6 +294,7 @@ describe('<NumberField.Input />', () => {
     await flushMicrotasks();
     await user.keyboard('1.23456');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue((1.23456).toLocaleString());
 
     input.focus();
@@ -444,6 +446,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.keyDown(input, { key: 'ArrowLeft' });
     onValueChange.mockClear();
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(onValueChange.mock.lastCall?.[0]).toBe(5);
   });
 
@@ -571,6 +574,7 @@ describe('<NumberField.Input />', () => {
     input.setSelectionRange(input.value.length - 1, input.value.length);
     await user.keyboard('-3');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.0015);
     expect(input).toHaveValue(formatter.format(0.0015));
@@ -644,6 +648,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.input(input, { target: { value: '1234' } });
     expect(input).toHaveValue('1234');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue((1234).toLocaleString());
   });
 
@@ -659,6 +664,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.input(input, { target: { value: '-1' } });
     expect(input).toHaveValue('-1');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue('0');
   });
 
@@ -674,6 +680,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.input(input, { target: { value: '1' } });
     expect(input).toHaveValue('1');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue('0');
   });
 
@@ -690,6 +697,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.input(input, { target: { value: '1.3' } });
     expect(input).toHaveValue('1.3');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue((1.3).toLocaleString());
   });
 
@@ -705,6 +713,7 @@ describe('<NumberField.Input />', () => {
     await fireEvent.input(input, { target: { value: '3' } });
     expect(input).toHaveValue('3');
     await fireEvent.focusOut(input);
+    await wait(0);
     expect(input).toHaveValue('3');
   });
 
@@ -728,6 +737,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     // A focus/blur with no edits must not re-parse the rounded display text and overwrite the
@@ -842,6 +852,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23456).toLocaleString());
@@ -854,6 +865,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue('1.234567');
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
     expect(input).toHaveValue((1.234567).toLocaleString());
   });
 
@@ -883,6 +896,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue('1.23456000');
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
     expect(input).toHaveValue((1.23456).toLocaleString());
   });
 
@@ -906,6 +921,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23456789).toLocaleString());
@@ -913,6 +929,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     // Repeated no-edit blur cycles keep the full-precision numeric value; only the display
@@ -947,6 +964,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue('1.50');
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
     expect((input as HTMLInputElement).value).toMatch(/^1[.,]5/);
   });
 
@@ -989,6 +1008,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue((3.14159265).toLocaleString());
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
     expect(input).toHaveValue((3.14159265).toLocaleString());
   });
 
@@ -1016,6 +1037,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue((1.23).toLocaleString());
@@ -1075,6 +1097,7 @@ describe('<NumberField.Input />', () => {
 
       await user.keyboard(inputText);
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(onValueChange.mock.lastCall?.[0]).toBe(1.23);
       expect(input).toHaveValue(new Intl.NumberFormat(locale, format).format(1.239));
@@ -1101,6 +1124,7 @@ describe('<NumberField.Input />', () => {
 
     input.focus();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
 
     expect(input).toHaveValue(expectedValue);
@@ -1121,6 +1145,8 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.focusOut(input);
 
+    await wait(0);
+
     expect(onValueChange.mock.lastCall?.[0]).toBe(1.5);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.5);
     expect(input).toHaveValue(new Intl.NumberFormat('en-US', format).format(1.26));
@@ -1137,6 +1163,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('12345');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(12300);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(12300);
@@ -1154,6 +1181,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('0.0001234%');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(0.0000012);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.0000012);
@@ -1171,6 +1199,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('1.2399');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(1.239);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.239);
@@ -1233,6 +1262,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('1.239%');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(expectedValue);
     expect(input).toHaveValue('1.23%');
@@ -1252,6 +1282,7 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.input(input, { target: { value: formatted } });
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(0.0123);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.0123);
@@ -1270,6 +1301,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('0.46%');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(0.0046);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.0046);
@@ -1288,6 +1320,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('0.46%');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(0.0046);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.0046);
@@ -1308,6 +1341,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('1.236%');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(0.01235);
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(0.01235);
@@ -1325,6 +1359,7 @@ describe('<NumberField.Input />', () => {
 
     await user.keyboard('1.239');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange.mock.lastCall?.[0]).toBe(1.23);
     expect(input).toHaveValue(new Intl.NumberFormat('en-US', format).format(1.239));
@@ -1356,6 +1391,7 @@ describe('<NumberField.Input />', () => {
     await flushMicrotasks();
     await fireEvent.input(input, { target: { value: formattedOverflow } });
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange).not.toHaveBeenCalled();
     expect(onValueCommitted).not.toHaveBeenCalled();
@@ -1385,6 +1421,7 @@ describe('<NumberField.Input />', () => {
     await flushMicrotasks();
     await fireEvent.input(input, { target: { value: '1.239' } });
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueCommitted).not.toHaveBeenCalled();
     expect(input).toHaveValue('1.239');
@@ -1425,6 +1462,8 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.focusOut(input);
 
+    await wait(0);
+
     // The committed value retains full precision, while the displayed text uses default formatting.
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.23456);
     expect(input).toHaveValue((1.23456).toLocaleString());
@@ -1464,6 +1503,8 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.focusOut(input);
 
+    await wait(0);
+
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.234567890123456);
     expect(input).toHaveValue((1.234567890123456).toLocaleString());
   });
@@ -1496,6 +1537,7 @@ describe('<NumberField.Input />', () => {
     await flushMicrotasks();
     await user.keyboard('1.23456');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     // Display rounds to the Intl default; the committed numeric value keeps full precision.
     expect(input).toHaveValue((1.23456).toLocaleString());
@@ -1506,6 +1548,7 @@ describe('<NumberField.Input />', () => {
     input.focus();
     await flushMicrotasks();
     input.blur();
+    await wait(0);
     await flushMicrotasks();
     expect(onValueCommitted.mock.calls.length).toBe(1);
 
@@ -1532,6 +1575,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue('1234,5');
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
 
     expect(onValueChange.mock.calls.length).toBe(1);
     expect(onValueChange.mock.calls[0][0]).toBe(1234.5);
@@ -1572,6 +1617,8 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.focusOut(input);
 
+    await wait(0);
+
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(-14);
     expect(input).toHaveValue(formatter.format(-14));
     expect(document.querySelector<HTMLInputElement>('input[name="price"]')).toHaveValue(-14);
@@ -1609,6 +1656,7 @@ describe('<NumberField.Input />', () => {
     input.setSelectionRange(digitIndex, digitIndex + 1);
     await user.keyboard('7');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(21.7);
     expect(input).toHaveValue(formatter.format(21.7));
@@ -1647,6 +1695,8 @@ describe('<NumberField.Input />', () => {
     expect(onValueChange.mock.lastCall?.[0]).toBe(123);
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(123);
   });
@@ -1687,6 +1737,8 @@ describe('<NumberField.Input />', () => {
 
       await fireEvent.focusOut(input);
 
+      await wait(0);
+
       // `1.2K` is never read back as 1.2: one fraction digit keeps 1234, two significant digits
       // round it to 1200
       expect(onValueChange.mock.calls.map(([value]) => value)).toEqual(committed);
@@ -1719,6 +1771,7 @@ describe('<NumberField.Input />', () => {
     input.setSelectionRange(input.value.length - 1, input.value.length);
     await user.keyboard('1');
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(10001);
     expect(input).toHaveValue(formatter.format(10001));
@@ -1750,6 +1803,8 @@ describe('<NumberField.Input />', () => {
     expect(input).toHaveValue(new Intl.NumberFormat('en-US', format).format(1234));
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
 
     expect(onValueChange).not.toHaveBeenCalled();
     expect(document.querySelector<HTMLInputElement>('input[name="count"]')).toHaveValue(1234);
@@ -1872,6 +1927,8 @@ describe('<NumberField.Input />', () => {
 
       await fireEvent.focusOut(input);
 
+      await wait(0);
+
       expect(input).toHaveValue(formatter.format(edited));
     },
   );
@@ -1895,6 +1952,7 @@ describe('<NumberField.Input />', () => {
     input.focus();
     await flushMicrotasks();
     await fireEvent.focusOut(input);
+    await wait(0);
 
     expect(onValueChange).not.toHaveBeenCalled();
     expect(onValueCommitted).not.toHaveBeenCalled();
@@ -1919,11 +1977,13 @@ describe('<NumberField.Input />', () => {
       await flushMicrotasks();
       await fireEvent.input(input, { target: { value: '-' } });
       await fireEvent.focusOut(input);
+      await wait(0);
       expect(input).toHaveValue('-');
 
       input.focus();
       await flushMicrotasks();
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(input).toHaveValue(expected);
       expect(onValueChange).not.toHaveBeenCalled();
@@ -1959,6 +2019,8 @@ describe('<NumberField.Input />', () => {
 
     await fireEvent.focusOut(input);
 
+    await wait(0);
+
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(-14);
     expect(input).toHaveValue(formatter.format(-14));
   });
@@ -1993,6 +2055,8 @@ describe('<NumberField.Input />', () => {
     expect(onValueChange.mock.lastCall?.[0]).toBe(-1234.57);
 
     await fireEvent.focusOut(input);
+
+    await wait(0);
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(-1234.57);
     expect(input).toHaveValue(formatter.format(-1234.57));
@@ -2114,39 +2178,6 @@ describe('<NumberField.Input />', () => {
   });
 
   describe('consumer-prevented defaults', () => {
-    it('ignores canceled native focus events', async () => {
-      await render(
-        <Field.Root data-testid="field">
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
-        </Field.Root>,
-      );
-      const field = screen.getByTestId('field');
-      for (const type of ['focusin', 'focusout']) {
-        const event = new FocusEvent(type, { bubbles: true, cancelable: true });
-        event.preventDefault();
-        await fireEvent(screen.getByRole('textbox'), event);
-        expect(field).not.toHaveAttribute('data-focused');
-      }
-      expect(field).not.toHaveAttribute('data-touched');
-    });
-
-    it('does not mark the field focused when the focus default is prevented', async () => {
-      await render(
-        <Field.Root data-testid="field">
-          <NumberField.Root defaultValue={1234}>
-            <NumberField.Input onFocusin={(event) => event.preventVaseUIHandler()} />
-          </NumberField.Root>
-        </Field.Root>,
-      );
-
-      screen.getByRole('textbox').focus();
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
-    });
-
     it('does not reformat, touch, or commit on blur when the blur default is prevented', async () => {
       const onValueCommitted = vi.fn();
 
@@ -2163,6 +2194,7 @@ describe('<NumberField.Input />', () => {
       await flushMicrotasks();
       await fireEvent.input(input, { target: { value: '5.10' } });
       await fireEvent.focusOut(input);
+      await wait(0);
 
       expect(input).toHaveValue('5.10');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
@@ -2293,6 +2325,8 @@ describe('<NumberField.Input />', () => {
       expect(getHiddenInput().value).toBe('5');
 
       await fireEvent.focusOut(input);
+
+      await wait(0);
 
       expect(input).toHaveValue('1.2.3');
       expect(onValueChange).not.toHaveBeenCalled();
@@ -2534,7 +2568,7 @@ describe('<NumberField.Input />', () => {
               data-testid="root"
               name="quantity"
               validate={validate}
-              validationMode="onChange"
+              validationMode="change"
             >
               <NumberField.Root defaultValue={1}>
                 <NumberField.Input />
@@ -2545,6 +2579,7 @@ describe('<NumberField.Input />', () => {
         );
         const input = screen.getByRole('textbox');
         await fireEvent.input(input, { target: { value: '9' } });
+        await flushMicrotasks();
         expect(validate).toHaveBeenCalledTimes(1);
         expect(screen.getByTestId('error')).toHaveTextContent('Too big');
 
@@ -2578,19 +2613,6 @@ describe('<NumberField.Input />', () => {
       file: 'src/number-field/input/NumberFieldInputHydration.test.vue',
       component: NumberFieldInputHydration,
       cases: [
-        {
-          name: 'a removed label',
-          props: {
-            parts: ['input', 'label', 'description'],
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: '[data-testid="input"]',
-          attribute: 'aria-labelledby',
-          serverValue: 'label-a',
-          clientValue: null,
-        },
         {
           name: 'a removed description',
           props: {
@@ -2627,7 +2649,8 @@ describe('<NumberField.Input />', () => {
       const serverInput = template.content.querySelector('[data-testid="input"]');
       const serverId = (testId: string) =>
         template.content.querySelector(`[data-testid="${testId}"]`)?.id;
-      expect(serverInput?.getAttribute('aria-labelledby')).toBe(serverId('label'));
+      // The label names the input with `for`.
+      expect(serverInput?.hasAttribute('aria-labelledby')).toBe(false);
       expect(serverInput?.getAttribute('aria-describedby')).toBe(serverId('description'));
       expect(template.content.querySelector('[data-testid="label"]')?.getAttribute('for')).toBe(
         serverInput?.id,
@@ -2637,7 +2660,7 @@ describe('<NumberField.Input />', () => {
       const { container } = await hydrate(NumberFieldInputHydration, { serverHtml, props });
 
       const input = within(container).getByTestId('input');
-      expect(input).toHaveAttribute('aria-labelledby', serverId('label'));
+      expect(input).not.toHaveAttribute('aria-labelledby');
       expect(input).toHaveAttribute('aria-describedby', serverId('description'));
       expect(input).toHaveValue('5');
     });

@@ -56,19 +56,19 @@ Checkbox Group works with [Checkbox](/components/checkbox). Import the component
 
 <<< ./checkbox-group/Anatomy.vue
 
-Give each `Checkbox.Root` a `value`. The `modelValue` of the group is an array. It lists the values of the checked checkboxes. Bind it with `v-model`. The group follows a change that you make in place to a reactive `modelValue`, such as `push` or `splice`.
+Give each `Checkbox` a `value`. The `modelValue` of the group is an array of the values of the checked checkboxes. Bind it with `v-model`. A press adds the value at the end, or removes it. The group follows a change that you make in place to a reactive `modelValue`, such as `push` or `splice`. A value with no mounted checkbox stays.
 
-A checkbox with no `value`, and with no `name` of its own or of its field, keeps its own state. The group does not list it.
+A checkbox with no `value` keeps its own state. The group does not list it.
 
-A change of a checkbox emits `checkedChange` on the checkbox, then `valueChange` and `update:modelValue` on the group, and then `update:modelValue` on the checkbox. `checkedChange` and `valueChange` get the same `eventDetails`. To stop the change, call `eventDetails.cancel()` in one of them. The change then emits no later event, and the checkbox and the group keep their state.
+A press emits `checkedChange` on the checkbox, then `valueChange` and `update:modelValue` on the group. `checkedChange` and `valueChange` get the same `details`. To stop the change, call `details.cancel()` in one of them.
 
-A reset of the form sets an uncontrolled group to its `defaultValue`. When the reset changes the value, the group emits `valueChange`, and `eventDetails.event` is the `reset` event. A checkbox with a `value` emits no `checkedChange` for the reset. To keep the value, call `eventDetails.cancel()` in `valueChange`. A controlled group does not change and emits nothing. In a `Field`, a reset clears the error of the field and starts no validation.
+A native reset of the form puts an uncontrolled group back to its first value, and emits only `update:*`.
 
-A native form submits one entry for each checked checkbox that has a name and is not disabled. The name is the `name` of the `Field.Root`, or the `name` of the checkbox when the field has none. A disabled group submits nothing.
+A form gets one entry for each checked checkbox that has a name and is enabled. In a `Field`, the name is the `name` of the field. The values of a `Form` have the array of the checked, mounted and enabled checkboxes.
 
-In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. The label can come before or after the group.
+## Styling
 
-Each checkbox of the group takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The group then emits `valueChange` and `update:modelValue` one time for each checkbox that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
+Select the states of the group with `[data-disabled]`, `[aria-invalid="true"]`, `[data-valid]`, `[data-touched]`, `[data-dirty]` and `[data-filled]`. Select the states of each checkbox as the [Checkbox](/components/checkbox#styling) page says.
 
 ## Examples
 
@@ -82,32 +82,22 @@ A `<label>` around each checkbox is the simplest way to label it:
 
 <<< ./checkbox-group/EnclosingLabel.vue{8,11}
 
-To name the group with a `Fieldset.Legend`, give `CheckboxGroup` to the `as` prop of `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`.
+A `Fieldset.Legend` names the group in its `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`:
 
-<<< ./checkbox-group/FieldsetLegend.vue{10}
-
-### Rendering as a native button
-
-By default, `Checkbox.Root` renders a `<span>` element, so a `<label>` can hold it. Render each checkbox as a native button when a label beside it names it with `for` and `id`.
-
-<<< ./checkbox-group/SiblingLabel.vue{11}
-
-To put a native button in a `<label>`, use the `#render` slot. The hidden input then stays outside the label, and the HTML stays valid.
-
-<<< ./checkbox-group/LabelInRenderSlot.vue{10-15}
+<<< ./checkbox-group/FieldsetLegend.vue{11}
 
 ### Parent checkbox
 
 To make a checkbox that controls the other checkboxes of a `CheckboxGroup`:
 
 1. Pass an array of all the child checkbox values to the `allValues` prop of `CheckboxGroup`.
-2. Add the `parent` prop to the parent `Checkbox.Root`.
+2. Add the `parent` prop to the parent `Checkbox`.
 
-The parent checkbox works with a controlled group and with an uncontrolled group. The group sets the [indeterminate](/components/checkbox#api-checkbox-root) state of the parent checkbox when some, but not all, child checkboxes are checked.
+The parent checkbox works with a controlled group and with an uncontrolled group. The group sets the [indeterminate](/components/checkbox#anatomy) state of the parent checkbox when some, but not all, child checkboxes are checked.
 
 When some children, but not all, are checked, the first click on the parent checks all of them. The second click unchecks them. The third click restores the selection that the children had before the first click. A disabled child keeps its state.
 
-The parent has `data-parent` and `aria-controls` with the ids of its children. Its hidden input has no name, so a form gets no value from the parent. In the server HTML, the parent has no `aria-controls`, because each child gives its id after the mount.
+The parent has `aria-controls` with the ids of its children. It has no name, so a form gets no value from the parent. In the server HTML, the parent has no `aria-controls`, because each child gives its id after the mount.
 
 <DemoFrame>
   <DemoCheckboxGroupParent />

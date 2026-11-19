@@ -731,10 +731,10 @@ describe('<Select.Trigger />', () => {
   });
 
   describe('Field', () => {
-    it('sets the focused state of the field, and marks it as touched and validates it on blur', async () => {
+    it('marks the field as touched and validates it when the trigger loses the focus', async () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
-        <Field.Root data-testid="field" validate={validate} validationMode="onBlur">
+        <Field.Root data-testid="field" validate={validate} validationMode="blur">
           <Select.Root defaultValue="sans">
             <Select.Trigger data-testid="trigger" />
           </Select.Root>
@@ -745,46 +745,20 @@ describe('<Select.Trigger />', () => {
 
       trigger.focus();
       await flushMicrotasks();
-
-      expect(field).toHaveAttribute('data-focused', '');
       expect(field).not.toHaveAttribute('data-touched');
 
       trigger.blur();
       await flushMicrotasks();
 
-      expect(field).not.toHaveAttribute('data-focused');
       expect(field).toHaveAttribute('data-touched', '');
-      expect(validate).toHaveBeenCalledTimes(1);
+      // The field validates after the blur listeners of the developer.
+      await waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
       expect(validate.mock.lastCall?.[0]).toBe('sans');
-    });
-
-    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Select.Root key="held">
-          <Select.Trigger id="held-trigger" />
-        </Select.Root>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Label data-testid="label">Font</Field.Label>
-          <HeldBranch />
-        </Field.Root>
-      ));
-      const label = screen.getByTestId('label');
-      const providerId = label.getAttribute('for');
-
-      await mountWhileHeld();
-
-      expect(label.getAttribute('for')).toBe(providerId);
-
-      await show();
-
-      expect(label).toHaveAttribute('for', 'held-trigger');
     });
   });
 
   describe('BUG-1425: a required select with no value after blur', () => {
-    function renderSelect(validationMode?: 'onBlur') {
+    function renderSelect(validationMode?: 'blur') {
       return render(
         <div>
           <Field.Root validationMode={validationMode} data-testid="field">
@@ -801,7 +775,7 @@ describe('<Select.Trigger />', () => {
     }
 
     it('is invalid when the focus leaves the trigger, with no change before', async () => {
-      const { user } = await renderSelect('onBlur');
+      const { user } = await renderSelect('blur');
       const trigger = screen.getByTestId('trigger');
 
       trigger.focus();
@@ -813,7 +787,9 @@ describe('<Select.Trigger />', () => {
       await user.tab();
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
-      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('required');
+      });
       expect(trigger).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');

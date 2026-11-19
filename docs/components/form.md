@@ -54,15 +54,17 @@ Form works together with [Field](/components/field). Import the components and p
 
 <<< ./form/Anatomy.vue
 
-`Form` emits `submit` after its validation, and only when each field is valid. The listener gets the native `SubmitEvent`.
+`Form` renders a `<form>` with `novalidate`. A submit validates each field of the form. A submit that a field blocks is prevented, and the first invalid control gets the focus. A submit that passes emits `submit` with the native `SubmitEvent` and the values of the form. Use `@submit.prevent` to stop the navigation of the browser.
 
-`Form` exposes `validate()`. Call it through a template ref to validate each field, or give it the name of one field.
+`errors` makes a field invalid by its `name`. Bind it with `v-model:errors`: an edit of a field asks to remove its key. After a submit that passed, the first change of `errors` moves the focus to the first invalid control.
+
+The template ref of `Form` has `validate(name?)`. It validates each field, or the field of one name, and returns `true` when they are valid.
 
 ## Examples
 
 ### Submit to a server
 
-To submit the form to a server, call `event.preventDefault()` in a `submit` listener. Then send the `FormData` of the form. Give the errors of the response to the `errors` prop.
+To submit the form to a server, call `event.preventDefault()` in a `submit` listener. Then send the `FormData` of the form. Give the errors of the response to `v-model:errors`.
 
 The demo keeps the response in one state object. It disables the button while the request runs.
 
@@ -97,13 +99,11 @@ The demo keeps the response in one state object. It disables the button while th
 
 ### Submit form values as a JavaScript object
 
-Use `@form-submit` in place of the native `submit` listener to get the form values as a JavaScript object. This is useful when you must change the values before the request, or when you use a third-party API.
+The second argument of `submit` has the value of each named field of the form whose control is enabled. Each value has the type that the control gives: a string for `Input`, a boolean for `Checkbox` and `Switch`, and the value of a `RadioGroup` or of a `CheckboxGroup`.
 
 <<< ./form/FormSubmit.vue
 
-Give the first parameter of the listener the type of the form values. With no type, that parameter is `any`.
-
-When you use `@form-submit`, `Form` calls `preventDefault()` on the native submit event.
+Give the second parameter of the listener the type of the form values. With no type, that parameter is `any`.
 
 ### Using with Zod
 
