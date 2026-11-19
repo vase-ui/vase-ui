@@ -233,6 +233,26 @@ describe('overflow', () => {
     expect(read()).toEqual(parts.map(() => atEnd));
   });
 
+  test('a scroll that changes no state renders no part: only the variables and the thumbs change', async () => {
+    const { viewport, area } = await mountArea({ scene: { corner: true } });
+    await scrollViewport(viewport, 100, 100);
+    const changes: string[] = [];
+    const observer = new MutationObserver((records) => {
+      for (const { target, attributeName } of records) {
+        changes.push(`${(target as Element).classList[0]} ${attributeName}`);
+      }
+    });
+    observer.observe(area, { attributes: true, subtree: true });
+    onTestFinished(() => observer.disconnect());
+    await scrollViewport(viewport, 200, 300);
+    await settle();
+    expect([...new Set(changes)].sort()).toEqual([
+      'thumb-x style',
+      'thumb-y style',
+      'vase-ui-disable-scrollbar style',
+    ]);
+  });
+
   test('a distance of 1px or less counts as the edge, also at a position that is not a whole number', async () => {
     const { viewport, area } = await mountArea();
     await reportPosition(viewport, 'scrollTop', 799.5);

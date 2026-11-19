@@ -23,7 +23,7 @@ export interface ScrollAreaRootState {
   overflowYStart: boolean;
   /** The content overflows the bottom edge. */
   overflowYEnd: boolean;
-  /** Not the two axes have overflow, so `ScrollArea.Corner` renders nothing. */
+  /** One axis or no axis has overflow, so `ScrollArea.Corner` renders nothing. */
   cornerHidden: boolean;
 }
 
