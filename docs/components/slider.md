@@ -64,7 +64,7 @@ Import the component and assemble its parts:
 
 <<< ./slider/Anatomy.vue
 
-Each `Slider.Thumb` renders an `<input type="range">` in its element. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
+Each `Slider.Thumb` has an `<input type="range">`. A custom render slot can place that input elsewhere. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
 
 A reset of the form puts an uncontrolled slider back to `defaultValue`, or to `min` when it has none. A controlled slider does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 

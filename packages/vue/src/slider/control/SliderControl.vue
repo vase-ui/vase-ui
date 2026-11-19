@@ -141,6 +141,7 @@ function getFingerState(fingerCoords: Coords): FingerState | null {
   const controlOffset = getControlOffset(styles, vertical);
   const controlSize =
     (vertical ? height : width) - controlOffset.start - controlOffset.end - insetThumbOffset * 2;
+  if (controlSize <= 0) return null;
   const thumbCenterOffset = centerOffset ?? 0;
   const fingerX = fingerCoords.x - thumbCenterOffset;
   const fingerY = fingerCoords.y - thumbCenterOffset;
@@ -188,8 +189,12 @@ function startPressing(fingerCoords: Coords, targetIndex = -1) {
     pressedIndex = targetIndex;
     centerOffset = fingerCoords[axis] - getMidpoint(target, vertical);
     if (values.value[pressedIndex] === rootProps.max) {
-      while (pressedIndex > 0 && values.value[pressedIndex - 1] === rootProps.max) {
-        pressedIndex -= 1;
+      for (
+        let index = targetIndex - 1;
+        index >= 0 && values.value[index] === rootProps.max;
+        index -= 1
+      ) {
+        if (getThumbInput(thumbRefs.value[index])?.matches(':enabled')) pressedIndex = index;
       }
     }
   } else {
@@ -237,6 +242,7 @@ function setValueFromPointer(
     lastChange = { value: finger.value, model, reason };
     // A veto keeps focus on the original thumb.
     if (finger.didSwap) {
+      focusFrame.cancel();
       pressedIndex = finger.thumbIndex;
       if (!thumbRefs.value[pressedIndex]) centerOffset = null;
       focusThumb(finger.thumbIndex);

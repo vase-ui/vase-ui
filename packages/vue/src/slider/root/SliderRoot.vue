@@ -249,9 +249,9 @@ const emit = defineEmits<{
    */
   'update:modelValue': [value: Value extends number ? number : Value];
   /**
-   * Callback function that is fired when a value change is committed.
-   * Does not fire if the value did not change, or if the change was canceled.
-   * **Warning**: This is a generic event, not a change event.
+   * A pointer or touch press commits its last accepted value when the press ends.
+   * Keyboard edits, native input edits and form resets commit after the model update request.
+   * A controlled parent can keep its value.
    *
    * The `eventDetails.reason` indicates what triggered the commit:
    *
