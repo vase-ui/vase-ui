@@ -986,10 +986,9 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - For a shared element, give consumers an action that registers or clears their element. Clear the registration only if the departing part still owns it.
 - Keep one element ref only for a part that can occur once in a root. If a part can occur more than once, each instance registers a getter with a registry in the root context. Picker fields and triggers use `usePickerPartElement`.
 - A part can then destructure the context in `setup` and keep reactivity. A part that reads one field renders again only when that field changes.
-- The context file exports the key with the type `InjectionKey<Context>`. It exports `use<Root>Context()` beside the key.
-- `use<Root>Context()` calls `inject(key, undefined)`. With one argument, Vue gives a warning of its own when there is no provider.
-- When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
-- A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` and `useCheckboxGroupContext()` return `undefined`, because a radio or a checkbox with no group is valid.
+- Type the key as `InjectionKey<Context>`. When a context has one reader, that part can call `inject(key, undefined)` directly. Shared context readers can use a `use<Root>Context()` function.
+- Pass an explicit default to `inject` to suppress Vue's missing-provider warning. A part that requires the provider throws an error that follows [Error messages](#error-messages).
+- A radio or checkbox can render outside its group. Both roots use `undefined` as the default for the group context. `useCompositeListContext()` and `useCompositeRootContext(true)` also return `undefined` when the provider is absent.
 - `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` return stateless defaults for optional readers.
 - The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does. The default delay group is the exception, because the default context of Base UI holds state too. Only a mounted part writes it. See [Popup interactions](#popup-interactions).
 - A field owns its focus and its validation input. Controls use `setFocusOwner` and `validation.setFieldInput`. A reader gets the current input from `validation.inputRef`.
