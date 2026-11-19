@@ -5,9 +5,9 @@ import { Tabs } from '@vase-ui/vue/tabs';
 <template>
   <Tabs.Root default-value="overview">
     <Tabs.List>
-      <Tabs.Tab :native-button="false" value="overview">
-        <template #render="{ props }">
-          <a v-bind="props" href="/overview">Overview</a>
+      <Tabs.Tab value="overview">
+        <template #element="{ props, elementRef }">
+          <a v-bind="props" :ref="elementRef" href="#overview">Overview</a>
         </template>
       </Tabs.Tab>
     </Tabs.List>
