@@ -50,7 +50,7 @@ Import the component and assemble its parts:
 
 <<< ./meter/Anatomy.vue
 
-`Meter.Label` names the meter, also in the server HTML. A label with an `id` of its own names the meter from the mount on. To name the meter in the server HTML too, give `Meter.Root` an `aria-labelledby` with that id. A meter with no `Meter.Label` needs an `aria-label` or an `aria-labelledby`. Such an attribute names the meter also when it has a `Meter.Label`. Use one `Meter.Label` in each meter.
+`Meter.Label` names the meter, also in the server HTML. A label with an `id` prop names the meter from the mount on. To name the meter in the server HTML too, give `Meter.Root` an `aria-labelledby` with that id. Give the label its `id` with the `id` prop. An `id` in the `element` slot of the label does not name the meter. A meter with no `Meter.Label` needs an `aria-label` or an `aria-labelledby`. Such an attribute names the meter also when it has a `Meter.Label`. Use one `Meter.Label` in each meter.
 
 The default element of `Meter.Root` holds a visually hidden text after its content, because NVDA and JAWS can need text in a meter to say its name. When the `element` slot replaces the element, put text in your element. A `Meter.Label` is such text.
 

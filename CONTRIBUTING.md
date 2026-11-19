@@ -910,7 +910,8 @@ The label of a root:
 - A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
 - This rule covers `Progress.Root`, `Fieldset.Root` and `Slider.Root`.
-- `Meter.Root` makes the same assumption with no `useLabelId()`. It makes an id with `useId()`, and a `Meter.Label` with no `id` takes that id. The root names its first label. An `aria-label` of the consumer, also a blank one, names the root in place of the label, before and after the mount.
+- `Meter.Root` makes the same assumption with no `useLabelId()`. It makes an id with `useId()`, and a `Meter.Label` with no `id` prop takes that id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name.
+- An `aria-label` of the consumer on `Meter.Root`, also a blank one, replaces the name of the label, before and after the mount. An `aria-label` of `null` or `undefined` does not replace it. An `aria-labelledby` of the consumer replaces the id of the label, also a blank one, and `undefined` removes it.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser makes the same assumption so its `aria-labelledby` matches the server HTML.
 - `Slider.Root` is the exception while Vue hydrates it. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render. `useRenderElement` gives that render the value of the server HTML.
