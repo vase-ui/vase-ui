@@ -6,27 +6,188 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
-      "describe": ["<ScrollArea.Scrollbar />", "data-hovering attribute"],
-      "title": "adds [data-hovering] when the synthetic pointer target differs from the native path",
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContentDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The case dispatches `pointerover` and tests the target of a React synthetic enter event. A Vue listener gets the native event, whose path starts at its target. An own case covers the native event."
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRootCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumbDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/ScrollArea.test.ts",
+      "reason": "`ScrollArea.test.ts` tests the attributes and the `element` slot of the content, the measurement when it resizes, and its error outside a viewport."
     },
     {
       "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
-      "describe": ["<ScrollArea.Corner />"],
-      "title": "allows overriding aria-hidden",
       "kind": "replaced",
-      "test": "packages/vue/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
-      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+      "test": "packages/vue/src/scroll-area/ScrollArea.test.ts",
+      "reason": "`ScrollArea.test.ts` tests `aria-hidden` of the corner, the value of the developer, and the size of the corner."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/ScrollArea.test.ts",
+      "reason": "`ScrollArea.test.ts` tests the measurement, the overflow attributes, the thresholds, the variables, the thumb length, `scrolling` and right-to-left."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "describe": ["<ScrollArea.Root />", "sizing"],
+      "title": "shows scrollbars after mount compute before the first ResizeObserver measurement",
+      "kind": "not-applicable",
+      "reason": "The case replaces the observer with one that reports nothing. A real observer reports in the first frame, before the paint, in Chromium, Firefox and WebKit (`test/measurements/scroll-area.test.ts`). The parts measure nothing by hand at the mount."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "describe": ["<ScrollArea.Root />", "overflow data attributes"],
+      "title": "recomputes horizontal overflow edges when direction changes",
+      "kind": "not-applicable",
+      "reason": "The direction changes with no event. A part handles the events that the browser sends, and reads the direction at the next measurement."
     },
     {
       "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
-      "describe": ["<ScrollArea.Scrollbar />"],
-      "title": "allows overriding aria-hidden",
       "kind": "replaced",
-      "test": "packages/vue/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
-      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+      "test": "packages/vue/src/scroll-area/ScrollArea.pointer.test.ts",
+      "reason": "`ScrollArea.pointer.test.ts` tests the press on the track, `mousedown`, the wheel and the thumb that fills its track. `ScrollArea.test.ts` tests `aria-hidden`, the orientation and the `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "describe": ["<ScrollArea.Scrollbar />", "data-hovering attribute"],
+      "kind": "not-applicable",
+      "reason": "`hovering` is cut. CSS `:hover` of the root gives the same hook: `.ScrollArea:hover .Scrollbar`, in `@media (hover: hover)`. The browser owns this state, also for a pointer that is over the root at the mount, for a touch, and during a drag with the pointer outside the root."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "describe": ["<ScrollArea.Scrollbar />", "track pointer down"],
+      "title": "ignores thumb clicks when the native path differs from the synthetic target",
+      "kind": "not-applicable",
+      "reason": "The case tests the target of a React synthetic event. A press on the thumb reaches the listener of the thumb first, and the press is then in progress when the track gets the event."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/ScrollArea.pointer.test.ts",
+      "reason": "`ScrollArea.pointer.test.ts` tests the drag in each direction, the end of a press, a second pointer, another button, scroll snap and an unmount during a press."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
+      "describe": ["<ScrollArea.Thumb />"],
+      "title": "ends a drag whose release was missed instead of scrolling on hover",
+      "kind": "not-applicable",
+      "reason": "The case stubs the capture functions to make a release that never comes. Chromium, Firefox and WebKit send the release and `lostpointercapture` to the thumb, also with `display: none` (`test/measurements/scroll-area.test.ts`)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
+      "describe": ["<ScrollArea.Thumb />", "scroll snap"],
+      "title": "lets a new pointer take over when capture was silently dropped",
+      "kind": "not-applicable",
+      "reason": "The case stubs the capture functions to drop the capture with no event. The browsers send `lostpointercapture` when the thumb loses the capture (`test/measurements/scroll-area.test.ts`)."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/ScrollArea.test.ts",
+      "reason": "`ScrollArea.test.ts` tests the tab stop, the overflow attributes, the rubber band of WebKit, the animations, `scrolling` and the errors of the viewport."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
+      "describe": ["<ScrollArea.Viewport />", "subtree animations"],
+      "title": "releases a completed animation target while another animation is paused",
+      "kind": "not-applicable",
+      "reason": "The viewport keeps no list of animations. Each animation that runs one task after the mount measures when it ends."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Scrollbar",
+      "kind": "not-applicable",
+      "reason": "`hovering` and `data-hovering` are cut. CSS `:hover` of the root gives the same hook. The other props, states and attributes of the scrollbar stay."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Corner",
+      "kind": "not-applicable",
+      "reason": "`ScrollAreaCornerState` holds no field, so the corner gives no `state` and no state type."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaRootCssVariables",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaViewportCssVariables",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaContentDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaScrollbarDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaScrollbarCssVariables",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaThumbDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [],
@@ -36,30 +197,93 @@
     {
       "upstream": "packages/react/src/scroll-area/constants.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
-      "member": "SCROLL_TIMEOUT",
-      "witness": "packages/vue/src/scroll-area/root/ScrollAreaRoot.test.tsx"
+      "destination": "packages/vue/src/scroll-area/geometry.ts",
+      "member": "MIN_THUMB_LENGTH",
+      "witness": "packages/vue/src/scroll-area/geometry.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaContent.vue",
+      "behavior": "The root measures when the content changes its size.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaCorner.vue",
+      "behavior": "The corner has the thickness of the scrollbars while the two axes have overflow.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/parts.ts",
+      "behavior": "The parts of the namespace `ScrollArea`.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaRoot.vue",
+      "behavior": "The root measures the viewport, and writes the state, the variables and the place of the thumbs.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root.ts",
+      "member": "scrollAreaKey",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
     },
     {
       "upstream": "packages/react/src/scroll-area/root/stateAttributes.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
-      "member": "scrollAreaStateAttributesMapping",
-      "witness": "packages/vue/src/scroll-area/root/ScrollAreaRoot.test.tsx"
+      "destination": "packages/vue/src/scroll-area/root.ts",
+      "member": "stateAttributes",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaScrollbar.vue",
+      "behavior": "A press on the track and a wheel over it scroll the viewport.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.pointer.test.ts"
     },
     {
       "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarContext.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
-      "member": "ScrollAreaScrollbarContext",
-      "witness": "packages/vue/src/scroll-area/thumb/ScrollAreaThumb.test.tsx"
+      "destination": "packages/vue/src/scroll-area/root.ts",
+      "member": "scrollbarKey",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaThumb.vue",
+      "behavior": "A drag of the thumb scrolls the viewport.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.pointer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/utils/getOffset.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/root.ts",
+      "member": "readTrack",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/scroll-area/ScrollAreaViewport.vue",
+      "behavior": "The viewport is the scroll container, and its scrolls of the user set `scrolling`.",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
     },
     {
       "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportContext.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/scroll-area/root/ScrollAreaRootContext.ts",
-      "member": "ScrollAreaViewportContext",
-      "witness": "packages/vue/src/scroll-area/content/ScrollAreaContent.test.tsx"
+      "destination": "packages/vue/src/scroll-area/root.ts",
+      "member": "viewportKey",
+      "witness": "packages/vue/src/scroll-area/ScrollArea.test.ts"
     }
   ]
 }
