@@ -214,8 +214,8 @@ export interface CalendarBaseProps {
    */
   hiddenDates?: DateMatcher | undefined;
   /**
-   * The names of days, each with the days that it matches. A day that a modifier matches has the
-   * attribute `data-<name>`, and its state has the name as a key.
+   * A matching day has a kebab-case `data-*` attribute for each modifier. Its
+   * `state.modifiers[name]` gives the match. Names of built-in day attributes are reserved.
    */
   modifiers?: Record<string, DateMatcher> | undefined;
   /**
@@ -553,14 +553,11 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     computed(() => view.value === 'day'),
   );
 
-  assertModifierNames(part, props.modifiers);
   if (process.env.NODE_ENV !== 'production') {
-    watch(
-      () => props.modifiers,
-      (modifiers) => {
-        assertModifierNames(part, modifiers);
-      },
-    );
+    const names = computed(() => Object.keys(props.modifiers ?? {}));
+    const check = (keys: string[]) => assertModifierNames(part, keys);
+    check(names.value);
+    watch(names, check);
   }
 
   const rules = computed<DayRules>(() => ({

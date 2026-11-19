@@ -144,23 +144,17 @@ const DAY_ATTRIBUTES = [
   'weekend',
   'date',
 ];
+const RANGE_DAY_ATTRIBUTES = [...DAY_ATTRIBUTES, 'range-start', 'range-end', 'range-middle'];
 
-/**
- * Throws in a development build when a modifier has the name of an attribute of a day: that
- * attribute would then have two meanings.
- */
-export function assertModifierNames(
-  part: string,
-  modifiers: Readonly<Record<string, DateMatcher>> | undefined,
-): void {
-  if (process.env.NODE_ENV === 'production') {
-    return;
-  }
-  for (const name of Object.keys(modifiers ?? {})) {
-    if (DAY_ATTRIBUTES.includes(toKebabCase(name))) {
+/** A modifier with a built-in name would give the same data attribute two meanings. */
+export function assertModifierNames(part: string, names: readonly string[]): void {
+  const reserved = part === 'RangeCalendar.Root' ? RANGE_DAY_ATTRIBUTES : DAY_ATTRIBUTES;
+  for (const name of names) {
+    const attribute = toKebabCase(name);
+    if (reserved.includes(attribute)) {
       throw new Error(
         `Vase UI: The \`modifiers\` prop of <${part}> has the key \`${name}\`. ` +
-          `A day uses the attribute \`data-${toKebabCase(name)}\` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.`,
+          `A day uses the attribute \`data-${attribute}\` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.`,
       );
     }
   }

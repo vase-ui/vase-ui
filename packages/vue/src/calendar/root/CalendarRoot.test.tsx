@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { nextTick, shallowReactive } from 'vue';
+import { defineComponent, nextTick, onErrorCaptured, shallowReactive } from 'vue';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import CalendarAnatomy from './CalendarAnatomy.test.vue';
 import * as Calendar from '../index.parts';
@@ -52,6 +52,24 @@ describe('<Calendar.Root />', () => {
     expect(onValueChange.mock.calls[0]![0][0].toString()).toBe(
       '2026-11-18T09:30:00+09:00[Asia/Tokyo]',
     );
+  });
+
+  it('checks a modifier name added to the same reactive object', async () => {
+    const modifiers = shallowReactive<Record<string, Temporal.PlainDate>>({});
+    const errors: string[] = [];
+    const Host = defineComponent(() => {
+      onErrorCaptured((error) => {
+        errors.push((error as Error).message);
+        return false;
+      });
+      return () => <Calendar.Root today={today()} modifiers={modifiers} />;
+    });
+    await render(<Host />);
+
+    modifiers['selected'] = today();
+    await nextTick();
+
+    expect(errors).toEqual([expect.stringContaining('has the key `selected`')]);
   });
 
   describe('names', () => {
