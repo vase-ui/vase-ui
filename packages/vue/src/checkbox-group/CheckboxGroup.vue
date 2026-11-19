@@ -145,7 +145,7 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
 // A mixed selection returns on the third parent press.
 let childrenValue = groupValue.value;
 let status: 'mixed' | 'on' | 'off' = 'mixed';
-const disabledStates = new Map<string, boolean>();
+const childStates = new Set<readonly [value: string, disabled: boolean]>();
 const childIds = shallowReactive(new Map<string, readonly string[]>());
 
 const hasParent = computed(() => props.allValues !== undefined);
@@ -170,13 +170,15 @@ function registerChildId(value: string, id: string) {
 }
 
 function registerDisabled(value: string, disabled: boolean) {
-  disabledStates.set(value, disabled);
-  return () => disabledStates.delete(value);
+  const entry = [value, disabled] as const;
+  childStates.add(entry);
+  return () => childStates.delete(entry);
 }
 
 function toggleParent(details: CheckboxGroupChangeEventDetails) {
   const values = props.allValues;
   if (!values) return;
+  const disabledStates = new Map(childStates);
   const none = values.filter((value) => disabledStates.get(value) && childrenValue.includes(value));
   const all = values.filter((value) => !disabledStates.get(value) || childrenValue.includes(value));
   if (childrenValue.length === 0 || childrenValue.length === all.length) {

@@ -799,6 +799,27 @@ describe('useCheckboxGroupParent', () => {
   });
 
   describe('disabled children', () => {
+    it('VUE-153: keeps a disabled child registered when a checkbox with the same value unmounts', async () => {
+      const duplicate = shallowRef(true);
+      const change = vi.fn();
+      await render(() => (
+        <CheckboxGroup allValues={['a', 'b']} onValueChange={change}>
+          <Checkbox.Root parent data-testid="parent" />
+          <Checkbox.Root value="a" disabled data-testid="a" />
+          {duplicate.value && <Checkbox.Root value="a" disabled />}
+          <Checkbox.Root value="b" data-testid="b" />
+        </CheckboxGroup>
+      ));
+
+      duplicate.value = false;
+      await flushMicrotasks();
+      await fireEvent.click(screen.getByTestId('parent'));
+
+      expect(change.mock.calls.map(([value]) => value)).toEqual([['b']]);
+      expect(screen.getByTestId('a')).toHaveAttribute('aria-checked', 'false');
+      expect(screen.getByTestId('b')).toHaveAttribute('aria-checked', 'true');
+    });
+
     it('leaves out a child that becomes disabled after the mount', async () => {
       const disabled = shallowRef(false);
       const App = defineComponent(() => () => (
