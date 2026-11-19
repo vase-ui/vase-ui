@@ -1,22 +1,22 @@
 import type { ComputedRef, InjectionKey } from 'vue';
 import { NOOP } from '../../src/common/empty';
 import type { Side } from '../../src/internals/useAnchorPositioning';
-import { NullStore } from '../../src/utils/popups/NullStore';
-import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginConstants';
-import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
 import {
+  NullStore,
   BasePopupStore,
   createInitialPopupStoreState,
   createPopupStoreContext,
   getHoverPopupInstantType,
   popupStoreSelectors,
-} from '../../src/utils/popups/store';
+} from '../../src/utils/popups/usePopupRoot';
+import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginConstants';
+import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
 import type {
   PopupOpenChangeEventDetails,
   PopupStoreContext,
   PopupStoreState,
   PopupTriggerStoreKeys,
-} from '../../src/utils/popups/store';
+} from '../../src/utils/popups/usePopupRoot';
 
 // The fixture family of the popup root: a store with keys of its own, its handle, and the key of
 // its context. `PopupRootPart`, `PopupTriggerPart`, `PopupPositionerPart`, `PopupPart` and

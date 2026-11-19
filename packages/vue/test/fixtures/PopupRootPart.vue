@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="Payload">
 import { provide } from 'vue';
-import { usePopupRoot } from '../../src/utils/popups/popupRoot';
-import type { PopupOpenChangeEventDetails } from '../../src/utils/popups/store';
+import { usePopupRoot } from '../../src/utils/popups/usePopupRoot';
+import type { PopupOpenChangeEventDetails } from '../../src/utils/popups/usePopupRoot';
 import { PopupFixtureContext, PopupFixtureStore } from './PopupFixture';
 import type { PopupFixtureHandle } from './PopupFixture';
 

@@ -1,3 +1,4 @@
+import { selectors as menuSelectors, MenuStore } from '../store/MenuStore';
 import { computed, onMounted, onScopeDispose, provide, toRaw, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
@@ -17,20 +18,16 @@ import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
-import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
+import { useTriggerModality } from '../../utils/popups/usePopupTrigger';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
-import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
-import {
-  FOCUSABLE_POPUP_PROPS,
-  usePopupInteractionProps,
-} from '../../utils/popups/popupStoreUtils';
+import { usePopupRoot, usePopupRootSync } from '../../utils/popups/usePopupRoot';
+import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import {
   provideFloatingTree,
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../../utils/popups/tree/FloatingTree';
 import { useElementId } from '../../utils/popups/useElementId';
-import { MenuStore } from '../store/MenuStore';
 import type { MenuCommittedOpenState } from '../store/MenuStore';
 import type {
   MenuParent,
@@ -147,7 +144,17 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   // suppresses the enter transition on both popups or neither.
   const seededInstantType = animateInitialOpen ? parentMenuState?.instantType : undefined;
 
-  const { store, open, payload, transitionStatus, actions } = usePopupRoot(
+  const {
+    store,
+    open,
+    triggerId,
+    trigger: activeTriggerElement,
+    payload,
+    transitionStatus,
+    actions,
+    requestOpen,
+    bindParts,
+  } = usePopupRoot(
     props,
     (initialState, defaultPopupId) => {
       const menuStore = new MenuStore<Payload>(
@@ -174,13 +181,13 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     },
   );
 
-  const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
+  const floatingTreeRoot = computed(() => menuSelectors.floatingTreeRoot(store.state));
   const floatingNodeIdFromContext = useFloatingNodeId(floatingTreeRoot);
 
-  const parent = computed(() => store.select('parent'));
-  const nested = computed(() => store.select('floatingParentNodeId') != null);
-  const disabled = computed(() => store.select('disabled'));
-  const activeIndex = computed(() => store.select('activeIndex'));
+  const parent = computed(() => store.state.parent);
+  const nested = computed(() => store.state.floatingParentNodeId != null);
+  const disabled = computed(() => menuSelectors.disabled(store.state));
+  const activeIndex = computed(() => store.state.activeIndex);
   const loopFocus = computed(() => props.loopFocus ?? true);
   const orientation = computed(() => props.orientation ?? 'vertical');
   const allowEscape = computed(() => toValue(options.allowEscape) ?? true);
@@ -203,7 +210,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     );
   }
 
-  const interactionTypeProps = useOpenMethodTriggerProps(open, (interactionType) =>
+  const interactionTypeProps = useTriggerModality(open, (interactionType) =>
     store.set('openMethod', interactionType),
   );
   usePopupRootSync(store, open);
@@ -270,7 +277,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
 
   watch(
-    [floatingParentNodeIdFromContext, () => store.select('activeTriggerElement')],
+    [floatingParentNodeIdFromContext, activeTriggerElement],
     ([parentNodeId, activeTriggerElement]) => {
       if (contextMenuContext && !parentMenuRootContext) {
         // This is a context menu root.
@@ -339,7 +346,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   onScopeDispose(() => store.context.allowTouchToCloseTimeout.clear());
 
-  watch([open, () => store.select('hoverEnabled')], ([isOpen, hoverEnabled]) => {
+  watch([open, () => store.state.hoverEnabled], ([isOpen, hoverEnabled]) => {
     if (!isOpen && !hoverEnabled) {
       store.set('hoverEnabled', true);
     }
@@ -351,8 +358,8 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   function readOpenState(): MenuCommittedOpenState {
     return {
       open: open.value,
-      activeTriggerElement: store.select('activeTriggerElement'),
-      openChangeReason: store.select('lastOpenChangeReason'),
+      activeTriggerElement: activeTriggerElement.value,
+      openChangeReason: store.state.openChangeReason,
     };
   }
   watch(readOpenState, (state) => {
@@ -369,7 +376,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   });
 
   watch(
-    [parent, () => store.select('positionerElement')] as const,
+    [parent, () => menuSelectors.positionerElement(store.state)] as const,
     ([currentParent, positionerElement], _previous, onCleanup) => {
       if (currentParent.type !== 'context-menu') {
         return;
@@ -377,7 +384,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
       const context = currentParent.context;
       context.positionerRef.value = positionerElement;
-      context.actionsRef.value = { setOpen: store.setOpen };
+      context.actionsRef.value = { setOpen: requestOpen };
       onCleanup(() => {
         context.positionerRef.value = null;
         context.actionsRef.value = null;
@@ -419,7 +426,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     // Filtered menus keep DOM focus on the input, while keyboard and virtual opens initially
     // highlight an item as ordinary menus do. The input stays in the arrow-key loop unless the
     // filter highlights automatically.
-    focusItemOnOpen: () => (virtualFocus ? store.select('keyboardOpen') : undefined),
+    focusItemOnOpen: () => (virtualFocus ? store.state.keyboardOpen : undefined),
     allowEscape: () => virtualFocus && loopFocus.value && allowEscape.value,
     resetOnPointerLeave: options.resetOnPointerLeave,
     orientation,
@@ -451,7 +458,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     activeIndex,
     resetMs: TYPEAHEAD_RESET_MS,
     onMatch(index, event) {
-      if (store.select('open') && index !== store.select('activeIndex')) {
+      if (open.value && index !== store.state.activeIndex) {
         store.setActiveIndex(index, REASONS.keyboard, event);
       }
     },
@@ -500,7 +507,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       }),
     );
   }
-  watch(() => store.select('activeIndex'), syncHighlightedItem, { flush: 'post' });
+  watch(() => store.state.activeIndex, syncHighlightedItem, { flush: 'post' });
 
   function allowMouseEnter() {
     store.set('allowMouseEnter', true);
@@ -533,7 +540,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       }
     },
     onClick() {
-      if (store.select('hoverEnabled')) {
+      if (store.state.hoverEnabled) {
         store.set('hoverEnabled', false);
       }
     },
@@ -542,7 +549,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       // The Menubar's CompositeRoot captures keyboard events via event delegation. This works well
       // when Menu.Root is nested inside Menubar, but with detached triggers we need to manually
       // forward the event to the CompositeRoot.
-      const relay = store.select('keyboardEventRelay');
+      const relay = menuSelectors.keyboardEventRelay(store.state);
       // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (relay && !event.cancelBubble) {
         relay(event);
@@ -575,36 +582,45 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return rest;
   }
 
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: mergeProps(
-      typeahead.reference,
-      getOpenTriggerProps(),
-      dismiss.reference,
-      {
-        onMousemove: allowMouseEnter,
-        'aria-haspopup': 'menu',
-        'aria-expanded': open.value,
-      },
-      interactionTypeProps,
-    ),
-    inactiveTriggerProps,
-    popupProps: mergeProps(
-      FOCUSABLE_POPUP_PROPS,
-      popupListeners,
-      typeahead.floating,
-      listNavigation.value.floating,
-      dismiss.floating,
-    ),
-    itemProps: listNavigation.value.item,
-    inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
-  }));
+  bindParts({
+    trigger: () =>
+      mergeProps(
+        typeahead.reference,
+        getOpenTriggerProps(),
+        dismiss.reference,
+        {
+          onMousemove: allowMouseEnter,
+          'aria-haspopup': 'menu',
+          'aria-expanded': open.value,
+        },
+        interactionTypeProps,
+      ),
+    inactiveTrigger: () => inactiveTriggerProps,
+    popup: () =>
+      mergeProps(
+        FOCUSABLE_POPUP_PROPS,
+        popupListeners,
+        typeahead.floating,
+        listNavigation.value.floating,
+        dismiss.floating,
+      ),
+  });
+  watch(
+    listNavigation,
+    (navigation) => {
+      store.update({
+        itemProps: navigation.item,
+        inputProps: virtualFocus ? navigation.reference : EMPTY_OBJECT,
+      });
+    },
+    { immediate: true },
+  );
 
-  const activeTriggerElement = computed(() => store.select('activeTriggerElement'));
   const activeTriggerElementId = useElementId(activeTriggerElement);
   // The `#render` slot of a trigger can give its element an id of its own, and an empty id names
   // no element. The registered id thus names the trigger only while no trigger element exists.
   const popupLabelId = computed(() =>
-    activeTriggerElement.value ? activeTriggerElementId.value : store.select('activeTriggerId'),
+    activeTriggerElement.value ? activeTriggerElementId.value : triggerId.value,
   );
 
   const context: MenuRootContext<Payload> = {
@@ -631,6 +647,6 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
 function isInContextMenu(menuParent: MenuParent): boolean {
   return menuParent.type === 'menu'
-    ? isInContextMenu(menuParent.store.select('parent'))
+    ? isInContextMenu(menuParent.store.state.parent)
     : menuParent.type === 'context-menu';
 }

@@ -1,3 +1,4 @@
+import { popupBindings } from '../../utils/popups/popupBindings';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   KeepAlive,
@@ -2199,7 +2200,7 @@ describe('<Combobox.Root />', () => {
           disabled: rootStore.select('disabled'),
           inline: rootStore.select('inline'),
           itemRootId: rootStore.select('itemRoot').id,
-          hasPopupListeners: Object.keys(rootStore.select('popupProps')).length > 0,
+          hasPopupListeners: Object.keys(popupBindings(rootStore)).length > 0,
         };
         return () => null;
       });

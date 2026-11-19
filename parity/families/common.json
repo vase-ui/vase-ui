@@ -10,17 +10,17 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.ts",
       "kind": "not-applicable",
-      "reason": "The methods of the class call React hooks. `ReactiveStore` of `packages/vue/src/utils/popups/ReactiveStore.ts` holds the state, the context and the selectors on Vue reactivity."
+      "reason": "The methods of the class call React hooks. `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` holds the state, the context and the selectors on Vue reactivity."
     },
     {
       "upstream": "packages/utils/src/store/Store.ts",
       "kind": "not-applicable",
-      "reason": "The class keeps a list of subscribers and gives each one the new state object. A write to `shallowReactive` state tells the readers, so `ReactiveStore` of `packages/vue/src/utils/popups/ReactiveStore.ts` has no such list."
+      "reason": "The class keeps a list of subscribers and gives each one the new state object. A write to `shallowReactive` state tells the readers, so `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` has no such list."
     },
     {
       "upstream": "packages/utils/src/store/index.ts",
       "kind": "not-applicable",
-      "reason": "The file exports the store classes and hooks for React. The store of Vase UI is in `packages/vue/src/utils/popups/ReactiveStore.ts`."
+      "reason": "The file exports the store classes and hooks for React. The store of Vase UI is in `packages/vue/src/utils/popups/handleStoreAdapter.ts`."
     },
     {
       "upstream": "packages/utils/src/store/useStore.ts",
@@ -268,5 +268,14 @@
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
+      "member": "useEnhancedClickHandler",
+      "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+    }
+  ]
 }

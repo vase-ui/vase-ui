@@ -13,7 +13,9 @@ describe('<Menu.Trigger />', () => {
     });
     await render(() => (
       <div>
-        {shifted.value && <div style={{ height: '100px' }}>Status</div>}
+        <div hidden={!shifted.value} style={{ height: '100px' }}>
+          Status
+        </div>
         <Menu.Root onOpenChange={onOpenChange}>
           <Menu.Trigger>Open</Menu.Trigger>
           <Menu.Portal>

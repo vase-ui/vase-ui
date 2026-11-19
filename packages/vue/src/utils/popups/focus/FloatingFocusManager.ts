@@ -24,7 +24,7 @@ import {
   getTarget,
 } from '../../../common/shadowDom';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
-import type { InteractionType } from '../../../common/useEnhancedClickHandler';
+import type { InteractionType } from '../usePopupTrigger';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible } from '../../../internals/composite/listIndex';
 import { clickTriggers } from '../registeredParts';

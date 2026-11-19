@@ -1,10 +1,9 @@
 import type { HTMLProps } from '../../../internals/types';
 import { ValuePopupFixtureStore } from '../../../../test/fixtures/ValuePopupFixture';
-import { useSingleAnchorPopupRoot } from '../popupRoot';
-import { usePopupInteractionProps } from '../popupStoreUtils';
+import { useSingleAnchorPopupRoot } from '../usePopupRoot';
 
 function useTypeTests(props: HTMLProps) {
-  const { store } = useSingleAnchorPopupRoot(
+  const { store, bindParts } = useSingleAnchorPopupRoot(
     {},
     (initialState, defaultPopupId) => new ValuePopupFixtureStore(initialState, defaultPopupId),
     {
@@ -22,22 +21,10 @@ function useTypeTests(props: HTMLProps) {
     },
   );
 
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    popupProps: props,
-    id: 'id',
-    modal: true,
-    selectedValue: 'a',
-  }));
-
-  usePopupInteractionProps(store, () => ({
-    activeTriggerProps: props,
-    inactiveTriggerProps: props,
-    popupProps: props,
-    // @ts-expect-error A key of the family must have its declared value type.
-    modal: 'invalid',
-  }));
+  bindParts({ trigger: () => props, popup: () => props });
+  store.update({ id: 'id', modal: true, selectedValue: 'a' });
+  // @ts-expect-error A family field requires its declared type.
+  store.update({ modal: 'invalid' });
 }
 
 void useTypeTests;

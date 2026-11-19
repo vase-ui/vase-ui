@@ -8,8 +8,12 @@ import {
   createPopupStoreContext,
   getHoverPopupInstantType,
   popupStoreSelectors,
-} from './store';
-import type { PopupOpenChangeEventDetails, PopupStoreContext, PopupStoreState } from './store';
+} from './usePopupRoot';
+import type {
+  PopupOpenChangeEventDetails,
+  PopupStoreContext,
+  PopupStoreState,
+} from './usePopupRoot';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 
@@ -1027,6 +1031,24 @@ describe('BasePopupStore', () => {
       expect(store.state.extra).toBe(9);
       expect(store.state.open).toBe(true);
     });
+
+    it.each(['open', 'openProp'] as const)(
+      'keeps a synchronous write to %s during a write to another field',
+      (key) => {
+        const store = new TestPopupStore(() => {});
+        onTestFinished(
+          watch(
+            () => store.state.activeTriggerId,
+            () => store.set(key, true),
+            { flush: 'sync' },
+          ),
+        );
+
+        store.set('activeTriggerId', 'trigger');
+
+        expect(store.state[key]).toBe(true);
+      },
+    );
 
     it('adds no dependency to the render of a part when its ref callback sets a key', async () => {
       const store = new TestPopupStore(() => {});

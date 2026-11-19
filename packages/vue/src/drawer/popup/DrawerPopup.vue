@@ -157,6 +157,7 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
+import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { computed, onMounted, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
@@ -169,7 +170,6 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
-import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
@@ -390,7 +390,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping,
   props: (attrs) => [
-    store.select('popupProps'),
+    popupBindings(store),
     {
       ...(swipe?.release.value && {
         [DrawerPopupDataAttributes.swipeDismiss]: '',

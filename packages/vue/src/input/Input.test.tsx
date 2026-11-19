@@ -92,6 +92,42 @@ describe('<Input />', () => {
     expect(input).toHaveValue('written');
   });
 
+  it('forwards each composing input event once through a custom render slot', async () => {
+    const value = shallowRef('');
+    const events: Event[] = [];
+    const updates: string[] = [];
+    await render(() => (
+      <Input
+        modelValue={value.value}
+        onInput={(event) => events.push(event)}
+        onUpdate:modelValue={(text) => {
+          updates.push(text);
+          value.value = text;
+        }}
+        v-slots={{ render: ({ props }: { props: HTMLProps }) => <input {...props} /> }}
+      />
+    ));
+    const input = screen.getByRole<HTMLInputElement>('textbox');
+    input.focus();
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    const edit = new InputEvent('input', { bubbles: true, data: 'か', isComposing: true });
+    input.value = 'か';
+    input.dispatchEvent(edit);
+    await flushMicrotasks();
+    expect(input).toHaveFocus();
+    expect(events).toEqual([edit]);
+    expect(updates).toEqual(['か']);
+
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '仮' }));
+    const commit = new InputEvent('input', { bubbles: true, data: '仮' });
+    input.value = '仮';
+    input.dispatchEvent(commit);
+    await flushMicrotasks();
+    expect(events).toEqual([edit, commit]);
+    expect(updates).toEqual(['か', '仮']);
+    expect(input).toHaveValue('仮');
+  });
+
   it('stops update:modelValue when a valueChange listener cancels the change', async () => {
     const updates: string[] = [];
 

@@ -74,6 +74,9 @@
     "src/combobox/items/createItems.test.tsx": {
       "fails": {}
     },
+    "src/combobox/trigger/ComboboxTrigger.press.test.tsx": {
+      "fails": {}
+    },
     "src/combobox/value/ComboboxValue.test.tsx": {
       "fails": {}
     },
@@ -130,6 +133,9 @@
     "src/internals/date-time/field/inputRegistration.test.tsx": {
       "fails": {}
     },
+    "src/internals/field-register-control/useFieldControl.test.tsx": {
+      "fails": {}
+    },
     "src/internals/field-root-context/FieldProvider.test.tsx": {
       "fails": {}
     },
@@ -167,6 +173,9 @@
       "fails": {}
     },
     "src/menu/filter-root/useMenuFilterItem.test.tsx": {
+      "fails": {}
+    },
+    "src/menu/trigger/MenuTrigger.press.test.tsx": {
       "fails": {}
     },
     "src/navigation-menu/arrow/NavigationMenuArrow.test.tsx": {
@@ -238,6 +247,13 @@
         "<ScrollArea.Content /> > KeepAlive > observes content from the first activation after a held mount": "vue-16305-keep-alive"
       }
     },
+    "src/scroll-area/root/ScrollAreaRoot.test.tsx": {
+      "fails": {
+        "<ScrollArea.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
+        "<ScrollArea.Root /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
+        "<ScrollArea.Root /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
+      }
+    },
     "src/scroll-area/thumb/ScrollAreaThumb.test.tsx": {
       "fails": {
         "<ScrollArea.Thumb /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -247,6 +263,9 @@
       "fails": {
         "<Select.ItemText /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
+    },
+    "src/select/trigger/SelectTrigger.press.test.tsx": {
+      "fails": {}
     },
     "src/switch/root/SwitchRoot.test.tsx": {
       "fails": {
@@ -298,6 +317,9 @@
         "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "src/tooltip/root/TooltipOwner.test.tsx": {
+      "fails": {}
+    },
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },
@@ -317,6 +339,9 @@
       "fails": {}
     },
     "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
+      "fails": {}
+    },
+    "test/disclosurePanels.test.tsx": {
       "fails": {}
     },
     "test/modelOwnership.test.tsx": {

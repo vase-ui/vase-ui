@@ -38,9 +38,7 @@ defineSlots<{
 const { state: fieldState, disabled: rootDisabled } = useFieldRootContext(false);
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(
-  () => (rootDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
-);
+const isDisabled = computed(() => rootDisabled.value || fieldsetDisabled.value || props.disabled);
 const state = computed<FieldItemState>(() => ({ ...fieldState.value, disabled: isDisabled.value }));
 
 provideLabelableContext();

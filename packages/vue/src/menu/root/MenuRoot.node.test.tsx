@@ -1,3 +1,4 @@
+import { triggerBindings } from '../../utils/popups/popupBindings';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
@@ -19,7 +20,7 @@ function createTestTrigger() {
       stores.push(store);
       const isActive = computed(() => store.select('isTriggerActive', props.id));
 
-      return () => <button id={props.id} {...store.select('triggerProps', isActive.value)} />;
+      return () => <button id={props.id} {...triggerBindings(store, isActive.value)} />;
     },
   });
 

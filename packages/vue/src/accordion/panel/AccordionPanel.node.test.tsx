@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, normalizeStyle } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Accordion } from '@vase-ui/vue/accordion';
 
@@ -14,19 +14,9 @@ function readPanelTag(html: string) {
   return tag;
 }
 
-/** The declarations of the `style` attribute of the panel, in the order that the server wrote them. */
-function readPanelDeclarations(html: string) {
+function readPanelStyle(html: string) {
   const style = /style="([^"]*)"/.exec(readPanelTag(html))?.[1] ?? '';
-  return style
-    .split(';')
-    .filter((declaration) => declaration.trim() !== '')
-    .map((declaration) => {
-      const separator = declaration.indexOf(':');
-      return [
-        declaration.slice(0, separator).trim(),
-        declaration.slice(separator + 1).trim(),
-      ] as const;
-    });
+  return normalizeStyle([style]) as Record<string, string>;
 }
 
 describe('<Accordion.Panel />', () => {
@@ -66,11 +56,9 @@ describe('<Accordion.Panel />', () => {
         </>,
       );
 
-      const animationNames = readPanelDeclarations(html).filter(
-        ([property]) => property === 'animation-name',
-      );
-      expect(animationNames.at(-1)).toEqual(['animation-name', 'none']);
-      expect(readPanelDeclarations(html)).toContainEqual(['animation-duration', '100ms']);
+      const style = readPanelStyle(html);
+      expect(style['animation-name']).toBe('none');
+      expect(style['animation-duration']).toBe('100ms');
     });
   });
 

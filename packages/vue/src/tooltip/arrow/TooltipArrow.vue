@@ -33,12 +33,12 @@ export interface TooltipArrowProps
 </script>
 
 <script setup lang="ts">
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -49,20 +49,20 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TooltipArrowState>;
 }>();
 
-const store = useTooltipRootContext();
+const { store } = useTooltipRootContext();
 const { arrowRef, side, align, arrowUncentered, arrowStyles } = useTooltipPositionerContext();
 
 const state = computed<TooltipArrowState>(() => ({
-  open: store.select('open'),
+  open: popupStoreSelectors.open(store.state),
   side: side.value,
   align: align.value,
   uncentered: arrowUncentered.value,
-  instant: store.select('instantType'),
+  instant: store.state.instantType,
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [arrowRef],
+  ref: arrowRef,
   stateAttributesMapping: popupStateMapping,
   props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
 });

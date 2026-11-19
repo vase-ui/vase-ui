@@ -1,5 +1,5 @@
 import { provide, watch } from 'vue';
-import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
+import { usePopupRoot, usePopupRootSync } from '../../utils/popups/usePopupRoot';
 import { DialogStore } from '../store/DialogStore';
 import type { DialogRootChangeEventDetails, DialogRootProps } from './DialogRoot.vue';
 import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
@@ -42,7 +42,7 @@ export function useRenderDialogRoot<Payload>(
     role,
   });
 
-  const { store, open, payload, actions } = usePopupRoot(
+  const owner = usePopupRoot(
     props,
     (initialState, defaultPopupId) =>
       new DialogStore<Payload>({ ...initialState, ...rootState() }, defaultPopupId),
@@ -61,13 +61,14 @@ export function useRenderDialogRoot<Payload>(
     },
   );
 
+  const { store, open, payload, actions } = owner;
   watch(rootState, (values) => store.update(values));
 
   usePopupRootSync(store, open);
 
   provide(DialogRootContext, store as DialogStore<unknown>);
 
-  useDialogInteractions({ store, parentContext: parentStore?.context, isDrawer });
+  useDialogInteractions({ ...owner, parentContext: parentStore?.context, isDrawer });
 
   return { store, payload, actions };
 }

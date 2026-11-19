@@ -28,8 +28,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
-import { TooltipPortalContext } from './TooltipPortalContext';
+import { useTooltipRootContext, TooltipPortalContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -42,8 +41,8 @@ defineSlots<{
 
 const state: TooltipPortalState = EMPTY_OBJECT;
 
-const store = useTooltipRootContext();
-const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
+const { mounted } = useTooltipRootContext();
+const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
   TooltipPortalContext,

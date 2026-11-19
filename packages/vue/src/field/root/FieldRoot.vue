@@ -75,13 +75,17 @@ export interface FieldRootProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createFieldFocusOwner } from '../../internals/field-root-context/useSetFieldFocused';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
-import { useFieldControlRegistration } from '../../internals/field-register-control';
-import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
-import { useFormContext } from '../../internals/form-context/FormContext';
+import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import {
+  FieldRootContext,
+  getCombinedFieldValidityData,
+} from '../../internals/field-root-context/FieldRootContext';
+import type { FieldControlRegistration } from '../../internals/field-root-context/FieldRootContext';
+import { FormContext } from '../../internals/form-context/FormContext';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -108,24 +112,21 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FieldRootState>;
 }>();
 
-const { errors, validationMode: formValidationMode, submitCountRef } = useFormContext();
-const labelable = provideLabelableContext();
+const form = inject(FormContext, null);
+const { getDescriptionProps } = provideLabelableContext();
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldsetDisabled.value || props.disabled);
-const resolvedValidationMode = computed(() => props.validationMode ?? formValidationMode.value);
+const resolvedValidationMode = computed(
+  () => props.validationMode ?? form?.validationMode.value ?? 'onSubmit',
+);
 
 const touchedState = shallowRef(false);
 const dirtyState = shallowRef(false);
 const filled = shallowRef(false);
 const focused = shallowRef(false);
 
-const isDirty = computed(() => props.dirty ?? dirtyState.value);
-const isTouched = computed(() => props.touched ?? touchedState.value);
-
-// The watcher is sync. A `validate()` call that follows the change of the prop in one handler then
-// reads the new value.
-const markedDirtyRef = shallowRef(isDirty.value);
+const markedDirtyRef = shallowRef(props.dirty ?? false);
 watch(
   () => props.dirty,
   (dirtyProp) => {
@@ -133,7 +134,6 @@ watch(
       markedDirtyRef.value = dirtyProp;
     }
   },
-  { flush: 'sync' },
 );
 
 function setDirty(value: boolean) {
@@ -157,7 +157,7 @@ function setTouched(value: boolean) {
 function shouldValidateOnChange() {
   return (
     resolvedValidationMode.value === 'onChange' ||
-    (resolvedValidationMode.value === 'onSubmit' && submitCountRef.value > 0)
+    (resolvedValidationMode.value === 'onSubmit' && (form?.submitCountRef.value ?? 0) > 0)
   );
 }
 
@@ -173,27 +173,32 @@ function setValidityData(next: FieldValidityData) {
   validityData.value = next;
 }
 
-// The registration comes first, because the name of the field can come from its control.
-// `validation` exists when a control calls `change` or `commit`.
-const {
-  validate: validateField,
-  registerFieldControl,
-  registeredFieldName,
-} = useFieldControlRegistration({
-  change: (value, cancelPending) => validation.change(value, cancelPending),
-  commit: (value) => validation.commit(value),
-  invalid: () => isInvalid.value,
-  markedDirtyRef,
-  name: () => props.name,
-  setValidityData,
-  validityData,
-});
+const { ids: controls, registerId: registerControl } = createIdRegistry<{
+  source: symbol;
+  registration: FieldControlRegistration;
+}>();
+const activeControl = computed(() => controls.value.at(-1));
+const activeSource = () => activeControl.value?.source;
+const effectiveName = computed(() => props.name ?? activeControl.value?.registration.name);
 
-const effectiveName = computed(() => props.name ?? registeredFieldName.value);
+const registerFieldControl: FieldRootContext['registerFieldControl'] = (
+  source,
+  getRegistration,
+) => {
+  // The last changed control takes precedence over earlier controls.
+  registerControl(source, undefined);
+  if (getRegistration) {
+    registerControl(source, () => {
+      const registration = getRegistration();
+      return registration && { source, registration };
+    });
+  }
+};
 
 const isInvalid = computed(() => {
   const name = effectiveName.value;
-  const formError = name && Object.hasOwn(errors.value, name) ? errors.value[name] : null;
+  const errors = form?.errors.value;
+  const formError = name && errors && Object.hasOwn(errors, name) ? errors[name] : null;
   const hasFormError = !!(Array.isArray(formError) ? formError.length : formError);
   return props.invalid === true || hasFormError;
 });
@@ -207,8 +212,8 @@ const valid = computed(
 
 const state = computed<FieldRootState>(() => ({
   disabled: isDisabled.value,
-  touched: isTouched.value,
-  dirty: isDirty.value,
+  touched: props.touched ?? touchedState.value,
+  dirty: props.dirty ?? dirtyState.value,
   valid: valid.value,
   filled: filled.value,
   focused: focused.value,
@@ -216,15 +221,71 @@ const state = computed<FieldRootState>(() => ({
 
 const validation = useFieldValidation({
   setValidityData,
-  validate: (value, formValues) => (props.validate ? props.validate(value, formValues) : null),
+  validate: (value, formValues) => props.validate?.(value, formValues),
   validityData,
   validationDebounceTime: () => props.validationDebounceTime,
   markedDirtyRef,
   state,
   shouldValidateOnChange,
   validationMode: resolvedValidationMode,
-  getDescriptionProps: labelable.getDescriptionProps,
+  getDescriptionProps,
 });
+
+function getFormValue() {
+  const control = activeControl.value?.registration;
+  return control?.getValue ? control.getValue() : control?.value;
+}
+
+function getControlValue(control: FieldControlRegistration) {
+  return control.value === undefined ? getFormValue() : control.value;
+}
+
+function validateField() {
+  const control = activeControl.value?.registration;
+  markedDirtyRef.value = true;
+  void validation.commit(control ? getControlValue(control) : validityData.value.value);
+}
+
+watch(activeSource, (_source, previous) => {
+  if (previous !== undefined) {
+    validation.change(undefined, true);
+  }
+});
+
+// Several controls can mount in one patch. The first registration sets the dirty baseline.
+watch(
+  activeSource,
+  () => {
+    const control = activeControl.value?.registration;
+    if (control) {
+      const initialValue = getControlValue(control);
+      if (validityData.value.initialValue !== initialValue) {
+        setValidityData({ ...validityData.value, initialValue });
+      }
+    }
+  },
+  { flush: 'sync', once: true },
+);
+
+if (form) {
+  const source = Symbol();
+  onMounted(() =>
+    form.registerField(source, () => {
+      const control = activeControl.value?.registration;
+      if (!control?.id) {
+        return undefined;
+      }
+      return {
+        name: effectiveName.value,
+        validate: validateField,
+        validityData: getCombinedFieldValidityData(validityData.value, isInvalid.value),
+        controlRef: control.controlRef,
+        getValue: getFormValue,
+      };
+    }),
+  );
+  onScopeDispose(() => form.registerField(source, undefined));
+}
 
 provide(FieldRootContext, {
   invalid: isInvalid,

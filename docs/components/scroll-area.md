@@ -112,7 +112,7 @@ The variables have values only after the client measures the viewport. For a ser
 var(--scroll-area-overflow-y-end, 40px);
 ```
 
-When the fade is on `<ScrollArea.Viewport>` itself, the variables work directly. A child does not inherit them, so it must set each variable to `inherit`.
+Use the variables directly on `<ScrollArea.Viewport>`. For a fade on a child, set each variable it uses to `inherit`.
 
 ```css
 .Child {

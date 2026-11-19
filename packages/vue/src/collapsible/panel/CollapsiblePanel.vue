@@ -39,15 +39,15 @@ export interface CollapsiblePanelProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, watchEffect } from 'vue';
 import { warn } from '../../common/warn';
-import { given } from '../../internals/givenAttributes';
-import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
-import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
+import {
+  collapsibleStateAttributesMapping,
+  useCollapsibleRootContext,
+} from '../root/CollapsibleRootContext';
 import * as CollapsiblePanelCssVars from './CollapsiblePanelCssVars';
 import { useCollapsiblePanel } from './useCollapsiblePanel';
 
@@ -56,6 +56,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CollapsiblePanelProps>(), {
   as: 'div',
   hiddenUntilFound: false,
+  // Only an explicit false conflicts with hiddenUntilFound.
   keepMounted: undefined,
 });
 
@@ -66,87 +67,57 @@ defineSlots<{
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Collapsible.Panel');
-  // Only an explicit `keepMounted={false}` gets the warning, so the prop has no default.
-  const warnWhenKeepMountedIsIgnored = () => {
-    if (props.hiddenUntilFound && props.keepMounted === false) {
-      warn(
-        'The `keepMounted` prop of `Collapsible.Panel` is `false` and `hiddenUntilFound` is enabled.',
-        'The panel must stay mounted while it is closed, so `keepMounted` has no effect.',
-        'Remove `keepMounted`, or remove `hiddenUntilFound`.',
-      );
-    }
-  };
-  onMounted(warnWhenKeepMountedIsIgnored);
-  watch([() => props.hiddenUntilFound, () => props.keepMounted], warnWhenKeepMountedIsIgnored);
+  onMounted(() => {
+    watchEffect(() => {
+      if (props.hiddenUntilFound && props.keepMounted === false) {
+        warn(
+          'The `keepMounted` prop of `Collapsible.Panel` is `false` and `hiddenUntilFound` is enabled.',
+          'The panel must stay mounted while it is closed, so `keepMounted` has no effect.',
+          'Remove `keepMounted`, or remove `hiddenUntilFound`.',
+        );
+      }
+    });
+  });
 }
 
+const root = useCollapsibleRootContext();
 const {
-  defaultPanelId,
-  mounted,
-  onOpenChange,
-  open,
-  registerPanelId,
-  setMounted,
-  setOpen,
-  state,
-  transitionStatus,
-} = useCollapsibleRootContext();
-
-const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
-
-useRegisteredId(
-  () => panelId.value,
-  registerPanelId,
-  () => element.value,
-);
-
-const {
+  element,
+  id: panelId,
+  hidden,
+  persistStartingStyle,
+  handleAnimationEnd,
+  handleBeforeMatch,
   height,
-  props: panelProps,
-  ref: panelRef,
-  shouldPreventOpenAnimation,
-  shouldRender,
-  temporaryStyle,
-  transitionStatus: panelTransitionStatus,
   width,
-} = useCollapsiblePanel({
-  hiddenUntilFound: () => props.hiddenUntilFound,
-  id: () => panelId.value,
-  keepMounted: () => props.keepMounted ?? false,
-  mounted,
-  onOpenChange,
-  open,
-  setMounted,
-  setOpen,
+  shouldRender,
+  overridingStyle,
   transitionStatus,
-});
+} = useCollapsiblePanel(root, props);
 
 const panelState = computed<CollapsiblePanelState>(() => ({
-  ...state.value,
-  transitionStatus: panelTransitionStatus.value,
+  ...root.state.value,
+  transitionStatus: transitionStatus.value,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state: panelState,
-  ref: panelRef,
+  elementRef: element,
   props: (attrs) => [
-    panelProps.value,
     {
+      ...(persistStartingStyle.value && { 'data-starting-style': '' }),
+      hidden: hidden.value,
+      id: panelId.value,
+      onAnimationend: handleAnimationEnd,
+      onBeforematch: handleBeforeMatch,
       style: {
-        [CollapsiblePanelCssVars.collapsiblePanelHeight]:
-          height.value === undefined ? 'auto' : `${height.value}px`,
-        [CollapsiblePanelCssVars.collapsiblePanelWidth]:
-          width.value === undefined ? 'auto' : `${width.value}px`,
+        [CollapsiblePanelCssVars.collapsiblePanelHeight]: height.value,
+        [CollapsiblePanelCssVars.collapsiblePanelWidth]: width.value,
       },
     },
     attrs,
   ],
-  // The temporary `animation-name: none` and the temporary declarations must win over the style of
-  // the consumer.
-  overridingStyle: () =>
-    shouldPreventOpenAnimation.value
-      ? { animationName: 'none', ...temporaryStyle.value }
-      : temporaryStyle.value,
+  overridingStyle,
   stateAttributesMapping: collapsibleStateAttributesMapping,
 });
 

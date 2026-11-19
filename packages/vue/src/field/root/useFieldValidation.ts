@@ -3,7 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { comesBeforeInSameTree } from '../../internals/comesBeforeInSameTree';
-import { createFieldInputRegistry } from '../../internals/field-register-control/useFieldInput';
+import { createFieldInputRegistry } from '../../internals/field-register-control';
 import { DEFAULT_VALIDITY_STATE } from '../../internals/field-constants/constants';
 import type {
   FieldRootState,
@@ -103,9 +103,7 @@ export function useFieldValidation(
   // Tracks the message installed by Vase UI and the custom message it displaced.
   let customValidity: [element: HTMLInputElement, message: string, displaced: string] | null = null;
 
-  // The validity of the last render. A handler of a control clears the error of the form and then
-  // calls `change`. Base UI reads the state of the last render there, in which the field is still
-  // invalid. A read of `state` at that moment gives the value after the clear.
+  // An edit can clear a form error before validation reads the last rendered validity.
   let renderedValid = state.value.valid;
   watch(
     () => state.value.valid,
@@ -150,51 +148,29 @@ export function useFieldValidation(
     validationCommitId += 1;
     const commitId = validationCommitId;
 
-    function makeValidityData(
-      validityState: FieldValidityData['state'],
-      errorMessages: string[],
-    ): FieldValidityData {
-      // `valueMissing` may be suppressed while the native message remains non-empty.
-      const errors = validityState.valid === false ? errorMessages : [];
-      return {
+    function publish(state: FieldValidityData['state'], messages: string[]) {
+      const errors = state.valid === false ? messages : [];
+      setValidityData({
         value,
-        state: validityState,
+        state,
         error: errors[0] ?? '',
         errors,
         initialValue: validityData.value.initialValue,
-      };
-    }
-
-    function publish(validityState: FieldValidityData['state'], errorMessages: string[]) {
-      setValidityData(makeValidityData(validityState, errorMessages));
+      });
     }
 
     function getState(el: HTMLInputElement) {
-      const computedState = validityKeys.reduce(
-        (acc, key) => {
-          acc[key] = el.validity[key];
-          return acc;
-        },
-        {} as Record<keyof ValidityState, boolean>,
-      );
-
-      let hasOnlyValueMissingError = false;
-
+      const computedState = { ...DEFAULT_VALIDITY_STATE, valid: el.validity.valid };
       for (const key of validityKeys) {
-        if (key === 'valid') {
-          continue;
-        }
-        if (key === 'valueMissing' && computedState[key]) {
-          hasOnlyValueMissingError = true;
-        } else if (computedState[key]) {
-          return computedState;
-        }
+        computedState[key] = el.validity[key];
       }
 
-      // Only make `valueMissing` mark the field invalid if it's been changed
-      // to reduce error noise. A control that the user cannot empty is never missing a value after
-      // a change, so it asks for the error with `countValueMissing`.
-      if (hasOnlyValueMissingError && !markedDirtyRef.value && !countValueMissing) {
+      if (
+        computedState.valueMissing &&
+        !markedDirtyRef.value &&
+        !countValueMissing &&
+        !validityKeys.some((key) => key !== 'valid' && key !== 'valueMissing' && computedState[key])
+      ) {
         computedState.valid = true;
         computedState.valueMissing = false;
       }
@@ -246,9 +222,6 @@ export function useFieldValidation(
           return;
         }
       }
-
-      // Value is still missing: publish the current native state so valueMissing and the changed
-      // value are observable immediately. Full custom validation still waits for its boundary.
     }
 
     timeout.clear();
@@ -263,9 +236,6 @@ export function useFieldValidation(
 
     // Native or externally set errors take precedence outside onChange validation.
     if (validationErrors.length === 0 || isValidatingOnChange) {
-      // call the validate function because either
-      // - validating on change, or
-      // - native constraint validations passed, custom validity check is next
       const formValues: Record<string, unknown> = {};
       for (const field of fields.value) {
         if (field.name) {

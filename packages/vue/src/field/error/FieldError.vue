@@ -33,7 +33,7 @@ export interface FieldErrorProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watchEffect } from 'vue';
 import type { Component } from 'vue';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -47,7 +47,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import FieldErrorChildren from './FieldErrorChildren.vue';
-import { FieldErrorContext } from './FieldErrorContext';
+import { FieldErrorContext } from '../../internals/field-root-context/FieldRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -75,7 +75,6 @@ const formError = computed(() => {
 const hasFormError = computed(
   () => !!(Array.isArray(formError.value) ? formError.value.length : formError.value),
 );
-const hasSpecificMatch = computed(() => typeof props.match === 'string');
 
 const rendered = computed(() => {
   if (props.match === true) {
@@ -104,42 +103,25 @@ useRegisteredMessageId(
   () => element.value,
 );
 
-const error = computed<string | string[] | null | undefined>(() => {
-  if (!hasSpecificMatch.value && hasFormError.value) {
-    return formError.value;
+// The default slot can supply other text until the exit.
+const message = shallowRef<string | string[] | null | undefined>(null);
+watchEffect(() => {
+  if (rendered.value) {
+    const { error, errors } = validityData.value;
+    const current =
+      typeof props.match !== 'string' && hasFormError.value
+        ? formError.value
+        : errors.length > 1
+          ? errors
+          : error;
+    message.value = Array.isArray(current)
+      ? current.length > 1
+        ? [...current]
+        : current[0]
+      : current;
   }
-  if (validityData.value.errors.length > 1) {
-    return validityData.value.errors;
-  }
-  return validityData.value.error;
 });
-
-const errorMessage = computed(() => {
-  const message = error.value;
-  if (Array.isArray(message)) {
-    return message.length > 1 ? message : message[0];
-  }
-  return message;
-});
-
-// The message of the last time that the error showed. The element keeps it while it animates out,
-// after the field is valid again. The watcher is sync, so the message does not change in the
-// render that follows the write that hides the error.
-const lastRenderedMessage = shallowRef<string | string[] | null | undefined>(null);
-watch(
-  [rendered, errorMessage],
-  () => {
-    if (rendered.value) {
-      lastRenderedMessage.value = errorMessage.value;
-    }
-  },
-  { immediate: true, flush: 'sync' },
-);
-
-provide(
-  FieldErrorContext,
-  computed(() => (rendered.value ? errorMessage.value : lastRenderedMessage.value)),
-);
+provide(FieldErrorContext, message);
 
 const state = computed<FieldErrorState>(() => ({
   ...fieldState.value,

@@ -19,7 +19,7 @@ export interface FieldValidityProps {}
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useFieldRootContext } from '../../internals/field-root-context';
-import { getCombinedFieldValidityData } from '../../internals/field-root-context/getCombinedFieldValidityData';
+import { getCombinedFieldValidityData } from '../../internals/field-root-context/FieldRootContext';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 
 defineSlots<{
