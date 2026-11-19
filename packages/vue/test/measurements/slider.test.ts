@@ -406,17 +406,6 @@ describe('S7: the native keys of a range input', () => {
 
 describe('S8: a click on the label of a clipped range input', () => {
   // WebKit on macOS gives a control that is not a text field no focus at a click.
-  test('gives the input the focus in Chromium, Firefox and WebKit on Linux, and not in WebKit on macOS', async () => {
-    html(`<label for="range" id="label">Volume</label>
-      <div style="position:relative;width:20px;height:20px">
-        <input id="range" type="range" style="${HIDDEN_INPUT}">
-      </div>`);
-    await userEvent.click(root!.querySelector('#label')!);
-    expect(document.activeElement).toBe(
-      webkit && platform.os.mac ? document.body : root!.querySelector('#range'),
-    );
-  });
-
   test.each([
     { listener: 'nothing', focus: !(webkit && platform.os.mac), ring: false },
     { listener: 'a script focus', focus: true, ring: webkit && platform.os.mac },
