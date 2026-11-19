@@ -77,7 +77,9 @@ export interface TabsTabProps
 
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
+import { useListenerSession } from '../../common/useListenerSession';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   useCompositeItem,
@@ -91,6 +93,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTabsListContext } from '../list/TabsListContext';
 import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -188,11 +191,15 @@ watch([active, index, highlightedIndex, isDisabled, selectedTab], syncHighlight,
   flush: 'post',
 });
 
-let isPressing = false;
-let isMainButton = false;
+const { isHeld } = useKeepAliveState();
+const press = useListenerSession(isHeld);
+let secondaryPress = false;
 
-// Both callers return when the tab is active, so the current value is never committed again.
 function activate(event: Event) {
+  if (active.value || isDisabled.value) {
+    return;
+  }
+
   onValueChange(
     props.value,
     createChangeEventDetails(REASONS.none, event, undefined, {
@@ -201,24 +208,8 @@ function activate(event: Event) {
   );
 }
 
-function onClick(event: MouseEvent) {
-  if (active.value || isDisabled.value) {
-    return;
-  }
-
-  activate(event);
-}
-
 function onFocusin(event: FocusEvent) {
-  if (active.value || isDisabled.value) {
-    return;
-  }
-
-  if (
-    activateOnFocus.value &&
-    (!isPressing || // keyboard or touch focus
-      isMainButton) // main mouse button focus
-  ) {
+  if (activateOnFocus.value && !secondaryPress) {
     activate(event);
   }
 }
@@ -228,24 +219,20 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
 
-  isPressing = true;
-  // A secondary press (context menu, middle button) can focus the tab, but it must not activate
-  // the tab with `activateOnFocus`.
-  isMainButton = event.button === 0;
-
-  // The listeners are set for each button. A secondary press then does not leave the tab in the
-  // pressed state, which would stop the activation on a later focus.
-  const doc = ownerDocument(event.currentTarget as Element);
-
-  function handlePointerEnd() {
-    isPressing = false;
-    isMainButton = false;
-    doc.removeEventListener('pointerup', handlePointerEnd);
-    doc.removeEventListener('pointercancel', handlePointerEnd);
+  if (event.button === 0) {
+    press.stop();
+    return;
   }
 
-  doc.addEventListener('pointerup', handlePointerEnd);
-  doc.addEventListener('pointercancel', handlePointerEnd);
+  const doc = ownerDocument(event.currentTarget as Element);
+  press.start((onCleanup, end) => {
+    secondaryPress = true;
+    onCleanup(() => {
+      secondaryPress = false;
+    });
+    onCleanup(addEventListener(doc, 'pointerup', end));
+    onCleanup(addEventListener(doc, 'pointercancel', end));
+  });
 }
 
 const state = computed<TabsTabState>(() => ({
@@ -272,7 +259,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', prop
       'aria-controls': getTabPanelIdByValue(props.value),
       'aria-selected': active.value,
       id: tabId.value,
-      onClick,
+      onClick: activate,
       onFocusin,
       onPointerdown,
       onKeydownCapture() {

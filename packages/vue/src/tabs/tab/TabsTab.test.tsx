@@ -250,6 +250,38 @@ describe('<Tabs.Tab />', () => {
       expect(handleValueChange).toHaveBeenCalledTimes(1);
       expect(secondTab).toHaveAttribute('aria-selected', 'true');
     });
+
+    it('VUE-144: removes both document listeners when a tab unmounts during a secondary press', async () => {
+      const { unmount } = await render(<TwoTabs />);
+      const tab = screen.getByRole('tab', { name: 'Two' });
+      const doc = tab.ownerDocument;
+      const add = vi.spyOn(doc, 'addEventListener');
+      const remove = vi.spyOn(doc, 'removeEventListener');
+
+      tab.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
+      unmount();
+
+      for (const type of ['pointerup', 'pointercancel']) {
+        const listeners = add.mock.calls.filter(([name]) => name === type);
+        expect(listeners).toHaveLength(1);
+        expect(remove.mock.calls).toContainEqual(listeners[0]);
+      }
+    });
+
+    it('activates on keyboard focus after KeepAlive interrupts a secondary press', async () => {
+      const { HeldBranch, hide, show } = createHeldBranch(() => <TwoTabs />, { mounted: true });
+      const { user } = await render(<HeldBranch />);
+      const [first, second] = screen.getAllByRole('tab');
+      second.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
+      await hide();
+      await show();
+
+      first.focus();
+      await user.keyboard('{ArrowRight}');
+
+      expect(second).toHaveFocus();
+      expect(second).toHaveAttribute('aria-selected', 'true');
+    });
   });
 
   describe('keyboard activation', () => {
