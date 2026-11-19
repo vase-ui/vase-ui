@@ -14,8 +14,7 @@ export interface NumberFieldGroupProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
+import { useNumberFieldRootContext, stateAttributesMapping } from '../root/NumberFieldRootContext';
 
 defineOptions({ inheritAttrs: false });
 

@@ -13,7 +13,10 @@ export type * from './group/NumberFieldGroup.vue';
 export type * from './increment/NumberFieldIncrement.vue';
 export type * from './decrement/NumberFieldDecrement.vue';
 export type * from './input/NumberFieldInput.vue';
-export type * from './scrub-area/NumberFieldScrubArea.vue';
+export type {
+  NumberFieldScrubAreaProps,
+  NumberFieldScrubAreaState,
+} from './scrub-area/NumberFieldScrubArea.vue';
 export type * from './scrub-area-cursor/NumberFieldScrubAreaCursor.vue';
 
 export * as NumberFieldRootDataAttributes from './root/NumberFieldRootDataAttributes';

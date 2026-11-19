@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest';
+import { shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { createRenderer, flushMicrotasks, isJSDOM, screen } from '#test-utils';
 import { platform } from '../../common/platform';
@@ -26,6 +27,28 @@ describe.skipIf(isJSDOM || platform.engine.webkit)('<NumberField.ScrubArea /> on
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('VUE-53: finishes a release after the scrub sensitivity changes', async () => {
+    const sensitivity = shallowRef(2);
+    const commit = vi.fn();
+    await render(() => (
+      <NumberField.Root defaultValue={0} data-testid="root" onValueCommitted={commit}>
+        <NumberField.Input />
+        <NumberField.ScrubArea data-testid="area" pixelSensitivity={sensitivity.value} />
+      </NumberField.Root>
+    ));
+    screen
+      .getByTestId('area')
+      .dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' }));
+    window.dispatchEvent(new PointerEvent('pointermove', { movementX: 4 }));
+    window.dispatchEvent(new PointerEvent('pointerup'));
+    sensitivity.value = 3;
+    await flushMicrotasks();
+    vi.advanceTimersByTime(20);
+    await flushMicrotasks();
+    expect(commit.mock.calls.map(([value]) => value)).toEqual([4]);
+    expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
   });
 
   it('delays releasing the pointer lock so soft clicks are not swallowed', async () => {

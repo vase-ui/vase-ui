@@ -21,8 +21,7 @@ export interface AvatarRootProps
 import { computed, provide, shallowRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { AvatarRootContext } from './AvatarRootContext';
-import { avatarStateAttributesMapping } from './stateAttributesMapping';
+import { avatarStateAttributesMapping, AvatarRootContext } from './AvatarRootContext';
 
 defineOptions({ inheritAttrs: false });
 

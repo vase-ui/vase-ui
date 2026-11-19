@@ -97,13 +97,13 @@ describe('the context of the root of Number Field', () => {
 
     it('keeps the text of an edit that is not a number until the edit ends', async () => {
       const { getContext, setProps } = await renderRoot({ defaultValue: 1 });
-      getContext().allowInputSyncRef.value = false;
+      getContext().setEditing(true);
       getContext().setInputValue('12x');
 
       await setProps({ locale: 'de-DE' });
       expect(getText().value).toBe('12x');
 
-      getContext().allowInputSyncRef.value = true;
+      getContext().setEditing(false);
       await setProps({ locale: 'en-US' });
       expect(getText().value).toBe(new Intl.NumberFormat('en-US').format(1));
     });
@@ -111,12 +111,12 @@ describe('the context of the root of Number Field', () => {
 
   it('formats the text again for a change that leaves the value as it was', async () => {
     const { getContext } = await renderRoot({ defaultValue: 1 });
-    getContext().allowInputSyncRef.value = false;
+    getContext().setEditing(true);
     getContext().setInputValue('12x');
     await flushMicrotasks();
     expect(getText().value).toBe('12x');
 
-    getContext().allowInputSyncRef.value = true;
+    getContext().setEditing(false);
     getContext().setValue(1, createChangeEventDetails(REASONS.inputBlur));
     await flushMicrotasks();
 
@@ -237,16 +237,19 @@ describe('the context of the root of Number Field', () => {
       has: ['(', ')', '$'],
       hasNot: [],
     },
-  ])('getAllowedNonNumericKeys has $name', async ({ props, has, hasNot }) => {
-    const { getContext } = await renderRoot({ locale: 'en-US', ...props });
-
-    const keys = getContext().getAllowedNonNumericKeys();
-
+  ])('accepts the keys for $name', async ({ props, has, hasNot }) => {
+    await renderRoot({ locale: 'en-US', ...props });
     for (const key of has) {
-      expect(keys.has(key), key).toBe(true);
+      expect(
+        getText().dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true })),
+        key,
+      ).toBe(true);
     }
     for (const key of hasNot) {
-      expect(keys.has(key), key).toBe(false);
+      expect(
+        getText().dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true })),
+        key,
+      ).toBe(false);
     }
   });
 
