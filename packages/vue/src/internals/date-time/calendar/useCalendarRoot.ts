@@ -1,8 +1,17 @@
 import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import type { DateMatcher } from '../matchers';
 import type { DateValue, DayOfWeek } from '../temporal';
-import { computed, shallowRef, nextTick, onMounted, watch, watchEffect } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import {
+  computed,
+  shallowRef,
+  nextTick,
+  onMounted,
+  watch,
+  watchEffect,
+  watchPostEffect,
+  toValue,
+} from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useControlled } from '../../../common/useControlled';
 import {
   compareDates,
@@ -19,6 +28,7 @@ import { useServerValue } from '../../../common/hydration';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
+import { useKeepAliveState } from '../../useKeepAliveState';
 import { REASONS } from '../../reasons';
 import { displayCalendar } from '../displayCalendar';
 import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
@@ -767,14 +777,29 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     return date ? dayElements.get(toInputText(date, false)) : null;
   });
 
-  function registerDay(date: Temporal.PlainDate, element: HTMLElement) {
-    const key = toInputText(date, false);
-    dayElements.set(key, element);
-    return () => {
-      if (dayElements.get(key) === element) {
-        dayElements.delete(key);
+  function useFocusTarget(
+    element: Readonly<Ref<HTMLElement | null>>,
+    date: MaybeRefOrGetter<Temporal.PlainDate | null>,
+    register?: (button: HTMLElement, day: Temporal.PlainDate) => () => void,
+  ) {
+    const { isHeld } = useKeepAliveState();
+    watchPostEffect((onCleanup) => {
+      const button = element.value;
+      const day = toValue(date);
+      if (!button || !day || isHeld.value) {
+        return;
       }
-    };
+      const key = toInputText(day, false);
+      dayElements.set(key, button);
+      onCleanup(() => {
+        if (dayElements.get(key) === button) {
+          dayElements.delete(key);
+        }
+      });
+      if (register) {
+        onCleanup(register(button, day));
+      }
+    });
   }
 
   // The element of a day that the page shows now exists after the next flush.
@@ -1270,7 +1295,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
     pressDay,
     onDayFocus,
     onDayKeydown,
-    registerDay,
+    useFocusTarget,
     focus,
     view,
     hasViews,

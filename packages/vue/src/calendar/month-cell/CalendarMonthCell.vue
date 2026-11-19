@@ -33,7 +33,7 @@ import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
-import { useCalendarCell } from '../utils/useCalendarCell';
+import { useCalendarCell } from '../utils/CalendarViewGridContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -62,9 +62,7 @@ const { element, elementProps, setRef, usesRenderSlot, text } = useCalendarCell(
   state,
   format: () => ({ month: props.format }),
   label: () => formatText(props.month, { month: props.format, year: 'numeric' }, root.locale.value),
-  press: (event) => {
-    root.pressMonth(props.month, event);
-  },
+  press: (event) => root.pressMonth(props.month, event),
 });
 
 defineExpose({ element });

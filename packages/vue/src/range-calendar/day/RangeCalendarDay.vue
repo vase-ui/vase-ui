@@ -18,16 +18,19 @@ export interface RangeCalendarDayProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, toRef } from 'vue';
 import { getDayState } from '../../internals/date-time/calendar/dayState';
-import { getRangeDayState, useRangeCalendarRootContext } from '../root/RangeCalendarRootContext';
+import {
+  getRangeDayState,
+  useRangeCalendarRootContext,
+  RangeCalendarDayContext,
+  rangeDayStateAttributesMapping,
+} from '../root/RangeCalendarRootContext';
 import { toInputText } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarMonthContext } from '../../calendar/month/CalendarMonthContext';
 import { useCalendarRootContext } from '../../calendar/root/CalendarRootContext';
-import { RangeCalendarDayContext } from './RangeCalendarDayContext';
-import { rangeDayStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
 
@@ -50,7 +53,7 @@ const state = computed<RangeCalendarDayState>(() => {
   };
 });
 
-provide(RangeCalendarDayContext, { day: computed(() => props.day), state });
+provide(RangeCalendarDayContext, { day: toRef(() => props.day), state });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('td', props, {
   state,

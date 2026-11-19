@@ -71,8 +71,10 @@ import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarR
 import { assertTemporal } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { CalendarRootContext } from '../../calendar/root/CalendarRootContext';
-import { calendarRootStateAttributesMapping } from '../../calendar/root/stateAttributesMapping';
+import {
+  CalendarRootContext,
+  calendarRootStateAttributesMapping,
+} from '../../calendar/root/CalendarRootContext';
 import type { CalendarState } from '../../calendar/root/CalendarRoot.vue';
 
 defineOptions({ inheritAttrs: false });

@@ -1,5 +1,5 @@
 import { inject, computed, shallowRef, watchSyncEffect } from 'vue';
-import type { InjectionKey } from 'vue';
+import type { InjectionKey, ComputedRef, Ref } from 'vue';
 import type { RangeCalendarRootProps } from './RangeCalendarRoot.vue';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -13,13 +13,16 @@ import type {
   CalendarBaseChangeEventReason,
 } from '../../internals/date-time/calendar/useCalendarRoot';
 import { isDisabledDay } from '../../internals/date-time/calendar/dayState';
+import type { RangeCalendarDayState } from '../day/RangeCalendarDay.vue';
+import { dayStateAttributesMapping } from '../../calendar/root/CalendarRootContext';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import * as RangeCalendarDayDataAttributes from '../day/RangeCalendarDayDataAttributes';
 
 type RangeSelection = ReturnType<typeof useRangeSelection>;
 
 export const RangeCalendarRootContext: InjectionKey<RangeSelection> = Symbol();
 
 export function useRangeCalendarRootContext(): RangeSelection {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(RangeCalendarRootContext, undefined);
   if (context === undefined) {
     throw new Error(
@@ -448,3 +451,29 @@ export function useRangeSelection(
     },
   };
 }
+
+export interface RangeCalendarDayContext {
+  day: Readonly<Ref<Temporal.PlainDate>>;
+  state: ComputedRef<RangeCalendarDayState>;
+}
+
+export const RangeCalendarDayContext: InjectionKey<RangeCalendarDayContext> = Symbol();
+
+export function useRangeCalendarDayContext(): RangeCalendarDayContext {
+  const context = inject(RangeCalendarDayContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: <RangeCalendar.DayButton> must be inside <RangeCalendar.Day>. Without a day the button has no date to select. Put the button inside <RangeCalendar.Day>.',
+    );
+  }
+
+  return context;
+}
+
+// The default mapping writes `data-rangestart`, `data-rangeend` and `data-rangemiddle`.
+export const rangeDayStateAttributesMapping: StateAttributesMapping<RangeCalendarDayState> = {
+  ...dayStateAttributesMapping,
+  rangeStart: (value) => (value ? { [RangeCalendarDayDataAttributes.rangeStart]: '' } : null),
+  rangeEnd: (value) => (value ? { [RangeCalendarDayDataAttributes.rangeEnd]: '' } : null),
+  rangeMiddle: (value) => (value ? { [RangeCalendarDayDataAttributes.rangeMiddle]: '' } : null),
+};

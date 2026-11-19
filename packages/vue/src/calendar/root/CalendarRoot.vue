@@ -121,8 +121,7 @@ import { assertTemporal, compareDates, withDate } from '../../internals/date-tim
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { CalendarRootContext } from './CalendarRootContext';
-import { calendarRootStateAttributesMapping } from './stateAttributesMapping';
+import { CalendarRootContext, calendarRootStateAttributesMapping } from './CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 

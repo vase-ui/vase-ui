@@ -17,15 +17,17 @@ export interface CalendarDayProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, toRef } from 'vue';
 import { getDayState } from '../../internals/date-time/calendar/dayState';
 import { toInputText } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
-import { CalendarDayContext } from './CalendarDayContext';
-import { dayStateAttributesMapping } from './stateAttributesMapping';
+import {
+  useCalendarRootContext,
+  CalendarDayContext,
+  dayStateAttributesMapping,
+} from '../root/CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -41,7 +43,7 @@ const { month } = useCalendarMonthContext();
 
 const state = computed<CalendarDayState>(() => getDayState(props.day, month.value, rules.value));
 
-provide(CalendarDayContext, { day: computed(() => props.day), state });
+provide(CalendarDayContext, { day: toRef(() => props.day), state });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('td', props, {
   state,

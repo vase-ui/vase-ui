@@ -32,7 +32,7 @@ import { computed } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
-import { useCalendarCell } from '../utils/useCalendarCell';
+import { useCalendarCell } from '../utils/CalendarViewGridContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -60,11 +60,7 @@ const { element, elementProps, setRef, usesRenderSlot, text } = useCalendarCell(
   cell: () => props.year,
   state,
   format: () => ({ year: props.format }),
-  // The text is the year, so it names the button.
-  label: () => undefined,
-  press: (event) => {
-    root.pressYear(props.year, event);
-  },
+  press: (event) => root.pressYear(props.year, event),
 });
 
 defineExpose({ element });

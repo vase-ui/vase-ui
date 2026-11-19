@@ -48,6 +48,9 @@
         "<Calendar.Grid /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
+    "src/calendar/root/CalendarRoot.focusTargets.test.tsx": {
+      "fails": {}
+    },
     "src/checkbox/root/CheckboxRoot.test.tsx": {
       "fails": {
         "<Checkbox.Root /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",

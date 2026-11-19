@@ -22,9 +22,8 @@ import { computed } from 'vue';
 import { formatFieldName, formatText } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
-import { useCalendarSelect } from '../utils/useCalendarSelect';
-import CalendarMonthSelectChildren from './CalendarMonthSelectChildren.vue';
+import { useCalendarRootContext, useCalendarSelect } from '../root/CalendarRootContext';
+import CalendarSelectChildren from '../utils/CalendarSelectChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -44,7 +43,7 @@ defineSlots<{
 const root = useCalendarRootContext();
 const { state, locale } = root;
 
-const { onChange } = useCalendarSelect({
+const onChange = useCalendarSelect({
   root,
   getSelect: () => element.value,
   getOptions({ yearMonth }) {
@@ -100,9 +99,9 @@ defineExpose({ element });
     name="render"
     :props="elementProps()"
     :state="state"
-    :children="CalendarMonthSelectChildren"
+    :children="CalendarSelectChildren"
   />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <CalendarMonthSelectChildren />
+    <CalendarSelectChildren />
   </component>
 </template>
