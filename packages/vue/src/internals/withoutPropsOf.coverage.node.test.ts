@@ -16,7 +16,12 @@ const ELEMENT = 1;
 const COMMENT = 3;
 const DIRECTIVE = 7;
 const builtIns = new Set(['Teleport', 'KeepAlive', 'Suspense', 'Transition', 'TransitionGroup']);
-const exceptions: Record<string, { reason: string }> = {};
+const exceptions: Record<string, { reason: string }> = {
+  '../toolbar/separator/ToolbarSeparator.vue': {
+    reason:
+      'Each prop of `Separator` is a prop of the wrapper, so an attribute cannot set a prop that the wrapper does not have. The attributes fall through to `Separator`.',
+  },
+};
 
 type TemplateNode = NonNullable<SFCTemplateBlock['ast']>['children'][number];
 type ElementNode = Extract<TemplateNode, { type: typeof ELEMENT }>;
@@ -99,6 +104,6 @@ it('each wrapper filters the attributes it gives to another part', () => {
       }
     }
   }
-  expect(checked).toBeGreaterThanOrEqual(41);
+  expect(checked).toBeGreaterThanOrEqual(40);
   expect(failures).toEqual([]);
 });

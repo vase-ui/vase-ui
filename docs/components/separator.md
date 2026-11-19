@@ -50,6 +50,30 @@ Import the component and use it as a single part:
 
 <<< ./separator/Anatomy.vue
 
+`Separator` renders one `<div role="separator">`. Each attribute and listener that you give goes to the `<div>`.
+
+## Orientation
+
+`aria-orientation` has the value of the `orientation` prop: `horizontal` by default, or `vertical`. Select it in CSS:
+
+```css
+.Separator[aria-orientation='vertical'] {
+  width: 1px;
+}
+```
+
+## Content
+
+The default slot holds content, such as a glyph or an icon between two groups. Assistive technology does not read the content of a separator. For a line that is only decoration, give `aria-hidden="true"` to the separator.
+
+## Another element
+
+The `element` slot renders your element in place of the `<div>`. A paragraph cannot hold a `<div>`, so render a `<span>` there. Bind `props` and `elementRef` on your element:
+
+<<< ./separator/ElementSlot.vue
+
+A native `<hr>` has the role `separator` too. For a horizontal line with no content, use `<hr>` with no part.
+
 ## API reference
 
 <ApiReference />

@@ -256,6 +256,9 @@
     "src/toolbar/root/ToolbarRoot.activation.test.tsx": {
       "fails": {}
     },
+    "src/toolbar/separator/ToolbarSeparator.test.tsx": {
+      "fails": {}
+    },
     "src/tooltip/positioner/TooltipPositioner.test.tsx": {
       "fails": {
         "<Tooltip.Positioner /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
