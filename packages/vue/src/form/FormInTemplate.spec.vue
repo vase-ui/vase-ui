@@ -1,44 +1,44 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
 import { expectType } from '#test-utils';
-import { Form } from '@vase-ui/vue/form';
+import { Form, type FormValues } from '@vase-ui/vue/form';
 
 interface Values {
   name: string;
   age: number;
 }
 
-function onTypeLiteral(formValues: { id: string; quantity: number }) {
-  return formValues.id + String(formValues.quantity);
+function save(event: SubmitEvent, values: Values) {
+  return event.type + values.name + String(values.age);
 }
 
-function onInterface(formValues: Values, eventDetails: Form.SubmitEventDetails) {
-  return formValues.name + eventDetails.reason;
+function saveLiteral(_event: SubmitEvent, values: { id: string; quantity: number }) {
+  return values.id + String(values.quantity);
 }
 
-function onFormValues(formValues: Form.Values) {
-  return formValues;
+function saveValues(_event: SubmitEvent, values: FormValues) {
+  return values;
 }
 
-function onWrongEventDetails(formValues: Values, eventDetails: string) {
-  return formValues.name + eventDetails;
+function saveWrongEvent(event: string, values: Values) {
+  return event + values.name;
 }
 </script>
 
 <template>
-  <Form @form-submit="onTypeLiteral" />
-  <Form @form-submit="onInterface" />
-  <Form @form-submit.once="onInterface" />
-  <Form @form-submit="(formValues: { id: string }) => formValues.id" />
-  <Form @form-submit="onFormValues" />
+  <Form @submit="save" />
+  <Form @submit.prevent="save" />
+  <Form @submit.prevent.once="saveLiteral" />
+  <Form @submit="saveValues" />
+  <Form @submit="(_event: SubmitEvent, values: { id: string }) => values.id" />
   <Form
-    @form-submit="
-      (formValues, eventDetails) => {
-        expectType<any, typeof formValues>(formValues);
-        expectType<'none', typeof eventDetails.reason>(eventDetails.reason);
+    @submit="
+      (event, values) => {
+        expectType<SubmitEvent, typeof event>(event);
+        expectType<any, typeof values>(values);
       }
     "
   />
-  <!-- @vue-expect-error `eventDetails` is an object -->
-  <Form @form-submit="onWrongEventDetails" />
+  <!-- @vue-expect-error The first argument is the native `SubmitEvent`. -->
+  <Form @submit="saveWrongEvent" />
 </template>

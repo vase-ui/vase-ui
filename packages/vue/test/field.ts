@@ -1,3 +1,5 @@
+import { settle } from './render';
+
 /** The `data-*` attributes of an element, sorted. */
 export function dataAttributes(element: Element) {
   return element
@@ -17,4 +19,14 @@ export function recordValidate(
     },
     ...props,
   };
+}
+
+/**
+ * Moves the focus out of `element`, and waits for its field. The field counts the leave one
+ * microtask after the blur, and in `blur` mode it validates after a timer.
+ */
+export async function leave(element: HTMLElement) {
+  element.blur();
+  await settle();
+  await settle();
 }

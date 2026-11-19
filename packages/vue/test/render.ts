@@ -101,8 +101,9 @@ export async function renderOnServer(fixture: string, props: Record<string, unkn
 
 export function hydrate(component: vue.Component, props: Record<string, unknown>, root: Element) {
   const app = createAppOf(component, props, true);
-  app.mount(root);
+  const exposed = app.mount(root) as Exposed;
   cleanups.push(() => app.unmount());
+  return exposed;
 }
 
 /** Types `text` after the value, as a user who clicks after the text. */

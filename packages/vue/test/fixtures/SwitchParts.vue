@@ -19,7 +19,11 @@ defineExpose({ marked, styled });
   <label>
     <Switch ref="marked" v-bind="attrs">
       <template #element="{ props, elementRef, state }">
-        <span class="Track" :data-on="state.checked || undefined">
+        <span
+          class="Track"
+          :data-on="state.checked || undefined"
+          :data-required="String(state.required)"
+        >
           <input v-bind="props" :ref="elementRef" />
         </span>
       </template>

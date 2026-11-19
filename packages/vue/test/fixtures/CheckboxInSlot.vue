@@ -16,6 +16,7 @@ defineExpose({ box, styled });
         <span
           class="Box"
           :data-mark="state.indeterminate ? 'mixed' : state.checked ? 'check' : 'none'"
+          :data-required="String(state.required)"
         >
           <input v-bind="props" :ref="elementRef" />
         </span>

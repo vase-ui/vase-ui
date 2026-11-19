@@ -1,412 +1,220 @@
-<script lang="ts">
-import type { HTMLAttributes } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
-import type { FieldRootState } from '../internals/field-root-context/FieldRootContext';
-import { REASONS } from '../internals/reasons';
-import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
-
-export interface RadioGroupState extends FieldRootState {
-  /**
-   * Whether the user should be unable to select a different radio button in the group.
-   */
-  readOnly: boolean;
-  /**
-   * Whether the user must tick a radio button within the group before submitting a form.
-   */
-  required: boolean;
-}
-
-export interface RadioGroupProps<Value = any>
-  extends
-    VaseUIComponentProps<RadioGroupState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
-  /**
-   * The id of the element of the group.
-   */
-  id?: string | undefined;
-  /**
-   * Whether the component should ignore user interaction.
-   * @default false
-   */
-  disabled?: boolean | undefined;
-  /**
-   * Whether the user should be unable to select a different radio button in the group.
-   * @default false
-   */
-  readOnly?: boolean | undefined;
-  /**
-   * Whether the user must choose a value before submitting a form.
-   * @default false
-   */
-  required?: boolean | undefined;
-  /**
-   * Identifies the field when a form is submitted.
-   */
-  name?: string | undefined;
-  /**
-   * Identifies the form that owns the radio inputs.
-   * Useful when the radio group is rendered outside the form.
-   */
-  form?: string | undefined;
-  /**
-   * The controlled value of the radio item that should be currently selected.
-   *
-   * To render an uncontrolled radio group, use the `defaultValue` prop instead.
-   */
-  modelValue?: Value | undefined;
-  /**
-   * The uncontrolled value of the radio button that should be initially selected.
-   *
-   * To render a controlled radio group, use the `modelValue` prop instead.
-   */
-  defaultValue?: Value | undefined;
-}
-
-export type RadioGroupChangeEventReason = typeof REASONS.none;
-
-export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupChangeEventReason>;
-</script>
-
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, provide, shallowRef, triggerRef } from 'vue';
-import { queueInputTake } from '../common/hydration';
-import { contains } from '../common/shadowDom';
-import { useControlled } from '../common/useControlled';
-import { isEligibleInput } from '../field/root/useFieldValidation';
-import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
-import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
-import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
-import { SHIFT } from '../internals/composite/listIndex';
-import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
-import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
-import { fieldValidityMapping } from '../internals/field-constants/constants';
-import { useFieldControl } from '../internals/field-register-control';
-import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
-import { useFormContext } from '../internals/form-context';
-import { given } from '../internals/givenAttributes';
-import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
-import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useVaseUiId';
-import { useFormRestore } from '../internals/useFormRestore';
-import { useRenderElement } from '../internals/useRenderElement';
-import { useValueChanged } from '../internals/useValueChanged';
-import { RadioGroupContext } from './radioContext';
-import type { RadioInput } from './radioContext';
+import { computed, mergeProps, nextTick, provide, shallowReactive, useAttrs, watch } from 'vue';
+import { createChangeEventDetails } from '../common/changeEventDetails';
+import { useDeferredServerRender } from '../common/deferredServerRender';
+import { byDocumentOrder, useElement } from '../common/element';
+import { useModel } from '../common/model';
+import { fieldStateAttributes } from '../field/control';
+import { useFieldGroup } from '../field/group';
+import { useInDisabledFieldset } from '../fieldset/part';
+import { radioGroupKey, type GroupRadio } from './radio';
+import type { RadioGroupChangeEventDetails, RadioGroupProps, RadioGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
-  as: 'div',
-  disabled: false,
-  readOnly: false,
-  required: false,
   modelValue: undefined,
+  defaultValue: undefined,
 });
-
 const emit = defineEmits<{
-  /**
-   * Callback fired when the value changes.
-   * A native reset puts a group that has no `defaultValue` back to no value. The callback then gets
-   * `undefined`.
-   */
-  valueChange: [value: Value, eventDetails: RadioGroupChangeEventDetails];
-  /**
-   * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model` uses it.
-   */
-  'update:modelValue': [value: Value];
+  valueChange: [value: Value, details: RadioGroupChangeEventDetails];
+  'update:modelValue': [value: Value | undefined];
 }>();
-
 defineSlots<{
-  default(props: { state: RadioGroupState }): unknown;
-  render: ComponentRenderFn<HTMLProps, RadioGroupState>;
+  default?(scope: { state: RadioGroupState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: RadioGroupState;
+  }): unknown;
 }>();
 
-const {
-  setTouched: setFieldTouched,
-  setFocused,
-  validationMode,
-  disabled: fieldDisabled,
-  state: fieldState,
-  validation,
-  setDirty,
-  setFilled,
-  validityData,
-} = useFieldRootContext();
-const { labelId } = useLabelableContext();
-const { clearErrors, elementRef: formElement } = useFormContext();
-const fieldset = useFieldsetRootContext(true);
-
-// The group binds the id of a label, a legend and a message that can come after it.
+const attrs = useAttrs();
+// The label and the messages of the field can come after the group.
 useDeferredServerRender();
+const { element, setElement } = useElement<HTMLDivElement>();
+const inDisabledFieldset = useInDisabledFieldset(element);
 
-const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
-const controlId = useVaseUiId(() => props.id);
+const firstValue = props.modelValue !== undefined ? props.modelValue : props.defaultValue;
+const { value, setOwn } = useModel<Value | undefined>(() => props.modelValue, firstValue);
+const radios = shallowReactive<GroupRadio[]>([]);
+// The last reset that the group followed. Each radio of the group tells the group a reset.
+let lastReset: Event | undefined;
+// The radio that had the focus at a key press of an arrow with Ctrl, Alt or Meta, until the next
+// task.
+let modifiedArrowFrom: HTMLInputElement | undefined;
 
-const checkedValue = useControlled<Value>({
-  controlled: () => props.modelValue,
-  default: () => props.defaultValue,
-  name: 'RadioGroup',
-  state: 'value',
+const tabStop = computed(() => {
+  const enabled = radios.filter((radio) => !radio.disabled);
+  enabled.sort((a, b) => byDocumentOrder(a.element, b.element));
+  return enabled.find((radio) => radio.value === value.value) ?? enabled[0];
+});
+const { field, labelledBy, onFocusout } = useFieldGroup({
+  element,
+  disabled: () => disabled.value,
+  ownDisabled: () => props.disabled || inDisabledFieldset.value,
+  readOnly: () => props.readonly,
+  inputs: () => radios.map((radio) => radio.element),
+  // The focus goes to the tab stop, as the Tab key gives it.
+  focusElement: () => tabStop.value?.element,
+  // A form gets the value of the checked radio that is mounted and enabled.
+  formValue: () =>
+    radios.some((radio) => radio.value === value.value && !radio.disabled) ? value.value : null,
+});
+const disabled = computed<boolean>(
+  () => props.disabled || !!field?.disabled || inDisabledFieldset.value,
+);
+const state = computed<RadioGroupState>(() => ({
+  disabled: disabled.value,
+  readonly: props.readonly,
+  required: props.required,
+  touched: field?.state.touched ?? false,
+  dirty: field?.state.dirty ?? false,
+  valid: field?.state.valid ?? null,
+  filled: field?.state.filled ?? false,
+}));
+
+watch(value, (next) => field?.setValue(next, next != null), { immediate: true });
+
+provide(radioGroupKey, {
+  get value() {
+    return value.value;
+  },
+  get name() {
+    return field?.name ?? props.name;
+  },
+  get form() {
+    return props.form;
+  },
+  get disabled() {
+    return disabled.value;
+  },
+  get readonly() {
+    return props.readonly;
+  },
+  get required() {
+    return props.required;
+  },
+  get tabStop() {
+    return tabStop.value;
+  },
+  select: (next, event) => select(next as Value, event),
+  onClick,
+  onReset,
+  addRadio(radio) {
+    radios.push(radio);
+    return () => radios.splice(radios.indexOf(radio), 1);
+  },
 });
 
-// The field holds `null` for a group with no value. A reset gives `undefined`, the same state.
-const fieldValue = computed(() => checkedValue.value ?? null);
+defineExpose({ element });
 
-// A server writes the parts that come after the group before it runs the `setup` of a radio,
-// because the group defers its render. The group thus sets the first `filled` state itself.
-if (checkedValue.value != null) {
-  setFilled(true);
-}
-
-const touched = shallowRef(false);
-const radioInputs = new Map<HTMLInputElement, RadioInput>();
-
-function restoreInputs() {
-  for (const radio of radioInputs.values()) radio.restore();
-}
-
-function takeInputs(event?: Event) {
-  // Unnamed inputs can both be checked. Compare them before a change updates the group.
-  const changes = Array.from(radioInputs).filter(
-    ([input, radio]) => input.checked && !radio.checked.value,
+function elementProps() {
+  const on = (value: boolean) => (value ? 'true' : undefined);
+  return mergeProps(
+    {
+      role: 'radiogroup',
+      'aria-labelledby': labelledBy(attrs),
+      'aria-describedby': field?.describedBy,
+      // WAI-ARIA gives these states to a radio group, and CSS matches them.
+      'aria-disabled': on(disabled.value),
+      'aria-readonly': on(props.readonly),
+      // A radio with `required` makes its group required.
+      'aria-required': on(props.required || radios.some((radio) => radio.required)),
+      'aria-invalid': on(state.value.valid === false),
+      ...fieldStateAttributes(state.value),
+      'data-invalid': undefined,
+      onKeydown,
+      onFocusout,
+    },
+    attrs,
   );
-  for (const [, radio] of changes) radio.take(event);
-  void nextTick(restoreInputs);
 }
 
-let isInputTakeQueued = false;
-
-function takeInputsAfterMount() {
-  if (isInputTakeQueued) {
+function onClick(event: MouseEvent, readonly: boolean) {
+  // The browser keeps the checked radio and fires no `change`.
+  if (readonly) {
+    event.preventDefault();
     return;
   }
-  isInputTakeQueued = true;
-  queueInputTake(() => {
-    isInputTakeQueued = false;
-    takeInputs();
-    return true;
+  // WebKit selects the next radio with a click at an arrow key with Ctrl, Alt or Meta, and
+  // Chromium and Firefox do nothing. The focus goes back after the move of WebKit.
+  const from = modifiedArrowFrom;
+  if (!from) return;
+  event.preventDefault();
+  setTimeout(() => from.focus());
+}
+
+function select(next: Value, event: Event) {
+  const details = createChangeEventDetails('none', event);
+  emit('valueChange', next, details);
+  if (!details.isCanceled) {
+    setOwn(next);
+    emit('update:modelValue', next);
+  }
+  // The parent can refuse a controlled value. Its answer arrives with its next render.
+  nextTick(() => {
+    showValue();
+    if (!details.isCanceled) field?.onEdit();
   });
 }
 
-function setTouched(value: boolean) {
-  touched.value = value;
+// Vue writes `checked` only when it changes. After a refused or cancelled change, each radio must
+// show the value again.
+function showValue() {
+  for (const radio of radios) radio.element.checked = radio.value === value.value;
 }
 
-function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetails) {
-  emit('valueChange', value, eventDetails);
+function onReset(event: Event) {
+  if (event === lastReset) return;
+  lastReset = event;
+  field?.onReset(firstValue);
+  if (value.value === firstValue) return;
+  setOwn(firstValue);
+  emit('update:modelValue', firstValue);
+}
 
-  if (eventDetails.isCanceled) {
+const steps: Record<string, 'next' | 'previous' | 'right' | 'left'> = {
+  ArrowDown: 'next',
+  ArrowUp: 'previous',
+  ArrowRight: 'right',
+  ArrowLeft: 'left',
+};
+
+// Browsers move the focus between native radios by their own rules: WebKit does not loop and
+// does not follow the text direction, and radios with no name are no group in any browser.
+function onKeydown(event: KeyboardEvent) {
+  const step = steps[event.key];
+  const current = radios.find((radio) => radio.element === event.target);
+  if (!step || !current) return;
+  // With Ctrl, Alt or Meta, the browser keeps its own shortcut.
+  if (event.ctrlKey || event.altKey || event.metaKey) {
+    modifiedArrowFrom = current.element;
+    setTimeout(() => (modifiedArrowFrom = undefined));
     return;
   }
-
-  emit('update:modelValue', value);
-  checkedValue.value = value;
-  void nextTick(restoreInputs);
+  event.preventDefault();
+  const rtl = getComputedStyle(current.element).direction === 'rtl';
+  const forward = step === 'next' || step === (rtl ? 'left' : 'right');
+  const choices = radios.filter((radio) => radio === current || !radio.disabled);
+  choices.sort((a, b) => byDocumentOrder(a.element, b.element));
+  const index = choices.indexOf(current) + (forward ? 1 : -1);
+  const next = choices[(index + choices.length) % choices.length]!;
+  next.element.focus();
+  // A click selects the radio as the browser does, and a read-only group prevents it.
+  next.element.click();
 }
-
-// The exposed input stays null after removal until an enabled radio registers or the value clears.
-const isExposedInputDetached = shallowRef(false);
-
-// A keyed move runs no registration, and a radio follows a change of a native `<fieldset>` only after
-// its observer calls back. The group thus reads its inputs at each read. `:disabled` also matches an
-// input in a disabled `<fieldset>`, and the browser does not focus that input.
-function getExposedInput() {
-  if (isExposedInputDetached.value) {
-    return null;
-  }
-
-  let firstInput: HTMLInputElement | null = null;
-  for (const input of radioInputs.keys()) {
-    if (input.matches(':disabled')) {
-      continue;
-    }
-    if (input.checked) {
-      return input;
-    }
-    if (!firstInput || comesBeforeInSameTree(input, firstInput)) {
-      firstInput = input;
-    }
-  }
-  return firstInput;
-}
-
-function refreshInput(input: HTMLInputElement) {
-  if (!input.disabled) isExposedInputDetached.value = false;
-  // A computed that reads inputElement must also see a new checked or disabled input.
-  triggerRef(isExposedInputDetached);
-}
-
-function registerInput(input: HTMLInputElement, actions: RadioInput) {
-  radioInputs.set(input, actions);
-  refreshInput(input);
-  return () => {
-    const givenInput = getExposedInput();
-    radioInputs.delete(input);
-    if (givenInput === input) {
-      isExposedInputDetached.value = true;
-    }
-  };
-}
-
-function getFormValue() {
-  const form = formElement.value;
-  if (!form) {
-    return fieldValue.value;
-  }
-
-  for (const input of validation.registeredInputs.keys()) {
-    if (input.checked && isEligibleInput(input, form)) {
-      return fieldValue.value;
-    }
-  }
-
-  return null;
-}
-
-const { name: inputName } = useFieldControl(() => validation.getInputControl(), {
-  id: controlId,
-  name: () => props.name,
-  value: fieldValue,
-  getValue: getFormValue,
-  enabled: () => !isDisabled.value,
-});
-const clearFieldError = useClearFieldError(inputName);
-
-// The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
-// would come before `validation.change`, and the validation could show a new error. The timeout sets
-// this flag, and the callback clears the field and starts no validation.
-let isResetChangePending = false;
-
-useValueChanged(checkedValue, () => {
-  clearErrors(inputName.value);
-
-  setDirty(fieldValue.value !== validityData.value.initialValue);
-  setFilled(checkedValue.value != null);
-
-  if (isResetChangePending) {
-    isResetChangePending = false;
-    clearFieldError(fieldValue.value);
-  } else {
-    validation.change(checkedValue.value);
-  }
-
-  if (checkedValue.value == null) {
-    isExposedInputDetached.value = false;
-  }
-});
-
-let handledReset: Event | undefined;
-
-function reset(event: Event) {
-  if (event === handledReset) {
-    return;
-  }
-  handledReset = event;
-
-  if (props.modelValue === undefined && checkedValue.value !== props.defaultValue) {
-    const details = createChangeEventDetails(REASONS.none, event);
-    // `Value` cannot name the value of a group that has no default.
-    setCheckedValue(props.defaultValue as Value, details);
-
-    if (!details.isCanceled) {
-      isResetChangePending = true;
-      return;
-    }
-  }
-
-  clearFieldError(fieldValue.value);
-}
-
-const state = computed<RadioGroupState>(() => ({
-  ...fieldState.value,
-  disabled: isDisabled.value,
-  required: props.required,
-  readOnly: props.readOnly,
-}));
-
-provide(RadioGroupContext, {
-  checkedValue,
-  disabled: isDisabled,
-  form: computed(() => props.form),
-  validation,
-  name: inputName,
-  readOnly: computed(() => props.readOnly),
-  registerInput,
-  refreshInput,
-  required: computed(() => props.required),
-  setCheckedValue,
-  setTouched,
-  touched,
-  takeInputsAfterMount,
-  reset,
-});
-
-// With a value, the server HTML has the tab stop on the checked radio. Base UI has `-1` on each radio.
-const composite = useCompositeRoot({
-  enableHomeAndEndKeys: false,
-  modifierKeys: [SHIFT],
-  hasActiveItem: () => checkedValue.value != null,
-});
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: composite.registerRoot,
-  stateAttributesMapping: fieldValidityMapping,
-  props: (attrs) => [
-    {
-      onFocusin: composite.onFocusin,
-      onFocusout: composite.onFocusout,
-      onKeydown: composite.onKeydown,
-    },
-    {
-      id: given('id', props.id),
-      role: 'radiogroup',
-      'aria-required': props.required || undefined,
-      'aria-disabled': isDisabled.value || undefined,
-      'aria-readonly': props.readOnly || undefined,
-      'aria-labelledby': labelId.value ?? fieldset?.legendId.value,
-      onFocusout(event: FocusEvent) {
-        if (
-          !contains(event.currentTarget as Element | null, event.relatedTarget as Element | null)
-        ) {
-          setTouched(false);
-          setFieldTouched(true);
-          setFocused(false);
-
-          // A user cannot empty a group, so a missing value counts with no earlier change.
-          if (validationMode.value === 'onBlur') {
-            void validation.commit(checkedValue.value, true);
-          }
-        }
-      },
-      onKeydownCapture(event: KeyboardEvent) {
-        if (event.key.startsWith('Arrow')) {
-          setTouched(true);
-        }
-      },
-    },
-    attrs,
-    (merged) => validation.getValidationProps(isDisabled.value, merged),
-  ],
-});
-
-useFormRestore(element, (event) => {
-  void nextTick(() => takeInputs(event));
-});
-
-defineExpose({
-  element,
-  get inputElement() {
-    return getExposedInput();
-  },
-});
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
-  </component>
+  </div>
 </template>

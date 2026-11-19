@@ -37,7 +37,9 @@ const RUN_EACH_TEST = [
   /^patches\//,
   /^\.node-version$/,
   /(?:^|\/)tsconfig[^/]*\.json$/,
-  /^packages\/vue\/vitest\.config\.ts$/,
+  /^packages\/vue\/vitest\.[^/]*config\.ts$/,
+  // The configurations read the list of the folders whose tests run with Vue 3.6.
+  /^packages\/vue\/test\/refactoredFolders\.ts$/,
   // The module graph misses two files of `test/server`: `renderOnServer` loads `renderToHtml.ts` by
   // a path, and a test runs `printSegmentLayouts.ts` in a child process. The configuration starts
   // the shell script.
