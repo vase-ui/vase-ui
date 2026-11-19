@@ -66,7 +66,7 @@ describe('<Calendar.Root />', () => {
     });
     await render(<Host />);
 
-    modifiers['selected'] = today();
+    modifiers.selected = today();
     await nextTick();
 
     expect(errors).toEqual([expect.stringContaining('has the key `selected`')]);

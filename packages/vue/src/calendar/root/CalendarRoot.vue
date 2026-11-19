@@ -88,8 +88,8 @@ export interface CalendarRootProps<
    */
   multiple?: (Multiple & boolean) | undefined;
   /**
-   * The least number of days, or months, that stay selected with `multiple`. A press on a selected
-   * day or month removes it only when more than this number stay selected.
+   * The minimum number of selected days or months with `multiple`. A press can remove a selection
+   * when at least this many will remain.
    * @default 0
    */
   minDays?: number | undefined;

@@ -1002,7 +1002,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - `Accordion.Item` and `Collapsible.Root` use `useCollapsibleRoot` to provide the panel IDs, transition state and open request. The item checks its veto before it asks the accordion root to change the value. Each root checks its own veto before the model update.
 - A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
-- A part that renders a root can give that root a host, when the root needs a value that it has no prop for. The part calls `provide` with an `InjectionKey` in `src/internals`, such as `RangeCalendarHostContext` and `DateTimeFieldHostContext`. The root calls `inject(key, undefined)` and works with no host. A host is internal, so it adds no prop and no event to the root.
+- A part that renders a root can give that root a host, when the root needs a value that it has no prop for. The part calls `provide` with an internal `InjectionKey`, such as `RangeCalendarHostContext` and `DateTimeFieldHostContext`. The root calls `inject(key, undefined)` and works with no host. A host is internal, so it adds no prop and no event to the root.
 
 ### Dates and times
 
