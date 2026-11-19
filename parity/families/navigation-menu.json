@@ -72,5 +72,35 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuDismissContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root/NavigationMenuRootContext.ts",
+      "member": "NavigationMenuDismissContext",
+      "witness": "packages/vue/src/navigation-menu/list/NavigationMenuList.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root/NavigationMenuRootContext.ts",
+      "member": "NavigationMenuPortalContext",
+      "witness": "packages/vue/src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/utils/constants.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root/NavigationMenuRootContext.ts",
+      "member": "OPEN_DELAY",
+      "witness": "packages/vue/src/navigation-menu/root/NavigationMenuRoot.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/utils/isOutsideMenuEvent.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root/NavigationMenuRootContext.ts",
+      "member": "useNavigationMenuFocusout",
+      "witness": "packages/vue/src/navigation-menu/link/NavigationMenuLink.test.tsx"
+    }
+  ]
 }

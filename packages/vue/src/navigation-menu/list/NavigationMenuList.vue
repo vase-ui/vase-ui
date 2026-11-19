@@ -29,10 +29,9 @@ import {
 } from '../../utils/popups/interactions/useDismissLayer';
 import {
   useNavigationMenuRootContext,
-  useNavigationMenuTreeContext,
+  navigationTriggers,
+  NavigationMenuDismissContext,
 } from '../root/NavigationMenuRootContext';
-import { navigationTriggers } from '../utils/constants';
-import { NavigationMenuDismissContext } from './NavigationMenuDismissContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -43,9 +42,8 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuListState>;
 }>();
 
-const nodeId = useNavigationMenuTreeContext();
-
 const {
+  nodeId,
   orientation,
   open,
   nested,

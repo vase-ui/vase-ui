@@ -33,12 +33,10 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import {
   useNavigationMenuRootContext,
-  useNavigationMenuTreeContext,
+  useNavigationMenuFocusout,
 } from '../root/NavigationMenuRootContext';
-import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent';
 
 defineOptions({ inheritAttrs: false });
 
@@ -53,9 +51,8 @@ defineSlots<{
   render: ComponentRenderFn<AnchorHTMLAttributes & Pick<HTMLProps, 'ref'>, NavigationMenuLinkState>;
 }>();
 
-const { setValue, popupElement, positionerElement, rootRef } = useNavigationMenuRootContext();
-const nodeId = useNavigationMenuTreeContext();
-const tree = useFloatingTree();
+const { setValue } = useNavigationMenuRootContext();
+const onFocusout = useNavigationMenuFocusout();
 
 const state = computed<NavigationMenuLinkState>(() => ({ active: props.active }));
 
@@ -77,26 +74,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('a', props, {
           setValue(null, createChangeEventDetails(REASONS.linkPress, event));
         }
       },
-      onFocusout(event: FocusEvent) {
-        if (
-          positionerElement.value &&
-          popupElement.value &&
-          isOutsideMenuEvent(
-            {
-              currentTarget: event.currentTarget as HTMLElement | null,
-              relatedTarget: event.relatedTarget as HTMLElement | null,
-            },
-            {
-              popupElement: popupElement.value,
-              rootElement: rootRef.value,
-              tree: tree.value,
-              nodeId,
-            },
-          )
-        ) {
-          setValue(null, createChangeEventDetails(REASONS.focusOut, event));
-        }
-      },
+      onFocusout,
     },
     attrs,
   ],

@@ -12,7 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { allowTopLevelViewportWarning } from '../utils/test-utils';
+import { allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 

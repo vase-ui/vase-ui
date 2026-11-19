@@ -108,7 +108,6 @@ import {
 } from '../../utils/popups/tree/FloatingTree';
 import {
   NavigationMenuRootContext,
-  NavigationMenuTreeContext,
   useNavigationMenuRootContext,
 } from './NavigationMenuRootContext';
 import type {
@@ -314,7 +313,12 @@ function close() {
   setValue(null, createChangeEventDetails(REASONS.imperativeAction));
 }
 
+const tree = nested ? undefined : provideFloatingTree();
+const nodeId = useFloatingNodeId(tree);
+provideFloatingNode(nodeId);
+
 provide(NavigationMenuRootContext, {
+  nodeId,
   open,
   value: currentValue,
   setValue,
@@ -355,22 +359,13 @@ provide(NavigationMenuRootContext, {
   },
 });
 
-const tree = nested ? undefined : provideFloatingTree();
-const nodeId = useFloatingNodeId(tree);
-provideFloatingNode(nodeId);
-provide(NavigationMenuTreeContext, nodeId);
-
 const state = computed<NavigationMenuRootState>(() => ({ open: open.value, nested }));
 
 const defaultTag = nested ? 'div' : 'nav';
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement(defaultTag, props, {
   state,
-  ref: [
-    (rootElement) => {
-      rootRef.value = rootElement;
-    },
-  ],
+  elementRef: rootRef,
 });
 
 defineExpose({ element, close, unmount });

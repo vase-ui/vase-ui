@@ -11,7 +11,7 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { TOP_LEVEL_VIEWPORT_WARNING, allowTopLevelViewportWarning } from '../utils/test-utils';
+import { TOP_LEVEL_VIEWPORT_WARNING, allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
 import NavigationMenuViewportScoped from './NavigationMenuViewportScoped.test.vue';
 
 type ViewportRenderSlotProps = Parameters<

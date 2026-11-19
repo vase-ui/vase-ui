@@ -354,6 +354,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - The part passes `children: true` to `useRenderElement`, and `<Part>Children.vue` calls `markChildrenMounted()` in setup. A development build then shows a warning when the `#render` slot does not mount `children`.
 - A node of `<Part>Children.vue` that a consumer styles has a `data-vase-ui-*` attribute as its name, such as `data-vase-ui-resizable-edge` of `Resizable.Root`.
+- Combobox.Icon, NavigationMenu.Icon and Select.Icon use `DownArrowChildren.vue` for their default glyph and render slot.
 - The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`. With no positioner, `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content. In a positioner, it renders only its default slot. The part then keeps the two focus guards before and after its element with `useElementSiblings`, so the part has one root node. See [Focus helpers](#focus-helpers).
 
 <!-- prettier-ignore -->
@@ -2062,7 +2063,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Do not select the calls of a console spy by their text. Do not use `toHaveBeenCalledWith` as the only assertion on a console spy. The case then passes on a message that it does not expect.
 - Assert the calls after the last step that can give a message. When a step follows the assertion, assert the number of calls at the end of the case.
 - A case that expects no message needs no console spy. To assert that no message came until a step, use `expect(takeReportedMessages()).toEqual([])`.
-- A test that mounts `NavigationMenu.Viewport` with no positioner in a root that is not nested calls `allowTopLevelViewportWarning()` of `navigation-menu/utils/test-utils.ts` before the mount.
+- A test that mounts `NavigationMenu.Viewport` with no positioner in a root that is not nested calls `allowTopLevelViewportWarning()` of `test/navigation-menuTestUtils.ts` before the mount.
 - A test that counts the transitions of an element reads no style and no layout. A read starts the transition that the part must start, and the test then passes with a broken part.
 - Put the cases of such a test that use a real pointer event in a file of their own. `test/fixtures/AnimatedPanel.click.test.tsx` is an example. A real pointer event comes from `userEvent` of `vitest/browser`.
 - A real pointer event makes Chromium compute style before the next frame callback. A later case of the same file then passes with a broken part.

@@ -22,7 +22,7 @@ import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useSelectRootContext } from '../root/SelectRootContext';
-import SelectIconChildren from './SelectIconChildren.vue';
+import DownArrowChildren from '../../internals/DownArrowChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -52,8 +52,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="SelectIconChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="DownArrowChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <SelectIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectIconChildren>
+    <DownArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></DownArrowChildren>
   </component>
 </template>

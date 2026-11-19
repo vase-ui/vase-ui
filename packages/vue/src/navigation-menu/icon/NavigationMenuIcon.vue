@@ -23,7 +23,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import NavigationMenuIconChildren from './NavigationMenuIconChildren.vue';
+import DownArrowChildren from '../../internals/DownArrowChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -53,8 +53,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="NavigationMenuIconChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="DownArrowChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <NavigationMenuIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></NavigationMenuIconChildren>
+    <DownArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></DownArrowChildren>
   </component>
 </template>

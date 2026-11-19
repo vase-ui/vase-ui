@@ -53,10 +53,9 @@ import {
 } from '../../utils/popups/focus/tabbable';
 import { adaptiveOrigin } from '../../utils/popups/positioning/adaptiveOriginMiddleware';
 import { usePositioner, usePopupPlacement } from '../../utils/popups/usePopupPositioner';
-import { useNavigationMenuPortalContext } from '../portal/NavigationMenuPortalContext';
 import {
   useNavigationMenuRootContext,
-  useNavigationMenuTreeContext,
+  useNavigationMenuPortalContext,
 } from '../root/NavigationMenuRootContext';
 import { positionerSizeStyles } from '../../utils/popups/viewport/popupSizeStyles';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
@@ -83,10 +82,17 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuPositionerState>;
 }>();
 
-const { sizes, open, mounted, positionerElement, floatingRootStore, nested, transitionStatus } =
-  useNavigationMenuRootContext();
+const {
+  nodeId,
+  sizes,
+  open,
+  mounted,
+  positionerElement,
+  floatingRootStore,
+  nested,
+  transitionStatus,
+} = useNavigationMenuRootContext();
 const keepMounted = useNavigationMenuPortalContext();
-const nodeId = useNavigationMenuTreeContext();
 
 const initialInstantTimeout = useTimeout();
 const resizeTimeout = useTimeout();

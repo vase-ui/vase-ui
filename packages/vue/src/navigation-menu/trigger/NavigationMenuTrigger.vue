@@ -79,6 +79,7 @@ import { dismissTriggerBindings } from '../../utils/popups/interactions/useDismi
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import {
   computed,
+  inject,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -116,16 +117,15 @@ import type { ElementSiblings } from '../../utils/popups/focus/useElementSibling
 import { usePopupHover, useHoverPointerStyle } from '../../utils/popups/interactions/usePopupHover';
 import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
-import { useNavigationMenuDismissContext } from '../list/NavigationMenuDismissContext';
 import {
   useNavigationMenuRootContext,
-  useNavigationMenuTreeContext,
+  NavigationMenuDismissContext,
+  useNavigationMenuFocusout,
+  navigationTriggers,
+  NAVIGATION_MENU_TRIGGER_IDENTIFIER,
 } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootChangeEventDetails } from '../root/NavigationMenuRoot.vue';
-import { navigationTriggers, NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
-import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent';
 import { useNavigationMenuPopupSize } from './useNavigationMenuPopupSize';
 
 defineOptions({ inheritAttrs: false });
@@ -146,6 +146,7 @@ defineSlots<{
 }>();
 
 const {
+  nodeId,
   value,
   setValue,
   mounted,
@@ -170,9 +171,8 @@ const {
   nested,
 } = useNavigationMenuRootContext();
 const { value: itemValue } = useNavigationMenuItemContext();
-const nodeId = useNavigationMenuTreeContext();
-const tree = useFloatingTree();
-const dismissProps = useNavigationMenuDismissContext();
+const handleFocusout = useNavigationMenuFocusout();
+const dismissProps = inject(NavigationMenuDismissContext, undefined);
 const direction = useDirection();
 
 const stickIfOpenTimeout = useTimeout();
@@ -414,27 +414,6 @@ function handleKeydown(event: KeyboardEvent) {
     setValue(itemValue.value, createChangeEventDetails(REASONS.listNavigation, event));
     handleActivation(event);
     stopEvent(event);
-  }
-}
-
-function handleFocusout(event: FocusEvent) {
-  if (
-    positionerElement.value &&
-    popupElement.value &&
-    isOutsideMenuEvent(
-      {
-        currentTarget: event.currentTarget as HTMLElement | null,
-        relatedTarget: event.relatedTarget as HTMLElement | null,
-      },
-      {
-        popupElement: popupElement.value,
-        rootElement: rootRef.value,
-        tree: tree.value,
-        nodeId,
-      },
-    )
-  ) {
-    setValue(null, createChangeEventDetails(REASONS.focusOut, event));
   }
 }
 

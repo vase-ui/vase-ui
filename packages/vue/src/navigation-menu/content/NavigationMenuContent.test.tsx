@@ -15,7 +15,7 @@ import {
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { allowTopLevelViewportWarning } from '../utils/test-utils';
+import { allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
 import NavigationMenuContentScoped from './NavigationMenuContentScoped.test.vue';
 
 // The root waits for the animations of its popup element before it unmounts the popup. This

@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createSSRApp } from 'vue';
 import { renderOnServer, takeReportedMessages, waitFor, within } from '#test-utils';
-import { allowTopLevelViewportWarning } from '../utils/test-utils';
+import { allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 
 describe('<NavigationMenu.Trigger />', () => {

@@ -21,7 +21,7 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { allowTopLevelViewportWarning } from '../utils/test-utils';
+import { allowTopLevelViewportWarning } from '../../../test/navigation-menuTestUtils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
 

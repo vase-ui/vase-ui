@@ -58,10 +58,7 @@ import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
-import {
-  useNavigationMenuRootContext,
-  useNavigationMenuTreeContext,
-} from '../root/NavigationMenuRootContext';
+import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -76,6 +73,7 @@ defineSlots<{
 }>();
 
 const {
+  nodeId,
   mounted: popupMounted,
   viewportElement,
   value,
@@ -84,7 +82,7 @@ const {
   viewportTargetElement,
 } = useNavigationMenuRootContext();
 const { value: itemValue } = useNavigationMenuItemContext();
-provideFloatingNode(useNavigationMenuTreeContext());
+provideFloatingNode(nodeId);
 
 const open = computed(() => popupMounted.value && value.value === itemValue.value);
 

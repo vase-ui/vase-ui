@@ -26,8 +26,10 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopupPortal from '../../utils/popups/portal/PopupPortal.vue';
-import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { NavigationMenuPortalContext } from './NavigationMenuPortalContext';
+import {
+  NavigationMenuPortalContext,
+  useNavigationMenuRootContext,
+} from '../root/NavigationMenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 

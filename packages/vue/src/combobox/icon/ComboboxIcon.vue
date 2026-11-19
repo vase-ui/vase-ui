@@ -15,7 +15,7 @@ import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import ComboboxIconChildren from './ComboboxIconChildren.vue';
+import DownArrowChildren from '../../internals/DownArrowChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -42,8 +42,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ComboboxIconChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="DownArrowChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <ComboboxIconChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ComboboxIconChildren>
+    <DownArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></DownArrowChildren>
   </component>
 </template>

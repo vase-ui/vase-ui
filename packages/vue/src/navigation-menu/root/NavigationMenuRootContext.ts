@@ -1,4 +1,10 @@
 import { inject } from 'vue';
+import { contains } from '../../common/shadowDom';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import type { DismissLayer } from '../../utils/popups/interactions/useDismissLayer';
+import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
+import { getNodeChildren } from '../../utils/popups/tree/nodes';
 import type { Dimensions } from '@floating-ui/utils';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -78,6 +84,7 @@ export interface NavigationMenuRootContext<Value = any> {
    * The popup reads this ref in its render for its name. A write thus renders the popup again.
    */
   prevTriggerElementRef: ShallowRef<Element | null | undefined>;
+  nodeId: string;
   nested: boolean;
   rootRef: ShallowRef<HTMLElement | null>;
   beforeInsideRef: ShallowRef<HTMLElement | null>;
@@ -99,8 +106,6 @@ export interface NavigationMenuRootContext<Value = any> {
 
 export const NavigationMenuRootContext: InjectionKey<NavigationMenuRootContext> = Symbol();
 
-export const NavigationMenuTreeContext: InjectionKey<string> = Symbol();
-
 export function useNavigationMenuRootContext(optional: true): NavigationMenuRootContext | undefined;
 export function useNavigationMenuRootContext(optional?: false): NavigationMenuRootContext;
 export function useNavigationMenuRootContext(optional = false) {
@@ -114,10 +119,48 @@ export function useNavigationMenuRootContext(optional = false) {
   return context;
 }
 
-/**
- * Gives the id of the node that the root registered in the popup tree, or `undefined` outside a
- * root.
- */
-export function useNavigationMenuTreeContext() {
-  return inject(NavigationMenuTreeContext, undefined);
+export const OPEN_DELAY = 50;
+export const CLOSE_DELAY = 50;
+export const NAVIGATION_MENU_TRIGGER_IDENTIFIER = 'data-vase-ui-navigation-menu-trigger';
+
+export const navigationTriggers = new WeakMap<Element, () => boolean>();
+
+export const NavigationMenuDismissContext: InjectionKey<ComputedRef<DismissLayer | undefined>> =
+  Symbol();
+
+export const NavigationMenuPortalContext: InjectionKey<ComputedRef<boolean>> = Symbol();
+
+export function useNavigationMenuPortalContext() {
+  const keepMounted = inject(NavigationMenuPortalContext, undefined);
+  if (keepMounted === undefined) {
+    throw new Error(
+      'Vase UI: <NavigationMenu.Portal> is missing. The positioner reads from the portal whether the popup stays in the DOM while it is closed. Put <NavigationMenu.Positioner> inside <NavigationMenu.Portal>.',
+    );
+  }
+  return keepMounted;
+}
+
+export function useNavigationMenuFocusout() {
+  const { positionerElement, popupElement, rootRef, nodeId, setValue } =
+    useNavigationMenuRootContext();
+  const tree = useFloatingTree();
+
+  return (event: FocusEvent) => {
+    const popup = popupElement.value;
+    const next = event.relatedTarget as Element | null;
+    if (
+      !positionerElement.value ||
+      !popup ||
+      contains(popup, event.currentTarget as Element) ||
+      contains(popup, next) ||
+      contains(rootRef.value, next) ||
+      (tree.value &&
+        getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
+          contains(node.context?.elements.floating, next),
+        ))
+    ) {
+      return;
+    }
+    setValue(null, createChangeEventDetails(REASONS.focusOut, event));
+  };
 }

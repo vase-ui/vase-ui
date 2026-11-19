@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { OPEN_DELAY } from '../utils/constants';
+import { OPEN_DELAY } from '../root/NavigationMenuRootContext';
 
 vi.mock('../../common/platform', async () => {
   const actual =
