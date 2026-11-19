@@ -114,9 +114,8 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { TabsRootContext } from './TabsRootContext';
+import { tabsStateAttributesMapping, TabsRootContext } from './TabsRootContext';
 import type { TabsPartRegistration } from './TabsRootContext';
-import { tabsStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
 
@@ -266,7 +265,13 @@ function onValueChange(newValue: TabsTabValue, eventDetails: TabsRootChangeEvent
   activeTabValue.value = newValue;
 }
 
-function notifyAutomaticValueChange(nextValue: TabsTabValue, reason: TabsRootChangeEventReason) {
+function selectAutomatically(nextValue: TabsTabValue, reason: TabsRootChangeEventReason) {
+  if (nextValue !== activeTabValue.value) {
+    // An automatic change has no direction. Commit it before the listener can throw.
+    previousValue = nextValue;
+    tabActivationDirection.value = 'none';
+    activeTabValue.value = nextValue;
+  }
   emit(
     'valueChange',
     nextValue,
@@ -275,25 +280,11 @@ function notifyAutomaticValueChange(nextValue: TabsTabValue, reason: TabsRootCha
     }),
   );
   emit('update:modelValue', nextValue);
-}
-
-function commitAutomaticValueChange(
-  fallbackValue: TabsTabValue,
-  reason: TabsRootChangeEventReason,
-) {
-  // An automatic fallback is not a directional transition. The previous value is set first, so that
-  // the watcher of the value computes no direction.
-  previousValue = fallbackValue;
-  tabActivationDirection.value = 'none';
-  // The write comes before the listener, so that a listener that throws cannot stop it.
-  activeTabValue.value = fallbackValue;
-  notifyAutomaticValueChange(fallbackValue, reason);
-  // The initial notification is done only after the listener returns.
   shouldNotifyInitialValueChange = false;
 }
 
 // A controlled root keeps the exact value of the parent, also when that tab is disabled or missing.
-function run() {
+function reconcileSelection() {
   if (isControlled.value) {
     shouldNotifyInitialValueChange = false;
     shouldHonorDisabledDefaultValue = false;
@@ -306,7 +297,7 @@ function run() {
     // In Vue, only `KeepAlive` empties the map while the tab parts exist. A deactivated tab part
     // stays in the registry, so an empty registry is a removal.
     if (didRegisterTabs && activeTabValue.value !== null && tabs.size === 0) {
-      commitAutomaticValueChange(null, REASONS.missing);
+      selectAutomatically(null, REASONS.missing);
     }
     return;
   }
@@ -353,18 +344,21 @@ function run() {
       fallbackReason = REASONS.disabled;
     }
 
-    commitAutomaticValueChange(fallbackValue, fallbackReason);
+    selectAutomatically(fallbackValue, fallbackReason);
     return;
   }
 
   if (shouldNotifyInitialValueChange && selectedTabMetadata != null) {
-    notifyAutomaticValueChange(activeTabValue.value, REASONS.initial);
-    shouldNotifyInitialValueChange = false;
+    selectAutomatically(activeTabValue.value, REASONS.initial);
   }
 }
 
-onMounted(run);
-watch([tabMap, activeTabValue, isControlled], run, { flush: 'post' });
+onMounted(() => {
+  watch([tabMap, activeTabValue, isControlled], reconcileSelection, {
+    immediate: true,
+    flush: 'post',
+  });
+});
 
 // A server cannot tell which tab the implicit default `0` names, so that value chooses no tab. The
 // first enabled tab then takes the tab stop of the server HTML.
@@ -373,14 +367,18 @@ const hasChosenTab = computed(
 );
 
 // The panels register their elements in this list, to get their `data-index`.
-const panelElements = shallowRef<(HTMLElement | null)[]>([]);
-const panelList = useCompositeList({ elementsRef: panelElements, provide: false });
+const panelList = useCompositeList({ elementsRef: shallowRef([]), provide: false });
+
+const state = computed<TabsRootState>(() => ({
+  orientation: props.orientation,
+  tabActivationDirection: tabActivationDirection.value,
+}));
 
 provide(TabsRootContext, {
   value: activeTabValue,
   onValueChange,
-  orientation: computed(() => props.orientation),
-  getTabElementBySelectedValue: (selectedValue) => findTabElement(tabMap.value, selectedValue),
+  state,
+  activeTabElement: computed(() => findTabElement(tabMap.value, activeTabValue.value)),
   getTabIdByPanelValue: (panelValue) => findId(tabs, panelValue, false),
   getTabPanelIdByValue: (tabValue) => findId(panels, tabValue, true),
   registerTab: (source, registration) => register(tabs, source, registration),
@@ -389,15 +387,9 @@ provide(TabsRootContext, {
     didRegisterTabs ||= map.size > 0;
     tabMap.value = map;
   },
-  tabActivationDirection,
   hasChosenTab,
   panelList,
 });
-
-const state = computed<TabsRootState>(() => ({
-  orientation: props.orientation,
-  tabActivationDirection: tabActivationDirection.value,
-}));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,

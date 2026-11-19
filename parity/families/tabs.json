@@ -59,5 +59,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/tabs/root/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/root/TabsRootContext.ts",
+      "member": "tabsStateAttributesMapping",
+      "witness": "packages/vue/src/tabs/root/TabsRoot.test.tsx"
+    }
+  ]
 }

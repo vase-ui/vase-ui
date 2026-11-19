@@ -2,6 +2,7 @@ import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { trackResizeObservers } from '../../../test/fixtures/trackResizeObservers';
 import {
   createHeldBranch,
   createRenderer,
@@ -391,30 +392,7 @@ describe('<Tabs.List />', () => {
     // A deactivated list has an empty map, so the indicator measures nothing and shows no trace of
     // a call. The case counts the observers instead.
     it('stops the size observer while the list is deactivated and starts it again', async () => {
-      const NativeResizeObserver = window.ResizeObserver;
-      const observers: { observed: Set<Element>; isDisconnected: boolean }[] = [];
-      class RecordedResizeObserver extends NativeResizeObserver {
-        record = { observed: new Set<Element>(), isDisconnected: false };
-
-        constructor(callback: ResizeObserverCallback) {
-          super(callback);
-          observers.push(this.record);
-        }
-
-        observe(target: Element, options?: ResizeObserverOptions) {
-          this.record.observed.add(target);
-          super.observe(target, options);
-        }
-
-        disconnect() {
-          this.record.isDisconnected = true;
-          super.disconnect();
-        }
-      }
-      vi.stubGlobal('ResizeObserver', RecordedResizeObserver);
-      onTestFinished(() => {
-        vi.unstubAllGlobals();
-      });
+      const readTargets = trackResizeObservers();
 
       const Inner = defineComponent(() => () => (
         <Tabs.Root modelValue={0}>
@@ -435,17 +413,15 @@ describe('<Tabs.List />', () => {
       const list = screen.getByTestId('list');
       const tab = screen.getByRole('tab');
       const indicator = screen.getByTestId('indicator');
-      const readRunning = () => observers.filter((observer) => !observer.isDisconnected);
-
-      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
+      expect(readTargets()).toEqual([[list, tab]]);
 
       await setProps({ visible: false });
 
-      expect(readRunning()).toEqual([]);
+      expect(readTargets()).toEqual([]);
 
       await setProps({ visible: true });
 
-      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
+      expect(readTargets()).toEqual([[list, tab]]);
 
       tab.style.width = '60px';
 

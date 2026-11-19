@@ -54,8 +54,7 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
-import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
-import { useTabsRootContext } from '../root/TabsRootContext';
+import { tabsStateAttributesMapping, useTabsRootContext } from '../root/TabsRootContext';
 import * as TabsPanelDataAttributes from './TabsPanelDataAttributes';
 
 defineOptions({ inheritAttrs: false });
@@ -78,19 +77,17 @@ defineSlots<{
 const {
   value: selectedValue,
   getTabIdByPanelValue,
-  orientation,
   panelList,
   registerPanel,
-  tabActivationDirection,
+  state: rootState,
 } = useTabsRootContext();
 
 // A tab registers its id in `setup`, and it can come after the panel.
 useDeferredServerRender();
 
 const panelId = useVaseUiId(() => props.id);
-
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const open = computed(() => props.value === selectedValue.value);
-// The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.
 const { mounted, transitionStatus, setMounted } = useTransitionStatus(
   open,
   false,
@@ -107,13 +104,11 @@ useRegisteredId(
   () => element.value,
 );
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const index = useCompositeListItem(element, { list: panelList });
 
 const state = computed<TabsPanelState>(() => ({
+  ...rootState.value,
   hidden: hidden.value,
-  orientation: orientation.value,
-  tabActivationDirection: tabActivationDirection.value,
   transitionStatus: transitionStatus.value,
 }));
 

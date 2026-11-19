@@ -181,15 +181,14 @@ function resolveTranslateLength(value: string | undefined, referenceSize: number
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, shallowRef } from 'vue';
+import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import PrehydrationScript from '../../internals/PrehydrationScript.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTabsListContext } from '../list/TabsListContext';
-import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
-import { useTabsRootContext } from '../root/TabsRootContext';
+import { tabsStateAttributesMapping, useTabsRootContext } from '../root/TabsRootContext';
 import { script as prehydrationScript } from './prehydrationScript.min';
 import * as TabsIndicatorCssVars from './TabsIndicatorCssVars';
 
@@ -211,28 +210,15 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TabsIndicatorState>;
 }>();
 
-const { getTabElementBySelectedValue, orientation, tabActivationDirection, value } =
-  useTabsRootContext();
-const { tabsListElement, registerIndicatorUpdateListener } = useTabsListContext();
+const { activeTabElement, state: rootState, value } = useTabsRootContext();
+const { tabsListElement, resizeCount } = useTabsListContext();
 
 const isHydrating = useIsHydrating();
 
-// The list calls the listener when its size or the size of a tab changes. The measurement reads the
-// count, so each call measures again.
-const updateCount = shallowRef(0);
-onMounted(() => {
-  onScopeDispose(
-    registerIndicatorUpdateListener(() => {
-      updateCount.value += 1;
-    }),
-  );
-});
-
 const measurement = computed<ActiveTabMeasurement | null>(() => {
-  void updateCount.value;
-  // A change of the orientation can move a tab with no change of size, and the observer reports
-  // only a change of size.
-  void orientation.value;
+  void resizeCount.value;
+  // A change of orientation can move a tab without a resize.
+  void rootState.value.orientation;
 
   const listElement = tabsListElement.value;
   // The first client render must equal the server HTML, which has no measurement. A part that
@@ -241,15 +227,14 @@ const measurement = computed<ActiveTabMeasurement | null>(() => {
     return null;
   }
 
-  const activeTab = getTabElementBySelectedValue(value.value);
+  const activeTab = activeTabElement.value;
   return activeTab === null ? null : measureActiveTab(activeTab, listElement);
 });
 
 const state = computed<TabsIndicatorState>(() => ({
-  orientation: orientation.value,
+  ...rootState.value,
   activeTabPosition: measurement.value?.position ?? null,
   activeTabSize: measurement.value?.size ?? null,
-  tabActivationDirection: tabActivationDirection.value,
 }));
 
 // The template puts `PrehydrationScript` directly after the element. The script finds the indicator

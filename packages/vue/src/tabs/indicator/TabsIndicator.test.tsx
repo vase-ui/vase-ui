@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createSSRApp, defineComponent, provide } from 'vue';
+import { createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
@@ -16,7 +16,6 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
-import { TabsListContext, useTabsListContext } from '../list/TabsListContext';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { script as generatedPrehydrationScript } from './prehydrationScript.min';
 import TabsIndicatorHydration from './TabsIndicatorHydration.test.vue';
@@ -44,29 +43,27 @@ describe('<Tabs.Indicator />', () => {
     testRenderPropWith: 'div',
   }));
 
-  it('releases its update listener when the indicator unmounts', async () => {
-    const listeners = new Set<() => void>();
-    const Indicator = defineComponent(() => {
-      provide(TabsListContext, {
-        ...useTabsListContext(),
-        registerIndicatorUpdateListener(listener) {
-          listeners.add(listener);
-          return () => listeners.delete(listener);
-        },
-      });
-      return () => <Tabs.Indicator />;
-    });
-    const { unmount } = await render(
-      <Tabs.Root>
+  it('updates only the mounted indicator after another indicator unmounts', async () => {
+    const visible = shallowRef(true);
+    await render(() => (
+      <Tabs.Root defaultValue="one">
         <Tabs.List>
-          <Indicator />
+          <Tabs.Tab value="one" style={{ width: '50px' }} />
+          {visible.value && <Tabs.Indicator data-testid="first" />}
+          <Tabs.Indicator data-testid="second" />
         </Tabs.List>
-      </Tabs.Root>,
-    );
-    expect(listeners.size).toBe(1);
+      </Tabs.Root>
+    ));
+    const first = screen.getByTestId('first');
+    const second = screen.getByTestId('second');
+    expect(first.style.getPropertyValue('--active-tab-width')).toBe('50px');
+    visible.value = false;
+    await nextTick();
+    expect(first).not.toBeInTheDocument();
 
-    unmount();
-    expect(listeners.size).toBe(0);
+    screen.getByRole('tab').style.width = '75px';
+    await waitFor(() => expect(second.style.getPropertyValue('--active-tab-width')).toBe('75px'));
+    expect(first.style.getPropertyValue('--active-tab-width')).toBe('50px');
   });
 
   it('exposes null active tab state when the selected value has no matching tab', async () => {

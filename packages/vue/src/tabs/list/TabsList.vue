@@ -23,15 +23,14 @@ export interface TabsListProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
+import { useResizeObserver } from '../../common/useResizeObserver';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
-import { useTabsRootContext } from '../root/TabsRootContext';
+import { tabsStateAttributesMapping, useTabsRootContext } from '../root/TabsRootContext';
 import type { TabsTabMetadata } from '../tab/TabsTab.vue';
 import { TabsListContext } from './TabsListContext';
 
@@ -52,31 +51,25 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TabsListState>;
 }>();
 
-const { hasChosenTab, orientation, setTabMap, tabActivationDirection } = useTabsRootContext();
+const { hasChosenTab, setTabMap, state } = useTabsRootContext();
 
-// The list controls the highlighted index, as Base UI does. The check of `disabledIndices` in the
-// composite then does not run. With an uncontrolled index, that check moves the tab stop off a
-// selected tab that is hidden or natively disabled. `Tabs.Tab` moves it back. The two moves repeat.
+// A selected tab can be hidden or natively disabled and still own the tab stop.
 const highlightedTabIndex = shallowRef(0);
 
-const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot<TabsTabMetadata>({
-  highlightedIndex: highlightedTabIndex,
-  enableHomeAndEndKeys: true,
-  loopFocus: () => props.loopFocus,
-  orientation,
-  onHighlightedIndexChange(index) {
-    highlightedTabIndex.value = index;
-  },
-  onMapChange: setTabMap,
-  // A disabled tab can get focus, so the keys do not skip it.
-  getDisabledIndices: () => EMPTY_ARRAY,
-  hasActiveItem: hasChosenTab,
-});
-
-const state = computed<TabsListState>(() => ({
-  orientation: orientation.value,
-  tabActivationDirection: tabActivationDirection.value,
-}));
+const { elementsRef, onFocusin, onFocusout, onKeydown, registerRoot } =
+  useCompositeRoot<TabsTabMetadata>({
+    highlightedIndex: highlightedTabIndex,
+    enableHomeAndEndKeys: true,
+    loopFocus: () => props.loopFocus,
+    orientation: () => state.value.orientation,
+    onHighlightedIndexChange(index) {
+      highlightedTabIndex.value = index;
+    },
+    onMapChange: setTabMap,
+    // A disabled tab can get focus, so the keys do not skip it.
+    getDisabledIndices: () => EMPTY_ARRAY,
+    hasActiveItem: hasChosenTab,
+  });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
@@ -84,7 +77,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   props: (attrs) => [
     { onFocusin, onFocusout, onKeydown },
     {
-      'aria-orientation': orientation.value === 'vertical' ? 'vertical' : undefined,
+      'aria-orientation': state.value.orientation === 'vertical' ? 'vertical' : undefined,
       role: 'tablist',
     },
     attrs,
@@ -92,52 +85,17 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   stateAttributesMapping: tabsStateAttributesMapping,
 });
 
-const indicatorUpdateListeners = new Set<() => void>();
-const tabResizeObserverElements = new Set<HTMLElement>();
-let resizeObserver: ResizeObserver | null = null;
-
-// `KeepAlive` takes the elements out of the document. They have no layout there, so the observer
-// stops until the list is active again.
-const { isHeld } = useKeepAliveState();
-
-watch(
-  [element, isHeld],
-  ([listElement, held], _previous, onCleanup) => {
-    if (listElement === null || held || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-
-    const observer = new ResizeObserver(() => {
-      indicatorUpdateListeners.forEach((listener) => listener());
-    });
-    resizeObserver = observer;
-    observer.observe(listElement);
-    tabResizeObserverElements.forEach((tabElement) => observer.observe(tabElement));
-
-    onCleanup(() => {
-      observer.disconnect();
-      resizeObserver = null;
-    });
+const resizeCount = shallowRef(0);
+useResizeObserver(
+  () => element.value && [element.value, ...elementsRef.value],
+  () => {
+    resizeCount.value += 1;
   },
-  { flush: 'post' },
 );
 
 provide(TabsListContext, {
   activateOnFocus: computed(() => props.activateOnFocus),
-  registerIndicatorUpdateListener(listener) {
-    indicatorUpdateListeners.add(listener);
-    return () => {
-      indicatorUpdateListeners.delete(listener);
-    };
-  },
-  registerTabResizeObserverElement(tabElement) {
-    tabResizeObserverElements.add(tabElement);
-    resizeObserver?.observe(tabElement);
-    return () => {
-      tabResizeObserverElements.delete(tabElement);
-      resizeObserver?.unobserve(tabElement);
-    };
-  },
+  resizeCount,
   tabsListElement: element,
 });
 

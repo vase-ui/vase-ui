@@ -1,11 +1,17 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 import type {
   CompositeListContextValue,
   CompositeMetadata,
 } from '../../internals/composite/list/useCompositeList';
-import type { TabsTabActivationDirection, TabsTabMetadata, TabsTabValue } from '../tab/TabsTab.vue';
-import type { TabsRootChangeEventDetails, TabsRootOrientation } from './TabsRoot.vue';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import type { TabsTabMetadata, TabsTabValue } from '../tab/TabsTab.vue';
+import type { TabsRootChangeEventDetails, TabsRootState } from './TabsRoot.vue';
+import * as TabsRootDataAttributes from './TabsRootDataAttributes';
+
+export const tabsStateAttributesMapping: StateAttributesMapping<TabsRootState> = {
+  tabActivationDirection: (dir) => ({ [TabsRootDataAttributes.activationDirection]: dir }),
+};
 
 /**
  * What a tab or a panel tells the root: its value, and a getter for its `id`. The getter gives
@@ -26,14 +32,8 @@ export interface TabsRootContext {
    * uncontrolled root.
    */
   onValueChange(value: TabsTabValue, eventDetails: TabsRootChangeEventDetails): void;
-  /**
-   * The component orientation (layout flow direction).
-   */
-  orientation: ComputedRef<TabsRootOrientation>;
-  /**
-   * Gives the element of the tab with the given value.
-   */
-  getTabElementBySelectedValue(selectedValue: TabsTabValue): HTMLElement | null;
+  state: ComputedRef<TabsRootState>;
+  activeTabElement: ComputedRef<HTMLElement | null>;
   /**
    * Gives the `id` of the tab that corresponds to the given panel value.
    */
@@ -56,10 +56,6 @@ export interface TabsRootContext {
    * The list gives the root its map of tab elements.
    */
   setTabMap(map: ReadonlyMap<Element, CompositeMetadata<TabsTabMetadata>>): void;
-  /**
-   * The position of the active tab relative to the previously active tab.
-   */
-  tabActivationDirection: Readonly<Ref<TabsTabActivationDirection>>;
   /**
    * Whether `modelValue` or `defaultValue` chose a tab. It is `false` for `null` and for the implicit
    * default `0`, because a server cannot tell which tab the implicit default names. The list gives

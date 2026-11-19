@@ -1,6 +1,7 @@
-import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { trackResizeObservers } from '../../../test/fixtures/trackResizeObservers';
 import {
   createHeldBranch,
   createRenderer,
@@ -374,6 +375,7 @@ describe('<Tabs.Tab />', () => {
   });
 
   it('stops the resize observer on the previous tab element', async () => {
+    const readTargets = trackResizeObservers();
     const tag = shallowRef('button');
     await render(() => (
       <Tabs.Root>
@@ -385,13 +387,14 @@ describe('<Tabs.Tab />', () => {
       </Tabs.Root>
     ));
     const previous = screen.getByRole('tab');
-    const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
-    onTestFinished(() => unobserve.mockRestore());
+    const list = screen.getByRole('tablist');
+    expect(readTargets()).toEqual([[list, previous]]);
 
     tag.value = 'span';
     await nextTick();
-    expect(screen.getByRole('tab')).not.toBe(previous);
-    expect(unobserve).toHaveBeenCalledWith(previous);
+    const current = screen.getByRole('tab');
+    expect(current).not.toBe(previous);
+    expect(readTargets()).toEqual([[list, current]]);
   });
 
   it('is not named by its panel while KeepAlive holds a tab that mounted in a held branch', async () => {
