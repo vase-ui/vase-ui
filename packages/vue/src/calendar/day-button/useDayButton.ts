@@ -9,7 +9,7 @@ import type { NativeButtonProps, VaseUIComponentProps } from '../../internals/ty
 import { useButton } from '../../internals/use-button/useButton';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
+import type { CalendarRootContext } from '../root/CalendarRootContext';
 
 const FULL_DATE: Intl.DateTimeFormatOptions = {
   weekday: 'long',
@@ -23,6 +23,7 @@ interface DayButtonProps<State> extends NativeButtonProps, VaseUIComponentProps<
 }
 
 interface UseDayButtonOptions<State extends DayState> {
+  root: CalendarRootContext;
   day: Readonly<Ref<Temporal.PlainDate>>;
   state: Readonly<Ref<State>>;
   stateAttributesMapping: StateAttributesMapping<State>;
@@ -37,9 +38,8 @@ interface UseDayButtonOptions<State extends DayState> {
  */
 export function useDayButton<State extends DayState>(
   props: DayButtonProps<State>,
-  { day, state, stateAttributesMapping, extraProps, register }: UseDayButtonOptions<State>,
+  { root, day, state, stateAttributesMapping, extraProps, register }: UseDayButtonOptions<State>,
 ) {
-  const root = useCalendarRootContext();
   const { isLeaving } = useCalendarMonthContext();
   const isHydrating = useIsHydrating();
 

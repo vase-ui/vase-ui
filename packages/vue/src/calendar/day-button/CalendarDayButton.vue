@@ -26,7 +26,11 @@ export interface CalendarDayButtonProps
 import { useDayButton } from './useDayButton';
 import type { HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useCalendarDayContext, dayStateAttributesMapping } from '../root/CalendarRootContext';
+import {
+  useCalendarRootContext,
+  useCalendarDayContext,
+  dayStateAttributesMapping,
+} from '../root/CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -44,9 +48,11 @@ defineSlots<{
   render(props: { props: HTMLProps; state: CalendarDayButtonState; text: string }): unknown;
 }>();
 
+const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
 
 const { element, elementProps, setRef, usesRenderSlot, text } = useDayButton(props, {
+  root,
   day,
   state,
   stateAttributesMapping: dayStateAttributesMapping,
