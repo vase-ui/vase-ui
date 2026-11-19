@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import { PopupTriggerMap } from '../popupTriggerMap';
+import { PopupTriggerMap } from '../usePopupRoot';
 import { menuPopups } from '../registeredParts';
 import { hoverPointerStyle } from './hoverPointerEvents';
 import { getHoverIntent } from './hoverIntent';

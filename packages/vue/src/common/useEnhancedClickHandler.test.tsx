@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, fireEvent } from '#test-utils';
-import { useEnhancedClickHandler } from './useEnhancedClickHandler';
+import { useEnhancedClickHandler } from '../utils/popups/usePopupTrigger';
 
 describe('useEnhancedClickHandler', () => {
   const { render } = createRenderer();

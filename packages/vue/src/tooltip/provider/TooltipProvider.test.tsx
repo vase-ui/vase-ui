@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { OPEN_DELAY } from '../utils/constants';
+import { OPEN_DELAY } from '../root/TooltipRootContext';
 
 describe('<Tooltip.Provider />', () => {
   const { render } = createRenderer();

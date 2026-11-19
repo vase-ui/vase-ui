@@ -4,7 +4,7 @@ import type { PropType, ShallowRef, VNode, VNodeChild } from 'vue';
 import { isInaccessible } from '@testing-library/dom';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
-import type { InteractionType } from '../src/common/useEnhancedClickHandler';
+import type { InteractionType } from '../src/utils/popups/usePopupTrigger';
 import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';

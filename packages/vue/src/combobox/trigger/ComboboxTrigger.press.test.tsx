@@ -13,7 +13,9 @@ describe('<Combobox.Trigger />', () => {
     });
     await render(() => (
       <div>
-        {shifted.value && <div style={{ height: '100px' }}>Status</div>}
+        <div hidden={!shifted.value} style={{ height: '100px' }}>
+          Status
+        </div>
         <Combobox.Root onOpenChange={onOpenChange}>
           <Combobox.Trigger data-testid="trigger">Fruit</Combobox.Trigger>
           <Combobox.Portal>

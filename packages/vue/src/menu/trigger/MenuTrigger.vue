@@ -63,6 +63,7 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { selectors as menuSelectors } from '../store/MenuStore';
 import { computed, onMounted, onScopeDispose, shallowRef, watch, type ShallowRef } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -83,20 +84,17 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
-import { useClick } from '../../utils/popups/interactions/useClick';
-import { useFocus } from '../../utils/popups/interactions/useFocus';
+import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
 import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import {
   useFloatingNodeId,
   useFloatingParentNodeId,
   useFloatingTree,
 } from '../../utils/popups/tree/FloatingTree';
 import { FloatingTreeStore } from '../../utils/popups/tree/FloatingTreeStore';
-import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
 import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -125,14 +123,11 @@ defineSlots<{
 }>();
 
 const rootContext = useMenuRootContext(true);
-const handleStore = usePopupHandleStore(() => props.handle);
-if (rootContext === undefined && props.handle === undefined) {
-  throw new Error(
-    'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
-  );
-}
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
-const store = computed<MenuHandleStore<any>>(() => handleStore.value ?? rootContext!.store);
+const store = useTriggerOwner<MenuHandleStore<unknown>>(
+  rootContext?.store,
+  () => props.handle,
+  'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
+);
 
 const thisTriggerId = useVaseUiId(() => props.id);
 
@@ -154,31 +149,34 @@ const floatingParentNodeId = useFloatingParentNodeId();
 
 const triggerElement: ShallowRef<HTMLElement | null> = shallowRef(null);
 
-const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
-  thisTriggerId,
-  store,
-  () => ({
-    payload: props.payload,
-    closeDelay: props.closeDelay,
-    parent,
-    floatingTreeRoot: floatingTreeRoot.value,
-    floatingNodeId,
-    floatingParentNodeId: floatingParentNodeId.value,
-    keyboardEventRelay: compositeRootContext?.relayKeyboardEvent,
-  }),
-);
+const {
+  registerTrigger,
+  useFocus,
+  usePress,
+  isMountedByThisTrigger,
+  bindings: rootTriggerProps,
+  open: popupOpen,
+  isOpenedByThisTrigger,
+  isTriggerActive,
+} = usePopupTrigger(thisTriggerId, store, () => ({
+  payload: props.payload,
+  closeDelay: props.closeDelay,
+  parent,
+  floatingTreeRoot: floatingTreeRoot.value,
+  floatingNodeId,
+  floatingParentNodeId: floatingParentNodeId.value,
+  keyboardEventRelay: compositeRootContext?.relayKeyboardEvent,
+}));
 
-const isTriggerActive = computed(() => store.value.select('isTriggerActive', thisTriggerId.value));
-const isOpenedByThisTrigger = computed(() =>
-  store.value.select('isOpenedByTrigger', thisTriggerId.value),
+const controlsId = computed(() =>
+  menuSelectors.triggerControlsId(store.value.state, thisTriggerId.value),
 );
-const controlsId = computed(() => store.value.select('triggerControlsId', thisTriggerId.value));
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
     props.disabled ||
-    store.value.select('disabled') ||
+    menuSelectors.disabled(store.value.state) ||
     (menubarContext?.disabled.value ?? false) ||
     (props.nativeButton && fieldsetDisabled.value),
 );
@@ -207,13 +205,16 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
 
   if (
     contains(trigger, mouseUpTarget) ||
-    contains(store.value.select('positionerElement'), mouseUpTarget) ||
+    contains(menuSelectors.positionerElement(store.value.state), mouseUpTarget) ||
     mouseUpTarget === trigger
   ) {
     return;
   }
 
-  if (mouseUpTarget != null && findRootOwnerId(mouseUpTarget) === store.value.select('rootId')) {
+  if (
+    mouseUpTarget != null &&
+    findRootOwnerId(mouseUpTarget) === menuSelectors.rootId(store.value.state)
+  ) {
     return;
   }
 
@@ -258,10 +259,7 @@ function followHoverOpen() {
     removeMouseUpListener();
   }
 
-  if (
-    isOpenedByThisTrigger.value &&
-    store.value.select('lastOpenChangeReason') === REASONS.triggerHover
-  ) {
+  if (isOpenedByThisTrigger.value && store.value.state.openChangeReason === REASONS.triggerHover) {
     listensAfterHoverOpen = true;
     listenForMouseUp(ownerDocument(triggerElement.value), null);
   }
@@ -304,7 +302,7 @@ const hoverProps = useHoverTriggerInteraction(store, {
 // Whether to ignore clicks to open the menu.
 const stickIfOpen = useStickIfOpen();
 
-const click = useClick(store, {
+const click = usePress({
   enabled: () => !isDisabled.value,
   event: () => (isOpenedByThisTrigger.value && isInMenubar ? 'click' : 'mousedown'),
   toggle: true,
@@ -312,7 +310,7 @@ const click = useClick(store, {
   stickIfOpen: () => (parent.type === undefined ? stickIfOpen.value : false),
 });
 
-const focusProps = useFocus(store, {
+const focusProps = useFocus({
   enabled: () => !isDisabled.value && parentMenubarHasSubmenuOpen.value,
 });
 
@@ -324,7 +322,7 @@ const mixedToggleHandlers = useMixedToggleClickHandler({
 
 const triggerListeners = {
   onMousedown(event: MouseEvent) {
-    if (store.value.select('open')) {
+    if (popupOpen.value) {
       return;
     }
 
@@ -346,7 +344,7 @@ function useStickIfOpen() {
   const value = shallowRef(false);
 
   watch(isOpenedByThisTrigger, (open) => {
-    if (open && store.value.select('lastOpenChangeReason') === REASONS.triggerHover) {
+    if (open && store.value.state.openChangeReason === REASONS.triggerHover) {
       // Only allow "patient" clicks to close the menu if it's open.
       // If they clicked within 500ms of the menu opening, keep it open.
       value.value = true;
@@ -362,11 +360,8 @@ function useStickIfOpen() {
   return value;
 }
 
-const rootTriggerProps = computed(() =>
-  store.value.select('triggerProps', isMountedByThisTrigger.value),
-);
 // A filterable menu keeps real focus inside its popup and publishes what its trigger needs.
-const filterTriggerProps = computed(() => store.value.select('filterTriggerProps'));
+const filterTriggerProps = computed(() => store.value.state.filterTriggerProps);
 
 const state = computed<MenuTriggerState>(() => ({
   disabled: isDisabled.value,
@@ -389,7 +384,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     compositeItem?.attributes.value,
     compositeItem?.events,
     focusProps,
-    click.reference,
+    click,
     hoverProps,
     { style: hoverStyle.value },
     rootTriggerProps.value,

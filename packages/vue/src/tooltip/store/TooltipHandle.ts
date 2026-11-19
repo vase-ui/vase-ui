@@ -1,6 +1,6 @@
 import { BasePopupHandle } from '../../utils/popups/popupHandle';
-import { createNullTooltipStore } from './TooltipStore';
-import type { TooltipHandleStore, TooltipStore } from './TooltipStore';
+import { createNullTooltipStore } from '../root/TooltipRootContext';
+import type { TooltipHandleStore, TooltipStore } from '../root/TooltipRootContext';
 
 /**
  * Controls a Tooltip imperatively and associates detached `Tooltip.Trigger` components with a

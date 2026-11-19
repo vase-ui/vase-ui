@@ -17,7 +17,10 @@ import { createChangeEventDetails } from '../internals/createVaseUIEventDetails'
 import { defaultItemEquality } from '../internals/itemEquality';
 import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';
-import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/popups/store';
+import {
+  createInitialPopupStoreState,
+  createPopupStoreContext,
+} from '../utils/popups/usePopupRoot';
 import ComboboxStoreHydration from './ComboboxStoreHydration.test.vue';
 import { useComboboxRootContext } from './root/ComboboxRootContext';
 import { ComboboxStore, selectors } from './store';

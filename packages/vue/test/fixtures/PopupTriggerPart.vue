@@ -32,8 +32,7 @@ import { REASONS } from '../../src/internals/reasons';
 import { useVaseUiId } from '../../src/internals/useVaseUiId';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 import { triggerOpenStateMapping } from '../../src/utils/popups/popupStateMapping';
-import { useTriggerDataForwarding } from '../../src/utils/popups/popupStoreUtils';
-import { usePopupHandleStore } from '../../src/utils/popups/usePopupHandleStore';
+import { usePopupTrigger, usePopupHandleStore } from '../../src/utils/popups/usePopupTrigger';
 import { PopupFixtureContext } from './PopupFixture';
 import type { PopupFixtureHandleStore } from './PopupFixture';
 
@@ -62,7 +61,7 @@ const isOpenedByThisTrigger = computed(() =>
 );
 const popupId = computed(() => store.value.select('triggerPopupId', triggerId.value));
 
-const { registerTrigger } = useTriggerDataForwarding(triggerId, store, () => ({
+const { registerTrigger } = usePopupTrigger(triggerId, store, () => ({
   payload: props.payload,
 }));
 

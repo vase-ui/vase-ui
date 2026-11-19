@@ -1,7 +1,7 @@
 import { computed, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { NOOP } from '../../common/empty';
-import { useEnhancedClickHandler } from '../../common/useEnhancedClickHandler';
+import { useEnhancedClickHandler } from '../../utils/popups/usePopupTrigger';
 import { useFilterDropdownItem } from '../../filter-dropdown/item/useFilterDropdownItem';
 import type { UseFilterDropdownItemParameters } from '../../filter-dropdown/item/useFilterDropdownItem';
 import { useFilterContextForList } from '../../filter-dropdown/root/FilterDropdownRootContext';

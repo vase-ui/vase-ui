@@ -1,5 +1,5 @@
 import { expectType } from '../../common/testUtils';
-import { ReactiveStore } from './ReactiveStore';
+import { ReactiveStore } from './handleStoreAdapter';
 
 interface TestState {
   count: number | undefined;

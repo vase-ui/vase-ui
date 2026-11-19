@@ -1,3 +1,4 @@
+import { triggerBindings, popupBindings } from '../../utils/popups/popupBindings';
 import userEvent from '@testing-library/user-event';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
@@ -46,7 +47,7 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { createAttribute } from '../../utils/popups/createAttribute';
-import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
+import { useTriggerRegistration } from '../../utils/popups/usePopupTrigger';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
 import * as Menu from '../index.parts';
@@ -107,7 +108,7 @@ const TestTrigger = defineComponent({
     };
 
     return () => (
-      <button id={props.id} {...store.select('triggerProps', isActive.value)} ref={setElement} />
+      <button id={props.id} {...triggerBindings(store, isActive.value)} ref={setElement} />
     );
   },
 });
@@ -126,7 +127,7 @@ const TestPopup = defineComponent({
         <div
           data-testid="popup"
           onKeydown={props.onKeydown}
-          {...store.select('popupProps')}
+          {...popupBindings(store)}
           ref={setElement}
         />
       ) : null;
@@ -5996,9 +5997,9 @@ describe('<Menu.Root />', () => {
 
       expect(plain.store.state.inputProps).toEqual({});
       expect(virtual.store.state.inputProps).toHaveProperty('onKeydown');
-      expect(plain.store.select('triggerProps', true)).toHaveProperty('onFocusin');
-      expect(virtual.store.select('triggerProps', true)).not.toHaveProperty('onFocusin');
-      expect(virtual.store.select('triggerProps', true)).toHaveProperty('onKeydown');
+      expect(triggerBindings(plain.store, true)).toHaveProperty('onFocusin');
+      expect(triggerBindings(virtual.store, true)).not.toHaveProperty('onFocusin');
+      expect(triggerBindings(virtual.store, true)).toHaveProperty('onKeydown');
     });
   });
 

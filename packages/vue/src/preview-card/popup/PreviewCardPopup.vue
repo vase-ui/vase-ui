@@ -34,6 +34,7 @@ export interface PreviewCardPopupProps
 </script>
 
 <script setup lang="ts">
+import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { computed, provide } from 'vue';
 import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -42,7 +43,6 @@ import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportCont
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
 import { usePreviewCardPositionerContext } from '../positioner/PreviewCardPositionerContext';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 
@@ -80,7 +80,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,
-    store.select('popupProps'),
+    popupBindings(store),
     { style: store.context.viewportStyles.value?.popup.value },
     transitionStatus.value === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
     attrs,

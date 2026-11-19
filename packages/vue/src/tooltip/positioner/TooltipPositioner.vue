@@ -45,12 +45,15 @@ export interface TooltipPositionerProps
 </script>
 
 <script setup lang="ts">
+import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import { provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
-import { useTooltipPortalContext } from '../portal/TooltipPortalContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
-import { TooltipPositionerContext } from './TooltipPositionerContext';
+import {
+  useTooltipPortalContext,
+  useTooltipRootContext,
+  TooltipPositionerContext,
+} from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -73,22 +76,19 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TooltipPositionerState>;
 }>();
 
-const store = useTooltipRootContext();
+const { store } = useTooltipRootContext();
 const keepMounted = useTooltipPortalContext();
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning } =
   usePopupPositioner<TooltipPositionerState>(store, props, {
     keepMounted,
     state: () => ({
-      instant:
-        store.select('trackCursorAxis') !== 'none'
-          ? 'tracking-cursor'
-          : store.select('instantType'),
+      instant: store.state.trackCursorAxis !== 'none' ? 'tracking-cursor' : store.state.instantType,
     }),
     inert: () =>
-      !store.select('open') ||
-      store.select('trackCursorAxis') === 'both' ||
-      store.select('disableHoverablePopup'),
+      !popupStoreSelectors.open(store.state) ||
+      store.state.trackCursorAxis === 'both' ||
+      store.state.disableHoverablePopup,
   });
 
 provide(TooltipPositionerContext, positioning);

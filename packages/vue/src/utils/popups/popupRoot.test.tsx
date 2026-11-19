@@ -38,22 +38,20 @@ import {
   useImplicitActiveTrigger,
   usePopupRootSync,
   useSingleAnchorPopupRoot,
-} from './popupRoot';
-import PopupRootHydration from './PopupRootHydration.test.vue';
-import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
-import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
-import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import { REASONS } from '../../internals/reasons';
-import { ReactiveStore } from './ReactiveStore';
-import {
   createInitialPopupStoreState,
   createPopupOpenState,
   createPopupStoreContext,
   popupStoreSelectors,
-} from './store';
-import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
-import { PopupTriggerMap } from './popupTriggerMap';
+  PopupTriggerMap,
+} from './usePopupRoot';
+import PopupRootHydration from './PopupRootHydration.test.vue';
+import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { InteractionType } from './usePopupTrigger';
+import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import { REASONS } from '../../internals/reasons';
+import { ReactiveStore } from './handleStoreAdapter';
+import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './usePopupRoot';
 import { provideFloatingNode } from './tree/FloatingTree';
 import {
   createTestPopupStore,

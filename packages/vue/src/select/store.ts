@@ -3,7 +3,7 @@ import { compareItemEquality } from '../internals/itemEquality';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel, stringifyAsValue } from '../internals/resolveValueLabel';
 import type { Group, ItemLabel } from '../internals/resolveValueLabel';
-import { popupStoreSelectors } from '../utils/popups/store';
+import { popupStoreSelectors } from '../utils/popups/usePopupRoot';
 import type { InteractionProps } from '../utils/popups/types';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {

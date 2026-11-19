@@ -3,7 +3,7 @@ import { generateId } from '../common/generateId';
 import { ownerDocument } from '../common/owner';
 import { activeElement, contains, getTarget } from '../common/shadowDom';
 import { Timeout } from '../common/useTimeout';
-import { ReactiveStore } from '../utils/popups/ReactiveStore';
+import { ReactiveStore } from '../utils/popups/handleStoreAdapter';
 import type {
   ToastManagerAddOptions,
   ToastManagerPromiseOptions,

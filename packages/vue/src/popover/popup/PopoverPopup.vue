@@ -58,6 +58,11 @@ export interface PopoverPopupProps
 </script>
 
 <script setup lang="ts">
+import {
+  popupBindings,
+  FOCUSABLE_POPUP_PROPS,
+  createDefaultInitialFocus,
+} from '../../utils/popups/popupBindings';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { computed, provide, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
@@ -72,10 +77,6 @@ import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusM
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
-import {
-  FOCUSABLE_POPUP_PROPS,
-  createDefaultInitialFocus,
-} from '../../utils/popups/popupStoreUtils';
 import { usePopoverPositionerContext } from '../positioner/PopoverPositionerContext';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import { useClosePartCount } from '../utils/closePart';
@@ -155,7 +156,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   ref: createElementSetter(popupElementTarget(store)),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
-    store.select('popupProps'),
+    popupBindings(store),
     { style: store.context.viewportStyles.value?.popup.value },
     {
       id: store.select('defaultPopupId'),

@@ -3,7 +3,7 @@ import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
 import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
-import { useSingleAnchorPopupRoot } from './popupRoot';
+import { useSingleAnchorPopupRoot } from './usePopupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 
 interface TriggerValues {

@@ -33,8 +33,7 @@ import {
   popupViewportStateMapping,
   usePopupViewport,
 } from '../../utils/popups/viewport/usePopupViewport';
-import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
-import { useTooltipRootContext } from '../root/TooltipRootContext';
+import { useTooltipPositionerContext, useTooltipRootContext } from '../root/TooltipRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -48,7 +47,7 @@ defineSlots<{
   render(props: { props: HTMLProps; state: TooltipViewportState; children: Component }): unknown;
 }>();
 
-const store = useTooltipRootContext();
+const { store } = useTooltipRootContext();
 const positioner = useTooltipPositionerContext();
 
 const { state: viewportState } = usePopupViewport({ store, side: positioner.side });
@@ -56,7 +55,7 @@ const { state: viewportState } = usePopupViewport({ store, side: positioner.side
 const state = computed<TooltipViewportState>(() => ({
   activationDirection: viewportState.value.activationDirection,
   transitioning: viewportState.value.transitioning,
-  instant: store.select('instantType'),
+  instant: store.state.instantType,
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
