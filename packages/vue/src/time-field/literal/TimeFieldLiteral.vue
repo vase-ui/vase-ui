@@ -67,7 +67,7 @@ const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 const { element, elementProps, usesRenderSlot } = useRenderElement('span', props, {
   state,
   stateAttributesMapping,
-  ref: [setElement],
+  ref: setElement,
   props: (attrs) => [
     {
       // The text between the segments is not for assistive technology. The time zone name is.

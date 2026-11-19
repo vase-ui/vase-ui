@@ -24,7 +24,7 @@ export interface TimeFieldClearProps
 </script>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue';
+import { computed } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
@@ -32,7 +32,7 @@ import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import TimeFieldClearChildren from './TimeFieldClearChildren.vue';
+import ClearButtonChildren from '../../internals/ClearButtonChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -46,7 +46,7 @@ if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('TimeField.Clear');
 }
 
-defineSlots<{
+const slots = defineSlots<{
   /**
    * The content of the button. The default is `x`. With no default slot and no `#render` slot, the
    * button has the `aria-label` `Clear`.
@@ -55,7 +55,6 @@ defineSlots<{
   render(props: { props: HTMLProps; state: TimeFieldClearState; children: Component }): unknown;
 }>();
 
-const slots = useSlots();
 const context = useDateTimeFieldContext();
 
 const isDisabled = computed(
@@ -94,8 +93,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="TimeFieldClearChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ClearButtonChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <TimeFieldClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></TimeFieldClearChildren>
+    <ClearButtonChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ClearButtonChildren>
   </component>
 </template>

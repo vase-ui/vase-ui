@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markChildrenMounted } from '../../internals/useRenderElement';
+import { markChildrenMounted } from './useRenderElement';
 
 defineSlots<{
   default?(): unknown;

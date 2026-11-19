@@ -50,7 +50,7 @@ const {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('input', props, {
   state,
   stateAttributesMapping: segmentStateAttributesMapping,
-  ref: [setElement],
+  ref: setElement,
   props: (attrs) => [segmentProps.value, attrs],
 });
 

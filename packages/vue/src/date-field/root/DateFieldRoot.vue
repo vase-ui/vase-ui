@@ -141,7 +141,7 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
 </script>
 
 <script setup lang="ts" generic="Value extends DateFieldRootValue = DateFieldRootValue">
-import { shallowRef } from 'vue';
+import { toRefs, useTemplateRef } from 'vue';
 import {
   rootStateAttributesMapping,
   useDateTimeFieldRoot,
@@ -194,31 +194,12 @@ defineSlots<{
 
 assertTemporal('DateField.Root');
 
-const inputElement = shallowRef<HTMLInputElement | null>(null);
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 const context = useDateTimeFieldRoot<Value>({
-  hiddenInputElement: inputElement,
+  ...toRefs(props),
   family: 'date',
   value: () => props.modelValue,
-  defaultValue: () => props.defaultValue,
-  referenceDate: () => props.referenceDate,
-  granularity: () => props.granularity,
-  hourCycle: () => props.hourCycle,
-  forceLeadingZeros: () => props.forceLeadingZeros,
-  hideTimeZone: () => props.hideTimeZone,
-  minDate: () => props.minDate,
-  maxDate: () => props.maxDate,
-  unavailableDates: () => props.unavailableDates,
-  locale: () => props.locale,
-  calendar: () => props.calendar,
-  timeZone: () => props.timeZone,
-  disabled: () => props.disabled,
-  readOnly: () => props.readOnly,
-  required: () => props.required,
-  name: () => props.name,
-  form: () => props.form,
-  id: () => props.id,
-  autoComplete: () => props.autoComplete,
-  ariaLabelledby: () => props.ariaLabelledby,
+  hiddenInputElement: inputElement,
   valueChange: (value, details) => emit('valueChange', value, details),
   updateValue: (value) => emit('update:modelValue', value),
 });
@@ -245,8 +226,5 @@ defineExpose({
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input
-    v-bind="context.hiddenInputProps()"
-    :ref="(input) => (inputElement = input as HTMLInputElement | null)"
-  />
+  <input ref="input" v-bind="context.hiddenInputProps()" />
 </template>

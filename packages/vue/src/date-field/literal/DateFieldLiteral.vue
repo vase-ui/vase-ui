@@ -56,7 +56,7 @@ const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 const { element, elementProps, usesRenderSlot } = useRenderElement('span', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
-  ref: [setElement],
+  ref: setElement,
   props: (attrs) => [
     {
       // An era and a zone name tell something that a screen reader must read.

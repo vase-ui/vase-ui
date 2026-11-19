@@ -12,7 +12,7 @@ describe.each([
 ])('$name input registration', ({ Root, Input }) => {
   const { render } = createRenderer();
 
-  it('exposes the form input in the root ref callback and clears it on removal', async () => {
+  it('exposes the form input after mount and clears it on removal', async () => {
     type RootRef = { inputElement: HTMLInputElement | null };
     let currentRoot: RootRef | undefined;
     let inputAtFirstRef: HTMLInputElement | null = null;
@@ -26,15 +26,17 @@ describe.each([
     const { container, rerender, unmount } = await render(() => form('first'));
     const first = container.querySelector('input[name="when"]');
     expect(first).toBeInstanceOf(HTMLInputElement);
-    expect(inputAtFirstRef).toBe(first);
+    expect(inputAtFirstRef).toBeNull();
     const firstRoot = currentRoot!;
+    expect(firstRoot.inputElement).toBe(first);
 
     await rerender(() => form('second'));
     const second = container.querySelector('input[name="when"]');
     expect(second).toBeInstanceOf(HTMLInputElement);
     expect(second).not.toBe(first);
     expect(firstRoot.inputElement).toBe(null);
-    expect(inputAtFirstRef).toBe(second);
+    expect(inputAtFirstRef).toBeNull();
+    expect(currentRoot!.inputElement).toBe(second);
 
     unmount();
     expect(currentRoot!.inputElement).toBe(null);

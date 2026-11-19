@@ -1046,7 +1046,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - Before V8 15.5, `formatToParts` ends the process when the format of the locale has the year of the week, `Y` ([nodejs/node#67076](https://github.com/nodejs/node/issues/67076)). WebKit gives that year as a part of the type `unknown`. `resolvedOptions()` of such a format has no `year`.
 - `getSegmentLayout` then takes the layout of the format with an era, and gives those options as `formatOptions`. It keeps the era only when the field needs one, or when the format with no era has one. The Chinese and Dangi calendars give `relatedYear`, so they keep their own layout.
 - Call `formatToParts` with a year only with the `formatOptions` of a layout.
-- Each date and time field root sets its hidden input ref during the patch. A consumer can read `inputElement` in its first root ref callback.
+- Each date and time field root exposes its hidden input as `inputElement` after mount. A first root ref callback can receive `null` for that input.
 - A date or time field has a value only when each segment has a number.
 - The numbers of an empty segment come from `referenceDate`, and then from today.
 - A segment gives `field-sizing: content` in its style, so its box follows its text with no rule of the consumer. `useDateTimeFieldSegment` gives the declaration with the props of the element, so the `style` of the consumer wins over it. The `size` attribute stays, because it gives the width in an engine that has no `field-sizing`.
