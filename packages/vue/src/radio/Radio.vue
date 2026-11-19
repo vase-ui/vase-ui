@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { useFormReset } from '../common/formReset';
-import { fieldKey, fieldStateAttributes } from '../field/control';
+import { fieldKey, fieldStateAttributes, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey } from '../radio-group/radio';
 import type { RadioProps, RadioState } from './types';
@@ -31,6 +31,7 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
+const id = computed(() => props.id || field?.controlId || generatedId);
 const checked = computed(() => group.value === props.value);
 const disabled = computed(() => !!field?.disabled || group.disabled || props.disabled);
 const state = computed<RadioState>(() => ({
@@ -48,7 +49,7 @@ const ownProps = computed(() => {
   const tabStop = group.tabStop;
   return {
     type: 'radio',
-    id: props.id || field?.controlId || generatedId,
+    id: id.value,
     name: group.name,
     form: group.form,
     value: props.value,
@@ -75,35 +76,28 @@ watch(
   element,
   (el, _, onCleanup) => {
     if (!el) return;
-    const removeFromGroup = group.addRadio({
-      get value() {
-        return props.value;
-      },
-      element: el,
-      get disabled() {
-        return state.value.disabled;
-      },
-    });
-    // A `Field.Item` names the radio with its label.
-    const removeControl = field?.setControl({
-      element: el,
-      get id() {
-        return el.id;
-      },
-      name: undefined,
-      get disabled() {
-        return state.value.disabled;
-      },
-      readOnly: false,
-      inputs: [el],
-    });
-    onCleanup(() => {
-      removeFromGroup();
-      removeControl?.();
-    });
+    onCleanup(
+      group.addRadio({
+        get value() {
+          return props.value;
+        },
+        element: el,
+        get disabled() {
+          return state.value.disabled;
+        },
+      }),
+    );
   },
   { flush: 'post' },
 );
+
+// A `Field.Item` names the radio with its label.
+useFieldControl(field, element, {
+  id: () => id.value,
+  name: () => undefined,
+  disabled: () => state.value.disabled,
+  readOnly: () => false,
+});
 
 useFormReset(element, (event) => group.onReset(event));
 

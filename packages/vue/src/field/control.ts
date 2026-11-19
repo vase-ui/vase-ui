@@ -1,4 +1,4 @@
-import type { InjectionKey } from 'vue';
+import { watch, type InjectionKey, type Ref } from 'vue';
 
 export interface FieldState {
   /** The focus left the control one time or more. */
@@ -89,4 +89,42 @@ export function controlAttributes(field: FieldForControl) {
     'aria-invalid': field.state.valid === false ? 'true' : undefined,
     'aria-describedby': field.describedBy,
   };
+}
+
+/** Makes the element the control of its field while the element is mounted. */
+export function useFieldControl(
+  field: FieldForControl | null,
+  element: Readonly<Ref<NativeControl | null>>,
+  control: {
+    id(): string;
+    name(): string | undefined;
+    disabled(): boolean;
+    readOnly(): boolean;
+  },
+) {
+  watch(
+    element,
+    (el, _, onCleanup) => {
+      if (!el || !field) return;
+      onCleanup(
+        field.setControl({
+          element: el,
+          get id() {
+            return control.id();
+          },
+          get name() {
+            return control.name();
+          },
+          get disabled() {
+            return control.disabled();
+          },
+          get readOnly() {
+            return control.readOnly();
+          },
+          inputs: [el],
+        }),
+      );
+    },
+    { flush: 'post' },
+  );
 }

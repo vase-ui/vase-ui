@@ -236,7 +236,10 @@ describe('the parent checkbox', () => {
     };
     expect(await press()).toEqual(['fuji', 'gala', 'pink']);
     expect(await press()).toEqual([]);
+    log.length = 0;
     expect(await press()).toEqual(['fuji']);
+    // The browser checked the parent, but the selection makes it indeterminate and not checked.
+    expect(log).toEqual(['all checkedChange false', 'valueChange fuji', 'group fuji', 'all false']);
     cancel.next = true;
     log.length = 0;
     expect(await press()).toEqual(['fuji']);

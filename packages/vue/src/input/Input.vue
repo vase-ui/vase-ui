@@ -4,7 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { useFormReset } from '../common/formReset';
 import { useModel } from '../common/model';
-import { controlAttributes, fieldKey } from '../field/control';
+import { controlAttributes, fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
 
@@ -66,31 +66,12 @@ useFormReset(element, () => {
   if (value.value !== firstValue) changeValue(firstValue);
 });
 
-watch(
-  element,
-  (el, _, onCleanup) => {
-    if (!el || !field) return;
-    onCleanup(
-      field.setControl({
-        element: el,
-        get id() {
-          return id.value;
-        },
-        get name() {
-          return props.name;
-        },
-        get disabled() {
-          return props.disabled || inDisabledFieldset.value;
-        },
-        get readOnly() {
-          return props.readonly;
-        },
-        inputs: [el],
-      }),
-    );
-  },
-  { flush: 'post' },
-);
+useFieldControl(field, element, {
+  id: () => id.value,
+  name: () => props.name,
+  disabled: () => props.disabled || inDisabledFieldset.value,
+  readOnly: () => props.readonly,
+});
 
 defineExpose({ element });
 
