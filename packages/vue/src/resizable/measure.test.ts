@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMeasurement, getPanelSize, isSameMeasurement } from './measure';
+import { getMeasurement, isSameMeasurement } from './measure';
 import type { RootMeasurement } from './measure';
 
 const measurement: RootMeasurement = {
@@ -62,16 +62,5 @@ describe('getMeasurement', () => {
     { name: 'a panel that is not mounted', id: 'gone' },
   ])('gives the font size of the root for $name', ({ id }) => {
     expect(getMeasurement(measurement, id).em).toBe(14);
-  });
-});
-
-describe('getPanelSize', () => {
-  it.each([
-    { name: 'a whole size', percent: 30, space: 1000, pixels: 300 },
-    { name: 'three decimals', percent: 33.333, space: 1000, pixels: 333.33 },
-    { name: 'a size that has more decimals', percent: 12.3456, space: 999, pixels: 123.333 },
-    { name: 'no measurement', percent: 30, space: undefined, pixels: 0 },
-  ])('gives the pixels for $name', ({ percent, space, pixels }) => {
-    expect(getPanelSize(percent, space)).toEqual({ percent, pixels });
   });
 });

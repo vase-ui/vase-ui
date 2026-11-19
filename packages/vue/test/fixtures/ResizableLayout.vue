@@ -15,7 +15,7 @@ defineExpose({ panels });
 </script>
 
 <template>
-  <div :style="frame">
+  <div :style="spec.frame ?? frame">
     <Resizable.Root
       v-slot="{ state, sizes }"
       data-key="root"
@@ -60,7 +60,7 @@ defineExpose({ panels });
                 />
               </template>
             </Resizable.Root>
-            <output class="panel-state">{{ JSON.stringify(panelState) }}</output>
+            <output class="panel-state" hidden>{{ JSON.stringify(panelState) }}</output>
           </Resizable.Panel>
           <Resizable.Handle
             v-else-if="part.kind === 'handle'"

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isLength,
+  isViewportLength,
+  normalizeLayout,
+  parsePixels,
+  parseSize,
+  toEventLayout,
   adjustLayout,
   adjustLayoutToSize,
   areConstraintsFeasible,
@@ -16,7 +22,7 @@ import {
   applyFixedSizes,
   validateLayout,
 } from './layout';
-import type { Layout, PanelConstraints } from './layout';
+import type { Layout, Measurement, PanelConstraints } from './layout';
 
 const panel = (id: string, rest: Partial<PanelConstraints> = {}): PanelConstraints => ({
   id,
@@ -903,5 +909,225 @@ describe('layout', () => {
 
       expect(snapDelta(panels, { a: 30, b: 70 }, 0, 9)).toBe(9);
     });
+  });
+});
+
+// One percent of the panel space is 10 px, and 1% of the viewport is 12 px by 8 px.
+const measurement: Measurement = {
+  space: 1000,
+  rem: 16,
+  em: 20,
+  viewportWidth: 1200,
+  viewportHeight: 800,
+};
+
+describe('sizes', () => {
+describe('parseSize', () => {
+  it.each([
+    { name: 'a number', value: 25, expected: 25 },
+    { name: 'a decimal number', value: 12.5, expected: 12.5 },
+    { name: 'a string of a number', value: '25', expected: 25 },
+    { name: 'a string with a percent sign', value: '25%', expected: 25 },
+    { name: 'a decimal string', value: '12.5%', expected: 12.5 },
+    { name: 'a string that starts with a point', value: '.5', expected: 0.5 },
+    { name: 'a string with spaces around it', value: ' 25% ', expected: 25 },
+    { name: 'zero', value: 0, expected: 0 },
+  ])('gives the percent of $name, with no measurement', ({ value, expected }) => {
+    expect(parseSize(value, undefined)).toBe(expected);
+    expect(parseSize(value, measurement)).toBe(expected);
+  });
+
+  it.each([
+    { name: 'pixels', value: '200px', expected: 20 },
+    { name: 'a decimal number of pixels', value: '12.5px', expected: 1.25 },
+    { name: 'em', value: '10em', expected: 20 },
+    { name: 'rem', value: '10rem', expected: 16 },
+    { name: 'vw', value: '50vw', expected: 60 },
+    { name: 'vh', value: '25vh', expected: 20 },
+    { name: 'a length with spaces around it', value: ' 200px ', expected: 20 },
+  ])('gives the percent of the panel space for a length in $name', ({ value, expected }) => {
+    expect(parseSize(value, measurement)).toBeCloseTo(expected, 10);
+  });
+
+  it.each([
+    { name: 'pixels', value: '200px' },
+    { name: 'em', value: '10em' },
+    { name: 'rem', value: '10rem' },
+    { name: 'vw', value: '50vw' },
+    { name: 'vh', value: '25vh' },
+  ])('gives nothing for a length in $name while there is no measurement', ({ value }) => {
+    expect(parseSize(value, undefined)).toBeUndefined();
+  });
+
+  it.each([
+    { name: 'a unit that is not known', value: '12ch' },
+    { name: 'text', value: 'wide' },
+    { name: 'an empty string', value: '' },
+    { name: 'a percent sign alone', value: '%' },
+    { name: 'a unit alone', value: 'px' },
+    { name: 'a space before the percent sign', value: '25 %' },
+    { name: 'a space before the unit', value: '25 px' },
+    { name: 'a unit in capital letters', value: '25PX' },
+    { name: 'a number that is not finite', value: Number.NaN },
+    { name: 'infinity', value: Number.POSITIVE_INFINITY },
+    { name: 'a negative number', value: -10 },
+    { name: 'a negative string', value: '-10%' },
+    { name: 'a negative length', value: '-10px' },
+  ])('gives nothing for $name', ({ value }) => {
+    expect(parseSize(value, measurement)).toBeUndefined();
+    expect(parseSize(value, undefined)).toBeUndefined();
+    expect(parsePixels(value, measurement)).toBeUndefined();
+  });
+});
+
+describe('parsePixels', () => {
+  it.each([
+    { name: 'pixels', value: '200px', expected: 200 },
+    { name: 'em', value: '10em', expected: 200 },
+    { name: 'rem', value: '10rem', expected: 160 },
+    { name: 'vw', value: '50vw', expected: 600 },
+    { name: 'vh', value: '25vh', expected: 200 },
+    { name: 'a number, which is percent', value: 25, expected: 250 },
+    { name: 'a string with a percent sign', value: '25%', expected: 250 },
+  ])('gives the pixels for a size in $name', ({ value, expected }) => {
+    expect(parsePixels(value, measurement)).toBe(expected);
+  });
+
+  it('gives nothing while there is no measurement', () => {
+    expect(parsePixels('200px', undefined)).toBeUndefined();
+    expect(parsePixels(25, undefined)).toBeUndefined();
+  });
+});
+
+describe('isLength and isViewportLength', () => {
+  it.each([
+    { name: 'a number', value: 25, length: false, viewport: false },
+    { name: 'a percent', value: '25%', length: false, viewport: false },
+    { name: 'no size', value: undefined, length: false, viewport: false },
+    { name: 'pixels', value: '25px', length: true, viewport: false },
+    { name: 'em', value: '25em', length: true, viewport: false },
+    { name: 'rem', value: '25rem', length: true, viewport: false },
+    { name: 'vw', value: '25vw', length: true, viewport: true },
+    { name: 'vh', value: '25vh', length: true, viewport: true },
+  ])('tells a length from a percent for $name', ({ value, length, viewport }) => {
+    expect(isLength(value)).toBe(length);
+    expect(isViewportLength(value)).toBe(viewport);
+  });
+});
+
+describe('normalizeLayout', () => {
+  const basis = () => measurement;
+
+  it('gives percent for each entry, and the pixels of a fixed panel that has a length', () => {
+    expect(
+      normalizeLayout(
+        { nav: '200px', side: '300px', main: 50, rest: '30%' },
+        new Set(['nav']),
+        basis,
+      ),
+    ).toEqual({
+      layout: { nav: 20, side: 30, main: 50, rest: 30 },
+      pins: { nav: 200 },
+      lengths: new Set(['nav', 'side']),
+    });
+  });
+
+  it('gives no pixels for a fixed panel that has a percent', () => {
+    expect(normalizeLayout({ nav: '20%' }, new Set(['nav']), basis)).toEqual({
+      layout: { nav: 20 },
+      pins: {},
+      lengths: new Set(),
+    });
+  });
+
+  it('leaves out a length while there is no measurement', () => {
+    expect(normalizeLayout({ nav: '200px', main: 50 }, new Set(['nav']), () => undefined)).toEqual({
+      layout: { main: 50 },
+      pins: {},
+      lengths: new Set(),
+    });
+  });
+
+  it('reads the font size of the panel that has the entry', () => {
+    expect(
+      normalizeLayout({ a: '10em', b: '10em' }, new Set(), (id) => ({
+        ...measurement,
+        em: id === 'a' ? 10 : 20,
+      })).layout,
+    ).toEqual({ a: 10, b: 20 });
+  });
+
+  it('keeps an id that an object also has', () => {
+    const sizes = JSON.parse('{ "__proto__": "200px", "constructor": 30 }') as Record<
+      string,
+      number | string
+    >;
+
+    const { layout, pins } = normalizeLayout(sizes, new Set(['__proto__']), basis);
+
+    expect(Object.keys(layout)).toEqual(['__proto__', 'constructor']);
+    expect(Object.values(layout)).toEqual([20, 30]);
+    expect(Object.keys(pins)).toEqual(['__proto__']);
+    expect(Object.values(pins)).toEqual([200]);
+  });
+
+  it('leaves out an entry that is not a size', () => {
+    const sizes = JSON.parse('{ "a": "12ch", "b": 40, "c": null }') as Record<string, unknown>;
+
+    expect(normalizeLayout(sizes, new Set(['a']), basis)).toEqual({
+      layout: { b: 40 },
+      pins: {},
+      lengths: new Set(),
+    });
+  });
+});
+});
+
+describe('a layout with lengths', () => {
+  const panels = (...ids: string[]) => ids.map((id) => panel(id));
+
+  it('a length keeps its size, and the entries with a number share the rest in their ratio', () => {
+    expect(resolveLayout(panels('a', 'b', 'c'), { a: 30, b: 24, c: 45 }, new Set(['b']))).toEqual({
+      a: 30.4,
+      b: 24,
+      c: 45.6,
+    });
+  });
+
+  it('with no entry of a number, or no room for the lengths, each entry keeps its ratio', () => {
+    expect(resolveLayout(panels('a', 'b'), { a: 20, b: 30 }, new Set(['a', 'b']))).toEqual({
+      a: 40,
+      b: 60,
+    });
+    expect(resolveLayout(panels('a', 'b'), { a: 150, b: 50 }, new Set(['a']))).toEqual({
+      a: 75,
+      b: 25,
+    });
+  });
+});
+
+describe('toEventLayout', () => {
+  it('gives a fixed panel its pixels with three decimals, and keeps the entry of a panel that is not mounted', () => {
+    expect(
+      toEventLayout(
+        { a: 24.05, b: 75.95 },
+        { a: 20, b: 60, gone: 20 },
+        { a: 20, b: 60, gone: '100px', waits: '3em', bad: 'wide' },
+        new Set(['a']),
+        500.5,
+      ),
+    ).toEqual({ waits: '3em', gone: '100px', a: '120.37px', b: 60.76 });
+  });
+
+  it('gives an id that an object also has as an own key', () => {
+    const layout = toEventLayout(
+      JSON.parse('{ "__proto__": 40, "constructor": 60 }') as Record<string, number>,
+      {},
+      {},
+      new Set(),
+      undefined,
+    );
+    expect(Object.keys(layout)).toEqual(['__proto__', 'constructor']);
+    expect(JSON.stringify(layout)).toBe('{"__proto__":40,"constructor":60}');
   });
 });

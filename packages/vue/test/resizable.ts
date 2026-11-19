@@ -16,6 +16,8 @@ export interface LayoutPart {
 }
 
 export interface LayoutSpec {
+  /** The style of the frame around the root. */
+  frame?: string;
   root?: Record<string, unknown>;
   parts: LayoutPart[];
 }
@@ -88,5 +90,13 @@ export async function doubleClick(element: Element) {
   element.dispatchEvent(
     new MouseEvent('dblclick', { bubbles: true, cancelable: true, detail: 2, button: 0 }),
   );
+  await nextTick();
+}
+
+/** Waits for the root to read a new size of the page: an observer reads it in a frame. */
+export async function frames(count = 2) {
+  for (let index = 0; index < count; index += 1) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
   await nextTick();
 }
