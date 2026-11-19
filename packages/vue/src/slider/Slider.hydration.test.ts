@@ -58,11 +58,23 @@ describe('server render and hydration', () => {
 
   test.each([
     { name: 'a single slider', props: { root: { defaultValue: 30 }, label: 'before' } },
-    { name: 'a range with index', props: { root: { defaultValue: [20, 60] }, thumbs: [{ index: 1 }, { index: 0 }] } },
-    { name: 'a vertical slider', props: { root: { defaultValue: 30, orientation: 'vertical' }, value: 'after' } },
-    { name: 'thumbAlignment edge', props: { root: { defaultValue: [10, 90], thumbAlignment: 'edge' }, thumbs: [{}, {}] } },
+    {
+      name: 'a range with index',
+      props: { root: { defaultValue: [20, 60] }, thumbs: [{ index: 1 }, { index: 0 }] },
+    },
+    {
+      name: 'a vertical slider',
+      props: { root: { defaultValue: 30, orientation: 'vertical' }, value: 'after' },
+    },
+    {
+      name: 'thumbAlignment edge',
+      props: { root: { defaultValue: [10, 90], thumbAlignment: 'edge' }, thumbs: [{}, {}] },
+    },
     { name: 'dir rtl', props: { root: { defaultValue: 30, dir: 'rtl' }, label: 'after' } },
-    { name: 'a slider in a field', props: { root: { defaultValue: [20, 60] }, thumbs: [{}, {}], field: {} } },
+    {
+      name: 'a slider in a field',
+      props: { root: { defaultValue: [20, 60] }, thumbs: [{}, {}], field: {} },
+    },
   ])('$name hydrates with no message, and keeps its elements', async ({ props }) => {
     const root = await renderOnServer('SliderParts', props);
     const inputs = [...root.querySelectorAll('input[type=range]')];

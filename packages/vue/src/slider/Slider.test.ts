@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
-import type { SliderRootChangeEventDetails, SliderRootCommitEventDetails } from '@vase-ui/vue/slider';
+import type {
+  SliderRootChangeEventDetails,
+  SliderRootCommitEventDetails,
+} from '@vase-ui/vue/slider';
 import { dataAttributes } from '../../test/field';
 import SliderInToolbar from '../../test/fixtures/SliderInToolbar.vue';
 import SliderPartAlone from '../../test/fixtures/SliderPartAlone.vue';
@@ -107,7 +110,10 @@ describe('the parts', () => {
     expect(exposed.track.element).toBe(root.querySelector('.Track'));
     expect(exposed.indicator.element).toBe(root.querySelector('.StyledDiv'));
     expect(exposed.thumb.element).toBe(root.querySelector('.Thumb'));
-    const [start, end] = [root.querySelector<HTMLInputElement>('.Input')!, target.querySelector('input')!];
+    const [start, end] = [
+      root.querySelector<HTMLInputElement>('.Input')!,
+      target.querySelector('input')!,
+    ];
     expect(exposed.thumb.input).toBe(start);
     expect([start.value, end.value, end.name]).toEqual(['20', '60', 'volume']);
     expect(root.querySelector('.Label')).toHaveAttribute('for', start.id);
@@ -162,7 +168,6 @@ describe('the parts', () => {
       'click div',
     ]);
   });
-
 });
 
 describe('the value', () => {
@@ -249,7 +254,7 @@ describe('the value', () => {
 });
 
 describe('the events', () => {
-  test('a change gives one valueChange with the native event and then one update:modelValue; a cancel keeps the value and each input', async () => {
+  test('VUE-147: a change gives one valueChange with the native event and then one update:modelValue; a cancel keeps the value and each input', async () => {
     const log: string[] = [];
     const root = sliderModel(log, [20, 40]);
     const events: SliderRootChangeEventDetails[] = [];
@@ -259,10 +264,13 @@ describe('the events', () => {
       events.push(details);
       if (cancel) details.cancel();
     };
-    const { input, values } = await mountSlider({ root, thumbs: [{ name: 'a' }, {}] });
+    root.name = 'volume';
+    const { input, values } = await mountSlider({ root, thumbs: [{}, {}] });
     await press(input(1), '{ArrowLeft}');
     expect(log).toEqual(['change 20,39', 'update 20,39', 'commit 20,39 keyboard']);
     expect(events[0]!.event).toBeInstanceOf(KeyboardEvent);
+    expect(events[0]!.event.target).toBe(input(1));
+    expect(input(1).name).toBe('volume');
     expect(events[0]!.activeThumbIndex).toBe(1);
     cancel = true;
     log.length = 0;
@@ -295,10 +303,30 @@ describe('the events', () => {
 
 describe('the keys', () => {
   test.each([
-    { orientation: 'horizontal', dir: 'ltr', up: ['ArrowUp', 'ArrowRight'], down: ['ArrowDown', 'ArrowLeft'] },
-    { orientation: 'horizontal', dir: 'rtl', up: ['ArrowUp', 'ArrowLeft'], down: ['ArrowDown', 'ArrowRight'] },
-    { orientation: 'vertical', dir: 'ltr', up: ['ArrowUp', 'ArrowRight'], down: ['ArrowDown', 'ArrowLeft'] },
-    { orientation: 'vertical', dir: 'rtl', up: ['ArrowUp', 'ArrowLeft'], down: ['ArrowDown', 'ArrowRight'] },
+    {
+      orientation: 'horizontal',
+      dir: 'ltr',
+      up: ['ArrowUp', 'ArrowRight'],
+      down: ['ArrowDown', 'ArrowLeft'],
+    },
+    {
+      orientation: 'horizontal',
+      dir: 'rtl',
+      up: ['ArrowUp', 'ArrowLeft'],
+      down: ['ArrowDown', 'ArrowRight'],
+    },
+    {
+      orientation: 'vertical',
+      dir: 'ltr',
+      up: ['ArrowUp', 'ArrowRight'],
+      down: ['ArrowDown', 'ArrowLeft'],
+    },
+    {
+      orientation: 'vertical',
+      dir: 'rtl',
+      up: ['ArrowUp', 'ArrowLeft'],
+      down: ['ArrowDown', 'ArrowRight'],
+    },
   ])(
     '$orientation, $dir: $up go one step up and $down one step down; Shift with an arrow, Page Up and Page Down a large step; Home and End to the ends',
     async ({ orientation, dir, up, down }) => {
@@ -385,7 +413,9 @@ describe('the keys', () => {
       const inputs: string[] = [];
       const { input } = await mountSlider({
         root: { defaultValue: 50 },
-        thumbs: [{ onInput: (event: Event) => inputs.push((event.target as HTMLInputElement).value) }],
+        thumbs: [
+          { onInput: (event: Event) => inputs.push((event.target as HTMLInputElement).value) },
+        ],
       });
       await press(input(), '{Control>}{ArrowRight}{/Control}');
       expect(inputs).toEqual(['50']);
@@ -485,7 +515,10 @@ describe('the text', () => {
   test('Slider.Value shows the formatted values; aria-valuetext comes from the attribute, getAriaValueText, or format', async () => {
     const root = reactive<Attrs>({ defaultValue: [0.2, 0.5], min: 0, max: 1, step: 0.1 });
     const thumbs = reactive<Attrs[]>([
-      { getAriaValueText: (text: string, value: number, index: number) => `${text}|${value}|${index}` },
+      {
+        getAriaValueText: (text: string, value: number, index: number) =>
+          `${text}|${value}|${index}`,
+      },
       {},
     ]);
     const { output, input } = await mountSlider({ root, thumbs, value: 'before' });

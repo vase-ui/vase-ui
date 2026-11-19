@@ -29,10 +29,7 @@ defineExpose({ element });
 
 function elementProps() {
   // The thumbs and the indicator have their places in the track.
-  return mergeProps(
-    { ...stateAttributes(slider.state), style: { position: 'relative' } },
-    attrs,
-  );
+  return mergeProps({ ...stateAttributes(slider.state), style: { position: 'relative' } }, attrs);
 }
 </script>
 

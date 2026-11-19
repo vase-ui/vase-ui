@@ -37,7 +37,7 @@ An attribute with the value `undefined` counts as not set, as a prop does in Vue
 
 A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop.
 
-A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control. A part that declares `aria-describedby` as a prop, such as `Slider.Thumb`, follows the same rule.
+A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control. A part that declares `aria-describedby` as a prop, such as `TimeClock.Face`, follows the same rule.
 
 A part keeps its own id when the `id` prop or attribute is empty or contains only white space. A title can then still name its dialog, and a label can still refer to its control. HTML requires a nonempty id with no ASCII white space.
 
@@ -77,9 +77,11 @@ The `#render` slot gives you `props` and `state`. Bind `props` on your element. 
 
 <<< ../examples/composition/RenderSlot.vue{8-11}
 
-The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Slider.Thumb` inside your element to keep its range input. A development build warns if the slot opens without those children.
+The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Toast.Viewport` inside your element to keep its focus guards. A development build warns if the slot opens without those children.
 
-<<< ../examples/composition/RenderChildren.vue{10-12}
+The `element` slot of `Slider.Thumb` gives its range input as `inputProps` and `inputRef`. Render the input in your element, or in another place:
+
+<<< ../examples/composition/ThumbElementSlot.vue{10-14}
 
 ## Element refs
 

@@ -84,7 +84,7 @@ function valueAt(event: PointerEvent, control: Element, current: Press) {
       ? rect.right - start - half - point
       : point - rect.left - start - half;
   const { min, max } = slider.state;
-  return snap(min + (Math.min(Math.max(fromStart / size, 0), 1) * (max - min)), slider.state);
+  return snap(min + Math.min(Math.max(fromStart / size, 0), 1) * (max - min), slider.state);
 }
 
 function onPointerdown(event: PointerEvent) {
@@ -135,7 +135,12 @@ function onPointerdown(event: PointerEvent) {
     if (target === undefined) {
       current.index = enabled.indexOf(true);
     } else {
-      current.index = slider.dragTo(nearestThumb(values, target, enabled), target, 'track-press', event);
+      current.index = slider.dragTo(
+        nearestThumb(values, target, enabled),
+        target,
+        'track-press',
+        event,
+      );
     }
   }
   focus(current.index);

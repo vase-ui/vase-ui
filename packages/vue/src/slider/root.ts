@@ -43,7 +43,12 @@ export interface SliderForParts {
   /** A key or an `input` event: the thumb goes to `target`, to its limit at most. Commits. */
   moveTo(index: number, target: number, reason: 'keyboard' | 'input-change', event: Event): void;
   /** A press or a move, by `thumbCollisionBehavior`. Returns the thumb that the press goes on with. */
-  dragTo(index: number, target: number, reason: 'track-press' | 'drag', event: PointerEvent): number;
+  dragTo(
+    index: number,
+    target: number,
+    reason: 'track-press' | 'drag',
+    event: PointerEvent,
+  ): number;
   startPress(): void;
   /** Commits the last accepted change of the press when `event` is given. */
   endPress(event?: PointerEvent): void;

@@ -36,7 +36,10 @@ defineExpose({ root: rootPart, control: controlPart, thumbs: thumbParts });
       :is="fieldset ? (fieldset.native ? 'fieldset' : Fieldset.Root) : 'div'"
       :disabled="fieldset?.disabled"
     >
-      <component :is="fieldset ? (fieldset.native ? 'legend' : Fieldset.Legend) : 'div'" id="legend">
+      <component
+        :is="fieldset ? (fieldset.native ? 'legend' : Fieldset.Legend) : 'div'"
+        id="legend"
+      >
         Sound
       </component>
       <TestField :field="field">

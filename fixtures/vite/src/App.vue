@@ -22,9 +22,7 @@ function record(name: string, value: unknown, details: { event: Event }) {
       <DateField.Input data-testid="when" />
     </DateField.Root>
   </form>
-  <output data-testid="models">{{
-    JSON.stringify({ when: when?.toString() ?? null })
-  }}</output>
+  <output data-testid="models">{{ JSON.stringify({ when: when?.toString() ?? null }) }}</output>
   <output data-testid="changes">{{ JSON.stringify(changes) }}</output>
   <a href="./away.html" data-testid="away">Away</a>
 </template>

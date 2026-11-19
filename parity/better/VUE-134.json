@@ -1,9 +1,0 @@
-{
-  "id": "VUE-134",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/v1.9.0/packages/react/src/slider/thumb/SliderThumb.tsx#L322-L325",
-    "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch"
-  ],
-  "behavior": "After hydration, the range input of `Slider.Thumb` has the `aria-valuetext` that the browser formats, even when the server has different `Intl` data.",
-  "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
-}

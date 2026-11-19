@@ -64,17 +64,53 @@ Import the component and assemble its parts:
 
 <<< ./slider/Anatomy.vue
 
-Each `Slider.Thumb` has an `<input type="range">`. A custom render slot can place that input elsewhere. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
+`Slider.Root` renders a `<div role="group">`. Each `Slider.Thumb` renders a `<div>` with an `<input type="range">` after its content. The input has the role `slider` and takes the focus. A part outside `Slider.Root` throws an error.
 
-A reset of the form puts an uncontrolled slider back to `defaultValue`, or to `min` when it has none. A controlled slider does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+The input gets each `aria-*` attribute, `tabindex`, `autofocus`, and the `focus`, `blur` and `keydown` listeners of `Slider.Thumb`. The thumb element gets each other attribute. The `element` slot of `Slider.Thumb` also gives `inputProps` and `inputRef`. Render the input in your element, or in another place:
 
-Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
+<<< ../examples/composition/ThumbElementSlot.vue{10-14}
 
-Read the new value from the first argument of `valueChange` and the field name from the thumb input. `eventDetails.event` is the original browser event. A change without a browser event supplies a new `Event('vase-ui')`.
+Bind the value with `v-model`, or give `defaultValue` to an uncontrolled slider. An array makes a range slider. Each change of the user emits `valueChange` and then `update:modelValue`. A drag emits them at each move. To keep the value, call `details.cancel()` in `valueChange`. `valueCommitted` comes when the user ends an action that changed the value: at once for a key, and at the end of a press.
 
-In the server HTML, a root with no name of its own from `aria-label` or `aria-labelledby` already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no name of its own from `aria-label`, `aria-labelledby` or `getAriaLabel`. The label can come before or after the control. Until the root is mounted, a root with no label and no `aria-label` has an `aria-labelledby` with an id that no element has. The attribute gives the root no name.
+The slider shows each value on the grid that starts at `min` and goes up by `step`. It shows a value of the parent at the nearest value of the grid, with no event.
 
-Each thumb takes a value that a program or the browser writes into its input before the page hydrates. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` with the reason `input-change` and `update:modelValue` one time, with the value of each thumb that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
+A slider with a `name` gives its form one entry for each enabled thumb, as native range inputs do. A disabled slider gives no entry. A native reset of the form puts the slider back to its first value, and emits only `update:modelValue`. In a `Field`, a reset clears the error of the field.
+
+### Keyboard
+
+| Key                                         | Action                                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| Arrow Up, Arrow Right                       | Moves the thumb one `step` up. In right-to-left text, Arrow Left does it.    |
+| Arrow Down, Arrow Left                      | Moves the thumb one `step` down. In right-to-left text, Arrow Right does it. |
+| Shift with an arrow key, Page Up, Page Down | Moves the thumb one `largeStep`, to the next value of the grid.              |
+| Home, End                                   | Moves the thumb to `min`, or to the largest value of the grid.               |
+
+In a range, a thumb stops at its neighbour, and `minStepsBetweenValues` keeps a distance between them. A key with Ctrl, Alt or Meta changes no value, so the browser keeps its shortcuts.
+
+### Pointer
+
+A press on the control moves the nearest thumb to the point, and a drag moves it with the pointer. `Slider.Control` has the inline style `touch-action: none`, so a touch drag does not scroll the page. To let the page scroll across a horizontal slider, give `Slider.Control` the style `touch-action: pan-y`.
+
+## Styling
+
+Each part has these attributes, and the slots give the same state:
+
+| Selector                         | State                                                |
+| -------------------------------- | ---------------------------------------------------- |
+| `[data-orientation="vertical"]`  | The slider is vertical.                              |
+| `[data-disabled]`                | The slider is disabled. On a thumb, also that thumb. |
+| `[data-dragging]`                | A press on the control is on.                        |
+| `[data-touched]`                 | The focus left the slider in a field.                |
+| `[data-dirty]`                   | The value differs from the first value of the field. |
+| `[data-valid]`, `[data-invalid]` | The field is valid or invalid.                       |
+
+`:focus-within` matches each part around the input that has the focus. Select the thumb whose input shows a focus ring with `:has(:focus-visible)`. After a press, the browsers also match `:focus-visible` on the input.
+
+## Direction and text
+
+The slider reads the text direction of its element. For a right-to-left page that renders on a server, give `Slider.Root` the attribute `dir="rtl"`, so that the server HTML has each thumb at its place. On a page that changes its direction, bind `dir`.
+
+`format` and `locale` give the text of `Slider.Value`, and `aria-valuetext` of each input when `format` is set. The default `locale` is `en-US` on the server and in the browser, so give the locale of the page.
 
 ## Examples
 
@@ -88,7 +124,7 @@ A slider with one thumb and no visible label, such as a volume control, takes it
 
 <<< ./slider/VisibleLabel.vue{7}
 
-A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
+`Slider.Label` is a `<label>` for the input of the first thumb. The root and each input with no `aria-label` and no `aria-labelledby` have the id of the label in `aria-labelledby`. A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
 
 <<< ./slider/RangeLabels.vue{11-12}
 
@@ -201,7 +237,7 @@ The marks do not change the values that the thumb can have. To snap the thumb to
 
 By default, the center of the thumb is on the edge of the control when the value is at `min` or `max`, so the thumb goes past the control. With `thumbAlignment="edge"`, the thumb stays in the control, and its edge is on the edge of the control.
 
-With `edge`, the server HTML has an inline script that places the thumbs before the app starts. The script has the nonce of `CSPProvider`. With `edge-client-only`, the server HTML has no script, and each thumb stays hidden until the slider is mounted.
+CSS places each thumb, also in the server HTML. After the mount, `Slider.Indicator` ends at the centre of each thumb.
 
 <DemoFrame>
   <DemoSliderEdgeAlignment />

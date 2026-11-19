@@ -365,7 +365,9 @@ describe('S7: the native keys of a range input', () => {
 
   // WebKit runs with full keyboard access: the test setup turns it on in macOS.
   test('Tab reaches a range input in each browser', async () => {
-    html('<input id="before" aria-label="Before"><input id="range" type="range" aria-label="Volume">');
+    html(
+      '<input id="before" aria-label="Before"><input id="range" type="range" aria-label="Volume">',
+    );
     root!.querySelector<HTMLElement>('#before')!.focus();
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement?.id).toBe('range');

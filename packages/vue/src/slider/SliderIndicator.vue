@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, mergeProps, onMounted, shallowRef, useAttrs, watch, type CSSProperties } from 'vue';
+import {
+  computed,
+  mergeProps,
+  onMounted,
+  shallowRef,
+  useAttrs,
+  watch,
+  type CSSProperties,
+} from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { injectSlider, stateAttributes } from './root';

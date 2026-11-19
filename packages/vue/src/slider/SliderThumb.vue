@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, onUnmounted, useAttrs, useId, type CSSProperties } from 'vue';
+import {
+  computed,
+  inject,
+  mergeProps,
+  onUnmounted,
+  useAttrs,
+  useId,
+  type CSSProperties,
+} from 'vue';
 import { useElement } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
-import { describedByWith, fieldKey } from '../field/control';
+import { fieldKey } from '../field/control';
 import { injectSlider, stateAttributes, type SliderThumbEntry } from './root';
 import type { SliderThumbProps, SliderThumbState } from './types';
 import { largest, percent, snap } from './values';
@@ -24,8 +32,18 @@ const slots = defineSlots<{
 }>();
 
 // The attributes and the listeners of the developer that go to the input.
-const INPUT_ATTRIBUTE = /^(?:aria-|tabindex$|autofocus$|on(?:Focus|Blur|Keydown)(?:Capture|Once|Passive)*$)/i;
-const KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'PageUp', 'PageDown', 'Home', 'End']);
+const INPUT_ATTRIBUTE =
+  /^(?:aria-|tabindex$|autofocus$|on(?:Focus|Blur|Keydown)(?:Capture|Once|Passive)*$)/i;
+const KEYS = new Set([
+  'ArrowUp',
+  'ArrowRight',
+  'ArrowDown',
+  'ArrowLeft',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+]);
 
 const slider = injectSlider('Thumb');
 const field = inject(fieldKey, null);
@@ -59,8 +77,8 @@ const entry: SliderThumbEntry = {
 const unregister = slider.addThumb(entry);
 onUnmounted(unregister);
 
-const index = computed(() => slider.thumbs.indexOf(entry));
-const value = computed(() => slider.state.values[index.value]);
+const valueIndex = computed(() => slider.thumbs.indexOf(entry));
+const value = computed(() => slider.state.values[valueIndex.value]);
 const isDisabled = computed(() => props.disabled || slider.state.disabled);
 const inputId = computed(
   () =>
@@ -70,14 +88,28 @@ const state = computed<SliderThumbState>(() => ({ ...slider.state, disabled: isD
 
 const style = computed<CSSProperties>(() => {
   const { values, activeThumbIndex, orientation } = slider.state;
-  const active = activeThumbIndex !== -1 && activeThumbIndex === index.value;
+  const active = activeThumbIndex !== -1 && activeThumbIndex === valueIndex.value;
   const zIndex =
-    values.length > 1 ? (active ? 2 : slider.lastActive === entry ? 1 : undefined) : active ? 1 : undefined;
+    values.length > 1
+      ? active
+        ? 2
+        : slider.lastActive === entry
+          ? 1
+          : undefined
+      : active
+        ? 1
+        : undefined;
   if (value.value === undefined) return { position: 'absolute', zIndex };
   // A percent of `translate` is of the size of the thumb, so an `edge` thumb stays in the track.
   const at = `${percent(value.value, slider.state)}%`;
   if (orientation === 'vertical') {
-    return { position: 'absolute', bottom: at, left: '50%', translate: `-50% ${slider.edge ? at : '50%'}`, zIndex };
+    return {
+      position: 'absolute',
+      bottom: at,
+      left: '50%',
+      translate: `-50% ${slider.edge ? at : '50%'}`,
+      zIndex,
+    };
   }
   const x = slider.edge ? (slider.rtl ? at : `-${at}`) : slider.rtl ? '50%' : '-50%';
   return { position: 'absolute', insetInlineStart: at, top: '50%', translate: `${x} -50%`, zIndex };
@@ -108,7 +140,10 @@ function splitAttrs() {
 }
 
 function elementProps() {
-  return mergeProps({ ...stateAttributes(state.value), style: style.value }, splitAttrs().ofElement);
+  return mergeProps(
+    { ...stateAttributes(state.value), style: style.value },
+    splitAttrs().ofElement,
+  );
 }
 
 function inputProps() {
@@ -128,6 +163,7 @@ function inputProps() {
       'aria-valuetext': valueText(),
       'aria-labelledby': named ? undefined : slider.labelId,
       'aria-invalid': field?.state.valid === false ? 'true' : undefined,
+      'aria-describedby': field?.describedBy,
       style: inputStyle.value,
       onFocus,
       onBlur,
@@ -136,8 +172,6 @@ function inputProps() {
     },
     ofInput,
   );
-  // The ids of the developer come before the ids of the field.
-  if (field) merged['aria-describedby'] = describedByWith(field, ofInput['aria-describedby']);
   // Vue writes `value` after `min`, `max` and `step`, so the browser does not clamp it to old ones.
   return { ...merged, value: value.value };
 }
@@ -145,7 +179,7 @@ function inputProps() {
 function valueText() {
   if (value.value === undefined) return undefined;
   const text = slider.text(value.value);
-  if (props.getAriaValueText) return props.getAriaValueText(text, value.value, index.value);
+  if (props.getAriaValueText) return props.getAriaValueText(text, value.value, valueIndex.value);
   return slider.hasFormat ? text : undefined;
 }
 
@@ -163,7 +197,8 @@ function onInput(event: Event) {
     target.value = String(value.value);
     return;
   }
-  if (value.value !== undefined) slider.moveTo(index.value, target.valueAsNumber, 'input-change', event);
+  if (value.value !== undefined)
+    slider.moveTo(valueIndex.value, target.valueAsNumber, 'input-change', event);
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -192,9 +227,13 @@ function onKeydown(event: KeyboardEvent) {
     const large = event.shiftKey || event.key === 'PageUp' || event.key === 'PageDown';
     // A large step off the grid goes on to the next value of the grid, so the thumb moves.
     const direction = up ? 1 : -1;
-    target = snap(value.value + direction * (large ? slider.largeStep : grid.step), grid, direction);
+    target = snap(
+      value.value + direction * (large ? slider.largeStep : grid.step),
+      grid,
+      direction,
+    );
   }
-  slider.moveTo(index.value, target, 'keyboard', event);
+  slider.moveTo(valueIndex.value, target, 'keyboard', event);
 }
 </script>
 

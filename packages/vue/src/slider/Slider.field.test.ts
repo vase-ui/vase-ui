@@ -121,7 +121,11 @@ describe('a native reset', () => {
 
   test('VUE-21: clears the field, also when the value does not change', async () => {
     const field = reactive<Attrs>({ validationMode: 'change', validate: () => 'Too loud' });
-    const { form, input, field: fieldElement } = await mountSlider({
+    const {
+      form,
+      input,
+      field: fieldElement,
+    } = await mountSlider({
       root: { defaultValue: 20 },
       field,
     });
@@ -154,22 +158,22 @@ describe('a field', () => {
     expect(label.htmlFor).toBe('start');
   });
 
-  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid', async () => {
+  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid; an aria-describedby of the developer wins', async () => {
     const field = reactive<Attrs>({ invalid: false });
     const { input } = await mountSlider({
-      root: { defaultValue: [20, 60] },
-      thumbs: [{}, { 'aria-describedby': 'mine' }],
+      root: { defaultValue: [20, 40, 60] },
+      thumbs: [{}, {}, { 'aria-describedby': 'mine' }],
       field,
     });
     expect(input(0)).toHaveAttribute('aria-describedby', 'description');
-    expect(input(1)).toHaveAttribute('aria-describedby', 'mine description');
     field.invalid = true;
     await nextTick();
     await nextTick();
     for (const index of [0, 1]) {
-      expect(input(index)).toHaveAttribute('aria-describedby', expect.stringContaining('error'));
+      expect(input(index)).toHaveAttribute('aria-describedby', 'description error');
       expect(input(index)).toHaveAttribute('aria-invalid', 'true');
     }
+    expect(input(2)).toHaveAttribute('aria-describedby', 'mine');
   });
 
   test('disabled and name of the field win over the props', async () => {
@@ -202,7 +206,10 @@ describe('a field', () => {
     const { root } = mount(SliderSlots, { target, field: {} });
     await nextTick();
     const field = root.querySelector<HTMLElement>('form > div')!;
-    const [start, end] = [root.querySelector<HTMLInputElement>('.Input')!, target.querySelector('input')!];
+    const [start, end] = [
+      root.querySelector<HTMLInputElement>('.Input')!,
+      target.querySelector('input')!,
+    ];
     start.focus();
     end.focus();
     await settle();
@@ -232,8 +239,14 @@ describe('a field', () => {
         validationMode === 'submit'
           ? [[21, 60]]
           : validationMode === 'blur'
-            ? [[21, 60], [21, 60]]
-            : [[21, 60], [21, 60]],
+            ? [
+                [21, 60],
+                [21, 60],
+              ]
+            : [
+                [21, 60],
+                [21, 60],
+              ],
       );
     },
   );
@@ -269,7 +282,11 @@ describe('a fieldset', () => {
     'VUE-112: a disabled fieldset disables the slider (native: %s); the legend of a Fieldset.Root names it',
     async (native) => {
       const fieldset = reactive({ native, disabled: true });
-      const { group, input, inputs } = await mountSlider({ fieldset, thumbs: [{}, {}], root: { defaultValue: [1, 2] } });
+      const { group, input, inputs } = await mountSlider({
+        fieldset,
+        thumbs: [{}, {}],
+        root: { defaultValue: [1, 2] },
+      });
       await nextTick();
       expect(group).toHaveAttribute('data-disabled');
       expect(inputs().every((element) => element.matches(':disabled'))).toBe(true);

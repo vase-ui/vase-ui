@@ -225,7 +225,13 @@ provide(sliderKey, {
   },
   moveTo(index, target, reason, event) {
     if (!(props.max > props.min) || values.value[index] === undefined) return;
-    const next = moveThumb(values.value, index, snap(target, grid.value), grid.value, distance.value);
+    const next = moveThumb(
+      values.value,
+      index,
+      snap(target, grid.value),
+      grid.value,
+      distance.value,
+    );
     const accepted = change(next, index, reason, event);
     if (accepted === undefined) return;
     // After a key during a press, the end of the press commits only a later change.

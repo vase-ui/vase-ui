@@ -6,7 +6,7 @@ import { Slider } from '@vase-ui/vue/slider';
 <template>
   <div dir="rtl">
     <DirectionProvider direction="rtl">
-      <Slider.Root :default-value="25">
+      <Slider.Root :default-value="25" dir="rtl">
         <Slider.Control class="flex w-56 touch-none items-center py-3 select-none">
           <Slider.Track class="h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800">
             <Slider.Indicator class="bg-neutral-950 select-none dark:bg-white" />

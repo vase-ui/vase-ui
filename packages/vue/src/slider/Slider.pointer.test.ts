@@ -1,7 +1,10 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
-import type { SliderRootChangeEventDetails, SliderRootCommitEventDetails } from '@vase-ui/vue/slider';
+import type {
+  SliderRootChangeEventDetails,
+  SliderRootCommitEventDetails,
+} from '@vase-ui/vue/slider';
 import SliderParts from '../../test/fixtures/SliderParts.vue';
 import { penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
@@ -285,7 +288,10 @@ describe('the geometry', () => {
   test.each([
     { name: 'vertical', root: { orientation: 'vertical' } },
     { name: 'right-to-left', root: { dir: 'rtl' } },
-    { name: 'a border and a padding', control: { style: 'border: 5px solid; padding: 0 10px; box-sizing: content-box' } },
+    {
+      name: 'a border and a padding',
+      control: { style: 'border: 5px solid; padding: 0 10px; box-sizing: content-box' },
+    },
   ])('$name: a point gives the value under it', async ({ root, control }) => {
     const slider = await mountSlider({ root: { defaultValue: 0, ...root }, control });
     const rect = slider.control.getBoundingClientRect();
