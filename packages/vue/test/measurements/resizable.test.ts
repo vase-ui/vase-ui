@@ -155,30 +155,18 @@ describe('M3: flex items that get their final flex in the flush after the mount'
     expect(runs.length).toBeGreaterThan(0);
   });
 
-  // The docs give a panel its transition in a class that the app adds in the first animation
-  // frame after the mount.
-  test('a transition class that the app adds after the mount starts none from the first animation frame', async () => {
-    const results: Record<string, boolean> = {};
-    for (const [name, wait] of [
-      ['task', () => new Promise((resolve) => setTimeout(resolve))],
-      ['first frame', () => frames(1)],
-      ['second frame', () => frames(2)],
-    ] as const) {
-      const style = document.head.appendChild(document.createElement('style'));
-      style.textContent = '.moves .item { transition: flex-grow 1s; }';
-      const { container, runs } = mountItems({ read: true });
-      await wait();
-      container.classList.add('moves');
-      await frames(3);
-      results[name] = runs.length > 0;
-      container.remove();
-      style.remove();
-    }
-    expect(results).toEqual({
-      task: server.browser !== 'webkit',
-      'first frame': false,
-      'second frame': false,
-    });
+  // The docs give a panel its transition in a class that the app adds in the second animation
+  // frame after the mount. A class in a task or in the first frame can come before or after the
+  // next rendering, so it starts a transition in some runs.
+  test('a transition class that the app adds in the second animation frame after the mount starts none', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    onTestFinished(() => style.remove());
+    style.textContent = '.moves .item { transition: flex-grow 1s; }';
+    const { container, runs } = mountItems({ read: true });
+    await frames(2);
+    container.classList.add('moves');
+    await frames(3);
+    expect(runs).toEqual([]);
   });
 });
 
@@ -403,12 +391,14 @@ describe('M10: an absolute child outside the box of its parent', () => {
 });
 
 describe('M11: a ResizeObserver callback that changes the size of the items that it observes', () => {
+  type Reaction = 'at once' | 'in a microtask' | 'in a frame';
+
   /**
    * Observes the items `a` and `b` of a row, and the row with `withRow`. The callback gives `a` a
-   * third of the room of `a` and `b`, as a fixed panel takes its pixels. With `deferItems`, it
-   * reacts to a delivery with no entry of the row in the next animation frame.
+   * third of the room of `a` and `b`, as a fixed panel takes its pixels: at once, in a microtask
+   * as the render of Vue does, or in the next animation frame.
    */
-  async function observe(withRow: boolean, change: 'row' | 'sibling', deferItems: boolean) {
+  async function observe(withRow: boolean, change: 'row' | 'sibling', reaction: Reaction) {
     const row = html(
       '<div style="display: flex; width: 600px; height: 20px"><div style="flex: 0 0 200px"></div><div style="flex: 1 1 0px"></div><div style="flex: none; width: 10px"></div></div>',
     ).firstElementChild as HTMLElement;
@@ -423,12 +413,10 @@ describe('M11: a ResizeObserver callback that changes the size of the items that
       const room = a.getBoundingClientRect().width + b.getBoundingClientRect().width;
       a.style.flexBasis = `${Math.round(room / 3)}px`;
     };
-    const observer = new ResizeObserver((entries) => {
-      if (deferItems && !entries.some((entry) => entry.target === row)) {
-        requestAnimationFrame(react);
-      } else {
-        react();
-      }
+    const observer = new ResizeObserver(() => {
+      if (reaction === 'at once') react();
+      else if (reaction === 'in a microtask') queueMicrotask(react);
+      else requestAnimationFrame(react);
     });
     if (withRow) observer.observe(row);
     observer.observe(a);
@@ -444,25 +432,33 @@ describe('M11: a ResizeObserver callback that changes the size of the items that
     return result;
   }
 
-  test('gives a loop error, unless the row is in the same delivery or the reaction to the items comes in the next frame', async () => {
+  // The root measures at once for a delivery with the root, and in the next frame for a delivery
+  // of panels alone.
+  test('a change at once or in a microtask gives a loop error, unless the row is in the delivery; a change in the next frame gives none', async () => {
     const results: Record<string, string> = {};
     for (const withRow of [false, true]) {
       for (const change of ['row', 'sibling'] as const) {
-        for (const deferItems of [false, true]) {
-          const name = `${withRow ? 'row and items' : 'items'}, ${change} grows${deferItems ? ', items in a frame' : ''}`;
-          results[name] = await observe(withRow, change, deferItems);
+        for (const reaction of ['at once', 'in a microtask', 'in a frame'] as const) {
+          const name = `${withRow ? 'row and items' : 'items'}, ${change} grows, ${reaction}`;
+          results[name] = await observe(withRow, change, reaction);
         }
       }
     }
+    const error = (width: number) => `loop error, ${width}px`;
+    const none = (width: number) => `no error, ${width}px`;
     expect(results).toEqual({
-      'items, row grows': 'loop error, 297px',
-      'items, row grows, items in a frame': 'no error, 297px',
-      'items, sibling grows': 'loop error, 167px',
-      'items, sibling grows, items in a frame': 'no error, 167px',
-      'row and items, row grows': 'no error, 297px',
-      'row and items, row grows, items in a frame': 'no error, 297px',
-      'row and items, sibling grows': 'loop error, 167px',
-      'row and items, sibling grows, items in a frame': 'no error, 167px',
+      'items, row grows, at once': error(297),
+      'items, row grows, in a microtask': error(297),
+      'items, row grows, in a frame': none(297),
+      'items, sibling grows, at once': error(167),
+      'items, sibling grows, in a microtask': error(167),
+      'items, sibling grows, in a frame': none(167),
+      'row and items, row grows, at once': none(297),
+      'row and items, row grows, in a microtask': none(297),
+      'row and items, row grows, in a frame': none(297),
+      'row and items, sibling grows, at once': error(167),
+      'row and items, sibling grows, in a microtask': error(167),
+      'row and items, sibling grows, in a frame': none(167),
     });
     // The test runner also writes each loop error to the console.
     expect(new Set(takeReportedMessages())).toEqual(

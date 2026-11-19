@@ -638,6 +638,13 @@ describe('sizes with a unit', () => {
     expect(width(0)).toBeCloseTo(150, 0);
   });
 
+  test('a first size in a length gives a percent at the first measurement, which the panel keeps at a new size of the root', async () => {
+    const { width, resizeFrame } = await mountPanels([{ defaultSize: '100px' }, {}]);
+    expect(width(0)).toBeCloseTo(100, 0);
+    await resizeFrame(200);
+    expect(width(0)).toBeCloseTo(50, 0);
+  });
+
   test('a first size in a length keeps its percent at a new size of the root; a double click gives the pixels again', async () => {
     const { at, width, resizeFrame } = await mountPanels([{ defaultSize: '100px' }, {}]);
     await drag(at('h1'), 40);

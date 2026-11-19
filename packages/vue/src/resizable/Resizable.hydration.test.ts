@@ -116,7 +116,17 @@ describe('the server HTML', () => {
     expect(at('a').style.flex).toBe('0 1 240px');
     expect(at('a').style.getPropertyValue('--resizable-panel-size')).toBe('');
     expect(grows(container)).toEqual(['0', '100']);
-    expect(at('h1')).not.toHaveAttribute('aria-valuenow');
+    expect(handleValues(at('h1'))).toEqual(['0', 'a', null, null, null, null, null]);
+  });
+
+  test('a right-to-left root of a server reads the dir attribute of the root for the ends', async () => {
+    const { at } = await serverLayout({
+      root: { dir: 'rtl', defaultLayout: { a: 20, b: 80 } },
+      parts: panelsAndHandles('a', 'b').map((each) =>
+        each.key === 'a' ? { ...each, attrs: { minSize: 20 } } : each,
+      ),
+    });
+    expect(handleValues(at('h1')).slice(5)).toEqual([null, '']);
   });
 });
 
@@ -186,14 +196,29 @@ describe('the hydration', () => {
     );
     const server = await serverLayout({ root: { modelValue: { a: 5, b: 50, c: 45 } }, parts });
     expect(server.at('a')).toHaveAttribute('data-collapsed');
+    expect(server.at('h1')).toHaveAttribute('data-at-min');
     expect(grows(server.container)).toEqual(['0', '55', '45']);
     const spec = reactive(structuredClone({ root: { modelValue: { a: 5, b: 50, c: 45 } }, parts }));
     hydrate(ResizableLayoutFixture, { spec }, server.container);
     spec.root.modelValue = { a: 40, b: 30, c: 30 };
     await settle();
+    // The first client render gives `null`, so the render after the mount removes each attribute
+    // of the server HTML that the client does not have.
     expect(server.at('a')).not.toHaveAttribute('data-collapsed');
+    expect(server.at('h1')).not.toHaveAttribute('data-at-min');
     expect(grows(server.container)).toEqual(['40', '30', '30']);
     expect(handleValues(server.at('h1')).slice(1, 3)).toEqual(['a', '40']);
+  });
+
+  test('a handle that loses a panel at the mount loses the value and aria-controls of the server HTML', async () => {
+    const spec: LayoutSpec = { parts: panelsAndHandles('a', 'b') };
+    const server = await serverLayout(spec);
+    expect(handleValues(server.at('h1')).slice(1, 3)).toEqual(['a', '50']);
+    const client = reactive(structuredClone(spec));
+    hydrate(ResizableLayoutFixture, { spec: client }, server.container);
+    client.parts.pop();
+    await settle();
+    expect(handleValues(server.at('h1'))).toEqual([null, null, null, null, null, '', '']);
   });
 
   test('a panel that goes after the mount: the handles name their new neighbors', async () => {

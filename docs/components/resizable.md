@@ -92,7 +92,7 @@ A panel with `collapsible` collapses to its `collapsedSize`, which is 0 by defau
 
 Enter on a handle collapses its primary panel when that panel is collapsible, or gives it its size again. `collapse()` and `expand()` of a template ref do the same from a script. The `state` of the default slot of the panel has `collapsed`. A `defaultSize` equal to the `collapsedSize` shows the panel collapsed at the start, with no event.
 
-The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The panels get their sizes at the mount. Add the class of the transition in the first animation frame after the mount, so that it does not animate them. The root has `data-dragging` during a drag. Turn the transition off then, or each move of the pointer animates.
+The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The panels get their sizes at the mount. Add the class of the transition in the second animation frame after the mount, so that it does not animate them. The root has `data-dragging` during a drag. Turn the transition off then, or each move of the pointer animates.
 
 <DemoFrame>
   <DemoResizableCollapsible />

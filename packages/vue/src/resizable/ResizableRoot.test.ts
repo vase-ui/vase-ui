@@ -438,30 +438,47 @@ describe('the panel space', () => {
     expect(widthOf(at('main'))).toBeCloseTo(200, 0);
   });
 
-  test('while the root has no room, no drag starts, and a key and a method do nothing', async () => {
-    const log: unknown[][] = [];
-    const { at, exposed } = await mountLayout({
-      frame: 'display: none; width: 400px; height: 100px',
-      root: logged(log),
-      parts: [
-        {
-          kind: 'panel',
-          key: 'nav',
-          attrs: { defaultSize: '100px', collapsible: true, minSize: 10 },
-        },
-        { kind: 'handle', key: 'h1' },
-        { kind: 'panel', key: 'main' },
-      ],
+  test.each([
+    { name: 'a length that waits', first: '100px' },
+    { name: 'sizes in percent', first: 25 },
+  ])(
+    'while the root has no room, no drag starts, and a key and a method do nothing: $name',
+    async ({ first }) => {
+      const log: unknown[][] = [];
+      const { at, exposed } = await mountLayout({
+        frame: 'display: none; width: 400px; height: 100px',
+        root: logged(log),
+        parts: [
+          {
+            kind: 'panel',
+            key: 'nav',
+            attrs: { defaultSize: first, collapsible: true, minSize: 10 },
+          },
+          { kind: 'handle', key: 'h1' },
+          { kind: 'panel', key: 'main' },
+        ],
+      });
+      const flex = at('nav').style.flex;
+      at('h1').dispatchEvent(
+        new PointerEvent('pointerdown', { button: 0, buttons: 1, bubbles: true }),
+      );
+      at('h1').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      const nav = exposed.panels.nav as { collapse(): void; resize(size: number): void };
+      nav.collapse();
+      nav.resize(40);
+      await nextTick();
+      expect(log).toEqual([]);
+      expect(at('nav').style.flex).toBe(flex);
+    },
+  );
+
+  test('the root reads the direction of its element, also from an element around it', async () => {
+    const { at } = await mountLayout({
+      frame: 'width: 400px; height: 100px; direction: rtl',
+      parts: panelsAndHandles('a', 'b'),
     });
-    at('h1').dispatchEvent(
-      new PointerEvent('pointerdown', { button: 0, buttons: 1, bubbles: true }),
-    );
-    at('h1').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-    (exposed.panels.nav as { collapse(): void; resize(size: number): void }).collapse();
-    (exposed.panels.nav as { resize(size: number): void }).resize(40);
-    await nextTick();
-    expect(log).toEqual([]);
-    expect(at('nav').style.flex).toBe('0 1 100px');
+    await key(at('h1'), '{ArrowRight}');
+    expect(at('h1')).toHaveAttribute('aria-valuenow', '49');
   });
 });
 
@@ -512,11 +529,11 @@ describe('elements that are not panels', () => {
       ],
     });
     expect(widthOf(at('a'))).toBeCloseTo(100, 0);
+    // The first delivery of the observer has the root too.
+    await frames(2);
     part(spec, 'extra').attrs = { style: 'width: 100px; flex: none' };
     await nextTick();
-    await settle();
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await frames(3);
     expect(widthOf(at('a'))).toBeCloseTo(100, 0);
     expect(widthOf(at('b'))).toBeCloseTo(200, 0);
   });
@@ -587,6 +604,11 @@ describe('panels that mount and unmount', () => {
     part(spec, 'c').show = false;
     await settle();
     expect(grows(root, 'a', 'b')).toEqual(['75', '25']);
+    // `sizes` has the panels that are mounted.
+    expect(JSON.parse(root.querySelector('.root-state')!.textContent!).sizes).toEqual({
+      a: 75,
+      b: 25,
+    });
     await drag(at('h1'), 40);
     expect(log).toContainEqual(['update', { c: 20, a: 68, b: 12 }]);
     part(spec, 'c').show = true;

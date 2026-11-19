@@ -7,10 +7,10 @@ import styles from './index.module.css';
 const files = useTemplateRef('files');
 const outline = useTemplateRef('outline');
 const timeline = useTemplateRef('timeline');
-// The panels get their sizes at the mount. The transition starts one frame later, so that it
+// The panels get their sizes at the mount. The transition starts two frames later, so that it
 // does not animate them.
 const animated = shallowRef(false);
-onMounted(() => requestAnimationFrame(() => (animated.value = true)));
+onMounted(() => requestAnimationFrame(() => requestAnimationFrame(() => (animated.value = true))));
 
 function toggle(panel: { collapse(): void; expand(): void } | null, collapsed: boolean) {
   if (collapsed) panel?.expand();

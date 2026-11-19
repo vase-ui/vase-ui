@@ -4,10 +4,10 @@ import { Resizable } from '@vase-ui/vue/resizable';
 import CollapseButton from './CollapseButton.vue';
 
 const sidebar = useTemplateRef('sidebar');
-// The panels get their sizes at the mount. The transition starts one frame later, so that it
+// The panels get their sizes at the mount. The transition starts two frames later, so that it
 // does not animate them.
 const animated = shallowRef(false);
-onMounted(() => requestAnimationFrame(() => (animated.value = true)));
+onMounted(() => requestAnimationFrame(() => requestAnimationFrame(() => (animated.value = true))));
 
 function toggle(collapsed: boolean) {
   if (collapsed) sidebar.value?.expand();
