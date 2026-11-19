@@ -80,10 +80,13 @@ export default defineConfig({
               ...engineInstances(),
               // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
               // leaves it out.
+              // The helpers of `test/render.ts` mount a fixture in an app of its own mode. This
+              // project compiles no fixture as Vapor, so it gives `app: 'vdom'`.
+              // `vitest.vue-3.6.config.ts` runs those tests in Vapor apps.
               {
                 browser: 'chromium',
                 name: 'vapor',
-                provide: { testApp: 'vapor', app: 'vapor-interop' },
+                provide: { testApp: 'vapor', app: 'vdom' },
               },
             ],
           },
