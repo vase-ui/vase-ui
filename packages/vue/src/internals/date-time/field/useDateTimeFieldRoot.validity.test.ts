@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { formatter } from '../format';
 import type { TemporalValue } from '../temporal';
-import { compareMoments, getInputLimits, getLimitMessage, laterMinimum } from './customValidity';
-import type { ValueLimits } from './customValidity';
+import {
+  compareMoments,
+  getInputLimits,
+  getLimitMessage,
+  laterMinimum,
+} from './useDateTimeFieldRoot';
+import type { ValueLimits } from './useDateTimeFieldRoot';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);

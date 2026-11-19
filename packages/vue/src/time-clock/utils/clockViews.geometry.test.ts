@@ -5,7 +5,7 @@ import {
   outerRingRadius,
   positionOfAngle,
   ratioOfPoint,
-} from './clockGeometry';
+} from './clockViews';
 
 // A face that does not start at the origin, so a point is not an offset from the center.
 const rect = { left: 20, top: 40, width: 200, height: 200 };
@@ -61,6 +61,8 @@ describe('positionOfAngle', () => {
     { name: 'gives a minute', angle: 37, count: 60, step: 1, position: 6 },
     { name: 'rounds a minute to its step', angle: 37, count: 60, step: 5, position: 5 },
     { name: 'wraps a step that is not a divisor', angle: 359, count: 60, step: 7, position: 0 },
+    { name: 'keeps the last mark before halfway', angle: 347.9, count: 60, step: 8, position: 56 },
+    { name: 'wraps at the shortened midpoint', angle: 348, count: 60, step: 8, position: 0 },
   ])('$name', ({ angle, count, step, position }) => {
     expect(positionOfAngle(angle, count, step)).toBe(position);
   });

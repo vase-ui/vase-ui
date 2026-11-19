@@ -37,7 +37,7 @@ export interface TimeClockFaceProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useAriaAfterHydration } from '../../common/hydration';
@@ -56,17 +56,26 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
+import { useInputRegistration } from '../../internals/field-register-control';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
+import { useElementRegistration } from '../../internals/useElementRegistration';
+import { useInputRender } from '../../internals/useInputRender';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useTimeClockRootContext } from '../root/TimeClockRootContext';
-import { angleOfPoint, outerRingRadius, ratioOfPoint } from '../utils/clockGeometry';
-import { faceNumber, faceNumberOfPoint, gridOf, pagePlaces } from '../utils/clockViews';
+import { TimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
+import {
+  angleOfPoint,
+  faceNumber,
+  faceNumberOfPoint,
+  outerRingRadius,
+  pagePlaces,
+  ratioOfPoint,
+} from '../utils/clockViews';
 import type { TimeClockFaceNumber } from '../utils/clockViews';
 import TimeClockFaceChildren from './TimeClockFaceChildren.vue';
-import { TimeClockFaceContext } from './TimeClockFaceContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -92,19 +101,20 @@ const HIDDEN_INPUT_STYLE = {
 };
 
 const root = useTimeClockRootContext();
-const { state } = root;
+const { grid, state } = root;
+const { isHeld } = useKeepAliveState();
 const formatLocale = useFormatLocale(root.locale);
 const ariaAfterHydration = useAriaAfterHydration();
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const numberElements = new Map<HTMLElement, () => TimeClockFaceNumber>();
+const { valueProps, renderValue } = useInputRender();
+const numberElements = new Map<Element, () => TimeClockFaceNumber>();
 // The pointer of the press or drag that is in progress, the radius of the outer ring that it
 // measured, and whether it selected a number.
 let activePointerId: number | null = null;
 let pressRadius = 0;
 let pressSelected = false;
 
-const grid = computed(() => gridOf(root.view.value, root.hourCycle.value, root.step.value));
 const label = computed(() =>
   new Intl.DisplayNames(formatLocale.value, { type: 'dateTimeField' }).of(root.view.value),
 );
@@ -116,29 +126,13 @@ const valueText = computed(() =>
   }),
 );
 
-// A template can mount the face that replaces this face before it unmounts this face.
-function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  if (input !== null || root.inputElement.value === inputElement.value) {
-    root.inputElement.value = input;
-  }
-  inputElement.value = input;
-}
-
 function onInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   root.selectNumber(
     faceNumber(root.view.value, root.hourCycle.value, input.valueAsNumber),
     createChangeEventDetails(REASONS.inputChange, event),
   );
-  // A listener can cancel the change, and a parent that controls the clock can keep its time. Vue
-  // writes the value of the input only when the face renders again.
-  void nextTick(() => {
-    const { value } = root.selectedNumber.value;
-    if (input.valueAsNumber !== value) {
-      input.value = String(value);
-    }
-  });
+  renderValue();
 }
 
 function inputProps() {
@@ -150,7 +144,7 @@ function inputProps() {
       ) ?? undefined,
     'aria-labelledby': ariaLabelledby,
     'aria-describedby': given('aria-describedby', props.ariaDescribedby),
-    'aria-readonly': root.readOnly.value ? 'true' : undefined,
+    'aria-readonly': state.value.readOnly ? 'true' : undefined,
     'aria-valuenow': root.selectedNumber.value.value,
     'aria-valuetext':
       ariaAfterHydration(
@@ -160,25 +154,31 @@ function inputProps() {
       ) ?? undefined,
     // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
     autocomplete: 'off',
-    disabled: root.disabled.value,
+    disabled: state.value.disabled,
     max: grid.value.first + grid.value.count - 1,
     min: grid.value.first,
     onInput,
     step: grid.value.step,
     style: HIDDEN_INPUT_STYLE,
     type: 'range',
-    value: root.selectedNumber.value.value,
+    ...valueProps(root.selectedNumber.value.value),
   };
 }
 
 provide(TimeClockFaceContext, {
   inputProps,
-  setInputElement,
-  registerNumber(element, number) {
-    numberElements.set(element, number);
-    return () => {
-      numberElements.delete(element);
+  useInputRef() {
+    // A render slot can keep its children alive while the face stays on screen.
+    const input = shallowRef<HTMLInputElement | null>(null);
+    useInputRegistration(input, root.registerInput);
+    return (value) => {
+      const next = value as HTMLInputElement | null;
+      if (next || inputElement.value === input.value) inputElement.value = next;
+      input.value = next;
     };
+  },
+  useNumber(element, number) {
+    useElementRegistration(numberElements, element, number);
   },
 });
 
@@ -196,7 +196,7 @@ function selectNumberOfEvent(event: PointerEvent) {
   const number = faceNumberOfPoint(
     root.view.value,
     root.hourCycle.value,
-    root.step.value,
+    grid.value.step,
     angleOfPoint(point, rect),
     ratioOfPoint(point, rect, pressRadius),
   );
@@ -205,18 +205,18 @@ function selectNumberOfEvent(event: PointerEvent) {
   }
 }
 
-function endPress(event: PointerEvent) {
+function endPress(face: HTMLElement) {
+  if (activePointerId === null) return;
+  const pointerId = activePointerId;
   activePointerId = null;
-  const face = event.currentTarget as HTMLElement;
-  // `pointercancel` releases the capture by itself, and a release of a capture that is gone throws.
-  if (face.hasPointerCapture(event.pointerId)) {
-    face.releasePointerCapture(event.pointerId);
+  if (face.hasPointerCapture(pointerId)) {
+    face.releasePointerCapture(pointerId);
   }
-  root.setDragging(false);
+  root.setDragging(face, false);
 }
 
 function onPointerdown(event: PointerEvent) {
-  if (event.button !== 0 || root.disabled.value || root.readOnly.value) {
+  if (event.button !== 0 || isHeld.value || state.value.disabled || state.value.readOnly) {
     return;
   }
   const face = event.currentTarget as HTMLElement;
@@ -233,7 +233,7 @@ function onPointerdown(event: PointerEvent) {
     // The method throws for a pointer that the browser does not know, such as the pointer of an
     // event that a script dispatched. The press then ends with the events of the face.
   }
-  root.setDragging(true);
+  root.setDragging(face, true);
   // The press cancels the default action, so the browser does not move the focus or select text.
   event.preventDefault();
   inputElement.value?.focus({ preventScroll: true });
@@ -251,7 +251,7 @@ function onPointerup(event: PointerEvent) {
   if (event.pointerId !== activePointerId) {
     return;
   }
-  endPress(event);
+  endPress(event.currentTarget as HTMLElement);
   if (pressSelected) {
     root.commit(createGenericEventDetails(REASONS.drag, event));
   }
@@ -259,7 +259,7 @@ function onPointerup(event: PointerEvent) {
 
 function onPointercancel(event: PointerEvent) {
   if (event.pointerId === activePointerId) {
-    endPress(event);
+    endPress(event.currentTarget as HTMLElement);
   }
 }
 
@@ -307,17 +307,14 @@ function onKeydown(event: KeyboardEvent) {
   event.preventDefault();
 }
 
-onScopeDispose(() => {
-  if (activePointerId !== null) {
-    root.setDragging(false);
-  }
-});
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       onKeydown,
+      onLostpointercapture(event: PointerEvent) {
+        if (event.target === event.currentTarget) onPointercancel(event);
+      },
       onPointercancel,
       onPointerdown,
       onPointermove,
@@ -328,6 +325,15 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
   children: true,
 });
+
+// A held or replaced face can lose the pointer release.
+watch(
+  () => (isHeld.value ? null : element.value),
+  (face, _previous, onCleanup) => {
+    if (face) onCleanup(() => endPress(face));
+  },
+  { flush: 'sync' },
+);
 
 defineExpose({ element, inputElement });
 </script>

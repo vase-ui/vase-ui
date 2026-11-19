@@ -125,12 +125,10 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
 </script>
 
 <script setup lang="ts" generic="Value extends TimeFieldRootValue = Temporal.PlainTime">
-import { shallowRef } from 'vue';
-import {
-  rootStateAttributesMapping,
-  useDateTimeFieldRoot,
-} from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { toRefs, useTemplateRef } from 'vue';
+import { useDateTimeFieldRoot } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 
@@ -175,41 +173,24 @@ defineSlots<{
 
 assertTemporal('TimeField.Root');
 
-const inputElement = shallowRef<HTMLInputElement | null>(null);
+const inputElement = useTemplateRef<HTMLInputElement>('input');
 const context = useDateTimeFieldRoot<Value>({
-  hiddenInputElement: inputElement,
+  ...toRefs(props),
   family: 'time',
   value: () => props.modelValue,
-  defaultValue: () => props.defaultValue,
-  referenceDate: () => props.referenceDate,
-  granularity: () => props.granularity,
-  hourCycle: () => props.hourCycle,
-  forceLeadingZeros: () => props.forceLeadingZeros,
-  hideTimeZone: () => props.hideTimeZone,
-  minTime: () => props.minTime,
-  maxTime: () => props.maxTime,
-  step: () => props.step,
-  locale: () => props.locale,
-  disabled: () => props.disabled,
-  readOnly: () => props.readOnly,
-  required: () => props.required,
-  name: () => props.name,
-  form: () => props.form,
-  id: () => props.id,
-  autoComplete: () => props.autoComplete,
-  ariaLabelledby: () => props.ariaLabelledby,
+  hiddenInputElement: inputElement,
   valueChange: (value, details) => emit('valueChange', value, details),
   updateValue: (value) => emit('update:modelValue', value),
 });
 
+const { state } = context;
+
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state: context.state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  state,
+  stateAttributesMapping: fieldValidityMapping,
   ref: context.setRootElement,
   props: context.getRootProps,
 });
-
-const state = context.state;
 
 defineExpose({
   element,
@@ -225,8 +206,5 @@ defineExpose({
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
-  <input
-    v-bind="context.hiddenInputProps()"
-    :ref="(input) => (inputElement = input as HTMLInputElement | null)"
-  />
+  <input ref="input" v-bind="context.hiddenInputProps()" />
 </template>

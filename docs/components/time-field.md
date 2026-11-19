@@ -60,7 +60,7 @@ Import the component and assemble its parts:
 
 <<< ./time-field/Anatomy.vue
 
-`TimeField.Root` renders its element and a hidden `<input>` after it. The hidden input has the `name` of the field and the native validation, so a form submits the time one time. The segments have no `name`.
+`TimeField.Root` renders its element and a hidden `<input>` after it. The hidden input has the `name` of the field and the native validation, so a form submits the time one time. The segments have no `name`. Read `inputElement` on the root ref after mount to get the hidden input.
 
 `TimeField.Input` renders the layout of the locale: a segment for each part of the time, and the text between them. With no `segment` slot, it renders each part with no class. Use the slot to give a class to a segment and to a separator. The slot gets each part of the layout and its `index`. A part that the user edits has `editable: true`. The other parts have `editable: false` and a `text`: a separator, or the name of a time zone.
 

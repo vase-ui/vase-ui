@@ -538,6 +538,7 @@ describe('<Calendar.Root />', () => {
     );
 
     expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of watcher callback'),
       expect.stringContaining('Unhandled error during execution of setup function'),
     ]);
   });

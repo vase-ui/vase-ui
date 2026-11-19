@@ -75,12 +75,10 @@ const ProbeInput = defineComponent({
 </script>
 
 <script setup lang="ts">
+import { fieldValidityMapping } from '../../src/internals/field-constants';
 import { useTemplateRef } from 'vue';
 import type { DateTimeFieldChangeEventDetails } from '../../src/internals/date-time/field/DateTimeFieldContext';
-import {
-  rootStateAttributesMapping,
-  useDateTimeFieldRoot,
-} from '../../src/internals/date-time/field/useDateTimeFieldRoot';
+import { useDateTimeFieldRoot } from '../../src/internals/date-time/field/useDateTimeFieldRoot';
 import type { DateTimeFieldGranularity } from '../../src/internals/date-time/field/useDateTimeFieldRoot';
 import type { DateMatcher } from '../../src/internals/date-time/matchers';
 import { assertTemporal } from '../../src/internals/date-time/temporal';
@@ -213,7 +211,7 @@ const { elementProps, setRef } = useRenderElement(
   {},
   {
     state: root.state,
-    stateAttributesMapping: rootStateAttributesMapping,
+    stateAttributesMapping: fieldValidityMapping,
     ref: root.setRootElement,
     props: root.getRootProps,
   },

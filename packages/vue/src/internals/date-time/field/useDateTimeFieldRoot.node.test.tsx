@@ -92,12 +92,10 @@ describe('the modules of the date and time field with no Temporal', () => {
     await expect(
       Promise.all([
         import('./segmentLayout'),
-        import('./segmentRanges'),
-        import('./customValidity'),
         import('./useDateTimeFieldRoot'),
         import('./useDateTimeFieldSegment'),
         import('./DateTimeFieldContext'),
       ]),
-    ).resolves.toHaveLength(6);
+    ).resolves.toHaveLength(4);
   });
 });

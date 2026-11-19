@@ -27,9 +27,11 @@ export interface DateFieldLiteralProps
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { DateTimeFieldLiteralElement } from '../../internals/date-time/field/DateTimeFieldLiteralElement';
-import { useDateTimeFieldLiteral } from '../../internals/date-time/field/useDateTimeFieldLiteral';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import {
+  DateTimeFieldLiteralElement,
+  useDateTimeFieldLiteral,
+} from '../../internals/date-time/field/DateTimeFieldLiteralElement';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 
@@ -55,8 +57,8 @@ const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 
 const { element, elementProps, usesRenderSlot } = useRenderElement('span', props, {
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
-  ref: [setElement],
+  stateAttributesMapping: fieldValidityMapping,
+  ref: setElement,
   props: (attrs) => [
     {
       // An era and a zone name tell something that a screen reader must read.

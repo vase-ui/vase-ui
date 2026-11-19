@@ -27,12 +27,12 @@ export interface DateFieldClearProps
 import { computed, useSlots } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import DateFieldClearChildren from './DateFieldClearChildren.vue';
+import ClearButtonChildren from '../../internals/ClearButtonChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -74,7 +74,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       disabled: isDisabled,
     }),
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
     {
       // The button names itself only when it shows its own `x`.
@@ -93,8 +93,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="DateFieldClearChildren" />
+  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ClearButtonChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <DateFieldClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></DateFieldClearChildren>
+    <ClearButtonChildren><template v-if="$slots.default" #default><slot :state="state" /></template></ClearButtonChildren>
   </component>
 </template>

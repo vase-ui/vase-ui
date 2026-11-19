@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  screen,
+} from '#test-utils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const hour = (value: number, inner = false) => ({ value, inner });
@@ -32,6 +38,49 @@ describe('<TimeClock.Number />', () => {
     await fireEvent.pointerDown(screen.getByTestId('face'), { button: 0, pointerId: 1 });
     expect(current).toHaveBeenCalled();
     expect(previous).not.toHaveBeenCalled();
+  });
+
+  it('uses the visible dial numbers when a number mounts or returns from KeepAlive', async () => {
+    const { HeldBranch, mountWhileHeld, show, hide } = createHeldBranch(() => (
+      <TimeClock.Number
+        number={hour(3)}
+        style={{ position: 'absolute', left: '225px', top: '100px', width: 0, height: 0 }}
+      />
+    ));
+    await render(
+      <TimeClock.Root hourCycle={24} granularity="hour">
+        <TimeClock.Face
+          data-testid="face"
+          style={{
+            position: 'fixed',
+            left: '100px',
+            top: '100px',
+            width: '200px',
+            height: '200px',
+          }}
+        >
+          <HeldBranch />
+        </TimeClock.Face>
+      </TimeClock.Root>,
+    );
+    const face = screen.getByTestId('face');
+    const slider = screen.getByRole('slider');
+    const rect = face.getBoundingClientRect();
+    const pointer = { button: 0, pointerId: 1, clientX: rect.left + 190, clientY: rect.top + 100 };
+    async function press() {
+      await fireEvent.pointerDown(face, pointer);
+      await fireEvent.pointerUp(face, pointer);
+    }
+
+    await mountWhileHeld();
+    await press();
+    expect(slider).toHaveValue('3');
+    await show();
+    await press();
+    expect(slider).toHaveValue('15');
+    await hide();
+    await press();
+    expect(slider).toHaveValue('3');
   });
 
   describe('text', () => {

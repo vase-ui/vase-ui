@@ -33,10 +33,12 @@ export interface TimeFieldLiteralProps
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { DateTimeFieldLiteralElement } from '../../internals/date-time/field/DateTimeFieldLiteralElement';
-import { useDateTimeFieldLiteral } from '../../internals/date-time/field/useDateTimeFieldLiteral';
-import { fieldValidityMapping } from '../../internals/field-constants';
+import {
+  DateTimeFieldLiteralElement,
+  useDateTimeFieldLiteral,
+} from '../../internals/date-time/field/DateTimeFieldLiteralElement';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 
@@ -67,7 +69,7 @@ const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 const { element, elementProps, usesRenderSlot } = useRenderElement('span', props, {
   state,
   stateAttributesMapping,
-  ref: [setElement],
+  ref: setElement,
   props: (attrs) => [
     {
       // The text between the segments is not for assistive technology. The time zone name is.

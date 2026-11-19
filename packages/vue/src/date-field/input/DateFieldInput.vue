@@ -22,7 +22,7 @@ export interface DateFieldInputProps
 import type { Component } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import DateFieldInputChildren from './DateFieldInputChildren.vue';
@@ -49,7 +49,7 @@ const { state } = context;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
     {
       // The server can have another layout than the browser, so the number of parts can differ.

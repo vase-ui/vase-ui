@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { markChildrenMounted } from '../../internals/useRenderElement';
-import { useTimeClockRootContext } from '../root/TimeClockRootContext';
+import { useTimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
 import type { TimeClockFaceNumber } from '../utils/clockViews';
-import { useTimeClockFaceContext } from './TimeClockFaceContext';
 
 defineSlots<{
   default?(): unknown;
@@ -10,7 +9,8 @@ defineSlots<{
 }>();
 
 const { numbers } = useTimeClockRootContext();
-const { inputProps, setInputElement } = useTimeClockFaceContext();
+const { inputProps, useInputRef } = useTimeClockFaceContext();
+const setInputElement = useInputRef();
 
 markChildrenMounted();
 </script>

@@ -21,7 +21,7 @@ export interface TimeFieldInputProps
 <script setup lang="ts">
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import TimeFieldInputChildren from './TimeFieldInputChildren.vue';
@@ -42,9 +42,11 @@ defineSlots<{
 const context = useDateTimeFieldContext();
 const isHydrating = useIsHydrating();
 
+const { state } = context;
+
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state: context.state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  state,
+  stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
     {
       // The server can have another layout than the browser. The segments then make the elements again
@@ -57,8 +59,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   children: true,
 });
 
-const state = context.state;
-
 defineExpose({ element });
 </script>
 
@@ -66,6 +66,6 @@ defineExpose({ element });
 <template>
   <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="TimeFieldInputChildren" />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <TimeFieldInputChildren v-if="$slots.segment"><template #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></TimeFieldInputChildren><TimeFieldInputChildren v-else />
+    <TimeFieldInputChildren><template v-if="$slots.segment" #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></TimeFieldInputChildren>
   </component>
 </template>

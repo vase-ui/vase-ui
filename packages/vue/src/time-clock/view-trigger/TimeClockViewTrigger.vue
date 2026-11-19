@@ -72,7 +72,7 @@ const state = computed<TimeClockViewTriggerState>(() => ({
 // With no default slot and no `as`, the text is the only child of a static element. Vue allows a
 // text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() =>
-  root.empty.value
+  root.state.value.empty
     ? '--'
     : formatNumber(
         faceNumberOf(props.view, root.hourCycle.value, root.time.value).value,
@@ -84,7 +84,7 @@ const text = computed(() =>
 // The text is a number, so the name says which unit it is.
 const label = computed(() => {
   const unit = new Intl.DisplayNames(formatLocale.value, { type: 'dateTimeField' }).of(props.view);
-  return root.empty.value ? unit : `${unit} ${text.value}`;
+  return root.state.value.empty ? unit : `${unit} ${text.value}`;
 });
 
 function onClick(event: MouseEvent) {
@@ -94,7 +94,7 @@ function onClick(event: MouseEvent) {
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
   button: (element) =>
     useButton(element, {
-      disabled: root.disabled,
+      disabled: () => root.state.value.disabled,
       native: () => props.nativeButton,
     }),
   state,

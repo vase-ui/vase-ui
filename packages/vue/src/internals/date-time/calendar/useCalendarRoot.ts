@@ -555,9 +555,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions) {
 
   if (process.env.NODE_ENV !== 'production') {
     const names = computed(() => Object.keys(props.modifiers ?? {}));
-    const check = (keys: string[]) => assertModifierNames(part, keys);
-    check(names.value);
-    watch(names, check);
+    watch(names, (keys) => assertModifierNames(part, keys), { immediate: true });
   }
 
   const rules = computed<DayRules>(() => ({

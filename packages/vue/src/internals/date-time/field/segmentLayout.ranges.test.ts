@@ -14,8 +14,8 @@ import {
   toNumbers,
   typeDigit,
   wrapNumber,
-} from './segmentRanges';
-import type { NumbersContext } from './segmentRanges';
+} from './segmentLayout';
+import type { NumbersContext } from './segmentLayout';
 
 const gregory = (hourCycle?: HourCycle): NumbersContext => ({
   calendar: 'gregory',

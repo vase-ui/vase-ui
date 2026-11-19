@@ -47,5 +47,5 @@ it('renders the same server HTML as the native Temporal', async () => {
 
 // Each module reads `Temporal` only in its cases, so the cases get the polyfill.
 await import('./segmentLayout.test');
-await import('./segmentRanges.test');
-await import('./customValidity.test');
+await import('./segmentLayout.ranges.test');
+await import('./useDateTimeFieldRoot.validity.test');
