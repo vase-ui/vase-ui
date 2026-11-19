@@ -558,7 +558,7 @@ describe('corner and tracks', () => {
   ])(
     '$name that mounts after the first measurement gives a measurement',
     async ({ name, scene, show }) => {
-      const parts = reactive<Record<string, boolean>>({ ...scene });
+      const parts = reactive<Record<string, boolean | undefined>>({ ...scene });
       const { get } = await mountArea({ scene: parts });
       Object.assign(parts, show);
       // The measurement comes in the flush of the render, before the next frame.
