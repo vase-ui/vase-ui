@@ -521,8 +521,7 @@ describe('corner and tracks', () => {
     expect(get('vertical')!.offsetHeight).toBe(186);
     expect(get('horizontal')!.offsetWidth).toBe(190);
     expect(get('thumb-x')!.offsetWidth).toBe(38);
-    const thumbWidth = () =>
-      get('horizontal')!.style.getPropertyValue('--scroll-area-thumb-width');
+    const thumbWidth = () => get('horizontal')!.style.getPropertyValue('--scroll-area-thumb-width');
     expect(thumbWidth()).toBe('38px');
 
     scene.height = 100;
@@ -782,9 +781,10 @@ describe('lifetime', () => {
   test('a viewport that unmounts before it reads its animations leaves no timer', () => {
     vi.useFakeTimers();
     const mounted = mount(ScrollAreaParts);
-    expect(vi.getTimerCount()).toBe(1);
+    // A Vapor app also starts a timer of the devtools.
+    const timers = vi.getTimerCount();
     mounted.unmount();
-    expect(vi.getTimerCount()).toBe(0);
+    expect(vi.getTimerCount()).toBe(timers - 1);
   });
 });
 
