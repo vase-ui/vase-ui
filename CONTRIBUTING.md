@@ -567,7 +567,7 @@ The change event carries these details:
 - An emit can report a state that the part derives from other state, such as `collapsedChange` of `Resizable.Panel`. It has the new value and no `details`, and the part has no `update:x` for it. The part emits it after the DOM update of each change of the state, also a change that comes from the `layout` prop of the root. It does not emit it at the mount.
 - An emit and an exposed method can have one name. `Resizable.Panel` emits `resize` and exposes `resize(size)`. Vue keeps the two apart: the emit is the listener `onResize`, and the method is a member of the exposed object.
 - A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
-- Declare a listener prop beside an emit only when native behavior depends on its presence.
+- Declare a listener prop beside an emit only when native behavior depends on its presence. `Form` declares `onSubmit` and `onSubmitOnce` with `@ignore`: it prevents the native submit while it has a `submit` listener.
 - A callback whose result the component uses stays a function prop: `validate`, `format`, `getAriaValueText`, `filter`, `itemToStringValue`, `isItemEqualToValue`, `initialFocus`, `finalFocus`.
 
 ### Actions, handles, slots, composables and ids
@@ -584,12 +584,12 @@ The change event carries these details:
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
 - Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `modelValue` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
 - vue-tsc does not use a listener of a template to resolve a type parameter of a generic SFC. It resolves the type parameters from the other props, and then it checks each listener against the result.
-- A type parameter that only a listener can give is the exception to the default of Base UI. Give it a default that accepts a listener with a typed parameter. A consumer then gives the parameter of the listener the type: `(formValues: { id: string }) => void` on `Form`. With the default of Base UI, `Record<string, any>`, vue-tsc refuses that listener.
+- A type parameter that only a listener can give is the exception to the default of Base UI. Give it a default that accepts a listener with a typed parameter. A consumer then gives the parameter of the listener the type: `(event: SubmitEvent, values: { id: string }) => void` on `Form`. With the default of Base UI, `Record<string, any>`, vue-tsc refuses that listener.
 - Use the first default of this list that applies:
   1. The type of the value when no prop gives the type parameter, where no other part gives the value. With no `modelValue` and no `defaultValue`, the value of `Slider.Root` is its `min`, a number. So its default is `number`.
   2. `never`, where Base UI gives `unknown` to a listener with no type: `Select.Root`, `Combobox.Root` and `Autocomplete.Root`. As with `unknown`, a listener with no type then cannot read a member of an item. vue-tsc still refuses `(value: string) => void` where the value can be `null` or `undefined`. With `any`, some lines of the Base UI type tests that must fail then pass.
   3. `any`, where Base UI gives a type with members: `Form` (`Record<string, any>`) and `ToggleGroup` (`string[]`). With `never`, vue-tsc refuses a call such as `value.includes('a')`.
-- The exported props interface keeps the default of Base UI: `FormProps<FormValues extends Record<string, any> = Record<string, any>>`.
+- The exported props interface keeps the default of Base UI: `FormProps<Values extends Record<string, any> = Record<string, any>>`.
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
 - A part whose default tag has attributes of its own gives them to the slot type. The `a` of `PreviewCard.Trigger` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>`. `HTMLProps` has no `href`.
 - Keep the published composable names, such as `useDirection`, `useRender`, `Toast.useToastManager` and `Combobox.useFilter`.
@@ -723,7 +723,7 @@ The public form:
 10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
 12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
-13. A form gives the typed values of its fields at its submit: `submit(event, values)`. `validate` of a field gets the value of its control and the same values.
+13. A form gives the typed values of its fields at its submit: `submit(event, values)`. A `submit` listener prevents the native submit. With no listener, the browser submits the form. `validate` of a field gets the value of its control and the same values.
 
 Measure before you write code that guards, tracks, repairs or copies a behavior:
 
@@ -2092,7 +2092,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A new case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. It also has a control case in which the removal is late, as `AnimatedPanel.test.tsx` has.
 - A case for an exit that ends before the part reads its animations uses `probeFrameAfterExitBeforeRead`. It asserts that no part read the animations before the end. The control cases of that probe are in `test/animation.test.ts`.
 - `probeFrameAfterExit` cannot show that a part that hides its element waits for an animation that a script made, such as a `motion-v` animation. `hidden` does not cancel such an animation, so the probe does not see a hide that comes too early.
-- In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
+- In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. The helpers of `test/render.ts` add such a listener to the document, and `submitsPrevented` records whether the form prevented the submit first.
 - A ported case that Base UI writes with `createTouches` keeps the call. The helper is in `packages/vue/test/sliderTestUtils.ts`. For WebKit, the helper uses `document.createTouch` and `document.createTouchList` when both are available. Otherwise it uses `new Touch`.
 - A case that needs a picture that the document has calls `pictureThatBrowserHas` of `test/pictures.ts`. Each call gives a new picture, so the case does not depend on an earlier case.
 - A case that needs the answer of the server for an image waits for the `load` or `error` event with a listener. Attach the listener before the source changes. Do not use `waitFor`: the server answers in its own time, and the page renders frames during that time. The 180 frames of `waitFor` can pass before the answer. After the event, call `await nextTick()` before you assert. `nextTick()` resolves after Vue renders the state that the part set in its listener.

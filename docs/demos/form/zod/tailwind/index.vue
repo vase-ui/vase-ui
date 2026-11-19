@@ -34,7 +34,7 @@ async function onSubmit(_event: SubmitEvent, formValues: FormValues) {
 </script>
 
 <template>
-  <Form class="flex w-full max-w-64 flex-col gap-4" :errors="errors" @submit.prevent="onSubmit">
+  <Form class="flex w-full max-w-64 flex-col gap-4" :errors="errors" @submit="onSubmit">
     <Field.Root name="name" class="flex flex-col items-start gap-1">
       <Field.Label class="text-sm font-bold text-neutral-950 dark:text-white">Name</Field.Label>
       <Input

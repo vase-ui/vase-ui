@@ -24,7 +24,7 @@ function save(event: SubmitEvent, values: FormValues) {
 </script>
 
 <template>
-  <Form @submit.prevent="save">
+  <Form @submit="save">
     <Field.Root name="name">
       <Field.Label>Name</Field.Label>
       <Input default-value="Ada" />
