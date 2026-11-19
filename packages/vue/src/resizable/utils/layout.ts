@@ -40,9 +40,8 @@ function splitSize(value: number | string): { amount: number; unit: '%' | Length
     return Number.isFinite(value) && value >= 0 ? { amount: value, unit: '%' } : undefined;
   }
   const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
-  return text === undefined
-    ? undefined
-    : { amount: Number(text), unit: isLengthUnit(unit) ? unit : '%' };
+  const amount = Number(text);
+  return Number.isFinite(amount) ? { amount, unit: isLengthUnit(unit) ? unit : '%' } : undefined;
 }
 
 export const SIZE_FORMS =

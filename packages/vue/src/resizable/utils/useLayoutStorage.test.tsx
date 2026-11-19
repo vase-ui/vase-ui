@@ -150,6 +150,10 @@ describe('Resizable.useLayoutStorage', () => {
     { name: 'an array', item: '[30,70]' },
     { name: 'null', item: 'null' },
     { name: 'a record with a bad size', item: '{"a":"1fr","b":70}' },
+    {
+      name: 'a length outside the numeric range',
+      item: JSON.stringify({ a: '9'.repeat(310) + 'px' }),
+    },
   ])('ignores a stored item that is $name', async ({ item }) => {
     const storage = createStorage({ layout: item });
     let layout: Ref<ResizableRootLayoutSnapshot> | undefined;
@@ -168,6 +172,27 @@ describe('Resizable.useLayoutStorage', () => {
     expect(storage.getItem).toHaveBeenCalledWith('layout');
     expect(layout?.value).toEqual({});
     expect(grows()).toEqual(['50', '50']);
+  });
+
+  it('restores the layout when a blocked storage getter becomes available', async () => {
+    const blocked = shallowRef(true);
+    const storage = createStorage({ layout: '{"a":25,"b":75}' });
+    const Layout = createLayout({
+      key: 'layout',
+      storage: () => {
+        if (blocked.value) throw new DOMException('Site data is blocked.', 'SecurityError');
+        return storage;
+      },
+    });
+
+    await render(<Layout />);
+    expect(grows()).toEqual(['50', '50']);
+    await drag(100);
+    expect(grows()).toEqual(['60', '40']);
+
+    blocked.value = false;
+    await nextTick();
+    expect(grows()).toEqual(['25', '75']);
   });
 
   it('ignores a storage whose getItem throws', async () => {
