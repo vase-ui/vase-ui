@@ -7,19 +7,19 @@
       "describe": ["<Tabs.Panel />", "Suspense integration"],
       "title": "renders a panel that suspends when opened with the boundary outside the root",
       "kind": "not-applicable",
-      "reason": "React hides the mounted tree and shows the fallback when a panel suspends after the mount. A mounted Vue component cannot suspend again."
+      "reason": "React hides the mounted tree and shows the fallback when a panel suspends after the mount. Vue keeps a resolved Suspense branch when the same root component mounts an async descendant."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Root",
       "prop": "defaultValue",
       "kind": "not-applicable",
-      "reason": "The part must tell an absent `defaultValue` from `defaultValue={0}`. Only the absent prop makes the root emit the initial change and fall back from a disabled tab. A Vue prop with a default cannot tell the two apart, so the prop has no default. The part uses `0` for an absent prop, which is the default that Base UI documents."
+      "reason": "The root uses 0 when `defaultValue` is absent or undefined. An uncontrolled root with that implicit default can fall back from a disabled tab on mount and emit an initial change. An explicit `defaultValue={0}` keeps a disabled tab with value 0 on mount. The root applies the default in setup to distinguish these cases."
     },
     {
       "upstream": "packages/react/src/tabs/indicator/prehydrationScript.template.js",
       "kind": "not-applicable",
-      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. No component imports the template. Vase UI has no minifier and copies the minified text."
+      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. Vase UI copies the resulting script text into its prehydration module. Its components use that module."
     },
     {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",

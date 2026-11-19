@@ -28,8 +28,7 @@ export interface TabsRootContext {
    */
   value: ComputedRef<TabsTabValue>;
   /**
-   * Sets a new value. It emits `valueChange` and `update:modelValue` and writes the value of an
-   * uncontrolled root.
+   * A tab requests a user change. A listener can cancel it before the model update.
    */
   onValueChange(value: TabsTabValue, eventDetails: TabsRootChangeEventDetails): void;
   state: ComputedRef<TabsRootState>;
