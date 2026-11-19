@@ -8,6 +8,7 @@ import MeterParts from '../../test/fixtures/MeterParts.vue';
 import MeterValueSlot from '../../test/fixtures/MeterValueSlot.vue';
 import { mockRuntimeLocale } from '../../test/mockRuntimeLocale';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 
 type Attributes = Record<string, unknown>;
 
@@ -29,6 +30,7 @@ async function mountMeter(parts: Parts = {}) {
     meter: element('root')!,
     label: element('label'),
     value: element('value')!,
+    track: element('track')!,
     indicator: element('indicator')!,
   };
 }
@@ -36,7 +38,7 @@ async function mountMeter(parts: Parts = {}) {
 describe('the parts', () => {
   test('each part renders its element with the attributes of the developer, and a ref has it', async () => {
     const onClick = vi.fn();
-    const { root, meter, label, value, indicator } = await mountMeter({
+    const { root, meter, label, value, track, indicator } = await mountMeter({
       root: { class: 'Meter', 'data-kind': 'storage', onClick },
       label: { class: 'Label' },
       value: { class: 'Value' },
@@ -45,7 +47,8 @@ describe('the parts', () => {
     });
     expect(root.children).toHaveLength(1);
     expect(root.firstElementChild).toBe(meter);
-    const track = indicator.parentElement!;
+    expect([...meter.children].slice(0, 3)).toEqual([label, value, track]);
+    expect(indicator.parentElement).toBe(track);
     const names = (part: Element) => [part.localName, ...part.getAttributeNames().sort()];
     expect([meter, label!, value, track, indicator].map(names)).toEqual([
       [
@@ -64,14 +67,17 @@ describe('the parts', () => {
       ['div', 'class'],
       ['div', 'class', 'style'],
     ]);
-    expect(track.parentElement).toBe(meter);
     expect(value).toHaveAttribute('aria-hidden', 'true');
     meter.click();
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  test('the element slot of each part renders the element of the developer, and a ref has it', async () => {
-    const { root, exposed } = mount(MeterElementsReplaced);
+  test('the element slot of each part renders the element of the developer, which alone gets the attributes', async () => {
+    const onClick = vi.fn();
+    const part = { class: 'Part' };
+    const { root, exposed } = mount(MeterElementsReplaced, {
+      parts: { root: { ...part, onClick }, label: part, value: part, track: part, indicator: part },
+    });
     await nextTick();
     const meter = root.querySelector('section')!;
     const label = meter.querySelector('strong')!;
@@ -83,6 +89,15 @@ describe('the parts', () => {
     expect(exposed.value.element).toBe(value);
     expect(exposed.track.element).toBe(track);
     expect(exposed.indicator.element).toBe(indicator);
+    for (const element of [meter, label, value, track, indicator]) {
+      expect(element).toHaveAttribute('class', 'Part');
+    }
+    for (const frame of root.querySelectorAll('.frame')) {
+      expect(frame.getAttributeNames()).toEqual(['class']);
+      expect(frame).toHaveAttribute('class', 'frame');
+    }
+    meter.click();
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(meter).toHaveAttribute('role', 'meter');
     expect(meter).toHaveAttribute('aria-valuenow', '100');
     expect(meter).toHaveAttribute('aria-labelledby', label.id);
@@ -91,7 +106,7 @@ describe('the parts', () => {
     expect(value).toHaveTextContent('100 of 150');
     expect(indicator.style.width).toBe('100%');
     // The developer puts the text in their element.
-    expect(meter.lastElementChild).toBe(track);
+    expect(meter.querySelector('[role=presentation]')).toBeNull();
   });
 
   test('Meter.Track outside a root renders its element', () => {
@@ -336,10 +351,13 @@ describe('the indicator', () => {
   });
 });
 
+// The case throws in `setup`, so it is the last of the file.
 describe('outside a root', () => {
   test.each(['Label', 'Value', 'Indicator'])('Meter.%s throws', (part) => {
     expect(String(mountError(MeterPartAlone, { part }))).toBe(
       `Error: Vase UI Meter: <Meter.${part}> must be inside <Meter.Root>.`,
     );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });
