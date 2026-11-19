@@ -11,9 +11,8 @@ import {
 
 // A module namespace is read-only. The mock gives `os` as a plain object, so a case can set `ios`.
 vi.mock('../../common/platform', async () => {
-  const actual = await vi.importActual<typeof import('../../common/platform')>(
-    '../../common/platform',
-  );
+  const actual =
+    await vi.importActual<typeof import('../../common/platform')>('../../common/platform');
   return { platform: { ...actual.platform, os: { ...actual.platform.os } } };
 });
 

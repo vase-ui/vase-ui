@@ -41,26 +41,22 @@ describe('useHoverTriggerInteraction', () => {
   });
 
   it('updates the handleClose options during render', async () => {
-    const block = shallowRef(false);
-    let store!: FloatingRootStore;
-
     const App = defineComponent({
-      setup() {
-        const { context } = useFloating();
-        store = context.rootStore;
-        usePopupHover(context.rootStore).trigger({
-          safePolygon: () => ({ blockPointerEvents: block.value }),
-        });
-        return () => null;
+      props: { block: Boolean },
+      setup(props) {
+        const hover = usePopupHover(useFloating().context.rootStore);
+        hover.trigger({ safePolygon: () => ({ blockPointerEvents: props.block }) });
+        return () => (
+          <output>{String(hover.session.value.handleCloseOptions?.blockPointerEvents)}</output>
+        );
       },
     });
 
-    await render(<App />);
-    expect(getPopupHoverSession(store).handleCloseOptions?.blockPointerEvents).toBe(false);
-
-    block.value = true;
-    await flushMicrotasks();
-    expect(getPopupHoverSession(store).handleCloseOptions?.blockPointerEvents).toBe(true);
+    const { container, setProps } = await render(<App block={false} />);
+    const output = container.querySelector('output')!;
+    expect(output).toHaveTextContent('false');
+    await setProps({ block: true });
+    expect(output).toHaveTextContent('true');
   });
 
   // The setup of the cases that give the listeners to a wrapper of the trigger. The popup is open.

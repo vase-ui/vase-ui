@@ -1,4 +1,4 @@
-import { computed, shallowReactive, toValue, watch, onMounted } from 'vue';
+import { computed, shallowReactive, toValue, watch, onBeforeMount, onMounted } from 'vue';
 import type { MaybeRefOrGetter, ComputedRef } from 'vue';
 import type { Placement, Side, Rect } from '@floating-ui/vue';
 import { isMouseLikePointerType } from '../event';
@@ -820,7 +820,8 @@ function bindHoverTrigger(
     getHandleCloseContext: props.getHandleCloseContext,
   };
 
-  onMounted(() => {
+  // The first client render reads the active policy. Server requests can share an inert store.
+  onBeforeMount(() => {
     watch(
       [intent, isActiveTrigger, polygon],
       ([session, active, options]) => {
@@ -1234,7 +1235,7 @@ export function trackHoverPolygon(
 }
 
 export function usePopupHover(store: MaybeRefOrGetter<PopupInteractionStore>) {
-  // Server renders share inert handles. Create the session only on a client interaction or mount.
+  // An inert handle can serve several server requests. Resolve its session lazily.
   const session = computed(() => getPopupHoverSession(toValue(store)));
   return {
     session,

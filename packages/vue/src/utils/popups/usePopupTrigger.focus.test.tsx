@@ -16,9 +16,8 @@ import type { UseFocusProps } from './usePopupTrigger';
 // A module namespace is read-only. The mock gives `os` and `engine` as plain objects, so a case can
 // set `mac` and `webkit`. Both start `false`, so a case does not depend on the engine that runs it.
 vi.mock('../../common/platform', async () => {
-  const actual = await vi.importActual<typeof import('../../common/platform')>(
-    '../../common/platform',
-  );
+  const actual =
+    await vi.importActual<typeof import('../../common/platform')>('../../common/platform');
   return {
     platform: {
       ...actual.platform,
