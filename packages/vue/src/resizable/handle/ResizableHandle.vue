@@ -85,7 +85,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, provide, shallowRef, watch, type ShallowRef } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import type { Component, CSSProperties } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -106,18 +106,13 @@ import { createChangeEventDetails } from '../../internals/createVaseUIEventDetai
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { ResizableHandleContext, useResizableRootContext } from '../root/ResizableRootContext';
-import { createHandleDrag } from '../utils/handleDrag';
-import { getHandleEnds } from '../utils/handleEnds';
-import { createHandlePress } from '../utils/handlePress';
-import { registerHandle } from '../utils/handleRegistry';
 import { adjustLayout, areLayoutsEqual, getHandleRange, isCollapsed } from '../utils/layout';
 import type { PanelConstraints } from '../utils/layout';
 import { getPanelSize } from '../utils/measure';
-import { getPreviewOffset } from '../utils/previewOffset';
+import { useResizeHandle } from '../utils/useResizeHandle';
 import ResizableHandleChildren from './ResizableHandleChildren.vue';
 import * as ResizableHandleCssVariables from './ResizableHandleCssVariables';
 
@@ -141,7 +136,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+const element = shallowRef<HTMLElement | null>(null);
 const index = useCompositeListItem(element, { list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -223,6 +218,23 @@ const valueAttributes = computed(() => {
   };
 });
 
+const hitAreaElement = shallowRef<HTMLElement | null>(null);
+const {
+  dragging,
+  crossing,
+  ends: limits,
+  previewOffset,
+  isHeld,
+  listeners,
+  endPress,
+} = useResizeHandle(root, {
+  pivot,
+  disabled: () => !isFocusable.value,
+  elements: () => [element.value],
+  hitArea: hitAreaElement,
+});
+root.registerHandle({ index, isHeld });
+
 // While Vue hydrates the handle, the layout does not know the panel after it. The ends then come
 // from the server HTML, which has the layout of all the panels.
 const serverElement = useServerElement();
@@ -239,20 +251,8 @@ const ends = computed(() => {
   }
   // A handle that is not disabled has no tab stop only after the mount, and only when it has no
   // panel on one side.
-  return hasTabStop.value ? getHandleEnds(root, pivot.value) : { atMin: true, atMax: true };
+  return hasTabStop.value ? limits.value : { atMin: true, atMax: true };
 });
-
-const drag = createHandleDrag(root, {
-  pivot: () => pivot.value,
-  disabled: () => !isFocusable.value,
-});
-const press = createHandlePress({ drag, orientation: () => root.orientation.value });
-
-// `KeepAlive` takes the handle out of the document. The root then does not count it.
-const { isHeld } = useKeepAliveState();
-root.registerHandle({ index, disabled: () => isDisabled.value, isHeld });
-
-const hitAreaElement = shallowRef<HTMLElement | null>(null);
 
 function setHitAreaElement(value: unknown) {
   hitAreaElement.value = value as HTMLElement | null;
@@ -329,7 +329,7 @@ function onKeydown(event: KeyboardEvent) {
   event.preventDefault();
   // The next move of a drag computes the layout from the start of the drag again, and it would
   // undo the key.
-  if (drag.dragging.value) {
+  if (dragging.value) {
     return;
   }
   const next = adjustLayout(root.constraints.value, root.shown.value, pivot.value, delta, {
@@ -355,7 +355,7 @@ function toggleCollapse(event: KeyboardEvent) {
   }
   event.preventDefault();
   // The next move of a drag would undo the change.
-  if (drag.dragging.value) {
+  if (dragging.value) {
     return;
   }
   const handleMove = { pivot: pivot.value, reason: REASONS.keyboard, event };
@@ -378,7 +378,7 @@ function onDblclick(event: MouseEvent) {
 }
 
 function onPointerdown(event: PointerEvent) {
-  if (press.start(event)) {
+  if (listeners.onPointerdown(event)) {
     // The `mousedown` of the press does not focus the handle, as `onMousedown` of the press says.
     element.value?.focus({
       preventScroll: true,
@@ -389,46 +389,24 @@ function onPointerdown(event: PointerEvent) {
   }
 }
 
-// The press that this handle started ends, and so does the drag that the press of another handle
-// or edge started on this handle. The other press goes on with its other drags.
-function endDrags() {
-  press.end();
-  drag.end(undefined, false);
-}
-
 // Firefox and Safari keep the focus on an element that loses its tab stop: a handle that becomes
 // disabled, or that loses the panel on one side.
 watch(isFocusable, (focusable) => {
   if (focusable) {
     return;
   }
-  endDrags();
+  endPress();
   const handle = element.value;
   if (handle && activeElement(ownerDocument(handle)) === handle) {
     handle.blur();
   }
 });
 
-// `KeepAlive` takes the handle out of the document and sends no pointer event.
-watch(
-  isHeld,
-  (held) => {
-    if (held) {
-      endDrags();
-    }
-  },
-  { flush: 'sync' },
-);
-
-onScopeDispose(endDrags);
-
-const previewOffset = computed(() => getPreviewOffset(root, pivot.value, drag.dragging.value));
-
 const state = computed<ResizableHandleState>(() => ({
   orientation: root.orientation.value,
   disabled: isDisabled.value,
-  dragging: drag.dragging.value,
-  crossing: drag.crossing.value,
+  dragging: dragging.value,
+  crossing: crossing.value,
   atMin: ends.value.atMin,
   atMax: ends.value.atMax,
 }));
@@ -445,7 +423,7 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
       'aria-disabled': isDisabled.value ? 'true' : undefined,
       tabindex: hasTabStop.value ? 0 : undefined,
       ...valueAttributes.value,
-      ...press.listeners,
+      ...listeners,
       onKeydown,
       onDblclick,
       onPointerdown,
@@ -463,26 +441,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, 
     attrs,
   ],
 });
-
-watch(
-  [element, hitAreaElement],
-  ([handle, hitArea], _previous, onCleanup) => {
-    if (handle !== null) {
-      onCleanup(
-        registerHandle(
-          {
-            element: handle,
-            drag,
-            orientation: () => root.orientation.value,
-            hitAreaSize: () => root.hitAreaSize.value,
-          },
-          hitArea,
-        ),
-      );
-    }
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

@@ -56,7 +56,6 @@ export interface ResizableHandleRegistration {
    * The position of the handle among the panels and the handles of the root.
    */
   index: ComputedRef<number>;
-  disabled: () => boolean;
   /**
    * Whether `KeepAlive` holds the handle. Such a handle is not at its place.
    */
