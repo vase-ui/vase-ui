@@ -1,5 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
+import {
+  defineComponent,
+  h,
+  KeepAlive,
+  nextTick,
+  onMounted,
+  shallowRef,
+  Teleport,
+  watch,
+} from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -38,6 +47,7 @@ async function simulateSwipe(
     button: 0,
     bubbles: true,
     pointerId: 1,
+    pointerType: 'mouse',
   });
 
   // Fire an initial move event close to the start to trigger the isFirstPointerMove logic correctly.
@@ -47,6 +57,7 @@ async function simulateSwipe(
     clientY: startY + Math.sign(endY - startY),
     bubbles: true,
     pointerId: 1,
+    pointerType: 'mouse',
   });
 
   // Fire the main move event to the end position.
@@ -55,6 +66,7 @@ async function simulateSwipe(
     clientY: endY,
     bubbles: true,
     pointerId: 1,
+    pointerType: 'mouse',
   });
 
   await fireEvent.pointerUp(releaseTarget, {
@@ -62,6 +74,7 @@ async function simulateSwipe(
     clientY: endY,
     bubbles: true,
     pointerId: 1,
+    pointerType: 'mouse',
   });
 }
 
@@ -1993,11 +2006,12 @@ describe('<Toast.Root />', () => {
       async (replacement) => {
         const manager = Toast.createToastManager();
         const tag = shallowRef('div');
+        const part = shallowRef<InstanceType<typeof Toast.Root> | null>(null);
         const id = shallowRef('first');
         const onClose = vi.fn();
         const App = defineComponent({
           setup: () => () => (
-            <Toast.Root as={tag.value} toast={{ id: id.value }} data-testid="root" />
+            <Toast.Root ref={part} as={tag.value} toast={{ id: id.value }} data-testid="root" />
           ),
         });
         await render(
@@ -2008,16 +2022,28 @@ describe('<Toast.Root />', () => {
         manager.add({ id: 'first', timeout: 0, onClose });
         manager.add({ id: 'second', timeout: 0, onClose });
         const original = screen.getByTestId('root');
+        vi.spyOn(original, 'hasPointerCapture').mockReturnValue(true);
+        const release = vi.spyOn(original, 'releasePointerCapture').mockImplementation(() => {});
         const pointer = { pointerId: 1, pointerType: 'mouse', clientY: 20 };
         await fireEvent.pointerDown(original, { ...pointer, clientX: 0, button: 0 });
         await fireEvent.pointerMove(original, { ...pointer, clientX: 1 });
         await fireEvent.pointerMove(original, { ...pointer, clientX: 60 });
         expect(original).toHaveAttribute('data-swiping');
+        // A consumer can release the pointer as soon as Vue clears the rendered element.
+        const stop = watch(
+          () => part.value?.element,
+          () => {
+            document.dispatchEvent(new PointerEvent('pointerup', pointer));
+          },
+          { flush: 'sync' },
+        );
+        onTestFinished(stop);
         if (replacement === 'element') tag.value = 'section';
         else id.value = 'second';
         await nextTick();
 
         const current = screen.getByTestId('root');
+        expect(release).toHaveBeenCalledWith(pointer.pointerId);
         expect(current).not.toHaveAttribute('data-swiping');
         expect(current.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
         await fireEvent.pointerUp(document, pointer);

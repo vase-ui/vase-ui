@@ -97,16 +97,13 @@ function applyLimited(toasts: StoredToast[], limit: number): StoredToast[] {
 
 export const selectors = {
   toasts: (state: State) => state.toasts,
-  isEmpty: (state: State) => state.toasts.length === 0,
   toast: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.value,
   toastIndex: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.domIndex ?? -1,
   toastOffsetY: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.offsetY ?? 0,
   toastVisibleIndex: (state: State, id: string) =>
     getToastMetadata(state.toasts).get(id)?.visibleIndex ?? -1,
-  focused: (state: State) => state.focused,
   expanded: (state: State) => state.hovering || state.focused,
   expandedOrOutOfFocus: (state: State) => state.hovering || state.focused || !state.isWindowFocused,
-  prevFocusElement: (state: State) => state.prevFocusElement,
 };
 
 function resolvePromiseOptions<T, Data extends object>(

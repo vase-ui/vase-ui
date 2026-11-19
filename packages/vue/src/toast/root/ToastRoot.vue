@@ -203,7 +203,7 @@ useOpenChangeComplete({
 });
 
 const { isHeld } = useKeepAliveState();
-const isToastEscape = useToastEscape(() => element.value, isHeld);
+const isToastEscape = useToastEscape(element, isHeld);
 const press = useListenerSession(isHeld);
 watch([element, () => props.toast.id], press.stop, { flush: 'sync' });
 
@@ -314,6 +314,8 @@ function handlePointerdown(event: PointerEvent) {
     onCleanup(addEventListener(doc, 'pointerup', handleSwipeEnd));
     onCleanup(addEventListener(doc, 'pointercancel', handleSwipeEnd));
     onCleanup(() => {
+      if (rootElement.hasPointerCapture(event.pointerId))
+        rootElement.releasePointerCapture(event.pointerId);
       activePointerId.value = null;
       dragOffset.value = { x: initialTransform.value.x, y: initialTransform.value.y };
       currentSwipeDirection.value = undefined;

@@ -1,14 +1,17 @@
-import { watch } from 'vue';
-import type { Ref } from 'vue';
+import { toValue, watch } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 
-export function useToastEscape(getElement: () => Element | null, isHeld: Readonly<Ref<boolean>>) {
+export function useToastEscape(
+  element: MaybeRefOrGetter<Element | null>,
+  isHeld: MaybeRefOrGetter<boolean>,
+) {
   const compositionEnd = useTimeout();
   watch(
-    [() => getElement()?.ownerDocument, isHeld],
+    [() => toValue(element)?.ownerDocument, () => toValue(isHeld)],
     ([doc, held], _, onCleanup) => {
       if (!doc || held || !platform.engine.webkit) return;
       // WebKit can send Escape just after compositionend.

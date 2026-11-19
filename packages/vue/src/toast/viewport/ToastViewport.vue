@@ -223,7 +223,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
 });
 
-const isToastEscape = useToastEscape(() => element.value, isHeld);
+const isToastEscape = useToastEscape(element, isHeld);
 
 // Sibling nodes keep the viewport eligible for v-show and Transition.
 const viewportDocument = computed(() => element.value?.ownerDocument);

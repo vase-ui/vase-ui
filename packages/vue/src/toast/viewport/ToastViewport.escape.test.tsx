@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { Toast } from '@vase-ui/vue/toast';
+import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import { platform } from '../../common/platform';
 
 describe.each(['root', 'viewport'] as const)('Escape in the toast %s', (part) => {
@@ -13,14 +14,12 @@ describe.each(['root', 'viewport'] as const)('Escape in the toast %s', (part) =>
       <Toast.Provider toastManager={manager}>
         <button data-testid="origin">Show notifications</button>
         <Toast.Viewport>
-          <Toast.Root toast={{ id: 'edit' }}>
-            <input aria-label="root" />
-          </Toast.Root>
+          <ToastTextList />
           <input aria-label="viewport" />
         </Toast.Viewport>
       </Toast.Provider>,
     );
-    manager.add({ id: 'edit', timeout: 0, onClose });
+    manager.add({ id: 'edit', title: () => <input aria-label="root" />, timeout: 0, onClose });
     await flushMicrotasks();
     const origin = screen.getByTestId('origin');
     origin.focus();
@@ -59,7 +58,9 @@ describe.each(['root', 'viewport'] as const)('Escape in the toast %s', (part) =>
   it('VUE-183: respects the browser event order at the end of composition', async () => {
     const { input, origin, onClose } = await focusInput();
     vi.useFakeTimers();
-    onTestFinished(() => vi.useRealTimers());
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
 
     await fireEvent.compositionEnd(input);
     if (platform.engine.webkit) {
