@@ -7,6 +7,7 @@ import type {
 } from '@vase-ui/vue/slider';
 import { dataAttributes } from '../../test/field';
 import SliderInToolbar from '../../test/fixtures/SliderInToolbar.vue';
+import SliderLabelToggle from '../../test/fixtures/SliderLabelToggle.vue';
 import SliderPartAlone from '../../test/fixtures/SliderPartAlone.vue';
 import SliderParts from '../../test/fixtures/SliderParts.vue';
 import SliderSlots from '../../test/fixtures/SliderSlots.vue';
@@ -18,6 +19,7 @@ type Attrs = Record<string, unknown>;
 async function mountSlider(props: {
   root?: Attrs;
   thumbs?: Attrs[];
+  thumbText?: string;
   label?: 'before' | 'after';
   labelAttrs?: Attrs;
   value?: 'before' | 'after';
@@ -69,6 +71,7 @@ describe('the parts', () => {
       root: { defaultValue: 30 },
       label: 'before',
       value: 'after',
+      thumbText: 'Volume',
     });
     expect(group.tagName).toBe('DIV');
     expect(exposed.root.element).toBe(group);
@@ -83,6 +86,10 @@ describe('the parts', () => {
       expect(dataAttributes(part)).toEqual(['data-orientation']);
     }
     expect(input().type).toBe('range');
+    // The input has the place and the size of the thumb.
+    expect(input().getBoundingClientRect().toJSON()).toEqual(
+      thumb().getBoundingClientRect().toJSON(),
+    );
     expect(input().getAttributeNames().sort()).toEqual([
       'aria-labelledby',
       'aria-orientation',
@@ -94,6 +101,12 @@ describe('the parts', () => {
       'type',
       'value',
     ]);
+  });
+
+  test('autofocus of a thumb goes to its input', async () => {
+    const { input, thumb } = await mountSlider({ thumbs: [{ autofocus: true }] });
+    expect(input()).toHaveAttribute('autofocus');
+    expect(thumb()).not.toHaveAttribute('autofocus');
   });
 
   test('the element slot renders the elements of the developer; the input of a thumb can be in a Teleport', async () => {
@@ -116,7 +129,9 @@ describe('the parts', () => {
     ];
     expect(exposed.thumb.input).toBe(start);
     expect([start.value, end.value, end.name]).toEqual(['20', '60', 'volume']);
-    expect(root.querySelector('.Label')).toHaveAttribute('for', start.id);
+    // The `element` slot gives the input another `id`, and the parts name it.
+    expect(root.querySelector('.Label')).toHaveAttribute('for', 'start-input');
+    expect(exposed.value.element).toHaveAttribute('for', `start-input ${end.id}`);
     end.focus();
     await userEvent.keyboard('{ArrowRight}');
     await nextTick();
@@ -141,6 +156,7 @@ describe('the parts', () => {
           onFocus: record('focus'),
           onBlur: record('blur'),
           onKeydown: record('keydown'),
+          onKeydownCapture: record('keydown capture'),
           onFocusin: record('focusin'),
           onInput: record('input'),
           onClick: record('click'),
@@ -162,6 +178,7 @@ describe('the parts', () => {
     expect(log).toEqual([
       'focus input',
       'focusin div',
+      'keydown capture input',
       'keydown input',
       'input div',
       'blur input',
@@ -222,6 +239,15 @@ describe('the value', () => {
     expect(log).toEqual([]);
   });
 
+  test('the input shows its value when max grows over it', async () => {
+    const root = reactive<Attrs>({ modelValue: 150, max: 100 });
+    const { values } = await mountSlider({ root });
+    expect(values()).toEqual([100]);
+    root.max = 200;
+    await nextTick();
+    expect(values()).toEqual([150]);
+  });
+
   test('a decimal step gives exact values', async () => {
     const { input, values } = await mountSlider({
       root: { defaultValue: 0.2, min: 0, max: 1, step: 0.1 },
@@ -234,13 +260,17 @@ describe('the value', () => {
     const log: string[] = [];
     const root = sliderModel(log, 50);
     Object.assign(root, { min: 10, max: 10 });
-    const { input, values, thumb } = await mountSlider({ root });
+    const { input, values, thumb, root: element } = await mountSlider({ root });
     expect(takeReportedMessages()).toEqual([
       'console.warn: Vase UI: Slider `max` must be greater than `min`. With `max` at or below `min`, the slider has no range of values to choose from. Set `max` above `min`.',
     ]);
     expect(values()).toEqual([10]);
     expect(thumb().style.insetInlineStart).toBe('0%');
     await press(input(), '{ArrowRight}{End}');
+    const control = element.querySelector<HTMLElement>('[style*="touch-action"]')!;
+    control.setPointerCapture = () => {};
+    control.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, buttons: 1 }));
+    control.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
     expect(log).toEqual([]);
   });
 
@@ -333,6 +363,8 @@ describe('the keys', () => {
       const { input, values } = await mountSlider({
         root: { defaultValue: 50, orientation, dir, largeStep: 20 },
       });
+      // The native control has the axis of the slider in each browser.
+      expect(input().style.writingMode).toBe(orientation === 'vertical' ? 'vertical-lr' : '');
       const after = async (key: string) => {
         await press(input(), key);
         return values()[0];
@@ -404,6 +436,10 @@ describe('the keys', () => {
     expect(values()).toEqual([50]);
     expect(log).toEqual([]);
     expect(prevented).not.toContain(true);
+    // An `input` event of a later task changes the value.
+    input().value = '60';
+    input().dispatchEvent(new Event('input', { bubbles: true }));
+    expect(log).toEqual(['change 60 input-change 0', 'update 60', 'commit 60 input-change']);
   });
 
   // Chromium and WebKit change a range input at an arrow key with Ctrl, Alt or Meta.
@@ -433,6 +469,23 @@ describe('the keys', () => {
     root.querySelector<HTMLElement>('#first')!.focus();
     await userEvent.keyboard('{ArrowRight}');
     expect(document.activeElement).toBe(root.querySelector('#inside'));
+  });
+});
+
+describe('the direction', () => {
+  test('the thumbs follow the direction of the root element at the mount and at the focus of a thumb', async () => {
+    const container = document.body.appendChild(document.createElement('div'));
+    container.dir = 'rtl';
+    const { root } = mount(SliderParts, { root: { defaultValue: 30 } }, container);
+    await nextTick();
+    const input = root.querySelector('input[type=range]')!;
+    const thumb = input.parentElement!;
+    expect(thumb.style.translate).toBe('50% -50%');
+    container.dir = 'ltr';
+    input.focus();
+    await nextTick();
+    expect(thumb.style.translate).toBe('-50% -50%');
+    container.remove();
   });
 });
 
@@ -495,14 +548,27 @@ describe('the names', () => {
     expect(group).toHaveAttribute('aria-labelledby', 'volume-label');
   });
 
+  test('a label that unmounts names nothing', async () => {
+    const scene = reactive({ shown: true });
+    const { root } = mount(SliderLabelToggle, { scene });
+    await nextTick();
+    const group = root.querySelector('[role=group]')!;
+    expect(group).toHaveAttribute('aria-labelledby');
+    scene.shown = false;
+    await nextTick();
+    expect(group).not.toHaveAttribute('aria-labelledby');
+    expect(root.querySelector('input[type=range]')).not.toHaveAttribute('aria-labelledby');
+  });
+
   test('an aria-label of the developer on the root or on a thumb stops the aria-labelledby of the part', async () => {
     const { group, input } = await mountSlider({
-      root: { 'aria-label': 'Volume' },
-      thumbs: [{ 'aria-labelledby': 'elsewhere' }],
+      root: { 'aria-label': 'Volume', defaultValue: [20, 40] },
+      thumbs: [{ 'aria-label': 'Start' }, { 'aria-labelledby': 'elsewhere' }],
       label: 'before',
     });
     expect(group).not.toHaveAttribute('aria-labelledby');
-    expect(input()).toHaveAttribute('aria-labelledby', 'elsewhere');
+    expect(input(0)).not.toHaveAttribute('aria-labelledby');
+    expect(input(1)).toHaveAttribute('aria-labelledby', 'elsewhere');
   });
 
   test('the legend of a Fieldset.Root names a slider with no label', async () => {

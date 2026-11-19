@@ -62,7 +62,12 @@ defineExpose(parts);
                             }"
                           >
                             <span v-bind="thumbProps" :ref="thumbRef" class="Thumb">
-                              <input v-bind="inputProps" :ref="inputRef" class="Input" />
+                              <input
+                                v-bind="inputProps"
+                                :ref="inputRef"
+                                id="start-input"
+                                class="Input"
+                              />
                             </span>
                           </template>
                         </Slider.Thumb>

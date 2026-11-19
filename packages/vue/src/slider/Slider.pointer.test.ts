@@ -5,6 +5,7 @@ import type {
   SliderRootChangeEventDetails,
   SliderRootCommitEventDetails,
 } from '@vase-ui/vue/slider';
+import SliderControlSwap from '../../test/fixtures/SliderControlSwap.vue';
 import SliderParts from '../../test/fixtures/SliderParts.vue';
 import { penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
@@ -110,15 +111,20 @@ describe('a press on the control', () => {
     },
   );
 
-  test('a press on a thumb changes no value, and the drag keeps the distance between the pointer and the centre of the thumb', async () => {
-    const log: string[] = [];
-    const slider = await mountSlider({ root: sliderModel(log, 40) });
-    await slider.down(43, {}, slider.thumb());
-    await slider.move(63);
-    await slider.up(63);
-    await nextTick();
-    expect(log).toEqual(['change 60 drag 0', 'commit 60 drag pointerup']);
-  });
+  test.each(['horizontal', 'vertical'])(
+    '%s: a press on a thumb changes no value, and the drag keeps the distance between the pointer and the centre of the thumb',
+    async (orientation) => {
+      const log: string[] = [];
+      const root = sliderModel(log, 40);
+      root.orientation = orientation;
+      const slider = await mountSlider({ root });
+      await slider.down(43, {}, slider.thumb());
+      await slider.move(63);
+      await slider.up(63);
+      await nextTick();
+      expect(log).toEqual(['change 60 drag 0', 'commit 60 drag pointerup']);
+    },
+  );
 
   test('a press with no accepted change commits nothing; pointercancel ends a press and commits', async () => {
     const log: string[] = [];
@@ -150,8 +156,13 @@ describe('a press on the control', () => {
     expect((await slider.down(80, { pointerId: 2 })).defaultPrevented).toBe(false);
     await slider.move(80, { pointerId: 2 });
     await slider.up(80, { pointerId: 2 });
-    await slider.up(50);
-    expect(log).toEqual(['change 20,50 track-press 1', 'commit 20,50 track-press pointerup']);
+    await slider.move(55);
+    await slider.up(55);
+    expect(log).toEqual([
+      'change 20,50 track-press 1',
+      'change 20,55 drag 1',
+      'commit 20,55 drag pointerup',
+    ]);
     root.disabled = true;
     await nextTick();
     expect((await slider.down(10)).defaultPrevented).toBe(false);
@@ -161,7 +172,7 @@ describe('a press on the control', () => {
     expect((await slider.down(10)).defaultPrevented).toBe(false);
   });
 
-  test('the press ends with no commit when the slider becomes disabled or the control unmounts', async () => {
+  test('the press ends with no commit when the slider becomes disabled', async () => {
     const log: string[] = [];
     const root = sliderModel(log, 40);
     const control = reactive<Attrs>({});
@@ -235,6 +246,37 @@ describe('a press on the control', () => {
   });
 });
 
+describe('the element of the control', () => {
+  test.each([
+    { name: 'gets another element', change: (scene: { tag: string }) => (scene.tag = 'section') },
+    { name: 'unmounts', change: (scene: { shown: boolean }) => (scene.shown = false) },
+  ])('a press ends with no commit when the control $name', async ({ change }) => {
+    const log: string[] = [];
+    const scene = reactive({ tag: 'div', shown: true });
+    const { root } = mount(SliderControlSwap, { root: sliderModel(log, 40), scene });
+    await nextTick();
+    const control = root.querySelector<HTMLElement>('[style*="touch-action"]')!;
+    control.setPointerCapture = () => {};
+    const rect = control.getBoundingClientRect();
+    const init = {
+      bubbles: true,
+      pointerId: 1,
+      buttons: 1,
+      clientX: rect.left + 70,
+      clientY: rect.top + 5,
+    };
+    control.dispatchEvent(new PointerEvent('pointerdown', init));
+    await nextTick();
+    const group = root.querySelector('[role=group]')!;
+    expect(group).toHaveAttribute('data-dragging');
+    change(scene as never);
+    await nextTick();
+    expect(group).not.toHaveAttribute('data-dragging');
+    control.dispatchEvent(new PointerEvent('pointerup', { ...init, buttons: 0 }));
+    expect(log).toEqual(['change 70 track-press 0']);
+  });
+});
+
 describe('thumbs that meet in a drag', () => {
   test('push: the thumb pushes its neighbour; a pushed thumb stays when the drag goes back', async () => {
     const log: string[] = [];
@@ -244,6 +286,25 @@ describe('thumbs that meet in a drag', () => {
     await slider.move(30);
     await slider.up(30);
     expect(slider.values()).toEqual([30, 65]);
+  });
+
+  test('push: a disabled thumb is a wall; a part of a step as the least distance keeps whole steps', async () => {
+    const walled = await mountSlider({
+      root: { defaultValue: [20, 40, 60] },
+      thumbs: [{}, {}, { disabled: true }],
+    });
+    await walled.down(20, {}, walled.thumb(0));
+    await walled.move(90);
+    await walled.up(90);
+    expect(walled.values()).toEqual([60, 60, 60]);
+    const spaced = await mountSlider({
+      root: { defaultValue: [0, 5, 10], minStepsBetweenValues: 0.5 },
+      thumbs: [{}, {}, {}],
+    });
+    await spaced.down(10, {}, spaced.thumb(2));
+    await spaced.move(0);
+    await spaced.up(0);
+    expect(spaced.values()).toEqual([0, 1, 2]);
   });
 
   test('none: the thumb stops at its neighbour', async () => {
@@ -281,6 +342,24 @@ describe('thumbs that meet in a drag', () => {
     await slider.up(45);
     expect(slider.values()).toEqual([40, 50, 80]);
     expect(log.at(-1)).toBe('commit 40,50,80 drag pointerup');
+  });
+
+  test('swap: the drag keeps the distance from the pointer to the centre of the thumb, and 0 for a thumb with no element', async () => {
+    const log: string[] = [];
+    const root = sliderModel(log, [20, 40]);
+    root.thumbCollisionBehavior = 'swap';
+    const slider = await mountSlider({ root });
+    await slider.down(23, {}, slider.thumb(0));
+    await slider.move(33);
+    await slider.move(53);
+    await slider.move(63);
+    await slider.up(63);
+    expect(log).toEqual([
+      'change 30,40 drag 0',
+      'change 40,50 drag 1',
+      'change 40,63 drag 1',
+      'commit 40,63 drag pointerup',
+    ]);
   });
 });
 
@@ -329,6 +408,9 @@ describe('the geometry', () => {
     await slider.down(20);
     await slider.move(30);
     await slider.up(30);
+    await slider.down(40, {}, slider.thumb());
+    await slider.move(30);
+    await slider.up(30);
     expect(log).toEqual([]);
   });
 });
@@ -363,17 +445,58 @@ describe('thumbAlignment edge', () => {
     expect(indicator.getBoundingClientRect().width).toBeCloseTo(34);
   });
 
-  test('a range: each end of the indicator is at the centre of its thumb', async () => {
+  test.each([
+    {
+      name: 'right-to-left',
+      root: { dir: 'rtl' },
+      ends: (c: DOMRect, t: DOMRect) => [c.right - t.right, c.right - t.left],
+    },
+    {
+      name: 'vertical',
+      root: { orientation: 'vertical' },
+      ends: (c: DOMRect, t: DOMRect) => [c.bottom - t.bottom, c.bottom - t.top],
+    },
+  ])('$name: a thumb is in the control at min and at max', async ({ root, ends }) => {
+    const props = reactive<Attrs>({ ...root, thumbAlignment: 'edge', modelValue: 0 });
+    const slider = await mountSlider({ root: props });
+    const place = () =>
+      ends(slider.control.getBoundingClientRect(), slider.thumb().getBoundingClientRect());
+    expect(place()).toEqual([0, 10]);
+    props.modelValue = 100;
+    await nextTick();
+    expect(place()).toEqual([90, 100]);
+  });
+
+  test('a range: each end of the indicator is at the centre of its thumb, also after the last thumb gets another size; with center, at the percent', async () => {
+    const root = reactive<Attrs>({ defaultValue: [0, 100], thumbAlignment: 'edge' });
+    const thumbs = reactive<Attrs[]>([{}, {}]);
+    const slider = await mountSlider({ root, thumbs });
+    const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
+    const ends = async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await settle();
+      const control = slider.control.getBoundingClientRect();
+      const rect = indicator.getBoundingClientRect();
+      return [rect.left - control.left, rect.right - control.left];
+    };
+    expect(await ends()).toEqual([5, 95]);
+    thumbs[1]!.style = 'width: 20px; height: 10px';
+    expect(await ends()).toEqual([5, 90]);
+    root.thumbAlignment = 'center';
+    expect(await ends()).toEqual([0, 100]);
+  });
+
+  test('vertical: the indicator ends at the centre of the thumb on the vertical axis', async () => {
     const slider = await mountSlider({
-      root: { defaultValue: [0, 100], thumbAlignment: 'edge' },
-      thumbs: [{}, {}],
+      root: { defaultValue: 30, thumbAlignment: 'edge', orientation: 'vertical' },
+      thumbs: [{ style: 'width: 10px; height: 20px' }],
     });
     await new Promise((resolve) => requestAnimationFrame(resolve));
     await settle();
     const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
     const control = slider.control.getBoundingClientRect();
-    const rect = indicator.getBoundingClientRect();
-    expect([rect.left - control.left, rect.right - control.left]).toEqual([5, 95]);
+    // The centre of a thumb of 20 px at 30 %: 10 + 0.3 × 80.
+    expect(control.bottom - indicator.getBoundingClientRect().top).toBeCloseTo(34);
   });
 
   test('VUE-148: a press gives the value under the pointer, with half a thumb at each end; after a change of alignment, the press uses the whole control', async () => {
@@ -391,6 +514,19 @@ describe('thumbAlignment edge', () => {
     await slider.up(0, point);
     await nextTick();
     expect(slider.values()).toEqual([32]);
+  });
+
+  test('vertical: a press gives the value under the pointer, with half a thumb at each end', async () => {
+    const slider = await mountSlider({
+      root: { defaultValue: 0, thumbAlignment: 'edge', orientation: 'vertical' },
+      thumbs: [{ style: 'width: 10px; height: 20px' }],
+    });
+    const rect = slider.control.getBoundingClientRect();
+    const point = { clientX: rect.left + 5, clientY: rect.bottom - 10 - 24 };
+    await slider.down(0, point);
+    await slider.up(0, point);
+    await nextTick();
+    expect(slider.values()).toEqual([30]);
   });
 });
 

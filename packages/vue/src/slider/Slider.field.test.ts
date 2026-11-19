@@ -67,14 +67,17 @@ describe('a form', () => {
 });
 
 describe('a native reset', () => {
-  test('gives the first value and emits only update:modelValue, one time for a range', async () => {
+  test('gives the first value and emits only update:modelValue, one time for a controlled range', async () => {
     const log: string[] = [];
     const root = reactive<Attrs>({
-      defaultValue: [20, 60],
+      modelValue: [20, 60],
       onValueChange: () => log.push('change'),
       onValueCommitted: () => log.push('commit'),
-      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
     });
+    root['onUpdate:modelValue'] = (value: unknown) => {
+      log.push(`update ${String(value)}`);
+      root.modelValue = value;
+    };
     const { form, input, values } = await mountSlider({ root, thumbs: [{}, {}] });
     await press(input(1), '{Home}');
     log.length = 0;
@@ -150,6 +153,9 @@ describe('a field', () => {
     });
     const label = field.querySelector('label')!;
     expect(label.htmlFor).toBe(input(0).id);
+    // A slider always has a value, so no part has `data-filled`.
+    expect(field).toHaveAttribute('data-filled');
+    expect(group).not.toHaveAttribute('data-filled');
     expect(input(0).labels?.[0]).toBe(label);
     expect(group).toHaveAttribute('aria-labelledby', label.id);
     expect(input(1)).toHaveAttribute('aria-labelledby', label.id);
@@ -251,29 +257,56 @@ describe('a field', () => {
     },
   );
 
-  test('a blocked submit gives the first input the focus', async () => {
+  test('a blocked submit gives the first enabled input the focus', async () => {
+    const thumbs = reactive<Attrs[]>([{}, {}]);
     const { form, input } = await mountSlider({
       root: { defaultValue: [20, 60] },
-      thumbs: [{}, {}],
+      thumbs,
       field: { validate: () => 'Too loud' },
       form: {},
     });
     form.requestSubmit();
     await settle();
     expect(document.activeElement).toBe(input(0));
+    thumbs[0]!.disabled = true;
+    await nextTick();
+    form.requestSubmit();
+    await settle();
+    expect(document.activeElement).toBe(input(1));
   });
 
-  test('the values of a form at a submit have the value of the slider', async () => {
+  test('the values of a form at a submit have the value of the slider, under its name; a disabled slider has none', async () => {
     const submitted: unknown[] = [];
+    const root = reactive<Attrs>({ defaultValue: [20, 60], name: 'volume' });
     const { form } = await mountSlider({
-      root: { defaultValue: [20, 60] },
+      root,
       thumbs: [{}, {}],
-      field: { name: 'volume' },
+      field: {},
       form: { onSubmit: (_: Event, values: unknown) => submitted.push(values) },
     });
     form.requestSubmit();
     await settle();
-    expect(submitted).toEqual([{ volume: [20, 60] }]);
+    root.disabled = true;
+    await nextTick();
+    form.requestSubmit();
+    await settle();
+    expect(submitted).toEqual([{ volume: [20, 60] }, {}]);
+  });
+
+  test('an edit removes the error that the form has for the field', async () => {
+    const updates: unknown[] = [];
+    const { input } = await mountSlider({
+      root: { defaultValue: 20 },
+      field: { name: 'volume' },
+      form: {
+        errors: { volume: 'Too loud' },
+        'onUpdate:errors': (errors: unknown) => updates.push(errors),
+      },
+    });
+    expect(input()).toHaveAttribute('aria-invalid', 'true');
+    await press(input(), '{ArrowRight}');
+    await settle();
+    expect(updates).toEqual([{}]);
   });
 });
 

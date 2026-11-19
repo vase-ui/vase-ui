@@ -10,7 +10,7 @@ type Attrs = Record<string, unknown>;
 // A slider in a form, with a control of 100 px and thumbs of 10 px. `thumbs` gives the attributes
 // of each thumb. `label` and `value` put a `Slider.Label` and a `Slider.Value` before or after the
 // control. `fieldset` puts the slider in a native `<fieldset>` or in a `Fieldset.Root`. With
-// `form`, the form is a `Form` with these attributes.
+// `form`, the form is a `Form` with these attributes. `thumbText` is the content of each thumb.
 const props = defineProps({
   root: Object as PropType<Attrs>,
   thumbs: { type: Array as PropType<Attrs[]>, default: () => [{}] },
@@ -21,6 +21,7 @@ const props = defineProps({
   field: Object as PropType<Attrs>,
   fieldset: Object as PropType<{ native: boolean; disabled: boolean }>,
   form: Object as PropType<Attrs>,
+  thumbText: String,
 });
 const vertical = computed(() => props.root?.orientation === 'vertical');
 const rootPart = useTemplateRef('rootPart');
@@ -59,7 +60,9 @@ defineExpose({ root: rootPart, control: controlPart, thumbs: thumbParts });
                 ref="thumbParts"
                 style="width: 10px; height: 10px; background: black"
                 v-bind="thumb"
-              />
+              >
+                <span v-if="thumbText" style="display: block; height: 4px">{{ thumbText }}</span>
+              </Slider.Thumb>
             </Slider.Track>
           </Slider.Control>
           <Slider.Value v-if="value === 'after'" />

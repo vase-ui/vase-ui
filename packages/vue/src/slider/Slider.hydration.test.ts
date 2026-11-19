@@ -56,6 +56,29 @@ describe('server render and hydration', () => {
     expect(thumb.right).toBe(control.right);
   });
 
+  test('dir="rtl" on the root places the thumbs in the server HTML; the label of a field names the input of the first thumb', async () => {
+    const props = { root: { defaultValue: [20, 60], dir: 'rtl' }, thumbs: [{}, {}], field: {} };
+    const root = await renderOnServer('SliderParts', props);
+    const inputs = [...root.querySelectorAll<HTMLInputElement>('input[type=range]')];
+    expect(inputs.map((input) => input.parentElement!.style.translate)).toEqual([
+      '50% -50%',
+      '50% -50%',
+    ]);
+    expect(root.querySelector('label')).toHaveAttribute('for', inputs[0]!.id);
+    hydrate(SliderParts, props, root);
+    await nextTick();
+    expect(inputs[0]!.parentElement!.style.translate).toBe('50% -50%');
+  });
+
+  test('a thumb with no value has no place in the server HTML', async () => {
+    const root = await renderOnServer('SliderParts', {
+      root: { defaultValue: [20] },
+      thumbs: [{}, {}],
+    });
+    const [, extra] = root.querySelectorAll('input[type=range]');
+    expect(extra!.parentElement!.getAttribute('style')).not.toContain('NaN');
+  });
+
   test.each([
     { name: 'a single slider', props: { root: { defaultValue: 30 }, label: 'before' } },
     {

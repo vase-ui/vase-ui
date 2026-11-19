@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-// A native range input with `min`, `max` and `value` in one object for `v-bind`, with `value` last.
+// A native range input with `value`, `min` and `max` in one object for `v-bind`, with `value` first.
 // Its listener gives the value to the parent, and the parent can keep its value.
 defineProps({
   model: {
@@ -18,7 +18,7 @@ defineProps({
 
 <template>
   <input
-    v-bind="{ type: 'range', min: model.min, max: model.max, value: model.value }"
+    v-bind="{ type: 'range', value: model.value, min: model.min, max: model.max }"
     aria-label="Range"
     @input="model.write(($event.target as HTMLInputElement).valueAsNumber)"
   />

@@ -26,7 +26,7 @@ function onGrid(value: number, grid: Grid, direction: -1 | 0 | 1 = 0) {
 
 /** The largest value: `max`, or the last value of the grid below it. */
 export function largest(grid: Grid) {
-  return grid.max > grid.min ? onGrid(grid.max, grid, -1) : grid.min;
+  return onGrid(grid.max, grid, -1);
 }
 
 function clamp(value: number, low: number, high: number) {
@@ -123,11 +123,11 @@ export function dragThumb(
     const up = target > next[moving]!;
     const down = target < next[moving]!;
     while (up && moving < next.length - 1 && !disabled[moving + 1] && target >= next[moving + 1]!) {
-      next[moving] = Math.max(next[moving]!, onGrid(next[moving + 1]! - distance, grid, -1));
+      next[moving] = onGrid(next[moving + 1]! - distance, grid, -1);
       moving += 1;
     }
     while (down && moving > 0 && !disabled[moving - 1] && target <= next[moving - 1]!) {
-      next[moving] = Math.min(next[moving]!, onGrid(next[moving - 1]! + distance, grid, 1));
+      next[moving] = onGrid(next[moving - 1]! + distance, grid, 1);
       moving -= 1;
     }
   }
@@ -139,7 +139,7 @@ export function dragThumb(
 
 /**
  * The thumb `index` goes to `target` and pushes each thumb in its way, to `min` or `max` at most.
- * A disabled thumb is a wall.
+ * A disabled thumb is a wall: the thumbs before it keep the least distance to it.
  */
 function push(
   next: number[],
@@ -166,10 +166,10 @@ function push(
   [low, high] = [onGrid(low, grid, 1), onGrid(high, grid, -1)];
   if (low > high) return next;
   next[index] = clamp(target, low, high);
-  for (let other = index + 1; other < next.length && !disabled[other]; other += 1) {
+  for (let other = index + 1; other < next.length; other += 1) {
     next[other] = Math.max(next[other]!, onGrid(next[other - 1]! + distance, grid, 1));
   }
-  for (let other = index - 1; other >= 0 && !disabled[other]; other -= 1) {
+  for (let other = index - 1; other >= 0; other -= 1) {
     next[other] = Math.min(next[other]!, onGrid(next[other + 1]! - distance, grid, -1));
   }
   return next;

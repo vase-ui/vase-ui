@@ -28,7 +28,7 @@ import type {
   SliderRootProps,
   SliderRootState,
 } from './types';
-import { dragThumb, moveThumb, sameValues, shownValues, snap } from './values';
+import { dragThumb, moveThumb, sameValues, shownValues } from './values';
 
 type Emitted = Value extends number ? number : Value;
 
@@ -90,7 +90,6 @@ const lastActive = shallowRef<SliderThumbEntry>();
 const elementRtl = shallowRef(false);
 // The last accepted change of the press that is on.
 let press: { change?: { value: Emitted; reason: 'track-press' | 'drag' } } | undefined;
-let lastReset: Event | undefined;
 
 /** The thumbs at the index of their values: the `index` prop, else the place of the thumb. */
 const thumbs = computed(() => {
@@ -113,7 +112,7 @@ const state = computed<SliderRootState>(() => {
     disabled: isDisabled.value,
     dragging: dragging.value,
     orientation: props.orientation,
-    activeThumbIndex: thumb && !thumb.disabled ? thumbs.value.indexOf(thumb) : -1,
+    activeThumbIndex: thumb ? thumbs.value.indexOf(thumb) : -1,
     values: values.value,
     min: props.min,
     max: props.max,
@@ -214,10 +213,7 @@ provide(sliderKey, {
   readDirection,
   addThumb(thumb) {
     entries.push(thumb);
-    return () => {
-      entries.splice(entries.indexOf(thumb), 1);
-      if (active.value === thumb) active.value = undefined;
-    };
+    return () => entries.splice(entries.indexOf(thumb), 1);
   },
   addLabel(label) {
     labels.push(label);
@@ -225,13 +221,7 @@ provide(sliderKey, {
   },
   moveTo(index, target, reason, event) {
     if (!(props.max > props.min) || values.value[index] === undefined) return;
-    const next = moveThumb(
-      values.value,
-      index,
-      snap(target, grid.value),
-      grid.value,
-      distance.value,
-    );
+    const next = moveThumb(values.value, index, target, grid.value, distance.value);
     const accepted = change(next, index, reason, event);
     if (accepted === undefined) return;
     // After a key during a press, the end of the press commits only a later change.
@@ -276,16 +266,13 @@ provide(sliderKey, {
       field?.onLeave(input);
     }
   },
-  onReset(event) {
-    if (event === lastReset) return;
-    lastReset = event;
+  // Each thumb follows the reset in a timer of its own. The form resets each input to the value
+  // that Vue wrote last.
+  onReset() {
     field?.onReset(asValue(shownValues(firstValue, grid.value), typeof firstValue === 'number'));
-    if (!sameValues(value.value, firstValue)) {
-      const next = (typeof firstValue === 'number' ? firstValue : firstValue.slice()) as Emitted;
-      setOwn(next);
-      emit('update:modelValue', next);
-    }
-    nextTick(showValues);
+    if (sameValues(value.value, firstValue)) return;
+    setOwn(firstValue);
+    emit('update:modelValue', firstValue as Emitted);
   },
 });
 
@@ -308,10 +295,10 @@ function readDirection(target: Element) {
   return elementRtl.value;
 }
 
-/** The value of an event: a number for a single slider, a new array for a range. */
+/** The value of an event: a number for a single slider, an array for a range. */
 function asValue(next: readonly number[], single = typeof value.value === 'number') {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A single slider has one value.
-  return (single ? next[0]! : next.slice()) as Emitted;
+  return (single ? next[0]! : next) as Emitted;
 }
 
 /** Emits a change of the user. Returns the new value, or `undefined` when nothing changed. */

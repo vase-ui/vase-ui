@@ -15,7 +15,7 @@ import { visuallyHiddenInput } from '../common/visuallyHidden';
 import { fieldKey } from '../field/control';
 import { injectSlider, stateAttributes, type SliderThumbEntry } from './root';
 import type { SliderThumbProps, SliderThumbState } from './types';
-import { largest, percent, snap } from './values';
+import { percent, snap } from './values';
 
 defineOptions({ inheritAttrs: false });
 
@@ -126,7 +126,7 @@ const inputStyle = computed<CSSProperties>(() => ({
   writingMode: slider.state.orientation === 'vertical' ? 'vertical-lr' : undefined,
 }));
 
-useFormReset(input, (event) => slider.onReset(event));
+useFormReset(input, () => slider.onReset());
 
 defineExpose({ element, input });
 
@@ -149,7 +149,7 @@ function elementProps() {
 function inputProps() {
   const { ofInput } = splitAttrs();
   const named = 'aria-label' in ofInput || 'aria-labelledby' in ofInput;
-  const merged = mergeProps(
+  return mergeProps(
     {
       type: 'range',
       id: inputId.value,
@@ -169,11 +169,10 @@ function inputProps() {
       onBlur,
       onKeydown,
       onInput,
+      value: value.value,
     },
     ofInput,
   );
-  // Vue writes `value` after `min`, `max` and `step`, so the browser does not clamp it to old ones.
-  return { ...merged, value: value.value };
 }
 
 function valueText() {
@@ -197,8 +196,7 @@ function onInput(event: Event) {
     target.value = String(value.value);
     return;
   }
-  if (value.value !== undefined)
-    slider.moveTo(valueIndex.value, target.valueAsNumber, 'input-change', event);
+  slider.moveTo(valueIndex.value, target.valueAsNumber, 'input-change', event);
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -212,26 +210,22 @@ function onKeydown(event: KeyboardEvent) {
   }
   event.preventDefault();
   // `Toolbar.Root` moves the focus at an arrow key, Home and End that bubble from an item in it.
-  if (event.key !== 'PageUp' && event.key !== 'PageDown') event.stopPropagation();
-  if (value.value === undefined) return;
+  event.stopPropagation();
+  const current = value.value;
+  if (current === undefined) return;
   const grid = slider.state;
-  const rtl = slider.readDirection(event.currentTarget as Element);
   let target: number;
   if (event.key === 'Home') target = grid.min;
-  else if (event.key === 'End') target = largest(grid);
+  else if (event.key === 'End') target = grid.max;
   else {
     const up =
       event.key === 'ArrowUp' ||
       event.key === 'PageUp' ||
-      event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
+      event.key === (slider.rtl ? 'ArrowLeft' : 'ArrowRight');
     const large = event.shiftKey || event.key === 'PageUp' || event.key === 'PageDown';
     // A large step off the grid goes on to the next value of the grid, so the thumb moves.
     const direction = up ? 1 : -1;
-    target = snap(
-      value.value + direction * (large ? slider.largeStep : grid.step),
-      grid,
-      direction,
-    );
+    target = snap(current + direction * (large ? slider.largeStep : grid.step), grid, direction);
   }
   slider.moveTo(valueIndex.value, target, 'keyboard', event);
 }

@@ -46,11 +46,11 @@ let press: Press | undefined;
 watch(
   () => slider.state.disabled,
   (disabled) => {
-    if (disabled) cancel(element.value);
+    if (disabled) cancel();
   },
 );
-watch(element, (_, old) => cancel(old));
-onBeforeUnmount(() => cancel(element.value));
+watch(element, cancel);
+onBeforeUnmount(cancel);
 
 defineExpose({ element });
 
@@ -84,12 +84,12 @@ function valueAt(event: PointerEvent, control: Element, current: Press) {
       ? rect.right - start - half - point
       : point - rect.left - start - half;
   const { min, max } = slider.state;
-  return snap(min + Math.min(Math.max(fromStart / size, 0), 1) * (max - min), slider.state);
+  return snap(min + (fromStart / size) * (max - min), slider.state);
 }
 
 function onPointerdown(event: PointerEvent) {
-  const { values, disabled, orientation } = slider.state;
-  if (press || disabled || event.button !== 0) return;
+  const { values, orientation } = slider.state;
+  if (press || event.button !== 0) return;
   const thumbs = slider.thumbs;
   const enabled = values.map((_, index) => !!thumbs[index] && !thumbs[index].disabled);
   const pressed = thumbs.find((thumb) => thumb?.element?.contains(event.target as Node));
@@ -130,18 +130,14 @@ function onPointerdown(event: PointerEvent) {
   event.preventDefault();
   press = current;
   slider.startPress();
-  if (index === -1) {
-    const target = valueAt(event, control, current);
-    if (target === undefined) {
-      current.index = enabled.indexOf(true);
-    } else {
-      current.index = slider.dragTo(
-        nearestThumb(values, target, enabled),
-        target,
-        'track-press',
-        event,
-      );
-    }
+  const target = index === -1 ? valueAt(event, control, current) : undefined;
+  if (target !== undefined) {
+    current.index = slider.dragTo(
+      nearestThumb(values, target, enabled),
+      target,
+      'track-press',
+      event,
+    );
   }
   focus(current.index);
 }
@@ -169,10 +165,9 @@ function end(event: PointerEvent) {
   slider.endPress(event);
 }
 
-/** Ends the press with no commit. */
-function cancel(control: HTMLElement | null | undefined) {
+/** Ends the press with no commit. The browser ends the capture at the release. */
+function cancel() {
   if (!press) return;
-  if (control?.hasPointerCapture(press.pointerId)) control.releasePointerCapture(press.pointerId);
   press = undefined;
   slider.endPress();
 }

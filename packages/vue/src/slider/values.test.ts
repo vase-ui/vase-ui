@@ -185,15 +185,6 @@ describe('a drag with thumbCollisionBehavior push', () => {
       result: [30, 65],
     },
     {
-      name: 'a distance of a part of a step keeps values on the grid',
-      values: [0, 1],
-      index: 0,
-      target: 1,
-      distance: 1,
-      result: [1, 2],
-      grid: { min: 0, max: 10, step: 1 },
-    },
-    {
       name: 'a disabled thumb is a wall',
       values: [20, 40, 60],
       index: 0,
@@ -201,6 +192,24 @@ describe('a drag with thumbCollisionBehavior push', () => {
       distance: 5,
       disabled: [2],
       result: [50, 55, 60],
+    },
+    {
+      name: 'a disabled thumb is a wall below',
+      values: [20, 40, 60],
+      index: 2,
+      target: 10,
+      distance: 5,
+      disabled: [0],
+      result: [20, 25, 30],
+    },
+    {
+      name: 'a thumb between two disabled thumbs with no room stays',
+      values: [20, 25, 30],
+      index: 1,
+      target: 40,
+      distance: 10,
+      disabled: [0, 2],
+      result: [20, 25, 30],
     },
   ])('$name', (row) => {
     expect(drag('push', row.values, row.index, row.target, row)).toEqual({

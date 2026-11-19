@@ -299,7 +299,7 @@ describe('S6: Vue and a range input with min, max and value in one object for v-
     expect(input.value).toBe('51');
   });
 
-  test('Vue writes value after max: at the first render, and when max grows over the value', async () => {
+  test('Vue writes value after max, also when value comes first: at the first render, and when max grows over the value', async () => {
     expect(mountInput({ max: 200, value: 150, accept: true }).input.value).toBe('150');
     const { model, input } = mountInput({ max: 100, value: 150, accept: true });
     expect(input.value).toBe('100');
