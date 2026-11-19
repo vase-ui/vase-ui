@@ -9,7 +9,8 @@ defineSlots<{
 }>();
 
 const { numbers } = useTimeClockRootContext();
-const { inputProps, setInputElement } = useTimeClockFaceContext();
+const { inputProps, useInputRef } = useTimeClockFaceContext();
+const setInputElement = useInputRef();
 
 markChildrenMounted();
 </script>

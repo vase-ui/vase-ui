@@ -277,8 +277,9 @@ const currentView = useControlled<TimeClockView>({
 });
 
 const dragging = shallowRef(false);
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-usePickerControl(PickerClockOwner, () => inputElement.value);
+const inputs = new Set<HTMLInputElement>();
+const lastInput = () => Array.from(inputs).at(-1);
+usePickerControl(PickerClockOwner, lastInput);
 
 // A server and a browser can have other `Intl` data for the locale, and the hour cycle changes the
 // numbers of the face and the day periods.
@@ -457,13 +458,11 @@ provide(TimeClockRootContext, {
   selectedNumber,
   dayPeriod,
   registerInput(input) {
-    inputElement.value = input;
-    return () => {
-      if (inputElement.value === input) inputElement.value = null;
-    };
+    inputs.add(input);
+    return () => inputs.delete(input);
   },
   focusInput() {
-    inputElement.value?.focus();
+    lastInput()?.focus();
   },
   isNumberDisabled,
   isDayPeriodDisabled,

@@ -66,8 +66,7 @@ export function useTimeClockRootContext(): TimeClockRootContext {
 export interface TimeClockFaceContext {
   /** Makes the props of the range input of the face. The `children` component calls it in its render. */
   inputProps: () => Record<string, any>;
-  /** The `ref` setter of the range input. The `children` component binds it by name. */
-  setInputElement: (value: unknown) => void;
+  useInputRef: () => (value: unknown) => void;
   useNumber: (
     element: Readonly<Ref<HTMLElement | null>>,
     number: () => TimeClockFaceNumber,

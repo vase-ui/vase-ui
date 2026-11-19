@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { h, KeepAlive, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
+import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createHeldBranch,
   createRenderer,
@@ -321,7 +323,7 @@ describe('<TimeClock.DayPeriod />', () => {
 
       it('focuses the visible face when another face mounts inside a held branch', async () => {
         const cycle = shallowRef<12 | 24>(12);
-        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        const { HeldBranch, mountWhileHeld, show, hide } = createHeldBranch(() => (
           <TimeClock.Face ariaLabel="second" />
         ));
         await render(() => (
@@ -344,6 +346,41 @@ describe('<TimeClock.DayPeriod />', () => {
         cycle.value = 24;
         await flushMicrotasks();
         expect(screen.getByRole('slider', { name: 'second' })).toHaveFocus();
+
+        cycle.value = 12;
+        await hide();
+        screen.getByRole('button').focus();
+        cycle.value = 24;
+        await flushMicrotasks();
+        expect(screen.getByRole('slider', { name: 'first' })).toHaveFocus();
+      });
+
+      it('focuses the remaining input when a render slot holds its children', async () => {
+        const visible = shallowRef(true);
+        const cycle = shallowRef<12 | 24>(12);
+        await render(() => (
+          <TimeClock.Root hourCycle={cycle.value}>
+            <TimeClock.Face ariaLabel="first" />
+            <TimeClock.Face
+              ariaLabel="second"
+              v-slots={{
+                render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+                  <div {...props}>
+                    <KeepAlive>{visible.value ? h(children) : null}</KeepAlive>
+                  </div>
+                ),
+              }}
+            />
+            <TimeClock.DayPeriod value="pm" />
+          </TimeClock.Root>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        screen.getByRole('button').focus();
+        cycle.value = 24;
+        await flushMicrotasks();
+        expect(screen.getByRole('slider', { name: 'first' })).toHaveFocus();
       });
 
       it('gives its focus to a face that mounts before the old face unmounts', async () => {

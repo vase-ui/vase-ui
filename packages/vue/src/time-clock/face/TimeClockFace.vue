@@ -105,7 +105,6 @@ const formatLocale = useFormatLocale(root.locale);
 const ariaAfterHydration = useAriaAfterHydration();
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-useInputRegistration(inputElement, root.registerInput);
 const { valueProps, renderValue } = useInputRender();
 const numberElements = new Map<Element, () => TimeClockFaceNumber>();
 // The pointer of the press or drag that is in progress, the radius of the outer ring that it
@@ -166,8 +165,15 @@ function inputProps() {
 
 provide(TimeClockFaceContext, {
   inputProps,
-  setInputElement(value) {
-    inputElement.value = value as HTMLInputElement | null;
+  useInputRef() {
+    // A render slot can keep its children alive while the face stays on screen.
+    const input = shallowRef<HTMLInputElement | null>(null);
+    useInputRegistration(input, root.registerInput);
+    return (value) => {
+      const next = value as HTMLInputElement | null;
+      if (next || inputElement.value === input.value) inputElement.value = next;
+      input.value = next;
+    };
   },
   useNumber(element, number) {
     useElementRegistration(numberElements, element, number);
