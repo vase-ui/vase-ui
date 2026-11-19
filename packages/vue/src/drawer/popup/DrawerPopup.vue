@@ -71,67 +71,25 @@ export interface DrawerPopupState {
   swiping: boolean;
 }
 
-// Module-level flag to ensure we only register the CSS properties once,
-// regardless of how many Drawer components are mounted.
 let drawerSwipeVarsRegistered = false;
 
-/**
- * Removes inheritance of high-frequency drawer swipe CSS variables, which
- * reduces style recalculation cost in complex drawers with deep subtrees.
- * See https://motion.dev/blog/web-animation-performance-tier-list
- * under the "Improving CSS variable performance" section.
- */
 function removeCSSVariableInheritance() {
-  if (drawerSwipeVarsRegistered) {
-    return;
-  }
-
-  // Intentionally keep inheritance disabled on WebKit as well. Safari doesn't support
-  // opting descendants back in via `--var: inherit` for custom properties registered
-  // with `inherits: false`, but Drawer does not rely on descendant access to these vars
-  // (unlike ScrollArea), so we keep the performance optimization enabled.
-  if (typeof CSS !== 'undefined' && 'registerProperty' in CSS) {
-    [
-      DrawerPopupCssVars.swipeMovementX,
-      DrawerPopupCssVars.swipeMovementY,
-      DrawerPopupCssVars.snapPointOffset,
-    ].forEach((name) => {
-      try {
-        CSS.registerProperty({
-          name,
-          syntax: '<length>',
-          inherits: false,
-          initialValue: '0px',
-        });
-      } catch {
-        /* ignore already-registered */
-      }
-    });
-
-    [
-      {
-        name: DrawerBackdropCssVars.swipeProgress,
-        initialValue: '0',
-      },
-      {
-        name: DrawerPopupCssVars.swipeStrength,
-        initialValue: '1',
-      },
-    ].forEach(({ name, initialValue }) => {
-      try {
-        CSS.registerProperty({
-          name,
-          syntax: '<number>',
-          inherits: false,
-          initialValue,
-        });
-      } catch {
-        /* ignore already-registered */
-      }
-    });
-  }
-
+  if (drawerSwipeVarsRegistered || typeof CSS === 'undefined' || !CSS.registerProperty) return;
   drawerSwipeVarsRegistered = true;
+  // Descendants need no style recalculation for each drag sample.
+  for (const [name, syntax, initialValue] of [
+    [DrawerPopupCssVars.swipeMovementX, '<length>', '0px'],
+    [DrawerPopupCssVars.swipeMovementY, '<length>', '0px'],
+    [DrawerPopupCssVars.snapPointOffset, '<length>', '0px'],
+    [DrawerBackdropCssVars.swipeProgress, '<number>', '0'],
+    [DrawerPopupCssVars.swipeStrength, '<number>', '1'],
+  ] as const) {
+    try {
+      CSS.registerProperty({ name, syntax, initialValue, inherits: false });
+    } catch {
+      // Another copy of the package can register the same property.
+    }
+  }
 }
 
 const stateAttributesMapping: StateAttributesMapping<DrawerPopupState> = {
@@ -159,6 +117,7 @@ type DragStyles = Record<string, string | undefined>;
 <script setup lang="ts">
 import { popupBindings, FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupBindings';
 import { computed, onMounted, shallowRef, toRaw, watch } from 'vue';
+import { useResizeObserver } from '../../common/useResizeObserver';
 import { EMPTY_OBJECT } from '../../common/empty';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import { error } from '../../common/error';
@@ -439,7 +398,7 @@ watch(
 
 watch(
   [element, mounted, nestedDrawerOpen, isHeld],
-  ([popup, isMounted, , held], _previous, onCleanup) => {
+  ([popup, isMounted, , held]) => {
     if (held) {
       return;
     }
@@ -456,22 +415,13 @@ watch(
 
     removeCSSVariableInheritance();
     measureHeight();
-
-    if (typeof ResizeObserver !== 'function') {
-      return;
-    }
-
-    const resizeObserver = new ResizeObserver(measureHeight);
-
-    resizeObserver.observe(popup);
-    onCleanup(() => {
-      resizeObserver.disconnect();
-    });
   },
   { flush: 'post' },
 );
 
-// Bound nested progress on the parent popup added more than 10% to frame work.
+useResizeObserver(() => (mounted.value ? element.value : null), measureHeight);
+
+// A progress binding exceeds the frame budget for a nested drag.
 watch(
   element,
   (popup, _previous, onCleanup) => {

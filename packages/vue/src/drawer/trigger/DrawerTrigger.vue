@@ -58,12 +58,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DrawerTriggerState>;
 }>();
 
-// Base UI gives `DialogTrigger` the type of this part. This part renders `Dialog.Trigger` and makes
-// no element of its own, so the two triggers have the same DOM. Its own props interface gives the
-// API reference the handle of Drawer.
-// The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `Dialog.Trigger` dynamic. Vue then renders `Dialog.Trigger` again each time
-// this part renders. It also renders again each part in that slot that has slot content.
+// Separate outlets keep the forwarded slot stable across renders.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 

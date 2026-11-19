@@ -110,6 +110,13 @@
       "destination": "packages/vue/src/drawer/root/DrawerRootContext.test.ts",
       "behavior": "Snap distance, overshoot and nearest-point ties.",
       "witness": "packages/vue/src/drawer/root/DrawerRootContext.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/drawer/root/DrawerRootContext.snapPoints.test.tsx",
+      "behavior": "Snap units, clamped heights and the active offset.",
+      "witness": "packages/vue/src/drawer/root/DrawerRootContext.snapPoints.test.tsx"
     }
   ]
 }

@@ -79,11 +79,9 @@ function isKeyboardInputElement(element: HTMLElement): boolean {
     return true;
   }
 
-  const win = ownerWindow(element);
-
   if (
-    element instanceof win.HTMLTextAreaElement ||
-    (element instanceof win.HTMLInputElement && KEYBOARD_INPUT_TYPES.has(element.type))
+    element.localName === 'textarea' ||
+    (element.localName === 'input' && KEYBOARD_INPUT_TYPES.has((element as HTMLInputElement).type))
   ) {
     // Disabled controls can't focus or open the keyboard, so tap-to-focus must skip them —
     // otherwise the dispatched click fires handlers a native tap on a disabled control never would.
@@ -248,7 +246,7 @@ function findKeyboardScrollTarget(target: HTMLElement, root: HTMLElement): HTMLE
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, useTemplateRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { NOOP } from '../../common/empty';
@@ -257,6 +255,8 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { useTimeout } from '../../common/useTimeout';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { getPortalLocation } from '../../utils/popups/portal/portalElements';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import * as DrawerViewportCssVars from '../viewport/DrawerViewportCssVars';
 import { DrawerVirtualKeyboardContext } from '../root/DrawerRootContext';
@@ -269,10 +269,14 @@ const open = computed(() => store.select('open'));
 const mounted = computed(() => store.select('mounted'));
 const modal = computed(() => store.select('modal'));
 const nestedDrawerOpen = computed(() => store.select('nestedOpenDialogCount') > 0);
-// The provider requires a `<Drawer.Viewport>` to act as the measurement and containment
-// root and to host the keyboard inset variable; `<Drawer.Popup>` already warns when the
-// viewport is missing, so there is no need to fall back to the popup element here.
 const rootElement = computed(() => store.select('viewportElement'));
+const { isHeld } = useKeepAliveState();
+const probeTarget = computed(() =>
+  open.value && mounted.value && !isHeld.value
+    ? getPortalLocation(rootElement.value).document?.body
+    : undefined,
+);
+const smallViewportProbe = useTemplateRef<HTMLDivElement>('smallViewportProbe');
 
 let pendingKeyboardFocusMoved = false;
 let keyboardTouchStart: { x: number; y: number } | null = null;
@@ -411,22 +415,12 @@ function resetTouchTrackingState() {
   keyboardTouchStart = null;
 }
 
-useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
-  if (!mounted.value || !open.value) {
-    focusedKeyboardTarget = null;
-    restoreKeyboardScrollAdjustment();
-    keyboardFocusFrame.cancel();
-    return undefined;
-  }
-
+function trackKeyboardViewport() {
   const root = rootElement.value;
-  if (!root) {
-    restoreKeyboardScrollAdjustment();
-    return undefined;
-  }
+  if (!root || !probeTarget.value) return;
 
   const resolvedRootElement: HTMLElement = root;
-  const doc = ownerDocument(resolvedRootElement);
+  const doc = root.ownerDocument;
   const win = ownerWindow(resolvedRootElement);
   const visualViewport = win.visualViewport;
 
@@ -443,7 +437,6 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
   // Android: tallest layout viewport height seen at the current width.
   let tallestLayoutHeight = win.innerHeight;
   let layoutWidth = win.innerWidth;
-  let smallViewportProbe: HTMLElement | null = null;
 
   // New Chrome on iOS shrinks `svh` for the keyboard, then the layout viewport down to the
   // visual viewport, moving fixed content itself. Remembering the keyboard's visual height
@@ -477,14 +470,9 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
       return null;
     }
 
-    if (!smallViewportProbe) {
-      smallViewportProbe = doc.createElement('div');
-      smallViewportProbe.style.cssText = 'position:fixed;top:0;height:100svh;visibility:hidden';
-      doc.body.appendChild(smallViewportProbe);
-    }
-
-    const layoutFollowsKeyboard =
-      smallViewportProbe.offsetHeight - visualHeight <= KEYBOARD_RESIZE_THRESHOLD;
+    const probe = smallViewportProbe.value;
+    if (!probe || probe.ownerDocument !== doc) return null;
+    const layoutFollowsKeyboard = probe.offsetHeight - visualHeight <= KEYBOARD_RESIZE_THRESHOLD;
     const top = Math.max(0, visualViewport.offsetTop);
 
     return {
@@ -891,10 +879,11 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
     keyboardFocusFrame.cancel();
     keyboardRealignTimeout.clear();
     getOpenKeyboardViewport = null;
-    smallViewportProbe?.remove();
     resolvedRootElement.style.removeProperty(DrawerViewportCssVars.keyboardInset);
   };
-});
+}
+
+useDomEffect([probeTarget, modal, nestedDrawerOpen, rootElement], trackKeyboardViewport, isHeld);
 
 function handleTouchStart(event: TouchEvent) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A `touchstart` event has at least one touch.
@@ -1024,4 +1013,11 @@ provide(DrawerVirtualKeyboardContext, {
 
 <template>
   <slot />
+  <Teleport v-if="probeTarget" :to="probeTarget">
+    <div
+      ref="smallViewportProbe"
+      aria-hidden="true"
+      style="position: fixed; top: 0; height: 100svh; visibility: hidden; pointer-events: none"
+    />
+  </Teleport>
 </template>

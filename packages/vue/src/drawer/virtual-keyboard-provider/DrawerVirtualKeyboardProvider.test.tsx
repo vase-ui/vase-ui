@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   fireEvent,
   firePointer,
@@ -10,6 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import { createScrollDocument } from '../../../test/fixtures/scrollDocument';
 import * as Drawer from '../index.parts';
 import { useDrawerVirtualKeyboardContext } from '../root/DrawerRootContext';
 
@@ -68,8 +70,8 @@ function stubElementFromPoint(
   });
 }
 
-function mockVisualViewport(height: number) {
-  const originalDescriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+function mockVisualViewport(height: number, win: Window = window) {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(win, 'visualViewport');
   const listeners = new Map<string, Set<EventListener>>();
 
   const visualViewport: Pick<VisualViewport, 'addEventListener' | 'removeEventListener'> & {
@@ -92,15 +94,15 @@ function mockVisualViewport(height: number) {
     },
   };
 
-  Object.defineProperty(window, 'visualViewport', {
+  Object.defineProperty(win, 'visualViewport', {
     configurable: true,
     value: visualViewport as VisualViewport,
   });
   onTestFinished(() => {
     if (originalDescriptor) {
-      Object.defineProperty(window, 'visualViewport', originalDescriptor);
+      Object.defineProperty(win, 'visualViewport', originalDescriptor);
     } else {
-      Object.defineProperty(window, 'visualViewport', { configurable: true, value: undefined });
+      Object.defineProperty(win, 'visualViewport', { configurable: true, value: undefined });
     }
   });
 
@@ -275,6 +277,62 @@ const ScrollBodyDrawer = defineComponent({
 
 describe('<Drawer.VirtualKeyboardProvider />', () => {
   const { render } = createRenderer();
+
+  it.each(['input', 'textarea'] as const)(
+    'VUE-170: measures the keyboard for a teleported %s across documents',
+    async (Control) => {
+      const { doc, win } = await createScrollDocument();
+      const host = doc.body.appendChild(doc.createElement('div'));
+      host.style.transform = 'scale(0.5)';
+      const shadow = host.attachShadow({ mode: 'open' });
+      const target = shallowRef<Element | ShadowRoot>(shadow);
+      const frameKeyboard = mockVisualViewport(win.innerHeight, win);
+      const pageKeyboard = mockVisualViewport(window.innerHeight);
+      const open = shallowRef(true);
+      await render(() => (
+        <Drawer.Root open={open.value} modal={false}>
+          <Drawer.VirtualKeyboardProvider>
+            <Drawer.Portal to={target.value} keepMounted>
+              <Drawer.Viewport data-testid="viewport">
+                <Drawer.Popup initialFocus={false}>
+                  <Control />
+                </Drawer.Popup>
+              </Drawer.Viewport>
+            </Drawer.Portal>
+          </Drawer.VirtualKeyboardProvider>
+        </Drawer.Root>
+      ));
+
+      const selector = ':scope > div[style*="100svh"]';
+      const probe = doc.body.querySelector<HTMLElement>(selector)!;
+      expect(probe.getAttribute('aria-hidden')).toBe('true');
+      expect(probe.style.pointerEvents).toBe('none');
+      const viewport = shadow.querySelector<HTMLElement>('[data-testid="viewport"]')!;
+      const input = viewport.querySelector(Control)!;
+      input.focus();
+      frameKeyboard.resize(win.innerHeight - 120);
+      await waitFor(() =>
+        expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('120px'),
+      );
+      expect(doc.body.querySelector(selector)).toBe(probe);
+
+      target.value = document.body;
+      await flushMicrotasks();
+      expect(document.body.querySelector(selector)).toBe(probe);
+      expect(doc.body.querySelector(selector)).toBeNull();
+      expect(frameKeyboard.listeners.get('resize')?.size).toBe(0);
+      input.focus();
+      pageKeyboard.resize(window.innerHeight - 160);
+      await waitFor(() =>
+        expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('160px'),
+      );
+
+      open.value = false;
+      await flushMicrotasks();
+      expect(probe.isConnected).toBe(false);
+      expect(pageKeyboard.listeners.get('resize')?.size).toBe(0);
+    },
+  );
 
   it('compensates for keyboard overlap without adding extra spacing and centers the focused input', async () => {
     mockWindowInnerHeight(800);
@@ -3129,6 +3187,30 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
   });
 
   describe('KeepAlive', () => {
+    it('VUE-5: measures only while its provider is active in a mounted viewport', async () => {
+      const { HeldBranch, mountWhileHeld, show, hide } = createHeldBranch(() => (
+        <Drawer.VirtualKeyboardProvider />
+      ));
+      await render(
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup>
+                <HeldBranch />
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+      const probe = () => document.body.querySelector(':scope > div[style*="100svh"]');
+      await mountWhileHeld();
+      expect(probe()).toBeNull();
+      await show();
+      expect(probe()).toBeInstanceOf(HTMLDivElement);
+      await hide();
+      expect(probe()).toBeNull();
+    });
+
     it('VUE-5: removes its listeners and the keyboard inset while KeepAlive holds the drawer, and adds them again at the activation', async () => {
       mockWindowInnerHeight(800);
       const visualViewport = mockVisualViewport(800);

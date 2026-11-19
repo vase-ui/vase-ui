@@ -1,0 +1,8 @@
+{
+  "id": "VUE-170",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx#L813-L829"
+  ],
+  "behavior": "A drawer recognizes text fields that a portal moves to another document. Base UI checks the field against the new window's element constructors.",
+  "dueWith": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx"
+}

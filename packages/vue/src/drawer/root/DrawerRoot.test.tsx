@@ -16,6 +16,7 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
+import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { platform } from '../../common/platform';
 import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAttributes';
@@ -665,6 +666,41 @@ function createProvider() {
 
 describe('<Drawer.Root />', () => {
   const { render } = createRenderer();
+
+  it('returns focus and releases one scroll lock for each nested modal', async () => {
+    const { user } = await render(
+      <Drawer.Root>
+        <Drawer.Trigger>Open outer</Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <Drawer.Root>
+                <Drawer.Trigger>Open inner</Drawer.Trigger>
+                <Drawer.Portal>
+                  <Drawer.Viewport>
+                    <Drawer.Popup>Inner</Drawer.Popup>
+                  </Drawer.Viewport>
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+    const outer = screen.getByRole('button', { name: 'Open outer' });
+    await user.click(outer);
+    await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+    const inner = screen.getByRole('button', { name: 'Open inner' });
+    await user.click(inner);
+    await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(2));
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(inner).toHaveFocus());
+    expect(getScrollLockRegistry()?.lockCount).toBe(1);
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(outer).toHaveFocus());
+    expect(getScrollLockRegistry()?.lockCount).toBe(0);
+  });
 
   it('VUE-128: renders the popup in place, marks outside elements and closes on Escape', async () => {
     const onOpenChange = vi.fn();

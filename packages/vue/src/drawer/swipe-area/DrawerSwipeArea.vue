@@ -138,6 +138,7 @@ const {
 const providerContext = useDrawerProviderContext();
 
 const swipeActive = shallowRef(false);
+const element = shallowRef<HTMLElement | null>(null);
 
 let swipeStartEvent: PointerEvent | TouchEvent | null = null;
 let openedBySwipe = false;
@@ -344,7 +345,7 @@ function finishSwipeInteraction() {
 const swipe = useSwipeDismiss({
   enabled,
   directions: () => [resolvedSwipeDirection.value],
-  elementRef: (): HTMLElement | null => element.value,
+  elementRef: element,
   trackDrag: false,
   movementCssVars: {
     x: DrawerPopupCssVars.swipeMovementX,
@@ -479,8 +480,9 @@ const state = computed<DrawerSwipeAreaState>(() => ({
   disabled: props.disabled,
 }));
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
+const { elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
+  elementRef: element,
   ref: registerTrigger,
   stateAttributesMapping,
   props: (attrs) => [

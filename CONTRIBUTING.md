@@ -1530,6 +1530,8 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Write reactive state directly when the next operation needs no DOM read. Vue queues its DOM flush as a microtask before the next paint.
 - Await `nextTick()` after the write when the next operation needs the patched DOM for a read or focus. Test that order.
 - Measure after mount when the DOM reflects the inputs to the measurement. A `ResizeObserver` reports size changes only. `Tabs.Indicator` reads a size-change counter, the tab order and the orientation. A change in order or orientation can move the selected tab without a resize.
+- A drawer popup uses the snap measurements of its own viewport. Without that viewport, the popup measures for itself.
+- The drawer keyboard provider renders a hidden `100svh` box in the viewport document's body. The box follows the portal across documents.
 - Measure a mounted scroll area track again after its overflow attribute or corner size changes. Either change can resize the track through CSS.
 - A render slot can set an attribute that no prop tracks. `AvatarImage.vue` checks its rendered image at mount and after updates, and acts only on a changed value. For a referenced id, follow [Actions, handles, slots, composables and ids](#actions-handles-slots-composables-and-ids).
 - In a development build, `Menu.SubmenuTrigger` warns in this way about a disabled element of its `#render` slot. The warning comes only one time, so the hooks compare no values.
@@ -1579,6 +1581,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. `Drawer.Popup` applies the same snap point damping to the rendered movement as it does during the drag. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
 - `Drawer.Popup` gives the `transform` and the `transition` of the drag to `useRenderElement` as `overridingStyle` while the drawer is swiping. The drag then wins over a `transform` or a `transition` in the `style` of the consumer.
 - `Drawer.SwipeArea` gives the popup its movement and the backdrop its progress. The popup binds `transition: none` for that gesture. When the gesture ends, the backdrop and indent show the resting snap progress.
+- The drawer provider publishes height and swipe progress as one sample. Only the current gesture can clear its sample.
 - The popup and backdrop use the same release strength and dismiss flag. A new gesture, a reopen or a replacement popup clears the release. A rejected close restores the previous snap point.
 - `handleHiddenInputInvalid` writes `min-width` and `min-height`, and Base UI writes `width` and `height`. A Vue render writes each key of the style of the input again, and it writes no other property.
 - `ScrollArea.Viewport` binds `scroll-snap-type` to `none` for a thumb or track press. The track jump follows the style patch. Later drag moves scroll in the pointer event.
