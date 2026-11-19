@@ -21,7 +21,6 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
 import { Separator } from '@vase-ui/vue/separator';
 import { Slider } from '@vase-ui/vue/slider';
@@ -327,12 +326,6 @@ const rows: Row[] = [
       </PreviewCard.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Progress.Root aria-valuenow',
-    attribute: 'aria-valuenow',
-    createNode: () => <Progress.Root value={30} aria-valuenow={undefined} data-testid="part" />,
-    expected: () => '30',
   },
   {
     name: 'Resizable.Handle role',
