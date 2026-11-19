@@ -75,10 +75,16 @@
     transition-duration: 0ms;
   }
 
-  &[data-hovering],
   &[data-scrolling] {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  @media (hover: hover) {
+    .ScrollArea:hover & {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 }
 
