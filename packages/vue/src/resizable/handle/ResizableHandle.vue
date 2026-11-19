@@ -109,7 +109,7 @@ import type { HTMLProps } from '../../internals/types';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useResizableRootContext } from '../root/ResizableRootContext';
+import { ResizableHandleContext, useResizableRootContext } from '../root/ResizableRootContext';
 import { createHandleDrag } from '../utils/handleDrag';
 import { getHandleEnds } from '../utils/handleEnds';
 import { createHandlePress } from '../utils/handlePress';
@@ -119,7 +119,6 @@ import type { PanelConstraints } from '../utils/layout';
 import { getPanelSize } from '../utils/measure';
 import { getPreviewOffset } from '../utils/previewOffset';
 import ResizableHandleChildren from './ResizableHandleChildren.vue';
-import { ResizableHandleContext } from './ResizableHandleContext';
 import * as ResizableHandleCssVariables from './ResizableHandleCssVariables';
 
 defineOptions({ inheritAttrs: false });

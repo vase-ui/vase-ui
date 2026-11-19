@@ -1,6 +1,6 @@
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import type { Orientation } from '../../internals/types';
-import type { Measurement } from './parseSize';
+import type { Measurement } from './layout';
 
 /**
  * What the root reads from the page after the mount. A pixel is a layout pixel: a scale transform

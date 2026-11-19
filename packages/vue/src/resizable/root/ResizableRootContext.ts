@@ -1,9 +1,11 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { ComputedRef, CSSProperties, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
+import type { ResizablePanelActions, ResizablePanelState } from '../panel/ResizablePanel.vue';
+import type { EdgeBoundary } from '../utils/useEdges';
 import type { Layout, PanelConstraints } from '../utils/layout';
 import type { RootMeasurement } from '../utils/measure';
 import type {
@@ -200,7 +202,6 @@ export interface ResizableRootContext {
 export const ResizableRootContext: InjectionKey<ResizableRootContext> = Symbol();
 
 export function useResizableRootContext(): ResizableRootContext {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(ResizableRootContext, undefined);
   if (context === undefined) {
     throw new Error(
@@ -209,4 +210,84 @@ export function useResizableRootContext(): ResizableRootContext {
   }
 
   return context;
+}
+
+/**
+ * What `useParentPanel()` gives: the id, the state and the methods of the nearest panel.
+ */
+export interface ResizableParentPanel extends ResizablePanelActions {
+  /**
+   * The id of the panel element, and the key of the panel in the layout.
+   */
+  id: ComputedRef<string>;
+  /**
+   * The state of the panel.
+   */
+  state: ComputedRef<ResizablePanelState>;
+}
+
+export const ResizablePanelContext: InjectionKey<ResizableParentPanel> = Symbol();
+
+export interface ResizableHandleContext {
+  /**
+   * The style of the hit area node: the area that takes a press on the handle.
+   */
+  hitAreaStyle: ComputedRef<CSSProperties>;
+  /**
+   * The `ref` setter of the hit area node. The handle registers the node in the registry of the
+   * crossings.
+   */
+  hitAreaRef: (element: unknown) => void;
+}
+
+export const ResizableHandleContext: InjectionKey<ResizableHandleContext> = Symbol();
+
+export function useResizableHandleContext(): ResizableHandleContext {
+  const context = inject(ResizableHandleContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Resizable.Handle> must be inside <Resizable.Handle>. Without the part it has no hit area to render. Mount the `children` component in the element of the `#render` slot of <Resizable.Handle>.',
+    );
+  }
+
+  return context;
+}
+
+export interface ResizableRootEdgesContext {
+  /**
+   * The boundaries of two panels that have no handle between them, with the boxes of their edge
+   * nodes. The list is empty on a server, in the first client render, and in a root with no
+   * `dragEdges`.
+   */
+  edges: Readonly<ShallowRef<readonly EdgeBoundary[]>>;
+}
+
+export const ResizableRootEdgesContext: InjectionKey<ResizableRootEdgesContext> = Symbol();
+
+export function useResizableRootEdgesContext(): ResizableRootEdgesContext {
+  const context = inject(ResizableRootEdgesContext, undefined);
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: The `children` component of <Resizable.Root> must be inside <Resizable.Root>. Without the part it has no edges to render. Mount the `children` component in the element of the `#render` slot of <Resizable.Root>.',
+    );
+  }
+
+  return context;
+}
+
+/**
+ * Gives the id, the state and the methods of the nearest `Resizable.Panel` above the caller, or
+ * `null` when the caller is not inside a panel. Call it in `setup`.
+ */
+export function useParentPanel(): ResizableParentPanel | null {
+  return inject(ResizablePanelContext, null);
+}
+
+/**
+ * Gives the orientation and the methods of the nearest `Resizable.Root` above the caller, or `null`
+ * when the caller is not inside a root. A root in a panel of another root is the nearest root for
+ * the parts inside it. Call it in `setup`.
+ */
+export function useParentRoot(): ResizableParentRoot | null {
+  return inject(ResizableRootContext, null)?.actions ?? null;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isLength, isViewportLength, normalizeLayout, parsePixels, parseSize } from './parseSize';
-import type { Measurement } from './parseSize';
+import { isLength, isViewportLength, normalizeLayout, parsePixels, parseSize } from './layout';
+import type { Measurement } from './layout';
 
 // One percent of the panel space is 10 px, and 1% of the viewport is 12 px by 8 px.
 const measurement: Measurement = {

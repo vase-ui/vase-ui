@@ -6,7 +6,7 @@ import type {
   ResizableRootLayout,
   ResizableRootLayoutSnapshot,
 } from '../root/ResizableRoot.vue';
-import { isSize } from './parseSize';
+import { isSize } from './layout';
 
 /**
  * A storage that holds the layout, such as `localStorage` or `sessionStorage`.

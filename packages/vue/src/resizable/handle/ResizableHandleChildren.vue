@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { markChildrenMounted } from '../../internals/useRenderElement';
-import { useResizableHandleContext } from './ResizableHandleContext';
+import { useResizableHandleContext } from '../root/ResizableRootContext';
 
 defineSlots<{
   default?(): unknown;

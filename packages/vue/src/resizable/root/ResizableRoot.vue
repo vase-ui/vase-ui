@@ -6,8 +6,7 @@ import type {
 } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { Layout } from '../utils/layout';
-import type { LayoutSnapshot } from '../utils/parseSize';
+import type { Layout, LayoutSnapshot } from '../utils/layout';
 
 /**
  * The size of each panel in percent of the panel space, by panel `id`. The sizes sum to 100.
@@ -215,11 +214,6 @@ import {
   resolveLayout,
   takePins,
   toRequestedLayout,
-} from '../utils/layout';
-import type { PanelConstraints } from '../utils/layout';
-import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
-import type { RootMeasurement } from '../utils/measure';
-import {
   formatSize,
   isLength,
   isSize,
@@ -227,16 +221,18 @@ import {
   normalizeLayout,
   parseSize,
   SIZE_FORMS,
-} from '../utils/parseSize';
+} from '../utils/layout';
+import type { PanelConstraints } from '../utils/layout';
+import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
+import type { RootMeasurement } from '../utils/measure';
 import { useEdges } from '../utils/useEdges';
 import ResizableRootChildren from './ResizableRootChildren.vue';
-import { ResizableRootContext } from './ResizableRootContext';
+import { ResizableRootContext, ResizableRootEdgesContext } from './ResizableRootContext';
 import type {
   ResizableHandleMove,
   ResizableHandleRegistration,
   ResizablePanelRegistration,
 } from './ResizableRootContext';
-import { ResizableRootEdgesContext } from './ResizableRootEdgesContext';
 
 defineOptions({ inheritAttrs: false });
 

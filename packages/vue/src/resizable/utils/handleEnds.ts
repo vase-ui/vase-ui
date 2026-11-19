@@ -7,12 +7,14 @@ import { getHandleLimits } from './layout';
  */
 export function getHandleEnds(root: ResizableRootContext, pivot: number) {
   // A root that waits for a length has no layout to move.
-  const limits =
-    pivot < 0 || root.lengthPanels.value.size > 0
-      ? undefined
-      : getHandleLimits(root.constraints.value, root.shown.value, pivot, root.pushPanels.value);
-  const { atMin = false, atMax = false } = limits ?? {};
-  // The panel before the handle is on the right in a horizontal root that has the direction `rtl`.
-  const flipped = root.orientation.value === 'horizontal' && root.direction.value === 'rtl';
-  return flipped ? { atMin: atMax, atMax: atMin } : { atMin, atMax };
+  if (pivot < 0 || root.lengthPanels.value.size > 0) {
+    return { atMin: false, atMax: false };
+  }
+  return getHandleLimits(
+    root.constraints.value,
+    root.shown.value,
+    pivot,
+    root.pushPanels.value,
+    root.orientation.value === 'horizontal' && root.direction.value === 'rtl',
+  );
 }

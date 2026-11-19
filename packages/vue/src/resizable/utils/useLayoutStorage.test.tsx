@@ -100,6 +100,23 @@ describe('Resizable.useLayoutStorage', () => {
     expect(grows()).toEqual(['25', '75']);
   });
 
+  it('restores a fixed panel from a stored length and saves its next size in pixels', async () => {
+    const storage = createStorage({ layout: '{"a":"240px","b":"76%"}' });
+    const Layout = createLayout({ key: 'layout', storage }, { fixed: true });
+    const { unmount } = await render(<Layout />);
+    const handle = screen.getByRole('separator');
+
+    expect(grows()).toEqual(['24', '76']);
+    expect(handle).toHaveAttribute('aria-controls', 'a');
+    expect(handle).toHaveAttribute('aria-valuenow', '24');
+    await fireEvent.keyDown(handle, { key: 'ArrowRight' });
+
+    expect(storage.map.get('layout')).toBe('{"a":"250px","b":75}');
+    unmount();
+    await render(<Layout />);
+    expect(grows()).toEqual(['25', '75']);
+  });
+
   it('saves the snapshot of a commit under the key', async () => {
     const storage = createStorage();
     const Layout = createLayout({ key: 'layout', storage }, { fixed: true });

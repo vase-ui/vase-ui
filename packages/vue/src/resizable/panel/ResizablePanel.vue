@@ -170,10 +170,9 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { useResizableRootContext } from '../root/ResizableRootContext';
+import { ResizablePanelContext, useResizableRootContext } from '../root/ResizableRootContext';
 import { isCollapsed } from '../utils/layout';
 import { getPanelSize } from '../utils/measure';
-import { ResizablePanelContext } from './ResizablePanelContext';
 import * as ResizablePanelCssVariables from './ResizablePanelCssVariables';
 
 defineOptions({ inheritAttrs: false });

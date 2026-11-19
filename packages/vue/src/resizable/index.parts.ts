@@ -65,6 +65,5 @@ export namespace Handle {
   export type Props = ResizableHandleProps;
 }
 
-export { useParentPanel } from './utils/useParentPanel';
-export { useParentRoot } from './utils/useParentRoot';
+export { useParentPanel, useParentRoot } from './root/ResizableRootContext';
 export { useLayoutStorage } from './utils/useLayoutStorage';
