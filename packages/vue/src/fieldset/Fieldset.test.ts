@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import { dataAttributes } from '../../test/field';
 import FieldsetElementReplaced from '../../test/fixtures/FieldsetElementReplaced.vue';
 import FieldsetGroupRoot from '../../test/fixtures/FieldsetGroupRoot.vue';
+import FieldsetGroupRootInField from '../../test/fixtures/FieldsetGroupRootInField.vue';
 import FieldsetInField from '../../test/fixtures/FieldsetInField.vue';
 import FieldsetInTransition from '../../test/fixtures/FieldsetInTransition.vue';
 import FieldsetLegends from '../../test/fixtures/FieldsetLegends.vue';
@@ -92,7 +93,7 @@ describe('the name of the group', () => {
     expect(await screen.findByRole('group', { name: 'Invoice' })).toBeInTheDocument();
   });
 
-  test('the first legend names the root, and the next one when the first goes; each has its own id', async () => {
+  test('VUE-131: the first legend names the root, and the next one when the first goes; each has its own id', async () => {
     const scene = reactive({ legend: 'two' as const, first: true });
     const { root } = mount(FieldsetLegends, { scene });
     await nextTick();
@@ -130,6 +131,12 @@ describe('the name of the group', () => {
       }
     },
   );
+
+  test('a group that the element slot renders takes the label of its field when the root has no legend', async () => {
+    const { root } = mount(FieldsetGroupRootInField);
+    await settle();
+    expect(root.querySelector('.Group')).toHaveAccessibleName('Storage');
+  });
 
   test('a root with a legend and labelled inputs has no accessibility violation', async () => {
     const { root } = mount(PartsInFieldset, { scene: { disabled: false } });

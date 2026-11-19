@@ -29,7 +29,7 @@ defineSlots<{
 
 const attrs = useAttrs();
 const around = inject(fieldsetKey, null);
-const legendId = useId();
+const generatedLegendId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 // The element of the `element` slot is known after the mount. Until then, the parts take the
@@ -55,7 +55,7 @@ provide(fieldsetKey, {
 });
 provide(legendKey, {
   get firstLegendId() {
-    return legends.length === 0 ? legendId : undefined;
+    return legends.length === 0 ? generatedLegendId : undefined;
   },
   addLegend(legend) {
     legends.push(legend);
@@ -70,17 +70,20 @@ defineExpose({ element });
 function labelledBy() {
   // An `aria-labelledby` of the developer wins in the merge.
   if (attrs['aria-label'] != null) return undefined;
-  return legends[0]?.id ?? (mounted.value ? undefined : legendId);
+  return legends[0]?.id ?? (mounted.value ? undefined : generatedLegendId);
 }
 
 function elementProps() {
+  const legendId = labelledBy();
   // CSS `:disabled` matches a `<fieldset>`. Another element that the developer renders shows the
   // state as an attribute.
   return mergeProps(
     {
       disabled: props.disabled,
       'data-disabled': !isFieldset.value && state.value.disabled ? '' : undefined,
-      'aria-labelledby': labelledBy(),
+      // A group in the `element` slot names itself when it gets no `aria-labelledby` key, for
+      // example by the label of its field.
+      ...(legendId && { 'aria-labelledby': legendId }),
     },
     attrs,
   );

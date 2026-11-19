@@ -58,7 +58,7 @@ describe('server render and hydration', () => {
 
 describe('the name in the server HTML', () => {
   test.each(['wrapped', 'native', 'two'] as const)(
-    'the server HTML of the root names its first legend, and the client keeps the name (legend: %s)',
+    'VUE-89: the server HTML of the root names its first legend, and the client keeps the name (legend: %s)',
     async (legend) => {
       const props = { scene: { legend } };
       const root = await renderOnServer('FieldsetLegends', props);
