@@ -2,9 +2,9 @@ import { expect, describe, it } from 'vitest';
 import { computed, defineComponent, provide } from 'vue';
 import { Switch } from '@vase-ui/vue/switch';
 import { createRenderer, describeConformance, takeReportedMessages } from '#test-utils';
-import { SwitchRootContext } from '../root/SwitchRootContext';
+import { SwitchRootContext } from '../root/SwitchRoot.vue';
 
-const testContext: SwitchRootContext = computed(() => ({
+const testContext = computed(() => ({
   checked: false,
   disabled: false,
   readOnly: false,

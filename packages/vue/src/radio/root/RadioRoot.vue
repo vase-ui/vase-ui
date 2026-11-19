@@ -88,7 +88,7 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, nextTick, provide, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, inject, provide, shallowRef, useTemplateRef, watch } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -114,9 +114,11 @@ import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
-import { stateAttributesMapping } from '../utils/stateAttributesMapping';
-import { RadioRootContext } from './RadioRootContext';
+import {
+  RadioGroupContext,
+  RadioRootContext,
+  stateAttributesMapping,
+} from '../../radio-group/radioContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -133,7 +135,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, RadioRootState>;
 }>();
 
-const group = useRadioGroupContext<Value>();
+const group: RadioGroupContext<Value> | undefined = inject(RadioGroupContext, undefined);
 const {
   setTouched: setFieldTouched,
   setFilled,
@@ -204,37 +206,23 @@ watch(
 );
 
 if (group) {
-  // A click checks the input and unchecks the other inputs of a group that has a name. A parent
-  // that controls the group can keep the old value, and then no radio renders again.
-  watch(group.inputSyncRequest, restoreInput, { flush: 'post' });
-
-  // Only the input that the browser checked gives its value to the group. Each radio writes its
-  // state in the next tick: a write in this tick can uncheck the input that the browser checked,
-  // before its radio reads it.
-  watch(
-    group.inputTakeRequest,
-    (request) => {
-      const input = inputElement.value;
-      if (!request || !input || input.checked === checked.value) {
-        return;
-      }
-
-      if (input.checked && !isDisabled.value && !isReadOnly.value && props.value !== undefined) {
-        group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, request.event));
-      }
-
-      void nextTick(restoreInput);
-    },
-    { flush: 'post' },
-  );
-
-  // The radio follows the reset with its own input. The input that the group exposes changes with
-  // the value and can be absent.
   useFormReset(inputElement, group.reset);
 
   const { isHeld } = useInputRegistration(inputElement, (input) =>
     mergeCleanups(
-      group.registerInputRef(input),
+      group.registerInput(input, {
+        restore: restoreInput,
+        take(event) {
+          if (
+            !checked.value &&
+            !isDisabled.value &&
+            !isReadOnly.value &&
+            props.value !== undefined
+          ) {
+            group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, event));
+          }
+        },
+      }),
       group.validation.registerInput(input, {
         controlRef: () => element.value,
         value: undefined,
@@ -250,11 +238,13 @@ if (group) {
     () => {
       const input = inputElement.value;
       if (input && !isHeld.value) {
-        group.registerInputRef(input);
+        group.refreshInput(input);
       }
     },
     { flush: 'post' },
   );
+} else {
+  useFormRestore(inputElement, restoreInput);
 }
 
 function acceptClick(_checked: boolean, event: MouseEvent) {
@@ -267,11 +257,6 @@ function acceptClick(_checked: boolean, event: MouseEvent) {
 
   setFieldTouched(true);
   return group !== undefined;
-}
-
-// A radio with no group has no state to change, so it writes its state over a restored input.
-if (!group) {
-  useFormRestore(inputElement, restoreInput);
 }
 
 const state = computed<RadioRootState>(() => ({
@@ -369,11 +354,11 @@ defineExpose({ element, inputElement });
     type="radio"
     :name="group?.name.value"
     :form="group?.form.value"
-    :checked="checked"
     :required="isRequired"
     :readonly="isReadOnly"
     :style="group?.name.value ? visuallyHiddenInput : visuallyHiddenInputPinned"
-    v-bind="value === undefined ? {} : { value: serializeValue(value) }"
+    v-bind="{ checked }"
+    :value="value === undefined ? undefined : serializeValue(value)"
     :id="hiddenInputId"
     :disabled="isDisabled"
     tabindex="-1"

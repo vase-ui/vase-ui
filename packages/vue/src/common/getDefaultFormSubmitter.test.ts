@@ -1,5 +1,5 @@
 import { expect, describe, afterEach, it } from 'vitest';
-import { getDefaultFormSubmitter } from './getDefaultFormSubmitter';
+import { getDefaultFormSubmitter } from '../checkbox/root/CheckboxRoot.vue';
 
 describe('getDefaultFormSubmitter', () => {
   function setup(html: string) {

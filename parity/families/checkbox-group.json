@@ -54,5 +54,21 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/checkbox-group/checkboxContext.ts",
+      "member": "CheckboxGroupContext",
+      "witness": "packages/vue/src/checkbox-group/CheckboxGroup.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/checkbox-group/CheckboxGroup.vue",
+      "member": "toggleParent",
+      "witness": "packages/vue/src/checkbox-group/useCheckboxGroupParent.test.tsx"
+    }
+  ]
 }

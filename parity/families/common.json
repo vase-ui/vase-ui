@@ -276,6 +276,13 @@
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useEnhancedClickHandler",
       "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.vue",
+      "member": "getDefaultFormSubmitter",
+      "witness": "packages/vue/src/common/getDefaultFormSubmitter.test.ts"
     }
   ]
 }

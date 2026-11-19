@@ -1,5 +1,8 @@
 <script lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { ComputedRef, HTMLAttributes, InjectionKey } from 'vue';
+import { fieldValidityMapping } from '../../internals/field-constants/constants';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import * as SwitchRootDataAttributes from './SwitchRootDataAttributes';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
@@ -101,6 +104,14 @@ export interface SwitchRootProps
 
 export type SwitchRootChangeEventReason = typeof REASONS.none;
 export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootChangeEventReason>;
+export const SwitchRootContext: InjectionKey<ComputedRef<SwitchRootState>> = Symbol();
+
+export const stateAttributesMapping: StateAttributesMapping<SwitchRootState> = {
+  ...fieldValidityMapping,
+  checked(value) {
+    return { [value ? SwitchRootDataAttributes.checked : SwitchRootDataAttributes.unchecked]: '' };
+  },
+};
 </script>
 
 <script setup lang="ts">
@@ -128,8 +139,6 @@ import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
-import { stateAttributesMapping } from '../stateAttributesMapping';
-import { SwitchRootContext } from './SwitchRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -351,11 +360,10 @@ defineExpose({ element, inputElement });
   <input
     ref="input"
     type="checkbox"
-    v-bind="inputValidation"
+    v-bind="{ ...inputValidation, checked: isChecked }"
     :aria-describedby="ariaAfterHydration(inputValidation['aria-describedby'])"
     :name="inputName"
     :form="form"
-    :checked="isChecked"
     :required="required"
     :style="inputName ? visuallyHiddenInput : visuallyHiddenInputPinned"
     :value="value"
