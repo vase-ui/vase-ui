@@ -3,20 +3,155 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/meter/root/MeterRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "`Meter.test.ts` tests the ARIA attributes of the root, the value in the range, the text with `format`, `locale` and `getAriaValueText`, the element slot and the name."
+    },
+    {
+      "upstream": "packages/react/src/meter/root/MeterRoot.test.tsx",
+      "describe": ["<Meter.Root />", "server-side rendering"],
+      "title": "formats with en-US until hydrated, then with the runtime locale",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "With no `locale`, the text is `en-US` on the server and in the browser, so the server HTML and the first render of the browser agree. The developer gives the locale of the page. The case \"with no locale, the text is en-US, also in a browser with another locale\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/meter/label/MeterLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "`Meter.test.ts` tests the name that the label gives, a change of its `id`, its unmount and the error outside a root."
+    },
+    {
+      "upstream": "packages/react/src/meter/value/MeterValue.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "`Meter.test.ts` tests the text of the value, the default slot with `formattedValue` and `value`, and the element slot."
+    },
+    {
+      "upstream": "packages/react/src/meter/value/MeterValue.test.tsx",
+      "describe": ["<Meter.Value />", "prop: children"],
+      "title": "accepts a render function",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "The default slot of `Meter.Value` takes the place of the `children` function, and the `element` slot gets the same `formattedValue` and `value`. The case \"the default slot of Meter.Value gets the text and the value prop, and follows a change\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/meter/value/MeterValue.test.tsx",
+      "describe": ["<Meter.Value />", "server-side rendering"],
+      "title": "hydrates $name without a mismatch, then uses the runtime locale",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.hydration.test.ts",
+      "reason": "With no `locale`, the text is `en-US` on the server and in the browser, so it does not change after the hydration. `Meter.hydration.test.ts` hydrates the parts with no message. The value reads its text from the root, so a value in `<Suspense>` needs no case of its own."
+    },
+    {
+      "upstream": "packages/react/src/meter/track/MeterTrack.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "`Meter.test.ts` tests the element of the track, its attributes and its element slot."
+    },
+    {
+      "upstream": "packages/react/src/meter/indicator/MeterIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/meter/Meter.test.ts",
+      "reason": "`Meter.test.ts` tests the width of the indicator for each value of the range, its start edge in each text direction and a `style` of the developer."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
       "entry": "Root",
       "prop": "aria-valuetext",
       "kind": "not-applicable",
-      "reason": "The row documents a native attribute that the React part does not read. In Vase UI the attribute goes to the element through the attributes, with its type from `HTMLAttributes`. A declared prop would take it out of the attributes."
+      "reason": "An ARIA attribute is a plain attribute of the root, not a prop. It reaches the element with the other attributes, and it wins over the text of the part."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state of the root is `{}`, so a state type and a `state` slot prop give the developer nothing. The default of `locale` is `en-US` and not the locale of the browser, so that the server HTML and the first render of the browser agree. The developer gives the locale of the page."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Value",
+      "kind": "not-applicable",
+      "reason": "The state of the value is `{}`, so a state type and a `state` slot prop give the developer nothing."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Indicator",
+      "kind": "not-applicable",
+      "reason": "The state of the indicator is `{}`, so a state type and a `state` slot prop give the developer nothing."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Track",
+      "kind": "not-applicable",
+      "reason": "The state of the track is `{}`, so a state type and a `state` slot prop give the developer nothing."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Label",
+      "kind": "not-applicable",
+      "reason": "The state of the label is `{}`, so a state type and a `state` slot prop give the developer nothing."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Label",
       "prop": "id",
-      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute. The server HTML of the root differs from Base UI on purpose. A root that the consumer does not name assumes a label until it is mounted, so the server HTML points at the generated id. A label with no `id` prop has that id, so it names the root in the server HTML. Base UI gives the root an `aria-labelledby` only after the page hydrates. With no label, or with a label that has an `id` prop, no element has the generated id until the root is mounted. An `aria-labelledby` with no valid IDREF gives no name (step 2B of https://www.w3.org/TR/accname-1.2/#computation-steps), so the root then has the name that it has with no `aria-labelledby`. A root that has a non-blank `aria-label` or `aria-labelledby` of the consumer has no generated id in the server HTML. The case \"renders the generated id in the aria-labelledby of a root that has no label\" in `MeterRoot.node.test.tsx` asserts the server HTML. The case \"renders no aria-labelledby of its own on a root that the consumer names: $name\" asserts that a named root has no generated id. The case \"has no aria-labelledby when it has no label\" in `MeterRoot.test.tsx` asserts that the mounted root has none."
+      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/meter/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/parts.ts",
+      "behavior": "The parts of the namespace `Meter`.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/root/MeterRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/MeterRoot.vue",
+      "behavior": "The root writes the role, the values, the text of the value and the name.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/root/MeterRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/root.ts",
+      "member": "meterKey",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/label/MeterLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/MeterLabel.vue",
+      "behavior": "The label names the root.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/value/MeterValue.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/MeterValue.vue",
+      "behavior": "The value shows the text of the root.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/track/MeterTrack.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/MeterTrack.vue",
+      "behavior": "The track holds the indicator.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/meter/indicator/MeterIndicator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/meter/MeterIndicator.vue",
+      "behavior": "The indicator has the width of the percent of the value.",
+      "witness": "packages/vue/src/meter/Meter.test.ts"
+    }
+  ]
 }

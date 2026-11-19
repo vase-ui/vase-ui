@@ -7,23 +7,28 @@ import MeasureLabelOnServer from '../fixtures/MeasureLabelOnServer.vue';
 import { hydrate, renderOnServer, settle } from '../render';
 
 describe('the name of a range from a label in it', () => {
-  test('the server HTML has no aria-labelledby from a child that gives its id in setup; the attribute comes after the hydration', async () => {
-    const root = await renderOnServer('MeasureLabelOnServer');
-    const range = root.querySelector('[role=progressbar]')!;
-    const label = root.querySelector('span')!;
-    expect(label.id).not.toBe('');
-    expect(range).not.toHaveAttribute('aria-labelledby');
-    hydrate(MeasureLabelOnServer, {}, root);
-    await settle();
-    expect(range).toHaveAttribute('aria-labelledby', label.id);
-  });
+  test.each(['progressbar', 'meter'] as const)(
+    'the server HTML of a %s has no aria-labelledby from a child that gives its id in setup; the attribute comes after the hydration',
+    async (role) => {
+      const root = await renderOnServer('MeasureLabelOnServer', { role });
+      const range = root.querySelector(`[role=${role}]`)!;
+      const label = root.querySelector('span')!;
+      expect(label.id).not.toBe('');
+      expect(range).not.toHaveAttribute('aria-labelledby');
+      hydrate(MeasureLabelOnServer, { role }, root);
+      await settle();
+      expect(range).toHaveAttribute('aria-labelledby', label.id);
+    },
+  );
 });
 
 const LOCALES = ['en-US', 'de-DE', 'fr-FR', 'ja-JP', 'ar-EG'];
 const FORMATS: { options: Intl.NumberFormatOptions; value: number }[] = [
   { options: { style: 'percent' }, value: 0.425 },
+  { options: { style: 'percent' }, value: 1234.567 },
   { options: { style: 'decimal', maximumFractionDigits: 2 }, value: 1234.567 },
   { options: { style: 'currency', currency: 'EUR' }, value: 1234.5 },
+  { options: { style: 'currency', currency: 'EUR' }, value: 1234.567 },
 ];
 const ROWS = LOCALES.flatMap((locale) => FORMATS.map((format) => ({ locale, ...format })));
 
