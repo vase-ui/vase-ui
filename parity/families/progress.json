@@ -6,29 +6,210 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/progress/indicator/ProgressIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/progress/label/ProgressLabelDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/progress/track/ProgressTrackDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/progress/value/ProgressValueDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/progress/indicator/ProgressIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "`Progress.test.ts` tests the element of `Progress.Indicator`, its width in each status and in a right-to-left text, and a `style` of the developer."
+    },
+    {
+      "upstream": "packages/react/src/progress/label/ProgressLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "`Progress.test.ts` tests the element of `Progress.Label`, the name of the root, the `id` prop and its change, the removal of the label, and a part outside the root."
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "`Progress.test.ts` tests the element of `Progress.Root`, its ARIA attributes, the status of each part, the range, `format`, `locale` and `getAriaValueText`."
+    },
+    {
+      "upstream": "packages/react/src/progress/track/ProgressTrack.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "`Progress.test.ts` tests the element of `Progress.Track` and its status."
+    },
+    {
+      "upstream": "packages/react/src/progress/value/ProgressValue.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "`Progress.test.ts` tests the element of `Progress.Value`, its text, and the scope of its default slot and of its `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
+      "describe": ["<Progress.Root />", "data attributes"],
+      "title": "keeps every composed part synchronized through the status cycle",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text (rule 8.13). WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
+      "describe": ["<Progress.Root />", "range"],
+      "title": "keeps non-finite value %s indeterminate",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text (rule 8.13). WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
+      "describe": ["<Progress.Root />", "server-side rendering"],
+      "title": "formats with en-US until hydrated, then with the runtime locale",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "The default locale is `en-US` on the server and in the browser, so the text does not change after the hydration (rule 8.14). The developer gives `locale` with the locale of the page."
+    },
+    {
+      "upstream": "packages/react/src/progress/value/ProgressValue.test.tsx",
+      "describe": ["<Progress.Value />", "prop: children", "it accepts a render function"],
+      "title": "indeterminate value %s",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.test.ts",
+      "reason": "While the progress is indeterminate, `formattedValue` is `null`, as its type says. `state.status` in the same slot says the status, and the developer gives the text."
+    },
+    {
+      "upstream": "packages/react/src/progress/value/ProgressValue.test.tsx",
+      "describe": ["<Progress.Value />", "server-side rendering"],
+      "title": "hydrates $name without a mismatch, then uses the runtime locale",
+      "kind": "replaced",
+      "test": "packages/vue/src/progress/Progress.hydration.test.ts",
+      "reason": "The default locale is `en-US` on the server and in the browser, so the text does not change after the hydration (rule 8.14). The developer gives `locale` with the locale of the page."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "Root",
+      "prop": "value",
+      "kind": "not-applicable",
+      "reason": "The prop is optional, with the default `null`. A native `<progress>` with no `value` is indeterminate, and `null` stays valid, so the wider type removes no feature."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "Root",
       "prop": "aria-valuetext",
       "kind": "not-applicable",
-      "reason": "The row documents a native attribute that the React part does not read. In Vase UI the attribute goes to the element through the attributes, with its type from `HTMLAttributes`. A declared prop would take it out of the attributes."
+      "reason": "The row is a native attribute. It reaches the element as an attribute of the developer and wins over the text of the part."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "ProgressRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "ProgressTrackDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "ProgressIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "ProgressValueDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
+      "entry": "ProgressLabelDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Label",
       "prop": "id",
-      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute. The server HTML of the root differs from Base UI on purpose. A root that the consumer does not name assumes a label until it is mounted, so the server HTML points at the generated id. A label with no `id` prop has that id, so it names the root in the server HTML. Base UI gives the root an `aria-labelledby` only after the page hydrates. With no label, or with a label that has an `id` prop, no element has the generated id until the root is mounted. An `aria-labelledby` with no valid IDREF gives no name (step 2B of https://www.w3.org/TR/accname-1.2/#computation-steps), so the root then has the name that it has with no `aria-labelledby`. A root that has a non-blank `aria-label` or `aria-labelledby` of the consumer has no generated id in the server HTML. The case \"renders the generated id in the aria-labelledby of a root that has no label\" in `ProgressRoot.node.test.tsx` asserts the server HTML. The case \"renders no aria-labelledby of its own on a root that the consumer names: $name\" asserts that a named root has no generated id. The case \"has no aria-labelledby when it has no label\" in `ProgressRoot.test.tsx` asserts that the mounted root has none."
+      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/progress/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/parts.ts",
+      "behavior": "The parts of the namespace `Progress`.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/ProgressRoot.vue",
+      "behavior": "The root holds the value in the range and names its label.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/track/ProgressTrack.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/ProgressTrack.vue",
+      "behavior": "The track shows the status.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/indicator/ProgressIndicator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/ProgressIndicator.vue",
+      "behavior": "The indicator has the width of the percent.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/value/ProgressValue.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/ProgressValue.vue",
+      "behavior": "The value shows the text.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/label/ProgressLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/ProgressLabel.vue",
+      "behavior": "The label names the root.",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/progress/root/ProgressRootContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/progress/root.ts",
+      "member": "progressKey",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
+    },
+    {
       "upstream": "packages/react/src/progress/root/stateAttributesMapping.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/progress/root/ProgressRootContext.ts",
-      "member": "progressStateAttributesMapping",
-      "witness": "packages/vue/src/progress/root/ProgressRoot.test.tsx"
+      "destination": "packages/vue/src/progress/root.ts",
+      "member": "statusAttributes",
+      "witness": "packages/vue/src/progress/Progress.test.ts"
     }
   ]
 }
