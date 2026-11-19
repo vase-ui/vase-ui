@@ -4,7 +4,7 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
 import type { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { popupStoreSelectors } from '../../utils/popups/usePopupRoot';
 import type { DialogStore } from '../store/DialogStore';
@@ -31,7 +31,7 @@ export function useDialogInteractions({
   const ownNestedOpenDrawers = shallowRef(0);
   const isTopmost = () => ownNestedOpenDialogs.value === 0;
 
-  const dismiss = useDismiss(store, {
+  const dismiss = useDismissLayer(store, {
     outsidePressEvent() {
       if (store.context.internalBackdropRef.value || store.context.backdropRef.value) {
         return 'intentional';
@@ -161,7 +161,7 @@ export function useDialogInteractions({
     },
   );
 
-  bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
+  bindParts({ trigger: () => dismissTriggerBindings(dismiss), popup: () => dismissPopupBindings(dismiss) });
   watch(
     [ownNestedOpenDialogs, ownNestedOpenDrawers],
     ([nestedOpenDialogCount, nestedOpenDrawerCount]) => {

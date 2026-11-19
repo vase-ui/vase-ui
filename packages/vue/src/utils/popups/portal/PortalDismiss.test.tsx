@@ -168,7 +168,7 @@ const children = {
       </Tooltip.Portal>
     </Tooltip.Root>
   ),
-  // The list calls `useDismiss`, and the portal is not below the list.
+  // The list calls `useDismissLayer`, and the portal is not below the list.
   navigationMenu: (record: Recorder) => (
     <NavigationMenu.Root
       defaultValue="item"

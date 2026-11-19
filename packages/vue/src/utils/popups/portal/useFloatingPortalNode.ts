@@ -1,4 +1,4 @@
-import { shallowRef, toValue, useId, watch } from 'vue';
+import { inject, shallowRef, toValue, useId, watch } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter, Ref } from 'vue';
 import { useIsHydrated } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
@@ -10,8 +10,7 @@ import type {
   UseRenderElementReturnValue,
 } from '../../../internals/useRenderElement';
 import { createAttribute } from '../createAttribute';
-import { useDismissPortal } from '../interactions/useDismiss';
-import { usePortalRegistration } from './portalElements';
+import { DismissPortalRegistration, usePortalRegistration } from './portalElements';
 import { usePortalContext } from './FloatingPortalContext';
 
 const attr = createAttribute('portal');
@@ -120,8 +119,7 @@ export function useFloatingPortalNode(
     },
   );
 
-  usePortalRegistration(element, isHeld, containerElement);
-  useDismissPortal(element);
+  usePortalRegistration(element, isHeld, containerElement, inject(DismissPortalRegistration, undefined));
 
   return { element, elementProps, setRef, usesRenderSlot, containerElement, isHeld };
 }

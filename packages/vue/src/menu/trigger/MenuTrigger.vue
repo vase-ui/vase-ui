@@ -269,7 +269,7 @@ function stopListening() {
 }
 
 onMounted(followHoverOpen);
-// The default flush runs before the `post` watcher of `useDismiss` in the root, as the effect of
+// The default flush runs before the `post` watcher of `useDismissLayer` in the root, as the effect of
 // Base UI runs before the effect of its parent.
 watch([store, isOpenedByThisTrigger], followHoverOpen);
 const { isHeld } = useKeepAliveState();

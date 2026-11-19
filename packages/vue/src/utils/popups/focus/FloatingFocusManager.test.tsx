@@ -37,7 +37,7 @@ import { createChangeEventDetails } from '../../../internals/createVaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { useDismiss } from '../interactions/useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 import { usePopupHover } from '../interactions/usePopupHover';
 import { usePortalContext } from '../portal/FloatingPortalContext';
 import type { PortalContextValue } from '../portal/FloatingPortalContext';
@@ -424,7 +424,7 @@ const Dialog = defineComponent({
 
     const { getReferenceProps, getFloatingProps } = useTestInteractions([
       useClick(context.rootStore),
-      useDismiss(context.rootStore, { bubbles: false }),
+      useTestDismiss(context.rootStore, { bubbles: false }),
     ]);
 
     provideFloatingNode(nodeId);
@@ -491,7 +491,7 @@ const ClickDismissApp = defineComponent({
     });
 
     const click = useClick(context.rootStore);
-    const dismiss = useDismiss(context.rootStore);
+    const dismiss = useTestDismiss(context.rootStore);
 
     const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -3650,7 +3650,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const click = useClick(context.rootStore);
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -4374,7 +4374,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
 
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -4544,7 +4544,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
             return () => (
@@ -4755,7 +4755,7 @@ describe('FloatingFocusManager', () => {
             });
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
             watch(
@@ -4832,7 +4832,7 @@ describe('FloatingFocusManager', () => {
             readInsideComponentTree = () => context.rootStore.context.insideComponentTree;
 
             const click = useClick(context.rootStore);
-            const dismiss = useDismiss(context.rootStore);
+            const dismiss = useTestDismiss(context.rootStore);
 
             const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
 
@@ -5369,7 +5369,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const role = () => roleProps(isOpen.value, 'listbox');
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
@@ -5422,7 +5422,7 @@ describe('FloatingFocusManager', () => {
           });
 
           const role = () => roleProps(isOpen.value, 'listbox');
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([
@@ -5482,7 +5482,7 @@ describe('FloatingFocusManager', () => {
             open: () => props.open,
             onOpenChange: (open) => props.onOpenChange(open),
           });
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const { getFloatingProps } = useTestInteractions([dismiss]);
 
           return () => (
@@ -5505,7 +5505,7 @@ describe('FloatingFocusManager', () => {
             onOpenChange: setOpenOf(isOpen),
           });
 
-          const dismiss = useDismiss(context.rootStore);
+          const dismiss = useTestDismiss(context.rootStore);
           const click = useClick(context.rootStore);
 
           const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);

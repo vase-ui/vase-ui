@@ -2,7 +2,7 @@ import { defineComponent, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { getEmptyRootStore } from '../../src/utils/popups/floating-root/getEmptyRootStore';
 import { FloatingFocusManager } from '../fixtures/floatingFocusManagerHarness';
-import { useDismiss } from '../../src/utils/popups/interactions/useDismiss';
+import { useTestDismiss } from '../fixtures/useTestDismiss';
 import { useTriggerFocus as useFocus } from '../../src/utils/popups/usePopupTrigger';
 import { usePopupHover } from '../../src/utils/popups/interactions/usePopupHover';
 import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';
@@ -108,7 +108,7 @@ export const NavigationItem = defineComponent({
     const focusProps = useFocus(context.rootStore, { enabled: hasChildren });
     const { getReferenceProps, getFloatingProps } = useTestInteractions([
       { reference: hoverReferenceProps },
-      useDismiss(context.rootStore, { enabled: hasChildren }),
+      useTestDismiss(context.rootStore, { enabled: hasChildren }),
     ]);
 
     provideFloatingNode(nodeId);

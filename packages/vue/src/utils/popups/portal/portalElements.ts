@@ -1,13 +1,16 @@
 import { shallowReactive, watch } from 'vue';
-import type { Ref } from 'vue';
+import type { InjectionKey, Ref } from 'vue';
 import { closest } from '../../../common/shadowDom';
+
+export const DismissPortalRegistration: InjectionKey<(portal: Element) => () => void> = Symbol();
 
 const portals = shallowReactive(new Map<Element, symbol>());
 
 export function usePortalRegistration(
   element: Readonly<Ref<HTMLElement | null>>,
   isHeld: Readonly<Ref<boolean>>,
-  container?: Readonly<Ref<HTMLElement | ShadowRoot | null>>,
+  container?: Readonly<Ref<Element | ShadowRoot | null>>,
+  registerDismiss?: (portal: Element) => () => void,
 ) {
   const owner = Symbol();
   watch(
@@ -17,7 +20,9 @@ export function usePortalRegistration(
         return;
       }
       portals.set(node, owner);
+      const releaseDismiss = registerDismiss?.(node);
       onCleanup(() => {
+        releaseDismiss?.();
         if (portals.get(node) === owner) {
           portals.delete(node);
         }

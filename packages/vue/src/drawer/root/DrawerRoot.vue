@@ -411,7 +411,7 @@ onMounted(() => {
     ],
     ([open, frontmost, popup, held], _previous, onCleanup) => {
       // CloseWatcher enables the Android back gesture (Chromium-only).
-      // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismiss`.
+      // Keep this Android-only for now to avoid interfering with Escape/nesting semantics on desktop due to `useDismissLayer`.
       if (!open || !frontmost || held || !platform.os.android) {
         return;
       }

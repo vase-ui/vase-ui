@@ -75,6 +75,7 @@ function createHoverEvent(type: 'mouseenter' | 'mousemove', currentTarget: HTMLE
 </script>
 
 <script setup lang="ts">
+import { dismissTriggerBindings } from '../../utils/popups/interactions/useDismissLayer';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import {
   computed,
@@ -460,7 +461,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
     click,
     hoverProps,
     { style: hoverStyle.value },
-    dismissProps?.value?.reference,
+    dismissProps?.value && dismissTriggerBindings(dismissProps.value),
     {
       // The popup reads this id from the element for its name.
       id: triggerId.value,

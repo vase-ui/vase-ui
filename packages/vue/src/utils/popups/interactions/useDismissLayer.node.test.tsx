@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
-import { useDismiss } from './useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 
 const Popup = defineComponent({
   setup() {
     const store = useFloatingRootStore({ open: true });
-    const { reference, floating } = useDismiss(store);
+    const { reference, floating } = useTestDismiss(store);
     return () => (
       <>
         <button {...reference}>trigger</button>
@@ -17,7 +17,7 @@ const Popup = defineComponent({
   },
 });
 
-describe('useDismiss on a server', () => {
+describe('useDismissLayer on a server', () => {
   it('renders an open popup with no listener attribute and takes no number for it', async () => {
     const html = await renderToString(createSSRApp(Popup));
 

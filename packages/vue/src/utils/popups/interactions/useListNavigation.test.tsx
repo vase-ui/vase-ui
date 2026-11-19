@@ -44,7 +44,7 @@ import {
 import type { InteractionProps } from '../types';
 import { navigateUniformGrid } from '../../../internals/composite/gridNavigation';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
-import { useDismiss } from './useDismiss';
+import { useTestDismiss } from '../../../../test/fixtures/useTestDismiss';
 import { useListNavigation } from './useListNavigation';
 import type { UseListNavigationProps } from './useListNavigation';
 import { useTypeahead } from './useTypeahead';
@@ -316,7 +316,7 @@ function createGrid(options: {
           disabledIndices,
           grid: () => grid,
         }),
-        useDismiss(context.rootStore),
+        useTestDismiss(context.rootStore),
       ]);
 
       return () => (
@@ -409,7 +409,7 @@ const EmojiPicker = defineComponent(() => {
   // Handles opening the floating element via the Choose Emoji button.
   const { getReferenceProps, getFloatingProps } = useTestInteractions([
     useClick(context.rootStore),
-    useDismiss(context.rootStore),
+    useTestDismiss(context.rootStore),
     () => ({
       reference: { 'aria-haspopup': 'menu' as const, 'aria-expanded': open.value },
       floating: { role: 'menu' },
@@ -1111,7 +1111,7 @@ describe('useListNavigation', () => {
       });
 
       const { getReferenceProps, getFloatingProps, getItemProps } = useTestInteractions([
-        useDismiss(context.rootStore),
+        useTestDismiss(context.rootStore),
         useListNavigation(context.rootStore, {
           listRef,
           activeIndex,

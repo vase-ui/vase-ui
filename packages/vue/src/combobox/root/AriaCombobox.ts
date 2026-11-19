@@ -68,7 +68,7 @@ import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { navigateUniformGrid } from '../../internals/composite/gridNavigation';
 import { useTriggerPress, useOpenInteractionType } from '../../utils/popups/usePopupTrigger';
-import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import { dismissPopupBindings, dismissTriggerBindings, useDismissLayer } from '../../utils/popups/interactions/useDismissLayer';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import {
   getPopupTransitionElement,
@@ -1755,7 +1755,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     reason: REASONS.inputPress,
   });
 
-  const dismiss = useDismiss(store.interactions, {
+  const dismiss = useDismissLayer(store.interactions, {
     enabled: () => !disabled.value && !inline.value,
     outsidePressEvent: {
       mouse: 'sloppy',
@@ -1831,12 +1831,12 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           }
         },
       },
-      dismiss.reference,
+      dismissTriggerBindings(dismiss),
       click,
       role.value,
     ),
   );
-  const popupProps = mergeProps(FOCUSABLE_POPUP_PROPS, dismiss.floating);
+  const popupProps = mergeProps(FOCUSABLE_POPUP_PROPS, dismissPopupBindings(dismiss));
   const listProps = computed(() =>
     mergeProps(listNavigation.value.floating, { role: 'presentation' }),
   );

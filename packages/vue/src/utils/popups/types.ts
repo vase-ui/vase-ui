@@ -86,17 +86,17 @@ export interface PopupInteractionContext {
   /**
    * Whether the current event went through the popup element, or through the element of a popup
    * below it in the component tree, such as a popup that `Teleport` moved. A listener that sees the
-   * event as outside then ignores it. `useDismiss` and the focus manager set it, and it
+   * event as outside then ignores it. `useDismissLayer` and the focus manager set it, and it
    * is cleared in the next task.
    */
   insideComponentTree?: boolean | undefined;
   /**
-   * Whether an Escape key press bubbles to the parent popup. `useDismiss` writes it and never
+   * Whether an Escape key press bubbles to the parent popup. `useDismissLayer` writes it and never
    * clears it.
    */
   escapeKeyBubbles?: boolean | undefined;
   /**
-   * Whether an outside press bubbles to the parent popup. `useDismiss` writes it and never clears
+   * Whether an outside press bubbles to the parent popup. `useDismissLayer` writes it and never clears
    * it.
    */
   outsidePressBubbles?: boolean | undefined;
@@ -172,14 +172,6 @@ export interface ElementProps {
   item?: InteractionProps | undefined;
   trigger?: InteractionProps | undefined;
 }
-
-/**
- * The props that `useDismiss` returns. Each handler does nothing while the composable is not
- * enabled, so the object always has the three members.
- */
-export type DismissElementProps = Required<
-  Pick<ElementProps, 'reference' | 'floating' | 'trigger'>
->;
 
 /**
  * The props that `useListNavigation` returns. `item` and `trigger` hold only listeners, and each
