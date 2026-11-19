@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, useAttrs, useId } from 'vue';
+import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
@@ -22,8 +22,18 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLLabelElement>();
 
+const id = computed(() => props.id || generatedId);
+
+onUnmounted(
+  field.addLabel({
+    get id() {
+      return id.value;
+    },
+  }),
+);
+
 const ownProps = computed(() => ({
-  id: props.id || generatedId,
+  id: id.value,
   for: field.controlId,
   ...fieldStateAttributes(field.state, field.state.disabled),
 }));

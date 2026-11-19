@@ -53,7 +53,7 @@ watch(
   () => {
     if (!focusAtAnswer) return;
     focusAtAnswer = false;
-    firstInvalidControl(fieldsOfForm())?.focus();
+    firstInvalid(fieldsOfForm())?.element?.focus();
   },
   { deep: true },
 );
@@ -61,9 +61,7 @@ watch(
 defineExpose({ element, validate });
 
 function validate(name?: string) {
-  const fields = [...fieldsOfForm().keys()].filter(
-    (field) => name === undefined || field.name === name,
-  );
+  const fields = [...fieldsOfForm()].filter((field) => name === undefined || field.name === name);
   for (const field of fields) field.validate();
   return fields.every((field) => !field.invalid);
 }
@@ -73,31 +71,31 @@ function elementProps() {
 }
 
 /**
- * The fields of the form with their controls, in the order of the document. The browser lists the
- * controls of the form: not a control that `KeepAlive` holds or that is outside the `<form>`, and
- * not a control that the `form` attribute gives to another form.
+ * The fields of the form, in the order of the document. The browser lists the controls of the
+ * form: not a control that `KeepAlive` holds or that is outside the `<form>`, and not a control
+ * that the `form` attribute gives to another form.
  */
 function fieldsOfForm() {
-  const fields = new Map<FormField, HTMLElement>();
+  const fields = new Set<FormField>();
   for (const control of element.value?.elements ?? []) {
     const field = fieldOfControl.get(control);
-    if (field) fields.set(field, control as HTMLElement);
+    if (field) fields.add(field);
   }
   return fields;
 }
 
-function firstInvalidControl(fields: Map<FormField, HTMLElement>) {
-  return [...fields].find(([field]) => field.invalid)?.[1];
+function firstInvalid(fields: Set<FormField>) {
+  return [...fields].find((field) => field.invalid);
 }
 
 function onSubmit(event: Event) {
   submitted.value = true;
   const fields = fieldsOfForm();
-  for (const field of fields.keys()) field.validate();
-  const invalid = firstInvalidControl(fields);
+  for (const field of fields) field.validate();
+  const invalid = firstInvalid(fields);
   if (invalid) {
     event.preventDefault();
-    invalid.focus();
+    invalid.element?.focus();
     return;
   }
   focusAtAnswer = true;
@@ -111,7 +109,7 @@ function onReset(event: Event) {
     if (event.defaultPrevented) return;
     submitted.value = false;
     focusAtAnswer = false;
-    removeErrors([...fieldsOfForm().keys()].map((field) => field.name));
+    removeErrors([...fieldsOfForm()].map((field) => field.name));
   });
 }
 

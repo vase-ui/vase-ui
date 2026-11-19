@@ -8,6 +8,8 @@ export type FormErrors = Record<string, string | string[]>;
 /** What a field gives to its form. */
 export interface FormField {
   readonly name: string | undefined;
+  /** The element that gets the focus when the form finds the field invalid. */
+  readonly element: HTMLElement | undefined;
   /** Validates the field at once. It does not wait for an async `validate`. */
   validate(): void;
   readonly invalid: boolean;

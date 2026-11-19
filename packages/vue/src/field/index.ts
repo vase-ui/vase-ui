@@ -4,6 +4,8 @@ export type {
   FieldDescriptionState,
   FieldErrorProps,
   FieldErrorState,
+  FieldItemProps,
+  FieldItemState,
   FieldLabelProps,
   FieldLabelState,
   FieldRootProps,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, mergeProps, provide, useAttrs, useId } from 'vue';
+import { computed, inject, mergeProps, onUnmounted, provide, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
 import { fieldsetKey } from './part';
 import { legendKey } from './root';
@@ -20,13 +20,24 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLLegendElement>();
 
-const forLegend = inject(legendKey, null);
-if (forLegend) provide(fieldsetKey, forLegend);
+const id = computed(() => props.id || generatedId);
+
+const root = inject(legendKey, null);
+if (root) {
+  provide(fieldsetKey, root.forParts);
+  onUnmounted(
+    root.addLegend({
+      get id() {
+        return id.value;
+      },
+    }),
+  );
+}
 
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps({ id: props.id || generatedId }, attrs);
+  return mergeProps({ id: id.value }, attrs);
 }
 </script>
 

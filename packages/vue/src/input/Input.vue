@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, nextTick, ref, useAttrs, useId, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
-import { fieldKey, fieldStateAttributes } from '../field/control';
+import { controlAttributes, fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
 
@@ -53,11 +53,7 @@ const ownProps = computed(() => ({
   disabled: disabled.value,
   readonly: props.readonly,
   value: value.value,
-  ...(field && {
-    ...fieldStateAttributes(field.state),
-    'aria-invalid': field.state.valid === false ? 'true' : undefined,
-    'aria-describedby': field.describedBy,
-  }),
+  ...(field && controlAttributes(field)),
   onInput,
   onBlur,
 }));
@@ -66,7 +62,7 @@ watch(
   value,
   (next) => {
     ownValue.value = next;
-    field?.setValue(next);
+    field?.setValue(next, next !== '');
   },
   { immediate: true },
 );
@@ -91,6 +87,7 @@ watch(
       get readOnly() {
         return props.readonly;
       },
+      inputs: [el],
     });
     onCleanup(() => {
       form?.removeEventListener('reset', onReset);

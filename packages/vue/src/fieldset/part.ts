@@ -7,6 +7,8 @@ export interface FieldsetForPart {
    * first render. After the mount, the part asks the browser.
    */
   readonly disabled: boolean;
+  /** The id of the legend of the nearest `Fieldset.Root`, for a group that nothing else names. */
+  readonly legendId: string | undefined;
 }
 
 export const fieldsetKey: InjectionKey<FieldsetForPart> = Symbol('fieldset');

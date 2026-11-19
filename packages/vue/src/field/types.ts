@@ -21,6 +21,7 @@ export interface FieldRootState extends FieldState {
 export type FieldLabelState = FieldRootState;
 export type FieldDescriptionState = FieldRootState;
 export type FieldErrorState = FieldRootState;
+export type FieldItemState = FieldRootState;
 
 /** The keys of the native `ValidityState`, and the `valid` of the state of the field. */
 export interface FieldValidity {
@@ -43,6 +44,10 @@ export interface FieldLabelProps {
 
 export interface FieldDescriptionProps {
   id?: string;
+}
+
+export interface FieldItemProps {
+  disabled?: boolean;
 }
 
 export interface FieldErrorProps {

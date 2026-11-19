@@ -169,7 +169,10 @@ describe('the state', () => {
   test('valid: invalid makes the field and each part invalid, and the control aria-invalid', async () => {
     const root = reactive({ invalid: true, validationMode: 'blur' as const });
     const parts = await mountField({ root });
-    expect(stateOfParts(parts).every((names) => names.includes('data-invalid'))).toBe(true);
+    for (const part of [parts.field, parts.label, parts.description]) {
+      expect(part).toHaveAttribute('data-invalid');
+    }
+    expect(parts.input).not.toHaveAttribute('data-invalid');
     expect(parts.input).toHaveAttribute('aria-invalid', 'true');
     root.invalid = false;
     await nextTick();

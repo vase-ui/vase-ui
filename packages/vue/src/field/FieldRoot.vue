@@ -13,10 +13,11 @@ import {
   watch,
 } from 'vue';
 import { useElement } from '../common/element';
+import { sameValue } from '../common/values';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { formKey, type FormField } from '../form/field';
-import { fieldKey, fieldStateAttributes, type FieldControl } from './control';
-import { fieldPartsKey } from './root';
+import { fieldKey, fieldStateAttributes, type FieldControl, type NativeControl } from './control';
+import { fieldPartsKey, joinIds } from './root';
 import type { FieldRootProps, FieldRootState, FieldValidateResult, FieldValidity } from './types';
 
 type Failures = Omit<FieldValidity, 'valid'>;
@@ -70,8 +71,10 @@ const { element, setElement } = useElement<HTMLDivElement>();
 // A swap of controls removes the old one before the new one registers.
 const control = shallowRef<FieldControl>();
 const describers = shallowReactive<{ readonly id: string; readonly shown: boolean }[]>([]);
+const labels = shallowReactive<{ readonly id: string }[]>([]);
 
 const value = shallowRef<unknown>();
+const filled = ref(false);
 const firstValue = shallowRef<unknown>();
 let hasValue = false;
 const ownTouched = ref(false);
@@ -103,7 +106,7 @@ const formErrors = computed(() => {
   return [messages].flat().filter((error): error is string => !!error);
 });
 
-const foundDirty = computed(() => value.value !== firstValue.value);
+const foundDirty = computed(() => !sameValue(value.value, firstValue.value));
 const valid = computed(() => {
   if (barred.value) return null;
   if (props.invalid || formErrors.value.length > 0) return false;
@@ -114,20 +117,14 @@ const state = computed<FieldRootState>(() => ({
   touched: props.touched ?? ownTouched.value,
   dirty: props.dirty ?? foundDirty.value,
   valid: valid.value,
-  filled: (value.value ?? '') !== '',
+  filled: filled.value,
 }));
 const validity = computed<FieldValidity>(() => ({
   ...(barred.value ? noFailures : (result.value?.failures ?? noFailures)),
   valid: valid.value,
 }));
 const errors = computed(() => (barred.value ? [] : (result.value?.errors ?? [])));
-const describedBy = computed(
-  () =>
-    describers
-      .filter((describer) => describer.shown)
-      .map((describer) => describer.id)
-      .join(' ') || undefined,
-);
+const describedBy = computed(() => joinIds(describers));
 
 watch(foundDirty, (dirty) => {
   if (dirty) valueMissingCounts = true;
@@ -137,6 +134,9 @@ watch(foundDirty, (dirty) => {
 const formField: FormField = {
   get name() {
     return name.value;
+  },
+  get element() {
+    return validationInput();
   },
   validate: validateAtOnce,
   get invalid() {
@@ -152,6 +152,9 @@ provide(fieldKey, {
     return name.value;
   },
   controlId,
+  get labelId() {
+    return labels[0]?.id;
+  },
   get describedBy() {
     return describedBy.value;
   },
@@ -160,20 +163,20 @@ provide(fieldKey, {
   },
   setControl(added) {
     control.value = added;
-    form?.addControl(added.element, formField);
     return () => {
       control.value = undefined;
       dropValidation();
     };
   },
-  setValue(next) {
+  setValue(next, nextFilled) {
+    filled.value = nextFilled;
     if (!hasValue) {
       hasValue = true;
       firstValue.value = next;
       value.value = next;
       return;
     }
-    if (next === value.value) return;
+    if (sameValue(next, value.value)) return;
     value.value = next;
     if (validatesOnChange.value) validateAfterChange();
   },
@@ -195,16 +198,28 @@ provide(fieldKey, {
     ownTouched.value = false;
     result.value = null;
     valueMissingCounts = false;
-    (control.value?.element as HTMLInputElement | undefined)?.setCustomValidity('');
+    removeMessages();
   },
 });
+
+// The browser lists the inputs of the control in `form.elements`, and the form finds the field
+// through them.
+watch(
+  () => control.value?.inputs,
+  (inputs) => {
+    for (const input of inputs ?? []) form?.addControl(input, formField);
+  },
+);
 
 provide(fieldPartsKey, {
   get state() {
     return state.value;
   },
   get controlId() {
-    return control.value?.id ?? controlId;
+    // A `<label for>` names only a labelable element, and the browser gives such an element
+    // `labels`.
+    if (!control.value) return controlId;
+    return 'labels' in control.value.element ? control.value.id : undefined;
   },
   get validity() {
     return validity.value;
@@ -218,6 +233,10 @@ provide(fieldPartsKey, {
   addDescriber(describer) {
     describers.push(describer);
     return () => describers.splice(describers.indexOf(describer), 1);
+  },
+  addLabel(label) {
+    labels.push(label);
+    return () => labels.splice(labels.indexOf(label), 1);
   },
 });
 
@@ -251,10 +270,10 @@ function validateNow() {
   dropValidation();
   const current = validation;
   if (barred.value) return;
-  const el = control.value?.element as HTMLInputElement | undefined;
+  // The native check does not count the message of `validate`.
+  removeMessages();
+  const el = validationInput();
   if (el) {
-    // The native check does not count the message of `validate`.
-    el.setCustomValidity('');
     const failed = nativeFailure(el);
     if (failed) {
       result.value = failed;
@@ -276,14 +295,14 @@ function validateNow() {
   }
 }
 
-function nativeFailure(el: HTMLInputElement): Result | null {
+function nativeFailure(el: NativeControl): Result | null {
   if (el.validity.valid) return null;
   const failures = failuresOf(el);
   if (onlyValueMissing(failures) && !valueMissingCounts) return null;
   return { failures, errors: [el.validationMessage], ofValidate: false };
 }
 
-function failuresOf(el: HTMLInputElement) {
+function failuresOf(el: NativeControl) {
   const failures = { ...noFailures };
   for (const key of Object.keys(noFailures) as (keyof Failures)[]) failures[key] = el.validity[key];
   return failures;
@@ -299,8 +318,7 @@ function applyResult(output: FieldValidateResult) {
     result.value = passed;
     return;
   }
-  const message = messages.join('\n').replaceAll('\r\n', '\n');
-  (control.value?.element as HTMLInputElement | undefined)?.setCustomValidity(message);
+  validationInput()?.setCustomValidity(messages.join('\n').replaceAll('\r\n', '\n'));
   result.value = {
     failures: { ...noFailures, customError: true },
     errors: messages,
@@ -308,14 +326,28 @@ function applyResult(output: FieldValidateResult) {
   };
 }
 
+/**
+ * The input whose constraint validation stands for the control: the first one in the document
+ * that fails, or else the first one. A disabled input does not count.
+ */
+function validationInput() {
+  const inputs = (control.value?.inputs ?? []).filter((input) => input.willValidate);
+  inputs.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  return inputs.find((input) => !input.validity.valid) ?? inputs[0];
+}
+
+function removeMessages() {
+  for (const input of control.value?.inputs ?? []) input.setCustomValidity('');
+}
+
 function onEdit() {
   form?.onEdit(name.value);
   // An invalid field that does not validate at each change takes back only `valueMissing`.
   if (validatesOnChange.value || valid.value !== false) return;
-  const el = control.value?.element as HTMLInputElement | undefined;
+  removeMessages();
+  const el = validationInput();
   if (!el) return;
   dropValidation();
-  el.setCustomValidity('');
   const failures = failuresOf(el);
   if (!failures.valueMissing) {
     result.value = passed;

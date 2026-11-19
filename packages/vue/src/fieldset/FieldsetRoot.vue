@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, provide, useAttrs } from 'vue';
+import { computed, mergeProps, provide, shallowReactive, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { fieldsetKey, useInDisabledFieldset } from './part';
 import { legendKey } from './root';
@@ -20,6 +20,9 @@ defineSlots<{
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
+// HTML takes the first `<legend>` child as the name of the fieldset.
+const legends = shallowReactive<{ readonly id: string }[]>([]);
+const legendId = computed(() => legends[0]?.id);
 const state = computed<FieldsetRootState>(() => ({
   disabled: props.disabled || inDisabledFieldset.value,
 }));
@@ -28,10 +31,22 @@ provide(fieldsetKey, {
   get disabled() {
     return state.value.disabled;
   },
+  get legendId() {
+    return legendId.value;
+  },
 });
 provide(legendKey, {
-  get disabled() {
-    return inDisabledFieldset.value;
+  forParts: {
+    get disabled() {
+      return inDisabledFieldset.value;
+    },
+    get legendId() {
+      return legendId.value;
+    },
+  },
+  addLegend(legend) {
+    legends.push(legend);
+    return () => legends.splice(legends.indexOf(legend), 1);
   },
 });
 

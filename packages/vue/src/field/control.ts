@@ -10,9 +10,12 @@ export interface FieldState {
   filled: boolean;
 }
 
+/** A native element with constraint validation. */
+export type NativeControl = HTMLInputElement | HTMLTextAreaElement;
+
 /** What a control tells its field about itself. The properties are reactive. */
 export interface FieldControl {
-  /** The element that has the role, takes the focus and stands for the control in validation. */
+  /** The element that has the role: the input, or the element of a group. */
   readonly element: HTMLElement;
   readonly id: string;
   /** The `name` of the control, for a field with no name. */
@@ -20,6 +23,8 @@ export interface FieldControl {
   /** The control is disabled by its own prop or by a fieldset around it, not by its field. */
   readonly disabled: boolean;
   readonly readOnly: boolean;
+  /** The native elements whose constraint validation stands for the control. */
+  readonly inputs: readonly NativeControl[];
 }
 
 /**
@@ -32,14 +37,16 @@ export interface FieldForControl {
   /** Wins over the `name` prop of the control. */
   readonly name: string | undefined;
   /** The id of a control that has no `id` prop. */
-  readonly controlId: string;
+  readonly controlId: string | undefined;
+  /** The id of the label, for a group that a `<label for>` cannot name. */
+  readonly labelId: string | undefined;
   /** The ids of the descriptions and of the errors that show. */
   readonly describedBy: string | undefined;
   readonly state: Readonly<FieldState>;
   /** Makes the control the control of the field. Returns the function that removes it. */
   setControl(control: FieldControl): () => void;
-  /** The value at the mount and after each change. */
-  setValue(value: unknown): void;
+  /** The value at the mount and after each change, and if it is not empty. */
+  setValue(value: unknown, filled: boolean): void;
   /** The user changed the value. The control calls `setValue` first. */
   onEdit(): void;
   /** The focus left the control. */
@@ -63,5 +70,18 @@ export function fieldStateAttributes(state: FieldState, disabled?: boolean) {
     'data-touched': on(state.touched),
     'data-dirty': on(state.dirty),
     'data-filled': on(state.filled),
+  };
+}
+
+/**
+ * The attributes that a field gives to the element of its control. `aria-invalid` says the invalid
+ * state, so the element has no `data-invalid`.
+ */
+export function controlAttributes(field: FieldForControl) {
+  return {
+    ...fieldStateAttributes(field.state),
+    'data-invalid': undefined,
+    'aria-invalid': field.state.valid === false ? 'true' : undefined,
+    'aria-describedby': field.describedBy,
   };
 }

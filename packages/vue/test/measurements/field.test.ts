@@ -3,6 +3,7 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import MeasureBlurOrder from '../fixtures/MeasureBlurOrder.vue';
+import MeasureRegisterList from '../fixtures/MeasureRegisterList.vue';
 import MeasureSwap from '../fixtures/MeasureSwap.vue';
 import { mount, settle } from '../render';
 
@@ -22,6 +23,23 @@ describe('a v-if that replaces one component with another', () => {
       expect(log).toEqual(['add first', 'remove first', 'add second']);
     },
   );
+});
+
+describe('a keyed list', () => {
+  test('registers an item that it puts first after the items that it had', async () => {
+    const names = reactive(['b', 'c']);
+    const log: string[] = [];
+    const root = mount(MeasureRegisterList, { names, log }).root;
+    await nextTick();
+    names.unshift('a');
+    await nextTick();
+    expect(log).toEqual(['add b', 'add c', 'add a']);
+    expect([...root.querySelectorAll('input')].map((input) => input.ariaLabel)).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
+  });
 });
 
 describe('two blur listeners', () => {

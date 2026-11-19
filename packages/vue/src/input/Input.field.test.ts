@@ -36,7 +36,7 @@ describe('what a field gives to its control', () => {
     expect(input).toHaveAttribute('name', 'field');
   });
 
-  test('the state of the field gives the data attributes and aria-invalid', async () => {
+  test('the state of the field gives the data attributes, and aria-invalid in place of data-invalid', async () => {
     const field = reactive({ validationMode: 'blur', invalid: false });
     const [input] = (await mountInField(field, { required: true, defaultValue: 'a' })).inputs;
     expect(dataAttributes(input!)).toEqual(['data-filled']);
@@ -48,12 +48,7 @@ describe('what a field gives to its control', () => {
     expect(input).not.toHaveAttribute('aria-invalid');
     field.invalid = true;
     await nextTick();
-    expect(dataAttributes(input!)).toEqual([
-      'data-dirty',
-      'data-filled',
-      'data-invalid',
-      'data-touched',
-    ]);
+    expect(dataAttributes(input!)).toEqual(['data-dirty', 'data-filled', 'data-touched']);
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
