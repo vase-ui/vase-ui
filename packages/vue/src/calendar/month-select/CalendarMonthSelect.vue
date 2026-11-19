@@ -20,11 +20,11 @@ export interface CalendarMonthSelectProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatFieldName, formatText } from '../../internals/date-time/calendar/formatText';
+import { getMonthCells } from '../../internals/date-time/calendar/viewPages';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
-import { useCalendarSelect } from '../utils/useCalendarSelect';
-import CalendarMonthSelectChildren from './CalendarMonthSelectChildren.vue';
+import { useCalendarRootContext, useCalendarSelect } from '../root/CalendarRootContext';
+import CalendarSelectChildren from '../utils/CalendarSelectChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -44,25 +44,18 @@ defineSlots<{
 const root = useCalendarRootContext();
 const { state, locale } = root;
 
-const { onChange } = useCalendarSelect({
+const onChange = useCalendarSelect({
   root,
   getSelect: () => element.value,
   getOptions({ yearMonth }) {
     const { min, max } = root.monthLimits.value;
-    return Array.from({ length: yearMonth.monthsInYear }, (_, index) => {
-      const month = Temporal.PlainYearMonth.from({
-        year: yearMonth.year,
-        month: index + 1,
-        calendar: yearMonth.calendarId,
-      });
-      return {
-        value: month.monthCode,
-        text: formatText(month, { month: props.format }, locale.value),
-        disabled:
-          (min !== undefined && Temporal.PlainYearMonth.compare(month, min) < 0) ||
-          (max !== undefined && Temporal.PlainYearMonth.compare(month, max) > 0),
-      };
-    });
+    return getMonthCells(yearMonth).map((month) => ({
+      value: month.monthCode,
+      text: formatText(month, { month: props.format }, locale.value),
+      disabled:
+        (min !== undefined && Temporal.PlainYearMonth.compare(month, min) < 0) ||
+        (max !== undefined && Temporal.PlainYearMonth.compare(month, max) > 0),
+    }));
   },
   getValue: ({ yearMonth }) => yearMonth.monthCode,
   getMonth: ({ yearMonth }, value) =>
@@ -100,9 +93,9 @@ defineExpose({ element });
     name="render"
     :props="elementProps()"
     :state="state"
-    :children="CalendarMonthSelectChildren"
+    :children="CalendarSelectChildren"
   />
   <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-    <CalendarMonthSelectChildren />
+    <CalendarSelectChildren />
   </component>
 </template>

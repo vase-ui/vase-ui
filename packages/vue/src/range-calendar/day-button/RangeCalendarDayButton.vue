@@ -24,13 +24,14 @@ export interface RangeCalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
+import { useDayButton } from '../../calendar/day-button/useDayButton';
 import type { HTMLProps } from '../../internals/types';
-import { useCalendarMonthContext } from '../../calendar/month/CalendarMonthContext';
 import { useCalendarRootContext } from '../../calendar/root/CalendarRootContext';
-import { useRangeCalendarDayContext } from '../day/RangeCalendarDayContext';
-import { rangeDayStateAttributesMapping } from '../day/stateAttributesMapping';
-import { useRangeCalendarRootContext } from '../root/RangeCalendarRootContext';
+import {
+  useRangeCalendarDayContext,
+  rangeDayStateAttributesMapping,
+  useRangeCalendarRootContext,
+} from '../root/RangeCalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -51,7 +52,6 @@ defineSlots<{
 const root = useCalendarRootContext();
 const range = useRangeCalendarRootContext();
 const { day, state } = useRangeCalendarDayContext();
-const { isLeaving } = useCalendarMonthContext();
 
 function onClick(event: MouseEvent) {
   // The click after a drag is not a press: the pointer went down and up on different days.
@@ -133,7 +133,6 @@ const { element, elementProps, setRef, usesRenderSlot, text } = useDayButton(pro
   root,
   day,
   state,
-  isLeaving,
   stateAttributesMapping: rangeDayStateAttributesMapping,
   extraProps: {
     // A finger that drags over the days must not scroll the page.

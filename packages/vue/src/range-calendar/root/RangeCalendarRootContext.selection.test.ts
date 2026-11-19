@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowReactive } from 'vue';
-import { createChangeEventDetails } from '../../createVaseUIEventDetails';
-import { REASONS } from '../../reasons';
-import { getRangeDayState, useRangeSelection } from './rangeSelection';
-import type { DateValue } from '../temporal';
-import type { RangeSelectionProps } from './rangeSelection';
-import type { RangeCalendarHost } from './rangeCalendarHost';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import { getRangeDayState, useRangeSelection } from './RangeCalendarRootContext';
+import type { DateValue } from '../../internals/date-time/temporal';
+import type { RangeCalendarRootProps } from './RangeCalendarRoot.vue';
+import type { RangeCalendarHost } from './RangeCalendarRootContext';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -13,7 +13,7 @@ function texts(value: readonly (DateValue | null)[]) {
   return value.map((end) => end?.toString() ?? null);
 }
 
-function createSelection(props: RangeSelectionProps = {}, host?: RangeCalendarHost) {
+function createSelection(props: RangeCalendarRootProps<DateValue> = {}, host?: RangeCalendarHost) {
   const reactiveProps = shallowReactive(props);
   const emit = vi.fn();
   const selection = useRangeSelection(reactiveProps, emit, host);
@@ -268,9 +268,9 @@ describe('useRangeSelection', () => {
       expect(changes()).toEqual([]);
     });
 
-    it('does not change the value of a read-only range', () => {
+    it.each(['readOnly', 'disabled'] as const)('preserves the range on Escape with %s', (prop) => {
       const { cancel, changes } = withCancel({
-        readOnly: true,
+        [prop]: true,
         defaultValue: [day('2026-11-03'), null],
       });
 
@@ -315,7 +315,7 @@ describe('useRangeSelection', () => {
       expect(details.reason).toBe('keyboard');
     });
 
-    function withCancel(props: RangeSelectionProps) {
+    function withCancel(props: RangeCalendarRootProps<DateValue>) {
       const created = createSelection(props);
       return { ...created, cancel: () => created.selection.cancel(escape()) };
     }
@@ -527,7 +527,9 @@ describe('useRangeSelection', () => {
     });
 
     describe('the host', () => {
-      const value: RangeSelectionProps = { defaultValue: [day('2026-11-10'), day('2026-11-12')] };
+      const value: RangeCalendarRootProps<DateValue> = {
+        defaultValue: [day('2026-11-10'), day('2026-11-12')],
+      };
 
       it('learns of a drag that makes the range that the value already has', () => {
         const host = { onSameRange: vi.fn() };

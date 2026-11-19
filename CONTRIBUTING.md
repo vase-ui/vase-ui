@@ -373,7 +373,7 @@ A part whose own node is text, such as `Progress.Value`, has four more rules:
 
 A part of a component that Base UI does not have, whose own node is text, has no `<Part>Children.vue`. Its default slot and its `#render` slot get the text as the slot prop `text`. The text is the content of the part when the consumer gives no default slot. `Calendar.Weekday` is the model. `Calendar.Caption`, `Calendar.WeekNumber`, `Calendar.DayButton`, `Calendar.MonthCell`, `Calendar.YearCell`, `Calendar.ViewTrigger`, `RangeCalendar.DayButton`, `TimePicker.Item` and `TimePicker.ColumnItem` follow this rule.
 
-A part of a component that Base UI does not have follows the same rules for its other nodes. `Calendar.MonthSelect` and `Calendar.YearSelect` have a `<Part>Children.vue` for their `option` nodes. The part provides the options in `CalendarSelectContext`.
+A part of a component that Base UI does not have follows the same rules for its other nodes. `Calendar.MonthSelect` and `Calendar.YearSelect` share `CalendarSelectChildren.vue`. Each select provides its options through `CalendarSelectContext`.
 
 ### Parts with a hidden input
 
@@ -1002,7 +1002,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - `Accordion.Item` and `Collapsible.Root` use `useCollapsibleRoot` to provide the panel IDs, transition state and open request. The item checks its veto before it asks the accordion root to change the value. Each root checks its own veto before the model update.
 - A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
-- A part that renders a root can give that root a host, when the root needs a value that it has no prop for. The part calls `provide` with an `InjectionKey` in `src/internals`, such as `RangeCalendarHostContext` and `DateTimeFieldHostContext`. The root calls `inject(key, undefined)` and works with no host. A host is internal, so it adds no prop and no event to the root.
+- A part that renders a root can give that root a host, when the root needs a value that it has no prop for. The part calls `provide` with an internal `InjectionKey`, such as `RangeCalendarHostContext` and `DateTimeFieldHostContext`. The root calls `inject(key, undefined)` and works with no host. A host is internal, so it adds no prop and no event to the root.
 
 ### Dates and times
 
@@ -1022,7 +1022,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - A server cannot know the day of the visitor. With no `today` prop, a calendar root keeps the day of the clock of the server in the server HTML, with `useServerValue`. The first client render shows that day, so it equals the server HTML. After the mount, the root shows the day of the clock of the browser.
 - When the clock picked the first page, that page then moves to the page of the day of the browser. The clock picked it when no `focusedDate`, `defaultFocusedDate`, value, `month` or `defaultMonth` gave the page. The move emits no event, because a client-only mount shows that page with no event. A day that had the focus before the hydration keeps the focus in the grid, and `autoFocus` focuses the day of the browser.
 - The root of a calendar holds the focused day and the month of the page. Each part derives its page from these two values, and no part keeps a page of its own.
-- The JSDoc of `calendarProps.ts` and `daySelection.ts` in `internals/date-time/calendar` gives the views of a calendar and the pages of each view. It also gives the value that takes the place of an empty value.
+- `CalendarBaseProps` and `CalendarViewProps` in `useCalendarRoot.ts` describe the pages of each view. `CalendarRootProps.modelValue` describes the next selection after the consumer clears the value.
 - A press on a year, or on a month in a calendar of days, changes the month of the root first, and then the view. When a listener cancels the change of the month, the view stays. A press on the month that the root has changes no month.
 - A move to a page of another month waits for that month. The page then changes one time, and it stays when the consumer keeps its `month`.
 - The comments of `useCalendarRoot` give the rules for the limits of `minDate` and `maxDate`. They give the rules for the first day of a page of weeks or days. They also give the rules for a `focusedDate` that the consumer changes, and for the focus after a change of the page.
@@ -1032,7 +1032,8 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - Watch a `Temporal` prop by its text, not by its object. A consumer can make a new object for the same day in each render.
 - A page that the user leaves stays in the pages that `Calendar.Months` renders until its animations end. It has `data-ending-style` and `inert`, and no tab stop. A new calendar or first day of the week, such as those of the runtime locale after a hydration, gives other pages for the same place. It is not a move, so no page stays and the side of the move does not change. The first page that moves to the day of the browser after a hydration is not a move either. Only the pages of days move: while the grid shows months or years, no page stays and the side is `none`.
 - Make a list of days by adding days, and never by adding 24 hours. A change of the clock in a time zone then does not repeat a day and does not skip a day.
-- A calendar root takes its selection from a function: `useDaySelection` for one day or a list of days, and `useRangeSelection` for a range. The selection owns the value, its events and the rule of a press. `useCalendarRoot` owns the focused day, the page and the keys.
+- `Calendar.Root` owns single and multiple selection. The range root uses `useRangeSelection` in `RangeCalendarRootContext.ts` for its endpoints and drag preview. Both roots use `useCalendarRoot` for pages, focus and keyboard navigation.
+- Day buttons, month cells and year cells register their elements after the DOM patch. Look up a connected element when a date takes focus. A cell can also mount in a cached branch.
 - Give `views` to `useCalendarRoot` only for a root that has the views of months and years, such as `Calendar.Root`.
 - Only the listeners and the selection of a root with `views` take the reasons of the views: `month-press`, `year-press` and `trigger-press`. A root with no `views`, such as `RangeCalendar.Root`, has the reasons that each root has, and reasons of its own, such as `drag`.
 - Put each new reason that `useCalendarRoot` sends into `CalendarBaseChangeEventReason` or `CalendarViewChangeEventReason`.

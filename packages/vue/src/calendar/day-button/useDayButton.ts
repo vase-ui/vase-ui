@@ -1,14 +1,15 @@
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import type { HTMLAttributes, Ref } from 'vue';
-import { useIsHydrating } from '../../../common/hydration';
-import type { StateAttributesMapping } from '../../getStateAttributesProps';
-import type { NativeButtonProps, VaseUIComponentProps } from '../../types';
-import { useButton } from '../../use-button/useButton';
-import { useRenderElement } from '../../useRenderElement';
-import { isSameDay } from '../temporal';
-import type { DayState } from './dayState';
-import { formatText } from './formatText';
-import type { CalendarRootController } from './useCalendarRoot';
+import { useIsHydrating } from '../../common/hydration';
+import type { DayState } from '../../internals/date-time/calendar/dayState';
+import { formatText } from '../../internals/date-time/calendar/formatText';
+import { isSameDay } from '../../internals/date-time/temporal';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import type { NativeButtonProps, VaseUIComponentProps } from '../../internals/types';
+import { useButton } from '../../internals/use-button/useButton';
+import { useRenderElement } from '../../internals/useRenderElement';
+import { useCalendarMonthContext } from '../month/CalendarMonthContext';
+import type { CalendarRootContext } from '../root/CalendarRootContext';
 
 const FULL_DATE: Intl.DateTimeFormatOptions = {
   weekday: 'long',
@@ -17,26 +18,15 @@ const FULL_DATE: Intl.DateTimeFormatOptions = {
   day: 'numeric',
 };
 
-export interface DayButtonProps<State> extends NativeButtonProps, VaseUIComponentProps<State> {
+interface DayButtonProps<State> extends NativeButtonProps, VaseUIComponentProps<State> {
   format?: Intl.DateTimeFormatOptions | undefined;
 }
 
-export interface UseDayButtonOptions<State extends DayState> {
-  /** The root that owns the focused day. The context of the root part gives it. */
-  root: Pick<
-    CalendarRootController,
-    'locale' | 'tabStop' | 'pressDay' | 'onDayFocus' | 'onDayKeydown' | 'registerDay'
-  >;
+interface UseDayButtonOptions<State extends DayState> {
+  root: CalendarRootContext;
   day: Readonly<Ref<Temporal.PlainDate>>;
   state: Readonly<Ref<State>>;
-  /** Whether the month of the button left the calendar and stays until its animations end. */
-  isLeaving: Readonly<Ref<boolean>>;
   stateAttributesMapping: StateAttributesMapping<State>;
-  /**
-   * The attributes and listeners that the button adds. A listener of `onClick`, `onFocusin` or
-   * `onKeydown` replaces the one of the button, which presses, focuses and moves the day through
-   * `root`. The replacing listener then calls `root` itself.
-   */
   extraProps?: HTMLAttributes | undefined;
   /** Gives the button and its day to a registry other than the root's. It returns the undo. */
   register?: ((button: HTMLElement, date: Temporal.PlainDate) => () => void) | undefined;
@@ -48,16 +38,9 @@ export interface UseDayButtonOptions<State extends DayState> {
  */
 export function useDayButton<State extends DayState>(
   props: DayButtonProps<State>,
-  {
-    root,
-    day,
-    state,
-    isLeaving,
-    stateAttributesMapping,
-    extraProps,
-    register,
-  }: UseDayButtonOptions<State>,
+  { root, day, state, stateAttributesMapping, extraProps, register }: UseDayButtonOptions<State>,
 ) {
+  const { isLeaving } = useCalendarMonthContext();
   const isHydrating = useIsHydrating();
 
   // The button of a month that leaves has no tab stop, and the root does not focus it.
@@ -68,7 +51,7 @@ export function useDayButton<State extends DayState>(
   const text = computed(() => formatText(day.value, { day: 'numeric' }, root.locale.value));
   const label = computed(() => formatText(day.value, props.format ?? FULL_DATE, root.locale.value));
 
-  const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
+  const rendered = useRenderElement('button', props, {
     button: (element) =>
       useButton(element, {
         disabled: () => state.value.disabled,
@@ -109,19 +92,7 @@ export function useDayButton<State extends DayState>(
     stateAttributesMapping,
   });
 
-  // The root focuses a day after a key moves the focus, and it finds the button of the day here.
-  watch(
-    [element, day, isLeaving],
-    ([button, date, leaving], _previous, onCleanup) => {
-      if (button && !leaving) {
-        onCleanup(root.registerDay(date, button));
-        if (register) {
-          onCleanup(register(button, date));
-        }
-      }
-    },
-    { flush: 'post' },
-  );
+  root.useFocusTarget(rendered.element, () => (isLeaving.value ? null : day.value), register);
 
-  return { element, elementProps, setRef, usesRenderSlot, text };
+  return { ...rendered, text };
 }

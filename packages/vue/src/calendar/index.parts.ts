@@ -107,7 +107,7 @@ import type {
   CalendarYearCellProps,
   CalendarYearCellState,
 } from './year-cell/CalendarYearCell.vue';
-import type { CalendarValue } from '../internals/date-time/calendar/calendarProps';
+import type { CalendarValue } from '../internals/date-time/calendar/useCalendarRoot';
 
 /**
  * Groups all parts of the calendar and holds the selected day or month, the month that the grid

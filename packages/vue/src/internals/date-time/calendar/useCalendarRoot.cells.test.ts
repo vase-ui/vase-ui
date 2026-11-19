@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { findGridTarget, getGridMove } from './gridKeys';
-import type { GridMove, GridTargetOptions } from './gridKeys';
+import { findGridTarget, getGridMove } from './useCalendarRoot';
+import type { GridMove, GridTargetOptions } from './useCalendarRoot';
 
 const month = (text: string) => Temporal.PlainYearMonth.from(text);
 

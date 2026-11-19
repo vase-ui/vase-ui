@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { defineComponent, nextTick, onErrorCaptured, shallowReactive } from 'vue';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import CalendarAnatomy from './CalendarAnatomy.test.vue';
 import * as Calendar from '../index.parts';
@@ -36,6 +37,40 @@ describe('<Calendar.Root />', () => {
     refInstanceof: window.HTMLDivElement,
     render,
   }));
+
+  it('keeps the last day when a consumer clears the selection in the same task', async () => {
+    const zoned = Temporal.ZonedDateTime.from('2026-11-16T09:30[Asia/Tokyo]');
+    const dates = shallowReactive<(Temporal.PlainDate | Temporal.ZonedDateTime)[]>([today()]);
+    const onValueChange = vi.fn();
+    const { user } = await renderCalendar({ modelValue: dates, multiple: true, onValueChange });
+
+    dates[0] = zoned;
+    dates.length = 0;
+    await nextTick();
+    await user.click(button('2026-11-18')!);
+
+    expect(onValueChange.mock.calls[0]![0][0].toString()).toBe(
+      '2026-11-18T09:30:00+09:00[Asia/Tokyo]',
+    );
+  });
+
+  it('checks a modifier name added to the same reactive object', async () => {
+    const modifiers = shallowReactive<Record<string, Temporal.PlainDate>>({});
+    const errors: string[] = [];
+    const Host = defineComponent(() => {
+      onErrorCaptured((error) => {
+        errors.push((error as Error).message);
+        return false;
+      });
+      return () => <Calendar.Root today={today()} modifiers={modifiers} />;
+    });
+    await render(<Host />);
+
+    modifiers.selected = today();
+    await nextTick();
+
+    expect(errors).toEqual([expect.stringContaining('has the key `selected`')]);
+  });
 
   describe('names', () => {
     it('renders a group that the visible month names', async () => {

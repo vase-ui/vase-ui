@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
-import type { KeyTargetOptions } from './focusTarget';
+import { findKeyTarget, getKeyAction, getTabStop } from './useCalendarRoot';
+import type { KeyTargetOptions } from './useCalendarRoot';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const text = (date: Temporal.PlainDate | null) => date?.toString() ?? null;

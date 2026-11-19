@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
+import { getMonthPage } from '../../internals/date-time/calendar/monthGrid';
 import {
   createRenderer,
   describeConformance,
@@ -33,6 +35,42 @@ describe('<RangeCalendar.DayButton />', () => {
     testRenderPropWith: 'button',
     render: (node) => render(<RangeCalendarAncestors level="day">{node}</RangeCalendarAncestors>),
   }));
+
+  it('focuses the visible day when a button mounts in a cached branch', async () => {
+    const date = Temporal.PlainDate.from('2026-11-14');
+    const month = getMonthPage(date.toPlainYearMonth(), 1);
+    const root = shallowRef<{ focus(): void } | null>(null);
+    const first = shallowRef(true);
+    const mounted = shallowRef(false);
+    const Cached = defineComponent(
+      () => () => (mounted.value ? <RangeCalendar.DayButton data-testid="cached" /> : null),
+    );
+    const Other = defineComponent(() => () => <RangeCalendar.DayButton data-testid="other" />);
+    const Host = defineComponent(() => () => (
+      <RangeCalendar.Root ref={root} today={date}>
+        <RangeCalendar.Month month={month}>
+          <RangeCalendar.Day day={date}>
+            <KeepAlive>{first.value ? <Cached /> : <Other />}</KeepAlive>
+          </RangeCalendar.Day>
+        </RangeCalendar.Month>
+      </RangeCalendar.Root>
+    ));
+    await render(<Host />);
+
+    first.value = false;
+    await nextTick();
+    mounted.value = true;
+    await nextTick();
+    root.value!.focus();
+    await nextTick();
+    expect(screen.getByTestId('other')).toHaveFocus();
+
+    first.value = true;
+    await nextTick();
+    root.value!.focus();
+    await nextTick();
+    expect(screen.getByTestId('cached')).toHaveFocus();
+  });
 
   it('renders a button that has the day number, and the full date as its name', async () => {
     await renderButton();

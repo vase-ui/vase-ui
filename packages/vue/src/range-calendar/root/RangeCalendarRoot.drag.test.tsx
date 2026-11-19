@@ -290,6 +290,21 @@ describe('<RangeCalendar.Root /> with a drag', () => {
       expect(shown()).toEqual({ start: [], middle: [], end: [] });
     });
 
+    it('discards the drag if the calendar becomes read-only before release', async () => {
+      const { onValueChange, setProps } = await renderRange();
+      const first = button('2026-11-10');
+      const last = button('2026-11-12');
+      await fireEvent.pointerDown(first, pointer('mouse', first));
+      await fireEvent.pointerMove(first, pointer('mouse', last));
+
+      await setProps({ readOnly: true });
+      await fireEvent.pointerUp(first, pointer('mouse', last, 0));
+      await fireEvent.click(first, { detail: 1 });
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(shown()).toEqual({ start: [], middle: [], end: [] });
+    });
+
     it('does not start a drag with another button than the main button', async () => {
       const { onValueChange } = await renderRange();
       const first = button('2026-11-10');

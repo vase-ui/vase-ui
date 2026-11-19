@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
-import type { NavigationDirection } from '../../internals/date-time/calendar/usePageTransition';
+import type { NavigationDirection } from '../../internals/date-time/calendar/useCalendarRoot';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { CalendarState } from '../root/CalendarRoot.vue';
 

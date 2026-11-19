@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getMonthPage } from './monthGrid';
-import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
+import {
+  alignPageStart,
+  getBroadcastPage,
+  getDurationPage,
+  getWeekNumber,
+} from './useCalendarRoot';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const month = (text: string) => Temporal.PlainYearMonth.from(text);
@@ -199,22 +203,5 @@ describe('alignPageStart', () => {
         true,
       );
     }
-  });
-});
-
-describe('getMonthPage with fixedWeeks', () => {
-  it.each([
-    { name: 'a month of 4 weeks', yearMonth: '2026-02', natural: 4 },
-    { name: 'a month of 5 weeks', yearMonth: '2026-11', natural: 5 },
-    { name: 'a month of 6 weeks', yearMonth: '2026-08', natural: 6 },
-  ])('has 6 weeks for $name', ({ yearMonth, natural }) => {
-    expect(getMonthPage(month(yearMonth), 7).weeks).toHaveLength(natural);
-    const page = getMonthPage(month(yearMonth), 7, true);
-
-    expect(page.weeks).toHaveLength(6);
-    expect(text(page.end)).toBe(text(page.start.add({ days: 41 })));
-    expect(text(page.last)).toBe(
-      text(month(yearMonth).toPlainDate({ day: month(yearMonth).daysInMonth })),
-    );
   });
 });

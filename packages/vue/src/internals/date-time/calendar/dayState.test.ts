@@ -9,7 +9,7 @@ import {
 } from './dayState';
 import type { DayRules } from './dayState';
 import { getMonthPage } from './monthGrid';
-import { getBroadcastPage, getDurationPage } from './weeks';
+import { getBroadcastPage, getDurationPage } from './useCalendarRoot';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -202,14 +202,21 @@ describe('modifier names', () => {
     'date',
   ])('refuses the name of an attribute of a day: %s', (name) => {
     expect(() => {
-      assertModifierNames('Calendar.Root', { [name]: day('2026-11-11') });
+      assertModifierNames('Calendar.Root', [name]);
     }).toThrow(/^Vase UI: The `modifiers` prop of <Calendar.Root> has the key `/);
+  });
+
+  it.each(['rangeStart', 'range-end', 'rangeMiddle'])('reserves %s for range days', (name) => {
+    expect(() => assertModifierNames('RangeCalendar.Root', [name])).toThrow(
+      `The \`modifiers\` prop of <RangeCalendar.Root> has the key \`${name}\``,
+    );
+    expect(() => assertModifierNames('Calendar.Root', [name])).not.toThrow();
   });
 
   it('accepts other names, and no modifiers', () => {
     expect(() => {
-      assertModifierNames('Calendar.Root', { holiday: day('2026-11-11'), selectedByTeam: [] });
-      assertModifierNames('Calendar.Root', undefined);
+      assertModifierNames('Calendar.Root', ['holiday', 'selectedByTeam']);
+      assertModifierNames('Calendar.Root', []);
     }).not.toThrow();
   });
 

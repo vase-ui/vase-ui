@@ -1,66 +1,303 @@
-import { computed, nextTick, onMounted, shallowRef, watch, watchEffect } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import {
+  computed,
+  nextTick,
+  onMounted,
+  readonly,
+  shallowRef,
+  toValue,
+  watch,
+  watchEffect,
+  watchPostEffect,
+} from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import { useServerValue } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
 import { activeElement } from '../../../common/shadowDom';
-import { useServerValue } from '../../../common/hydration';
 import { useControlled } from '../../../common/useControlled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { REASONS } from '../../reasons';
+import { useKeepAliveState } from '../../useKeepAliveState';
 import { displayCalendar } from '../displayCalendar';
 import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
+import type { DateMatcher } from '../matchers';
+import { PickerCalendarOwner, usePickerControl } from '../picker/PickerControlContext';
 import {
   compareDates,
   isKind,
   isSameDay,
   parseInputText,
+  today,
   toInputText,
   toPlainDate,
-  today,
 } from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
-import type {
-  CalendarBaseChangeEventDetails,
-  CalendarBaseProps,
-  CalendarChangeEventDetails,
-  CalendarView,
-  CalendarViewProps,
-} from './calendarProps';
 import { assertModifierNames, canFocus, canSelect, getDayState, ownsDay } from './dayState';
 import type { DayRules } from './dayState';
-import type { CalendarSelection } from './daySelection';
-import { PickerCalendarOwner, usePickerControl } from '../picker/PickerControlContext';
-import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
 import { formatPages, formatRangeText, formatText } from './formatText';
-import { findGridTarget, getGridMove } from './gridKeys';
-import { getMonthPage, startOfWeek } from './monthGrid';
+import {
+  createWeek,
+  dayOfWeekOf,
+  getMonthPage,
+  getPageKey,
+  startOfWeek,
+  weekdaysFrom,
+} from './monthGrid';
 import type { CalendarPage, CalendarPageWeek } from './monthGrid';
-import { usePageTransition } from './usePageTransition';
-import type { NavigationDirection } from './usePageTransition';
-import { getMonthCells, getSpanOfYears, getYearCells } from './viewPages';
+import { getMonthCells, getSpanOfYears, getYearCells, getYearPageStart } from './viewPages';
 import type { CalendarCellState } from './viewPages';
-import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
-import type { VisibleDuration } from './weeks';
 
-export interface CalendarRootEmit<Details> {
+/** The reasons that each calendar root has, whatever its selection and its views. */
+export type CalendarBaseChangeEventReason =
+  | typeof REASONS.dayPress
+  | typeof REASONS.keyboard
+  | typeof REASONS.monthChange
+  | typeof REASONS.none;
+
+/** The reasons that only a calendar with the views of months and years has. */
+export type CalendarViewChangeEventReason =
+  typeof REASONS.monthPress | typeof REASONS.yearPress | typeof REASONS.triggerPress;
+
+export type CalendarChangeEventReason =
+  CalendarBaseChangeEventReason | CalendarViewChangeEventReason;
+
+export type CalendarBaseChangeEventDetails =
+  VaseUIChangeEventDetails<CalendarBaseChangeEventReason>;
+export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChangeEventReason>;
+
+/** What a calendar can select: a day, or a year and month. */
+export type CalendarValue = DateValue | Temporal.PlainYearMonth;
+
+/** What the grid shows: the days of a month, the months of a year, or a page of years. */
+export type CalendarView = 'day' | 'month' | 'year';
+
+/** The props of a calendar that has the views of months and years. */
+export interface CalendarViewProps {
+  /**
+   * What the grid shows: `day` the days of the months, `month` the months of a year, and `year` a
+   * page of years. A value that is a year and month has no days, so its first view is `month`.
+   * A calendar with `visibleDuration` shows days only. Use it when controlled.
+   */
+  view?: CalendarView | undefined;
+  /**
+   * What the grid shows when it first renders. The default is `day`, and `month` for a value that is
+   * a year and month.
+   */
+  defaultView?: CalendarView | undefined;
+  /**
+   * The number of years on a page of years. A page starts with a year that is a multiple of this
+   * number, so the page that holds 2026 starts with 2016 when the number is 12.
+   * @default 12
+   */
+  visibleYears?: number | undefined;
+  /**
+   * Whether a month cannot take focus and cannot be selected. The function gets each month of the
+   * grid, in the calendar of the grid. A month before `minDate` or after `maxDate` is disabled too.
+   */
+  disabledMonths?: ((month: Temporal.PlainYearMonth) => boolean) | undefined;
+  /**
+   * Whether a year cannot take focus and cannot be selected. The function gets the first month of
+   * each year of the grid, in the calendar of the grid. A year before `minDate` or after `maxDate`
+   * is disabled too.
+   */
+  disabledYears?: ((year: Temporal.PlainYearMonth) => boolean) | undefined;
+}
+
+/** The props that each calendar root has, whatever its selection. */
+export interface CalendarBaseProps {
+  /**
+   * The month that the grid shows. With `numberOfMonths`, it is the first month. With
+   * `visibleDuration`, the page starts on a day of this month, or with the week that holds its
+   * first day, and a move of the page gives the month of its first day. A month or year select can
+   * start the page earlier, so that the page ends with the week or the day of `maxDate`. When the
+   * grid has another calendar than this month, the grid shows the month that holds the first day of
+   * this month. The grid of months shows the year of this month, and the grid of years shows the
+   * page of years that holds that year. Use it when controlled.
+   */
+  month?: Temporal.PlainYearMonth | undefined;
+  /**
+   * The month that the grid shows when it first renders, as `month` describes it. With no value, the
+   * month of the focused day, else of the selected day, else of today. The root applies `minDate`
+   * and `maxDate` to that month, as it does for a move of the page. It shows a value of this prop
+   * as it is.
+   */
+  defaultMonth?: Temporal.PlainYearMonth | undefined;
+  /**
+   * The day that the user focused last, and that has the tab stop. `null` means no such day. When
+   * it changes to a day that no page of the grid shows or holds, the grid shows the page of that
+   * day. For a day outside `minDate` and `maxDate`, it shows the page of the limit. When that page
+   * is in another month, the root emits `monthChange`. With a controlled `month`, the page moves
+   * when the consumer gives that month. Use it when controlled.
+   */
+  focusedDate?: Temporal.PlainDate | null | undefined;
+  /**
+   * The day that has the tab stop when the calendar first renders.
+   */
+  defaultFocusedDate?: Temporal.PlainDate | null | undefined;
+  /**
+   * The number of months that the grid shows at one time, one after the other.
+   * @default 1
+   */
+  numberOfMonths?: number | undefined;
+  /**
+   * Whether the two navigation buttons move by `numberOfMonths` months. Without it, they move by
+   * one month.
+   * @default false
+   */
+  pagedNavigation?: boolean | undefined;
+  /**
+   * Whether each month has the same number of weeks, so that the grid has the same height in each
+   * month: six weeks, and five weeks with `broadcastCalendar`.
+   * @default false
+   */
+  fixedWeeks?: boolean | undefined;
+  /**
+   * Whether the days of the months around a month have a button. The default is `false`, and `true`
+   * with `broadcastCalendar`. Two months of the grid that share a day show it one time, in the
+   * month that owns it. A press on a day that no month of the grid owns shows its month.
+   */
+  showOutsideDays?: boolean | undefined;
+  /**
+   * The first day of the week, from `1` for Monday to `7` for Sunday.
+   * The default is the first day of the week of the locale.
+   */
+  firstDayOfWeek?: DayOfWeek | undefined;
+  /**
+   * Whether the weeks follow ISO 8601: they start on Monday and have their ISO number.
+   * `firstDayOfWeek` and `firstWeekContainsDate` do not apply.
+   * @default false
+   */
+  isoWeek?: boolean | undefined;
+  /**
+   * The day of January that is always in the first week of the year, from `1` to `7`. The default
+   * is `4` for weeks that start on Monday, which gives the ISO 8601 number of the week, and `1` for
+   * the other weeks.
+   */
+  firstWeekContainsDate?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | undefined;
+  /**
+   * Whether the grid shows the broadcast calendar. Its weeks start on Monday, and a month has the
+   * 4 or 5 weeks from the Monday of the week that holds its first day. It needs the Gregorian
+   * calendar.
+   * @default false
+   */
+  broadcastCalendar?: boolean | undefined;
+  /**
+   * Shows one page of whole weeks, `{ weeks: 2 }`, or one row of days, `{ days: 5 }`, in place of
+   * a month. The navigation buttons move by the duration. A key that moves the focus out of the page
+   * shows the page that holds the day. `numberOfMonths` and `fixedWeeks` do not apply.
+   */
+  visibleDuration?: VisibleDuration | undefined;
+  /**
+   * The first day that the user can select. An earlier day is disabled. A page that the root picks
+   * or moves to does not start before the page of this day, unless `maxDate` does not allow it.
+   */
+  minDate?: DateValue | undefined;
+  /**
+   * The last day that the user can select. A later day is disabled. A page that the root picks or
+   * moves to does not end after the page of this day. This rule wins over `minDate`.
+   */
+  maxDate?: DateValue | undefined;
+  /**
+   * The days that can neither take focus nor be selected. The value is a date, a range
+   * `{ start, end }`, `{ before }`, `{ after }`, `{ dayOfWeek }`, a function that gets a
+   * `Temporal.PlainDate`, or a list of these.
+   */
+  disabledDates?: DateMatcher | undefined;
+  /**
+   * The days that can take focus and cannot be selected. It has the same forms as `disabledDates`.
+   */
+  unavailableDates?: DateMatcher | undefined;
+  /**
+   * The days that have no button. It has the same forms as `disabledDates`.
+   */
+  hiddenDates?: DateMatcher | undefined;
+  /**
+   * A matching day has a kebab-case `data-*` attribute for each modifier. Its
+   * `state.modifiers[name]` gives the match. Names of built-in day attributes are reserved.
+   */
+  modifiers?: Record<string, DateMatcher> | undefined;
+  /**
+   * The day that is today. The default is the day of the clock in `timeZone`.
+   * A server render and the hydration show the day of the clock of the server. After the mount, the
+   * calendar shows the day of the clock of the browser. Give `today` when the server knows the day
+   * of the visitor.
+   */
+  today?: DateValue | undefined;
+  /**
+   * The time zone in which the clock gives today. The default is the zone of the value, and then
+   * the zone of the runtime.
+   */
+  timeZone?: string | undefined;
+  /**
+   * The locale of the names and the numbers, and of the first day of the week and the weekend.
+   * The default is the runtime locale. When server rendering, `en-US` is used until hydration.
+   */
+  locale?: Intl.LocalesArgument | undefined;
+  /**
+   * The calendar of the grid, such as `gregory` or `persian`. The default is the calendar of the
+   * value when it is not ISO, and then the calendar of the locale. `gregory` turns the calendar of
+   * the locale off. The value keeps its own calendar.
+   */
+  calendar?: string | undefined;
+  /**
+   * Whether the component should ignore user interaction.
+   * @default false
+   */
+  disabled?: boolean | undefined;
+  /**
+   * Whether the user should be unable to select a day. The days still take focus.
+   * @default false
+   */
+  readOnly?: boolean | undefined;
+  /**
+   * Whether the value of the calendar is not valid.
+   * @default false
+   */
+  invalid?: boolean | undefined;
+  /**
+   * Whether the day that has the tab stop gets focus when the calendar mounts.
+   * @default false
+   */
+  autoFocus?: boolean | undefined;
+}
+
+interface CalendarSelection<Details = CalendarBaseChangeEventDetails> {
+  /** The values of the selection: none, one, or each value of a list. */
+  values: ComputedRef<readonly CalendarValue[]>;
+  /**
+   * The value that gives the kind, the calendar, the time and the zone of a new value: the first
+   * value, else the first value of `defaultValue`, else the last value that the selection had. A
+   * value that becomes empty thus keeps its kind, as the type of its model does.
+   */
+  template: ComputedRef<CalendarValue | undefined>;
+  /**
+   * Whether the grid selects more than one day. The grid then has `aria-multiselectable`, and
+   * Shift with an arrow key calls `extend` and does not move a month or a year.
+   */
+  multiselectable: ComputedRef<boolean>;
+  /** Whether `date` is in the selection. It reads the selection, so a `computed` follows it. */
+  isSelected: (date: Temporal.PlainDate) => boolean;
+  /** A press on a day that the user can select. */
+  press: (date: Temporal.PlainDate, details: Details) => void;
+  /**
+   * The move of the focus by Shift with an arrow key to a day that the user can select. `from` is
+   * the day that had the focus before the key.
+   */
+  extend: (date: Temporal.PlainDate, details: Details, from: Temporal.PlainDate) => void;
+}
+
+interface CalendarRootEmit<Details> {
   (event: 'monthChange', month: Temporal.PlainYearMonth, details: Details): void;
   (event: 'update:month', month: Temporal.PlainYearMonth): void;
   (event: 'focusedDateChange', date: Temporal.PlainDate, details: Details): void;
   (event: 'update:focusedDate', date: Temporal.PlainDate): void;
 }
 
-export interface CalendarViewEmit {
+interface CalendarViewEmit {
   (event: 'viewChange', view: CalendarView, details: CalendarChangeEventDetails): void;
   (event: 'update:view', view: CalendarView): void;
-}
-
-/** What a calendar that has the views of months and years gives to its root. */
-export interface CalendarViewsOptions {
-  props: CalendarViewProps;
-  emit: CalendarViewEmit;
-  /** Whether the value is a year and month. The first view is then the grid of months. */
-  isMonthValue: ComputedRef<boolean>;
 }
 
 /** The first day of the page of a duration, and the month of the root for that page. */
@@ -84,119 +321,28 @@ interface UseCalendarRootOptionsWithoutViews extends CalendarRootOptions<Calenda
 
 /** A root with the views of months and years. Its events also have the reasons of the views. */
 interface UseCalendarRootOptionsWithViews extends CalendarRootOptions<CalendarChangeEventDetails> {
-  views: CalendarViewsOptions;
+  views: true;
+  props: CalendarBaseProps & CalendarViewProps;
+  emit: CalendarRootEmit<CalendarChangeEventDetails> & CalendarViewEmit;
 }
 
-export type UseCalendarRootOptions =
-  UseCalendarRootOptionsWithoutViews | UseCalendarRootOptionsWithViews;
+type UseCalendarRootOptions = UseCalendarRootOptionsWithoutViews | UseCalendarRootOptionsWithViews;
 
-/** What the root gives to its parts and to its own element. */
-export interface CalendarRootController {
-  /**
-   * The attributes that keep the day of the clock, the calendar, the first day of the week and the
-   * weekend of the server in the server HTML. The element of the root binds them.
-   */
-  hydrationAttributes: () => Record<string, string>;
-  /** The locale for `Intl`. It is `en-US` until the root is mounted, when the consumer gives none. */
-  locale: ComputedRef<Intl.LocalesArgument | undefined>;
-  /** The pages of the grid. */
-  pages: ComputedRef<CalendarPage[]>;
-  /** The pages of the grid, and the pages that left and stay until their animations end. */
-  renderedPages: ComputedRef<CalendarPage[]>;
-  /** Whether the page left the grid and stays until its animations end. */
-  isLeaving: (page: CalendarPage) => boolean;
-  /** A page that left calls it when its animations end. The page then goes. */
-  finishLeaving: (page: CalendarPage) => void;
-  /** The days of the week in the order of the grid. */
-  weekdays: ComputedRef<DayOfWeek[]>;
-  weekend: ComputedRef<readonly DayOfWeek[]>;
-  multiselectable: ComputedRef<boolean>;
-  /** The day that has the tab stop, or `null` when no day can take focus. */
-  tabStop: ComputedRef<Temporal.PlainDate | null>;
-  /** The rules that give the state of a day with `getDayState`. */
-  rules: ComputedRef<DayRules>;
-  /**
-   * The name of what the grid shows: the visible pages of days, the year of the months, or the
-   * years of the page. The root names itself with it, and `Calendar.ViewTrigger` shows it.
-   */
-  label: ComputedRef<string>;
-  /** The side of the last change of the page. */
-  navigationDirection: Readonly<Ref<NavigationDirection>>;
-  /** What one press of a navigation button moves: years, months, weeks or days. */
-  navigationStep: ComputedRef<{ unit: 'years' | 'months' | 'weeks' | 'days'; count: number }>;
-  /** Whether `minDate` allows a page before the first one. */
-  canPrevious: ComputedRef<boolean>;
-  /** Whether `maxDate` allows a page after the last one. */
-  canNext: ComputedRef<boolean>;
-  /** The month of `minDate` and the month of `maxDate`. */
-  monthLimits: ComputedRef<{
-    min: Temporal.PlainYearMonth | undefined;
-    max: Temporal.PlainYearMonth | undefined;
-  }>;
-  /**
-   * Moves the pages by one step: by one month, by `numberOfMonths` months with `pagedNavigation`,
-   * or by the duration. It returns `true` when another step in the same direction is possible.
-   */
-  navigate: (step: 1 | -1, event?: Event) => boolean;
-  /**
-   * Makes `month` the month of the page at `pageIndex`. The pages then obey `minDate` and
-   * `maxDate`, as for each other move, so the page can show another month.
-   */
-  showMonth: (month: Temporal.PlainYearMonth, pageIndex: number, event?: Event) => void;
-  /** The number of the week, by `isoWeek` and `firstWeekContainsDate`. */
-  getWeekNumber: (week: CalendarPageWeek) => number;
-  /** The day in the calendar of the grid. */
-  toGridDate: (date: DateValue | Temporal.PlainYearMonth) => Temporal.PlainDate;
-  pressDay: (date: Temporal.PlainDate, event: MouseEvent) => void;
-  onDayFocus: (date: Temporal.PlainDate, event: FocusEvent) => void;
-  onDayKeydown: (date: Temporal.PlainDate, event: KeyboardEvent) => void;
-  /**
-   * Gives the element of a day to the root, so that the root can focus it. It returns the undo. A
-   * cell of a month or of a year registers under the first day of its month.
-   */
-  registerDay: (date: Temporal.PlainDate, element: HTMLElement) => () => void;
-  /**
-   * Focuses `date`, and shows its page. In the grid of months or of years it focuses the cell of
-   * that date. With no date, it focuses the cell that has the tab stop.
-   */
-  focus: (date?: DateValue) => void;
-  /** What the grid shows. A root with no views shows `day`. */
-  view: ComputedRef<CalendarView>;
-  /**
-   * Whether the grid can show months and years. A root with no views and a calendar with
-   * `visibleDuration` show days only.
-   */
-  hasViews: ComputedRef<boolean>;
-  /** Whether a press on a month selects it, because the value is a year and month. */
-  selectsMonths: ComputedRef<boolean>;
-  /** The months of the year that the grid of months shows. */
-  monthCells: ComputedRef<Temporal.PlainYearMonth[]>;
-  /** The first month of each year of the page that the grid of years shows. */
-  yearCells: ComputedRef<Temporal.PlainYearMonth[]>;
-  /** Shows `target`, or shows the first view when the grid already shows `target`. */
-  toggleView: (target: 'month' | 'year', event: MouseEvent) => void;
-  getMonthState: (month: Temporal.PlainYearMonth) => CalendarCellState;
-  getYearState: (year: Temporal.PlainYearMonth) => CalendarCellState;
-  pressMonth: (month: Temporal.PlainYearMonth, event: MouseEvent) => void;
-  pressYear: (year: Temporal.PlainYearMonth, event: MouseEvent) => void;
-  /** `cell` is the month, or the first month of the year, of the cell that got the focus. */
-  onCellFocus: (cell: Temporal.PlainYearMonth, event: FocusEvent) => void;
-  onCellKeydown: (cell: Temporal.PlainYearMonth, columns: number, event: KeyboardEvent) => void;
-}
+export type CalendarRootController = ReturnType<typeof useCalendarRoot>;
 
 /**
  * The state and the keys of a calendar root. A root calls it in `setup` after `assertTemporal`.
  * The root owns the focused day and the month of the page. The pages, the tab stop and the keys
  * derive from them and from the selection.
  */
-export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootController {
-  const { part, props, views } = options;
+export function useCalendarRoot(options: UseCalendarRootOptions) {
+  const { part, props } = options;
   const emit: CalendarRootEmit<CalendarBaseChangeEventDetails> = options.emit;
   const selection: CalendarSelection = options.selection;
   // Only a root with views has listeners and a selection that take the reasons of the views.
   // A root with no views gets no press on its view trigger, a month or a year. Its trigger is
   // disabled, and its grids of months and of years do not render.
-  const optionsWithViews = options.views ? options : undefined;
+  const views = options.views ? options : undefined;
   const formatLocale = useFormatLocale(() => props.locale);
   const direction = useDirection();
   const name = part.replace(/\.Root$/, '');
@@ -216,7 +362,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   );
 
   if (process.env.NODE_ENV !== 'production') {
-    function assertBroadcastCalendar() {
+    watchEffect(() => {
       const id = calendar.value;
       if (props.broadcastCalendar === true && id !== 'iso8601') {
         throw new Error(
@@ -225,10 +371,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
             'Remove `broadcastCalendar`, or set `calendar="gregory"`.',
         );
       }
-    }
-    // Vue reports a second warning if the first check throws inside the watcher.
-    assertBroadcastCalendar();
-    watchEffect(assertBroadcastCalendar);
+    });
   }
 
   const weekData = computed(() => weekInfo(formatLocale.value));
@@ -264,7 +407,9 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       : { days: Math.max(1, Math.floor(visible.days)) };
   });
 
-  const isMonthValue = computed(() => views?.isMonthValue.value === true);
+  const isMonthValue = computed(
+    () => views !== undefined && isKind(selection.template.value, 'yearMonth'),
+  );
   const viewState = useControlled<CalendarView | undefined>({
     controlled: () => views?.props.view,
     default: () => views?.props.defaultView,
@@ -408,14 +553,11 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     computed(() => view.value === 'day'),
   );
 
-  assertModifierNames(part, props.modifiers);
   if (process.env.NODE_ENV !== 'production') {
-    watch(
-      () => props.modifiers,
-      (modifiers) => {
-        assertModifierNames(part, modifiers);
-      },
-    );
+    const names = computed(() => Object.keys(props.modifiers ?? {}));
+    const check = (keys: string[]) => assertModifierNames(part, keys);
+    check(names.value);
+    watch(names, check);
   }
 
   const rules = computed<DayRules>(() => ({
@@ -627,26 +769,43 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     );
   }
 
-  const dayElements = new Map<string, HTMLElement>();
+  const dayElements = new Map<HTMLElement, string>();
+  const dayKeys: ReadonlyMap<Element | null, string> = dayElements;
+
+  function getDayElement(key: string) {
+    // A Vapor cell can mount in a cached branch before it receives a KeepAlive hook.
+    return [...dayElements].findLast(([button, date]) => date === key && button.isConnected)?.[0];
+  }
+
   const onPickerSelect = usePickerControl(PickerCalendarOwner, () => {
     const date = tabStop.value;
-    return date ? dayElements.get(toInputText(date, false)) : null;
+    return date ? getDayElement(toInputText(date, false)) : null;
   });
 
-  function registerDay(date: Temporal.PlainDate, element: HTMLElement) {
-    const key = toInputText(date, false);
-    dayElements.set(key, element);
-    return () => {
-      if (dayElements.get(key) === element) {
-        dayElements.delete(key);
+  function useFocusTarget(
+    element: Readonly<Ref<HTMLElement | null>>,
+    date: MaybeRefOrGetter<Temporal.PlainDate | null>,
+    register?: (button: HTMLElement, day: Temporal.PlainDate) => () => void,
+  ) {
+    const { isHeld } = useKeepAliveState();
+    watchPostEffect((onCleanup) => {
+      const button = element.value;
+      const day = toValue(date);
+      if (!button || !day || isHeld.value) {
+        return;
       }
-    };
+      dayElements.set(button, toInputText(day, false));
+      onCleanup(() => dayElements.delete(button));
+      if (register) {
+        onCleanup(register(button, day));
+      }
+    });
   }
 
   // The element of a day that the page shows now exists after the next flush.
   function focusDayElement(date: Temporal.PlainDate) {
     void nextTick().then(() => {
-      dayElements.get(toInputText(date, false))?.focus();
+      getDayElement(toInputText(date, false))?.focus();
     });
   }
 
@@ -687,10 +846,6 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     return max && compareDates(date, max) > 0 ? max : date;
   }
 
-  function isDayElement(element: Element | null) {
-    return [...dayElements.values()].some((dayElement) => dayElement === element);
-  }
-
   // An element in an `inert` subtree cannot keep the focus. The browser thus moves the focus to
   // `<body>` when the page of the day that has the focus leaves.
   // The root decides after the flush, because a consumer can give the new month in that flush. A
@@ -699,10 +854,10 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   // had the focus left the grid. Else the focus event would write the tab stop to the consumer in
   // place of the day that the consumer wrote.
   function keepFocusInGrid() {
-    const [someDayElement] = dayElements.values();
+    const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    if (!isDayElement(focused)) {
+    if (!dayKeys.has(focused)) {
       return;
     }
     void nextTick().then(() => {
@@ -712,7 +867,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       }
       const stop = tabStop.value;
       const focusedDateHasStop = stop && props.focusedDate && isSameDay(stop, props.focusedDate);
-      if (focusedDateHasStop || !isDayElement(active)) {
+      if (focusedDateHasStop || !dayKeys.has(active)) {
         focus();
       }
     });
@@ -723,10 +878,10 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   // had the focus takes it again. When that cell left the grid, the cell that has the tab stop
   // takes the focus.
   watch([calendar, firstDay], () => {
-    const [someDayElement] = dayElements.values();
+    const [someDayElement] = dayElements.keys();
     const doc = ownerDocument(someDayElement);
     const focused = activeElement(doc);
-    const key = [...dayElements].find(([, element]) => element === focused)?.[0];
+    const key = dayKeys.get(focused);
     if (key === undefined) {
       return;
     }
@@ -735,7 +890,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
       if (active !== doc.body && active !== null) {
         return;
       }
-      const element = dayElements.get(key);
+      const element = getDayElement(key);
       if (element === undefined) {
         focus();
       } else {
@@ -844,7 +999,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
   }
 
   function toggleView(target: 'month' | 'year', event: MouseEvent) {
-    if (!optionsWithViews) {
+    if (!views) {
       return;
     }
     const next = view.value === target ? (isMonthValue.value ? 'month' : 'day') : target;
@@ -855,7 +1010,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     if (
       next === 'day' &&
       !month.equals(visibleMonth.value) &&
-      !setMonthOfView(optionsWithViews, month, createDetails())
+      !setMonthOfView(views, month, createDetails())
     ) {
       return;
     }
@@ -935,13 +1090,13 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
 
   // A press on a month of a year and month selects it. Else it shows the days of the month.
   function pressMonth(month: Temporal.PlainYearMonth, event: MouseEvent) {
-    if (!optionsWithViews || isMonthDisabled(month)) {
+    if (!views || isMonthDisabled(month)) {
       return;
     }
     if (isMonthValue.value) {
       if (canChange()) {
         const details = createChangeEventDetails(REASONS.monthPress, event);
-        optionsWithViews.selection.press(cellDate(month), details);
+        views.selection.press(cellDate(month), details);
         if (!details.isCanceled) {
           onPickerSelect?.(event);
         }
@@ -951,7 +1106,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     const target = clampMonth(month);
     if (
       target.equals(visibleMonth.value) ||
-      setMonthOfView(optionsWithViews, target, createChangeEventDetails(REASONS.monthPress, event))
+      setMonthOfView(views, target, createChangeEventDetails(REASONS.monthPress, event))
     ) {
       setView('day', createChangeEventDetails(REASONS.monthPress, event));
     }
@@ -959,7 +1114,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
 
   // A press on a year shows its months, in the same month of the year as the root has now.
   function pressYear(year: Temporal.PlainYearMonth, event: MouseEvent) {
-    if (!optionsWithViews || isYearDisabled(year)) {
+    if (!views || isYearDisabled(year)) {
       return;
     }
     const target = clampMonth(
@@ -968,7 +1123,7 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     );
     if (
       target.equals(visibleMonth.value) ||
-      setMonthOfView(optionsWithViews, target, createChangeEventDetails(REASONS.yearPress, event))
+      setMonthOfView(views, target, createChangeEventDetails(REASONS.yearPress, event))
     ) {
       setView('month', createChangeEventDetails(REASONS.yearPress, event));
     }
@@ -1130,12 +1285,13 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     monthLimits,
     navigate,
     showMonth,
-    getWeekNumber: (week) => getWeekNumber(week.start, firstDay.value, minimalDays.value),
+    getWeekNumber: (week: CalendarPageWeek) =>
+      getWeekNumber(week.start, firstDay.value, minimalDays.value),
     toGridDate,
     pressDay,
     onDayFocus,
     onDayKeydown,
-    registerDay,
+    useFocusTarget,
     focus,
     view,
     hasViews,
@@ -1149,5 +1305,441 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     pressYear,
     onCellFocus,
     onCellKeydown,
+  };
+}
+
+interface TabStopOptions {
+  /** The days of the pages that can take focus, in the order of the grid. */
+  days: readonly Temporal.PlainDate[];
+  /** The day that the user focused last. */
+  focusedDate: Temporal.PlainDate | null;
+  isSelected: (date: Temporal.PlainDate) => boolean;
+  today: Temporal.PlainDate;
+}
+
+/**
+ * The day that has the tab stop: the focused day, else the first selected day, else today, else
+ * the first day. Each of them must be in `days`. The result is `null` when no day can take focus.
+ */
+export function getTabStop({
+  days,
+  focusedDate,
+  isSelected,
+  today,
+}: TabStopOptions): Temporal.PlainDate | null {
+  return (
+    (focusedDate && days.find((day) => isSameDay(day, focusedDate))) ??
+    days.find((day) => isSelected(day)) ??
+    days.find((day) => isSameDay(day, today)) ??
+    days[0] ??
+    null
+  );
+}
+
+/**
+ * A move of the focus that a key makes. A move by a duration adds it to the focused day. A move to
+ * the edge of a week goes to the first day of the week, or to its last day. `stepDays` is the step
+ * to the next day that can take focus when the first day cannot. Its sign is the direction.
+ */
+type KeyMove =
+  { weekEdge: 'start' | 'end' } | { duration: Temporal.DurationLike; stepDays: number };
+
+interface KeyAction {
+  move: KeyMove;
+  /** Whether the key also adds the day that it moves to into the selection. */
+  extend: boolean;
+}
+
+/**
+ * The action of a key in a grid of days, or `null` for a key that the grid does not handle.
+ * Shift with an arrow key extends the selection where the selection can extend, and else moves
+ * a month (left and right) or a year (up and down).
+ * @param isRtl Left and right swap in a right-to-left page.
+ */
+export function getKeyAction(
+  key: string,
+  shiftKey: boolean,
+  { isRtl, canExtend }: { isRtl: boolean; canExtend: boolean },
+): KeyAction | null {
+  const horizontal = isRtl ? -1 : 1;
+  switch (key) {
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      const amount = key === 'ArrowRight' ? horizontal : -horizontal;
+      return shiftKey && !canExtend
+        ? { move: { duration: { months: amount }, stepDays: amount }, extend: false }
+        : { move: { duration: { days: amount }, stepDays: amount }, extend: shiftKey };
+    }
+    case 'ArrowUp':
+    case 'ArrowDown': {
+      const amount = key === 'ArrowDown' ? 1 : -1;
+      return shiftKey && !canExtend
+        ? { move: { duration: { years: amount }, stepDays: amount }, extend: false }
+        : { move: { duration: { days: amount * 7 }, stepDays: amount * 7 }, extend: shiftKey };
+    }
+    case 'PageUp':
+    case 'PageDown': {
+      const amount = key === 'PageDown' ? 1 : -1;
+      return {
+        move: { duration: shiftKey ? { years: amount } : { months: amount }, stepDays: amount },
+        extend: false,
+      };
+    }
+    case 'Home':
+    case 'End':
+      return shiftKey
+        ? null
+        : { move: { weekEdge: key === 'Home' ? 'start' : 'end' }, extend: false };
+    default:
+      return null;
+  }
+}
+
+// A matcher that disables every day must not make the search run for ever.
+const MAX_STEPS = 366;
+
+export interface KeyTargetOptions {
+  firstDay: DayOfWeek;
+  canFocus: (date: Temporal.PlainDate) => boolean;
+  min: Temporal.PlainDate | undefined;
+  max: Temporal.PlainDate | undefined;
+}
+
+/**
+ * The day that a move of the focus reaches, or `null` when the focus stays. The move never stops on
+ * a day that cannot take focus. It goes on in its direction to the next day that can, and it stops
+ * at `min` and `max`. A move to the edge of a week stops at the first day of the week that can take
+ * focus, and the focused day is the last one that it tries.
+ */
+export function findKeyTarget(
+  from: Temporal.PlainDate,
+  move: KeyMove,
+  { firstDay, canFocus, min, max }: KeyTargetOptions,
+): Temporal.PlainDate | null {
+  if ('weekEdge' in move) {
+    const first = startOfWeek(from, firstDay);
+    const step = move.weekEdge === 'start' ? 1 : -1;
+    const edge = move.weekEdge === 'start' ? first : first.add({ days: 6 });
+    for (let day = edge; compareDates(day, from) * step <= 0; day = day.add({ days: step })) {
+      if (canFocus(day)) {
+        return isSameDay(day, from) ? null : day;
+      }
+    }
+    return null;
+  }
+
+  let candidate = from.add(move.duration);
+  if (min && compareDates(candidate, min) < 0) {
+    candidate = min;
+  }
+  if (max && compareDates(candidate, max) > 0) {
+    candidate = max;
+  }
+  for (let attempt = 0; attempt < MAX_STEPS; attempt += 1) {
+    if (canFocus(candidate)) {
+      return isSameDay(candidate, from) ? null : candidate;
+    }
+    candidate = candidate.add({ days: move.stepDays });
+    const isBeyondMin = move.stepDays < 0 && min && compareDates(candidate, min) < 0;
+    const isBeyondMax = move.stepDays > 0 && max && compareDates(candidate, max) > 0;
+    if (isBeyondMin || isBeyondMax) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** A cell of the grid of months is a month, and a cell of the grid of years is its first month. */
+type GridUnit = 'month' | 'year';
+
+/**
+ * A move of the focus that a key makes in a grid of months or years: by cells, to the first or last
+ * cell of the row, or by pages. A page is a year in the grid of months, and the years of a page in
+ * the grid of years. The sign is the direction.
+ */
+export type GridMove = { cells: number } | { rowEdge: 'start' | 'end' } | { pages: number };
+
+/**
+ * The move of a key in a grid, or `null` for a key that the grid does not handle.
+ * @param isRtl Left and right swap in a right-to-left page.
+ * @param columns The cells of a row. Up and down move by a row.
+ */
+export function getGridMove(
+  key: string,
+  { isRtl, columns }: { isRtl: boolean; columns: number },
+): GridMove | null {
+  const horizontal = isRtl ? -1 : 1;
+  switch (key) {
+    case 'ArrowLeft':
+      return { cells: -horizontal };
+    case 'ArrowRight':
+      return { cells: horizontal };
+    case 'ArrowUp':
+      return { cells: -columns };
+    case 'ArrowDown':
+      return { cells: columns };
+    case 'Home':
+      return { rowEdge: 'start' };
+    case 'End':
+      return { rowEdge: 'end' };
+    case 'PageUp':
+      return { pages: -1 };
+    case 'PageDown':
+      return { pages: 1 };
+    default:
+      return null;
+  }
+}
+
+export interface GridTargetOptions {
+  unit: GridUnit;
+  /** The cells of a row. */
+  columns: number;
+  /** The years of a page of years. */
+  visibleYears: number;
+  canFocus: (cell: Temporal.PlainYearMonth) => boolean;
+  /** The first and the last month that the limits allow. A year cell is out when its year is out. */
+  min: Temporal.PlainYearMonth | undefined;
+  max: Temporal.PlainYearMonth | undefined;
+}
+
+function compare(unit: GridUnit, a: Temporal.PlainYearMonth, b: Temporal.PlainYearMonth) {
+  return unit === 'month' ? Temporal.PlainYearMonth.compare(a, b) : a.year - b.year;
+}
+
+function stepBy(unit: GridUnit, cell: Temporal.PlainYearMonth, count: number) {
+  return unit === 'month' ? cell.add({ months: count }) : cell.add({ years: count });
+}
+
+// The cell of a limit: the month itself, or the first month of its year.
+function toCell(unit: GridUnit, month: Temporal.PlainYearMonth) {
+  return unit === 'month' ? month : month.with({ month: 1 });
+}
+
+/**
+ * The cell that a move of the focus reaches, or `null` when the focus stays. The move never stops
+ * on a cell that cannot take focus. It goes on in its direction to the next cell that can, and it
+ * stops at `min` and `max`. A move to the edge of a row stops at the first cell of the row that
+ * can take focus, and the focused cell is the last one that it tries.
+ */
+export function findGridTarget(
+  from: Temporal.PlainYearMonth,
+  move: GridMove,
+  { unit, columns, visibleYears, canFocus, min, max }: GridTargetOptions,
+): Temporal.PlainYearMonth | null {
+  if ('rowEdge' in move) {
+    const index =
+      unit === 'month' ? from.month - 1 : from.year - getYearPageStart(from.year, visibleYears);
+    const count = unit === 'month' ? from.monthsInYear : visibleYears;
+    const rowStart = index - (index % columns);
+    const edge = move.rowEdge === 'start' ? rowStart : Math.min(rowStart + columns, count) - 1;
+    const direction = move.rowEdge === 'start' ? 1 : -1;
+    for (let offset = edge - index; offset * direction <= 0; offset += direction) {
+      const cell = stepBy(unit, from, offset);
+      if (canFocus(cell)) {
+        return cell.equals(from) ? null : cell;
+      }
+    }
+    return null;
+  }
+
+  const direction = 'cells' in move ? move.cells : move.pages;
+  let candidate =
+    'cells' in move
+      ? stepBy(unit, from, move.cells)
+      : from.add({ years: unit === 'month' ? move.pages : move.pages * visibleYears });
+  if (min && compare(unit, candidate, min) < 0) {
+    candidate = toCell(unit, min);
+  }
+  if (max && compare(unit, candidate, max) > 0) {
+    candidate = toCell(unit, max);
+  }
+  for (let attempt = 0; attempt < MAX_STEPS; attempt += 1) {
+    if (canFocus(candidate)) {
+      return candidate.equals(from) ? null : candidate;
+    }
+    candidate = stepBy(unit, candidate, Math.sign(direction));
+    const isBeyondMin = direction < 0 && min && compare(unit, candidate, min) < 0;
+    const isBeyondMax = direction > 0 && max && compare(unit, candidate, max) > 0;
+    if (isBeyondMin || isBeyondMax) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** The weeks or the days that one page of a calendar shows, in place of a month. */
+export type VisibleDuration = { weeks: number } | { days: number };
+
+const BROADCAST_FIRST_DAY = 1;
+const BROADCAST_FIXED_WEEKS = 5;
+
+/**
+ * The number of the week that holds `date`. The first week of a year is the first week that has
+ * `minimalDays` days in that year, so that the day `minimalDays` of January is always in it. With
+ * Monday as `firstDay` and `4`, the number is the ISO 8601 number. A week of the days at the end of
+ * a year can have the number of the first week of the next year.
+ * `Intl` has no data for the first week, and `Temporal` gives a week number only in the ISO
+ * calendar, so the number is read from the ISO date of `date`.
+ */
+export function getWeekNumber(
+  date: Temporal.PlainDate,
+  firstDay: DayOfWeek,
+  minimalDays: number,
+): number {
+  const iso = date.withCalendar('iso8601');
+  const week = startOfWeek(iso, firstDay);
+  const firstWeekOf = (year: number) =>
+    startOfWeek(Temporal.PlainDate.from({ year, month: 1, day: minimalDays }), firstDay);
+
+  const nextYear = firstWeekOf(iso.year + 1);
+  const thisYear = firstWeekOf(iso.year);
+  const firstWeek =
+    compareDates(week, nextYear) >= 0
+      ? nextYear
+      : compareDates(week, thisYear) >= 0
+        ? thisYear
+        : firstWeekOf(iso.year - 1);
+  return firstWeek.until(week, { largestUnit: 'days' }).days / 7 + 1;
+}
+
+/**
+ * The page of a broadcast month. It starts on the Monday of the week that holds the first day of
+ * the month, and it ends on the Sunday before the first Monday of the next broadcast month, so it
+ * has 4 or 5 weeks. With `fixedWeeks`, it has 5 weeks. `yearMonth` must be in the ISO calendar.
+ */
+export function getBroadcastPage(
+  yearMonth: Temporal.PlainYearMonth,
+  fixedWeeks = false,
+): CalendarPage {
+  const start = startOfWeek(yearMonth.toPlainDate({ day: 1 }), BROADCAST_FIRST_DAY);
+  const next = startOfWeek(
+    yearMonth.add({ months: 1 }).toPlainDate({ day: 1 }),
+    BROADCAST_FIRST_DAY,
+  );
+  const length = fixedWeeks
+    ? BROADCAST_FIXED_WEEKS
+    : start.until(next, { largestUnit: 'days' }).days / 7;
+  const weeks = Array.from({ length }, (_, index) => createWeek(start.add({ weeks: index })));
+  return {
+    start,
+    end: start.add({ days: length * 7 - 1 }),
+    first: start,
+    last: next.subtract({ days: 1 }),
+    yearMonth,
+    isDuration: false,
+    weekdays: weekdaysFrom(BROADCAST_FIRST_DAY),
+    weeks,
+  };
+}
+
+/**
+ * The page of a duration. `start` is its first day: a day of `firstDay` for weeks. Days are one row.
+ * `yearMonth` is the month of the root, which a select of the page shows.
+ */
+export function getDurationPage(
+  start: Temporal.PlainDate,
+  duration: VisibleDuration,
+  yearMonth: Temporal.PlainYearMonth,
+): CalendarPage {
+  const weeks =
+    'weeks' in duration
+      ? Array.from({ length: duration.weeks }, (_, index) =>
+          createWeek(start.add({ weeks: index })),
+        )
+      : [createWeek(start, duration.days)];
+  const end = start.add({ days: ('weeks' in duration ? duration.weeks * 7 : duration.days) - 1 });
+  return {
+    start,
+    end,
+    first: start,
+    last: end,
+    yearMonth,
+    isDuration: true,
+    weekdays: weeks[0]?.days.map((day) => dayOfWeekOf(day)) ?? [],
+    weeks,
+  };
+}
+
+/**
+ * The first day of the page of a duration that shows `date`. A page that starts at its edge moves
+ * the least: forward, `date` is in the first week or the first day. Backward, it is in the last.
+ */
+export function alignPageStart(
+  date: Temporal.PlainDate,
+  duration: VisibleDuration,
+  firstDay: DayOfWeek,
+  edge: 'start' | 'end',
+): Temporal.PlainDate {
+  if ('weeks' in duration) {
+    const week = startOfWeek(date, firstDay);
+    return edge === 'start' ? week : week.subtract({ weeks: duration.weeks - 1 });
+  }
+  return edge === 'start' ? date : date.subtract({ days: duration.days - 1 });
+}
+
+/** The side of the last change of the page: `none` until the page changes after the mount. */
+export type NavigationDirection = 'previous' | 'next' | 'none';
+
+/**
+ * The side of the last change of the pages, and the pages that left. A page that left stays in
+ * `renderedPages` until its animations end, so that the part can play the exit.
+ *
+ * A change of `layoutKey` gives other pages for the same place of the calendar: the runtime locale
+ * has another first day of the week, or another calendar, than the locale of a server. After a
+ * hydration, the first page also changes when the clock of the browser gives another day than the
+ * clock of the server. A new layout drops outgoing pages and keeps the last navigation direction.
+ *
+ * Only the pages of days move, so `isEnabled` is `false` while the grid shows months or years. No
+ * page leaves then, because no `Calendar.Month` is there to end its animation. The side is `none`.
+ *
+ * The watcher is synchronous, so a page is in `renderedPages` in the render that removes it from
+ * `pages`.
+ */
+export function usePageTransition(
+  pages: Readonly<Ref<CalendarPage[]>>,
+  layoutKey: Readonly<Ref<string>>,
+  isEnabled: Readonly<Ref<boolean>>,
+) {
+  const navigationDirection = shallowRef<NavigationDirection>('none');
+  const leaving = shallowRef<CalendarPage[]>([]);
+
+  watch(
+    [pages, layoutKey, isEnabled],
+    ([next, layout, enabled], [previous, previousLayout]) => {
+      if (!enabled || layout !== previousLayout) {
+        leaving.value = [];
+        if (!enabled) {
+          navigationDirection.value = 'none';
+        }
+        return;
+      }
+
+      const first = next[0];
+      const wasFirst = previous[0];
+      if (first && wasFirst && compareDates(first.first, wasFirst.first) !== 0) {
+        navigationDirection.value =
+          compareDates(first.first, wasFirst.first) < 0 ? 'previous' : 'next';
+      }
+      const shown = new Set(next.map((page) => getPageKey(page)));
+      leaving.value = [...leaving.value, ...previous].filter(
+        (page) => !shown.has(getPageKey(page)),
+      );
+    },
+    { flush: 'sync' },
+  );
+
+  const renderedPages = computed(() =>
+    [...pages.value, ...leaving.value].sort((a, b) => compareDates(a.first, b.first)),
+  );
+
+  return {
+    navigationDirection: readonly(navigationDirection),
+    renderedPages,
+    isLeaving: (page: CalendarPage) =>
+      leaving.value.some((left) => getPageKey(left) === getPageKey(page)),
+    finishLeaving: (page: CalendarPage) => {
+      leaving.value = leaving.value.filter((left) => getPageKey(left) !== getPageKey(page));
+    },
   };
 }

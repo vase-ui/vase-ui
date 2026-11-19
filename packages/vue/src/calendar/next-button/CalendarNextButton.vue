@@ -25,7 +25,7 @@ export interface CalendarNextButtonProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useCalendarNavigationButton } from '../utils/useCalendarNavigationButton';
+import { useCalendarNavigationButton } from '../root/CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 

@@ -23,13 +23,14 @@ export interface CalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
+import { useDayButton } from './useDayButton';
 import type { HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { useCalendarDayContext } from '../day/CalendarDayContext';
-import { dayStateAttributesMapping } from '../day/stateAttributesMapping';
-import { useCalendarMonthContext } from '../month/CalendarMonthContext';
-import { useCalendarRootContext } from '../root/CalendarRootContext';
+import {
+  useCalendarRootContext,
+  useCalendarDayContext,
+  dayStateAttributesMapping,
+} from '../root/CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -49,13 +50,11 @@ defineSlots<{
 
 const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
-const { isLeaving } = useCalendarMonthContext();
 
 const { element, elementProps, setRef, usesRenderSlot, text } = useDayButton(props, {
   root,
   day,
   state,
-  isLeaving,
   stateAttributesMapping: dayStateAttributesMapping,
 });
 

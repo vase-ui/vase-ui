@@ -12,7 +12,7 @@ import type {
   RangeCalendarRootProps,
   RangeCalendarRootState,
 } from './root/RangeCalendarRoot.vue';
-import type { RangeValue } from '../internals/date-time/calendar/rangeSelection';
+import type { RangeValue } from './root/RangeCalendarRootContext';
 import type { DateValue } from '../internals/date-time/temporal';
 
 /**

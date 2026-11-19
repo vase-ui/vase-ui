@@ -7,6 +7,8 @@ const day = (text: string, calendar = 'iso8601') =>
 
 const text = (date: Temporal.PlainDate) => date.withCalendar('iso8601').toString();
 
+const month = (value: string) => Temporal.PlainYearMonth.from(value);
+
 describe('weekdaysFrom', () => {
   it.each([
     { firstDay: 1, expected: [1, 2, 3, 4, 5, 6, 7] },
@@ -142,5 +144,22 @@ describe('isInMonth', () => {
     expect(isInMonth(day('2024-02-10', 'hebrew'), adarI)).toBe(true);
     // The first day of Adar II, which has the month code M06.
     expect(isInMonth(day('2024-03-11', 'hebrew'), adarI)).toBe(false);
+  });
+});
+
+describe('getMonthPage with fixedWeeks', () => {
+  it.each([
+    { name: 'a month of 4 weeks', yearMonth: '2026-02', natural: 4 },
+    { name: 'a month of 5 weeks', yearMonth: '2026-11', natural: 5 },
+    { name: 'a month of 6 weeks', yearMonth: '2026-08', natural: 6 },
+  ])('has 6 weeks for $name', ({ yearMonth, natural }) => {
+    expect(getMonthPage(month(yearMonth), 7).weeks).toHaveLength(natural);
+    const page = getMonthPage(month(yearMonth), 7, true);
+
+    expect(page.weeks).toHaveLength(6);
+    expect(text(page.end)).toBe(text(page.start.add({ days: 41 })));
+    expect(text(page.last)).toBe(
+      text(month(yearMonth).toPlainDate({ day: month(yearMonth).daysInMonth })),
+    );
   });
 });

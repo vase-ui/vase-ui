@@ -1,11 +1,11 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { CalendarBaseProps } from '../../internals/date-time/calendar/calendarProps';
+import type { CalendarBaseProps } from '../../internals/date-time/calendar/useCalendarRoot';
 import type {
   RangeChangeEventDetails,
   RangeChangeEventReason,
   RangeValue,
-} from '../../internals/date-time/calendar/rangeSelection';
+} from './RangeCalendarRootContext';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -27,7 +27,8 @@ export interface RangeCalendarRootProps<Value extends DateValue = Temporal.Plain
   /**
    * The first and the last day of the range. A range in progress has its first day and a `null`
    * last day. A new end has the kind, the time, the time zone and the calendar of the end that it
-   * replaces.
+   * replaces. After a clear, the first nonempty end of `defaultValue` or the last known end supplies
+   * those fields.
    * This is the controlled counterpart of `defaultValue`.
    */
   modelValue?: readonly [Value | null, Value | null] | undefined;
@@ -62,16 +63,20 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, provide } from 'vue';
-import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
+import {
+  useRangeCalendarHost,
+  useRangeSelection,
+  RangeCalendarRootContext,
+} from './RangeCalendarRootContext';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
-import { useRangeSelection } from '../../internals/date-time/calendar/rangeSelection';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { CalendarRootContext } from '../../calendar/root/CalendarRootContext';
-import { calendarRootStateAttributesMapping } from '../../calendar/root/stateAttributesMapping';
+import {
+  CalendarRootContext,
+  calendarRootStateAttributesMapping,
+} from '../../calendar/root/CalendarRootContext';
 import type { CalendarState } from '../../calendar/root/CalendarRoot.vue';
-import { RangeCalendarRootContext } from './RangeCalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
 

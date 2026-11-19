@@ -605,6 +605,8 @@ On a Node.js version before 26, load a `Temporal` polyfill before the server sta
 
 ## Keyboard
 
+Call `focus()` on the root to focus the current tab stop. After `KeepAlive` restores a cached cell, the same call focuses that cell if it has the tab stop.
+
 Each grid has one tab stop: the focused day, month or year. Else the tab stop is the first selected one, else today, else the first one that can take focus. Left and Right swap in a right-to-left document. A key skips the cells that cannot take focus, and it stops at `minDate` and `maxDate`. A key that leaves the page shows the page of the cell that it reaches.
 
 | Key                          | Days                                       | Months and years                                                             |

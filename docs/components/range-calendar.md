@@ -66,7 +66,7 @@ Import the component and assemble its parts:
 
 The value is a list of two ends, `[start, end]`, and `v-model` gives back the same kind. Each end is a `Temporal.PlainDate`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A range with no days is `[null, null]`.
 
-A new end has the kind, the time, the time zone and the calendar of the end that it replaces. With no earlier end, it is a `Temporal.PlainDate` in the ISO calendar. A `defaultValue` with a time or a time zone thus gives the kind of each end that the user picks.
+A new end has the kind, the time, the time zone and the calendar of the end that it replaces. After you clear the range, the calendar uses the first nonempty end of `defaultValue` or the last known end. Without either, it creates a `Temporal.PlainDate` in the ISO calendar.
 
 The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value. The reason is `day-press` for a press, `drag` for a drag and `keyboard` for a key.
 

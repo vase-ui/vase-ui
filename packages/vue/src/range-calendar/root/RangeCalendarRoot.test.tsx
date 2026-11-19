@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { nextTick, shallowReactive, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -62,6 +62,26 @@ describe('<RangeCalendar.Root />', () => {
     refInstanceof: window.HTMLDivElement,
     render,
   }));
+
+  it('keeps the last end when a consumer clears the range in the same task', async () => {
+    const zoned = Temporal.ZonedDateTime.from('2026-11-16T09:30[Asia/Tokyo]');
+    const range = shallowReactive<[Temporal.PlainDate | null, Temporal.ZonedDateTime | null]>([
+      today(),
+      null,
+    ]);
+    const handlers = listeners();
+    const { user } = await renderRange({ modelValue: range, ...handlers });
+
+    range[0] = null;
+    range[1] = zoned;
+    range[1] = null;
+    await nextTick();
+    await user.click(button('2026-11-18'));
+
+    const expected = [zoned.with({ day: 18 }).toString(), null];
+    expect(ends(handlers.onValueChange.mock.calls[0]!)).toEqual(expected);
+    expect(ends(handlers['onUpdate:modelValue'].mock.calls[0]!)).toEqual(expected);
+  });
 
   it('renders a group that the visible month names, and a grid with more than one selection', async () => {
     await renderRange();
