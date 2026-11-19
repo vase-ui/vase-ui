@@ -53,7 +53,7 @@ export type * from './empty/MenuEmpty.vue';
 export type {
   SeparatorProps as MenuSeparatorProps,
   SeparatorState as MenuSeparatorState,
-} from '../separator/Separator.vue';
+} from '../separator';
 export type {
   Filter as MenuFilter,
   GetFilterParameters as MenuFilterOptions,
@@ -73,7 +73,6 @@ export * as MenuRadioItemIndicatorDataAttributes from './radio-item-indicator/Me
 export * as MenuTriggerDataAttributes from './trigger/MenuTriggerDataAttributes';
 export * as MenuViewportCssVariables from './viewport/MenuViewportCssVars';
 export * as MenuViewportDataAttributes from './viewport/MenuViewportDataAttributes';
-export * as MenuSeparatorDataAttributes from '../separator/SeparatorDataAttributes';
 export * as MenuSubmenuTriggerDataAttributes from './submenu-trigger/MenuSubmenuTriggerDataAttributes';
 export * as MenuInputDataAttributes from './input/MenuInputDataAttributes';
 export * as MenuClearDataAttributes from './clear/MenuClearDataAttributes';

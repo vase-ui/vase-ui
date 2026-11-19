@@ -1,6 +1,5 @@
 <script lang="ts">
-import type { Orientation } from '../../internals/types';
-import type { SeparatorProps, SeparatorState } from '../../separator';
+import type { SeparatorProps, SeparatorState } from '../../separator/types';
 
 export interface ToolbarSeparatorState extends SeparatorState {}
 
@@ -9,24 +8,24 @@ export interface ToolbarSeparatorProps extends SeparatorProps {
    * The orientation of the separator. Defaults to the opposite of the toolbar's
    * orientation, so a horizontal toolbar renders vertical separators.
    */
-  orientation?: Orientation | undefined;
+  orientation?: 'horizontal' | 'vertical';
 }
 </script>
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { Separator } from '../../separator';
 import { useToolbarRootContext } from '../root/ToolbarRootContext';
 
-defineOptions({ inheritAttrs: false });
-
-const props = withDefaults(defineProps<ToolbarSeparatorProps>(), { as: 'div' });
+const props = defineProps<ToolbarSeparatorProps>();
 
 defineSlots<{
-  default(props: { state: ToolbarSeparatorState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ToolbarSeparatorState>;
+  default?(scope: { state: ToolbarSeparatorState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: ToolbarSeparatorState;
+  }): unknown;
 }>();
 
 const context = useToolbarRootContext();
@@ -43,22 +42,14 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Separator
-    v-if="$slots.render"
-    ref="separator"
-    v-bind="{ ...withoutPropsOf($attrs, Separator), ...props, orientation: separatorOrientation }"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+  <Separator v-if="$slots.element" ref="separator" :orientation="separatorOrientation">
+    <template #element="scope">
+      <slot name="element" v-bind="scope" />
     </template>
   </Separator>
-  <Separator
-    v-else
-    ref="separator"
-    v-bind="{ ...withoutPropsOf($attrs, Separator), ...props, orientation: separatorOrientation }"
-  >
-    <template #default="slotProps">
-      <slot v-bind="slotProps" />
+  <Separator v-else ref="separator" :orientation="separatorOrientation">
+    <template #default="scope">
+      <slot v-bind="scope" />
     </template>
   </Separator>
 </template>

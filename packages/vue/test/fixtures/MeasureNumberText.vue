@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-defineProps({
-  cases: {
-    type: Array as PropType<{ locale: string; options: Intl.NumberFormatOptions }[]>,
-    required: true,
-  },
-  value: { type: Number, required: true },
-});
+interface Row {
+  locale: string;
+  options: Intl.NumberFormatOptions;
+  value: number;
+}
+
+// The text of `Intl.NumberFormat` for each row, in the environment that renders it.
+defineProps({ rows: { type: Array as PropType<Row[]>, required: true } });
+
+function format({ locale, options, value }: Row) {
+  return new Intl.NumberFormat(locale, options).format(value);
+}
 </script>
 
 <template>
-  <p v-for="{ locale, options } in cases" :key="JSON.stringify([locale, options])">
-    {{ new Intl.NumberFormat(locale, options).format(value) }}
-  </p>
+  <ul>
+    <li v-for="(row, index) in rows" :key="index">{{ format(row) }}</li>
+  </ul>
 </template>

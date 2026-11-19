@@ -83,7 +83,7 @@ async function expectSeparatorPage(page: Page) {
   expect(await readAttributes(page.getByTestId('separator'), attributeNames)).toEqual({
     role: 'separator',
     'aria-orientation': 'vertical',
-    'data-orientation': 'vertical',
+    'data-orientation': null,
     class: 'divider',
   });
 }
@@ -2710,8 +2710,8 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it.each(RANGE_PAGES.filter(({ path }) => path !== '/meter'))(
-    'formats a value of $path with the locale of the visitor after hydration',
+  it.each(RANGE_PAGES)(
+    'keeps the en-US text of $path for a visitor in de-DE after hydration',
     async ({ path, rootAttributes }) => {
       const page = await createPage(undefined, { locale: 'de-DE' });
       const messages = collectMessages(page);
@@ -2723,30 +2723,14 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         new Intl.NumberFormat(undefined, { style: 'percent' }).format(0.42),
       );
       expect(visitorText).not.toBe(PERCENT_TEXT);
-      expect(await page.getByTestId('percent-value').textContent()).toBe(visitorText);
+      expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
+      expect(await page.getByTestId('percent-root').getAttribute('aria-valuetext')).toBe(
+        PERCENT_TEXT,
+      );
       await expectCurrencyRoot(page, rootAttributes);
       expect(messages).toEqual([]);
     },
   );
-
-  it('keeps the en-US text of /meter for a visitor with another locale after hydration', async () => {
-    const page = await createPage(undefined, { locale: 'de-DE' });
-    const messages = collectMessages(page);
-
-    await page.goto(url('/meter'), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
-
-    const visitorText = await page.evaluate(() =>
-      new Intl.NumberFormat(undefined, { style: 'percent' }).format(0.42),
-    );
-    expect(visitorText).not.toBe(PERCENT_TEXT);
-    expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
-    expect(await page.getByTestId('percent-root').getAttribute('aria-valuetext')).toBe(
-      PERCENT_TEXT,
-    );
-    await expectCurrencyRoot(page, { role: 'meter', 'data-progressing': null });
-    expect(messages).toEqual([]);
-  });
 
   it('formats the text of /number-field with the locale of the visitor after hydration', async () => {
     const page = await createPage(undefined, { locale: 'de-DE' });

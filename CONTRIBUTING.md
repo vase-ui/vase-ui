@@ -241,7 +241,7 @@ A family whose upstream folder has no `index.parts.ts` declares the constant and
 
 A family can land in more than one pull request. Its `index.ts` then comes with the last part of the family, or in a later pull request, so the package exports nothing of the family before then. The exception is an entry point that a demo of another family imports. That `index.ts` comes with the last part that the demo renders, as in Slider. The tests of the pull requests before the `index.ts` import `../index.parts`.
 
-A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type, the state type and the data attributes of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps`, `OTPFieldSeparatorState` and `OTPFieldSeparatorDataAttributes`. `pnpm parity:check` needs the last two, because the `types.md` of the family names them.
+A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type and the state type of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps` and `OTPFieldSeparatorState`. `pnpm parity:check` needs the state type, because the `types.md` of the family names it.
 
 ## API convention
 
@@ -267,7 +267,7 @@ The families of [the rules of the refactored families](#the-rules-of-the-refacto
 - An `aria-label` or an `aria-labelledby` that is blank is not given: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own value (`VUE-106`). In Base UI, the blank value replaces the value of the part.
 - An ID reference attribute that is blank is not given either: `aria-activedescendant`, `aria-controls`, `aria-describedby`, `aria-details`, `aria-errormessage`, `aria-flowto`, `aria-owns` or `for`. Such a value refers to no element, so the part keeps its own value (`VUE-110`). In Base UI, the blank value replaces the value of the part. A blank `form` attribute stays, because HTML gives it a meaning: the control then has no form owner.
 - The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`.
-- The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
+- The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface MenuGroupProps extends VaseUIComponentProps<MenuGroupState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
 - A part that types an attribute in an interface of its own adds `null` to that type: `autocomplete?: string | null | undefined` of `Combobox.Input`.
@@ -310,12 +310,12 @@ The template of each such part has the `#render` slot, then the element, and no 
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A provider whose only output is its children renders `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
-A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
+A part that Base UI writes as another part renders that part and no element of its own. `AlertDialog.Trigger` is the example:
 
-- Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper. For example, `Input` declares `id`, `name` and `disabled`.
-- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
+- Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper.
+- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC that its `exceptions` do not name. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
-- Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot, such as `Input`, has no slot template in the second form.
+- Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot has no slot template in the second form.
 - Do not write `v-if` on a slot template, as in `<template v-if="$slots.render" #render>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
 - If that part reads `$slots.default`, as `SelectScrollArrow` does, add a third form. The second form then has `v-else-if="$slots.default"`, and the third form has `v-else` and no slot. Without the third form, that part always gets a default slot, so it never shows its own content.
 - Fallback content in the `<slot>` of that part needs no third form. Vue shows the fallback when the slot renders nothing. The check mark of `ItemIndicator.vue` is an example.
@@ -337,7 +337,7 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
 - Its props and state types are aliases of the types of the other part. Where the Base UI state type has fewer keys, the Vase UI state type omits the other keys: `AutocompleteItemState` is `Omit<ComboboxItemState, 'selected'>`.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
-- The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `Toolbar.Separator` does. Its props interface then holds the text of Base UI for those props.
+- The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `AlertDialog.Trigger` does. Its props interface then holds the text of Base UI for those props.
 
 A part whose new types change a prop is the exception. `AlertDialog.Trigger` is the example: its `handle` takes only a handle of Alert Dialog.
 
@@ -349,7 +349,8 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
-- Put the extra nodes in an internal SFC. Progress puts its screen reader text in `RangeLabelChildren.vue`.
+- Put the extra nodes in an internal SFC, `<Part>Children.vue`.
+- A part of a refactored family writes the extra nodes in its own template, and its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot.
 - Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
@@ -368,7 +369,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 </component>
 ```
 
-A part whose own node is text, such as `Progress.Value`, has four more rules:
+A part whose own node is text, such as `Slider.Value`, has four more rules:
 
 - `<Part>Children.vue` shows the default slot of the consumer when there is one. If there is none, it shows the text. Write the two as one `v-if` chain: `<slot v-if="$slots.default" … />`, then `<template v-else-if="…">{{ text }}</template>`.
 - The part gives a default slot to `<Part>Children.vue` only when the consumer has one: `<template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template>`.
@@ -459,7 +460,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Input` forwards its render slot to the inner part and exposes the inner element.
+- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `AlertDialog.Trigger` forwards its render slot to the inner part and exposes the inner element.
 - Supply `useButton(element, options)` through the `button` option of `useRenderElement`. The button checks its disabled state before it calls the merged click, pointerdown, mousedown, keydown or keyup listener. A key listener can veto keyboard activation.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
@@ -505,9 +506,9 @@ Rules:
 - The helper warns when a wrapper component gives the part `false` only because Vue cast an absent Boolean prop of the wrapper. Its `except` list names each prop for which an absent prop and `false` have the same effect, as `invalid` of `Field.Root`.
 - `src/internals/useCastBooleanWarning.coverage.node.test.ts` fails for such a part with no call. Its table names each exception. A part that has no other such prop, as `Field.Error`, has no call.
 - Add each new such prop that is not an exception to the lists of [Wrap a part](docs/handbook/composition.md#wrap-a-part).
-- Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
+- Declare a required prop that can be `null` as `x: T | null`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
-- Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
+- Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `FieldsetLegend.vue` declares the prop `id`, so its constant is `elementId`.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - Declare the prop of an `aria-*` attribute in camel case: `ariaLabel` for `aria-label`. Vue gives the attribute `aria-label` to that prop.
 - Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Toggle aria-label="Bold">` fails the type check of a consumer that sets `strictTemplates`.
@@ -691,7 +692,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Switch and Meter follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress and Meter follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -909,9 +910,9 @@ The label of a root:
 - The root names the last label in the document that has an id (`VUE-131`). When that label unmounts, `KeepAlive` holds it, or its element gets an empty `id`, the root names the last label that stays. Before a label has an element, it counts in the order of the registrations. A move of the label elements with no other change does not update the order.
 - A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
-- This rule covers `Progress.Root`, `Fieldset.Root` and `Slider.Root`.
-- `Meter.Root` makes the same assumption with no `useLabelId()`. It makes an id with `useId()`, and a `Meter.Label` with no `id` prop takes that id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name.
-- An `aria-label` of the consumer on `Meter.Root`, also a blank one, replaces the name of the label, before and after the mount. An `aria-label` of `null` or `undefined` does not replace it. An `aria-labelledby` of the consumer replaces the id of the label, also a blank one, and `undefined` removes it.
+- This rule covers `Fieldset.Root` and `Slider.Root`.
+- `Progress.Root` and `Meter.Root` make the same assumption with no `useLabelId()`. Each makes an id with `useId()`, and a label with no `id` prop takes that id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name. `test/measurements/range.test.ts` shows that the server HTML has no id that a label gives in `setup`.
+- An `aria-label` of the consumer on such a root, also a blank one, replaces the name of the label, before and after the mount. An `aria-label` of `null` or `undefined` does not replace it. An `aria-labelledby` of the consumer replaces the id of the label, also a blank one, and `undefined` removes it.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser makes the same assumption so its `aria-labelledby` matches the server HTML.
 - `Slider.Root` is the exception while Vue hydrates it. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render. `useRenderElement` gives that render the value of the server HTML.
@@ -980,7 +981,7 @@ A date or time field and the `Intl` data of the server:
 
 ### Context of a root
 
-A root gives values to its parts with `provide` and `inject`. Use `progress/root/ProgressRootContext.ts` as the model.
+A root gives values to its parts with `provide` and `inject`. A refactored family gives an object of getters and functions under a typed key, as `progress/root.ts` does. In another family, use `collapsible/root/CollapsibleRootContext.ts` as the model.
 
 - Put the context refs and actions in a plain object.
 - A field that the root computes is a `ComputedRef`.
@@ -1712,7 +1713,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - The hydration helpers and a test that makes its own app use an ordinary Vue app in each project. An ordinary app needs `vaporInteropPlugin` to render a part compiled as a Vapor component. The hydration helpers give their app to `installPartsInterop`, which installs the plugin in the project `vapor-parts` only. A test file of the list that makes its own app does the same. A test with a custom element gives `installPartsInterop` as `configureApp` to `defineCustomElement`.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
-- A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`. A `replaced` Base UI case is the exception. It goes to the `.node.test.tsx` file of the folder of its Base UI test, as [How to port a test](#how-to-port-a-test) says: `fieldset/legend/FieldsetLegend.node.test.tsx`.
+- A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `alert-dialog/root/AlertDialogRoot.node.test.tsx`. A `replaced` Base UI case is the exception. It goes to the `.node.test.tsx` file of the folder of its Base UI test, as [How to port a test](#how-to-port-a-test) says: `fieldset/legend/FieldsetLegend.node.test.tsx`.
 - There is no jsdom.
 - A file with a name that ends in `.spec.ts`, `.spec.tsx` or `.spec.vue` is a type test. vue-tsc checks it, and no test runner runs it.
 - A `.spec.vue` file is the type test of a template. Its first line is `<!-- @strictTemplates true -->`. vue-tsc then reports an unknown prop in that file, as it does for a consumer that sets `strictTemplates`.
@@ -1970,7 +1971,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
 The hydration helpers:
 
 - `test/hydration.ts` has `renderOnServer(file, props)`, which renders a component on a server, and `hydrate` and `hydrateAfter`, which hydrate that HTML.
-- A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
+- A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `AccordionRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
 - The props go to Node as JSON, so a prop cannot be a function.
 - The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.
@@ -1987,7 +1988,7 @@ The hydration helpers:
 - To show that a part causes no violation, insert a control element with no nonce after the part inserts its elements. Wait for the event of the control with `nextEvent`. Then assert the whole list of events. `scroll-area/root/ScrollAreaRoot.test.tsx`, "sets the nonce, so that a policy that needs the nonce accepts the style element", is the model.
 - Collect the events with a capture listener on the document of the frame. Add the listener before the mount of the part. `nextEvent` resolves in the listener of the target, and the case continues before a bubble listener of the document gets the event.
 
-`hydrate` asserts after the mount and two ticks. It cannot test a part that hydrates later, such as an async component in `<Suspense>`. Hydrate such a part by hand, as `progress/value/ProgressValue.test.tsx` does:
+`hydrate` asserts after the mount and two ticks. It cannot test a part that hydrates later, such as an async component in `<Suspense>`. Hydrate such a part by hand, as `tabs/indicator/TabsIndicator.test.tsx` does:
 
 1. Put the server HTML in a container in the document, and get the element.
 2. Make the app with `installPartsInterop(createSSRApp(fixture, props))`.

@@ -2,7 +2,6 @@ import { expect, describe, it } from 'vitest';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
-  describeConformance,
   hydrate,
   renderOnServer,
   screen,
@@ -13,11 +12,6 @@ import ToolbarSeparatorHydration from './ToolbarSeparatorHydration.test.vue';
 
 describe('<Toolbar.Separator />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<Toolbar.Separator />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    render: (node) => render(<Toolbar.Root>{node}</Toolbar.Root>),
-  }));
 
   it.each([
     ['horizontal', 'vertical'],
@@ -46,6 +40,43 @@ describe('<Toolbar.Separator />', () => {
     );
 
     expect(screen.getByRole('separator')).toHaveAttribute('aria-orientation', 'horizontal');
+  });
+
+  it('gives the attributes and the template ref to the separator, also in the element slot', async () => {
+    type Exposed = { element: Element | null } | null;
+    type ElementScope = { props: Record<string, unknown>; elementRef: (target: unknown) => void };
+    let plain: Exposed = null;
+    let replaced: Exposed = null;
+    await render(() => (
+      <Toolbar.Root>
+        <Toolbar.Separator
+          ref={(value) => {
+            plain = value as Exposed;
+          }}
+          class="line"
+          style={{ color: 'rgb(255, 0, 0)' }}
+          data-index="1"
+        />
+        <Toolbar.Separator
+          ref={(value) => {
+            replaced = value as Exposed;
+          }}
+          v-slots={{
+            element: ({ props, elementRef }: ElementScope) => <span {...props} ref={elementRef} />,
+          }}
+        />
+      </Toolbar.Root>
+    ));
+
+    const [div, span] = screen.getAllByRole('separator');
+    expect(div!.tagName).toBe('DIV');
+    expect(div).toHaveClass('line');
+    expect(div).toHaveStyle({ color: 'rgb(255, 0, 0)' });
+    expect(div).toHaveAttribute('data-index', '1');
+    expect(plain!.element).toBe(div);
+    expect(span!.tagName).toBe('SPAN');
+    expect(span).toHaveAttribute('aria-orientation', 'vertical');
+    expect(replaced!.element).toBe(span);
   });
 
   it('gives the state of the separator to the default slot', async () => {

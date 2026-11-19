@@ -1,35 +1,44 @@
-// Measurements with plain Vue and native elements, with no code of the library. Each one states
-// what the browser or Vue does, so that a part has code only where they do not do it.
+// Measurements with native elements and plain Vue, with no code of the library, for Progress and
+// Meter. Each one states what the browser or Vue does, so that a part has code only where they do
+// not do it. `range-screen-readers.html` is the measurement for NVDA and JAWS, which a person does
+// on Windows.
 import { describe, expect, test } from 'vitest';
-import { nextTick } from 'vue';
 import MeasureLabelOnServer from '../fixtures/MeasureLabelOnServer.vue';
-import MeasureNumberText from '../fixtures/MeasureNumberText.vue';
-import { hydrate, mount, renderOnServer } from '../render';
+import { hydrate, renderOnServer, settle } from '../render';
 
-describe('an attribute of a parent that a child gives in its setup', () => {
-  test('is not in the server HTML, and comes after the hydration', async () => {
-    const root = await renderOnServer('MeasureLabelOnServer');
-    const meter = root.querySelector('[role=meter]')!;
-    expect(meter).not.toHaveAttribute('aria-labelledby');
-    hydrate(MeasureLabelOnServer, {}, root);
-    await nextTick();
-    expect(meter).toHaveAttribute('aria-labelledby', 'label');
-  });
+describe('the name of a range from a label in it', () => {
+  test.each(['progressbar', 'meter'] as const)(
+    'the server HTML of a %s has no aria-labelledby from a child that gives its id in setup; the attribute comes after the hydration',
+    async (role) => {
+      const root = await renderOnServer('MeasureLabelOnServer', { role });
+      const range = root.querySelector(`[role=${role}]`)!;
+      const label = root.querySelector('span')!;
+      expect(label.id).not.toBe('');
+      expect(range).not.toHaveAttribute('aria-labelledby');
+      hydrate(MeasureLabelOnServer, { role }, root);
+      await settle();
+      expect(range).toHaveAttribute('aria-labelledby', label.id);
+    },
+  );
 });
 
-describe('the text of Intl.NumberFormat', () => {
-  test('is the same in Node and in the browser', async () => {
-    const cases = ['en-US', 'de-DE', 'fr-FR', 'ja-JP', 'ar-EG'].flatMap((locale) =>
-      [
-        { style: 'percent' },
-        { style: 'decimal', maximumFractionDigits: 2 },
-        { style: 'currency', currency: 'EUR' },
-      ].map((options) => ({ locale, options })),
+const LOCALES = ['en-US', 'de-DE', 'fr-FR', 'ja-JP', 'ar-EG'];
+const FORMATS: { options: Intl.NumberFormatOptions; value: number }[] = [
+  { options: { style: 'percent' }, value: 0.425 },
+  { options: { style: 'percent' }, value: 1234.567 },
+  { options: { style: 'decimal', maximumFractionDigits: 2 }, value: 1234.567 },
+  { options: { style: 'currency', currency: 'EUR' }, value: 1234.5 },
+  { options: { style: 'currency', currency: 'EUR' }, value: 1234.567 },
+];
+const ROWS = LOCALES.flatMap((locale) => FORMATS.map((format) => ({ locale, ...format })));
+
+describe('the text of a number', () => {
+  test('Intl.NumberFormat gives the same text in Node and in the browser', async () => {
+    const root = await renderOnServer('MeasureNumberText', { rows: ROWS });
+    const texts = (items: Iterable<Element>) => [...items].map((item) => item.textContent);
+    const ofBrowser = ROWS.map(({ locale, options, value }) =>
+      new Intl.NumberFormat(locale, options).format(value),
     );
-    const props = { cases, value: 1234.567 };
-    const texts = (root: Element) => [...root.querySelectorAll('p')].map((p) => p.textContent);
-    const server = texts(await renderOnServer('MeasureNumberText', props));
-    expect(server).toHaveLength(cases.length);
-    expect(texts(mount(MeasureNumberText, props).root)).toEqual(server);
+    expect(texts(root.querySelectorAll('li'))).toEqual(ofBrowser);
   });
 });

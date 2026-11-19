@@ -20,9 +20,7 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
-import { Separator } from '@vase-ui/vue/separator';
 import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
@@ -322,12 +320,6 @@ const rows: Row[] = [
     expected: () => '',
   },
   {
-    name: 'Progress.Root aria-valuenow',
-    attribute: 'aria-valuenow',
-    createNode: () => <Progress.Root value={30} aria-valuenow={undefined} data-testid="part" />,
-    expected: () => '30',
-  },
-  {
     name: 'Resizable.Handle role',
     attribute: 'role',
     createNode: () => (
@@ -354,12 +346,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Select.Separator role={undefined} data-testid="part" />,
     expected: () => 'presentation',
-  },
-  {
-    name: 'Separator role',
-    attribute: 'role',
-    createNode: () => <Separator role={undefined} data-testid="part" />,
-    expected: () => 'separator',
   },
   {
     name: 'Slider.Root role',
