@@ -1,18 +1,11 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 
 export interface TabsListContext {
   activateOnFocus: ComputedRef<boolean>;
-  /**
-   * Registers a listener that the list calls when its size or the size of a tab changes.
-   * Returns the function that removes the listener.
-   */
-  registerIndicatorUpdateListener(listener: () => void): () => void;
-  /**
-   * Makes the list observe the size of a tab element. Returns the function that stops it.
-   */
-  registerTabResizeObserverElement(element: HTMLElement): () => void;
-  tabsListElement: ShallowRef<HTMLElement | null>;
+  resizeCount: Readonly<Ref<number>>;
+  tabElements: Readonly<Ref<readonly (HTMLElement | null)[]>>;
+  tabsListElement: Readonly<Ref<HTMLElement | null>>;
 }
 
 export const TabsListContext: InjectionKey<TabsListContext> = Symbol();

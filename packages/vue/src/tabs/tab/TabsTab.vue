@@ -76,8 +76,10 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
+import { computed, shallowRef, watchPostEffect, type ShallowRef } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
+import { useListenerSession } from '../../common/useListenerSession';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   useCompositeItem,
@@ -91,10 +93,10 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTabsListContext } from '../list/TabsListContext';
-import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
-import { useTabsRootContext } from '../root/TabsRootContext';
+import { tabsStateAttributesMapping, useTabsRootContext } from '../root/TabsRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -116,19 +118,19 @@ defineSlots<{
 const {
   value: activeTabValue,
   getTabPanelIdByValue,
-  getTabElementBySelectedValue,
+  activeTabElement,
   onValueChange,
-  orientation,
   registerTab,
-  tabActivationDirection,
+  state: rootState,
 } = useTabsRootContext();
-const { activateOnFocus, registerTabResizeObserverElement } = useTabsListContext();
+const { activateOnFocus } = useTabsListContext();
 const { hasFocus, highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext();
 
 // A panel registers its id in `setup`, and it can come after the tab.
 useDeferredServerRender();
 
 const tabId = useVaseUiId(() => props.id);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const active = computed(() => props.value === activeTabValue.value);
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
@@ -146,53 +148,38 @@ const tabMetadata = computed<TabsTabMetadata>(() => ({
   value: props.value,
 }));
 
-const element: ShallowRef<HTMLElement | null> = shallowRef(null);
-const compositeItem = useCompositeItem<TabsTabMetadata>(element, {
+const { attributes, events, index } = useCompositeItem<TabsTabMetadata>(element, {
   metadata: tabMetadata,
   active,
   // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
   // when it is disabled. The server HTML gives it the same tab stop.
   disabled: () => isDisabled.value && activeTabValue.value !== null,
 });
-const { index } = compositeItem;
-
-let isNavigating = false;
-
-// Tabs with the same value are all selected. Only the first may move the tab stop.
-const selectedTab = computed(() => getTabElementBySelectedValue(activeTabValue.value));
-
-// Keeps the highlighted item in sync with the active tab when the value changes outside the list.
-function syncHighlight() {
-  if (isNavigating) {
-    isNavigating = false;
+// With duplicate values, only the first selected tab can claim the tab stop.
+watchPostEffect(() => {
+  if (
+    !active.value ||
+    isDisabled.value ||
+    !element.value ||
+    activeTabElement.value !== element.value
+  ) {
     return;
   }
-
-  if (!(active.value && index.value > -1 && highlightedIndex.value !== index.value)) {
-    return;
+  const tabIndex = index.value;
+  if (tabIndex >= 0 && tabIndex !== highlightedIndex.value && !hasFocus()) {
+    onHighlightedIndexChange(tabIndex);
   }
-
-  if (selectedTab.value !== element.value || hasFocus()) {
-    return;
-  }
-
-  // A tab disabled by its prop can get focus. No disabled tab takes the tab stop from an external
-  // value change.
-  if (!isDisabled.value) {
-    onHighlightedIndexChange(index.value);
-  }
-}
-
-onMounted(syncHighlight);
-watch([active, index, highlightedIndex, isDisabled, selectedTab], syncHighlight, {
-  flush: 'post',
 });
 
-let isPressing = false;
-let isMainButton = false;
+const { isHeld } = useKeepAliveState();
+const press = useListenerSession(isHeld);
+let secondaryPress = false;
 
-// Both callers return when the tab is active, so the current value is never committed again.
 function activate(event: Event) {
+  if (active.value || isDisabled.value) {
+    return;
+  }
+
   onValueChange(
     props.value,
     createChangeEventDetails(REASONS.none, event, undefined, {
@@ -201,24 +188,8 @@ function activate(event: Event) {
   );
 }
 
-function onClick(event: MouseEvent) {
-  if (active.value || isDisabled.value) {
-    return;
-  }
-
-  activate(event);
-}
-
 function onFocusin(event: FocusEvent) {
-  if (active.value || isDisabled.value) {
-    return;
-  }
-
-  if (
-    activateOnFocus.value &&
-    (!isPressing || // keyboard or touch focus
-      isMainButton) // main mouse button focus
-  ) {
+  if (activateOnFocus.value && !secondaryPress) {
     activate(event);
   }
 }
@@ -228,31 +199,26 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
 
-  isPressing = true;
-  // A secondary press (context menu, middle button) can focus the tab, but it must not activate
-  // the tab with `activateOnFocus`.
-  isMainButton = event.button === 0;
-
-  // The listeners are set for each button. A secondary press then does not leave the tab in the
-  // pressed state, which would stop the activation on a later focus.
-  const doc = ownerDocument(event.currentTarget as Element);
-
-  function handlePointerEnd() {
-    isPressing = false;
-    isMainButton = false;
-    doc.removeEventListener('pointerup', handlePointerEnd);
-    doc.removeEventListener('pointercancel', handlePointerEnd);
+  if (event.button === 0) {
+    press.stop();
+    return;
   }
 
-  doc.addEventListener('pointerup', handlePointerEnd);
-  doc.addEventListener('pointercancel', handlePointerEnd);
+  const doc = ownerDocument(event.currentTarget as Element);
+  press.start((onCleanup, end) => {
+    secondaryPress = true;
+    onCleanup(() => {
+      secondaryPress = false;
+    });
+    onCleanup(addEventListener(doc, 'pointerup', end));
+    onCleanup(addEventListener(doc, 'pointercancel', end));
+  });
 }
 
 const state = computed<TabsTabState>(() => ({
+  ...rootState.value,
   disabled: isDisabled.value,
   active: active.value,
-  orientation: orientation.value,
-  tabActivationDirection: tabActivationDirection.value,
 }));
 
 const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', props, {
@@ -265,35 +231,21 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', prop
     }),
   state,
   props: (attrs) => [
-    compositeItem.attributes.value,
-    compositeItem.events,
+    attributes.value,
+    events,
     {
       role: 'tab',
       'aria-controls': getTabPanelIdByValue(props.value),
       'aria-selected': active.value,
       id: tabId.value,
-      onClick,
+      onClick: activate,
       onFocusin,
       onPointerdown,
-      onKeydownCapture() {
-        isNavigating = true;
-      },
     },
     attrs,
   ],
   stateAttributesMapping: tabsStateAttributesMapping,
 });
-
-// The observer follows the element when `as` or the `#render` slot changes it.
-watch(
-  element,
-  (tab, _previous, onCleanup) => {
-    if (tab) {
-      onCleanup(registerTabResizeObserverElement(tab));
-    }
-  },
-  { flush: 'sync' },
-);
 
 defineExpose({ element });
 </script>

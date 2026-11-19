@@ -1,6 +1,7 @@
 import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { trackResizeObservers } from '../../../test/fixtures/trackResizeObservers';
 import {
   createHeldBranch,
   createRenderer,
@@ -164,18 +165,21 @@ describe('<Tabs.Tab />', () => {
       (props: {
         onValueChange?: (value: Tabs.Tab.Value, eventDetails: Tabs.Root.ChangeEventDetails) => void;
         disabledSecond?: boolean;
+        hideSecond?: boolean;
       }) =>
         () => (
           <Tabs.Root defaultValue={0} onValueChange={props.onValueChange}>
             <Tabs.List activateOnFocus>
               <Tabs.Tab value={0}>One</Tabs.Tab>
-              <Tabs.Tab value={1} disabled={props.disabledSecond}>
-                Two
-              </Tabs.Tab>
+              {!props.hideSecond && (
+                <Tabs.Tab value={1} disabled={props.disabledSecond}>
+                  Two
+                </Tabs.Tab>
+              )}
             </Tabs.List>
           </Tabs.Root>
         ),
-      { props: ['onValueChange', 'disabledSecond'] },
+      { props: ['onValueChange', 'disabledSecond', 'hideSecond'] },
     );
 
     it('does not re-commit the value when the active tab is pressed', async () => {
@@ -249,6 +253,43 @@ describe('<Tabs.Tab />', () => {
 
       expect(handleValueChange).toHaveBeenCalledTimes(1);
       expect(secondTab).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('VUE-161: removes both document listeners when a tab unmounts during a secondary press', async () => {
+      const { setProps } = await render(<TwoTabs />);
+      const tab = screen.getByRole('tab', { name: 'Two' });
+      const doc = tab.ownerDocument;
+      const add = vi.spyOn(doc, 'addEventListener');
+      const remove = vi.spyOn(doc, 'removeEventListener');
+      onTestFinished(() => {
+        add.mockRestore();
+        remove.mockRestore();
+      });
+
+      tab.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
+      await setProps({ hideSecond: true });
+      expect(screen.getByRole('tab')).toHaveTextContent('One');
+
+      for (const type of ['pointerup', 'pointercancel']) {
+        const listeners = add.mock.calls.filter(([name]) => name === type);
+        expect(listeners).toHaveLength(1);
+        expect(remove.mock.calls).toContainEqual(listeners[0]);
+      }
+    });
+
+    it('activates on keyboard focus after KeepAlive interrupts a secondary press', async () => {
+      const { HeldBranch, hide, show } = createHeldBranch(() => <TwoTabs />, { mounted: true });
+      const { user } = await render(<HeldBranch />);
+      const [first, second] = screen.getAllByRole('tab');
+      second.dispatchEvent(new PointerEvent('pointerdown', { button: 2, bubbles: true }));
+      await hide();
+      await show();
+
+      first.focus();
+      await user.keyboard('{ArrowRight}');
+
+      expect(second).toHaveFocus();
+      expect(second).toHaveAttribute('aria-selected', 'true');
     });
   });
 
@@ -342,6 +383,7 @@ describe('<Tabs.Tab />', () => {
   });
 
   it('stops the resize observer on the previous tab element', async () => {
+    const readTargets = trackResizeObservers();
     const tag = shallowRef('button');
     await render(() => (
       <Tabs.Root>
@@ -353,13 +395,14 @@ describe('<Tabs.Tab />', () => {
       </Tabs.Root>
     ));
     const previous = screen.getByRole('tab');
-    const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
-    onTestFinished(() => unobserve.mockRestore());
+    const list = screen.getByRole('tablist');
+    expect(readTargets()).toEqual([[list, previous]]);
 
     tag.value = 'span';
     await nextTick();
-    expect(screen.getByRole('tab')).not.toBe(previous);
-    expect(unobserve).toHaveBeenCalledWith(previous);
+    const current = screen.getByRole('tab');
+    expect(current).not.toBe(previous);
+    expect(readTargets()).toEqual([[list, current]]);
   });
 
   it('is not named by its panel while KeepAlive holds a tab that mounted in a held branch', async () => {

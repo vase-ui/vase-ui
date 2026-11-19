@@ -1,0 +1,8 @@
+{
+  "id": "VUE-161",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tabs/tab/TabsTab.tsx#L154-L176"
+  ],
+  "behavior": "A tab releases its document listeners if it unmounts before a secondary press ends. Base UI keeps both listeners until a pointer release or cancel. A KeepAlive hold also ends the press, so keyboard focus can select the tab after activation.",
+  "dueWith": "packages/react/src/tabs/tab/TabsTab.tsx"
+}

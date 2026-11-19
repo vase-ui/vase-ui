@@ -2,6 +2,7 @@ import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { trackResizeObservers } from '../../../test/fixtures/trackResizeObservers';
 import {
   createHeldBranch,
   createRenderer,
@@ -391,30 +392,7 @@ describe('<Tabs.List />', () => {
     // A deactivated list has an empty map, so the indicator measures nothing and shows no trace of
     // a call. The case counts the observers instead.
     it('stops the size observer while the list is deactivated and starts it again', async () => {
-      const NativeResizeObserver = window.ResizeObserver;
-      const observers: { observed: Set<Element>; isDisconnected: boolean }[] = [];
-      class RecordedResizeObserver extends NativeResizeObserver {
-        record = { observed: new Set<Element>(), isDisconnected: false };
-
-        constructor(callback: ResizeObserverCallback) {
-          super(callback);
-          observers.push(this.record);
-        }
-
-        observe(target: Element, options?: ResizeObserverOptions) {
-          this.record.observed.add(target);
-          super.observe(target, options);
-        }
-
-        disconnect() {
-          this.record.isDisconnected = true;
-          super.disconnect();
-        }
-      }
-      vi.stubGlobal('ResizeObserver', RecordedResizeObserver);
-      onTestFinished(() => {
-        vi.unstubAllGlobals();
-      });
+      const readTargets = trackResizeObservers();
 
       const Inner = defineComponent(() => () => (
         <Tabs.Root modelValue={0}>
@@ -435,17 +413,15 @@ describe('<Tabs.List />', () => {
       const list = screen.getByTestId('list');
       const tab = screen.getByRole('tab');
       const indicator = screen.getByTestId('indicator');
-      const readRunning = () => observers.filter((observer) => !observer.isDisconnected);
-
-      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
+      expect(readTargets()).toEqual([[list, tab]]);
 
       await setProps({ visible: false });
 
-      expect(readRunning()).toEqual([]);
+      expect(readTargets()).toEqual([]);
 
       await setProps({ visible: true });
 
-      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
+      expect(readTargets()).toEqual([[list, tab]]);
 
       tab.style.width = '60px';
 
@@ -527,7 +503,34 @@ describe('<Tabs.List />', () => {
     });
   });
 
-  // Last in the file: after a recursion error, Vue runs no post-flush job of a later case.
+  describe('a selected tab that becomes disabled', () => {
+    it('keeps the tab stop on a controlled selected tab that becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const App = defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <Tabs.Root modelValue={1}>
+            <Tabs.List>
+              <Tabs.Tab value={0}>Tab 0</Tabs.Tab>
+              <Tabs.Tab value={1} disabled={disabled.value}>
+                Tab 1
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.Root>
+        </div>
+      ));
+      await render(<App />);
+
+      disabled.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByText('Tab 1')).toHaveFocus();
+    });
+  });
+
+  // Keep these cases last. A recursive update can stop later post-flush jobs.
   describe('highlighted index', () => {
     it.each([
       {
@@ -584,32 +587,5 @@ describe('<Tabs.List />', () => {
         expect(tabElements.map((tab) => tab.tabIndex)).toEqual(tabStops);
       },
     );
-  });
-
-  describe('a selected tab that becomes disabled', () => {
-    it('keeps the tab stop on a controlled selected tab that becomes disabled', async () => {
-      const disabled = shallowRef(false);
-      const App = defineComponent(() => () => (
-        <div>
-          <button type="button" data-testid="before" />
-          <Tabs.Root modelValue={1}>
-            <Tabs.List>
-              <Tabs.Tab value={0}>Tab 0</Tabs.Tab>
-              <Tabs.Tab value={1} disabled={disabled.value}>
-                Tab 1
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs.Root>
-        </div>
-      ));
-      await render(<App />);
-
-      disabled.value = true;
-      await flushMicrotasks();
-      screen.getByTestId('before').focus();
-      await userEvent.keyboard('{Tab}');
-
-      expect(screen.getByText('Tab 1')).toHaveFocus();
-    });
   });
 });
