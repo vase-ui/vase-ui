@@ -4,10 +4,6 @@
       "summary": "A ref in a virtual DOM slot has no owner when its parent vnode comes from outside a render function.",
       "link": "https://github.com/vuejs/core/issues/16301"
     },
-    "vue-16305-hydration": {
-      "summary": "A Vapor component cannot read its hydration state or its first server node.",
-      "link": "https://github.com/vuejs/core/issues/16305"
-    },
     "vue-16305-keep-alive": {
       "summary": "A Vapor component cannot read whether KeepAlive holds its branch.",
       "link": "https://github.com/vuejs/core/issues/16305"
