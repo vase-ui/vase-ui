@@ -115,7 +115,7 @@ export const stateAttributesMapping: StateAttributesMapping<SwitchRootState> = {
 </script>
 
 <script setup lang="ts">
-import { computed, provide, useTemplateRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -188,7 +188,11 @@ const {
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 
-const inputElement = useTemplateRef<HTMLInputElement>('input');
+const inputElement = shallowRef<HTMLInputElement | null>(null);
+// The field must receive this input before the next control registers during the same patch.
+function setInputElement(node: unknown) {
+  inputElement.value = node as HTMLInputElement | null;
+}
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
@@ -358,7 +362,7 @@ defineExpose({ element, inputElement });
     :disabled="isDisabled"
   />
   <input
-    ref="input"
+    :ref="setInputElement"
     type="checkbox"
     v-bind="{ ...inputValidation, checked: isChecked }"
     :aria-describedby="ariaAfterHydration(inputValidation['aria-describedby'])"

@@ -12,6 +12,7 @@ export const CheckboxRootContext: InjectionKey<ComputedRef<CheckboxRootState>> =
 
 interface CheckboxGroupContext {
   value: ComputedRef<string[]>;
+  hasParent: ComputedRef<boolean>;
   parent: ComputedRef<
     { checked: boolean; indeterminate: boolean; controls: string | undefined } | undefined
   >;

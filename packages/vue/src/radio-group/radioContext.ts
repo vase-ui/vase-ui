@@ -1,13 +1,12 @@
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
 import type { StateAttributesMapping } from '../internals/getStateAttributesProps';
 import { transitionStatusMapping } from '../internals/stateAttributesMapping';
 import type { TransitionStatus } from '../internals/useTransitionStatus';
 import type { RadioRootState } from '../radio/root/RadioRoot.vue';
 import * as RadioRootDataAttributes from '../radio/root/RadioRootDataAttributes';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
 import type { UseFieldValidationReturnValue } from '../internals/field-root-context/FieldRootContext';
-import type { VaseUIEventReasons } from '../internals/reasons';
+import type { RadioGroupChangeEventDetails } from './RadioGroup.vue';
 
 export interface RadioInput {
   take: (event?: Event) => void;
@@ -21,10 +20,7 @@ export interface RadioGroupContext<Value> {
   form: ComputedRef<string | undefined>;
   name: ComputedRef<string | undefined>;
   checkedValue: Readonly<Ref<Value | undefined>>;
-  setCheckedValue: (
-    value: Value,
-    eventDetails: VaseUIChangeEventDetails<VaseUIEventReasons['none']>,
-  ) => void;
+  setCheckedValue: (value: Value, eventDetails: RadioGroupChangeEventDetails) => void;
   touched: Readonly<Ref<boolean>>;
   setTouched: (touched: boolean) => void;
   validation: UseFieldValidationReturnValue;

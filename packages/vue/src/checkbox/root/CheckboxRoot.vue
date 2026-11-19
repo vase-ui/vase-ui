@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import { REASONS } from '../../internals/reasons';
@@ -244,7 +244,7 @@ const clearFieldError = useClearFieldError(inputName);
 const parentState = computed(() => (props.parent ? group?.parent.value : undefined));
 const isIndeterminate = computed(() => props.indeterminate || !!parentState.value?.indeterminate);
 
-const inputElement = useTemplateRef<HTMLInputElement>('input');
+const inputElement: ShallowRef<HTMLInputElement | null> = useTemplateRef('input');
 // A field can have more than one input, so the input goes to the registry of the field and not to
 // `validation.inputRef`. The group reads the value when the form needs it, so a change of the value
 // needs no new registration. The parent checkbox is not an input of its field, because it has no
@@ -516,7 +516,7 @@ const elementId = useElementId(element);
 const isHydrated = useIsHydrated();
 if (group) {
   const childValue = computed(() =>
-    !isHeld.value && !props.parent && group.parent.value ? itemValue.value : undefined,
+    !isHeld.value && !props.parent && group.hasParent.value ? itemValue.value : undefined,
   );
   watch([childValue, isHydrated, isDisabled], ([value, hydrated, disabled], _, onCleanup) => {
     if (hydrated && value !== undefined) onCleanup(group.registerDisabled(value, disabled));

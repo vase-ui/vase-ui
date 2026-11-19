@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, ShallowRef } from 'vue';
 import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
 import type {
   NonNativeButtonProps,
@@ -160,7 +160,7 @@ const checked = computed(() =>
   group ? group.checkedValue.value === props.value : props.value === '',
 );
 
-const inputElement = useTemplateRef<HTMLInputElement>('input');
+const inputElement: ShallowRef<HTMLInputElement | null> = useTemplateRef('input');
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
@@ -269,7 +269,7 @@ const state = computed<RadioRootState>(() => ({
 
 provide(RadioRootContext, state);
 
-const element = shallowRef<HTMLElement | null>(null);
+const element: ShallowRef<HTMLElement | null> = shallowRef(null);
 const compositeItem = group
   ? useCompositeItem(element, { active: checked, disabled: isDisabled })
   : undefined;

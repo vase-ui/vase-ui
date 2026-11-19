@@ -148,6 +148,7 @@ let status: 'mixed' | 'on' | 'off' = 'mixed';
 const disabledStates = new Map<string, boolean>();
 const childIds = shallowReactive(new Map<string, readonly string[]>());
 
+const hasParent = computed(() => props.allValues !== undefined);
 const parent = computed(() => {
   const values = props.allValues;
   if (!values) return undefined;
@@ -193,7 +194,7 @@ function setChildChecked(
   checked: boolean,
   details: CheckboxGroupChangeEventDetails,
 ) {
-  const withParent = props.allValues !== undefined;
+  const withParent = hasParent.value;
   let next = groupValue.value.slice();
   if (checked) next.push(value);
   else if (withParent) next.splice(next.indexOf(value), 1);
@@ -298,6 +299,7 @@ provide(CheckboxGroupContext, {
   value: groupValue,
   setChildChecked,
   toggleParent,
+  hasParent,
   registerChildId,
   registerDisabled,
   parent,
