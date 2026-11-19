@@ -5,6 +5,7 @@ import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureRangeInput from '../fixtures/MeasureRangeInput.vue';
+import { platform } from '../../src/common/platform';
 import { touchDrag } from '../pointer';
 import { mount, settle } from '../render';
 
@@ -375,13 +376,16 @@ describe('S7: the native keys of a range input', () => {
 });
 
 describe('S8: a click on the label of a clipped range input', () => {
-  test('gives the input the focus in Chromium and Firefox, and not in WebKit', async () => {
+  // WebKit on macOS gives a control that is not a text field no focus at a click.
+  test('gives the input the focus in Chromium, Firefox and WebKit on Linux, and not in WebKit on macOS', async () => {
     html(`<label for="range" id="label">Volume</label>
       <div style="position:relative;width:20px;height:20px">
         <input id="range" type="range" style="${HIDDEN_INPUT}">
       </div>`);
     await userEvent.click(root!.querySelector('#label')!);
-    expect(document.activeElement).toBe(webkit ? document.body : root!.querySelector('#range'));
+    expect(document.activeElement).toBe(
+      webkit && platform.os.mac ? document.body : root!.querySelector('#range'),
+    );
   });
 });
 
