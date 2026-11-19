@@ -1,9 +1,15 @@
-import { clamp } from '../../common/clamp';
+import { clamp } from '../common/clamp';
 
 /**
  * The size of each panel in percent of the panel space, by panel id. The sizes of a layout sum to 100.
  */
 export type Layout = Record<string, number>;
+
+/**
+ * The size of each panel by panel id: a number, or a string of a number with a unit. A string with
+ * no unit, or with `%`, is percent of the panel space.
+ */
+export type Sizes = Readonly<Record<string, unknown>>;
 
 /**
  * The numbers that change a size with a unit into percent of the panel space.
@@ -25,23 +31,22 @@ export interface Measurement {
   viewportHeight: number;
 }
 
-/**
- * The size of each panel by panel id: a number, or a string of a number with a unit.
- * A string with no unit, or with `%`, is percent of the panel space.
- */
-export type LayoutSnapshot = Record<string, number | string>;
-
 type Length = 'px' | 'em' | 'rem' | 'vh' | 'vw';
 
 const SIZE = /^(\d*\.?\d+)(%|px|em|rem|vh|vw)?$/;
 
-function splitSize(value: number | string): { amount: number; unit: '%' | Length } | undefined {
+function splitSize(value: unknown): { amount: number; unit: '%' | Length } | undefined {
   if (typeof value === 'number') {
     return Number.isFinite(value) && value >= 0 ? { amount: value, unit: '%' } : undefined;
   }
+  if (typeof value !== 'string') {
+    return undefined;
+  }
   const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
   const amount = Number(text);
-  return Number.isFinite(amount) ? { amount, unit: isLengthUnit(unit) ? unit : '%' } : undefined;
+  return text !== undefined && Number.isFinite(amount)
+    ? { amount, unit: isLengthUnit(unit) ? unit : '%' }
+    : undefined;
 }
 
 export const SIZE_FORMS =
@@ -49,16 +54,6 @@ export const SIZE_FORMS =
 
 export function formatSize(value: unknown): string {
   return typeof value === 'string' ? `"${value}"` : String(value);
-}
-
-function readSize(value: number | string): { amount: number; unit: '%' | Length } {
-  const size = splitSize(value);
-  if (size === undefined) {
-    throw new Error(
-      `Vase UI: The size ${formatSize(value)} is not valid. Resizable cannot use it as a size. ${SIZE_FORMS} Examples are 30, "30%" and "200px".`,
-    );
-  }
-  return size;
 }
 
 // The pattern of `SIZE` allows no other unit.
@@ -83,90 +78,83 @@ function toPixels(amount: number, unit: Length, measurement: Measurement): numbe
 
 /**
  * The percent of the panel space for a size. A number, and a string with no unit or with `%`, are
- * percent already. A length needs the measurement: with none, the result is `undefined`.
- * Another form throws.
+ * percent already. A length needs the measurement. With no measurement, and for a size that is not
+ * valid, the result is `undefined`.
  */
-export function parseSize(
-  value: number | string,
-  measurement: Measurement | undefined,
-): number | undefined {
-  const { amount, unit } = readSize(value);
-  if (!isLengthUnit(unit)) {
-    return amount;
+export function parseSize(value: unknown, measurement: Measurement | undefined): number | undefined {
+  const size = splitSize(value);
+  if (size === undefined || !isLengthUnit(size.unit)) {
+    return size?.amount;
   }
   return measurement === undefined
     ? undefined
-    : (toPixels(amount, unit, measurement) / measurement.space) * 100;
+    : (toPixels(size.amount, size.unit, measurement) / measurement.space) * 100;
 }
 
 /**
- * The size in pixels of the panel space. It is `undefined` while there is no measurement.
+ * The size in pixels of the panel space. It is `undefined` while there is no measurement, and for a
+ * size that is not valid.
  */
-export function parsePixels(
-  value: number | string,
-  measurement: Measurement | undefined,
-): number | undefined {
-  if (measurement === undefined) {
+export function parsePixels(value: unknown, measurement: Measurement | undefined): number | undefined {
+  const size = splitSize(value);
+  if (measurement === undefined || size === undefined) {
     return undefined;
   }
-  const { amount, unit } = readSize(value);
-  return isLengthUnit(unit)
-    ? toPixels(amount, unit, measurement)
-    : (amount / 100) * measurement.space;
+  return isLengthUnit(size.unit)
+    ? toPixels(size.amount, size.unit, measurement)
+    : (size.amount / 100) * measurement.space;
 }
 
 /**
- * Whether the value is a size that `parseSize` accepts. This function does not throw.
+ * Whether the value is a size that `parseSize` accepts.
  */
 export function isSize(value: unknown): value is number | string {
-  return (typeof value === 'number' || typeof value === 'string') && splitSize(value) !== undefined;
+  return splitSize(value) !== undefined;
 }
 
 /**
  * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`. A size that is not valid is not a
- * length. This function does not throw.
+ * length.
  */
-export function isLength(value: number | string | undefined): boolean {
-  const unit = value === undefined ? undefined : splitSize(value)?.unit;
+export function isLength(value: unknown): value is string {
+  const unit = splitSize(value)?.unit;
   return unit !== undefined && isLengthUnit(unit);
 }
 
 /**
  * Whether the size is a length in `vh` or `vw`, which follow the size of the window.
  */
-export function isViewportLength(value: number | string | undefined): boolean {
-  const unit = value === undefined ? undefined : splitSize(value)?.unit;
+export function isViewportLength(value: unknown): boolean {
+  const unit = splitSize(value)?.unit;
   return unit === 'vh' || unit === 'vw';
 }
 
 /**
- * The layout in percent that a layout of sizes gives, and the pixels that it gives to the panels
- * that keep their size in pixels. An app can read a layout from a cookie, a storage or a server, so
- * an entry that is not a size is left out. An entry that is a length has no percent while there is
- * no measurement, so it is left out too.
+ * The layout in percent that a layout of sizes gives, the pixels that it gives to the panels that
+ * keep their size in pixels, and the panels whose size is a length. An app can read a layout from a
+ * cookie, a storage or a server, so an entry that is not a size is left out. An entry that is a
+ * length has no percent while there is no measurement, so it is left out too.
  */
 export function normalizeLayout(
-  snapshot: LayoutSnapshot,
+  sizes: Sizes,
   fixedIds: ReadonlySet<string>,
   getMeasurement: (id: string) => Measurement | undefined,
-): { layout: Layout; pins: Record<string, number> } {
-  const entries = Object.entries(snapshot).flatMap(([id, value]) => {
-    if (!isSize(value)) {
-      return [];
-    }
+): { layout: Layout; pins: Record<string, number>; lengths: Set<string> } {
+  const entries = Object.entries(sizes).flatMap(([id, value]) => {
     const measurement = getMeasurement(id);
     const percent = parseSize(value, measurement);
     return percent === undefined ? [] : [{ id, value, percent, measurement }];
   });
+  const lengths = entries.filter(({ value }) => isLength(value));
   return {
     layout: Object.fromEntries(entries.map(({ id, percent }) => [id, percent])),
     pins: Object.fromEntries(
-      entries.flatMap(({ id, value, measurement }) => {
-        const pixels =
-          fixedIds.has(id) && isLength(value) ? parsePixels(value, measurement) : undefined;
+      lengths.flatMap(({ id, value, measurement }) => {
+        const pixels = fixedIds.has(id) ? parsePixels(value, measurement) : undefined;
         return pixels === undefined ? [] : [[id, pixels]];
       }),
     ),
+    lengths: new Set(lengths.map(({ id }) => id)),
   };
 }
 
@@ -327,9 +315,15 @@ export function areConstraintsFeasible(panels: readonly PanelConstraints[]): boo
  * - A panel with no requested size takes its `defaultSize`.
  * - The panels with neither share the remainder in equal parts.
  * - When there is no remainder to share, each such panel takes 100 / n, and the panels with a
- *   requested size keep their ratio in the space that stays.
+ *   requested size share the space that stays. A panel in `lengths` keeps its size there, and the
+ *   other panels with a requested size share the rest in their ratio. With no such other panel, or
+ *   with no room for the lengths, each panel with a requested size keeps its ratio.
  */
-export function resolveLayout(panels: readonly PanelConstraints[], requested: Layout = {}): Layout {
+export function resolveLayout(
+  panels: readonly PanelConstraints[],
+  requested: Layout = {},
+  lengths: ReadonlySet<string> = new Set(),
+): Layout {
   if (panels.length === 0) {
     return {};
   }
@@ -344,13 +338,23 @@ export function resolveLayout(panels: readonly PanelConstraints[], requested: La
   const room = keepsRequested
     ? keptTotal
     : Math.max(100 - defaultTotal - share * unsized.length, 0);
+  const held = kept.filter((panel) => lengths.has(panel.id));
+  const heldTotal = sum(held.map((panel) => sizeOf(requested, panel)));
+  const scaled = kept.filter((panel) => !held.includes(panel));
+  const holdsLengths = held.length > 0 && scaled.length > 0 && heldTotal <= room;
+  const scaledTotal = holdsLengths ? keptTotal - heldTotal : keptTotal;
+  const scaledRoom = holdsLengths ? room - heldTotal : room;
   return validateLayout(
     panels,
     Object.fromEntries([
       ...added.map((panel) => [panel.id, panel.defaultSize ?? share]),
       ...kept.map((panel) => [
         panel.id,
-        keptTotal > 0 ? (sizeOf(requested, panel) / keptTotal) * room : room / kept.length,
+        holdsLengths && held.includes(panel)
+          ? sizeOf(requested, panel)
+          : scaledTotal > 0
+            ? (sizeOf(requested, panel) / scaledTotal) * scaledRoom
+            : scaledRoom / (holdsLengths ? scaled.length : kept.length),
       ]),
     ]),
   );
@@ -635,17 +639,12 @@ export function snapDelta(
   return stepped;
 }
 
-export function areLayoutsEqual(
-  a: Readonly<Record<string, number | string>>,
-  b: Readonly<Record<string, number | string>>,
-): boolean {
+/** Whether two layouts have the same panels with the same sizes. */
+export function areLayoutsEqual(a: Sizes, b: Sizes): boolean {
   return hasSamePanels(a, b) && Object.entries(a).every(([id, size]) => b[id] === size);
 }
 
-export function hasSamePanels(
-  a: Readonly<Record<string, unknown>>,
-  b: Readonly<Record<string, unknown>>,
-): boolean {
+export function hasSamePanels(a: Sizes, b: Sizes): boolean {
   const ids = Object.keys(a);
   return ids.length === Object.keys(b).length && ids.every((id) => Object.hasOwn(b, id));
 }
@@ -673,4 +672,41 @@ export function toRequestedLayout(shown: Layout, requested: Layout): Layout {
       room,
     ),
   };
+}
+
+/**
+ * The layout that an event of the root gives: the size of each panel of `shown` in percent, or, for
+ * a fixed panel, in pixels with three decimals at the most, such as `'240.375px'`. A panel that is
+ * not mounted keeps its entry of `given`, or its size in `requested`. The root reads the pixels
+ * again when the app gives the layout back, so each fixed panel then has its pixels at each size
+ * of the root.
+ */
+export function toEventLayout(
+  shown: Layout,
+  requested: Layout,
+  given: Sizes,
+  fixedIds: ReadonlySet<string>,
+  space: number | undefined,
+): Record<string, number | string> {
+  const unmounted = (id: string) => !Object.hasOwn(shown, id);
+  const entries = Object.entries(toRequestedLayout(shown, requested)).map(
+    ([id, size]): [string, number | string] => {
+      const entry = given[id];
+      if (unmounted(id)) {
+        return [id, isSize(entry) ? entry : size];
+      }
+      return [
+        id,
+        fixedIds.has(id) && space !== undefined
+          ? `${round((size / 100) * space)}px`
+          : size,
+      ];
+    },
+  );
+  // A length of a panel that is not mounted has no percent before the first measurement.
+  const waiting = Object.entries(given).filter(
+    (entry): entry is [string, number | string] =>
+      unmounted(entry[0]) && !Object.hasOwn(requested, entry[0]) && isSize(entry[1]),
+  );
+  return Object.fromEntries([...waiting, ...entries]);
 }

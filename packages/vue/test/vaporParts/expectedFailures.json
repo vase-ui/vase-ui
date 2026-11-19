@@ -196,17 +196,6 @@
         "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
-    "src/resizable/panel/ResizablePanel.test.tsx": {
-      "fails": {
-        "<Resizable.Panel /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Resizable.Panel /> > hydration > gives the collapsed state of the server HTML to both panel slots while it hydrates": "vue-16305-hydration",
-        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a removed panel, data-collapsed": "vue-16305-hydration",
-        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a stored layout, data-collapsed": "vue-16305-hydration"
-      }
-    },
-    "src/resizable/root/ResizableRoot.edges.test.tsx": {
-      "fails": {}
-    },
     "src/scroll-area/content/ScrollAreaContent.test.tsx": {
       "fails": {
         "<ScrollArea.Content /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",

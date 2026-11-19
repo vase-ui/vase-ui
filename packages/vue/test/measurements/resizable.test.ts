@@ -349,3 +349,72 @@ describe('M10: an absolute child outside the box of its parent', () => {
     expect(log).toEqual(['pointerdown@first']);
   });
 });
+
+describe('M11: a ResizeObserver callback that changes the size of the items that it observes', () => {
+  /**
+   * Observes the items `a` and `b` of a row, and the row with `withRow`. The callback gives `a` a
+   * third of the room of `a` and `b`, as a fixed panel takes its pixels. With `deferItems`, it
+   * reacts to a delivery with no entry of the row in the next animation frame.
+   */
+  async function observe(withRow: boolean, change: 'row' | 'sibling', deferItems: boolean) {
+    const row = html(
+      '<div style="display: flex; width: 600px; height: 20px"><div style="flex: 0 0 200px"></div><div style="flex: 1 1 0px"></div><div style="flex: none; width: 10px"></div></div>',
+    ).firstElementChild as HTMLElement;
+    const [a, b, sibling] = [...row.children] as HTMLElement[];
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => {
+      errors.push(event.message);
+      event.preventDefault();
+    };
+    window.addEventListener('error', onError);
+    const react = () => {
+      const room = a.getBoundingClientRect().width + b.getBoundingClientRect().width;
+      a.style.flexBasis = `${Math.round(room / 3)}px`;
+    };
+    const observer = new ResizeObserver((entries) => {
+      if (deferItems && !entries.some((entry) => entry.target === row)) {
+        requestAnimationFrame(react);
+      } else {
+        react();
+      }
+    });
+    if (withRow) observer.observe(row);
+    observer.observe(a);
+    observer.observe(b);
+    await frames(2);
+    if (change === 'row') row.style.width = '900px';
+    else sibling!.style.width = '100px';
+    await frames(4);
+    observer.disconnect();
+    window.removeEventListener('error', onError);
+    const result = `${errors.length > 0 ? 'loop error' : 'no error'}, ${Math.round(a.getBoundingClientRect().width)}px`;
+    root!.remove();
+    return result;
+  }
+
+  test('gives a loop error, unless the row is in the same delivery or the reaction to the items comes in the next frame', async () => {
+    const results: Record<string, string> = {};
+    for (const withRow of [false, true]) {
+      for (const change of ['row', 'sibling'] as const) {
+        for (const deferItems of [false, true]) {
+          const name = `${withRow ? 'row and items' : 'items'}, ${change} grows${deferItems ? ', items in a frame' : ''}`;
+          results[name] = await observe(withRow, change, deferItems);
+        }
+      }
+    }
+    expect(results).toEqual({
+      'items, row grows': 'loop error, 297px',
+      'items, row grows, items in a frame': 'no error, 297px',
+      'items, sibling grows': 'loop error, 167px',
+      'items, sibling grows, items in a frame': 'no error, 167px',
+      'row and items, row grows': 'no error, 297px',
+      'row and items, row grows, items in a frame': 'no error, 297px',
+      'row and items, sibling grows': 'loop error, 167px',
+      'row and items, sibling grows, items in a frame': 'no error, 167px',
+    });
+    // The test runner also writes each loop error to the console.
+    expect(new Set(takeReportedMessages())).toEqual(
+      new Set(['console.error: Error: ResizeObserver loop completed with undelivered notifications.']),
+    );
+  });
+});

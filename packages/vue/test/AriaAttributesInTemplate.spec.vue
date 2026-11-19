@@ -5,7 +5,7 @@ import * as DateField from '../src/date-field/index.parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
-import * as Resizable from '../src/resizable/index.parts';
+import { Resizable } from '../src/resizable';
 import * as Slider from '../src/slider/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
@@ -84,8 +84,6 @@ const id = 'id';
 
   <Resizable.Handle aria-valuetext="x" />
   <Resizable.Handle :aria-valuetext="id" />
-  <Resizable.Handle ariaValuetext="x" />
-  <Resizable.Handle :ariaValuetext="id" />
   <!-- @vue-expect-error `aria-valuetext` is a string -->
   <Resizable.Handle :aria-valuetext="5" />
 

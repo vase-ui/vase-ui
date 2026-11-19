@@ -8,7 +8,6 @@ import { Menu } from '@vase-ui/vue/menu';
 import { Meter } from '@vase-ui/vue/meter';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Progress } from '@vase-ui/vue/progress';
-import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
@@ -391,28 +390,6 @@ describe('useRegisteredId', () => {
             <NumberField.Input v-slots={slot('input', id)} />
             <NumberField.Increment data-testid="named" />
           </NumberField.Root>
-        ),
-      },
-      {
-        name: 'Resizable.Panel',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Resizable.Root>
-            <Resizable.Panel id="a" v-slots={slot('div', id)} />
-            <Resizable.Handle data-testid="named" />
-            <Resizable.Panel id="b" />
-          </Resizable.Root>
-        ),
-      },
-      {
-        name: 'Resizable.Panel with disabled handle',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Resizable.Root>
-            <Resizable.Panel id="a" v-slots={slot('div', id)} />
-            <Resizable.Handle disabled data-testid="named" />
-            <Resizable.Panel id="b" />
-          </Resizable.Root>
         ),
       },
     ];

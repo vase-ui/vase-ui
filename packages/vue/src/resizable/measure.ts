@@ -1,5 +1,3 @@
-import { ownerDocument, ownerWindow } from '../../common/owner';
-import type { Orientation } from '../../internals/types';
 import type { Measurement } from './layout';
 
 /**
@@ -48,10 +46,12 @@ const SPACE_TOLERANCE = 0.05;
 export function readMeasurement(
   rootElement: HTMLElement,
   panels: readonly MeasuredPanel[],
-  orientation: Orientation,
+  orientation: 'horizontal' | 'vertical',
 ): RootMeasurement | undefined {
   const horizontal = orientation === 'horizontal';
-  const win = ownerWindow(rootElement);
+  const document = rootElement.ownerDocument;
+  // A document with an element has a window.
+  const win = document.defaultView!;
   const rootRect = rootElement.getBoundingClientRect();
   const screenSize = horizontal ? rootRect.width : rootRect.height;
   const layoutSize = horizontal ? rootElement.offsetWidth : rootElement.offsetHeight;
@@ -84,9 +84,7 @@ export function readMeasurement(
   return {
     space,
     scale,
-    rem: Number.parseFloat(
-      win.getComputedStyle(ownerDocument(rootElement).documentElement).fontSize,
-    ),
+    rem: Number.parseFloat(win.getComputedStyle(document.documentElement).fontSize),
     rootFontSize,
     panelFontSizes,
     viewportWidth: win.innerWidth,
@@ -122,19 +120,5 @@ export function getMeasurement(measurement: RootMeasurement, id?: string): Measu
         : (measurement.panelFontSizes.get(id) ?? measurement.rootFontSize),
     viewportWidth,
     viewportHeight,
-  };
-}
-
-/**
- * The size of a panel that the `resize` event and `getSize()` report. The pixels have three
- * decimals, and they are 0 while there is no measurement.
- */
-export function getPanelSize(
-  percent: number,
-  space: number | undefined,
-): { percent: number; pixels: number } {
-  return {
-    percent,
-    pixels: space === undefined ? 0 : Math.round((percent / 100) * space * 1000) / 1000,
   };
 }
