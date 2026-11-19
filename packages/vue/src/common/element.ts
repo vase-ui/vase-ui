@@ -19,3 +19,8 @@ export function useElement<T extends Element>() {
   }
   return { element, setElement };
 }
+
+/** Compares two nodes by their order in the document, for `sort`. */
+export function byDocumentOrder(a: Node, b: Node) {
+  return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+}

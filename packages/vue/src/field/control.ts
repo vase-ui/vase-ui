@@ -25,6 +25,11 @@ export interface FieldControl {
   readonly readOnly: boolean;
   /** The native elements whose constraint validation stands for the control. */
   readonly inputs: readonly NativeControl[];
+  /**
+   * The element that gets the focus when a form finds the field invalid. With none, it is the
+   * first element of `inputs` that fails, or else the first one.
+   */
+  readonly focusElement?: HTMLElement | undefined;
 }
 
 /**

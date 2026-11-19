@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import {
-  computed,
-  inject,
-  mergeProps,
-  provide,
-  shallowReactive,
-  shallowRef,
-  useAttrs,
-  watch,
-} from 'vue';
+import { computed, mergeProps, provide, shallowReactive, useAttrs, watch } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
+import { useModel } from '../common/model';
 import { sameValue } from '../common/values';
-import { fieldKey, fieldStateAttributes } from '../field/control';
-import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
+import { fieldStateAttributes } from '../field/control';
+import { useFieldGroup } from '../field/group';
+import { useInDisabledFieldset } from '../fieldset/part';
 import { checkboxGroupKey, type GroupCheckbox } from './checkbox';
 import type {
   CheckboxGroupChangeEventDetails,
@@ -42,16 +35,13 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
-const field = inject(fieldKey, null);
-const fieldset = inject(fieldsetKey, null);
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
 const firstValue: readonly string[] = [...(props.modelValue ?? props.defaultValue ?? [])];
-// The value while no `modelValue` controls it: the last value, controlled or not.
-const ownValue = shallowRef<readonly string[]>(firstValue);
-const value = computed<readonly string[]>(() =>
-  props.modelValue === undefined ? ownValue.value : (props.modelValue ?? []),
+const { value, setOwn } = useModel<readonly string[]>(
+  () => (props.modelValue === undefined ? undefined : (props.modelValue ?? [])),
+  firstValue,
 );
 const checkboxes = shallowReactive<GroupCheckbox[]>([]);
 // The selection that a press on the parent gives back: the value after the last press on a
@@ -61,7 +51,17 @@ let selection = firstValue;
 let lastReset: Event | undefined;
 
 const allValues = computed(() => props.allValues ?? []);
-const disabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
+const inputs = computed(() => checkboxes.map((checkbox) => checkbox.element));
+const { field, labelledBy, onFocusout } = useFieldGroup({
+  element,
+  disabled: () => disabled.value,
+  ownDisabled: () => props.disabled || inDisabledFieldset.value,
+  readOnly: () => false,
+  inputs: () => inputs.value,
+});
+const disabled = computed<boolean>(
+  () => props.disabled || !!field?.disabled || inDisabledFieldset.value,
+);
 const state = computed<CheckboxGroupState>(() => ({
   disabled: disabled.value,
   touched: field?.state.touched ?? false,
@@ -72,40 +72,11 @@ const state = computed<CheckboxGroupState>(() => ({
 const parentChecked = computed(
   () => allValues.value.length > 0 && allValues.value.every((v) => value.value.includes(v)),
 );
-const inputs = computed(() => checkboxes.map((checkbox) => checkbox.element));
 
-watch(
-  value,
-  (next) => {
-    if (props.modelValue !== undefined) ownValue.value = [...next];
-    field?.setValue([...next], next.length > 0);
-  },
-  { deep: true, immediate: true },
-);
-
-watch(
-  element,
-  (el, _, onCleanup) => {
-    if (!el || !field) return;
-    onCleanup(
-      field.setControl({
-        element: el,
-        get id() {
-          return el.id;
-        },
-        name: undefined,
-        get disabled() {
-          return props.disabled || inDisabledFieldset.value;
-        },
-        readOnly: false,
-        get inputs() {
-          return inputs.value;
-        },
-      }),
-    );
-  },
-  { flush: 'post' },
-);
+watch(value, (next) => field?.setValue([...next], next.length > 0), {
+  deep: true,
+  immediate: true,
+});
 
 provide(checkboxGroupKey, {
   get value() {
@@ -141,40 +112,13 @@ provide(checkboxGroupKey, {
   },
 });
 
-// The checkboxes of the group show the state of the field. The group is the control of the
-// field, so it gives them no part in it.
-if (field) {
-  provide(fieldKey, {
-    get disabled() {
-      return disabled.value;
-    },
-    get name() {
-      return field.name;
-    },
-    controlId: undefined,
-    labelId: undefined,
-    get describedBy() {
-      return field.describedBy;
-    },
-    get state() {
-      return field.state;
-    },
-    setControl: () => () => {},
-    setValue() {},
-    onEdit() {},
-    onLeave() {},
-    onReset() {},
-  });
-}
-
 defineExpose({ element });
 
 function elementProps() {
-  const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;
   return mergeProps(
     {
       role: 'group',
-      'aria-labelledby': named ? undefined : (field?.labelId ?? fieldset?.legendId),
+      'aria-labelledby': labelledBy(attrs),
       'aria-describedby': field?.describedBy,
       ...fieldStateAttributes(state.value, disabled.value),
       onFocusout,
@@ -184,7 +128,7 @@ function elementProps() {
 }
 
 function nextOfParent() {
-  const current = value.value;
+  const current: readonly string[] = value.value;
   // A disabled child keeps its state.
   const keeps = (v: string) =>
     checkboxes.some((checkbox) => checkbox.value === v && checkbox.disabled);
@@ -210,7 +154,7 @@ function change(next: string[], details: ChangeEventDetails<'none'>, byChild: bo
   emit('valueChange', next, details);
   if (details.isCanceled) return false;
   if (byChild) selection = next;
-  ownValue.value = next;
+  setOwn(next);
   emit('update:modelValue', next);
   return true;
 }
@@ -221,13 +165,8 @@ function onReset(event: Event) {
   selection = firstValue;
   field?.onReset([...firstValue]);
   if (sameValue(value.value, firstValue)) return;
-  ownValue.value = firstValue;
+  setOwn(firstValue);
   emit('update:modelValue', [...firstValue]);
-}
-
-function onFocusout(event: FocusEvent) {
-  // A move of the focus between two checkboxes of the group is not a leave.
-  if (!element.value?.contains(event.relatedTarget as Node | null)) field?.onLeave();
 }
 </script>
 

@@ -12,7 +12,7 @@ import {
   useId,
   watch,
 } from 'vue';
-import { useElement } from '../common/element';
+import { byDocumentOrder, useElement } from '../common/element';
 import { sameValue } from '../common/values';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { formKey, type FormField } from '../form/field';
@@ -136,7 +136,7 @@ const formField: FormField = {
     return name.value;
   },
   get element() {
-    return validationInput();
+    return control.value?.focusElement ?? validationInput();
   },
   validate: validateAtOnce,
   get invalid() {
@@ -332,7 +332,7 @@ function applyResult(output: FieldValidateResult) {
  */
 function validationInput() {
   const inputs = (control.value?.inputs ?? []).filter((input) => input.willValidate);
-  inputs.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  inputs.sort(byDocumentOrder);
   return inputs.find((input) => !input.validity.valid) ?? inputs[0];
 }
 

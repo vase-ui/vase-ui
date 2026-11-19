@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, nextTick, ref, useAttrs, useId, watch } from 'vue';
+import { computed, inject, mergeProps, nextTick, useAttrs, useId, watch } from 'vue';
 import { checkboxGroupKey } from '../checkbox-group/checkbox';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
+import { useFormReset } from '../common/formReset';
+import { useModel } from '../common/model';
 import { controlAttributes, fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { CheckboxChangeEventDetails, CheckboxProps, CheckboxState } from './types';
@@ -38,12 +40,11 @@ const isParent = computed(() => !!group?.hasAllValues && props.parent);
 const inGroup = computed(() => !!group && (isParent.value || props.value !== undefined));
 
 const firstChecked = props.modelValue ?? props.defaultChecked;
-// The state while no `modelValue` controls it: the last state, controlled or not.
-const ownChecked = ref(firstChecked);
+const own = useModel(() => props.modelValue, firstChecked);
 const checked = computed(() => {
   if (isParent.value) return group!.parent.checked;
   if (inGroup.value) return group!.value.includes(props.value!);
-  return props.modelValue ?? ownChecked.value;
+  return own.value.value;
 });
 const indeterminate = computed(
   () => props.indeterminate || (isParent.value && group!.parent.indeterminate),
@@ -85,21 +86,20 @@ const ownProps = computed(() => ({
   onBlur,
 }));
 
-watch(
-  checked,
-  (next) => {
-    ownChecked.value = next;
-    field?.setValue(next, next);
-  },
-  { immediate: true },
-);
+watch(checked, (next) => field?.setValue(next, next), { immediate: true });
+
+useFormReset(element, (event) => {
+  if (inGroup.value) return group!.onReset(event);
+  field?.onReset(firstChecked);
+  if (checked.value === firstChecked) return;
+  own.setOwn(firstChecked);
+  emit('update:modelValue', firstChecked);
+});
 
 watch(
   element,
   (el, _, onCleanup) => {
     if (!el) return;
-    const form = el.form;
-    form?.addEventListener('reset', onReset);
     const removeControl = field?.setControl({
       element: el,
       get id() {
@@ -132,7 +132,6 @@ watch(
           })
         : undefined;
     onCleanup(() => {
-      form?.removeEventListener('reset', onReset);
       removeControl?.();
       removeFromGroup?.();
     });
@@ -177,7 +176,7 @@ function onChange(event: Event) {
     emit('checkedChange', next, details);
     accepted = !details.isCanceled && (!inGroup.value || changeGroup(next, details));
     if (accepted) {
-      ownChecked.value = next;
+      own.setOwn(next);
       emit('update:modelValue', next);
     }
   }
@@ -195,23 +194,6 @@ function changeGroup(next: boolean, details: CheckboxChangeEventDetails) {
   const value = props.value!;
   const others = group!.value.filter((v) => v !== value);
   return group!.change(next ? [...others, value] : others, details, true);
-}
-
-function onReset(event: Event) {
-  // A form resets only the controls that it owns at that moment: an element that `KeepAlive`
-  // holds has no form.
-  if (element.value?.form !== event.currentTarget) return;
-  // The form resets its controls to their `checked` attribute, which Vue sets to each state, so
-  // the checkbox gives the first state. A later listener can still prevent the reset, so the
-  // checkbox waits for the end of the event.
-  setTimeout(() => {
-    if (event.defaultPrevented) return;
-    if (inGroup.value) return group!.onReset(event);
-    field?.onReset(firstChecked);
-    if (checked.value === firstChecked) return;
-    ownChecked.value = firstChecked;
-    emit('update:modelValue', firstChecked);
-  });
 }
 
 function onBlur() {

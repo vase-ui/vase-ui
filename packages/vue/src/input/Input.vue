@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, nextTick, ref, useAttrs, useId, watch } from 'vue';
+import { computed, inject, mergeProps, nextTick, useAttrs, useId, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
+import { useFormReset } from '../common/formReset';
+import { useModel } from '../common/model';
 import { controlAttributes, fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
@@ -29,10 +31,9 @@ const generatedId = useId();
 const { element, setElement } = useElement<TextElement>();
 
 const firstValue = String(props.modelValue ?? props.defaultValue ?? '');
-// The value while no `modelValue` controls it: the last value, controlled or not.
-const ownValue = ref(firstValue);
-const value = computed(() =>
-  props.modelValue === undefined ? ownValue.value : String(props.modelValue),
+const { value, setOwn } = useModel(
+  () => (props.modelValue === undefined ? undefined : String(props.modelValue)),
+  firstValue,
 );
 
 const id = computed(() => props.id || field?.controlId || generatedId);
@@ -58,41 +59,35 @@ const ownProps = computed(() => ({
   onBlur,
 }));
 
-watch(
-  value,
-  (next) => {
-    ownValue.value = next;
-    field?.setValue(next, next !== '');
-  },
-  { immediate: true },
-);
+watch(value, (next) => field?.setValue(next, next !== ''), { immediate: true });
+
+useFormReset(element, () => {
+  field?.onReset(firstValue);
+  if (value.value !== firstValue) changeValue(firstValue);
+});
 
 watch(
   element,
   (el, _, onCleanup) => {
-    if (!el) return;
-    const form = el.form;
-    form?.addEventListener('reset', onReset);
-    const removeControl = field?.setControl({
-      element: el,
-      get id() {
-        return id.value;
-      },
-      get name() {
-        return props.name;
-      },
-      get disabled() {
-        return props.disabled || inDisabledFieldset.value;
-      },
-      get readOnly() {
-        return props.readonly;
-      },
-      inputs: [el],
-    });
-    onCleanup(() => {
-      form?.removeEventListener('reset', onReset);
-      removeControl?.();
-    });
+    if (!el || !field) return;
+    onCleanup(
+      field.setControl({
+        element: el,
+        get id() {
+          return id.value;
+        },
+        get name() {
+          return props.name;
+        },
+        get disabled() {
+          return props.disabled || inDisabledFieldset.value;
+        },
+        get readOnly() {
+          return props.readonly;
+        },
+        inputs: [el],
+      }),
+    );
   },
   { flush: 'post' },
 );
@@ -110,7 +105,7 @@ function showValue() {
 }
 
 function changeValue(next: string) {
-  ownValue.value = next;
+  setOwn(next);
   emit('update:modelValue', next);
 }
 
@@ -123,20 +118,6 @@ function onInput(event: Event) {
   nextTick(() => {
     showValue();
     if (!details.isCanceled) field?.onEdit();
-  });
-}
-
-function onReset(event: Event) {
-  // A form resets only the controls that it owns at that moment: an element that `KeepAlive`
-  // holds has no form.
-  if (element.value?.form !== event.currentTarget) return;
-  // The form resets its controls to their `value` attribute, which Vue sets to each value, so
-  // Input gives the first value. A later listener can still prevent the reset, so Input waits
-  // for the end of the event.
-  setTimeout(() => {
-    if (event.defaultPrevented) return;
-    field?.onReset(firstValue);
-    if (value.value !== firstValue) changeValue(firstValue);
   });
 }
 
