@@ -27,7 +27,8 @@ export interface RangeCalendarRootProps<Value extends DateValue = Temporal.Plain
   /**
    * The first and the last day of the range. A range in progress has its first day and a `null`
    * last day. A new end has the kind, the time, the time zone and the calendar of the end that it
-   * replaces.
+   * replaces. After a clear, the first nonempty end of `defaultValue` or the last known end supplies
+   * those fields.
    * This is the controlled counterpart of `defaultValue`.
    */
   modelValue?: readonly [Value | null, Value | null] | undefined;

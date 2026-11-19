@@ -263,14 +263,9 @@ export function useRangeSelection(
     return first && pending && isSameDay(pending.anchor, first) ? pending.before : value.value;
   }
 
-  // A new end has the kind, the calendar, the time and the zone of the end that it replaces, else
-  // of another end, else of an end of `defaultValue`. Without one, it is a date in the ISO calendar.
   function createEnds(first: Temporal.PlainDate, second: Temporal.PlainDate | null): RangeValue {
     const [before1, before2] = valueBefore();
-    const [current1, current2] = value.value;
-    const [default1, default2] = props.defaultValue ?? EMPTY_RANGE;
-    const fallback =
-      before1 ?? before2 ?? current1 ?? current2 ?? default1 ?? default2 ?? undefined;
+    const fallback = before1 ?? before2 ?? template.value;
     const create = (date: Temporal.PlainDate, like: DateValue | undefined) =>
       like ? withDate(like, date) : date.withCalendar('iso8601');
     return [create(first, before1 ?? fallback), second && create(second, before2 ?? fallback)];
@@ -345,7 +340,7 @@ export function useRangeSelection(
       return true;
     }
     const day = lone.value;
-    if (!day || props.readOnly === true) {
+    if (!day || props.readOnly || props.disabled) {
       return false;
     }
     extension = null;
@@ -392,6 +387,9 @@ export function useRangeSelection(
       return;
     }
     suppressClick = true;
+    if (props.readOnly || props.disabled) {
+      return;
+    }
     const range = rangeBetween(dragged.anchor, dragged.current);
     if (range) {
       const details = createChangeEventDetails(REASONS.drag, event);

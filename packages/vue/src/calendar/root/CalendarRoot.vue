@@ -70,8 +70,8 @@ export interface CalendarRootProps<
   /**
    * The selected day, or the list of selected days with `multiple`. A value that is a
    * `Temporal.PlainYearMonth` is a selected month, and the grid of months selects it. A new value
-   * has the kind, the time, the time zone and the calendar of the value that the calendar has. A
-   * value that becomes `null` or empty keeps them for the next value.
+   * has the kind, time, time zone and calendar of the first selected value. After a clear, the
+   * first value of `defaultValue` or the last known value supplies those fields.
    * This is the controlled counterpart of `defaultValue`.
    */
   modelValue?: CalendarInputValue<Value, Multiple> | undefined;

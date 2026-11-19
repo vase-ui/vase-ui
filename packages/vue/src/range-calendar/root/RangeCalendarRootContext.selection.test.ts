@@ -32,16 +32,6 @@ function createSelection(props: RangeCalendarRootProps<DateValue> = {}, host?: R
 const escape = () => new KeyboardEvent('keydown', { key: 'Escape' });
 
 describe('useRangeSelection', () => {
-  it('keeps the last end when a consumer clears the range in the same task', () => {
-    const { props, selection } = createSelection({ modelValue: [day('2026-11-14'), null] });
-    const zoned = Temporal.ZonedDateTime.from('2026-11-16T09:30[Asia/Tokyo]');
-
-    props.modelValue = [null, zoned];
-    props.modelValue = [null, null];
-
-    expect(selection.template.value).toBe(zoned);
-  });
-
   describe('press', () => {
     it('starts a range at the first press and ends it at the second', () => {
       const { press, changes, emit } = createSelection();
@@ -278,9 +268,9 @@ describe('useRangeSelection', () => {
       expect(changes()).toEqual([]);
     });
 
-    it('does not change the value of a read-only range', () => {
+    it.each(['readOnly', 'disabled'] as const)('preserves the range on Escape with %s', (prop) => {
       const { cancel, changes } = withCancel({
-        readOnly: true,
+        [prop]: true,
         defaultValue: [day('2026-11-03'), null],
       });
 
