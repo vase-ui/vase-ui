@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { KeepAlive, type PropType } from 'vue';
+import type { PropType } from 'vue';
 import { Resizable } from '../../src/resizable';
 import LastPanel from './ResizableLastPanel.vue';
 

@@ -702,9 +702,12 @@ export function toEventLayout(
         return [id, isSize(entry) ? entry : size];
       }
       // The pixels come from the size on the screen, which is in percent of the mounted panels.
+      const onScreen = shown[id];
       return [
         id,
-        fixedIds.has(id) && space !== undefined ? `${round((shown[id]! / 100) * space)}px` : size,
+        fixedIds.has(id) && space !== undefined && onScreen !== undefined
+          ? `${round((onScreen / 100) * space)}px`
+          : size,
       ];
     },
   );

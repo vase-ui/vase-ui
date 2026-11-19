@@ -156,7 +156,9 @@ function layoutStyle() {
 function firstStyle() {
   const first = firstSize.value;
   if (first === undefined) return { flex: '1 0 0px' };
-  return { flex: isLength(first) ? `0 1 ${first.trim()}` : `0 1 ${format(firstPercent.value!)}%` };
+  return {
+    flex: isLength(first) ? `0 1 ${first.trim()}` : `0 1 ${format(firstPercent.value ?? 0)}%`,
+  };
 }
 
 function elementProps() {

@@ -242,9 +242,11 @@ describe('the hydration', () => {
 
 describe('a client mount', () => {
   test('a child that reads its panel in onMounted finds the panel at its place', async () => {
-    const widths = reactive<Record<string, number>>({});
-    mount(ResizableReadAtMount, { widths });
-    expect({ ...widths }).toEqual({ a: 120, b: 180, c: 100 });
+    const widths: Record<string, number> = {};
+    mount(ResizableReadAtMount, {
+      log: { read: (key: string, width: number) => (widths[key] = width) },
+    });
+    expect(widths).toEqual({ a: 120, b: 180, c: 100 });
     await settle();
   });
 

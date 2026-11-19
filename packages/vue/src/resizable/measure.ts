@@ -50,8 +50,8 @@ export function readMeasurement(
 ): RootMeasurement | undefined {
   const horizontal = orientation === 'horizontal';
   const document = rootElement.ownerDocument;
-  // A document with an element has a window.
-  const win = document.defaultView!;
+  const win = document.defaultView;
+  if (!win) return undefined;
   const rootRect = rootElement.getBoundingClientRect();
   const screenSize = horizontal ? rootRect.width : rootRect.height;
   const layoutSize = horizontal ? rootElement.offsetWidth : rootElement.offsetHeight;

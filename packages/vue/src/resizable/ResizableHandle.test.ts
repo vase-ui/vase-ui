@@ -321,7 +321,7 @@ describe('keys', () => {
     expect(prevented).toEqual([true]);
     expect(at('h1')).toHaveAttribute('aria-valuenow', '60');
     await release();
-    expect(log.map(([name, , reason]) => `${name} ${reason}`)).toEqual([
+    expect(log.map(([name, , reason]) => `${String(name)} ${String(reason)}`)).toEqual([
       'layoutChange drag',
       'layoutCommitted drag',
     ]);
@@ -363,7 +363,9 @@ describe('collapse', () => {
     expect(flex(0, 1)).toEqual(['0', '100']);
     await key(at('h1'), '{Enter}');
     expect(flex(0, 1)).toEqual(['40', '60']);
-    expect(log.map(([name, , reason, type]) => `${name} ${reason} ${type}`)).toEqual([
+    expect(
+      log.map(([name, , reason, type]) => `${String(name)} ${String(reason)} ${String(type)}`),
+    ).toEqual([
       'layoutChange keyboard keydown',
       'layoutCommitted keyboard keydown',
       'layoutChange keyboard keydown',
@@ -477,10 +479,9 @@ describe('double click', () => {
     await nextTick();
     expect(event.defaultPrevented).toBe(true);
     expect(flex(...panels.map((_, index) => index))).toEqual(sizes);
-    expect(log.map(([name, , reason, type]) => `${name} ${reason} ${type}`)).toEqual([
-      'layoutChange reset dblclick',
-      'layoutCommitted reset dblclick',
-    ]);
+    expect(
+      log.map(([name, , reason, type]) => `${String(name)} ${String(reason)} ${String(type)}`),
+    ).toEqual(['layoutChange reset dblclick', 'layoutCommitted reset dblclick']);
   });
 
   test('pushes the next panel only in a root that pushes; a second double click and a disabled handle leave the event to the browser', async () => {

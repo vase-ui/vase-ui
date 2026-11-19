@@ -134,7 +134,7 @@ describe('M2: a hydration with other values', () => {
 });
 
 describe('M3: flex items that get their final flex in the flush after the mount', () => {
-  async function mountItems(props: { read?: boolean; transition?: string }) {
+  function mountItems(props: { read?: boolean; transition?: string }) {
     const runs: number[] = [];
     const container = document.body.appendChild(document.createElement('div'));
     onTestFinished(() => container.remove());
@@ -144,13 +144,13 @@ describe('M3: flex items that get their final flex in the flush after the mount'
   }
 
   test('no transition of flex-grow starts', async () => {
-    const { runs } = await mountItems({ transition: 'flex-grow 1s' });
+    const { runs } = mountItems({ transition: 'flex-grow 1s' });
     await frames(3);
     expect(runs).toEqual([]);
   });
 
   test('a child that reads its width in onMounted starts a transition', async () => {
-    const { runs } = await mountItems({ read: true, transition: 'flex-grow 1s' });
+    const { runs } = mountItems({ read: true, transition: 'flex-grow 1s' });
     await frames(3);
     expect(runs.length).toBeGreaterThan(0);
   });
@@ -166,7 +166,7 @@ describe('M3: flex items that get their final flex in the flush after the mount'
     ] as const) {
       const style = document.head.appendChild(document.createElement('style'));
       style.textContent = '.moves .item { transition: flex-grow 1s; }';
-      const { container, runs } = await mountItems({ read: true });
+      const { container, runs } = mountItems({ read: true });
       await wait();
       container.classList.add('moves');
       await frames(3);

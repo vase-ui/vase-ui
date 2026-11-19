@@ -112,11 +112,12 @@ export function useDrag(options: {
     },
     end(event, apply) {
       hovering.value = false;
-      if (!group.value) return;
+      // A drag that runs has the event of its press at the least.
+      const endEvent = event ?? lastEvent;
+      if (!group.value || !endEvent) return;
       group.value.delete(drag);
       group.value = undefined;
       const pending = root.pendingLayout;
-      const endEvent = event ?? lastEvent!;
       lastEvent = undefined;
       root.endDrag();
       const shown = root.shown;

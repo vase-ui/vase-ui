@@ -126,8 +126,12 @@ function findParts() {
   const rootElement = element.value;
   if (!rootElement) return;
   const next = parts
-    .filter((part) => part.element && rootElement.contains(part.element))
-    .sort((a, b) => byDocumentOrder(a.element!, b.element!));
+    .flatMap((part) => {
+      const partElement = part.element;
+      return partElement && rootElement.contains(partElement) ? [{ part, partElement }] : [];
+    })
+    .sort((a, b) => byDocumentOrder(a.partElement, b.partElement))
+    .map(({ part }) => part);
   const previous = present.value;
   if (next.length !== previous.length || next.some((part, index) => part !== previous[index])) {
     present.value = next;
@@ -362,9 +366,11 @@ function measure() {
   );
   if (!next) return undefined;
   for (const panel of panels.value) {
-    if (isLength(panel.defaultSize) && !firstDefaultSizes.has(panel)) {
-      firstDefaultSizes.set(panel, parseSize(panel.defaultSize, getMeasurement(next, panel.id))!);
-    }
+    const percent = isLength(panel.defaultSize)
+      ? parseSize(panel.defaultSize, getMeasurement(next, panel.id))
+      : undefined;
+    if (percent !== undefined && !firstDefaultSizes.has(panel))
+      firstDefaultSizes.set(panel, percent);
   }
   const previous = measurement.value;
   if (!previous || !isSameMeasurement(previous, next)) measurement.value = next;
@@ -455,8 +461,8 @@ function readFirstLayout(): Layout {
 
 function resetPanel(id: string, move: HandleMove) {
   const found = canChange() ? findPanel(id) : undefined;
-  const first = found && readFirstLayout()[id];
-  return first !== undefined && resizeWithHandle(found!.index, first, undefined, move);
+  const first = found ? readFirstLayout()[id] : undefined;
+  return !!found && first !== undefined && resizeWithHandle(found.index, first, undefined, move);
 }
 
 function startDrag() {
