@@ -16,7 +16,6 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -440,86 +439,6 @@ const rows: Row[] = [
           <Resizable.Panel id="b" />
         </Resizable.Root>
       </div>
-    ),
-  },
-  {
-    part: 'Tabs.Tab',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Tabs.Root defaultValue="a">
-        <Tabs.List>
-          <Tabs.Tab value="a" data-testid="part" {...attrs}>
-            Overview
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="a" data-testid="target">
-          Text
-        </Tabs.Panel>
-      </Tabs.Root>
-    ),
-  },
-  {
-    part: 'Combobox.Input',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createCombobox('input', attrs),
-  },
-  {
-    part: 'Autocomplete.Input',
-    attribute: 'aria-controls',
-    createNode: createAutocomplete,
-  },
-  {
-    part: 'Menu.Input',
-    attribute: 'aria-controls',
-    createNode: createMenuWithInput,
-  },
-  {
-    part: 'NumberField.Increment',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <NumberField.Root>
-        <NumberField.Input data-testid="target" />
-        <NumberField.Increment data-testid="part" {...attrs} />
-      </NumberField.Root>
-    ),
-  },
-  {
-    part: 'NumberField.Decrement',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <NumberField.Root>
-        <NumberField.Input data-testid="target" />
-        <NumberField.Decrement data-testid="part" {...attrs} />
-      </NumberField.Root>
-    ),
-  },
-  {
-    part: 'Resizable.Handle',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <div style={{ width: '1000px', height: '400px' }}>
-        <Resizable.Root style={{ height: '100%' }}>
-          <Resizable.Panel id="a" data-testid="target" />
-          <Resizable.Handle data-testid="part" {...attrs} />
-          <Resizable.Panel id="b" />
-        </Resizable.Root>
-      </div>
-    ),
-  },
-  {
-    part: 'Tabs.Tab',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Tabs.Root defaultValue="a">
-        <Tabs.List>
-          <Tabs.Tab value="a" data-testid="part" {...attrs}>
-            Overview
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="a" data-testid="target">
-          Text
-        </Tabs.Panel>
-      </Tabs.Root>
     ),
   },
   {

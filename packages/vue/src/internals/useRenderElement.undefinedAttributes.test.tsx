@@ -20,7 +20,6 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
@@ -330,21 +329,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Select.Separator role={undefined} data-testid="part" />,
     expected: () => 'presentation',
-  },
-  {
-    name: 'Tabs.Tab aria-controls',
-    attribute: 'aria-controls',
-    createNode: () => (
-      <Tabs.Root defaultValue="a">
-        <Tabs.List>
-          <Tabs.Tab value="a" aria-controls={undefined} data-testid="part">
-            A
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="a" data-testid="target" />
-      </Tabs.Root>
-    ),
-    expected: targetId,
   },
   {
     name: 'TimeClock.Root role',

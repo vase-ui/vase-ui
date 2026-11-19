@@ -20,4 +20,5 @@ export const REFACTORED_FOLDERS = [
   'separator',
   'slider',
   'switch',
+  'tabs',
 ];

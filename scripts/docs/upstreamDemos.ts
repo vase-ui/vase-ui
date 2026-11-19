@@ -30,11 +30,12 @@ const TAILWIND_FOLDER = 'tailwind';
 const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate']]);
 
 /**
- * The families whose parts are native form elements. A demo of such a family styles the parts with
- * the pseudo-classes of these elements, such as `:checked`, and can add an element of its own for a
- * mark or a thumb. Its classes and its style sheets thus differ from those of the Base UI demo.
+ * The families whose demos style the parts with the selectors of native elements and ARIA
+ * attributes, such as `:checked` and `[aria-selected="true"]`, in place of the data attributes of
+ * Base UI. A demo can add an element of its own for a mark or a thumb, and animate a part with
+ * `<Transition>`. Its classes and its style sheets thus differ from those of the Base UI demo.
  */
-const NATIVE_FORM_FAMILIES = new Set([
+const RESTYLED_FAMILIES = new Set([
   'checkbox',
   'checkbox-group',
   'field',
@@ -44,6 +45,7 @@ const NATIVE_FORM_FAMILIES = new Set([
   'input',
   'radio-group',
   'switch',
+  'tabs',
 ]);
 
 /**
@@ -55,7 +57,7 @@ const CSS_STATE_FAMILIES = new Set(['scroll-area']);
 
 /** Whether the demos of a family may differ from the classes and style sheets of Base UI. */
 function hasOwnStyles(name: string): boolean {
-  return NATIVE_FORM_FAMILIES.has(name) || CSS_STATE_FAMILIES.has(name);
+  return RESTYLED_FAMILIES.has(name) || CSS_STATE_FAMILIES.has(name);
 }
 
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;

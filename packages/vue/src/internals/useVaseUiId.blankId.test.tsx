@@ -15,7 +15,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
@@ -244,19 +243,6 @@ const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   </Field.Root>
 );
 
-const tabsParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Tabs.Root defaultValue="a">
-    <Tabs.List>
-      <Tabs.Tab value="a" {...blankIdIf(part === 'Tab', blankId)}>
-        Tab {k}
-      </Tabs.Tab>
-    </Tabs.List>
-    <Tabs.Panel value="a" {...blankIdIf(part === 'Panel', blankId)} data-testid={`panel${k}`}>
-      Panel
-    </Tabs.Panel>
-  </Tabs.Root>
-);
-
 const toastParts = (part: string) => (k: string, blankId: BlankId) => (
   <Toast.Provider>
     <Toast.Viewport>
@@ -439,11 +425,6 @@ const rows: Row[] = [
       description: `Hint ${k} Wrong ${k}`,
       nativeLabel: true,
     }),
-  })),
-  ...(['Tab', 'Panel'] as const).map((part): Row => ({
-    name: `Tabs.${part}`,
-    tree: tabsParts(part),
-    named: (k) => ({ testId: `panel${k}`, name: `Tab ${k}` }),
   })),
   ...(['Title', 'Description'] as const).map((part): Row => ({
     name: `Toast.${part}`,

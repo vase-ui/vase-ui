@@ -8,7 +8,6 @@ import { Menu } from '@vase-ui/vue/menu';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -191,34 +190,6 @@ describe('useRegisteredId', () => {
             <Collapsible.Trigger data-testid="named">Toggle</Collapsible.Trigger>
             <Collapsible.Panel v-slots={slot('div', id)} />
           </Collapsible.Root>
-        ),
-      },
-      {
-        name: 'Tabs.Tab',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Tabs.Root defaultValue="a">
-            <Tabs.List>
-              <Tabs.Tab value="a" v-slots={slot('button', id)} />
-            </Tabs.List>
-            <Tabs.Panel value="a" data-testid="named">
-              Panel
-            </Tabs.Panel>
-          </Tabs.Root>
-        ),
-      },
-      {
-        name: 'Tabs.Panel',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Tabs.Root defaultValue="a">
-            <Tabs.List>
-              <Tabs.Tab value="a" data-testid="named">
-                A
-              </Tabs.Tab>
-            </Tabs.List>
-            <Tabs.Panel value="a" v-slots={slot('div', id)} />
-          </Tabs.Root>
         ),
       },
       {
