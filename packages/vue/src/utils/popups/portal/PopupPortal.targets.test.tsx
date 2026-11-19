@@ -21,7 +21,7 @@ function addContainer() {
   return container;
 }
 
-describe('FloatingPortalLite', () => {
+describe('PopupPortal without guards', () => {
   const { render } = createRenderer();
 
   describeConformance(<PopupPortal />, () => ({

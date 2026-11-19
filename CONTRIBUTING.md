@@ -1218,7 +1218,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - The popup part gives the focus manager the guard before the trigger in `getInsideElements`, and the guard after the trigger as `nextFocusableElement`. It gives functions that read the refs, because the trigger writes the refs after the popup opens. It also gives the two refs of the store context for the inside guards. `MenuPopup.vue` is the model.
 - `usePopupFocus(props, element)` of `usePopupFocus.ts` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part calls it in `setup`, after `useRenderElement`, with a getter of its props and its `element`.
 - Each prop takes its default only when its value is `undefined`, as `withDefaults` does. `null` has its own meaning for `openInteractionType` and `returnFocus`.
-- The JSDoc of each prop of `usePopupFocus` gives its forms and its default. The comments of `usePopupFocus.ts` give the initial focus, the return of the focus, the close for a focus outside the popup, and the context that each focus manager gives to the focus managers below. Its `markOthers` function owns the outside marks.
+- The JSDoc of each prop of `usePopupFocus` gives its forms and its default. The comments of `usePopupFocus.ts` give the initial focus, the return of the focus, the close for a focus outside the popup, and the context that each focus manager gives to the focus managers below. Its `markOthers` function owns the outside marks. An owned dialog with a managed tab index follows changes to its tabbable content and its rendered role.
 - In the focus manager, record the element that has focus before the popup makes other elements inert. Keep coupled operations in that order when several sources change together. Run the cleanup of each changed operation before its next setup. Give independent resources their own watcher and cleanup.
 - At activation, the portal can still lack its popup. The focus manager restores its document listeners and modal marks after the DOM patch.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
@@ -1273,7 +1273,7 @@ The Tooltip provider owns the delay group in `src/tooltip/root/TooltipRootContex
 `useDismissLayer(store, options)` closes a popup for an Escape press, for a press outside it and for a press of its reference. The code is in `src/utils/popups/interactions/useDismissLayer.ts`.
 
 - A root calls it one time in `setup`. While the popup is closed, the composable holds no document listener and no timer.
-- The JSDoc of each option of `useDismissLayer` gives its forms. The root binds the dismissal listeners to its trigger and popup with `bindParts`.
+- The JSDoc of each option of `useDismissLayer` gives its forms. Bind the layer actions to the trigger and popup. Navigation Menu binds them on its trigger and list.
 - The document listeners exist only while the popup is open, enabled and not held by `KeepAlive`. A server render adds none.
 - `useDismissLayer` gives its document listeners to `useDomEffect`. It replaces the listeners after the DOM patch when their sources change. The server installs none.
 - A hold releases those listeners in the KeepAlive hook. The popup keeps its open state. The composable clears its session state and timers.
@@ -1595,7 +1595,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Use a passive touch listener when the handler permits the browser default. The browser can then start a scroll without waiting for the handler. `usePressAndHold` binds `onTouchstartPassive`.
 - `useSwipeDismiss` binds `onTouchstartPassive` and `onTouchmovePassive` for handlers that permit a scroll.
 - `ContextMenu.Trigger` also binds `onTouchstartPassive` and `onTouchmovePassive`. A listener of the consumer stops such a handler with `event.preventVaseUIHandler()` only when it has the `.passive` modifier. A listener with no modifier has another key, so the handler of the part still runs.
-- Menu.Input and Combobox.Input bind focus and blur on their input. Each handler checks that the event came from the current input.
+- Menu.Input and Combobox.Input bind `focusin` and `focusout` on their input. Each handler checks that the event came from the current input.
 - Measure frame work and parent and child renders when a gesture changes a style each frame. Compare the binding with a native write for the same slot content.
 - The drawer popup, backdrop and indent read the current gesture sample when they render. For a dismiss gesture, native writes to the popup transform start after Vue patches the drag styles.
 - `NumberField.ScrubAreaCursor` keeps its last transform for a render during a scrub. Vue owns one measurement box for the active cursor. The box enters the cursor's parent only for a measurement. Slot and portal selectors keep their original matches between samples.

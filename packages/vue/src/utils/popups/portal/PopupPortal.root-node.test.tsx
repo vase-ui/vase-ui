@@ -42,7 +42,7 @@ const open = { defaultOpen: true };
 // A generic part, such as `Combobox.Root`, is a function that `Component` does not accept.
 type PartComponent = Component | ((...args: any[]) => any);
 
-interface FloatingPortalPart {
+interface PortalPart {
   name: string;
   root: PartComponent;
   portal: PartComponent;
@@ -50,7 +50,7 @@ interface FloatingPortalPart {
   portalProps?: Record<string, unknown>;
 }
 
-const floatingPortalParts: FloatingPortalPart[] = [
+const portalParts: PortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
@@ -87,7 +87,7 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     expect(entered).toEqual([screen.getByTestId('portal')]);
   });
 
-  it.each(floatingPortalParts)(
+  it.each(portalParts)(
     '$name gives a Transition of the consumer to its portal element',
     async (part) => {
       const entered: Element[] = [];

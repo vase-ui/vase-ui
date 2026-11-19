@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L109-L163",
     "https://vuejs.org/guide/built-ins/teleport.html"
   ],
-  "behavior": "A change of the bound to value moves the same portal element and its children to the new target. An absent target uses the nearest portal or the body. Base UI reads a ref object once.",
+  "behavior": "A change of the bound to value moves the same portal element and its children to the new target. An absent target uses the nearest portal or the body. Base UI creates a new portal node when its resolved container changes.",
   "dueWith": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx"
 }

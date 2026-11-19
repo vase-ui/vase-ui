@@ -14,7 +14,7 @@ const Page = defineComponent({
 });
 
 describe('PopupPortal on a server', () => {
-  it('renders no portal element and no content of the portal', async () => {
+  it('VUE-168: renders no portal element or content for a selector on the server', async () => {
     const context: { teleports?: Record<string, string> } = {};
     const html = await renderToString(createSSRApp(Page), context);
 

@@ -57,7 +57,7 @@ function appendUntabbableReference() {
   return reference;
 }
 
-describe('FloatingPortal', () => {
+describe('PopupPortal with guards', () => {
   const { render } = createRenderer();
 
   describeConformance(<PopupPortal guards={usePortalFocus} />, () => ({
@@ -66,7 +66,7 @@ describe('FloatingPortal', () => {
     refInstanceof: window.HTMLDivElement,
   }));
 
-  describe('prop: inPlace', () => {
+  describe('prop: disabled', () => {
     it('keeps no guards or owner for a focus manager that is not modal and gives its mode through context', async () => {
       let context: PortalContextValue | undefined;
       const Probe = defineComponent({
