@@ -76,7 +76,7 @@ export interface TabsTabProps
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, watch, type ShallowRef } from 'vue';
+import { computed, shallowRef, watchPostEffect, type ShallowRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { useListenerSession } from '../../common/useListenerSession';
@@ -155,25 +155,21 @@ const { attributes, events, index } = useCompositeItem<TabsTabMetadata>(element,
   // when it is disabled. The server HTML gives it the same tab stop.
   disabled: () => isDisabled.value && activeTabValue.value !== null,
 });
-let isNavigating = false;
-
 // With duplicate values, only the first selected tab can claim the tab stop.
-watch(
-  [active, index, highlightedIndex, isDisabled, activeTabElement],
-  ([selected, tabIndex, highlight, disabled, selectedElement]) => {
-    if (isNavigating) {
-      isNavigating = false;
-      return;
-    }
-    if (!selected || disabled || tabIndex < 0 || tabIndex === highlight) {
-      return;
-    }
-    if (selectedElement === element.value && !hasFocus()) {
-      onHighlightedIndexChange(tabIndex);
-    }
-  },
-  { flush: 'post' },
-);
+watchPostEffect(() => {
+  if (
+    !active.value ||
+    isDisabled.value ||
+    !element.value ||
+    activeTabElement.value !== element.value
+  ) {
+    return;
+  }
+  const tabIndex = index.value;
+  if (tabIndex >= 0 && tabIndex !== highlightedIndex.value && !hasFocus()) {
+    onHighlightedIndexChange(tabIndex);
+  }
+});
 
 const { isHeld } = useKeepAliveState();
 const press = useListenerSession(isHeld);
@@ -245,9 +241,6 @@ const { elementProps, setRef, usesRenderSlot } = useRenderElement('button', prop
       onClick: activate,
       onFocusin,
       onPointerdown,
-      onKeydownCapture() {
-        isNavigating = true;
-      },
     },
     attrs,
   ],
