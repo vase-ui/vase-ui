@@ -15,7 +15,7 @@ export interface AccordionHeaderProps
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
-import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
+import { accordionStateAttributesMapping } from '../root/AccordionRootContext';
 
 defineOptions({ inheritAttrs: false });
 

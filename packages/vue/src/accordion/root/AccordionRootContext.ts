@@ -1,16 +1,23 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
+import { collapsibleOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
+import type { AccordionItemState } from '../item/AccordionItem.vue';
+import * as AccordionItemDataAttributes from '../item/AccordionItemDataAttributes';
 import type { CompositeListContextValue } from '../../internals/composite/list/useCompositeList';
-import type {
-  AccordionRootChangeEventDetails,
-  AccordionRootState,
-  AccordionValue,
-} from './AccordionRoot.vue';
+import type { AccordionRootChangeEventDetails, AccordionRootState } from './AccordionRoot.vue';
+
+export const accordionStateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
+  ...collapsibleOpenStateMapping,
+  index: (value) => ({ [AccordionItemDataAttributes.index]: String(value) }),
+  ...transitionStatusMapping,
+  value: () => null,
+};
 
 export interface AccordionRootContext<Value = any> {
-  disabled: ComputedRef<boolean>;
   handleValueChange: (
-    newValue: AccordionValue<Value>[number],
+    newValue: Value,
     nextOpen: boolean,
     eventDetails: AccordionRootChangeEventDetails,
   ) => void;
@@ -22,7 +29,6 @@ export interface AccordionRootContext<Value = any> {
   itemList: CompositeListContextValue<unknown>;
   keepMounted: ComputedRef<boolean>;
   state: ComputedRef<AccordionRootState<Value>>;
-  value: ComputedRef<AccordionValue<Value>>;
 }
 
 export const AccordionRootContext: InjectionKey<AccordionRootContext> = Symbol();

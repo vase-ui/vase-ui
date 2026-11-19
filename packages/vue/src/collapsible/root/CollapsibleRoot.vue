@@ -47,13 +47,11 @@ export type CollapsibleRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { useControlled } from '../../common/useControlled';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { CollapsibleRootContext } from './CollapsibleRootContext';
-import { collapsibleStateAttributesMapping } from './stateAttributesMapping';
-import { useCollapsibleRoot } from './useCollapsibleRoot';
+import { collapsibleStateAttributesMapping, useCollapsibleRoot } from './CollapsibleRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -85,35 +83,27 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CollapsibleRootState>;
 }>();
 
-// The trigger and the `beforematch` handler of the panel call this one function. Each caller
-// then writes the uncontrolled state.
-function onOpenChange(nextOpen: boolean, eventDetails: CollapsibleRootChangeEventDetails) {
-  emit('openChange', nextOpen, eventDetails);
-  if (!eventDetails.isCanceled) {
+const isOpen = useControlled({
+  controlled: () => props.open,
+  default: () => props.defaultOpen ?? false,
+  name: 'Collapsible',
+  state: 'open',
+});
+
+function requestOpen(nextOpen: boolean, details: CollapsibleRootChangeEventDetails) {
+  emit('openChange', nextOpen, details);
+  if (!details.isCanceled) {
     emit('update:open', nextOpen);
+    isOpen.value = nextOpen;
   }
 }
 
-// The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.
-const collapsible = useCollapsibleRoot({
-  open: () => props.open,
-  defaultOpen: () => props.defaultOpen,
-  onOpenChange,
-  disabled: () => props.disabled,
-  element: () => element.value,
-});
-
-const state = computed<CollapsibleRootState>(() => ({
-  open: collapsible.open.value,
-  disabled: collapsible.disabled.value,
-  transitionStatus: collapsible.transitionStatus.value,
-}));
-
-provide(CollapsibleRootContext, {
-  ...collapsible,
-  onOpenChange,
-  state,
-});
+const { state } = useCollapsibleRoot(
+  isOpen,
+  () => props.disabled,
+  requestOpen,
+  () => element.value,
+);
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,

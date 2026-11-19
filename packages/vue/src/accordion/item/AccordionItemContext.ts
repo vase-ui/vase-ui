@@ -4,10 +4,6 @@ import type { RegisterId } from '../../internals/labelable-provider/LabelableCon
 import type { AccordionItemState } from './AccordionItem.vue';
 
 export interface AccordionItemContext {
-  /**
-   * The `id` of a trigger that has no `id` of its own. The item makes it, as the item of Base UI
-   * does.
-   */
   defaultTriggerId: ComputedRef<string>;
   /**
    * Registers the `id` of a trigger by its source. Two triggers can have the same `id`, and Vue can
@@ -25,7 +21,6 @@ export interface AccordionItemContext {
 export const AccordionItemContext: InjectionKey<AccordionItemContext> = Symbol();
 
 export function useAccordionItemContext(): AccordionItemContext {
-  // With one argument, Vue shows a warning when there is no provider. The error below says more.
   const context = inject(AccordionItemContext, undefined);
   if (context === undefined) {
     throw new Error(

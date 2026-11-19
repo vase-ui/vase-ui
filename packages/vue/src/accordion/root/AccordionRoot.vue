@@ -83,7 +83,7 @@ const rootStateAttributesMapping = {
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, onMounted, provide, shallowRef, watchEffect } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -127,17 +127,17 @@ defineSlots<{
 
 if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('Accordion.Root');
-  const warnWhenKeepMountedIsIgnored = () => {
-    if (props.hiddenUntilFound && props.keepMounted === false) {
-      warn(
-        'The `keepMounted` prop of `Accordion.Root` is `false` and `hiddenUntilFound` is enabled.',
-        'The panels must stay mounted while they are closed, so `keepMounted` has no effect.',
-        'Remove `keepMounted`, or remove `hiddenUntilFound`.',
-      );
-    }
-  };
-  onMounted(warnWhenKeepMountedIsIgnored);
-  watch([() => props.hiddenUntilFound, () => props.keepMounted], warnWhenKeepMountedIsIgnored);
+  onMounted(() => {
+    watchEffect(() => {
+      if (props.hiddenUntilFound && props.keepMounted === false) {
+        warn(
+          'The `keepMounted` prop of `Accordion.Root` is `false` and `hiddenUntilFound` is enabled.',
+          'The panels must stay mounted while they are closed, so `keepMounted` has no effect.',
+          'Remove `keepMounted`, or remove `hiddenUntilFound`.',
+        );
+      }
+    });
+  });
 }
 
 const itemList = useCompositeList({ elementsRef: shallowRef([]), provide: false });
@@ -180,13 +180,11 @@ const state = computed<AccordionRootState<Value>>(() => ({
 }));
 
 provide(AccordionRootContext, {
-  disabled: computed(() => props.disabled),
   handleValueChange,
   hiddenUntilFound: computed(() => props.hiddenUntilFound),
   itemList,
   keepMounted: computed(() => props.keepMounted ?? false),
   state,
-  value: openValues,
 });
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {

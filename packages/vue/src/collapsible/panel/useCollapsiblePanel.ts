@@ -1,79 +1,72 @@
 import {
   computed,
   nextTick,
+  normalizeStyle,
   onMounted,
   onScopeDispose,
-  reactive,
   shallowRef,
   toValue,
+  useAttrs,
   watch,
 } from 'vue';
-import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { Timeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import { given } from '../../internals/givenAttributes';
+import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
-import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { isFiniteAnimation } from '../../utils/getFiniteAnimations';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
-import type { CollapsibleRootChangeEventDetails } from '../root/CollapsibleRoot.vue';
+import type { CollapsibleRootContext } from '../root/CollapsibleRootContext';
 import * as CollapsiblePanelDataAttributes from './CollapsiblePanelDataAttributes';
 
 type AnimationType = 'css-transition' | 'css-animation' | 'none';
 
 interface Dimensions {
-  height: number | undefined;
-  width: number | undefined;
+  height: number;
+  width: number;
 }
 
 type TemporaryStyle = Record<string, string>;
 
-/**
- * Puts declarations in the style that the part renders, and returns the function that takes them
- * out again.
- */
-type RecordTemporaryStyle = (declarations: TemporaryStyle) => () => void;
+const measuringStyle = {
+  'justify-content': 'initial !important',
+  'align-items': 'initial !important',
+  'align-content': 'initial !important',
+  'justify-items': 'initial !important',
+};
 
 interface PendingReveal {
   panel: HTMLElement;
-  /**
-   * Whether the reveal made the next open skip the motion of the author.
-   */
-  revertSkippedMotion: boolean;
-  /**
-   * Whether the reveal removed the starting style from the panel.
-   */
   restoreStartingStyle: boolean;
 }
 
-const EMPTY_DIMENSIONS: Dimensions = {
-  height: undefined,
-  width: undefined,
-};
-
 export function useCollapsiblePanel(
-  parameters: UseCollapsiblePanelParameters,
-): UseCollapsiblePanelReturnValue {
-  const { onOpenChange, setMounted, setOpen } = parameters;
+  root: CollapsibleRootContext,
+  options: {
+    id?: MaybeRefOrGetter<string | undefined>;
+    hiddenUntilFound?: MaybeRefOrGetter<boolean | undefined>;
+    keepMounted?: MaybeRefOrGetter<boolean | undefined>;
+  },
+) {
+  const attrs = useAttrs();
+  const { mounted, setMounted, requestOpen, state, defaultPanelId, registerPanelId } = root;
+  const isOpen = () => state.value.open;
+  const getTransitionStatus = () => state.value.transitionStatus;
+  const isHiddenUntilFound = () => toValue(options.hiddenUntilFound);
+  const element: ShallowRef<HTMLElement | null> = shallowRef(null);
+  const id = computed(() => given('id', toValue(options.id)) ?? defaultPanelId.value);
+  useRegisteredId(() => id.value, registerPanelId, element);
 
-  const isOpen = () => toValue(parameters.open);
-  const isMounted = () => toValue(parameters.mounted);
-  const isHiddenUntilFound = () => toValue(parameters.hiddenUntilFound);
-  const getTransitionStatus = () => toValue(parameters.transitionStatus);
-
-  // Vue calls the `ref` setter during the render of the part. A reactive read there would make the
-  // render depend on it, so the element is a plain variable.
-  let panel: HTMLElement | null = null;
-  // The render reads the next three values. A plain variable is not a source of the render, so
-  // each of them is a `shallowRef`.
   const animationType = shallowRef<AnimationType | null>(null);
-  const dimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
-  const lastMeasuredDimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
+  const dimensions = shallowRef<Dimensions>();
+  const lastMeasuredDimensions = shallowRef<Dimensions>();
   // A `beforematch` open shows the matched content at once. The next open skips the motion that
   // the author defined, one time. The open after that is normal.
   let shouldSkipNextOpen = false;
@@ -88,16 +81,17 @@ export function useCollapsiblePanel(
   // Some open paths skip the motion, but the status of the root changes in a later frame. The
   // panel stays idle until then, so its data attributes and its size match the open state.
   const forcePanelIdle = shallowRef(false);
-  // eslint-disable-next-line no-restricted-syntax -- The next panel measurement must restore the temporary style first.
-  let pendingTemporaryStyleRestore: (() => void) | null = null;
-  // Vue writes each key of the rendered style again on each render. A temporary inline style that
-  // the code writes to the DOM is also in this record. The part merges the record after the style
-  // of the consumer, so a render does not put the value of the consumer back.
-  const temporaryStyle = reactive<TemporaryStyle>({});
+  const instantOpenDuration = shallowRef<{
+    panel: HTMLElement;
+    property: 'transition-duration' | 'animation-duration';
+    bound: boolean;
+    restore: () => void;
+  }>();
+  const layoutStyle = shallowRef<TemporaryStyle>();
+  const pendingReveal = shallowRef<PendingReveal>();
 
-  const runOnceCloseAnimationsFinish = useAnimationsFinished(() => panel);
-
-  const hidden = computed(() => !isOpen() && !isMounted());
+  const runOnceCloseAnimationsFinish = useAnimationsFinished(element);
+  const hidden = computed(() => !isOpen() && !mounted.value);
   const panelTransitionStatus = computed(() =>
     forcePanelIdle.value ? 'idle' : getTransitionStatus(),
   );
@@ -108,108 +102,70 @@ export function useCollapsiblePanel(
   // When a keyframe panel closes, the live dimensions are `auto` until the effect measures them.
   // This fallback renders the last measured size in that time, so the animation starts from pixels.
   const renderedDimensions = computed(() =>
-    !isOpen() &&
-    isMounted() &&
-    animationType.value === 'css-animation' &&
-    dimensions.value.height === undefined &&
-    dimensions.value.width === undefined
-      ? lastMeasuredDimensions.value
+    !isOpen() && mounted.value && animationType.value === 'css-animation'
+      ? (dimensions.value ?? lastMeasuredDimensions.value)
       : dimensions.value,
   );
-  const shouldPersistHiddenTransitionStyles = computed(
-    () => isHiddenUntilFound() && hidden.value && animationType.value !== 'css-animation',
-  );
-
-  // A keyframe close uses the last measured size. `false` only clears the current dimensions.
-  function setDimensions(nextDimensions: Dimensions, shouldCacheMeasurement = true) {
-    if (shouldCacheMeasurement) {
-      lastMeasuredDimensions.value = nextDimensions;
-    }
-
-    dimensions.value = nextDimensions;
-  }
-
-  const recordTemporaryStyle: RecordTemporaryStyle = (declarations) => {
-    Object.assign(temporaryStyle, declarations);
-
-    let isRecorded = true;
-    return () => {
-      if (!isRecorded) {
-        return;
-      }
-      isRecorded = false;
-
-      for (const property of Object.keys(declarations)) {
-        delete temporaryStyle[property];
-      }
-    };
-  };
-
-  function restorePendingTemporaryStyle() {
-    pendingTemporaryStyleRestore?.();
-    pendingTemporaryStyleRestore = null;
-  }
-
-  function setPendingTemporaryStyleRestore(restore: () => void) {
-    restorePendingTemporaryStyle();
-    pendingTemporaryStyleRestore = () => {
-      pendingTemporaryStyleRestore = null;
-      restore();
-    };
-  }
-
-  // The write of the measured size reaches the DOM in the next update of Vue. Vue applies the
-  // state write of an animation frame in the microtask after the frame callback, so
-  // `data-ending-style` can reach the DOM before the browser computes a style with the size in
-  // pixels. The height then goes from `auto` to `0`, and no transition runs. A read of the layout
-  // after the update gives the browser that style.
-  function readLayoutAfterUpdate() {
-    void nextTick(() => {
-      panel?.getBoundingClientRect();
-    });
+  function setDimensions(size: Dimensions) {
+    lastMeasuredDimensions.value = size;
+    dimensions.value = size;
   }
 
   const { isHeld } = useKeepAliveState();
 
-  // If `KeepAlive` deactivates an open panel with a keyframe animation, the next reveal must not
-  // play the open animation again.
-  function markActivityResumeAnimationSuppressed() {
-    if (isOpen() && isMounted() && animationType.value === 'css-animation') {
-      shouldPreventActivityResumeAnimation.value = true;
-    }
+  function suppressDuration(panel: HTMLElement, motion: 'transition' | 'animation') {
+    const property = `${motion}-duration` as const;
+    const style = normalizeStyle([attrs.style]) as Record<string, unknown>;
+    instantOpenDuration.value = {
+      panel,
+      property,
+      bound: [motion, property, `${motion}Duration`].some((key) => style[key] != null),
+      restore: saveInlineStyle(panel.style, property),
+    };
   }
 
-  // `forcePanelIdle` is a temporary override. Keep it while the root still has the status
-  // `starting`, and drop it when the status changes.
-  watch([forcePanelIdle, getTransitionStatus], () => {
-    if (!forcePanelIdle.value || getTransitionStatus() === 'starting') {
-      return;
+  function restoreDuration(patchedPanel?: HTMLElement | null) {
+    const saved = instantOpenDuration.value;
+    if (!saved) return;
+    // After a patch, Vue owns the consumer's current declaration, including its removal.
+    if (
+      saved.panel !== patchedPanel ||
+      (!saved.bound && !patchedPanel.style.getPropertyValue(saved.property))
+    ) {
+      saved.restore();
     }
+    instantOpenDuration.value = undefined;
+  }
 
-    forcePanelIdle.value = false;
+  // Vue leaves the last bound style on a removed element.
+  watch(
+    [element, isHeld],
+    ([panel, held]) => {
+      if (held || instantOpenDuration.value?.panel !== panel) restoreDuration(panel);
+    },
+    { flush: 'post' },
+  );
+  onScopeDispose(restoreDuration);
+
+  watch(getTransitionStatus, (status) => {
+    if (status !== 'starting') forcePanelIdle.value = false;
   });
 
   function runSizeEffect(): (() => void) | void {
+    const panel = element.value;
     const open = isOpen();
-    const mounted = isMounted();
     const transitionStatus = getTransitionStatus();
 
     // A render function can remove the element when the panel closes. The suppression of the open
     // animation is for one open, so clear it also when there is no element.
     if (!open) {
+      restoreDuration(panel);
       shouldPreventMountAnimation.value = false;
       shouldPreventActivityResumeAnimation.value = false;
     }
 
     if (!panel) {
       return;
-    }
-
-    // A `beforematch` open sets a duration of `0s`. Restore the duration of the author before the
-    // detection of the animation type of the next close. Otherwise the close is read as "no
-    // motion", and the close has no transition or animation.
-    if (!open && pendingTemporaryStyleRestore) {
-      restorePendingTemporaryStyle();
     }
 
     const nextAnimationType = getAnimationType(panel, shouldPreventOpenAnimation.value);
@@ -240,41 +196,24 @@ export function useCollapsiblePanel(
       }
 
       if (nextAnimationType === 'css-transition') {
-        const restoreLayoutStyles = resetLayoutStyles(panel, recordTemporaryStyle);
+        const restoreLayoutStyles = resetLayoutStyles(panel, layoutStyle);
         setDimensions(getDimensions(panel));
 
         if (!skipNextOpen) {
           return restoreLayoutStyles;
         }
 
-        const restoreTransitionDuration = setTemporaryStyle(
-          panel,
-          'transition-duration',
-          '0s',
-          recordTemporaryStyle,
-        );
-        setPendingTemporaryStyleRestore(restoreTransitionDuration);
+        suppressDuration(panel, 'transition');
         forcePanelIdle.value = true;
         return restoreLayoutStyles;
       }
 
       setDimensions(getDimensions(panel));
 
-      const restoreAnimationName = setTemporaryStyle(panel, 'animation-name', 'none');
-      if (!skipNextOpen) {
-        restoreAnimationName();
-        return;
-      }
+      resetAnimationName(panel);
+      if (!skipNextOpen) return;
 
-      const restoreAnimationDuration = setTemporaryStyle(
-        panel,
-        'animation-duration',
-        '0s',
-        recordTemporaryStyle,
-      );
-
-      restoreAnimationName();
-      setPendingTemporaryStyleRestore(restoreAnimationDuration);
+      suppressDuration(panel, 'animation');
       forcePanelIdle.value = true;
 
       return;
@@ -282,15 +221,20 @@ export function useCollapsiblePanel(
 
     // The size is captured when the close is requested, before the deferred ending phase applies the
     // closed styles. An interrupted open then also closes from a size in pixels.
-    if (!open && mounted && (transitionStatus === 'idle' || transitionStatus === 'starting')) {
+    if (
+      !open &&
+      mounted.value &&
+      (transitionStatus === 'idle' || transitionStatus === 'starting')
+    ) {
       if (nextAnimationType === 'none') {
-        setDimensions(EMPTY_DIMENSIONS, false);
+        dimensions.value = undefined;
         setMounted(false);
         return;
       }
 
       setDimensions(getDimensions(panel));
-      readLayoutAfterUpdate();
+      // Commit the size in pixels before the next frame applies the exit style.
+      void nextTick(() => element.value?.getBoundingClientRect());
       return;
     }
 
@@ -316,22 +260,21 @@ export function useCollapsiblePanel(
     setDimensions(nextDimensions);
 
     if (nextAnimationType === 'css-animation') {
-      const restoreAnimationName = setTemporaryStyle(panel, 'animation-name', 'none');
-      restoreAnimationName();
+      resetAnimationName(panel);
     }
   }
 
   // A held panel is outside the document, so its computed style is empty.
   useDomEffect(
-    [isMounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus],
+    [mounted, isOpen, shouldPreventOpenAnimation, getTransitionStatus],
     runSizeEffect,
     isHeld,
   );
 
   useOpenChangeComplete({
-    enabled: () => isOpen() && isMounted() && panelTransitionStatus.value === 'idle',
+    enabled: () => isOpen() && mounted.value && panelTransitionStatus.value === 'idle',
     open: true,
-    ref: () => panel,
+    ref: element,
     onComplete() {
       // The `finished` promise of an animation can resolve after `open` changed and before the
       // wait is aborted. A clear of the measured size then makes the close transition start from
@@ -340,7 +283,7 @@ export function useCollapsiblePanel(
         return;
       }
 
-      setDimensions(EMPTY_DIMENSIONS, false);
+      dimensions.value = undefined;
     },
   });
 
@@ -354,7 +297,7 @@ export function useCollapsiblePanel(
     }
 
     setMounted(false);
-    setDimensions(EMPTY_DIMENSIONS, false);
+    dimensions.value = undefined;
   }
 
   // A closing panel needs more than `useOpenChangeComplete`. This effect runs after the update that
@@ -363,11 +306,11 @@ export function useCollapsiblePanel(
   // the animations.
   // See https://github.com/mui/base-ui/issues/3099
   function runCloseEffect() {
-    if (isOpen() || !isMounted() || panelTransitionStatus.value !== 'ending') {
+    if (isOpen() || !mounted.value || panelTransitionStatus.value !== 'ending') {
       return;
     }
 
-    if (!panel) {
+    if (!element.value) {
       // A render function can remove the element in the ending phase. Nothing is left to animate,
       // so the close completes at once.
       completeClose();
@@ -386,7 +329,7 @@ export function useCollapsiblePanel(
     };
   }
 
-  useDomEffect([isMounted, isOpen, panelTransitionStatus], runCloseEffect, isHeld);
+  useDomEffect([mounted, isOpen, panelTransitionStatus], runCloseEffect, isHeld);
 
   // The close effect reads the animations of the panel two frames after the ending style. A late
   // frame can end a keyframe exit before that read, and the panel then has its open style again.
@@ -415,180 +358,122 @@ export function useCollapsiblePanel(
   // is hidden with `content-visibility` and the element has no `display: none`. So when the panel
   // becomes hidden, the element first gets a plain `hidden` for one style computation. The browser
   // then cancels the transitions that still run.
-  function writeUntilFoundAttribute(isBecomingHidden: boolean) {
-    if (isHeld.value || !panel || !isHiddenUntilFound() || !hidden.value) {
-      return;
-    }
+  onMounted(() => {
+    watch(
+      [hidden, isHiddenUntilFound, element],
+      ([closed, searchable, panel], [wasClosed]) => {
+        if (!closed || !searchable || !panel || isHeld.value) return;
+        if (wasClosed === false) {
+          panel.setAttribute('hidden', '');
+          ownerWindow(panel).getComputedStyle(panel).getPropertyValue('display');
+        }
+        panel.setAttribute('hidden', 'until-found');
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
 
-    if (isBecomingHidden) {
-      panel.setAttribute('hidden', '');
-      ownerWindow(panel).getComputedStyle(panel).getPropertyValue('display');
-    }
-
-    panel.setAttribute('hidden', 'until-found');
-  }
-
-  onMounted(() => writeUntilFoundAttribute(false));
-  watch(
-    [hidden, isHiddenUntilFound],
-    ([nextHidden], [previousHidden]) => writeUntilFoundAttribute(nextHidden && !previousHidden),
-    { flush: 'post' },
-  );
-
-  // A `beforematch` reveal that the root did not follow yet. It stays until its revert runs or the
-  // open arrives.
-  const pendingReveal = shallowRef<PendingReveal>();
-
-  function revertPendingReveal() {
-    const reveal = pendingReveal.value;
-    if (!reveal) {
-      return;
-    }
+  function finishReveal() {
+    const match = pendingReveal.value;
     pendingReveal.value = undefined;
+    if (!match || isOpen()) return;
+    shouldSkipNextOpen = false;
+    if (!isHiddenUntilFound()) return;
 
-    if (isOpen()) {
-      return;
+    // The browser changed the matched element. Vue can replace it before this frame.
+    if (match.restoreStartingStyle) {
+      match.panel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
     }
-
-    if (reveal.revertSkippedMotion) {
-      // The open did not happen, so the next open is a normal open with the motion of the
-      // author.
-      shouldSkipNextOpen = false;
-    }
-
-    // A panel that lost `hiddenUntilFound` has its attributes from Vue.
-    if (!isHiddenUntilFound()) {
-      return;
-    }
-
-    if (reveal.restoreStartingStyle) {
-      reveal.panel.setAttribute(CollapsiblePanelDataAttributes.startingStyle, '');
-    }
-
-    reveal.panel.setAttribute('hidden', 'until-found');
+    match.panel.setAttribute('hidden', 'until-found');
   }
 
   function handleBeforeMatch(event: Event) {
-    // The listener is a prop of the element, so the element is `currentTarget`, also when a
-    // `#render` slot gives another element.
     const revealedPanel = event.currentTarget as HTMLElement;
     const eventDetails = createChangeEventDetails(REASONS.none, event);
 
-    onOpenChange(true, eventDetails);
+    requestOpen(true, eventDetails);
 
-    if (eventDetails.isCanceled) {
-      // The panel must stay hidden. The revert writes `hidden` again, so the content stays
-      // searchable.
-      pendingReveal.value = {
-        panel: revealedPanel,
-        revertSkippedMotion: false,
-        restoreStartingStyle: false,
-      };
-      return;
+    const restoreStartingStyle =
+      !eventDetails.isCanceled &&
+      revealedPanel.hasAttribute(CollapsiblePanelDataAttributes.startingStyle);
+    if (!eventDetails.isCanceled) {
+      shouldSkipNextOpen = true;
+      // The browser measures the match before Vue can patch the panel.
+      revealedPanel.removeAttribute(CollapsiblePanelDataAttributes.startingStyle);
     }
 
-    shouldSkipNextOpen = true;
-
-    // The browser removes `hidden` and measures the match in the task that dispatches this event.
-    // The state update below reaches the DOM in a later task. A panel that the kept starting style
-    // collapses has no size at that time, and the match has no highlight. So the handler removes
-    // that style at once.
-    const hadStartingStyle = revealedPanel.hasAttribute(
-      CollapsiblePanelDataAttributes.startingStyle,
-    );
-    revealedPanel.removeAttribute(CollapsiblePanelDataAttributes.startingStyle);
-
-    setOpen(true);
-
-    // A controlled root can ignore the open. The panel then goes back to the closed state when the
-    // browser has measured the match.
-    pendingReveal.value = {
-      panel: revealedPanel,
-      revertSkippedMotion: true,
-      restoreStartingStyle: hadStartingStyle,
-    };
+    pendingReveal.value = { panel: revealedPanel, restoreStartingStyle };
   }
 
   watch(
     isHeld,
     (held) => {
-      if (!held) {
-        // The browser removes `hidden` in the task of `beforematch`, after the listeners. A hold
-        // in that task comes before that removal, so the revert of a reveal that the hold stopped
-        // runs here and not at the hold.
-        revertPendingReveal();
-        return;
-      }
-
-      markActivityResumeAnimationSuppressed();
-      restorePendingTemporaryStyle();
-    },
-    { flush: 'sync' },
-  );
-
-  // The revert must wait until the browser has measured the match. Vue cannot do the revert: the
-  // props of a closed panel do not change, so Vue does not write the attributes that the browser
-  // changed (the browser removes `hidden` in the reveal).
-  // A task decides if the open arrived, and a frame writes the DOM. A busy main thread can delay a
-  // frame, and the frame could then read a value that is not current. When the consumer ignores the
-  // open, the state does not change and the decision holds.
-  // One run of this `watch` owns the task and the frame of one reveal, and its cleanup stops them.
-  // A hold thus stops them and keeps the reveal.
-  watch(
-    [pendingReveal, isHeld],
-    ([reveal, held], _previous, onCleanup) => {
-      if (!reveal || held) {
-        return;
-      }
-
-      const decisionTimeout = Timeout.create();
-      let revertFrame = -1;
-      decisionTimeout.start(0, () => {
-        if (isOpen()) {
-          pendingReveal.value = undefined;
-          return;
+      if (held) {
+        if (isOpen() && mounted.value && animationType.value === 'css-animation') {
+          shouldPreventActivityResumeAnimation.value = true;
         }
-
-        revertFrame = AnimationFrame.request(revertPendingReveal);
-      });
-      onCleanup(() => {
-        decisionTimeout.clear();
-        AnimationFrame.cancel(revertFrame);
-      });
+        // The parent can read the duration in its deactivation hook, before Vue drops the bound style.
+        instantOpenDuration.value?.restore();
+      } else if (pendingReveal.value) {
+        // The parent activation hook can read the panel before Vue patches its attributes.
+        finishReveal();
+      }
     },
     { flush: 'sync' },
   );
 
-  onScopeDispose(restorePendingTemporaryStyle);
+  watch([pendingReveal, isHeld], ([reveal, held], _previous, onCleanup) => {
+    if (!reveal || held) {
+      return;
+    }
 
-  const props = computed(() => ({
-    ...(shouldPersistHiddenTransitionStyles.value
-      ? { [CollapsiblePanelDataAttributes.startingStyle]: '' }
-      : undefined),
-    // The value is never `false`. A render function can give an element that has no `hidden`
-    // property, such as an `<svg>`, and Vue writes `false` there as `hidden="false"`.
-    hidden: hidden.value ? (isHiddenUntilFound() ? 'until-found' : true) : undefined,
-    id: toValue(parameters.id),
-    onAnimationend: handleAnimationEnd,
-    onBeforematch: handleBeforeMatch,
-  }));
+    const decisionTimeout = Timeout.create();
+    let revertFrame = -1;
+    decisionTimeout.start(0, () => {
+      if (isOpen()) {
+        pendingReveal.value = undefined;
+        return;
+      }
+
+      revertFrame = AnimationFrame.request(finishReveal);
+    });
+    onCleanup(() => {
+      decisionTimeout.clear();
+      AnimationFrame.cancel(revertFrame);
+    });
+  });
 
   return {
-    height: computed(() => renderedDimensions.value.height),
-    props,
-    ref(element) {
-      panel = element;
-    },
-    shouldPreventOpenAnimation,
+    element,
+    id,
+    hidden: computed(() => {
+      if (!hidden.value) return undefined;
+      return isHiddenUntilFound() ? 'until-found' : true;
+    }),
+    persistStartingStyle: computed(
+      () => isHiddenUntilFound() && hidden.value && animationType.value !== 'css-animation',
+    ),
+    handleAnimationEnd,
+    handleBeforeMatch,
+    height: computed(() => sizeInPixels(renderedDimensions.value?.height)),
+    width: computed(() => sizeInPixels(renderedDimensions.value?.width)),
     shouldRender: computed(
-      () => toValue(parameters.keepMounted) || isHiddenUntilFound() || isMounted() || isOpen(),
+      () => toValue(options.keepMounted) || isHiddenUntilFound() || !hidden.value,
     ),
-    temporaryStyle: computed(() =>
-      Object.keys(temporaryStyle).length > 0 ? { ...temporaryStyle } : undefined,
-    ),
+    overridingStyle() {
+      const duration = isOpen() && !isHeld.value && instantOpenDuration.value?.property;
+      return {
+        ...(shouldPreventOpenAnimation.value && { animationName: 'none' }),
+        ...(duration && { [duration]: '0s' }),
+        ...layoutStyle.value,
+      };
+    },
     transitionStatus: panelTransitionStatus,
-    width: computed(() => renderedDimensions.value.width),
   };
+}
+
+function sizeInPixels(size: number | undefined) {
+  return size === undefined ? 'auto' : `${size}px`;
 }
 
 function getDimensions(element: HTMLElement) {
@@ -642,74 +527,34 @@ function hasNonZeroDuration(value: string) {
     .some((part) => part !== '' && Number.parseFloat(part) > 0);
 }
 
-/**
- * Temporarily overrides an inline style property and returns a cleanup that
- * restores the previous inline value and priority.
- * @param element - The element whose inline style should be updated.
- * @param property - The CSS property name to override.
- * @param value - The temporary value to assign.
- * @param record - Puts the declaration in the style that the part renders, until the cleanup runs.
- * A declaration that is set and restored in the same run needs no record.
- * @returns A cleanup function that restores the original inline style state.
- */
-function setTemporaryStyle(
-  element: HTMLElement,
-  property: string,
-  value: string,
-  record?: RecordTemporaryStyle,
-): () => void {
-  const previousValue = element.style.getPropertyValue(property);
-  const previousPriority = element.style.getPropertyPriority(property);
-
-  element.style.setProperty(property, value);
-  const forget = record?.({ [property]: value });
-
-  return () => {
-    forget?.();
-
-    if (previousValue === '') {
-      element.style.removeProperty(property);
-      return;
-    }
-
-    element.style.setProperty(property, previousValue, previousPriority);
-  };
+function resetAnimationName(element: HTMLElement) {
+  const restore = saveInlineStyle(element.style, 'animation-name');
+  element.style.animationName = 'none';
+  restore();
 }
 
-/**
- * Temporarily resets inline alignment styles that can distort scroll-based
- * size measurements, then restores them on the next animation frame.
- * @param element - The panel element being measured.
- * @param record - Puts the reset in the style that the part renders, until the restore runs.
- * @returns A cleanup function that cancels the scheduled restore and reapplies
- * the original inline layout styles immediately.
- */
-function resetLayoutStyles(element: HTMLElement, record: RecordTemporaryStyle): () => void {
-  const originalLayoutStyles = {
-    'justify-content': element.style.justifyContent,
-    'align-items': element.style.alignItems,
-    'align-content': element.style.alignContent,
-    'justify-items': element.style.justifyItems,
-  };
+function saveInlineStyle(style: CSSStyleDeclaration, property: string) {
+  const value = style.getPropertyValue(property);
+  const priority = style.getPropertyPriority(property);
+  return () => style.setProperty(property, value, priority);
+}
 
-  const resets: TemporaryStyle = {};
-  Object.keys(originalLayoutStyles).forEach((key) => {
-    element.style.setProperty(key, 'initial', 'important');
-    resets[key] = 'initial !important';
+// The browser needs the reset for the size read in this task. Vue keeps it through the next patch.
+function resetLayoutStyles(
+  element: HTMLElement,
+  layoutStyle: ShallowRef<TemporaryStyle | undefined>,
+) {
+  const restore = Object.keys(measuringStyle).map((property) => {
+    const undo = saveInlineStyle(element.style, property);
+    element.style.setProperty(property, 'initial', 'important');
+    return undo;
   });
-  const forget = record(resets);
+  layoutStyle.value = measuringStyle;
 
   function restoreLayoutStyles() {
-    forget();
-
-    Object.entries(originalLayoutStyles).forEach(([key, value]) => {
-      if (value === '') {
-        element.style.removeProperty(key);
-        return;
-      }
-
-      element.style.setProperty(key, value);
-    });
+    if (!layoutStyle.value) return;
+    layoutStyle.value = undefined;
+    for (const undo of restore) undo();
   }
 
   const frame = AnimationFrame.request(restoreLayoutStyles);
@@ -718,58 +563,4 @@ function resetLayoutStyles(element: HTMLElement, record: RecordTemporaryStyle): 
     AnimationFrame.cancel(frame);
     restoreLayoutStyles();
   };
-}
-
-export interface UseCollapsiblePanelParameters {
-  /**
-   * Allows the browser's built-in page search to find and expand the panel contents.
-   *
-   * Overrides the `keepMounted` prop and uses `hidden="until-found"`
-   * to hide the element without removing it from the DOM.
-   */
-  hiddenUntilFound: MaybeRefOrGetter<boolean>;
-  /**
-   * The `id` attribute of the panel.
-   */
-  id: MaybeRefOrGetter<string | undefined>;
-  /**
-   * Whether to keep the element in the DOM while the panel is closed.
-   * This prop is ignored when `hiddenUntilFound` is used.
-   */
-  keepMounted: MaybeRefOrGetter<boolean>;
-  /**
-   * Whether the collapsible panel is mounted for transition and hidden-state
-   * purposes. This can be `false` while the element remains in the DOM when
-   * `keepMounted` or `hiddenUntilFound` is enabled.
-   */
-  mounted: MaybeRefOrGetter<boolean>;
-  onOpenChange: (open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void;
-  /**
-   * Whether the collapsible panel is currently open.
-   */
-  open: MaybeRefOrGetter<boolean>;
-  setMounted: (nextMounted: boolean) => void;
-  setOpen: (nextOpen: boolean) => void;
-  transitionStatus: MaybeRefOrGetter<TransitionStatus>;
-}
-
-export interface UseCollapsiblePanelReturnValue {
-  height: ComputedRef<number | undefined>;
-  /**
-   * `hidden`, `id`, the kept `data-starting-style`, and the `animationend` and `beforematch`
-   * listeners.
-   */
-  props: ComputedRef<Record<string, any>>;
-  /**
-   * The part gives it to `useRenderElement` in `ref`.
-   */
-  ref: (element: HTMLElement | null) => void;
-  shouldPreventOpenAnimation: ComputedRef<boolean>;
-  shouldRender: ComputedRef<boolean>;
-  /**
-   * The temporary declarations that the part merges after the style of the consumer.
-   */
-  temporaryStyle: ComputedRef<TemporaryStyle | undefined>;
-  transitionStatus: ComputedRef<TransitionStatus>;
-  width: ComputedRef<number | undefined>;
 }
