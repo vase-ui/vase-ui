@@ -286,7 +286,9 @@ describe('the focus of a native button', () => {
 describe('Vue', () => {
   test('runs no later listener of mergeProps after stopImmediatePropagation(), and no listener of an ancestor', () => {
     const log: string[] = [];
-    const { root: mounted } = mount(MeasureMergedClick, { log });
+    const { root: mounted } = mount(MeasureMergedClick, {
+      log: { add: (entry: string) => log.push(entry) },
+    });
     mounted.querySelector('button')!.click();
     expect(log).toEqual(['first']);
   });

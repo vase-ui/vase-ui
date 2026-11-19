@@ -52,7 +52,7 @@ const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
 /** Whether a demo styles the parts of a native form family, by a path from the folder of its family. */
 function stylesNativeParts(name: string, record: DemoRecord, path: string): boolean {
-  const demo = path.split('/')[0]!;
+  const demo = path.split('/')[0];
   return [name, ...(record.entryPoints?.[demo] ?? [])].some((family) =>
     NATIVE_FORM_FAMILIES.has(family),
   );
