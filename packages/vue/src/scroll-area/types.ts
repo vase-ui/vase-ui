@@ -6,7 +6,8 @@ export interface ScrollAreaRootProps extends /* @vue-ignore */ HTMLAttributes {
    * each edge. A missing or negative number is `0`.
    * @default 0
    */
-  overflowEdgeThreshold?: number | { xStart?: number; xEnd?: number; yStart?: number; yEnd?: number };
+  overflowEdgeThreshold?:
+    number | { xStart?: number; xEnd?: number; yStart?: number; yEnd?: number };
 }
 
 export interface ScrollAreaRootState {

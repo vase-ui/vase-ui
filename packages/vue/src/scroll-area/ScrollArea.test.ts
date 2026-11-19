@@ -50,7 +50,11 @@ async function scrollViewport(viewport: HTMLElement, left: number, top: number) 
 }
 
 /** Gives the viewport a position that the browser does not give, as WebKit in its rubber band. */
-async function reportPosition(viewport: HTMLElement, key: 'scrollTop' | 'scrollLeft', value: number) {
+async function reportPosition(
+  viewport: HTMLElement,
+  key: 'scrollTop' | 'scrollLeft',
+  value: number,
+) {
   Object.defineProperty(viewport, key, { configurable: true, get: () => value });
   await fireEvent.scroll(viewport);
 }
@@ -199,22 +203,33 @@ describe('overflow', () => {
   test('the root, the viewport, the content and the scrollbars show the overflow of each edge', async () => {
     const { get, viewport, area } = await mountArea();
     const parts = [area, viewport, get('content')!, get('vertical')!, get('horizontal')!];
-    const read = () => parts.map((part) => dataAttributes(part).filter((name) => OVERFLOW.includes(name)));
-    const atStart = ['data-has-overflow-x', 'data-has-overflow-y', 'data-overflow-x-end', 'data-overflow-y-end'];
+    const read = () =>
+      parts.map((part) => dataAttributes(part).filter((name) => OVERFLOW.includes(name)));
+    const atStart = [
+      'data-has-overflow-x',
+      'data-has-overflow-y',
+      'data-overflow-x-end',
+      'data-overflow-y-end',
+    ];
     expect(read()).toEqual(parts.map(() => atStart));
     expect(viewport.tabIndex).toBe(0);
-    expect(['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge))).toEqual(
-      ['0px', '800px', '0px', '800px'],
-    );
+    expect(
+      ['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge)),
+    ).toEqual(['0px', '800px', '0px', '800px']);
 
     await scrollViewport(viewport, 400, 300);
     expect(read()).toEqual(parts.map(() => OVERFLOW));
-    expect(['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge))).toEqual(
-      ['400px', '400px', '300px', '500px'],
-    );
+    expect(
+      ['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge)),
+    ).toEqual(['400px', '400px', '300px', '500px']);
 
     await scrollViewport(viewport, 800, 800);
-    const atEnd = ['data-has-overflow-x', 'data-has-overflow-y', 'data-overflow-x-start', 'data-overflow-y-start'];
+    const atEnd = [
+      'data-has-overflow-x',
+      'data-has-overflow-y',
+      'data-overflow-x-start',
+      'data-overflow-y-start',
+    ];
     expect(read()).toEqual(parts.map(() => atEnd));
   });
 
@@ -259,9 +274,9 @@ describe('overflow', () => {
     for (const part of [area, viewport, get('content')!, get('vertical')!]) {
       expect(dataAttributes(part).filter((name) => OVERFLOW.includes(name))).toEqual([]);
     }
-    expect(['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge))).toEqual(
-      ['0px', '0px', '0px', '0px'],
-    );
+    expect(
+      ['x-start', 'x-end', 'y-start', 'y-end'].map((edge) => distance(viewport, edge)),
+    ).toEqual(['0px', '0px', '0px', '0px']);
     expect(viewport.tabIndex).toBe(-1);
     expect(get('horizontal')).toBeNull();
     expect(get('corner')).toBeNull();
@@ -281,6 +296,14 @@ describe('overflow', () => {
     scene.width = 100;
     scene.height = 100;
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+  });
+
+  test('a viewport that changes its height, with no change of its content, gives a measurement', async () => {
+    const root = reactive<Record<string, unknown>>({});
+    const { viewport, area } = await mountArea({ root });
+    root.style = 'height: 2000px';
+    await waitFor(() => expect(distance(viewport, 'y-end')).toBe('0px'));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
   });
 
   test('a hidden scroll area measures when it shows, and a measurement while it is hidden changes nothing', async () => {
@@ -323,12 +346,16 @@ describe('animations in the viewport', () => {
     { name: 'a CSS transition', content: { style: 'transform: translateX(600px)' } },
   ])('the end of $name measures the viewport', async ({ name, content }) => {
     addKeyframes();
-    const { get, viewport, area } = await mountArea({ scene: { width: 100, height: 100 }, content });
+    const { get, viewport, area } = await mountArea({
+      scene: { width: 100, height: 100 },
+      content,
+    });
     expect(area).toHaveAttribute('data-has-overflow-x');
     const type = name === 'a CSS animation' ? 'animationend' : 'transitionend';
     await nextEvent(viewport, type, {
       action: () => {
-        if (type === 'transitionend') get('content')!.style.cssText += ';transition: transform 200ms; transform: none';
+        if (type === 'transitionend')
+          get('content')!.style.cssText += ';transition: transform 200ms; transform: none';
       },
     });
     await nextTick();
@@ -338,7 +365,10 @@ describe('animations in the viewport', () => {
   test('a script animation that runs at the mount measures at its end, beside one with no end', async () => {
     const mounted = mount(ScrollAreaParts, { scene: { width: 100, height: 100 } });
     const content = mounted.root.querySelector<HTMLElement>('.content')!;
-    const finite = content.animate([{ transform: 'translateX(600px)' }, { transform: 'none' }], 300);
+    const finite = content.animate(
+      [{ transform: 'translateX(600px)' }, { transform: 'none' }],
+      300,
+    );
     content.firstElementChild!.animate([{ opacity: 1 }, { opacity: 0.5 }], {
       duration: 100,
       iterations: Infinity,
@@ -353,8 +383,13 @@ describe('animations in the viewport', () => {
   test('a script animation that ends after the unmount gives no error', async () => {
     const mounted = mount(ScrollAreaParts, { scene: { width: 100, height: 100 } });
     const content = mounted.root.querySelector<HTMLElement>('.content')!;
-    const finite = content.animate([{ transform: 'translateX(600px)' }, { transform: 'none' }], 100);
-    await waitFor(() => expect(mounted.root.querySelector('.root')).toHaveAttribute('data-has-overflow-x'));
+    const finite = content.animate(
+      [{ transform: 'translateX(600px)' }, { transform: 'none' }],
+      100,
+    );
+    await waitFor(() =>
+      expect(mounted.root.querySelector('.root')).toHaveAttribute('data-has-overflow-x'),
+    );
     mounted.unmount();
     await finite.finished;
     await settle();
@@ -413,6 +448,14 @@ describe('scrolling', () => {
     expect(area).toHaveAttribute('data-scrolling');
     await vi.advanceTimersByTimeAsync(1);
     expect(area).not.toHaveAttribute('data-scrolling');
+  });
+
+  test('a pointer that moves in the viewport marks the scrolls that follow, as a drag that selects text', async () => {
+    const { viewport, area } = await mountArea();
+    vi.useFakeTimers();
+    await fireEvent.pointerMove(viewport, { pointerType: 'mouse' });
+    await fireEvent.scroll(viewport, { target: { scrollTop: 10 } });
+    expect(area).toHaveAttribute('data-scrolling');
   });
 
   test('while the last pointer of the root is a touch, each scroll is a scroll of the user', async () => {
@@ -512,9 +555,27 @@ describe('corner and tracks', () => {
 describe('thumb', () => {
   test.each([
     { name: 'the content', vertical: {}, thumbY: {}, height: 1000, length: 40 },
-    { name: 'the padding of the track', vertical: { style: 'padding-block: 8px' }, thumbY: {}, height: 1000, length: 36.8 },
-    { name: 'the margin of the track', vertical: { style: 'margin-block: 11px' }, thumbY: {}, height: 1000, length: 35.6 },
-    { name: 'the margin of the thumb', vertical: {}, thumbY: { style: 'margin-block: 8px' }, height: 1000, length: 36.8 },
+    {
+      name: 'the padding of the track',
+      vertical: { style: 'padding-block: 8px' },
+      thumbY: {},
+      height: 1000,
+      length: 36.8,
+    },
+    {
+      name: 'the margin of the track',
+      vertical: { style: 'margin-block: 11px' },
+      thumbY: {},
+      height: 1000,
+      length: 35.6,
+    },
+    {
+      name: 'the margin of the thumb',
+      vertical: {},
+      thumbY: { style: 'margin-block: 8px' },
+      height: 1000,
+      length: 36.8,
+    },
     { name: 'a short thumb', vertical: {}, thumbY: {}, height: 100000, length: 16 },
   ])('the length of the thumb counts $name', async ({ vertical, thumbY, height, length }) => {
     const { get } = await mountArea({ scene: { height }, vertical, thumbY });
@@ -534,22 +595,32 @@ describe('thumb', () => {
     { name: 'after the bottom', key: 'scrollTop', at: 850, edge: 'bottom' },
     { name: 'before the inline start', key: 'scrollLeft', at: -50, edge: 'left' },
     { name: 'after the inline end', key: 'scrollLeft', at: 850, edge: 'right' },
-  ] as const)('a position $name keeps the thumb at that edge and makes it shorter', async ({ key, at, edge }) => {
-    const { get, viewport } = await mountArea();
-    const vertical = key === 'scrollTop';
-    const [thumb, track] = vertical ? [get('thumb-y')!, get('vertical')!] : [get('thumb-x')!, get('horizontal')!];
-    await reportPosition(viewport, key, at);
-    const box = thumbBox(thumb, track);
-    expect(box[edge]).toBeCloseTo(0, 1);
-    expect(vertical ? box.height : box.width).toBeCloseTo((40 * 1000) / 1050, 1);
-    await reportPosition(viewport, key, 400);
-    expect(thumbBox(thumb, track)).toMatchObject(vertical ? { top: 80, height: 40 } : { left: 80, width: 40 });
-  });
+  ] as const)(
+    'a position $name keeps the thumb at that edge and makes it shorter',
+    async ({ key, at, edge }) => {
+      const { get, viewport } = await mountArea();
+      const vertical = key === 'scrollTop';
+      const [thumb, track] = vertical
+        ? [get('thumb-y')!, get('vertical')!]
+        : [get('thumb-x')!, get('horizontal')!];
+      await reportPosition(viewport, key, at);
+      const box = thumbBox(thumb, track);
+      expect(box[edge]).toBeCloseTo(0, 1);
+      expect(vertical ? box.height : box.width).toBeCloseTo((40 * 1000) / 1050, 1);
+      await reportPosition(viewport, key, 400);
+      expect(thumbBox(thumb, track)).toMatchObject(
+        vertical ? { top: 80, height: 40 } : { left: 80, width: 40 },
+      );
+    },
+  );
 });
 
 describe('right-to-left', () => {
   test('the edges, the scrollbars, the corner and the horizontal thumb follow the direction', async () => {
-    const { get, viewport, area } = await mountArea({ scene: { corner: true }, root: { dir: 'rtl' } });
+    const { get, viewport, area } = await mountArea({
+      scene: { corner: true },
+      root: { dir: 'rtl' },
+    });
     const box = (element: HTMLElement) => element.getBoundingClientRect();
     expect(box(get('vertical')!).left).toBe(box(area).left);
     expect(box(get('corner')!).left).toBe(box(area).left);
@@ -634,7 +705,9 @@ describe('lifetime', () => {
     const mounted = await mountArea({ scene });
     scene.content = false;
     await nextTick();
-    expect(unobserve).toHaveBeenCalledWith(expect.objectContaining({ className: expect.stringContaining('content') }));
+    expect(unobserve).toHaveBeenCalledWith(
+      expect.objectContaining({ className: expect.stringContaining('content') }),
+    );
     vi.useFakeTimers();
     await fireEvent.pointerEnter(mounted.viewport);
     await fireEvent.scroll(mounted.viewport, { target: { scrollTop: 10 } });

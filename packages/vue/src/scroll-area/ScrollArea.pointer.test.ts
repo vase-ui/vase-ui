@@ -1,7 +1,8 @@
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { fireEvent } from '../../test/fireEvent';
+import { touchDrag } from '../../test/pointer';
 import ScrollAreaInSlots from '../../test/fixtures/ScrollAreaInSlots.vue';
 import ScrollAreaParts from '../../test/fixtures/ScrollAreaParts.vue';
 import { mount, settle } from '../../test/render';
@@ -16,7 +17,9 @@ interface Point {
 async function mountArea(props: Record<string, unknown> = {}) {
   const mounted = mount(ScrollAreaParts, props);
   const get = (name: string) => mounted.root.querySelector<HTMLElement>(`.${name}`);
-  await waitFor(() => expect(get('viewport')!.style.getPropertyValue('--scroll-area-overflow-y-end')).not.toBe(''));
+  await waitFor(() =>
+    expect(get('viewport')!.style.getPropertyValue('--scroll-area-overflow-y-end')).not.toBe(''),
+  );
   await settle();
   return { ...mounted, get, viewport: get('viewport')!, area: get('root')! };
 }
@@ -32,11 +35,18 @@ function centre(element: Element): Point {
   return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
 }
 
+/** The id of the mouse: Chromium and WebKit give `1`, and Firefox can give `0`. */
+let mouse = 1;
+
 /**
  * Presses the main button of the real pointer at `point` and holds it. The case gets the release
  * when it ends, with coordinates: with none, the pointer moves to the element of the press.
  */
 async function hold(point: Point) {
+  document.addEventListener('pointerdown', (event) => (mouse = event.pointerId), {
+    capture: true,
+    once: true,
+  });
   let held = true;
   const release = async (to: Point = point) => {
     held = false;
@@ -66,7 +76,7 @@ describe('drag of the thumb', () => {
     const thumb = get('thumb-y')!;
     const start = centre(thumb);
     const release = await hold(start);
-    expect(thumb.hasPointerCapture(1)).toBe(true);
+    expect(thumb.hasPointerCapture(mouse)).toBe(true);
     expect(snap(viewport)).toEqual(['none', 'important']);
     // The free length is 200 and the thumb is 40, so 1px moves 800 / 160 = 5px.
     await moveTo({ x: start.x, y: start.y + 40 });
@@ -80,37 +90,33 @@ describe('drag of the thumb', () => {
     await moveTo(outside);
     expect(viewport.scrollTop).toBe(800);
     await release(outside);
-    expect(thumb.hasPointerCapture(1)).toBe(false);
+    expect(thumb.hasPointerCapture(mouse)).toBe(false);
     expect(get('vertical')).not.toHaveAttribute('data-scrolling');
     expect(area).not.toHaveAttribute('data-scrolling');
     expect(snap(viewport)).toEqual(['', '']);
   });
 
-  test.each(['ltr', 'rtl'])('a drag of the horizontal thumb scrolls from the inline start (%s)', async (dir) => {
-    const { get, viewport } = await mountArea({ root: { dir } });
-    const start = centre(get('thumb-x')!);
-    await hold(start);
-    await moveTo({ x: start.x + (dir === 'ltr' ? 40 : -40), y: start.y });
-    expect(viewport.scrollLeft).toBe(dir === 'ltr' ? 200 : -200);
-    expect(get('horizontal')).toHaveAttribute('data-scrolling');
-    expect(get('vertical')).not.toHaveAttribute('data-scrolling');
-  });
+  test.each(['ltr', 'rtl'])(
+    'a drag of the horizontal thumb scrolls from the inline start (%s)',
+    async (dir) => {
+      const { get, viewport } = await mountArea({ root: { dir } });
+      const start = centre(get('thumb-x')!);
+      await hold(start);
+      await moveTo({ x: start.x + (dir === 'ltr' ? 40 : -40), y: start.y });
+      expect(viewport.scrollLeft).toBe(dir === 'ltr' ? 200 : -200);
+      expect(get('horizontal')).toHaveAttribute('data-scrolling');
+      expect(get('vertical')).not.toHaveAttribute('data-scrolling');
+    },
+  );
 
-  test('pointercancel ends the press, and the part releases the capture only when the thumb has it', async () => {
-    const { get, viewport } = await mountArea();
-    const thumb = get('thumb-y')!;
-    const start = centre(thumb);
-    await hold(start);
-    await moveTo({ x: start.x, y: start.y + 20 });
-    vi.spyOn(thumb, 'hasPointerCapture').mockReturnValue(false);
-    const releaseCapture = vi.spyOn(thumb, 'releasePointerCapture');
-    await fireEvent.pointerCancel(thumb, { pointerId: 1 });
-    expect(releaseCapture).not.toHaveBeenCalled();
-    expect(thumb).not.toHaveAttribute('data-scrolling');
+  // The automation of Firefox and WebKit makes no touch drag.
+  test.runIf(server.browser === 'chromium')('a touch drag of the thumb scrolls the viewport, and its end ends the press', async () => {
+    const { get, viewport, area } = await mountArea();
+    const start = centre(get('thumb-y')!);
+    await touchDrag(start, { x: start.x, y: start.y + 40 });
+    expect(viewport.scrollTop).toBe(200);
+    expect(area).not.toHaveAttribute('data-scrolling');
     expect(snap(viewport)).toEqual(['', '']);
-    // A move after the end scrolls nothing.
-    await moveTo({ x: start.x, y: start.y + 60 });
-    expect(viewport.scrollTop).toBe(100);
   });
 
   test('a lost capture ends the press', async () => {
@@ -120,7 +126,7 @@ describe('drag of the thumb', () => {
     await hold(start);
     await moveTo({ x: start.x, y: start.y + 10 });
     expect(viewport.scrollTop).toBe(50);
-    thumb.releasePointerCapture(1);
+    thumb.releasePointerCapture(mouse);
     // The browser sends `lostpointercapture` before the next pointer event.
     await moveTo({ x: start.x, y: start.y + 20 });
     expect(snap(viewport)).toEqual(['', '']);
@@ -130,15 +136,15 @@ describe('drag of the thumb', () => {
   test('a second pointer and another button start nothing', async () => {
     const { get, viewport } = await mountArea();
     const thumb = get('thumb-y')!;
-    await fireEvent.pointerDown(thumb, { pointerId: 1, button: 1 });
+    await fireEvent.pointerDown(thumb, { pointerId: mouse, button: 1 });
     expect(snap(viewport)).toEqual(['', '']);
     const start = centre(thumb);
     await hold(start);
-    // The pointer 2 is not active, so a capture for it would throw.
-    await fireEvent.pointerDown(thumb, { pointerId: 2, button: 0 });
+    // The second pointer is not active, so a capture for it would throw.
+    await fireEvent.pointerDown(thumb, { pointerId: mouse + 1, button: 0 });
     await moveTo({ x: start.x, y: start.y + 20 });
     expect(viewport.scrollTop).toBe(100);
-    expect(thumb.hasPointerCapture(1)).toBe(true);
+    expect(thumb.hasPointerCapture(mouse)).toBe(true);
   });
 
   test('a press with no viewport or no thumb does nothing', async () => {
@@ -153,10 +159,23 @@ describe('drag of the thumb', () => {
     await release();
     scene.viewport = true;
     scene.thumb = false;
-    await waitFor(() => expect(mounted.root.querySelector('.viewport')!.tabIndex).toBe(0));
+    await waitFor(() =>
+      expect(mounted.root.querySelector<HTMLElement>('.viewport')!.tabIndex).toBe(0),
+    );
     release = await hold(at(track, 5, 150));
     expect(mounted.root.querySelector<HTMLElement>('.viewport')!.scrollTop).toBe(0);
     await release();
+  });
+
+  test('a drag goes on when the thumb of the other axis unmounts', async () => {
+    const scene = reactive({ horizontal: true });
+    const { get, viewport } = await mountArea({ scene });
+    const start = centre(get('thumb-y')!);
+    await hold(start);
+    scene.horizontal = false;
+    await nextTick();
+    await moveTo({ x: start.x, y: start.y + 20 });
+    expect(viewport.scrollTop).toBe(100);
   });
 
   test('the press ends when the thumb or the viewport unmounts during the press', async () => {
@@ -173,10 +192,10 @@ describe('drag of the thumb', () => {
     await settle();
     const thumb = get('thumb-y')!;
     await hold(centre(thumb));
-    expect(thumb.hasPointerCapture(1)).toBe(true);
+    expect(thumb.hasPointerCapture(mouse)).toBe(true);
     scene.viewport = false;
     await nextTick();
-    expect(thumb.hasPointerCapture(1)).toBe(false);
+    expect(thumb.hasPointerCapture(mouse)).toBe(false);
   });
 });
 
@@ -193,7 +212,11 @@ describe('press on the track', () => {
       const track = get(vertical ? 'vertical' : 'horizontal')!;
       const thumb = get(vertical ? 'thumb-y' : 'thumb-x')!;
       // 150px from the inline start, or from the top.
-      const point = vertical ? at(track, 5, 150) : dir === 'ltr' ? at(track, 150, 5) : at(track, 50, 5);
+      const point = vertical
+        ? at(track, 5, 150)
+        : dir === 'ltr'
+          ? at(track, 150, 5)
+          : at(track, 50, 5);
       await hold(point);
       expect(viewport[key]).toBe(position);
       // The thumb moves at the `scroll` event, which can come in the next frame.
@@ -205,7 +228,11 @@ describe('press on the track', () => {
         );
       });
       expect(track).toHaveAttribute('data-scrolling');
-      await moveTo(vertical ? { x: point.x, y: point.y - 20 } : { x: point.x + (dir === 'ltr' ? -20 : 20), y: point.y });
+      await moveTo(
+        vertical
+          ? { x: point.x, y: point.y - 20 }
+          : { x: point.x + (dir === 'ltr' ? -20 : 20), y: point.y },
+      );
       expect(viewport[key]).toBe(position + (position > 0 ? -100 : 100));
     },
   );
@@ -254,7 +281,9 @@ describe('press on the track', () => {
 
 /** Scrolls the viewport as a script does, and waits for the `scroll` event of the browser. */
 async function reportScroll(viewport: HTMLElement, top: number) {
-  const scrolled = new Promise((resolve) => viewport.addEventListener('scroll', resolve, { once: true }));
+  const scrolled = new Promise((resolve) =>
+    viewport.addEventListener('scroll', resolve, { once: true }),
+  );
   viewport.scrollTop = top;
   await scrolled;
   await nextTick();
@@ -282,29 +311,37 @@ describe('wheel over a scrollbar', () => {
     expect(await wheel(bar, { deltaY: 100 })).toBe(true);
   });
 
-  test.each(['ltr', 'rtl'])('a wheel over the horizontal scrollbar stays in its range (%s)', async (dir) => {
-    const { get, viewport } = await mountArea({ root: { dir } });
-    const bar = get('horizontal')!;
-    const toEnd = dir === 'ltr' ? 1 : -1;
-    expect(await wheel(bar, { deltaX: -toEnd * 100 })).toBe(true);
-    expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(false);
-    expect(viewport.scrollLeft).toBe(toEnd * 100);
-    expect(await wheel(bar, { deltaX: toEnd * 1000 })).toBe(false);
-    expect(viewport.scrollLeft).toBe(toEnd * 800);
-    expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(true);
-    expect(await wheel(bar, { deltaX: -toEnd * 1000 })).toBe(false);
-    expect(viewport.scrollLeft).toBe(0);
-  });
+  test.each(['ltr', 'rtl'])(
+    'a wheel over the horizontal scrollbar stays in its range (%s)',
+    async (dir) => {
+      const { get, viewport } = await mountArea({ root: { dir } });
+      const bar = get('horizontal')!;
+      const toEnd = dir === 'ltr' ? 1 : -1;
+      expect(await wheel(bar, { deltaX: -toEnd * 100 })).toBe(true);
+      expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(false);
+      expect(viewport.scrollLeft).toBe(toEnd * 100);
+      expect(await wheel(bar, { deltaX: toEnd * 1000 })).toBe(false);
+      expect(viewport.scrollLeft).toBe(toEnd * 800);
+      expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(true);
+      expect(await wheel(bar, { deltaX: -toEnd * 1000 })).toBe(false);
+      expect(viewport.scrollLeft).toBe(0);
+    },
+  );
 
   test('a wheel over a scrollbar with no viewport does nothing', async () => {
-    const mounted = mount(ScrollAreaParts, { scene: { viewport: false }, vertical: { keepMounted: true } });
+    const mounted = mount(ScrollAreaParts, {
+      scene: { viewport: false },
+      vertical: { keepMounted: true },
+    });
     await settle();
     expect(await wheel(mounted.root.querySelector('.vertical')!, { deltaY: 100 })).toBe(true);
   });
 
   test('a wheel of the real pointer over the scrollbar scrolls the viewport by its delta', async () => {
     const { get, viewport } = await mountArea();
-    const scrolled = new Promise((resolve) => viewport.addEventListener('scroll', resolve, { once: true }));
+    const scrolled = new Promise((resolve) =>
+      viewport.addEventListener('scroll', resolve, { once: true }),
+    );
     await userEvent.wheel(get('vertical')!, { delta: { y: 100 } });
     await scrolled;
     expect(viewport.scrollTop).toBe(100);
@@ -315,27 +352,36 @@ describe('scroll snap during a press', () => {
   test.each([
     { name: 'from style', viewport: { style: 'scroll-snap-type: y mandatory' } },
     { name: 'from a style sheet', viewport: { class: 'snapped' } },
-  ])('a press turns scroll snap off, and the end gives the value $name back', async ({ viewport: attrs }) => {
-    const style = document.head.appendChild(document.createElement('style'));
-    style.textContent = '.snapped { scroll-snap-type: y mandatory }';
-    onTestFinished(() => style.remove());
-    const viewportAttrs = reactive<Record<string, unknown>>({ ...attrs });
-    const { get, viewport } = await mountArea({ viewport: viewportAttrs });
-    const inline = viewport.style.getPropertyValue('scroll-snap-type');
-    for (const end of ['release', 'cancel']) {
-      const start = centre(get('thumb-y')!);
-      const release = await hold(start);
-      expect(getComputedStyle(viewport).scrollSnapType).toBe('none');
-      // A render of the viewport during the press keeps scroll snap off.
-      viewportAttrs['data-render'] = end;
-      await nextTick();
-      expect(getComputedStyle(viewport).scrollSnapType).toBe('none');
-      if (end === 'cancel') await fireEvent.pointerCancel(get('thumb-y')!, { pointerId: 1 });
-      await release();
-      expect(viewport.style.getPropertyValue('scroll-snap-type')).toBe(inline);
-      expect(getComputedStyle(viewport).scrollSnapType).toBe('y mandatory');
-    }
-  });
+  ])(
+    'a press turns scroll snap off, and the end gives the value $name back',
+    async ({ viewport: attrs }) => {
+      const style = document.head.appendChild(document.createElement('style'));
+      style.textContent = '.snapped { scroll-snap-type: y mandatory }';
+      onTestFinished(() => style.remove());
+      const viewportAttrs = reactive<Record<string, unknown>>({ ...attrs });
+      const { get, viewport } = await mountArea({ viewport: viewportAttrs });
+      const inline = viewport.style.getPropertyValue('scroll-snap-type');
+      for (const end of ['release', 'lost capture']) {
+        const start = centre(get('thumb-y')!);
+        const release = await hold(start);
+        expect(getComputedStyle(viewport).scrollSnapType).toBe('none');
+        // A render of the viewport during the press keeps scroll snap off.
+        viewportAttrs['data-render'] = end;
+        await nextTick();
+        expect(getComputedStyle(viewport).scrollSnapType).toBe('none');
+        if (end === 'lost capture') {
+          // The capture starts at the first move.
+          await moveTo({ x: start.x, y: start.y + 1 });
+          get('thumb-y')!.releasePointerCapture(mouse);
+          await moveTo({ x: start.x, y: start.y + 2 });
+          expect(getComputedStyle(viewport).scrollSnapType).toBe('y mandatory');
+        }
+        await release();
+        expect(viewport.style.getPropertyValue('scroll-snap-type')).toBe(inline);
+        expect(getComputedStyle(viewport).scrollSnapType).toBe('y mandatory');
+      }
+    },
+  );
 
   test('the jump of a press on the track is not snapped', async () => {
     const { get, viewport } = await mountArea({
@@ -364,7 +410,9 @@ describe('a listener of the developer that unmounts the scroll area', () => {
     });
     const mounted = mount(ScrollAreaInSlots, { listeners: { pointer: pointerListener } });
     unmount = mounted.unmount;
-    await waitFor(() => expect(mounted.root.querySelector<HTMLElement>('.thumb-y')!.offsetHeight).toBe(38));
+    await waitFor(() =>
+      expect(mounted.root.querySelector<HTMLElement>('.thumb-y')!.offsetHeight).toBe(38),
+    );
     await settle();
     const thumb = mounted.root.querySelector<HTMLElement>('.thumb-y')!;
     const start = centre(thumb);

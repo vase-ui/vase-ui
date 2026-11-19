@@ -61,7 +61,12 @@ defineExpose({
       style="width: 100%; height: 100%"
       v-bind="viewport"
     >
-      <ScrollArea.Content v-if="scene.content !== false" ref="contentPart" class="content" v-bind="content">
+      <ScrollArea.Content
+        v-if="scene.content !== false"
+        ref="contentPart"
+        class="content"
+        v-bind="content"
+      >
         <template v-if="scene.items">
           <div
             v-for="item in scene.items"
@@ -69,7 +74,10 @@ defineExpose({
             style="flex-shrink: 0; width: 200px; height: 100px; scroll-snap-align: start"
           />
         </template>
-        <div v-else :style="{ width: `${scene.width ?? 1000}px`, height: `${scene.height ?? 1000}px` }" />
+        <div
+          v-else
+          :style="{ width: `${scene.width ?? 1000}px`, height: `${scene.height ?? 1000}px` }"
+        />
       </ScrollArea.Content>
     </ScrollArea.Viewport>
     <ScrollArea.Scrollbar
@@ -79,7 +87,12 @@ defineExpose({
       style="width: 10px"
       v-bind="vertical"
     >
-      <ScrollArea.Thumb v-if="scene.thumb !== false" ref="thumbYPart" class="thumb-y" v-bind="thumbY">
+      <ScrollArea.Thumb
+        v-if="scene.thumb !== false"
+        ref="thumbYPart"
+        class="thumb-y"
+        v-bind="thumbY"
+      >
         <span class="grip" style="display: block; height: 4px" />
       </ScrollArea.Thumb>
     </ScrollArea.Scrollbar>

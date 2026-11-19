@@ -33,10 +33,7 @@ watch(
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(
-    { style: { minWidth: 'fit-content' }, ...stateAttributes(root.state) },
-    attrs,
-  );
+  return mergeProps({ style: { minWidth: 'fit-content' }, ...stateAttributes(root.state) }, attrs);
 }
 </script>
 

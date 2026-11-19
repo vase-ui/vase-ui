@@ -8,7 +8,10 @@ defineOptions({ inheritAttrs: false });
 defineProps</* @vue-ignore */ HTMLAttributes>();
 defineSlots<{
   default?(): unknown;
-  element?(scope: { props: Record<string, unknown>; elementRef: (target: unknown) => void }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+  }): unknown;
 }>();
 
 const root = injectScrollArea('Corner');

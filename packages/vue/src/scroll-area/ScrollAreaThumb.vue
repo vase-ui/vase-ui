@@ -58,7 +58,9 @@ function onPointerMove(event: PointerEvent) {
   root.scrollTo(press.vertical, dragPosition(press.startPosition, distance, free, length, max));
 }
 
-function onPointerEnd(event: PointerEvent) {
+// The browser releases the capture after `pointerup` and `pointercancel`, and then sends
+// `lostpointercapture`, also to a thumb with `display: none`.
+function onLostPointerCapture(event: PointerEvent) {
   if (event.pointerId === root.press?.pointerId) root.endPress();
 }
 
@@ -78,9 +80,7 @@ function elementProps() {
       },
       onPointerdown: onPointerDown,
       onPointermove: onPointerMove,
-      onPointerup: onPointerEnd,
-      onPointercancel: onPointerEnd,
-      onLostpointercapture: onPointerEnd,
+      onLostpointercapture: onLostPointerCapture,
     },
     attrs,
   );

@@ -32,7 +32,7 @@ export interface ScrollAreaForParts {
   readonly measured: boolean;
   /** The length of the vertical and of the horizontal thumb, in pixels. */
   readonly thumbLengths: { readonly x: number; readonly y: number };
-  /** The last pointer that entered, moved over or pressed the root is a touch. */
+  /** The last pointer that moved over or pressed the root is a touch. */
   readonly touch: boolean;
   readonly press: ScrollAreaPress | null;
   /** The parts that serve: the last that each list got. */

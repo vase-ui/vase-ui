@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { mergeProps, onMounted, onUnmounted, provide, useAttrs, watch, type HTMLAttributes } from 'vue';
+import {
+  mergeProps,
+  onMounted,
+  onUnmounted,
+  provide,
+  useAttrs,
+  watch,
+  type HTMLAttributes,
+} from 'vue';
 import { useElement } from '../common/element';
 import { styleDisableScrollbar } from '../utils/styles';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
@@ -105,10 +113,11 @@ function elementProps() {
   );
   if (!root.press) return props;
   // During a press the thumb follows the pointer, so scroll snap is off.
-  const { scrollSnapType: _, 'scroll-snap-type': __, ...style } = props.style as Record<
-    string,
-    unknown
-  >;
+  const {
+    scrollSnapType: _,
+    'scroll-snap-type': __,
+    ...style
+  } = props.style as Record<string, unknown>;
   return { ...props, style: { ...style, scrollSnapType: 'none !important' } };
 }
 </script>

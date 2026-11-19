@@ -61,7 +61,14 @@ const scrollbarY = computed(() => serving(scrollbars, true));
 const thumbX = computed(() => serving(thumbs, false));
 const thumbY = computed(() => serving(thumbs, true));
 
-const overflow = reactive({ x: false, y: false, xStart: false, xEnd: false, yStart: false, yEnd: false });
+const overflow = reactive({
+  x: false,
+  y: false,
+  xStart: false,
+  xEnd: false,
+  yStart: false,
+  yEnd: false,
+});
 const scrolling = reactive({ x: false, y: false });
 const cornerSize = reactive({ width: 0, height: 0 });
 const thumbLengths = reactive({ x: 0, y: 0 });
@@ -199,8 +206,8 @@ function endPress() {
   if (!ended) return;
   press.value = null;
   stopScroll(ended.vertical ? 'y' : 'x');
-  const thumb = ended.vertical ? thumbY.value : thumbX.value;
-  if (thumb?.hasPointerCapture(ended.pointerId)) thumb.releasePointerCapture(ended.pointerId);
+  // A press that ends with the capture held is a press whose viewport left.
+  (ended.vertical ? thumbY.value : thumbX.value)?.releasePointerCapture(ended.pointerId);
 }
 
 provide(scrollAreaKey, {
@@ -296,7 +303,7 @@ function elementProps() {
         '--scroll-area-corner-height': `${cornerSize.height}px`,
       },
       ...stateAttributes(state.value),
-      onPointerenter: readPointer,
+      // A pointer that enters the root also moves over it.
       onPointermove: readPointer,
       onPointerdown: readPointer,
     },

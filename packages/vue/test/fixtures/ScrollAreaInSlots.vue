@@ -10,7 +10,10 @@ defineProps({
    * are in an object, because a Vapor app reads a function as a root prop as a getter.
    */
   listeners: {
-    type: Object as PropType<{ scroll?: (event: Event) => void; pointer?: (event: PointerEvent) => void }>,
+    type: Object as PropType<{
+      scroll?: (event: Event) => void;
+      pointer?: (event: PointerEvent) => void;
+    }>,
     default: () => ({}),
   },
 });
@@ -21,7 +24,9 @@ defineProps({
     <template #element="{ props, elementRef, state }">
       <section v-bind="props" :ref="elementRef" class="root" :data-state="JSON.stringify(state)">
         <ScrollArea.Viewport style="width: 100%; height: 100%">
-          <template #element="{ props: viewportProps, elementRef: viewportRef, state: viewportState }">
+          <template
+            #element="{ props: viewportProps, elementRef: viewportRef, state: viewportState }"
+          >
             <article
               @scroll="listeners.scroll?.($event)"
               v-bind="viewportProps"
@@ -30,7 +35,9 @@ defineProps({
               :data-state="JSON.stringify(viewportState)"
             >
               <ScrollArea.Content>
-                <template #element="{ props: contentProps, elementRef: contentRef, state: contentState }">
+                <template
+                  #element="{ props: contentProps, elementRef: contentRef, state: contentState }"
+                >
                   <ul
                     v-bind="contentProps"
                     :ref="unbound ? undefined : contentRef"
