@@ -58,7 +58,7 @@ A `Progress.Label` with no `id` prop names the bar, also in the server HTML. A l
 
 A root with no `Progress.Label` needs `aria-label` or `aria-labelledby`. That attribute also names a root that has a label.
 
-The text of `Progress.Value` and `aria-valuetext` of the root is the percent of the range, or the value in `format`. The locale of the text is `en-US`, on the server and in the browser. Give `locale` with the locale of the page.
+The text of `Progress.Value` and `aria-valuetext` of the root is the percent of the range, or the value in `format`. With no `locale`, the text has the locale `en-US`, on the server and in the browser. Give `locale` with the locale of the page.
 
 While the progress is indeterminate, the root has no `aria-valuetext`, and a screen reader says the state in the language of the user. To give a text, use `getAriaValueText` or `aria-valuetext`, in the language of the page.
 
