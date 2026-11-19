@@ -9,6 +9,7 @@ import type { UseFieldValidationReturnValue } from '../internals/field-root-cont
 import type { RadioGroupChangeEventDetails } from './RadioGroup.vue';
 
 export interface RadioInput {
+  checked: Readonly<Ref<boolean>>;
   take: (event?: Event) => void;
   restore: () => void;
 }

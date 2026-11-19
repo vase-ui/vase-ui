@@ -168,10 +168,11 @@ function restoreInputs() {
 }
 
 function takeInputs(event?: Event) {
-  // Each radio must read its native state before a write can uncheck a peer.
-  for (const [input, radio] of radioInputs) {
-    if (input.checked) radio.take(event);
-  }
+  // Unnamed inputs can both be checked. Compare them before a change updates the group.
+  const changes = Array.from(radioInputs).filter(
+    ([input, radio]) => input.checked && !radio.checked.value,
+  );
+  for (const [, radio] of changes) radio.take(event);
   void nextTick(restoreInputs);
 }
 

@@ -208,14 +208,10 @@ if (group) {
   const { isHeld } = useInputRegistration(inputElement, (input) =>
     mergeCleanups(
       group.registerInput(input, {
+        checked,
         restore: restoreInput,
         take(event) {
-          if (
-            !checked.value &&
-            !isDisabled.value &&
-            !isReadOnly.value &&
-            props.value !== undefined
-          ) {
+          if (!isDisabled.value && !isReadOnly.value && props.value !== undefined) {
             group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, event));
           }
         },
