@@ -47,7 +47,7 @@
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Radio` is the part: one `<input type=\"radio\">` (rules 8.1, 8.3). The flat types `RadioProps` and `RadioState` replace the namespace types. `readonly` replaces `readOnly`. The `element` of the template ref replaces `inputRef`. CSS selects `:checked`, `:disabled` and `:required`."
+      "reason": "`Radio` is the part: one `<input type=\"radio\">` (rules 8.1, 8.3). The types of the part are `Radio.Props` and `Radio.State`, also with the flat names `RadioProps` and `RadioState`. `readonly` replaces `readOnly`. The `element` of the template ref replaces `inputRef`. CSS selects `:checked`, `:disabled` and `:required`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
