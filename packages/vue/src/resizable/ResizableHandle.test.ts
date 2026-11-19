@@ -192,19 +192,22 @@ describe('keys', () => {
     expect(prevented).toEqual([true, true, true]);
   });
 
+  // A real Meta with an arrow key goes back in the history of WebKit on macOS, so the keys are
+  // made events.
   test.each([
-    { name: 'ArrowUp in a horizontal root', orientation: 'horizontal', keys: '{ArrowUp}' },
-    { name: 'ArrowLeft in a vertical root', orientation: 'vertical', keys: '{ArrowLeft}' },
-    { name: 'Ctrl with an arrow', orientation: 'horizontal', keys: '{Control>}{ArrowLeft}{/Control}' },
-    { name: 'Alt with an arrow', orientation: 'horizontal', keys: '{Alt>}{ArrowLeft}{/Alt}' },
-    { name: 'Meta with an arrow', orientation: 'horizontal', keys: '{Meta>}{ArrowLeft}{/Meta}' },
-    { name: 'Enter on a panel that is not collapsible', orientation: 'horizontal', keys: '{Enter}' },
-  ] as const)('a key of the browser stays: $name', async ({ orientation, keys }) => {
+    { name: 'ArrowUp in a horizontal root', orientation: 'horizontal', key: 'ArrowUp', modifier: {} },
+    { name: 'ArrowLeft in a vertical root', orientation: 'vertical', key: 'ArrowLeft', modifier: {} },
+    { name: 'Ctrl with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { ctrlKey: true } },
+    { name: 'Alt with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { altKey: true } },
+    { name: 'Meta with an arrow', orientation: 'horizontal', key: 'ArrowLeft', modifier: { metaKey: true } },
+    { name: 'Enter on a panel that is not collapsible', orientation: 'horizontal', key: 'Enter', modifier: {} },
+  ] as const)('a key of the browser stays: $name', async ({ orientation, key: name, modifier }) => {
     const log: unknown[][] = [];
     const { at } = await mountHandles({ root: { orientation, ...logged(log) } });
-    const prevented = recordKeys(at('h1'));
-    await key(at('h1'), keys);
-    expect(prevented.at(-1)).toBe(false);
+    const event = new KeyboardEvent('keydown', { key: name, ...modifier, bubbles: true, cancelable: true });
+    at('h1').dispatchEvent(event);
+    await nextTick();
+    expect(event.defaultPrevented).toBe(false);
     expect(log).toEqual([]);
   });
 

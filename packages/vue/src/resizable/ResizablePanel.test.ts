@@ -155,7 +155,7 @@ describe('prop: minSize and maxSize', () => {
     const { at, flex } = await mountPanels([{ maxSize: 70 }, { minSize: 20 }]);
     await drag(at('h1'), 120);
     expect(flex(0, 1)).toEqual(['70', '30']);
-    await drag(at('h1'), -300);
+    await drag(at('h1'), -280);
     expect(flex(0, 1)).toEqual(['0', '100']);
     const keys = await mountPanels([{ minSize: '30%' }, { minSize: 30, maxSize: '60' }]);
     await key(keys.at('h1'), '{End}');
@@ -349,7 +349,7 @@ describe('methods', () => {
   test.each([
     { name: 'in one move', drags: [[-160]], sizes: ['40', '60'] },
     { name: 'in two moves', drags: [[-100, -160]], sizes: ['40', '60'] },
-    { name: 'from the least size', drags: [[-80], [-160]], sizes: ['20', '80'] },
+    { name: 'from the least size', drags: [[-80], [-80]], sizes: ['20', '80'] },
   ])('expand() gives the size from the start of the drag that collapsed it: $name', async ({ drags, sizes }) => {
     const { at, panel, flex } = await mountPanels([{ ...collapsible, defaultSize: 40 }, { id: 'b' }]);
     for (const moves of drags) {

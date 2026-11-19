@@ -1,3 +1,4 @@
+import { onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 
@@ -55,6 +56,10 @@ export function centerOf(element: Element) {
 
 /** Presses the element at its center with the main button of the mouse, and holds it. */
 export async function press(element: Element, at = centerOf(element)) {
+  // A case that fails before its release keeps the button down for the next case.
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' });
+  });
   await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
   return at;
 }

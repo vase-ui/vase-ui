@@ -193,52 +193,85 @@ describe('the press of a div with pointer capture', () => {
     return { target, text: container.querySelector('p')! };
   }
 
-  test('M4: a move across text selects it only in WebKit; with the default of mousedown prevented, nothing is selected and the div gets no focus', async () => {
+  type Press = 'native' | 'prevented mousedown' | 'user-select: none' | 'prevented selectstart';
+
+  /**
+   * Presses a div with pointer capture in a new document, after `before`, and moves across text.
+   * `focus` gives the div the focus by a script in that listener. A new document has no focus
+   * that a mouse gave, and the focus ring of each browser depends on it.
+   */
+  async function pressInFrame(
+    press: Press,
+    { before = 'nothing', focus }: { before?: 'nothing' | 'mouse' | 'Tab' | 'script'; focus?: 'pointerdown' | 'mousedown' } = {},
+  ) {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    onTestFinished(() => frame.remove());
+    frame.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px; height: 120px; border: 0';
+    const select = press === 'user-select: none' ? '; user-select: none; -webkit-user-select: none' : '';
+    frame.srcdoc = `<body style="margin: 0"><input id="start" aria-label="Start" style="width: 100px; height: 20px"><input id="before" aria-label="Before" style="width: 100px; height: 20px"><div style="display: flex"><div id="target" tabindex="0" style="width: 40px; height: 40px; background: gray${select}"></div><p style="width: 300px; margin: 0">Some text that a drag can select.</p></div></body>`;
+    await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+    const doc = frame.contentDocument!;
+    const target = doc.querySelector<HTMLElement>('#target')!;
+    target.addEventListener('pointerdown', (event) => target.setPointerCapture(event.pointerId));
+    if (press === 'prevented mousedown') target.addEventListener('mousedown', (event) => event.preventDefault());
+    if (press === 'prevented selectstart') target.addEventListener('selectstart', (event) => event.preventDefault());
+    if (focus) target.addEventListener(focus, () => target.focus({ preventScroll: true }));
+    if (before === 'mouse') await userEvent.pointer({ coords: { x: 150, y: 10 }, keys: '[MouseLeft]' });
+    if (before === 'Tab') {
+      doc.querySelector<HTMLElement>('#start')!.focus();
+      await userEvent.keyboard('{Tab}');
+    }
+    if (before === 'script') doc.querySelector<HTMLElement>('#before')!.focus();
+    await userEvent.pointer({ coords: { x: 20, y: 40 }, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: 200, y: 45 } });
+    await userEvent.pointer({ coords: { x: 330, y: 45 } });
+    const result = [
+      doc.activeElement === target ? 'focus' : 'no focus',
+      target.matches(':focus-visible') ? 'ring' : 'no ring',
+      doc.getSelection()!.toString() ? 'selected' : 'no selection',
+    ].join(', ');
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    frame.remove();
+    return result;
+  }
+
+  // `user-select` and `selectstart` are of limited availability (MDN), so no part rests on them.
+  test('M4: a press that moves across text selects it only in WebKit, also with user-select: none; a prevented mousedown or selectstart selects nothing', async () => {
     releaseAfterTest();
     const results: Record<string, string> = {};
-    for (const preventMousedown of [false, true]) {
-      const { target, text } = pressTarget({ preventMousedown });
-      await userEvent.pointer({ coords: center(target), keys: '[MouseLeft>]' });
-      const rect = text.getBoundingClientRect();
-      await userEvent.pointer({ coords: { x: rect.right - 2, y: rect.top + 4 } });
-      const selected = getSelection()!.toString() !== '';
-      results[preventMousedown ? 'prevented' : 'plain'] =
-        `${selected ? 'selected' : 'none'}, ${document.activeElement === target ? 'focus' : 'no focus'}`;
-      await userEvent.pointer({ keys: '[/MouseLeft]' });
-      getSelection()!.removeAllRanges();
-      root!.remove();
+    for (const press of ['native', 'user-select: none', 'prevented mousedown', 'prevented selectstart'] as const) {
+      results[press] = await pressInFrame(press);
     }
+    const webkit = server.browser === 'webkit';
     expect(results).toEqual({
-      plain: `${server.browser === 'webkit' ? 'selected' : 'none'}, focus`,
-      prevented: 'none, no focus',
+      native: `focus, no ring, ${webkit ? 'selected' : 'no selection'}`,
+      'user-select: none': `focus, no ring, ${webkit ? 'selected' : 'no selection'}`,
+      'prevented mousedown': 'no focus, no ring, no selection',
+      'prevented selectstart': 'focus, no ring, no selection',
     });
   });
 
-  // After the Tab key, each browser shows a ring for a focus that a script gives in a press.
-  test('M5: focus() matches :focus-visible from pointerdown only after a Tab key, and from a prevented mousedown always', async () => {
+  // A focus that the browser gives at a press never shows a ring. A focus that a script gives in
+  // the press shows one unless a mouse gave the focus before, in each browser.
+  test('M5: focus() in a press matches :focus-visible unless a mouse gave the last focus', async () => {
     releaseAfterTest();
-    const results: Record<string, boolean> = {};
-    for (const listener of ['pointerdown', 'mousedown'] as const) {
-      for (const afterTab of [false, true]) {
-        const { target } = pressTarget({ preventMousedown: true });
-        target.addEventListener(listener, () => target.focus({ preventScroll: true }));
-        if (afterTab) {
-          root!.querySelector<HTMLElement>('#start')!.focus();
-          await userEvent.keyboard('{Tab}');
-          expect(root!.querySelector('#before')).toHaveFocus();
-        }
-        await userEvent.pointer({ coords: center(target), keys: '[MouseLeft>]' });
-        expect(target).toHaveFocus();
-        results[`${listener}${afterTab ? ' after Tab' : ''}`] = target.matches(':focus-visible');
-        await userEvent.pointer({ keys: '[/MouseLeft]' });
-        root!.remove();
+    const results: Record<string, string> = {};
+    for (const focus of ['pointerdown', 'mousedown'] as const) {
+      for (const before of ['nothing', 'mouse', 'Tab', 'script'] as const) {
+        results[`${focus} after ${before}`] = await pressInFrame('prevented mousedown', { before, focus });
       }
     }
+    const ring = 'focus, ring, no selection';
+    const noRing = 'focus, no ring, no selection';
     expect(results).toEqual({
-      pointerdown: false,
-      'pointerdown after Tab': true,
-      mousedown: true,
-      'mousedown after Tab': true,
+      'pointerdown after nothing': ring,
+      'pointerdown after mouse': noRing,
+      'pointerdown after Tab': ring,
+      'pointerdown after script': ring,
+      'mousedown after nothing': ring,
+      'mousedown after mouse': noRing,
+      'mousedown after Tab': ring,
+      'mousedown after script': ring,
     });
   });
 
