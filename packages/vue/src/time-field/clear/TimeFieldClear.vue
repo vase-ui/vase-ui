@@ -27,7 +27,7 @@ export interface TimeFieldClearProps
 import { computed, useSlots } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button/useButton';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -75,7 +75,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('butt
       disabled: isDisabled,
     }),
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
     {
       // With a slot, the consumer gives the content, and the content gives the name.

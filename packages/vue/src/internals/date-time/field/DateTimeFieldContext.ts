@@ -3,8 +3,7 @@ import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../createVaseUIEventDetails';
 import type { FieldRootState } from '../../field-root-context/FieldRootContext';
 import type { REASONS } from '../../reasons';
-import type { EditableSegmentType } from './segmentLayout';
-import type { DayPeriod, NumericSegmentType } from './segmentRanges';
+import type { DayPeriod, EditableSegmentType, NumericSegmentType } from './segmentLayout';
 
 export type DateTimeFieldChangeEventReason =
   | typeof REASONS.inputChange
@@ -119,3 +118,25 @@ export function useDateTimeFieldContext(): DateTimeFieldContext {
 
   return context;
 }
+
+/**
+ * What a part that renders a field root gives to the root, such as a field of a range picker. The
+ * root has no prop for it, because the `id` prop of a root is the id of its first segment.
+ */
+export interface DateTimeFieldHost {
+  /**
+   * The `id` of the group element of the root. The part names the group by that `id`, so that the
+   * name of the group holds the `aria-label` of the group and a label.
+   */
+  groupId: string;
+}
+
+export const DateTimeFieldHostContext: InjectionKey<DateTimeFieldHost> = Symbol();
+
+/**
+ * The count of the native resets that a picker put back to its default value.
+ * `useDateTimePickerRoot` provides it to the field roots below the picker. The picker gives the new
+ * value of a reset to such a root with the next render, so the root reads the count to tell that
+ * value from the value of a user.
+ */
+export const PickerResetCountContext: InjectionKey<Readonly<Ref<number>>> = Symbol();

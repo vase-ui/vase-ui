@@ -126,11 +126,9 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
 
 <script setup lang="ts" generic="Value extends TimeFieldRootValue = Temporal.PlainTime">
 import { toRefs, useTemplateRef } from 'vue';
-import {
-  rootStateAttributesMapping,
-  useDateTimeFieldRoot,
-} from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { useDateTimeFieldRoot } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 
@@ -189,11 +187,10 @@ const { state } = context;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  stateAttributesMapping: fieldValidityMapping,
   ref: context.setRootElement,
   props: context.getRootProps,
 });
-
 
 defineExpose({
   element,

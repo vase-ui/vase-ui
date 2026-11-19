@@ -21,7 +21,7 @@ export interface TimeFieldInputProps
 <script setup lang="ts">
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
-import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import TimeFieldInputChildren from './TimeFieldInputChildren.vue';
@@ -46,7 +46,7 @@ const { state } = context;
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  stateAttributesMapping: rootStateAttributesMapping,
+  stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
     {
       // The server can have another layout than the browser. The segments then make the elements again
@@ -58,7 +58,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ],
   children: true,
 });
-
 
 defineExpose({ element });
 </script>

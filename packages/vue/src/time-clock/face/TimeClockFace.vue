@@ -65,7 +65,14 @@ import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { TimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
-import { angleOfPoint, faceNumber, faceNumberOfPoint, outerRingRadius, pagePlaces, ratioOfPoint } from '../utils/clockViews';
+import {
+  angleOfPoint,
+  faceNumber,
+  faceNumberOfPoint,
+  outerRingRadius,
+  pagePlaces,
+  ratioOfPoint,
+} from '../utils/clockViews';
 import type { TimeClockFaceNumber } from '../utils/clockViews';
 import TimeClockFaceChildren from './TimeClockFaceChildren.vue';
 

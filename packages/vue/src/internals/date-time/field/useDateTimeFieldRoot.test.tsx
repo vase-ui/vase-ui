@@ -19,7 +19,7 @@ import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue
 import { formatter } from '../format';
 import { kindOf } from '../temporal';
 import type { TemporalValue } from '../temporal';
-import { PARTIAL_MESSAGE } from './customValidity';
+import { PARTIAL_MESSAGE } from './useDateTimeFieldRoot';
 import { useDateTimeFieldContext } from './DateTimeFieldContext';
 
 const PROBE = 'test/fixtures/DateTimeFieldProbe.vue';

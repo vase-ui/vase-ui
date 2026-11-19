@@ -288,7 +288,11 @@ const { value: shownHourCycle, attributes: hourCycleAttributes } = useServerValu
   parseHourCycle,
 );
 const grid = computed(() =>
-  gridOf(currentView.value, shownHourCycle.value, stepOf(currentView.value, props.minuteStep, props.secondStep)),
+  gridOf(
+    currentView.value,
+    shownHourCycle.value,
+    stepOf(currentView.value, props.minuteStep, props.secondStep),
+  ),
 );
 const limits = computed<TimeLimits>(() => ({
   minTime: props.minTime,

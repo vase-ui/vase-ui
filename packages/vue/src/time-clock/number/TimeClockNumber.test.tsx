@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createHeldBranch, createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  screen,
+} from '#test-utils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const hour = (value: number, inner = false) => ({ value, inner });
@@ -36,11 +42,23 @@ describe('<TimeClock.Number />', () => {
 
   it('uses the visible dial numbers when a number mounts or returns from KeepAlive', async () => {
     const { HeldBranch, mountWhileHeld, show, hide } = createHeldBranch(() => (
-      <TimeClock.Number number={hour(3)} style={{ position: 'absolute', left: '225px', top: '100px', width: 0, height: 0 }} />
+      <TimeClock.Number
+        number={hour(3)}
+        style={{ position: 'absolute', left: '225px', top: '100px', width: 0, height: 0 }}
+      />
     ));
     await render(
       <TimeClock.Root hourCycle={24} granularity="hour">
-        <TimeClock.Face data-testid="face" style={{ position: 'fixed', left: '100px', top: '100px', width: '200px', height: '200px' }}>
+        <TimeClock.Face
+          data-testid="face"
+          style={{
+            position: 'fixed',
+            left: '100px',
+            top: '100px',
+            width: '200px',
+            height: '200px',
+          }}
+        >
           <HeldBranch />
         </TimeClock.Face>
       </TimeClock.Root>,

@@ -68,7 +68,10 @@ export interface TimeClockFaceContext {
   inputProps: () => Record<string, any>;
   /** The `ref` setter of the range input. The `children` component binds it by name. */
   setInputElement: (value: unknown) => void;
-  useNumber: (element: Readonly<Ref<HTMLElement | null>>, number: () => TimeClockFaceNumber) => void;
+  useNumber: (
+    element: Readonly<Ref<HTMLElement | null>>,
+    number: () => TimeClockFaceNumber,
+  ) => void;
 }
 
 export const TimeClockFaceContext: InjectionKey<TimeClockFaceContext> = Symbol();

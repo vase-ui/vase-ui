@@ -334,6 +334,23 @@ describe('<TimeClock.Root />', () => {
   });
 
   describe('step', () => {
+    it('warns when the second step becomes invalid after mount', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => warn.mockRestore());
+      const { setProps } = await render(
+        <TimeClock.Root defaultView="second" granularity="second" secondStep={5}>
+          <TimeClock.Face />
+        </TimeClock.Root>,
+      );
+      const slider = screen.getByRole('slider');
+      expect(slider).toHaveAttribute('step', '5');
+
+      await setProps({ secondStep: 0 });
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('`secondStep`'));
+      expect(slider).toHaveAttribute('step', '1');
+    });
+
     it.each([
       { name: 'a step of 0', prop: 'minuteStep', value: 0 },
       { name: 'a fraction', prop: 'minuteStep', value: 2.5 },

@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createHeldBranch, createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  waitFor,
+} from '#test-utils';
 import TimePickerAnatomy from '../../time-picker/root/TimePickerAnatomy.test.vue';
 import TimeClockFaceReplace from './TimeClockFaceReplace.test.vue';
 

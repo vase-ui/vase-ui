@@ -72,7 +72,12 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="!state.empty && usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
+  <slot
+    v-if="!state.empty && usesRenderSlot()"
+    name="render"
+    :props="elementProps()"
+    :state="state"
+  />
   <component :is="as" v-else-if="!state.empty" v-bind="elementProps()" :ref="setRef">
     <slot :state="state" />
   </component>
