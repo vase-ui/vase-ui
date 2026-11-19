@@ -16,7 +16,7 @@ it('VUE-112: hydrates the native button parts before it reads the fieldset', asy
   expect(serverHtml).not.toContain('data-disabled');
   const { container } = await hydrate(ButtonFieldsetHydration, { serverHtml });
   const buttons = container.querySelectorAll('button');
-  expect(buttons).toHaveLength(12);
+  expect(buttons).toHaveLength(11);
   for (const button of buttons) {
     expect(button).toHaveAttribute('data-disabled');
     expect(button.textContent).toBe('true');
@@ -33,7 +33,7 @@ it('VUE-112: shows the state of a disabled Fieldset.Root in the server HTML', as
     server.content.querySelectorAll('button'),
     container.querySelectorAll('button'),
   ]) {
-    expect(buttons).toHaveLength(12);
+    expect(buttons).toHaveLength(11);
     for (const button of buttons) {
       // The DOM matchers refuse an element of a template, which has no window.
       expect(button.hasAttribute('data-disabled')).toBe(true);

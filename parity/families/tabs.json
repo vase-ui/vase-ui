@@ -3,6 +3,185 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/list/TabsListDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanelDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTabDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicatorCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The indicator writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part writes its own attributes from the state of the root. No mapping of the state to attributes is shared."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/prehydrationScript.template.js",
+      "kind": "not-applicable",
+      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. Vase UI copies the resulting script text into its prehydration module, with the edits that its comment names. Its components use that module."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`Tabs.test.ts` tests the value, the first value, the changes of the root with each reason, the activation, the keys, the tab stop, the names, the panels, the direction, nested roots and Tabs in popups, with the native elements of the parts."
+    },
+    {
+      "upstream": "packages/react/src/tabs/list/TabsList.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`Tabs.test.ts` tests the role and the name of the list, the keys with and without `loopFocus`, the keys to a disabled tab and past a tab that the browser disables, and the tab stop after a removal."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`Tabs.test.ts` tests a press, Enter and Space, a disabled tab, a press of a secondary button, the state, and a link and a `<span>` in the `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`Tabs.test.ts` tests the panels: the open panel, `keepMounted` with `hidden` and `inert`, the names of panels that share a value, and `<Transition>`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/TabsIndicator.test.ts",
+      "reason": "`TabsIndicator.test.ts` tests the variables of each layout, the observers and the inline script. `Tabs.hydration.test.ts` tests the server HTML and the hydration."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "disabled tabs"],
+      "title": "does not set tabIndex=0 on disabled tabs when they are programmatically selected",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "The active tab has the tab stop, also a disabled one; with no active tab, the first tab has it (WAI-ARIA Authoring Practices, keyboard interface of tabs). Base UI moves the tab stop off a disabled or a missing tab."
+    },
+    {
+      "upstream": "packages/react/src/tabs/list/TabsList.test.tsx",
+      "describe": ["<Tabs.List />", "roving focus after tab removal"],
+      "title": "keeps tracking a successor through subsequent removals",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "The active tab has the tab stop, also a disabled one; with no active tab, the first tab has it (WAI-ARIA Authoring Practices, keyboard interface of tabs). Base UI moves the tab stop off a disabled or a missing tab."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "prop: onValueChange"],
+      "title": "when `activateOnFocus = true` should call onValueChange on pointerdown",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "A tab activates at `click` and in the key handler of the list, not at the focus event. The browsers then agree: Safari gives a pressed button no focus. A press of a secondary button sends no `click`, so it activates nothing with no guard."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "pointer interaction"],
+      "title": "does not activate a tab focused by a held secondary-button press",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "A tab activates at `click` and in the key handler of the list, not at the focus event. The browsers then agree: Safari gives a pressed button no focus. A press of a secondary button sends no `click`, so it activates nothing with no guard."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "pointer interaction"],
+      "title": "activates on focus again once a secondary-button press has ended",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "A tab activates at `click` and in the key handler of the list, not at the focus event. The browsers then agree: Safari gives a pressed button no focus. A press of a secondary button sends no `click`, so it activates nothing with no guard."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "pointer interaction"],
+      "title": "activates on focus again once a secondary-button press is cancelled",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "A tab activates at `click` and in the key handler of the list, not at the focus event. The browsers then agree: Safari gives a pressed button no focus. A press of a secondary button sends no `click`, so it activates nothing with no guard."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "prop: onValueChange"],
+      "title": "calls onValueChange with the selected value when the implicit default matches a later tab",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "With no `defaultValue`, the first tab that is not disabled is active, as the first option of a native `<select>`. The server HTML then has the active tab and its panel. Base UI starts on the tab of value `0`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "prop: children"],
+      "title": "cleans and replaces panel registrations in Strict Mode",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "Vue has no Strict Mode. The case of `Tabs.test.ts` replaces, removes and mounts the panel again with the same steps."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "prop: nativeButton"],
+      "title": "renders as an anchor and toggles selection when `nativeButton` is false",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). A link in the `element` slot activates with a press, Enter and Space."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "prop: nativeButton"],
+      "title": "renders a react-router Link",
+      "kind": "not-applicable",
+      "reason": "The case renders a component of React Router. The `element` slot renders each element or component, and the case of a link covers it."
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "describe": ["<Tabs.Tab />", "prop: nativeButton"],
+      "title": "settles when the rendered component recreates its merged ref",
+      "kind": "not-applicable",
+      "reason": "The case tests a merged React ref. Vue gives the element through `elementRef` of the `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "describe": ["<Tabs.Panel />"],
+      "title": "sets the panel index data attribute",
+      "kind": "not-applicable",
+      "reason": "`data-index` is cut (rule 8.15). It counts only the panels in the DOM. The developer has the index where they render the panels, `:nth-child()` selects by place, and `data-activation-direction` gives the side for a slide."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "describe": ["<Tabs.Panel />", "animations"],
+      "title": "triggers enter animation via data-starting-style when mounting",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes (rule 8.9). The panel has no `data-starting-style` and no `data-ending-style`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "describe": ["<Tabs.Panel />", "animations"],
+      "title": "applies data-ending-style before unmount",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.test.ts",
+      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes (rule 8.9). The panel has no `data-starting-style` and no `data-ending-style`."
+    },
+    {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
       "describe": ["<Tabs.Panel />", "Suspense integration"],
       "title": "renders a panel that suspends when opened with the boundary outside the root",
@@ -10,40 +189,91 @@
       "reason": "React hides the mounted tree and shows the fallback when a panel suspends after the mount. Vue keeps a resolved Suspense branch when the same root component mounts an async descendant."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
-      "entry": "Root",
-      "prop": "defaultValue",
-      "kind": "not-applicable",
-      "reason": "The root uses 0 when `defaultValue` is absent or undefined. An uncontrolled root with that implicit default can fall back from a disabled tab on mount and emit an initial change. An explicit `defaultValue={0}` keeps a disabled tab with value 0 on mount. The root applies the default in setup to distinguish these cases."
-    },
-    {
-      "upstream": "packages/react/src/tabs/indicator/prehydrationScript.template.js",
-      "kind": "not-applicable",
-      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. Vase UI copies the resulting script text into its prehydration module. Its components use that module."
-    },
-    {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
       "describe": ["<Tabs.Indicator />", "pre-hydration rendering"],
       "title": "renders the inline pre-hydration script during server-side rendering",
       "kind": "replaced",
-      "test": "packages/vue/src/tabs/indicator/TabsIndicator.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/tabs/Tabs.hydration.test.ts",
+      "reason": "`Tabs.hydration.test.ts` renders the indicator on a server, runs the script of the server HTML, and hydrates it."
     },
     {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
       "describe": ["<Tabs.Indicator />", "pre-hydration rendering"],
       "title": "inlines the script contents during server-side rendering",
       "kind": "replaced",
-      "test": "packages/vue/src/tabs/indicator/TabsIndicator.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/tabs/Tabs.hydration.test.ts",
+      "reason": "`Tabs.hydration.test.ts` renders the indicator on a server, runs the script of the server HTML, and hydrates it."
     },
     {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
       "describe": ["<Tabs.Indicator />", "pre-hydration rendering"],
       "title": "applies the CSP nonce to the pre-hydration script",
       "kind": "replaced",
-      "test": "packages/vue/src/tabs/indicator/TabsIndicator.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/tabs/Tabs.hydration.test.ts",
+      "reason": "`Tabs.hydration.test.ts` renders the indicator on a server, runs the script of the server HTML, and hydrates it."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
+      "describe": ["<Tabs.Indicator />", "pre-hydration rendering"],
+      "title": "keeps the script during hydration and removes it afterwards",
+      "kind": "replaced",
+      "test": "packages/vue/src/tabs/Tabs.hydration.test.ts",
+      "reason": "`Tabs.hydration.test.ts` renders the indicator on a server, runs the script of the server HTML, and hydrates it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsListDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsTabDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsPanelDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsIndicatorCssVariables",
+      "kind": "not-applicable",
+      "reason": "The indicator writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "Root",
+      "prop": "defaultValue",
+      "kind": "not-applicable",
+      "reason": "The prop has no default `0`. With no value, the first tab that is not disabled is active, as the first option of a native `<select>`, also in the server HTML."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "Tab",
+      "kind": "not-applicable",
+      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). `class`, `style` and the `element` slot replace `className`, `style` and `render`. The tab has no `data-active` and no `data-disabled`: CSS selects `[aria-selected=\"true\"]` and `[aria-disabled=\"true\"]` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "Panel",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The panel has no `data-hidden`, which `[hidden]` selects, and no `data-index` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
     }
   ],
   "surfaceAdditions": [
@@ -62,11 +292,67 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/tabs/root/stateAttributesMapping.ts",
+      "upstream": "packages/react/src/tabs/root/TabsRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/tabs/root/TabsRootContext.ts",
-      "member": "tabsStateAttributesMapping",
-      "witness": "packages/vue/src/tabs/root/TabsRoot.test.tsx"
+      "destination": "packages/vue/src/tabs/TabsRoot.vue",
+      "behavior": "The root holds the value, the first value, its own changes and the direction.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/list/TabsList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/TabsList.vue",
+      "behavior": "The list moves the focus with the keys, and gives the tab stop.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/tab/TabsTab.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/TabsTab.vue",
+      "behavior": "The tab asks the root for its value at a press, and names its panel.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/TabsPanel.vue",
+      "behavior": "The panel shows while its value is the value of the root, and names its tab.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/TabsIndicator.vue",
+      "behavior": "The indicator writes the place and the size of the active tab as variables.",
+      "witness": "packages/vue/src/tabs/TabsIndicator.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/parts.ts",
+      "behavior": "The parts of the namespace `Tabs`.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/prehydrationScript.min.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/prehydrationScript.min.ts",
+      "behavior": "The script of the server HTML that places the indicator before the app starts.",
+      "witness": "packages/vue/src/tabs/Tabs.hydration.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/root.ts",
+      "behavior": "What the root gives to its parts.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/tabs/list/TabsListContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/list.ts",
+      "behavior": "What the list gives to a tab and an indicator.",
+      "witness": "packages/vue/src/tabs/Tabs.test.ts"
     }
   ]
 }
