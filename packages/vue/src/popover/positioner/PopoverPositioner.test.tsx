@@ -4,7 +4,7 @@ import type { CSSProperties, FunctionalComponent, PropType, VNodeChild } from 'v
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createScrollDocument,
-  getScrollLockRegistry,
+  scrollLockCount,
   HIDDEN_SCROLLBARS_CSS,
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
@@ -591,12 +591,6 @@ describe('<Popover.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
-    // a change in the document of an iframe. Its check in each frame sees the change.
-    function lockCount() {
-      return getScrollLockRegistry()?.lockCount ?? 0;
-    }
-
     // The trigger and the portal are in the document of a frame, so the lock changes no style of
     // the test page.
     function createPopover(
@@ -632,7 +626,7 @@ describe('<Popover.Positioner />', () => {
 
       handle.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false));
-      expect(lockCount()).toBe(0);
+      expect(scrollLockCount(page)).toBe(0);
     });
 
     it.each([
@@ -652,7 +646,7 @@ describe('<Popover.Positioner />', () => {
       await flushMicrotasks();
 
       expect(handle.store.select('open')).toBe(true);
-      expect(lockCount()).toBe(0);
+      expect(scrollLockCount(page)).toBe(0);
     });
 
     it.each([
@@ -668,7 +662,7 @@ describe('<Popover.Positioner />', () => {
       await flushMicrotasks();
 
       expect(handle.store.select('positionerElement')).not.toBe(null);
-      expect(lockCount()).toBe(locks);
+      expect(scrollLockCount(page)).toBe(locks);
     });
 
     it('VUE-5: releases the lock while KeepAlive holds the popover, and takes it back after', async () => {

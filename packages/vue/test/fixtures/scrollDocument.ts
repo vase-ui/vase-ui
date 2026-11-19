@@ -19,6 +19,10 @@ export function getScrollLockRegistry(win: Window = window) {
   return (win as { [REGISTRY_KEY]?: ScrollLockRegistry })[REGISTRY_KEY];
 }
 
+export function scrollLockCount(page: ScrollDocument) {
+  return getScrollLockRegistry(page.win)?.lockCount ?? 0;
+}
+
 export function expectScrollLocksReleased() {
   const windows = [
     window,
