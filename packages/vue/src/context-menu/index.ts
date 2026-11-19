@@ -93,7 +93,7 @@ export type {
 export type {
   SeparatorProps as ContextMenuSeparatorProps,
   SeparatorState as ContextMenuSeparatorState,
-} from '../separator/Separator.vue';
+} from '../separator';
 
 export * as ContextMenuTriggerDataAttributes from './trigger/ContextMenuTriggerDataAttributes';
 export * as ContextMenuBackdropDataAttributes from '../menu/backdrop/MenuBackdropDataAttributes';
@@ -108,4 +108,3 @@ export * as ContextMenuLinkItemDataAttributes from '../menu/link-item/MenuLinkIt
 export * as ContextMenuRadioItemDataAttributes from '../menu/radio-item/MenuRadioItemDataAttributes';
 export * as ContextMenuRadioItemIndicatorDataAttributes from '../menu/radio-item-indicator/MenuRadioItemIndicatorDataAttributes';
 export * as ContextMenuSubmenuTriggerDataAttributes from '../menu/submenu-trigger/MenuSubmenuTriggerDataAttributes';
-export * as ContextMenuSeparatorDataAttributes from '../separator/SeparatorDataAttributes';

@@ -57,7 +57,7 @@ async function expectSeparatorPage(page: Page) {
   expect(await readAttributes(page.getByTestId('separator'), attributeNames)).toEqual({
     role: 'separator',
     'aria-orientation': 'vertical',
-    'data-orientation': 'vertical',
+    'data-orientation': null,
     class: 'divider',
   });
 }

@@ -10,6 +10,25 @@
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Switch"],
       "kind": "not-applicable",
       "reason": "`Switch` is one native `<input type=\"checkbox\" role=\"switch\">`. A `Toolbar.Button` renders a `<button>`, and a button cannot hold an input."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/separator/ToolbarSeparatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/separator/ToolbarSeparator.test.tsx",
+      "describe": ["<Toolbar.Separator />"],
+      "suite": "describeConformance",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/separator/ToolbarSeparator.test.tsx",
+      "reason": "A case of `ToolbarSeparator.test.tsx` tests the attributes of the developer, the template ref and the `element` slot. `Separator.test.ts` tests the rest of the element."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [],
