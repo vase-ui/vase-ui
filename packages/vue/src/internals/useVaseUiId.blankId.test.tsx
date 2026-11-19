@@ -15,7 +15,6 @@ import { Meter } from '@vase-ui/vue/meter';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Progress } from '@vase-ui/vue/progress';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { Tabs } from '@vase-ui/vue/tabs';
@@ -464,15 +463,6 @@ const rows: Row[] = [
       </Meter.Root>
     ),
     named: labelled('meter', 'Storage'),
-  },
-  {
-    name: 'Progress.Label',
-    tree: (k, blankId) => (
-      <Progress.Root value={50} data-testid={`progress${k}`}>
-        <Progress.Label {...blankId}>Upload {k}</Progress.Label>
-      </Progress.Root>
-    ),
-    named: labelled('progress', 'Upload'),
   },
   ...(['Tab', 'Panel'] as const).map((part): Row => ({
     name: `Tabs.${part}`,
