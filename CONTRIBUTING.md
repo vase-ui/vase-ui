@@ -703,7 +703,7 @@ The element of a part:
 - The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part.
 - A template ref on a part has `element`.
 - The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
-- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
+- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset), `locale-provider/part.ts` (a part and its locale provider).
 - `src/common/` holds only what two callers use.
 
 The public form:
@@ -721,7 +721,7 @@ The public form:
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
 12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
 13. A form gives the typed values of its fields at its submit: `submit(event, values)`. `validate` of a field gets the value of its control and the same values.
-14. A part that formats a text in a locale gets the locale from `useLocale` of `src/common/locale.ts`. The locale is the `locale` prop of the part, else the nearest `LocaleProvider`, else `en-US`. No part uses the locale of the visitor, so the server and the browser write the same text.
+14. A part that formats a text in a locale gets the locale from `useLocale` of `locale-provider/part.ts`. The locale is the `locale` prop of the part, else the nearest `LocaleProvider`, else `en-US`. No part uses the locale of the visitor, so the server and the browser write the same text.
 
 Measure before you write code that guards, tracks, repairs or copies a behavior:
 

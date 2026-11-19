@@ -11,8 +11,8 @@ import {
 } from 'vue';
 import { clamp } from '../common/clamp';
 import { useElement } from '../common/element';
-import { useLocale } from '../common/locale';
 import { visuallyHidden } from '../common/visuallyHidden';
+import { useLocale } from '../locale-provider/part';
 import { progressKey, statusAttributes } from './root';
 import type { ProgressRootProps, ProgressRootState } from './types';
 
