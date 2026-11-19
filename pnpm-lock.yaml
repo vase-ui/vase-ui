@@ -225,6 +225,9 @@ importers:
       prettier:
         specifier: 3.9.10
         version: 3.9.10
+      resolve-pkg-maps:
+        specifier: 1.0.0
+        version: 1.0.0
       tsdown:
         specifier: 0.23.7
         version: 0.23.7(@arethetypeswrong/core@0.18.5)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48))(publint@0.3.25)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))

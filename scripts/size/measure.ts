@@ -1,7 +1,17 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import {
+  globSync,
+  mkdirSync,
+  mkdtempDisposableSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve, sep } from 'node:path';
 import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { resolveExports } from 'resolve-pkg-maps';
+import type { PathConditionsMap } from 'resolve-pkg-maps';
 import { Rolldown } from 'tsdown';
 
 export interface EntrySize {
@@ -18,51 +28,77 @@ export interface PackageSize {
 
 interface Manifest {
   name: string;
-  exports: Record<string, string | { default: string }>;
+  exports: PathConditionsMap;
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
 }
 
-function publicEntries(manifest: Manifest, files: { path: string }[]): Map<string, string> {
-  const entries = new Map<string, string>();
-  for (const [key, target] of Object.entries(manifest.exports)) {
+function publicEntries(manifest: Manifest, files: { path: string }[]): Set<string> {
+  const entries = new Set<string>();
+  for (const key of Object.keys(manifest.exports)) {
     if (key === './package.json') continue;
     const name = manifest.name + key.slice(1);
-    const path = (typeof target === 'string' ? target : target.default).slice(2);
-    const [prefix, suffix] = path.split('*');
-    if (suffix === undefined) {
-      entries.set(name, path);
+    if (!key.includes('*')) {
+      entries.add(name);
       continue;
     }
+    const [pattern] = resolveExports(manifest.exports, key.slice(2), [
+      'browser',
+      'import',
+      'production',
+    ]);
+    const [prefix, suffix] = pattern.slice(2).split('*');
     for (const file of files) {
       if (!file.path.startsWith(prefix) || !file.path.endsWith(suffix)) continue;
       const folder = file.path.slice(prefix.length, file.path.length - suffix.length);
       if (!folder) continue;
-      entries.set(
-        name.replace('*', () => folder),
-        file.path,
-      );
+      entries.add(name.replace('*', () => folder));
     }
   }
   return entries;
 }
 
 export async function measurePackage(directory: string): Promise<PackageSize> {
+  using temporary = mkdtempDisposableSync(join(tmpdir(), 'vase-size-'));
   // The prepack hook builds the package and copies its release files.
-  const [pack]: { size: number; unpackedSize: number; files: { path: string }[] }[] = JSON.parse(
-    execFileSync('npm', ['pack', '--dry-run', '--json', '--foreground-scripts=false'], {
-      cwd: directory,
-      encoding: 'utf8',
-      maxBuffer: 16 * 1024 * 1024,
-    }),
+  const [pack]: {
+    filename: string;
+    size: number;
+    unpackedSize: number;
+    files: { path: string }[];
+  }[] = JSON.parse(
+    execFileSync(
+      'npm',
+      ['pack', '--pack-destination', temporary.path, '--json', '--foreground-scripts=false'],
+      {
+        cwd: directory,
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024,
+      },
+    ),
   );
-  const manifest: Manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
+  execFileSync('tar', ['-xzf', join(temporary.path, pack.filename), '-C', temporary.path]);
+  const packedDirectory = join(temporary.path, 'package');
+  const manifest: Manifest = JSON.parse(
+    readFileSync(join(packedDirectory, 'package.json'), 'utf8'),
+  );
+  const dependencies = { ...manifest.dependencies, ...manifest.optionalDependencies };
+  const installed = resolve(directory, 'node_modules');
+  for (const name of globSync(['*', '@*/*'], { cwd: installed })) {
+    if (!Object.hasOwn(dependencies, name.replaceAll(sep, '/'))) continue;
+    const link = join(temporary.path, 'node_modules', name);
+    mkdirSync(dirname(link), { recursive: true });
+    symlinkSync(join(installed, name), link, 'junction');
+  }
   const peers = Object.keys(manifest.peerDependencies ?? {});
   const entries: Record<string, EntrySize> = {};
-  for (const [name, file] of publicEntries(manifest, pack.files)) {
+  for (const name of publicEntries(manifest, pack.files)) {
     const { output } = await Rolldown.build({
-      input: resolve(directory, file),
-      cwd: resolve(directory),
+      input: name,
+      cwd: packedDirectory,
       platform: 'browser',
+      resolve: { conditionNames: ['production'] },
       external: (id) => peers.some((peer) => id === peer || id.startsWith(`${peer}/`)),
       transform: { define: { 'process.env.NODE_ENV': '"production"' } },
       onLog(level, log, handle) {

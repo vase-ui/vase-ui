@@ -4,11 +4,12 @@ import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import type { TestContext } from 'node:test';
 import { brotliCompressSync, gzipSync } from 'node:zlib';
 import { measurePackage } from './measure.ts';
 import { sizeReport } from './report.ts';
 
-test('measures the packed release and each public browser import', async (t) => {
+function fixture(t: TestContext) {
   const directory = mkdtempSync(join(tmpdir(), 'size-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   function write(file: string, content: string): void {
@@ -16,6 +17,11 @@ test('measures the packed release and each public browser import', async (t) => 
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, content);
   }
+  return { directory, write };
+}
+
+test('measures the packed release and each public browser import', async (t) => {
+  const { directory, write } = fixture(t);
   write(
     'package.json',
     JSON.stringify({
@@ -24,11 +30,20 @@ test('measures the packed release and each public browser import', async (t) => 
       type: 'module',
       files: ['dist', 'NOTICE'],
       exports: {
-        '.': { types: './dist/index.d.ts', default: './dist/index.js' },
-        './*': { types: './dist/*/index.d.ts', default: './dist/*/index.js' },
+        '.': {
+          types: './dist/index.d.ts',
+          browser: './dist/client.js',
+          default: './dist/index.js',
+        },
+        './*': {
+          types: './dist/*/index.d.ts',
+          browser: { production: './dist/*/index.js', default: './dist/*/dev.js' },
+          default: './dist/*/server.js',
+        },
         './package.json': './package.json',
       },
       peerDependencies: { vue: '*', '@fixture/peer': '*' },
+      dependencies: { runtime: '1.0.0' },
       scripts: { prepack: 'node release.mjs' },
     }),
   );
@@ -36,12 +51,14 @@ test('measures the packed release and each public browser import', async (t) => 
     'release.mjs',
     "import { writeFileSync } from 'node:fs'; writeFileSync('NOTICE', 'notice');",
   );
-  write('dist/index.js', "export * from './dialog/index.js';");
+  write('dist/index.js', "export const target = 'server';");
+  write('dist/client.js', "export * from './dialog/index.js';");
   write(
     'dist/dialog/index.js',
     "import 'vue'; import '@fixture/peer/client'; export const dialog = 1;",
   );
   write('dist/chunks/internal.js', 'export const privateValue = 0;');
+  write('dist/server-only/server.js', 'export const server = true;');
   write(
     'dist/unstable-button/index.js',
     [
@@ -55,10 +72,14 @@ test('measures the packed release and each public browser import', async (t) => 
     JSON.stringify({
       name: 'runtime',
       type: 'module',
-      exports: { browser: './client.js', default: './server.js' },
+      exports: {
+        browser: { production: './client.js', default: './dev.js' },
+        default: './server.js',
+      },
     }),
   );
   write('node_modules/runtime/client.js', "export const value = '茶';");
+  write('node_modules/runtime/dev.js', "export const value = 'development';");
   write('node_modules/runtime/server.js', "export const value = 'server';");
 
   const base = await measurePackage(directory);
@@ -98,6 +119,32 @@ test('measures the packed release and each public browser import', async (t) => 
   assert.match(changes, /\| `@fixture\/ui\/dialog` \| Raw \|/);
   assert.match(unchanged, /\| `@fixture\/ui\/unstable-button` \|/);
 
-  write('dist/index.js', "export { missing } from 'missing-runtime';");
+  write('dist/client.js', "export { missing } from 'missing-runtime';");
   await assert.rejects(measurePackage(directory), /missing-runtime/);
+});
+
+test('rejects imports that exist only in the checkout', async (t) => {
+  const { directory, write } = fixture(t);
+  write(
+    'package.json',
+    JSON.stringify({
+      name: '@fixture/ui',
+      version: '1.0.0',
+      type: 'module',
+      files: ['dist'],
+      exports: { '.': './dist/index.js' },
+      devDependencies: { 'dev-only': '1.0.0' },
+    }),
+  );
+  write('private.js', 'export const value = 1;');
+  write('dist/index.js', "export { value } from '../private.js';");
+  await assert.rejects(measurePackage(directory), /private\.js/);
+
+  write(
+    'node_modules/dev-only/package.json',
+    '{"name":"dev-only","type":"module","exports":"./index.js"}',
+  );
+  write('node_modules/dev-only/index.js', 'export const value = 2;');
+  write('dist/index.js', "export { value } from 'dev-only';");
+  await assert.rejects(measurePackage(directory), /dev-only/);
 });
