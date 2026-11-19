@@ -215,25 +215,6 @@
     "src/select/trigger/SelectTrigger.press.test.tsx": {
       "fails": {}
     },
-    "src/tabs/indicator/TabsIndicator.test.tsx": {
-      "fails": {
-        "<Tabs.Indicator /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Tabs.Indicator /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Tabs.Indicator /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/tabs/tab/TabsTab.test.tsx": {
-      "fails": {
-        "<Tabs.Tab /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Tabs.Tab /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Tabs.Tab /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Tabs.Tab /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Tabs.Tab /> > is not named by its panel while KeepAlive holds a tab that mounted in a held branch": "vue-16305-keep-alive",
-        "<Tabs.Tab /> > state > exposes tab activation direction through the render prop": "vue-16301"
-      }
-    },
     "src/toast/action/ToastAction.test.tsx": {
       "fails": {
         "<Toast.Action /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
