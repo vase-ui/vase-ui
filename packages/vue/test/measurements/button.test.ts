@@ -92,7 +92,7 @@ describe('the keys of a native button', () => {
     ]);
   });
 
-  test('with a modifier key: Chromium and WebKit give the modifier keys to the click of Shift+Enter and of Space, and no click to Enter with Ctrl, Alt or Meta; Firefox gives no modifier keys, and no click to Alt+Space', async () => {
+  test('with a modifier key: Chromium and WebKit give the modifier keys to the click of Shift+Enter and of Space, and no click to Enter with Ctrl, Alt or Meta; Firefox gives no modifier keys, and on macOS no click to Alt+Space', async () => {
     html('<button id="button">B</button>');
     const { button, log } = recordKeys();
     const clicks: Record<string, string> = {};
@@ -114,7 +114,7 @@ describe('the keys of a native button', () => {
             'Meta+Enter': 'click 0',
             'Shift+Space': 'click 0',
             'Control+Space': 'click 0',
-            'Alt+Space': 'none',
+            'Alt+Space': server.platform === 'darwin' ? 'none' : 'click 0',
             'Meta+Space': 'click 0',
           }
         : {
