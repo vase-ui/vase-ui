@@ -82,6 +82,14 @@ export interface ResizableParentPanel extends ResizablePanelActions {
 export const ResizablePanelContext: InjectionKey<ResizableParentPanel> = Symbol();
 
 /**
+ * Gives the id, the state and the methods of the nearest `Resizable.Panel` above the caller, or
+ * `null` when the caller is not inside a panel. Call it in `setup`.
+ */
+export function useParentPanel(): ResizableParentPanel | null {
+  return inject(ResizablePanelContext, null);
+}
+
+/**
  * What `useParentRoot()` gives: the orientation and the methods of the nearest root.
  */
 export interface ResizableParentRoot extends ResizableRootActions {
@@ -213,6 +221,15 @@ export function useResizableRootContext(): ResizableRootContext {
   return context;
 }
 
+/**
+ * Gives the orientation and the methods of the nearest `Resizable.Root` above the caller, or `null`
+ * when the caller is not inside a root. A root in a panel of another root is the nearest root for
+ * the parts inside it. Call it in `setup`.
+ */
+export function useParentRoot(): ResizableParentRoot | null {
+  return inject(ResizableRootContext, null)?.actions ?? null;
+}
+
 export interface ResizableHandleContext {
   /**
    * The style of the hit area node: the area that takes a press on the handle.
@@ -270,21 +287,4 @@ export function useResizableRootEdgesContext(): ResizableRootEdgesContext {
   }
 
   return context;
-}
-
-/**
- * Gives the id, the state and the methods of the nearest `Resizable.Panel` above the caller, or
- * `null` when the caller is not inside a panel. Call it in `setup`.
- */
-export function useParentPanel(): ResizableParentPanel | null {
-  return inject(ResizablePanelContext, null);
-}
-
-/**
- * Gives the orientation and the methods of the nearest `Resizable.Root` above the caller, or `null`
- * when the caller is not inside a root. A root in a panel of another root is the nearest root for
- * the parts inside it. Call it in `setup`.
- */
-export function useParentRoot(): ResizableParentRoot | null {
-  return inject(ResizableRootContext, null)?.actions ?? null;
 }

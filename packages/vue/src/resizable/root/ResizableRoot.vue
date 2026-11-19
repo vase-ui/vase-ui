@@ -594,16 +594,14 @@ const list = useCompositeList<{ id?: string }>({
 
 const isHydrated = useIsHydrated();
 watch(
-  [isHydrated, isHeld],
-  ([hydrated, held]) => {
-    if (hydrated && !held && !mounted) {
-      // The first activation of a root that mounted while held establishes its initial layout.
-      knownIds = new Set(constraints.value.map((panel) => panel.id));
-      mounted = true;
-      measure();
-    }
+  () => isHydrated.value && !isHeld.value,
+  () => {
+    // A parent mount hook can read lengths before the first resize observation.
+    knownIds = new Set(constraints.value.map((panel) => panel.id));
+    mounted = true;
+    measure();
   },
-  { flush: 'sync' },
+  { once: true, flush: 'sync' },
 );
 
 function registerPart(part: ResizableRegistration) {

@@ -8,6 +8,7 @@ import {
   h,
   nextTick,
   onDeactivated,
+  onMounted,
   shallowRef,
 } from 'vue';
 import type { ShallowRef } from 'vue';
@@ -2005,6 +2006,26 @@ describe('<Resizable.Root />', () => {
   });
 
   describe('sizes with a unit', () => {
+    it('gives the parent its measured layout at mount without ResizeObserver', async () => {
+      vi.stubGlobal('ResizeObserver', undefined);
+      onTestFinished(() => vi.unstubAllGlobals());
+      const snapshot = vi.fn();
+      const Parent = defineComponent(() => {
+        const root = shallowRef<InstanceType<typeof Resizable.Root> | null>(null);
+        onMounted(() => snapshot(root.value?.getLayout()));
+        return () => (
+          <Resizable.Root ref={root} style={{ width: '400px' }}>
+            <Resizable.Panel id="a" defaultSize="100px" />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        );
+      });
+
+      await render(<Parent />);
+
+      expect(snapshot).toHaveBeenCalledExactlyOnceWith({ a: 25, b: 75 });
+    });
+
     const widthOf = (id: string) => screen.getByTestId(id).getBoundingClientRect().width;
 
     // The container is 1000 px wide, and a handle has no size. A test can change the width.
