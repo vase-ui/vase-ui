@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-// Native radios with `:checked`. Their listener writes the value to the model only with `accept`.
-const props = defineProps({
-  model: {
-    type: Object as PropType<{ value: string | null; accept: boolean }>,
-    required: true,
-  },
-});
-
-function onChange(event: Event) {
-  if (props.model.accept) props.model.value = (event.target as HTMLInputElement).value;
-}
+// Native radios with `:checked`. Their listener sends the value, and the parent can keep its value.
+defineProps({ model: { type: Object as PropType<{ value: string | null }>, required: true } });
+const emit = defineEmits<{ change: [value: string] }>();
 </script>
 
 <template>
@@ -24,7 +16,7 @@ function onChange(event: Event) {
       :value="value"
       :aria-label="value"
       :checked="model.value === value"
-      @change="onChange"
+      @change="emit('change', value)"
     />
     <button type="reset">Reset</button>
   </form>

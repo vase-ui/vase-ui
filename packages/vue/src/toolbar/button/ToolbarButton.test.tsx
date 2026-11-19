@@ -46,12 +46,6 @@ const TestContexts = defineComponent((_, { slots }) => {
   return () => slots.default?.();
 });
 
-const NATIVE_BUTTON_MESSAGE =
-  'Vase UI: A component that acts as a button expected a native <button> because ' +
-  'the `nativeButton` prop is true. Rendering a non-<button> removes native button semantics, ' +
-  'which can impact forms and accessibility. Use a real <button> with the `as` prop or the `#render` slot, or ' +
-  'set `nativeButton` to `false`.';
-
 const NON_NATIVE_BUTTON_MESSAGE =
   'Vase UI: A component that acts as a button expected a non-<button> because ' +
   'the `nativeButton` prop is false. Rendering a <button> keeps native behavior while Vase UI ' +

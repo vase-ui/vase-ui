@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 
-// A native checkbox with `:checked` and `:indeterminate`. Its listener writes `checked` to the
-// model only with `accept`.
-const props = defineProps({
+// A native checkbox with `:checked` and `:indeterminate`. Its listener sends the new state, and the
+// parent can keep its state.
+defineProps({
   model: {
-    type: Object as PropType<{ checked: boolean; indeterminate: boolean; accept: boolean }>,
+    type: Object as PropType<{ checked: boolean; indeterminate: boolean }>,
     required: true,
   },
 });
-
-function onChange(event: Event) {
-  if (props.model.accept) props.model.checked = (event.target as HTMLInputElement).checked;
-}
+const emit = defineEmits<{ change: [checked: boolean] }>();
 </script>
 
 <template>
@@ -22,7 +19,7 @@ function onChange(event: Event) {
       aria-label="Box"
       :checked="model.checked"
       :indeterminate="model.indeterminate"
-      @change="onChange"
+      @change="emit('change', ($event.target as HTMLInputElement).checked)"
     />
     <button type="reset">Reset</button>
   </form>

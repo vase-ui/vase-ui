@@ -19,12 +19,7 @@ defineSlots<{
   }): unknown;
 }>();
 
-const group = inject(radioGroupKey, null);
-if (!group) {
-  throw new Error(
-    'Vase UI: <Radio> must be inside <RadioGroup>. A radio with no group cannot hold a choice. Put <Radio> inside <RadioGroup>.',
-  );
-}
+const group = injectGroup();
 // The field of the group, or the `Field.Item` around the radio.
 const field = inject(fieldKey, null);
 // The label and the messages of the field can come after the radio.
@@ -119,12 +114,22 @@ function elementProps() {
   return mergeProps(ownProps.value, attrs);
 }
 
+function injectGroup() {
+  const group = inject(radioGroupKey, null);
+  if (!group) {
+    throw new Error(
+      'Vase UI: <Radio> must be inside <RadioGroup>. A radio with no group cannot hold a choice. Put <Radio> inside <RadioGroup>.',
+    );
+  }
+  return group;
+}
+
 function onClick(event: MouseEvent) {
-  group!.onClick(event, readonly.value);
+  group.onClick(event, readonly.value);
 }
 
 function onChange(event: Event) {
-  group!.select(props.value, event);
+  group.select(props.value, event);
 }
 </script>
 

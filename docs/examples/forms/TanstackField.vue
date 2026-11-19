@@ -22,7 +22,7 @@ const form = useForm({ defaultValues: { username: '' } });
           @value-change="field.handleChange"
           @blur="field.handleBlur"
         />
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>

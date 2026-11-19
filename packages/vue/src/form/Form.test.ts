@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { vModel } from '../../test/attrs';
 import { recordValidate } from '../../test/field';
@@ -11,6 +11,7 @@ import FormValues from '../../test/fixtures/FormValues.vue';
 import SubmitWithModifiers from '../../test/fixtures/SubmitWithModifiers.vue';
 import TeleportedFields from '../../test/fixtures/TeleportedFields.vue';
 import { mount, settle, submitsPrevented, typeAtEnd } from '../../test/render';
+import { screen } from '../../test/queries';
 
 type Fields = {
   key?: string;
@@ -120,9 +121,11 @@ describe('submit', () => {
     expect(submitsPrevented).toEqual([false]);
   });
 
-  test('the native modifiers .prevent and .once work', async () => {
+  test('the native modifiers .prevent and .once work', () => {
     const submits: SubmitEvent[] = [];
-    const { root } = mount(SubmitWithModifiers, { submits });
+    const { root } = mount(SubmitWithModifiers, {
+      onSave: (event: SubmitEvent) => submits.push(event),
+    });
     const button = root.querySelector('button')!;
     button.click();
     button.click();
@@ -182,7 +185,10 @@ describe('submit', () => {
 describe('the values of the form', () => {
   test('@submit.prevent gets the event and the typed values of the named fields; a disabled field and a field outside the form have none', async () => {
     const submits: { prevented: boolean; values: Record<string, unknown> }[] = [];
-    const { root } = mount(FormValues, { submits });
+    const { root } = mount(FormValues, {
+      onSave: (prevented: boolean, values: Record<string, unknown>) =>
+        submits.push({ prevented, values }),
+    });
     await nextTick();
     const form = root.querySelector('form')!;
     form.querySelector('button')!.click();
@@ -601,6 +607,6 @@ describe('lifetime and accessibility', () => {
 
   test('is a form landmark with the name that the developer gives', async () => {
     await mountForm({ form: { 'aria-label': 'Profile' }, fields: [] });
-    await expect.element(page.getByRole('form', { name: 'Profile' })).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: 'Profile' })).toBeInTheDocument();
   });
 });

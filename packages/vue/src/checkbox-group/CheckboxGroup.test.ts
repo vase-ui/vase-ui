@@ -41,10 +41,10 @@ async function mountGroup(props: {
 function groupModel(log: string[], modelValue: unknown, write = true) {
   const group = reactive<Record<string, unknown>>({
     modelValue,
-    onValueChange: (value: string[]) => log.push(`valueChange ${value}`),
+    onValueChange: (value: string[]) => log.push(`valueChange ${value.join(',')}`),
   });
   group['onUpdate:modelValue'] = (value: string[]) => {
-    log.push(`group ${value}`);
+    log.push(`group ${value.join(',')}`);
     if (write) group.modelValue = value;
   };
   return group;
@@ -83,7 +83,7 @@ describe('the group', () => {
     const first = ['fuji'];
     const group = groupModel(log, first);
     group.onValueChange = (value: string[], given: CheckboxChangeEventDetails) => {
-      log.push(`valueChange ${value}`);
+      log.push(`valueChange ${value.join(',')}`);
       details.push(given);
     };
     const gala = recordBox(log, 'gala', {
@@ -139,7 +139,7 @@ describe('the group', () => {
     const log: string[] = [];
     const group = groupModel(log, []);
     group.onValueChange = (value: string[], details: CheckboxChangeEventDetails) => {
-      log.push(`valueChange ${value}`);
+      log.push(`valueChange ${value.join(',')}`);
       if (value.includes('gala')) details.cancel();
     };
     const fuji = recordBox(log, 'fuji', {

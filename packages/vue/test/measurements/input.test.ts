@@ -21,10 +21,20 @@ afterEach(() => {
 
 const timer = () => new Promise((resolve) => setTimeout(resolve));
 
+/** Mounts the input. Its parent keeps the text that the input sends only with `accept`. */
+function mountInput(model: { value: string; accept: boolean }) {
+  return mount(MeasureControlledInput, {
+    model,
+    onInput: (value: string) => {
+      if (model.accept) model.value = value;
+    },
+  }).root;
+}
+
 describe('a native input with :value', () => {
   test('keeps the typed text when its listener does not write the model', async () => {
     const model = reactive({ value: 'a', accept: false });
-    const input = mount(MeasureControlledInput, { model }).root.querySelector('input')!;
+    const input = mountInput(model).querySelector('input')!;
     await typeAtEnd(input, 'x');
     await settle();
     expect(model.value).toBe('a');
@@ -33,7 +43,7 @@ describe('a native input with :value', () => {
 
   test('has the last bound value as its value attribute, so a reset gives that value', async () => {
     const model = reactive({ value: 'first', accept: true });
-    const mounted = mount(MeasureControlledInput, { model }).root;
+    const mounted = mountInput(model);
     const input = mounted.querySelector('input')!;
     model.value = 'second';
     await nextTick();

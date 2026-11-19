@@ -183,7 +183,7 @@ const protocols = ['http', 'https', 'ssh'];
           @blur="componentField.onBlur"
         />
         <Field.Description>Must be 3 or more characters long</Field.Description>
-        <Field.Error :match="!!errorMessage">
+        <Field.Error>
           {{ errorMessage }}
         </Field.Error>
       </Field.Root>
@@ -233,7 +233,7 @@ const protocols = ['http', 'https', 'ssh'];
             </Combobox.Positioner>
           </Combobox.Portal>
         </Combobox.Root>
-        <Field.Error :match="!!errorMessage">
+        <Field.Error>
           {{ errorMessage }}
         </Field.Error>
       </Field.Root>
@@ -277,7 +277,7 @@ const protocols = ['http', 'https', 'ssh'];
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
-        <Field.Error :match="!!errorMessage">
+        <Field.Error>
           {{ errorMessage }}
         </Field.Error>
       </Field.Root>
@@ -325,7 +325,7 @@ const protocols = ['http', 'https', 'ssh'];
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
-        <Field.Error :match="!!errorMessage">
+        <Field.Error>
           {{ errorMessage }}
         </Field.Error>
       </Field.Root>
@@ -359,7 +359,7 @@ const protocols = ['http', 'https', 'ssh'];
             </NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
-        <Field.Error :match="!!errorMessage">
+        <Field.Error>
           {{ errorMessage }}
         </Field.Error>
       </Field.Root>

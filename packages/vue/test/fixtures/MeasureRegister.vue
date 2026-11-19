@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { useTemplateRef, watch, type PropType } from 'vue';
+import { useTemplateRef, watch } from 'vue';
 
 // Registers its element as a control registers with its field: after the render, until the
 // unmount.
-const props = defineProps({
-  name: { type: String, required: true },
-  log: { type: Array as PropType<string[]>, required: true },
-});
+const props = defineProps({ name: { type: String, required: true } });
+const emit = defineEmits<{ log: [entry: string] }>();
 const input = useTemplateRef<HTMLInputElement>('input');
 watch(
   input,
   (element, _, onCleanup) => {
     if (!element) return;
-    props.log.push(`add ${props.name}`);
-    onCleanup(() => props.log.push(`remove ${props.name}`));
+    emit('log', `add ${props.name}`);
+    onCleanup(() => emit('log', `remove ${props.name}`));
   },
   { flush: 'post' },
 );

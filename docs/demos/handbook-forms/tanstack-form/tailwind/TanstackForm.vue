@@ -197,7 +197,7 @@ const SERVER_TYPES = [
           @blur="field.handleBlur"
         />
         <Field.Description>Must be 3 or more characters long</Field.Description>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -247,7 +247,7 @@ const SERVER_TYPES = [
             </Combobox.Positioner>
           </Combobox.Portal>
         </Combobox.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -290,7 +290,7 @@ const SERVER_TYPES = [
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -334,7 +334,7 @@ const SERVER_TYPES = [
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -364,7 +364,7 @@ const SERVER_TYPES = [
             </NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -412,7 +412,7 @@ const SERVER_TYPES = [
             </Slider.Root>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -444,7 +444,7 @@ const SERVER_TYPES = [
             </RadioGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -467,7 +467,7 @@ const SERVER_TYPES = [
               class="pointer-events-none absolute top-[0.1875rem] left-[0.1875rem] size-3.5 bg-neutral-950 transition-[translate,background-color] duration-150 ease-[ease] peer-checked:translate-x-4 peer-checked:bg-white dark:bg-white dark:peer-checked:bg-neutral-950"
           /></span>
         </Field.Label>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -503,7 +503,7 @@ const SERVER_TYPES = [
             </CheckboxGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid">
+        <Field.Error>
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>

@@ -26,7 +26,7 @@ it('each part with a covered prop calls the helper', () => {
         continue;
       }
       checked.add(file);
-      const covered = Object.entries(part.props).filter(([name, option]) => {
+      const covered = Object.values(part.props).filter((option) => {
         if (!option || typeof option !== 'object') {
           return false;
         }

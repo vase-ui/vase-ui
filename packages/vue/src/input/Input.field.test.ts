@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { vModel } from '../../test/attrs';
 import { dataAttributes, recordValidate, leave } from '../../test/field';
@@ -7,6 +7,8 @@ import Inputs from '../../test/fixtures/Inputs.vue';
 import InputsInForm from '../../test/fixtures/InputsInForm.vue';
 import TwoInputsInField from '../../test/fixtures/TwoInputsInField.vue';
 import { mount, settle, typeAtEnd } from '../../test/render';
+import { screen } from '../../test/queries';
+import { waitFor } from '../../test/waitFor';
 
 // The parts after the control, and the control itself, register in the same render. The
 // attributes that they give show after the next one.
@@ -42,9 +44,14 @@ describe('what a field gives to its control', () => {
     expect(dataAttributes(input!)).toEqual(['data-filled']);
     await typeAtEnd(input!, 'b');
     input!.blur();
-    await expect
-      .poll(() => dataAttributes(input!))
-      .toEqual(['data-dirty', 'data-filled', 'data-touched', 'data-valid']);
+    await waitFor(() =>
+      expect(dataAttributes(input!)).toEqual([
+        'data-dirty',
+        'data-filled',
+        'data-touched',
+        'data-valid',
+      ]),
+    );
     expect(input).not.toHaveAttribute('aria-invalid');
     field.invalid = true;
     await nextTick();
@@ -69,10 +76,9 @@ describe('what a field gives to its control', () => {
   test('the label of the field names and activates the control, by its id or a generated id', async () => {
     const shown = reactive({ first: true, second: false });
     mount(TwoInputsInField, { field: {}, shown });
-    await expect
-      .element(page.getByRole('textbox', { name: 'Name' }))
-      .toHaveAttribute('id', 'first');
-    await userEvent.click(page.getByText('Name'));
+    await nextTick();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute('id', 'first');
+    await userEvent.click(screen.getByText('Name'));
     expect(document.activeElement).toHaveAttribute('id', 'first');
     const { field, inputs } = await mountInField({}, {});
     expect(inputs[0]!.id).not.toBe('');

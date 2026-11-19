@@ -25,7 +25,6 @@ import { Input } from '@vase-ui/vue/input';
 import { Popover } from '@vase-ui/vue/popover';
 import {
   createFormDataSpy,
-  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -14809,6 +14808,51 @@ describe('<Combobox.Root />', () => {
       });
       expect(trigger).toHaveAttribute('id', 'x-id');
     });
+
+    it('does not apply validation ARIA attributes to input inside popup', async () => {
+      const { user } = await render(
+        <Field.Root invalid>
+          <Combobox.Root>
+            <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.Input data-testid="input" />
+                  <Combobox.List>
+                    <Combobox.Item value="a">a</Combobox.Item>
+                    <Combobox.Item value="b">b</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+          <Field.Description data-testid="description" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const description = screen.getByTestId('description');
+      const error = screen.getByTestId('error');
+      const triggerDescribedBy = trigger.getAttribute('aria-describedby');
+
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(triggerDescribedBy).toContain(description.id);
+      expect(triggerDescribedBy).toContain(error.id);
+
+      await user.click(trigger);
+
+      const input = await screen.findByTestId('input');
+
+      expect(input).not.toHaveAttribute('aria-invalid');
+      expect(input).not.toHaveAttribute('aria-describedby');
+      expect(input).not.toHaveAttribute('data-valid');
+      expect(input).not.toHaveAttribute('data-invalid');
+      expect(input).not.toHaveAttribute('data-touched');
+      expect(input).not.toHaveAttribute('data-dirty');
+      expect(input).not.toHaveAttribute('data-filled');
+    });
+
     it('Combobox.Label links to Combobox.Trigger when input is inside popup and trigger has an explicit id', async () => {
       await render(
         <Combobox.Root>
@@ -15153,6 +15197,106 @@ describe('<Combobox.Root />', () => {
         expect(input).toHaveAttribute('data-filled');
         expect(trigger).toHaveAttribute('data-filled');
       });
+    });
+
+    it('does not mark as touched when focus moves into the popup', async () => {
+      const validateSpy = vi.fn(() => 'error');
+
+      await render(
+        <>
+          <Field.Root validationMode="blur" validate={validateSpy}>
+            <Combobox.Root>
+              <Combobox.Trigger data-testid="trigger" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      <Combobox.Item value="1">Option 1</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </Field.Root>
+          <button type="button" data-testid="outside">
+            Outside
+          </button>
+        </>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.focusIn(trigger);
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
+
+      const popup = screen.getByRole('dialog');
+
+      await fireEvent.focusOut(trigger, { relatedTarget: popup });
+      await fireEvent.focusIn(popup);
+
+      await flushMicrotasks();
+
+      expect(validateSpy.mock.calls.length).toBe(0);
+      expect(trigger).not.toHaveAttribute('data-touched');
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('validates when the popup is blurred', async () => {
+      const validateSpy = vi.fn(() => 'error');
+
+      await render(
+        <>
+          <Field.Root validationMode="blur" validate={validateSpy}>
+            <Combobox.Root>
+              <Combobox.Trigger data-testid="trigger" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      <Combobox.Item value="1">Option 1</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </Field.Root>
+          <button type="button" data-testid="outside">
+            Outside
+          </button>
+        </>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const outside = screen.getByTestId('outside');
+
+      await fireEvent.focusIn(trigger);
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
+
+      const popup = screen.getByRole('dialog');
+
+      // The four events go in one task, as in Base UI. The `focusout` of the popup marks a focus
+      // change inside the popup, and the check of the first `focusout` clears that marker.
+      await Promise.all([
+        fireEvent.focusOut(trigger, { relatedTarget: popup }),
+        fireEvent.focusIn(popup),
+        fireEvent.focusOut(popup, { relatedTarget: outside }),
+        fireEvent.focusIn(outside),
+      ]);
+
+      await waitFor(() => {
+        expect(validateSpy.mock.calls.length).toBe(1);
+      });
+      // The store commits the close before the Field's state updates land.
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-touched', '');
+      });
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('[data-invalid]', async () => {

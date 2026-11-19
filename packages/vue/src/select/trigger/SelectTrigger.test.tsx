@@ -730,7 +730,31 @@ describe('<Select.Trigger />', () => {
     expect(store.select('triggerElement')).toBe(screen.getByTestId('second'));
   });
 
-  describe('Field', () => {});
+  describe('Field', () => {
+    it('marks the field as touched and validates it when the trigger loses the focus', async () => {
+      const validate = vi.fn((_value: unknown) => null);
+      await render(
+        <Field.Root data-testid="field" validate={validate} validationMode="blur">
+          <Select.Root defaultValue="sans">
+            <Select.Trigger data-testid="trigger" />
+          </Select.Root>
+        </Field.Root>,
+      );
+      const field = screen.getByTestId('field');
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+      expect(field).not.toHaveAttribute('data-touched');
+
+      trigger.blur();
+      await flushMicrotasks();
+
+      expect(field).toHaveAttribute('data-touched', '');
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(validate.mock.lastCall?.[0]).toBe('sans');
+    });
+  });
 
   describe('BUG-1425: a required select with no value after blur', () => {
     function renderSelect(validationMode?: 'blur') {

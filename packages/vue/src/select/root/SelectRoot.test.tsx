@@ -4597,6 +4597,101 @@ describe('<Select.Root />', () => {
       });
     });
 
+    it('does not mark as touched when focus moves into the popup', async () => {
+      const validateSpy = vi.fn(() => 'error');
+
+      await render(
+        <>
+          <Field.Root validationMode="blur" validate={validateSpy}>
+            <Select.Root>
+              <Select.Trigger data-testid="trigger" />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="1">Option 1</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Field.Root>
+          <button type="button" data-testid="outside">
+            Outside
+          </button>
+        </>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.focusIn(trigger);
+      await fireEvent.click(trigger);
+
+      await flushMicrotasks();
+
+      const listbox = screen.getByRole('listbox');
+
+      await fireEvent.focusOut(trigger, { relatedTarget: listbox });
+      await fireEvent.focusIn(listbox);
+
+      await flushMicrotasks();
+
+      expect(validateSpy.mock.calls.length).toBe(0);
+      expect(trigger).not.toHaveAttribute('data-touched');
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('validates when the popup is blurred', async () => {
+      const validateSpy = vi.fn(() => 'error');
+
+      await render(
+        <>
+          <Field.Root validationMode="blur" validate={validateSpy}>
+            <Select.Root>
+              <Select.Trigger data-testid="trigger" />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="1">Option 1</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Field.Root>
+          <button type="button" data-testid="outside">
+            Outside
+          </button>
+        </>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const outside = screen.getByTestId('outside');
+
+      await fireEvent.focusIn(trigger);
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
+
+      const listbox = screen.getByRole('listbox');
+
+      // The four events go in one task, as in Base UI. The `focusout` of the list marks a focus
+      // change inside the popup, and the check of the first `focusout` clears that marker.
+      await Promise.all([
+        fireEvent.focusOut(trigger, { relatedTarget: listbox }),
+        fireEvent.focusIn(listbox),
+        fireEvent.focusOut(listbox, { relatedTarget: outside }),
+        fireEvent.focusIn(outside),
+      ]);
+
+      await waitFor(() => {
+        expect(validateSpy.mock.calls.length).toBe(1);
+      });
+
+      // The above `waitFor` might not ensure re-render has finished
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-touched', '');
+      });
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+    });
     it('prop: validate', async () => {
       await render(
         <Field.Root validationMode="blur" validate={() => 'error'}>

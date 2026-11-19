@@ -4,9 +4,9 @@ import { TimeField } from '@vase-ui/vue/time-field';
 import { createRenderer } from '#test-utils';
 
 describe.each([
-  { name: 'DateField', Root: DateField.Root<Temporal.PlainDateTime>, Input: DateField.Input },
-  { name: 'TimeField', Root: TimeField.Root<Temporal.PlainDateTime>, Input: TimeField.Input },
-])('$name input registration', ({ Root, Input }) => {
+  { name: 'DateField', Root: DateField.Root<Temporal.PlainDateTime> },
+  { name: 'TimeField', Root: TimeField.Root<Temporal.PlainDateTime> },
+])('$name input registration', ({ Root }) => {
   const { render } = createRenderer();
 
   it('exposes the form input after mount and clears it on removal', async () => {

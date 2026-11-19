@@ -17,7 +17,7 @@ describe('a v-if that replaces one component with another', () => {
     async (transition) => {
       const scene = reactive({ first: true });
       const log: string[] = [];
-      mount(MeasureSwap, { scene, log, transition });
+      mount(MeasureSwap, { scene, transition, onLog: (entry: string) => log.push(entry) });
       await nextTick();
       scene.first = false;
       await settle();
@@ -31,7 +31,10 @@ describe('a keyed list', () => {
   test('registers an item that it puts first after the items that it had', async () => {
     const names = reactive(['b', 'c']);
     const log: string[] = [];
-    const root = mount(MeasureRegisterList, { names, log }).root;
+    const root = mount(MeasureRegisterList, {
+      names,
+      onLog: (entry: string) => log.push(entry),
+    }).root;
     await nextTick();
     names.unshift('a');
     await nextTick();
@@ -48,7 +51,11 @@ describe('two blur listeners', () => {
   test('the value that the later listener writes reaches the element after a timer; nextTick and a watcher see the old one', async () => {
     const model = reactive({ value: ' a ' });
     const log: string[] = [];
-    const input = mount(MeasureBlurOrder, { model, log }).root.querySelector('input')!;
+    const input = mount(MeasureBlurOrder, {
+      model,
+      onLog: (entry: string) => log.push(entry),
+      onTrim: (value: string) => (model.value = value),
+    }).root.querySelector('input')!;
     // No render waits, as when a user leaves a field.
     await settle();
     input.focus();
@@ -63,7 +70,11 @@ describe('two blur listeners', () => {
 function focusedInput(kind: string) {
   const scene = reactive({ shown: true, disabled: false, visible: true });
   const log: string[] = [];
-  const { root } = mount(MeasureFocusLoss, { scene, kind, log });
+  const { root } = mount(MeasureFocusLoss, {
+    scene,
+    kind,
+    onLog: (entry: string) => log.push(entry),
+  });
   root.querySelector('input')!.focus();
   return { scene, log, root };
 }

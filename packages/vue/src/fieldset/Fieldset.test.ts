@@ -1,6 +1,5 @@
 import axe from 'axe-core';
 import { describe, expect, test, vi } from 'vitest';
-import { page } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { dataAttributes } from '../../test/field';
 import FieldsetElementReplaced from '../../test/fixtures/FieldsetElementReplaced.vue';
@@ -11,6 +10,7 @@ import LegendAlone from '../../test/fixtures/LegendAlone.vue';
 import NestedFieldsets from '../../test/fixtures/NestedFieldsets.vue';
 import PartsInFieldset from '../../test/fixtures/PartsInFieldset.vue';
 import { mount, settle } from '../../test/render';
+import { screen } from '../../test/queries';
 
 describe('the parts', () => {
   test('the root is a fieldset with the attributes of the developer, and disabled follows its prop', async () => {
@@ -83,9 +83,9 @@ describe('the name of the group', () => {
   test('the legend names the group, and an aria-label of the developer wins', async () => {
     const attrs = reactive<Record<string, unknown>>({});
     mount(FieldsetParts, { root: attrs });
-    await expect.element(page.getByRole('group', { name: 'Billing' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Billing' })).toBeInTheDocument();
     attrs['aria-label'] = 'Invoice';
-    await expect.element(page.getByRole('group', { name: 'Invoice' })).toBeInTheDocument();
+    expect(await screen.findByRole('group', { name: 'Invoice' })).toBeInTheDocument();
   });
 
   test('a root with a legend and labelled inputs has no accessibility violation', async () => {

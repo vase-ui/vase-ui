@@ -3,7 +3,7 @@ import type { PropType } from 'vue';
 
 // A focused input that Vue removes, disables or hides. Each `blur` and `focusout` writes whether
 // the input is in the document at the event and one microtask later.
-const props = defineProps({
+defineProps({
   scene: {
     type: Object as PropType<{ shown: boolean; disabled: boolean; visible: boolean }>,
     required: true,
@@ -12,13 +12,13 @@ const props = defineProps({
     type: String as PropType<'v-if' | 'parent' | 'transition' | 'disabled' | 'v-show'>,
     required: true,
   },
-  log: { type: Array as PropType<string[]>, required: true },
 });
+const emit = defineEmits<{ log: [entry: string] }>();
 
 function record(event: FocusEvent) {
   const input = event.target as HTMLInputElement;
   const atEvent = input.isConnected;
-  queueMicrotask(() => props.log.push(`${event.type} ${atEvent} ${input.isConnected}`));
+  queueMicrotask(() => emit('log', `${event.type} ${atEvent} ${input.isConnected}`));
 }
 </script>
 

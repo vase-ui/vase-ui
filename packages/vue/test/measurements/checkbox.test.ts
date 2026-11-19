@@ -19,8 +19,14 @@ afterEach(() => {
   root = undefined;
 });
 
+/** Mounts the checkbox. Its parent keeps the state that the checkbox sends only with `accept`. */
 function mountBox(model: { checked: boolean; indeterminate: boolean; accept: boolean }) {
-  const mounted = mount(MeasureControlledCheckbox, { model }).root;
+  const mounted = mount(MeasureControlledCheckbox, {
+    model,
+    onChange: (checked: boolean) => {
+      if (model.accept) model.checked = checked;
+    },
+  }).root;
   return { form: mounted.querySelector('form')!, box: mounted.querySelector('input')! };
 }
 
@@ -59,7 +65,7 @@ describe('a native checkbox with :checked and :indeterminate', () => {
   });
 
   test('has an indeterminate attribute in the server HTML that :indeterminate does not match, and gets the property at the hydration', async () => {
-    const props = { model: { checked: false, indeterminate: true, accept: false } };
+    const props = { model: { checked: false, indeterminate: true } };
     const rendered = await renderOnServer('MeasureControlledCheckbox', props);
     const box = rendered.querySelector('input')!;
     expect(box.hasAttribute('indeterminate')).toBe(true);

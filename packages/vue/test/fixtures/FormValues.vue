@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type PropType } from 'vue';
+import { ref } from 'vue';
 import { Checkbox } from '../../src/checkbox';
 import { CheckboxGroup } from '../../src/checkbox-group';
 import { Field } from '../../src/field';
@@ -9,17 +9,12 @@ import { Radio } from '../../src/radio';
 import { RadioGroup } from '../../src/radio-group';
 import { Switch } from '../../src/switch';
 
-// A form with a field of each control. Each submit that passes writes its values in `submits`.
-const props = defineProps({
-  submits: {
-    type: Array as PropType<{ prevented: boolean; values: FormValues }[]>,
-    required: true,
-  },
-});
+// A form with a field of each control. Each submit that passes sends its values.
+const emit = defineEmits<{ save: [prevented: boolean, values: FormValues] }>();
 const city = ref('Lyon');
 
 function save(event: SubmitEvent, values: FormValues) {
-  props.submits.push({ prevented: event.defaultPrevented, values });
+  emit('save', event.defaultPrevented, values);
 }
 </script>
 

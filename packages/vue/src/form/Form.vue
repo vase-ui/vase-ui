@@ -128,7 +128,7 @@ function removeErrors(names: (string | undefined)[]) {
   const errors = props.errors;
   if (!errors || !names.some((name) => name !== undefined && Object.hasOwn(errors, name))) return;
   const kept: FormErrors = {};
-  for (const key of Object.keys(errors)) if (!names.includes(key)) kept[key] = errors[key]!;
+  for (const [key, error] of Object.entries(errors)) if (!names.includes(key)) kept[key] = error;
   emit('update:errors', kept);
 }
 </script>

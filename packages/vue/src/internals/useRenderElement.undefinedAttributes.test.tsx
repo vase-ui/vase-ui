@@ -13,7 +13,6 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { Meter } from '@vase-ui/vue/meter';

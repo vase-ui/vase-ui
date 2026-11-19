@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import RadioChoices from '../../test/fixtures/RadioChoices.vue';
 import RadioOutsideGroup from '../../test/fixtures/RadioOutsideGroup.vue';

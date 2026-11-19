@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { InputChangeEventDetails } from '@vase-ui/vue/input';
 import { vModel } from '../../test/attrs';
@@ -16,6 +16,8 @@ import PartsBeforeControl from '../../test/fixtures/PartsBeforeControl.vue';
 import RadioChoices from '../../test/fixtures/RadioChoices.vue';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { mount, mountError, settle, typeAtEnd } from '../../test/render';
+import { screen } from '../../test/queries';
+import { waitFor } from '../../test/waitFor';
 
 /** Mounts a field with a label, an input, a description and one error, and waits one render. */
 async function mountField(props: Record<string, unknown> = {}) {
@@ -249,7 +251,7 @@ describe('the label', () => {
   test('names a control that is inside it', async () => {
     mount(LabelAroundInput);
     await nextTick();
-    await expect.element(page.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 });
 
@@ -434,7 +436,7 @@ describe('when a field validates', () => {
     input.required = true;
     const parts = await mountField({ root: { validationMode: 'change' }, input });
     input.modelValue = '';
-    await expect.poll(() => parts.field.hasAttribute('data-invalid')).toBe(true);
+    await waitFor(() => expect(parts.field.hasAttribute('data-invalid')).toBe(true));
   });
 
   test('a cancelled edit starts no validation and clears no error', async () => {
@@ -531,7 +533,7 @@ describe('debounce and async validation', () => {
       shown,
     });
     await typeAtEnd(parts.input, 'abc');
-    await expect.poll(() => validated).toEqual(['abc']);
+    await waitFor(() => expect(validated).toEqual(['abc']));
     await typeAtEnd(parts.input, 'd');
     shown.input = false;
     await new Promise((resolve) => setTimeout(resolve, 400));
@@ -771,7 +773,7 @@ describe('accessibility', () => {
     for (const element of [field, label, description]) expect(element).not.toHaveAttribute('role');
     expect(field).toHaveAttribute('data-valid');
     expect(input).not.toHaveAttribute('aria-invalid');
-    await expect.element(page.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
     expect(input).toHaveAccessibleDescription('Your full name.');
   });
 });

@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import ErrorsForm from '../../../../test/fixtures/ErrorsForm.vue';
-import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
   createRenderer,
@@ -1556,6 +1555,50 @@ describe('useDateTimeFieldRoot', () => {
       value.value = null;
       await flushMicrotasks();
       expect(field).not.toHaveAttribute('data-filled');
+    });
+
+    it('marks the field as dirty, filled and touched', async () => {
+      const { container, user } = await render(
+        <Field.Root name="when">
+          <DateTimeFieldProbe locale="en-US" />
+          <button type="button">Next</button>
+        </Field.Root>,
+      );
+      const root = container.querySelector('[role="group"]')!;
+      expect(root).not.toHaveAttribute('data-filled');
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('05172027');
+      expect(root).toHaveAttribute('data-filled');
+      expect(root).toHaveAttribute('data-dirty');
+      expect(root).not.toHaveAttribute('data-touched');
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(root).toHaveAttribute('data-touched');
+    });
+
+    it('marks the field as touched when the focus leaves from a button in the group', async () => {
+      const { container, user } = await render(
+        <Field.Root name="when" validationMode="blur">
+          <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
+          <Field.Error data-testid="error" />
+          <button type="button">Next</button>
+        </Field.Root>,
+      );
+      const root = container.querySelector('[role="group"]')!;
+
+      await user.click(segmentOf(container, 'day'));
+      await user.keyboard('{Backspace}{Backspace}');
+      // A focus by script, because Safari does not give a button the focus with Tab by default.
+      screen.getByTestId('clear').focus();
+      await flushMicrotasks();
+      expect(root).not.toHaveAttribute('data-touched');
+
+      screen.getByRole('button', { name: 'Next' }).focus();
+      await flushMicrotasks();
+
+      expect(root).toHaveAttribute('data-touched');
+      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
     });
 
     it('gives disabled, read-only and required to the group state and the segments', async () => {

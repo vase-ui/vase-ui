@@ -1,5 +1,5 @@
 import { describe, expect, inject, test, vi } from 'vitest';
-import { cdp, page, server, userEvent } from 'vitest/browser';
+import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Input, type InputChangeEventDetails } from '@vase-ui/vue/input';
 import { emitsFor, recordEmits, vModel } from '../../test/attrs';
@@ -13,6 +13,7 @@ import TeleportedInput from '../../test/fixtures/TeleportedInput.vue';
 import TextareaInSlot from '../../test/fixtures/TextareaInSlot.vue';
 import TransitionInput from '../../test/fixtures/TransitionInput.vue';
 import { mount, settle, typeAtEnd } from '../../test/render';
+import { screen } from '../../test/queries';
 
 function mountInputs(...inputs: Record<string, unknown>[]) {
   const { root, exposed } = mount(Inputs, { inputs });
@@ -497,11 +498,11 @@ describe('lifetime', () => {
 });
 
 describe('accessibility', () => {
-  test('has the native role, and the name from a label, aria-label or aria-labelledby', async () => {
+  test('has the native role, and the name from a label, aria-label or aria-labelledby', () => {
     mount(LabelledInputs);
-    await expect.element(page.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
-    await expect.element(page.getByRole('textbox', { name: 'Email' })).toBeInTheDocument();
-    await expect.element(page.getByRole('textbox', { name: 'Phone' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Email' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Phone' })).toBeInTheDocument();
   });
 });
 

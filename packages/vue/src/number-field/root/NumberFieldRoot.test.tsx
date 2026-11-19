@@ -5,7 +5,6 @@ import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Form, type FormValues } from '@vase-ui/vue/form';
 import { NumberField as NumberFieldBase } from '@vase-ui/vue/number-field';
 import {
-  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1328,6 +1327,31 @@ describe('<NumberField />', () => {
     });
   });
 
+  it('blocks submission when step mismatch occurs', async () => {
+    await render(
+      <form data-testid="form">
+        <NumberFieldBase.Root name="quantity" min={0} step={0.1}>
+          <NumberFieldBase.Group>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Group>
+        </NumberFieldBase.Root>
+        <button type="submit">Submit</button>
+      </form>,
+    );
+
+    const input = screen.getByRole('textbox');
+    await fireEvent.input(input, { target: { value: '0.11' } });
+
+    const hiddenInput = document.querySelector(
+      'input[type="number"][name="quantity"]',
+    ) as HTMLInputElement;
+    expect(hiddenInput).not.toBe(null);
+    expect(hiddenInput.validity.stepMismatch).toBe(true);
+
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(form.checkValidity()).toBe(false);
+  });
+
   it.skipIf(isJSDOM)('blocks submission when step mismatch occurs with default step', async () => {
     await render(
       <form data-testid="form">
@@ -1351,6 +1375,31 @@ describe('<NumberField />', () => {
 
     const form = screen.getByTestId<HTMLFormElement>('form');
     expect(form.checkValidity()).toBe(false);
+  });
+
+  it('does not block submission when step="any"', async () => {
+    await render(
+      <form data-testid="form">
+        <NumberFieldBase.Root name="quantity" min={0} step="any">
+          <NumberFieldBase.Group>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Group>
+        </NumberFieldBase.Root>
+        <button type="submit">Submit</button>
+      </form>,
+    );
+
+    const input = screen.getByRole('textbox');
+    await fireEvent.input(input, { target: { value: '0.11' } });
+
+    const hiddenInput = document.querySelector(
+      'input[type="number"][name="quantity"]',
+    ) as HTMLInputElement;
+    expect(hiddenInput).not.toBe(null);
+    expect(hiddenInput.validity.stepMismatch).toBe(false);
+
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(form.checkValidity()).toBe(true);
   });
 
   describe('prop: onValueChange', () => {

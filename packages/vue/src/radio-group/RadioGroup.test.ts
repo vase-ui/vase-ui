@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { server, userEvent } from 'vitest/browser';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { RadioGroupChangeEventDetails } from '@vase-ui/vue/radio-group';
 import { dataAttributes, leave } from '../../test/field';
@@ -40,10 +40,10 @@ async function mountGroup(props: {
 function groupModel(log: string[], modelValue: unknown, write = true) {
   const group = reactive<Record<string, unknown>>({
     modelValue,
-    onValueChange: (value: unknown) => log.push(`valueChange ${value}`),
+    onValueChange: (value: unknown) => log.push(`valueChange ${String(value)}`),
   });
   group['onUpdate:modelValue'] = (value: unknown) => {
-    log.push(`update ${value}`);
+    log.push(`update ${String(value)}`);
     if (write) group.modelValue = value;
   };
   return group;
@@ -74,7 +74,7 @@ describe('selection', () => {
     const details: RadioGroupChangeEventDetails[] = [];
     const group = groupModel(log, 'ssd');
     group.onValueChange = (value: unknown, given: RadioGroupChangeEventDetails) => {
-      log.push(`valueChange ${value}`);
+      log.push(`valueChange ${String(value)}`);
       details.push(given);
     };
     const { root, radio, checked } = await mountGroup({ group, items: choices('ssd', 'hdd') });
@@ -128,7 +128,7 @@ describe('selection', () => {
     const log: string[] = [];
     const group = groupModel(log, 'ssd');
     group.onValueChange = (value: unknown, details: RadioGroupChangeEventDetails) => {
-      log.push(`valueChange ${value}`);
+      log.push(`valueChange ${String(value)}`);
       details.cancel();
     };
     const { radio, checked, focused } = await mountGroup({ group, items: choices('ssd', 'hdd') });

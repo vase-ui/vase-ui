@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { SwitchChangeEventDetails } from '@vase-ui/vue/switch';
 import { dataAttributes, leave } from '../../test/field';
@@ -7,6 +7,8 @@ import SwitchInField from '../../test/fixtures/SwitchInField.vue';
 import SwitchParts from '../../test/fixtures/SwitchParts.vue';
 import Switches from '../../test/fixtures/Switches.vue';
 import { mount, settle } from '../../test/render';
+import { screen } from '../../test/queries';
+import { waitFor } from '../../test/waitFor';
 
 /** Attributes of a switch that write each event in `log`, with `v-model` when `write`. */
 function record(log: string[], attrs: Record<string, unknown> = {}, write = false) {
@@ -47,7 +49,7 @@ describe('the element', () => {
     expect(input).toHaveAttribute('role', 'switch');
     expect(input!.id).not.toBe('');
     expect(other).toHaveAttribute('role', 'checkbox');
-    await expect.element(page.getByRole('switch', { name: 'Switch 0' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Switch 0' })).toBeInTheDocument();
   });
 
   test('the element slot renders the markup of the developer with the state; a template ref reaches the element; Transition works', async () => {
@@ -73,7 +75,7 @@ describe('the element', () => {
     const fence = root.querySelector('.Fence')!;
     expect(fence).not.toHaveAttribute('data-disabled');
     scene.fieldsetDisabled = true;
-    await expect.poll(() => fence.hasAttribute('data-disabled')).toBe(true);
+    await waitFor(() => expect(fence.hasAttribute('data-disabled')).toBe(true));
   });
 });
 

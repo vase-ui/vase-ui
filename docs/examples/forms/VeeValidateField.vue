@@ -24,7 +24,7 @@ useForm({ initialValues: { username: '' } });
         @update:model-value="componentField['onUpdate:modelValue']"
         @blur="componentField.onBlur"
       />
-      <Field.Error :match="!!errorMessage">{{ errorMessage }}</Field.Error>
+      <Field.Error>{{ errorMessage }}</Field.Error>
     </Field.Root>
   </VeeField>
 </template>

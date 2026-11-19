@@ -200,7 +200,9 @@ function onKeydown(event: KeyboardEvent) {
   const choices = radios.filter((radio) => radio === current || !radio.disabled);
   choices.sort((a, b) => byDocumentOrder(a.element, b.element));
   const index = choices.indexOf(current) + (forward ? 1 : -1);
-  const next = choices[(index + choices.length) % choices.length]!;
+  // `at(-1)` is the last radio.
+  const next = choices.at(index % choices.length);
+  if (!next) return;
   next.element.focus();
   // A click selects the radio as the browser does, and a read-only group prevents it.
   next.element.click();

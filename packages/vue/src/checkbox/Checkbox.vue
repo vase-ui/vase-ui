@@ -57,7 +57,8 @@ const owner = computed<CheckedOwner | undefined>(() => {
       },
     };
   }
-  const value = props.value!;
+  const value = props.value;
+  if (value === undefined) return undefined;
   return {
     ...common,
     get checked() {
@@ -74,7 +75,7 @@ const owner = computed<CheckedOwner | undefined>(() => {
 });
 
 const indeterminate = computed(
-  () => props.indeterminate || (isParent.value && group!.parent.indeterminate),
+  () => props.indeterminate || (isParent.value && !!group?.parent.indeterminate),
 );
 const { checked, attributes } = useChecked({
   model: () => props.modelValue,
@@ -118,7 +119,7 @@ const ownProps = computed(() => ({
   value: props.value,
   indeterminate: indeterminate.value,
   disabled: disabled.value,
-  'aria-controls': isParent.value ? group!.parent.controls : undefined,
+  'aria-controls': isParent.value ? group?.parent.controls : undefined,
   // The server HTML has no `:indeterminate`.
   'data-indeterminate': indeterminate.value ? '' : undefined,
   ...attributes.value,
@@ -132,14 +133,12 @@ useFieldControl(field, element, {
 });
 
 watch(
-  element,
-  (el, _, onCleanup) => {
-    if (!el || !inGroup.value || isParent.value) return;
+  [element, () => (isParent.value ? undefined : props.value)],
+  ([el, value], _, onCleanup) => {
+    if (!el || !group || value === undefined) return;
     onCleanup(
-      group!.addCheckbox({
-        get value() {
-          return props.value!;
-        },
+      group.addCheckbox({
+        value,
         get id() {
           return id.value;
         },

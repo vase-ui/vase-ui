@@ -909,7 +909,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             return props.name;
           },
           get disabled() {
-            return Boolean(props.disabled || fieldsetDisabled.value);
+            return props.disabled || fieldsetDisabled.value;
           },
           get readOnly() {
             return readOnly.value;

@@ -54,7 +54,10 @@ export function useChecked(options: {
 
   useFormReset(options.element, (event) => {
     const group = owner();
-    if (group) return group.onReset(event);
+    if (group) {
+      group.onReset(event);
+      return;
+    }
     const reset = firstModel ?? options.defaultChecked();
     field?.onReset(reset);
     if (checked.value === reset) return;
@@ -90,7 +93,7 @@ export function useChecked(options: {
     }
     // Vue writes `checked` only when the state changes. The parent can refuse a controlled state,
     // and its answer arrives with its next render; then the element must show the state again.
-    nextTick(() => {
+    void nextTick(() => {
       const el = options.element.value;
       if (el) {
         el.checked = checked.value;

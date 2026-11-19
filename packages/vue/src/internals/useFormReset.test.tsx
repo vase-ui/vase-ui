@@ -24,8 +24,10 @@ const ResetSwitch = defineComponent(() => {
       <button
         type="button"
         role="switch"
-        aria-checked={String(checked.value)}
-        onClick={() => (checked.value = !checked.value)}
+        aria-checked={checked.value ? 'true' : 'false'}
+        onClick={() => {
+          checked.value = !checked.value;
+        }}
       >
         Notifications
       </button>

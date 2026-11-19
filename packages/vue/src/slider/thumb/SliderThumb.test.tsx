@@ -9,9 +9,7 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
-import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
@@ -320,6 +318,313 @@ describe('<Slider.Thumb />', () => {
   // See:
   // - https://issues.chromium.org/issues/40816094
   // - https://github.com/mui/material-ui/issues/23506
+  describe('events', () => {
+    describe.skipIf(isJSDOM)('focus and blur', () => {
+      it('single thumb', async () => {
+        const focusAndBlurSpy = vi.fn((event) => event.target);
+        const { user } = await render(
+          <Slider.Root defaultValue={50}>
+            <Slider.Control>
+              <Slider.Thumb onFocusin={focusAndBlurSpy} onFocusout={focusAndBlurSpy} />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+        expect(document.body).toHaveFocus();
+        const input = screen.getByRole('slider');
+        expect(input.tagName).toBe('INPUT');
+        expect(input).toHaveAttribute('type', 'range');
+
+        await user.keyboard('[Tab]');
+        // We assert above that the tabbable elements of the slider are
+        // input[type="range"] because TalkBack doesn't simulate keyboard events for increments
+        // or decrements (proof: https://issues.chromium.org/issues/40816094). Instead, it triggers change events on those native slider inputs.
+        expect(input).toHaveFocus();
+        expect(focusAndBlurSpy.mock.calls.length).toBe(1);
+        expect(focusAndBlurSpy.mock.results[0]?.value).toBe(input);
+
+        await user.keyboard('[Tab]');
+        expect(document.body).toHaveFocus();
+        expect(focusAndBlurSpy.mock.calls.length).toBe(2);
+        expect(focusAndBlurSpy.mock.results.at(-1)?.value).toBe(input);
+      });
+
+      it('multiple thumbs', async () => {
+        const focusSpy = vi.fn((event) => event.target);
+        const blurSpy = vi.fn((event) => event.target);
+        const { user } = await render(
+          <Slider.Root defaultValue={[50, 70]}>
+            <Slider.Control>
+              <Slider.Thumb onFocusin={focusSpy} onFocusout={blurSpy} />
+              <Slider.Thumb onFocusin={focusSpy} onFocusout={blurSpy} />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+        expect(document.body).toHaveFocus();
+        const [slider1, slider2] = screen.getAllByRole('slider');
+        expect(slider1).toHaveProperty('tagName', 'INPUT');
+        expect(slider1).toHaveAttribute('type', 'range');
+        expect(slider2).toHaveProperty('tagName', 'INPUT');
+        expect(slider2).toHaveAttribute('type', 'range');
+
+        await user.keyboard('[Tab]');
+        expect(slider1).toHaveFocus();
+        expect(focusSpy.mock.calls.length).toBe(1);
+        expect(focusSpy.mock.results.at(-1)?.value).toBe(slider1);
+
+        await user.keyboard('[Tab]');
+        expect(blurSpy.mock.calls.length).toBe(1);
+        expect(blurSpy.mock.results.at(-1)?.value).toBe(slider1);
+        expect(slider2).toHaveFocus();
+        expect(focusSpy.mock.calls.length).toBe(2);
+        expect(focusSpy.mock.results.at(-1)?.value).toBe(slider2);
+
+        await user.keyboard('[Tab]');
+        expect(blurSpy.mock.calls.length).toBe(2);
+        expect(blurSpy.mock.results.at(-1)?.value).toBe(slider2);
+        expect(document.body).toHaveFocus();
+      });
+
+      it('does not emit extra blur and focus events when restoring focus-visible', async () => {
+        const focusSpy = vi.fn((event) => event.target);
+        const blurSpy = vi.fn((event) => event.target);
+
+        await render(
+          <Slider.Root defaultValue={40}>
+            <Slider.Control data-testid="control">
+              <Slider.Thumb onFocusin={focusSpy} onFocusout={blurSpy} />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const sliderControl = screen.getByTestId('control');
+        vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(
+          getHorizontalSliderRect,
+        );
+
+        const slider = screen.getByRole('slider');
+
+        await fireEvent.pointerDown(sliderControl, {
+          pointerId: 1,
+          pointerType: 'mouse',
+          button: 0,
+          buttons: 1,
+          clientX: 40,
+          clientY: 0,
+        });
+
+        await waitFor(() => {
+          expect(slider).toHaveFocus();
+        });
+        expect(focusSpy).toHaveBeenCalledTimes(1);
+        expect(focusSpy.mock.results[0]?.value).toBe(slider);
+        expect(blurSpy).not.toHaveBeenCalled();
+
+        await fireEvent.keyDown(slider, { key: 'ArrowRight' });
+
+        expect(focusSpy).toHaveBeenCalledTimes(1);
+        expect(blurSpy).not.toHaveBeenCalled();
+      });
+
+      it('forwards focus and blur to the input so `currentTarget` is the input', async () => {
+        const focusSpy = vi.fn();
+        const blurSpy = vi.fn();
+        const { user } = await render(
+          <Slider.Root defaultValue={50}>
+            <Slider.Control>
+              <Slider.Thumb
+                onFocusin={(event: FocusEvent) => focusSpy(event.currentTarget)}
+                onFocusout={(event: FocusEvent) => blurSpy(event.currentTarget)}
+              />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        await user.keyboard('[Tab]');
+        expect(focusSpy).toHaveBeenCalledTimes(1);
+        expect(focusSpy.mock.calls[0][0]).toHaveProperty('tagName', 'INPUT');
+
+        await user.keyboard('[Tab]');
+        expect(blurSpy).toHaveBeenCalledTimes(1);
+        expect(blurSpy.mock.calls[0][0]).toHaveProperty('tagName', 'INPUT');
+      });
+
+      it('does not commit field validation when moving focus between range thumbs', async () => {
+        const validateSpy = vi.fn(() => null);
+        const { user } = await render(
+          <Field.Root validationMode="blur" validate={validateSpy}>
+            <Slider.Root defaultValue={[20, 50]}>
+              <Slider.Control>
+                <Slider.Thumb index={0} />
+                <Slider.Thumb index={1} />
+              </Slider.Control>
+            </Slider.Root>
+          </Field.Root>,
+        );
+
+        const [thumb0, thumb1] = screen.getAllByRole('slider');
+
+        await user.keyboard('[Tab]');
+        expect(thumb0).toHaveFocus();
+
+        validateSpy.mockClear();
+
+        await user.keyboard('[Tab]');
+        expect(thumb1).toHaveFocus();
+        expect(validateSpy).not.toHaveBeenCalled();
+
+        await user.keyboard('[Tab]');
+        expect(thumb1).not.toHaveFocus();
+        await waitFor(() => {
+          expect(validateSpy).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      it('VUE-87: validates on leaving the slider after focus moves to a teleported thumb input', async () => {
+        const target = document.createElement('div');
+        document.body.appendChild(target);
+        onTestFinished(() => target.remove());
+        const validate = vi.fn(() => null);
+        await render(
+          <Field.Root validationMode="blur" validate={validate}>
+            <Slider.Root defaultValue={[20, 50]}>
+              <Slider.Control>
+                <Slider.Thumb aria-label="Minimum" />
+                <SliderInputPortal target={target} />
+              </Slider.Control>
+            </Slider.Root>
+          </Field.Root>,
+        );
+
+        screen.getByRole('slider', { name: 'Minimum' }).focus();
+        await flushMicrotasks();
+        validate.mockClear();
+        within(target).getByRole('slider').focus();
+        await flushMicrotasks();
+        expect(validate).not.toHaveBeenCalled();
+
+        within(target).getByRole('button', { name: 'After input' }).focus();
+        await flushMicrotasks();
+        expect(validate).toHaveBeenCalledExactlyOnceWith([20, 50], expect.anything());
+      });
+
+      it.skipIf(isJSDOM)(
+        'commits field validation when focus moves from a thumb to an arbitrary Control child',
+        async () => {
+          const validateSpy = vi.fn(() => null);
+          const { user } = await render(
+            <>
+              <Field.Root validationMode="blur" validate={validateSpy} data-testid="field">
+                <Slider.Root defaultValue={[20, 50]}>
+                  <Slider.Control>
+                    <Slider.Thumb index={0} />
+                    <Slider.Thumb index={1} />
+                    <button type="button">Help</button>
+                  </Slider.Control>
+                </Slider.Root>
+              </Field.Root>
+              <button type="button">Outside</button>
+            </>,
+          );
+
+          const [thumb0, thumb1] = screen.getAllByRole('slider');
+
+          await user.keyboard('[Tab]');
+          expect(thumb0).toHaveFocus();
+          validateSpy.mockClear();
+
+          await user.keyboard('[Tab]');
+          expect(thumb1).toHaveFocus();
+          expect(validateSpy).not.toHaveBeenCalled();
+
+          await user.keyboard('[Tab]');
+          expect(screen.getByRole('button', { name: 'Help' })).toHaveFocus();
+          await waitFor(() => {
+            expect(validateSpy).toHaveBeenCalledTimes(1);
+          });
+          expect(screen.getByTestId('field')).toHaveAttribute('data-touched');
+
+          await user.keyboard('[Tab]');
+          expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
+          expect(validateSpy).toHaveBeenCalledTimes(1);
+        },
+      );
+    });
+
+    describe('change', () => {
+      it('handles change events', async () => {
+        const handleValueChange = vi.fn();
+        await render(
+          <Slider.Root defaultValue={50} onValueChange={handleValueChange}>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const slider = screen.getByRole('slider');
+        expect(slider).toHaveAttribute('aria-valuenow', '50');
+        await fireEvent.input(slider, { target: { value: '51' } });
+        expect(handleValueChange.mock.calls.length).toBe(1);
+        expect(slider).toHaveAttribute('aria-valuenow', '51');
+      });
+
+      it('does not change the value beyond min and max', async () => {
+        const handleValueChange = vi.fn();
+        await render(
+          <Slider.Root defaultValue={50} min={40} max={60} onValueChange={handleValueChange}>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const slider = screen.getByRole('slider');
+        expect(slider).toHaveAttribute('aria-valuenow', '50');
+
+        await fireEvent.input(slider, { target: { value: '30' } });
+        expect(slider).toHaveAttribute('aria-valuenow', '40');
+        expect(handleValueChange.mock.calls.length).toBe(1);
+        await fireEvent.input(slider, { target: { value: '30' } });
+        expect(handleValueChange.mock.calls.length).toBe(1);
+
+        await fireEvent.input(slider, { target: { value: '70' } });
+        expect(slider).toHaveAttribute('aria-valuenow', '60');
+        expect(handleValueChange.mock.calls.length).toBe(2);
+        await fireEvent.input(slider, { target: { value: '70' } });
+        expect(handleValueChange.mock.calls.length).toBe(2);
+      });
+
+      it('handles non-integer values', async () => {
+        const handleValueChange = vi.fn();
+        await render(
+          <Slider.Root
+            defaultValue={50}
+            min={-100}
+            max={100}
+            step={0.00000001}
+            onValueChange={handleValueChange}
+          >
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const slider = screen.getByRole('slider');
+        expect(slider).toHaveAttribute('aria-valuenow', '50');
+        expect(slider).toHaveAttribute('step', '1e-8');
+
+        await fireEvent.input(slider, { target: { value: '51.1' } });
+        expect(slider).toHaveAttribute('aria-valuenow', '51.1');
+
+        await fireEvent.input(slider, { target: { value: '0.00000005' } });
+        expect(slider).toHaveAttribute('aria-valuenow', '5e-8');
+
+        await fireEvent.input(slider, { target: { value: '1e-7' } });
+        expect(slider).toHaveAttribute('aria-valuenow', '1e-7');
+      });
+    });
+  });
 
   describe('prop: tabIndex', () => {
     it('does not apply tabIndex to the thumb element by default', async () => {

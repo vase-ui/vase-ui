@@ -110,7 +110,10 @@ export function controlAria(field: FieldForControl) {
  */
 export function describedByWith(field: FieldForControl, given: unknown) {
   if (given === null) return null;
-  return [given, field.describedBy].filter(Boolean).join(' ') || undefined;
+  return (
+    [typeof given === 'string' ? given : undefined, field.describedBy].filter(Boolean).join(' ') ||
+    undefined
+  );
 }
 
 /** Makes the element the control of its field while the element is mounted. */
