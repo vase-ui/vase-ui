@@ -3,7 +3,9 @@ import { ScrollArea } from '@vase-ui/vue/scroll-area';
 </script>
 
 <template>
-  <ScrollArea.Root class="h-[8.5rem] w-96 max-w-[calc(100vw-8rem)] bg-white dark:bg-neutral-950">
+  <ScrollArea.Root
+    class="group h-[8.5rem] w-96 max-w-[calc(100vw-8rem)] bg-white dark:bg-neutral-950"
+  >
     <ScrollArea.Viewport
       class="h-full border border-neutral-950 dark:border-white focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
@@ -32,7 +34,7 @@ import { ScrollArea } from '@vase-ui/vue/scroll-area';
       </ScrollArea.Content>
     </ScrollArea.Viewport>
     <ScrollArea.Scrollbar
-      class="m-px flex w-4 justify-center bg-black/12 dark:bg-white/12 opacity-0 transition-opacity pointer-events-none data-hovering:opacity-100 data-hovering:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0 data-scrolling:pointer-events-auto"
+      class="m-px flex w-4 justify-center bg-black/12 dark:bg-white/12 opacity-0 transition-opacity pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0 data-scrolling:pointer-events-auto"
     >
       <ScrollArea.Thumb class="w-full bg-neutral-950 dark:bg-white" />
     </ScrollArea.Scrollbar>

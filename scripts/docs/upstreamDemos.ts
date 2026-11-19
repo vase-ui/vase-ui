@@ -48,15 +48,26 @@ const NATIVE_FORM_FAMILIES = new Set([
   'switch',
 ]);
 
-const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
+/**
+ * The families whose demos select a state with CSS in place of an attribute that the parts no
+ * longer write, such as `:hover` of the root in place of `data-hovering`. Their classes and their
+ * style sheets thus differ from those of the Base UI demo.
+ */
+const CSS_STATE_FAMILIES = new Set(['scroll-area']);
 
-/** Whether a demo styles the parts of a native form family, by a path from the folder of its family. */
-function stylesNativeParts(name: string, record: DemoRecord, path: string): boolean {
+/**
+ * Whether a demo may differ from the classes and style sheets of Base UI, by a path from the folder
+ * of its family.
+ */
+function hasOwnStyles(name: string, record: DemoRecord, path: string): boolean {
   const demo = path.split('/')[0];
-  return [name, ...(record.entryPoints?.[demo] ?? [])].some((family) =>
-    NATIVE_FORM_FAMILIES.has(family),
+  return (
+    CSS_STATE_FAMILIES.has(name) ||
+    [name, ...(record.entryPoints?.[demo] ?? [])].some((family) => NATIVE_FORM_FAMILIES.has(family))
   );
 }
+
+const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
 /** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
 const TAILWIND_FOLDER_PATH = /^[^/]+\/tailwind(?=\/)/;
@@ -353,7 +364,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       styles.add(path);
       if (!files.has(path)) {
         problems.push(`${folder}/${path} does not exist. ${rerun}`);
-      } else if (files.get(path) !== hash && !stylesNativeParts(name, record, upstreamPath)) {
+      } else if (files.get(path) !== hash && !hasOwnStyles(name, record, upstreamPath)) {
         problems.push(
           `${folder}/${path} differs from the style sheet of Base UI. Do not edit a copied style sheet. ${rerun}`,
         );
@@ -383,7 +394,7 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
     }
     for (const [key, row] of Object.entries(record.classes ?? {}).filter(
-      ([key]) => !stylesNativeParts(name, record, key),
+      ([key]) => !hasOwnStyles(name, record, key),
     )) {
       const path = vueDemoPath(name, key);
       const vueRow = vueClasses.get(path);
