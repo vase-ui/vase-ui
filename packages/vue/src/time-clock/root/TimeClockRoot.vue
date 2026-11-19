@@ -148,7 +148,7 @@ import {
   PickerClockOwner,
   usePickerControl,
 } from '../../internals/date-time/picker/PickerControlContext';
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watchEffect } from 'vue';
 import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -249,24 +249,17 @@ defineSlots<{
 }>();
 
 if (process.env.NODE_ENV !== 'production') {
-  watch(
-    [() => props.minuteStep, () => props.secondStep],
-    (steps) => {
-      for (const [name, step] of [
-        ['minuteStep', steps[0]],
-        ['secondStep', steps[1]],
-      ] as const) {
-        if (!isValidStep(step)) {
-          warn(
-            `TimeClock \`${name}\` must be a whole number above 0.`,
-            'The clock uses a step of 1 instead.',
-            `Set \`${name}\` to a whole number above 0.`,
-          );
-        }
+  watchEffect(() => {
+    for (const name of ['minuteStep', 'secondStep'] as const) {
+      if (!isValidStep(props[name])) {
+        warn(
+          `TimeClock \`${name}\` must be a whole number above 0.`,
+          'The clock uses a step of 1 instead.',
+          `Set \`${name}\` to a whole number above 0.`,
+        );
       }
-    },
-    { immediate: true },
-  );
+    }
+  });
 }
 
 const formatLocale = useFormatLocale(() => props.locale);
@@ -294,15 +287,15 @@ const { value: shownHourCycle, attributes: hourCycleAttributes } = useServerValu
   () => props.hourCycle ?? hourCycleOf(formatLocale.value),
   parseHourCycle,
 );
-const step = computed(() => stepOf(currentView.value, props.minuteStep, props.secondStep));
-const grid = computed(() => gridOf(currentView.value, shownHourCycle.value, step.value));
+const grid = computed(() =>
+  gridOf(currentView.value, shownHourCycle.value, stepOf(currentView.value, props.minuteStep, props.secondStep)),
+);
 const limits = computed<TimeLimits>(() => ({
   minTime: props.minTime,
   maxTime: props.maxTime,
   disabledTimes: props.disabledTimes,
 }));
 
-const empty = computed(() => currentValue.value === null);
 // With no value, the face shows the reference time.
 const time = computed(() => {
   const like = currentValue.value ?? props.referenceDate;
@@ -313,8 +306,6 @@ const selectedNumber = computed(() =>
   faceNumberOf(currentView.value, shownHourCycle.value, time.value),
 );
 const dayPeriod = computed(() => dayPeriodOf(time.value));
-const isDisabled = computed(() => props.disabled);
-const isReadOnly = computed(() => props.readOnly);
 
 function isNumberDisabled(number: TimeClockFaceNumber): boolean {
   const { first, step: gridStep } = grid.value;
@@ -359,7 +350,7 @@ function selectNumber(
   number: TimeClockFaceNumber,
   details: TimeClockRootChangeEventDetails,
 ): Value | null {
-  if (isDisabled.value || isReadOnly.value || isNumberDisabled(number)) {
+  if (props.disabled || props.readOnly || isNumberDisabled(number)) {
     return null;
   }
   const candidate = timeOfFaceNumber(currentView.value, shownHourCycle.value, time.value, number);
@@ -399,7 +390,7 @@ function selectDayPeriod(
   period: TimeClockDayPeriodValue,
   details: TimeClockRootChangeEventDetails,
 ) {
-  if (isDisabled.value || isReadOnly.value || isDayPeriodDisabled(period)) {
+  if (props.disabled || props.readOnly || isDayPeriodDisabled(period)) {
     return;
   }
   if (currentValue.value === null || period !== dayPeriod.value) {
@@ -420,7 +411,7 @@ function setView(newView: TimeClockView, details: TimeClockRootViewChangeEventDe
 }
 
 function commit(details: TimeClockRootCommitEventDetails) {
-  if (isDisabled.value || isReadOnly.value) {
+  if (props.disabled || props.readOnly) {
     return;
   }
   // A key commits the time that the face shows, also when the clock has no value. A press that
@@ -445,10 +436,10 @@ function commit(details: TimeClockRootCommitEventDetails) {
 
 const state = computed<TimeClockRootState>(() => ({
   view: currentView.value,
-  disabled: isDisabled.value,
-  readOnly: isReadOnly.value,
+  disabled: props.disabled,
+  readOnly: props.readOnly,
   dragging: dragging.value,
-  empty: empty.value,
+  empty: currentValue.value === null,
 }));
 
 provide(TimeClockRootContext, {
@@ -456,15 +447,20 @@ provide(TimeClockRootContext, {
   view: currentView,
   hourCycle: shownHourCycle,
   locale: computed(() => props.locale),
-  step,
-  disabled: isDisabled,
-  readOnly: isReadOnly,
-  empty,
+  grid,
   numbers,
   time,
   selectedNumber,
   dayPeriod,
-  inputElement,
+  registerInput(input) {
+    inputElement.value = input;
+    return () => {
+      if (inputElement.value === input) inputElement.value = null;
+    };
+  },
+  focusInput() {
+    inputElement.value?.focus();
+  },
   isNumberDisabled,
   isDayPeriodDisabled,
   setDragging(newDragging) {

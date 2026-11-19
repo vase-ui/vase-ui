@@ -24,7 +24,7 @@ export interface TimeFieldClearProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useSlots } from 'vue';
 import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
@@ -46,7 +46,7 @@ if (process.env.NODE_ENV !== 'production') {
   useCastBooleanWarning('TimeField.Clear');
 }
 
-const slots = defineSlots<{
+defineSlots<{
   /**
    * The content of the button. The default is `x`. With no default slot and no `#render` slot, the
    * button has the `aria-label` `Clear`.
@@ -55,6 +55,7 @@ const slots = defineSlots<{
   render(props: { props: HTMLProps; state: TimeFieldClearState; children: Component }): unknown;
 }>();
 
+const slots = useSlots();
 const context = useDateTimeFieldContext();
 
 const isDisabled = computed(

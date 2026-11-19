@@ -73,8 +73,8 @@ const isTwelveHour = computed(() => root.hourCycle.value === 12);
 
 const state = computed<TimeClockDayPeriodState>(() => ({
   ...root.state.value,
-  disabled: root.disabled.value || root.isDayPeriodDisabled(props.value),
-  selected: !root.empty.value && root.dayPeriod.value === props.value,
+  disabled: root.state.value.disabled || root.isDayPeriodDisabled(props.value),
+  selected: !root.state.value.empty && root.dayPeriod.value === props.value,
 }));
 
 // With no default slot and no `as`, the text is the only child of a static element. Vue allows a
@@ -116,7 +116,7 @@ watch(isTwelveHour, (twelveHour) => {
     dayPeriodElement !== null &&
     contains(dayPeriodElement, activeElement(ownerDocument(dayPeriodElement)))
   ) {
-    root.inputElement.value?.focus();
+    root.focusInput();
   }
 });
 

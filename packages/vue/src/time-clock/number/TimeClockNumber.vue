@@ -34,14 +34,13 @@ export interface TimeClockNumberProps
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrating } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useTimeClockFaceContext } from '../face/TimeClockFaceContext';
-import { useTimeClockRootContext } from '../root/TimeClockRootContext';
+import { useTimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
 import { angleOfFaceNumber, radiusOfFaceNumber } from '../utils/clockViews';
 import * as TimeClockNumberCssVars from './TimeClockNumberCssVars';
 
@@ -64,9 +63,9 @@ const state = computed<TimeClockNumberState>(() => {
   const { selectedNumber } = root;
   return {
     ...root.state.value,
-    disabled: root.disabled.value || root.isNumberDisabled(number),
+    disabled: root.state.value.disabled || root.isNumberDisabled(number),
     selected:
-      !root.empty.value &&
+      !root.state.value.empty &&
       number.value === selectedNumber.value.value &&
       number.inner === selectedNumber.value.inner,
     inner: number.inner,
@@ -99,15 +98,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span
   ],
 });
 
-watch(
-  element,
-  (numberElement, _previous, onCleanup) => {
-    if (numberElement && face) {
-      onCleanup(face.registerNumber(numberElement, () => props.number));
-    }
-  },
-  { flush: 'sync' },
-);
+face?.useNumber(element, () => props.number);
 
 defineExpose({ element });
 </script>

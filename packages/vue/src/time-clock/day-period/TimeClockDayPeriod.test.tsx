@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
-import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createHeldBranch, createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import TimePickerAnatomy from '../../time-picker/root/TimePickerAnatomy.test.vue';
 import TimeClockFaceReplace from './TimeClockFaceReplace.test.vue';
 
@@ -310,6 +310,33 @@ describe('<TimeClock.DayPeriod />', () => {
 
         expect(screen.queryByTestId('pm')).toBeNull();
         expect(screen.getByRole('slider')).toHaveFocus();
+      });
+
+      it('focuses the visible face when another face mounts inside a held branch', async () => {
+        const cycle = shallowRef<12 | 24>(12);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <TimeClock.Face ariaLabel="second" />
+        ));
+        await render(() => (
+          <TimeClock.Root hourCycle={cycle.value}>
+            <TimeClock.Face ariaLabel="first" />
+            <HeldBranch />
+            <TimeClock.DayPeriod value="pm" />
+          </TimeClock.Root>
+        ));
+
+        await mountWhileHeld();
+        screen.getByRole('button').focus();
+        cycle.value = 24;
+        await flushMicrotasks();
+        expect(screen.getByRole('slider', { name: 'first' })).toHaveFocus();
+
+        cycle.value = 12;
+        await show();
+        screen.getByRole('button').focus();
+        cycle.value = 24;
+        await flushMicrotasks();
+        expect(screen.getByRole('slider', { name: 'second' })).toHaveFocus();
       });
 
       it('gives its focus to a face that mounts before the old face unmounts', async () => {

@@ -12,7 +12,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
-import { pointOnFace } from '../utils/test-utils';
+import { pointOnFace } from '../../../test/time-clockTestUtils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const faceStyle = { width: '200px', height: '200px' };
@@ -799,6 +799,30 @@ describe('<TimeClock.Face />', () => {
       expect(String(onValueChange.mock.calls[0]?.[0])).toBe('04:00:00');
       expect(onValueChange.mock.calls[0]?.[1]).toMatchObject({ reason: 'input-change' });
       expect(slider).toHaveValue('4');
+    });
+
+    it('renders the replacement face when the parent changes the view during an input event', async () => {
+      const minute = shallowRef(false);
+      await render(() => (
+        <TimeClock.Root
+          locale="en-US"
+          hourCycle={12}
+          modelValue={time('11:30')}
+          view={minute.value ? 'minute' : 'hour'}
+          onValueChange={() => (minute.value = true)}
+        >
+          <TimeClock.Face key={minute.value ? 'minute' : 'hour'} />
+        </TimeClock.Root>
+      ));
+      const hour = screen.getByRole<HTMLInputElement>('slider');
+      hour.value = '4';
+      await fireEvent.input(hour);
+
+      const replacement = screen.getByRole<HTMLInputElement>('slider');
+      expect(replacement).not.toBe(hour);
+      expect(replacement).toHaveValue('30');
+      expect(replacement).toHaveAttribute('aria-valuenow', '30');
+      expect(hour).toHaveValue('4');
     });
 
     it.each([

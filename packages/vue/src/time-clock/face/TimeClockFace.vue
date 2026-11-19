@@ -37,7 +37,7 @@ export interface TimeClockFaceProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
+import { computed, onScopeDispose, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useAriaAfterHydration } from '../../common/hydration';
@@ -56,17 +56,18 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createVaseUIEventDetails';
+import { useInputRegistration } from '../../internals/field-register-control';
 import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
+import { useElementRegistration } from '../../internals/useElementRegistration';
+import { useInputRender } from '../../internals/useInputRender';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
-import { useTimeClockRootContext } from '../root/TimeClockRootContext';
-import { angleOfPoint, outerRingRadius, ratioOfPoint } from '../utils/clockGeometry';
-import { faceNumber, faceNumberOfPoint, gridOf, pagePlaces } from '../utils/clockViews';
+import { TimeClockFaceContext, useTimeClockRootContext } from '../root/TimeClockRootContext';
+import { angleOfPoint, faceNumber, faceNumberOfPoint, outerRingRadius, pagePlaces, ratioOfPoint } from '../utils/clockViews';
 import type { TimeClockFaceNumber } from '../utils/clockViews';
 import TimeClockFaceChildren from './TimeClockFaceChildren.vue';
-import { TimeClockFaceContext } from './TimeClockFaceContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -92,19 +93,20 @@ const HIDDEN_INPUT_STYLE = {
 };
 
 const root = useTimeClockRootContext();
-const { state } = root;
+const { grid, state } = root;
 const formatLocale = useFormatLocale(root.locale);
 const ariaAfterHydration = useAriaAfterHydration();
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-const numberElements = new Map<HTMLElement, () => TimeClockFaceNumber>();
+useInputRegistration(inputElement, root.registerInput);
+const { valueProps, renderValue } = useInputRender();
+const numberElements = new Map<Element, () => TimeClockFaceNumber>();
 // The pointer of the press or drag that is in progress, the radius of the outer ring that it
 // measured, and whether it selected a number.
 let activePointerId: number | null = null;
 let pressRadius = 0;
 let pressSelected = false;
 
-const grid = computed(() => gridOf(root.view.value, root.hourCycle.value, root.step.value));
 const label = computed(() =>
   new Intl.DisplayNames(formatLocale.value, { type: 'dateTimeField' }).of(root.view.value),
 );
@@ -116,29 +118,13 @@ const valueText = computed(() =>
   }),
 );
 
-// A template can mount the face that replaces this face before it unmounts this face.
-function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  if (input !== null || root.inputElement.value === inputElement.value) {
-    root.inputElement.value = input;
-  }
-  inputElement.value = input;
-}
-
 function onInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   root.selectNumber(
     faceNumber(root.view.value, root.hourCycle.value, input.valueAsNumber),
     createChangeEventDetails(REASONS.inputChange, event),
   );
-  // A listener can cancel the change, and a parent that controls the clock can keep its time. Vue
-  // writes the value of the input only when the face renders again.
-  void nextTick(() => {
-    const { value } = root.selectedNumber.value;
-    if (input.valueAsNumber !== value) {
-      input.value = String(value);
-    }
-  });
+  renderValue();
 }
 
 function inputProps() {
@@ -150,7 +136,7 @@ function inputProps() {
       ) ?? undefined,
     'aria-labelledby': ariaLabelledby,
     'aria-describedby': given('aria-describedby', props.ariaDescribedby),
-    'aria-readonly': root.readOnly.value ? 'true' : undefined,
+    'aria-readonly': state.value.readOnly ? 'true' : undefined,
     'aria-valuenow': root.selectedNumber.value.value,
     'aria-valuetext':
       ariaAfterHydration(
@@ -160,25 +146,24 @@ function inputProps() {
       ) ?? undefined,
     // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
     autocomplete: 'off',
-    disabled: root.disabled.value,
+    disabled: state.value.disabled,
     max: grid.value.first + grid.value.count - 1,
     min: grid.value.first,
     onInput,
     step: grid.value.step,
     style: HIDDEN_INPUT_STYLE,
     type: 'range',
-    value: root.selectedNumber.value.value,
+    ...valueProps(root.selectedNumber.value.value),
   };
 }
 
 provide(TimeClockFaceContext, {
   inputProps,
-  setInputElement,
-  registerNumber(element, number) {
-    numberElements.set(element, number);
-    return () => {
-      numberElements.delete(element);
-    };
+  setInputElement(value) {
+    inputElement.value = value as HTMLInputElement | null;
+  },
+  useNumber(element, number) {
+    useElementRegistration(numberElements, element, number);
   },
 });
 
@@ -196,7 +181,7 @@ function selectNumberOfEvent(event: PointerEvent) {
   const number = faceNumberOfPoint(
     root.view.value,
     root.hourCycle.value,
-    root.step.value,
+    grid.value.step,
     angleOfPoint(point, rect),
     ratioOfPoint(point, rect, pressRadius),
   );
@@ -216,7 +201,7 @@ function endPress(event: PointerEvent) {
 }
 
 function onPointerdown(event: PointerEvent) {
-  if (event.button !== 0 || root.disabled.value || root.readOnly.value) {
+  if (event.button !== 0 || state.value.disabled || state.value.readOnly) {
     return;
   }
   const face = event.currentTarget as HTMLElement;

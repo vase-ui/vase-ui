@@ -1,6 +1,7 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type {
+  Grid,
   TimeClockDayPeriodValue,
   TimeClockFaceNumber,
   TimeClockHourCycle,
@@ -19,12 +20,7 @@ export interface TimeClockRootContext {
   hourCycle: ComputedRef<TimeClockHourCycle>;
   /** The `locale` prop. A part that formats text gives it to `useFormatLocale`. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
-  /** The step of the view. */
-  step: ComputedRef<number>;
-  disabled: ComputedRef<boolean>;
-  readOnly: ComputedRef<boolean>;
-  /** Whether the clock has no value. */
-  empty: ComputedRef<boolean>;
+  grid: ComputedRef<Grid>;
   /** The numbers of the face, in the order that the face lists them. */
   numbers: ComputedRef<TimeClockFaceNumber[]>;
   /** The time that the face shows: the time of the value, or the reference time while the clock has no value. */
@@ -33,8 +29,8 @@ export interface TimeClockRootContext {
   selectedNumber: ComputedRef<TimeClockFaceNumber>;
   /** The day period of the time of the clock. */
   dayPeriod: ComputedRef<TimeClockDayPeriodValue>;
-  /** The range input of the face. `TimeClock.Face` writes it. */
-  inputElement: ShallowRef<HTMLInputElement | null>;
+  registerInput: (input: HTMLInputElement) => () => void;
+  focusInput: () => void;
   isNumberDisabled: (number: TimeClockFaceNumber) => boolean;
   isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriodValue) => boolean;
   setDragging: (dragging: boolean) => void;
@@ -62,6 +58,29 @@ export function useTimeClockRootContext(): TimeClockRootContext {
   if (context === undefined) {
     throw new Error(
       'Vase UI: A part of TimeClock must be inside <TimeClock.Root>. Without a root the part has no time to show or to change. Put the part inside <TimeClock.Root>.',
+    );
+  }
+  return context;
+}
+
+export interface TimeClockFaceContext {
+  /** Makes the props of the range input of the face. The `children` component calls it in its render. */
+  inputProps: () => Record<string, any>;
+  /** The `ref` setter of the range input. The `children` component binds it by name. */
+  setInputElement: (value: unknown) => void;
+  useNumber: (element: Readonly<Ref<HTMLElement | null>>, number: () => TimeClockFaceNumber) => void;
+}
+
+export const TimeClockFaceContext: InjectionKey<TimeClockFaceContext> = Symbol();
+
+export function useTimeClockFaceContext(optional: true): TimeClockFaceContext | undefined;
+export function useTimeClockFaceContext(optional?: false): TimeClockFaceContext;
+export function useTimeClockFaceContext(optional = false) {
+  // With one argument, Vue shows a warning when there is no provider. The error below says more.
+  const context = inject(TimeClockFaceContext, undefined);
+  if (context === undefined && !optional) {
+    throw new Error(
+      'Vase UI: The children of <TimeClock.Face> must be inside <TimeClock.Face>. Without the face the range input has no time to show. Mount the `children` component of the `#render` slot inside the element of that slot.',
     );
   }
   return context;

@@ -17,7 +17,7 @@ import {
   takeReportedMessages,
   within,
 } from '#test-utils';
-import { pointOnFace } from '../utils/test-utils';
+import { pointOnFace } from '../../../test/time-clockTestUtils';
 import TimeClockRootHydration from './TimeClockRootHydration.test.vue';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
