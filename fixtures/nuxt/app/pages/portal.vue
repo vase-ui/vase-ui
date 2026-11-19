@@ -3,7 +3,6 @@ import { useTemplateRef } from 'vue';
 import PopupPortal from '../../../../packages/vue/src/utils/popups/portal/PopupPortal.vue';
 
 const page = useTemplateRef<HTMLElement>('page');
-
 </script>
 
 <template>

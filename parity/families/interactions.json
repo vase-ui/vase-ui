@@ -29,7 +29,7 @@
       "describe": ["useDismiss", "default options"],
       "title": "does not dismiss with the escape key that ends a composition spanning a reopen",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "test": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx",
       "reason": "The case asserts that Escape directly after `compositionend` keeps the popup open. Only WebKit sends `compositionend` before the `keydown` that ends a composition, so only WebKit needs that window. In the other engines Vase UI closes the popup (`BUG-6158`). The case \"ignores Escape for 5 ms after compositionend in WebKit\" tests the window in WebKit."
     },
     {
@@ -270,6 +270,20 @@
       "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts",
       "member": "createPlacementScenario",
       "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/interactions/useDismissLayer.ts",
+      "member": "useDismissLayer",
+      "witness": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx",
+      "member": "setWebKit",
+      "witness": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx"
     }
   ]
 }

@@ -64,6 +64,11 @@
       "entry": "Viewport",
       "prop": "id",
       "reason": "The part reads `id` to replace an absent id with a generated id, which the owner element of the active trigger names in `aria-owns`. It is thus a declared prop. Base UI reads it from the native attributes of the viewport, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Portal",
+      "prop": "disabled",
+      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
     }
   ],
   "returnTypeDifferences": [],

@@ -18,14 +18,36 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
-      "describe": ["$name container resolution"],
-      "title": "mounts children once in a connected container when a later update replaces its ref",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/portal/FloatingPortalLite.test.tsx",
-      "reason": "The Vue portal gets its container in the flush after the mount. When updates in that flush replace the container, the children mount in the first container. That container is out of the document when their `onMounted` hooks run. Vue then moves the children to the new container. The case \"mounts the children once, and moves them when updates in the flush of the mount replace the container\" tests this."
+      "describe": ["FloatingPortal"],
+      "title": "allows refs as containers",
+      "kind": "not-applicable",
+      "reason": "Vue templates unwrap refs. The to prop takes the target value. PopupPortal.spec.tsx checks the public type."
     }
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/portal/PopupPortal.vue",
+      "member": "PopupPortalProps",
+      "witness": "packages/vue/src/utils/popups/portal/PopupPortal.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/utils/popups/portal/PopupPortal.vue",
+      "member": "PopupPortalProps",
+      "witness": "packages/vue/src/utils/popups/portal/PopupPortal.targets.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/utils/popups/portal/PopupPortal.test.tsx",
+      "member": "App",
+      "witness": "packages/vue/src/utils/popups/portal/PopupPortal.test.tsx"
+    }
+  ]
 }

@@ -236,6 +236,10 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 - `DatePicker.TimeField` is not a control of the `Field` that holds the picker. It has no label from that field, so give it an `aria-label`.
 - The default labels are in English. The dates in them follow the locale.
 
+## Portal target
+
+Set `to` on `DatePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

@@ -205,6 +205,10 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 </DemoSource>
 
+## Portal target
+
+Set `to` on `PreviewCard.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

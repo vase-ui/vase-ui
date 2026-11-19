@@ -10,6 +10,11 @@
       "entry": "Trigger",
       "prop": "id",
       "reason": "The part reads `id` to register the trigger in the store of the preview card, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Portal",
+      "prop": "disabled",
+      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
     }
   ],
   "returnTypeDifferences": [

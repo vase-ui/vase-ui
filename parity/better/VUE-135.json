@@ -5,6 +5,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/popover/portal/PopoverPortal.tsx#L19-L31",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L207-L208"
   ],
-  "behavior": "A portal part drops an attribute that names a prop only the internal portal declares. With `portal-owner-role` on Dialog.Portal, the owner element has no role. With `in-place` on Popover.Portal, the popup stays in its container. Base UI passes all props except `keepMounted` from Popover.Portal to FloatingPortal. FloatingPortal reads `portalOwnerRole` from them, although Popover.Portal declares no such prop.",
+  "behavior": "A public portal drops private portal props. A portal-owner-role attribute cannot set the role of the owner. A guards attribute cannot replace the guard implementation. Base UI passes the rest of the public props to the internal portal, which reads portalOwnerRole.",
   "dueWith": "packages/react/src/utils/popups/portal/FloatingPortal.tsx"
 }

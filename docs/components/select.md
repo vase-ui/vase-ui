@@ -228,6 +228,10 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 </DemoSource>
 
+## Portal target
+
+Set `to` on `Select.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

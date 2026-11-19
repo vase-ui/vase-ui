@@ -233,6 +233,10 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 </DemoSource>
 
+## Portal target
+
+Set `to` on `Tooltip.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />

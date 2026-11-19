@@ -91,6 +91,16 @@ const rules: {
     },
   },
   {
+    name: 'only a Portal maps container to the Vue Teleport target',
+    part: makePart([row('container')], { name: 'Portal' }),
+    expected: { props: ['to<-container'] },
+  },
+  {
+    name: 'other parts keep a container prop',
+    part: makePart([row('container')]),
+    expected: { props: ['container<-container'] },
+  },
+  {
     name: 'className and style map to native attributes',
     part: makePart([row('className'), row('style')]),
     expected: { props: [] },

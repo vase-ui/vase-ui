@@ -94,6 +94,10 @@ To make a submenu, put a `ContextMenu.SubmenuRoot` in the parent context menu. U
 
 </DemoSource>
 
+## Portal target
+
+Set `to` on `ContextMenu.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+
 ## API reference
 
 <ApiReference />
