@@ -15,7 +15,6 @@ export type * from './link/ToolbarLink.vue';
 export type * from './input/ToolbarInput.vue';
 export type * from './separator/ToolbarSeparator.vue';
 
-export * as ToolbarSeparatorDataAttributes from './separator/ToolbarSeparatorDataAttributes';
 export * as ToolbarRootDataAttributes from './root/ToolbarRootDataAttributes';
 export * as ToolbarGroupDataAttributes from './group/ToolbarGroupDataAttributes';
 export * as ToolbarButtonDataAttributes from './button/ToolbarButtonDataAttributes';
