@@ -41,7 +41,7 @@ export interface ComboboxPositionerProps
 import { computed, onMounted, provide, watch } from 'vue';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { usePopupPositioner } from '../../utils/popups/popupPositioner';
+import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { useComboboxPortalContext } from '../portal/ComboboxPortalContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -83,7 +83,7 @@ const inputGroupElement = computed(() => store.select('inputGroupElement'));
 const empty = useListEmpty();
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning, open } =
-  usePopupPositioner<ComboboxPositionerInternalState>(store, props, {
+  usePopupPositioner<ComboboxPositionerInternalState>(props, store, {
     keepMounted,
     positioning: {
       anchor: () =>

@@ -76,8 +76,8 @@ const INPUT_SYNC_SAMPLES = [
     '(event.target as HTMLTextAreaElement).value = text;',
     'Vue value binding',
   ],
-  ['a checked write', 'input.checked = true;', 'restoreChecked'],
-  ['an indeterminate write', 'input.indeterminate = false;', 'restoreChecked'],
+  ['a checked write', 'input.checked = true;', 'useCheckedInput'],
+  ['an indeterminate write', 'input.indeterminate = false;', 'useCheckedInput'],
   [
     'a handled input value',
     'const handledHiddenValue = input.value; read(handledHiddenValue);',

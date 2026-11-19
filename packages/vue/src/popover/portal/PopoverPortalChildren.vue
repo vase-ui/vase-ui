@@ -9,25 +9,21 @@ defineSlots<{
   default?(): unknown;
 }>();
 
-const store = usePopoverRootContext();
+const { store, open, mounted, trigger } = usePopoverRootContext();
 
 // Base UI renders the backdrop in the positioner, so it lasts as long as the positioner (`VUE-61`).
 const shouldRenderBackdrop = computed(
   () =>
-    store.select('mounted') &&
+    mounted.value &&
     store.select('positionerElement') !== null &&
-    store.select('modal') === true &&
-    store.select('openChangeReason') !== REASONS.triggerHover,
+    store.state.modal === true &&
+    store.state.openChangeReason !== REASONS.triggerHover,
 );
 
 markChildrenMounted();
 </script>
 
 <template>
-  <InternalBackdrop
-    v-if="shouldRenderBackdrop"
-    :inert="!store.select('open')"
-    :cutout="store.select('activeTriggerElement')"
-  />
+  <InternalBackdrop v-if="shouldRenderBackdrop" :inert="!open" :cutout="trigger" />
   <slot />
 </template>

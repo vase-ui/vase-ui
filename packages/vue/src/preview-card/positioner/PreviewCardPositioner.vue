@@ -38,14 +38,16 @@ export interface PreviewCardPositionerProps
 </script>
 
 <script setup lang="ts">
-import { onMounted, provide, watch } from 'vue';
+import { provide, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { createInlineMiddleware } from '../../utils/popups/inlineRect';
-import { usePopupPositioner } from '../../utils/popups/popupPositioner';
+import {
+  createInlineMiddleware,
+  PreviewCardPositionerContext,
+} from './PreviewCardPositionerContext';
+import { usePopupPositioner } from '../../utils/popups/usePopupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../utils/popups/tree/FloatingTree';
 import { usePreviewCardPortalContext } from '../portal/PreviewCardPortalContext';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
-import { PreviewCardPositionerContext } from './PreviewCardPositionerContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -68,12 +70,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PreviewCardPositionerState>;
 }>();
 
-const store = usePreviewCardRootContext();
+const { store } = usePreviewCardRootContext();
 const keepMounted = usePreviewCardPortalContext();
 const nodeId = useFloatingNodeId();
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning, open, mounted } =
-  usePopupPositioner<PreviewCardPositionerState>(store, props, {
+  usePopupPositioner<PreviewCardPositionerState>(props, store, {
     keepMounted,
     positioning: {
       nodeId,
@@ -81,15 +83,14 @@ const { element, elementProps, setRef, usesRenderSlot, state, positioning, open,
     },
   });
 
-// The store can take the coordinates of another line while the card is still mounted, so each
-// open positions the card again.
-function updatePosition() {
-  if (open.value && mounted.value) {
-    positioning.update();
-  }
-}
-onMounted(updatePosition);
-watch([open, mounted], updatePosition, { flush: 'post' });
+// An open card can select a different line while its positioner stays mounted.
+watch(
+  [open, mounted],
+  ([isOpen, isMounted]) => {
+    if (isOpen && isMounted) positioning.update();
+  },
+  { flush: 'post' },
+);
 
 provide(PreviewCardPositionerContext, positioning);
 provideFloatingNode(nodeId);

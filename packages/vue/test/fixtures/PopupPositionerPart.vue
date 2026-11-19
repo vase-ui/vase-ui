@@ -7,7 +7,7 @@ import type {
   WithVaseUIEvent,
 } from '../../src/internals/types';
 import type { UseAnchorPositioningSharedParameters } from '../../src/internals/useAnchorPositioning';
-import type { PopupPositionerState } from '../../src/utils/popups/popupPositioner';
+import type { PopupPositionerState } from '../../src/utils/popups/usePopupPositioner';
 
 export interface PopupPositionerPartProps
   extends
@@ -24,7 +24,7 @@ export interface PopupPositionerPartProps
 
 <script setup lang="ts">
 import { inject, provide } from 'vue';
-import { usePopupPositioner } from '../../src/utils/popups/popupPositioner';
+import { usePopupPositioner } from '../../src/utils/popups/usePopupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
 import { PopupFixtureContext, PopupFixturePositionerContext } from './PopupFixture';
 
@@ -50,8 +50,8 @@ const nodeId = useFloatingNodeId();
 provideFloatingNode(nodeId);
 
 const { element, elementProps, setRef, usesRenderSlot, state, positioning } = usePopupPositioner(
-  store,
   props,
+  store,
   {
     keepMounted: () => props.keepMounted,
     positioning: { nodeId },

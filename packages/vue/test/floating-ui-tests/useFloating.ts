@@ -5,7 +5,7 @@ import type { VaseUIChangeEventDetails } from '../../src/internals/createVaseUIE
 import { resolveElement } from '../../src/internals/resolveElement';
 import type { FloatingRootStore } from '../../src/utils/popups/floating-root/FloatingRootStore';
 import { useFloatingRootStore } from '../../src/utils/popups/floating-root/useFloatingRootStore';
-import { useVaseUIFloating } from '../../src/utils/popups/positioning/useFloating';
+import { useVaseUIFloating } from '../../src/utils/popups/usePopupPositioner';
 import type { PopupPositioningContext } from '../../src/utils/popups/types';
 
 interface UseFloatingOptions {

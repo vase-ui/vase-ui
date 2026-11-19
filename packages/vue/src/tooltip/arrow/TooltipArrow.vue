@@ -50,7 +50,7 @@ defineSlots<{
 }>();
 
 const { store } = useTooltipRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles } = useTooltipPositionerContext();
+const { createArrowRef, side, align, arrowUncentered, arrowStyles } = useTooltipPositionerContext();
 
 const state = computed<TooltipArrowState>(() => ({
   open: popupStoreSelectors.open(store.state),
@@ -62,7 +62,7 @@ const state = computed<TooltipArrowState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: arrowRef,
+  ref: createArrowRef(),
   stateAttributesMapping: popupStateMapping,
   props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
 });

@@ -29,7 +29,7 @@ export interface PickerPopup {
  * `setup`.
  */
 export function usePickerPopup(): PickerPopup {
-  const store = usePopoverRootContext();
+  const { store } = usePopoverRootContext();
   const open = computed(() => store.select('open'));
 
   function openByKey(event: KeyboardEvent) {
@@ -78,7 +78,7 @@ export function getFirstInDocument<T extends Element>(
 export function usePickerInitialFocus(
   initialFocus: () => FocusOption | undefined,
 ): ComputedRef<FocusOption> {
-  const store = usePopoverRootContext();
+  const { store } = usePopoverRootContext();
   const targets = new Set<PickerFocusTarget>();
   provide(RegisterPickerFocusTarget, (target) => {
     const { isHeld } = useKeepAliveState();

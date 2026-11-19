@@ -14,8 +14,8 @@ export interface SwitchThumbProps
 <script setup lang="ts">
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useSwitchRootContext } from '../root/SwitchRootContext';
-import { stateAttributesMapping } from '../stateAttributesMapping';
+import { inject } from 'vue';
+import { SwitchRootContext, stateAttributesMapping } from '../root/SwitchRoot.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -26,7 +26,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SwitchThumbState>;
 }>();
 
-const state = useSwitchRootContext();
+const state = inject(SwitchRootContext, undefined);
+if (!state) {
+  throw new Error(
+    'Vase UI: A part of Switch must be inside <Switch.Root>. Without a root the part has no state to show. Put the part inside <Switch.Root>.',
+  );
+}
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('span', props, {
   state,

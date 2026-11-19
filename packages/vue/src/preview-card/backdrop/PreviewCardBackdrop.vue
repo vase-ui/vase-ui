@@ -44,11 +44,11 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PreviewCardBackdropState>;
 }>();
 
-const store = usePreviewCardRootContext();
+const { store, open, mounted, transitionStatus } = usePreviewCardRootContext();
 
 const state = computed<PreviewCardBackdropState>(() => ({
-  open: store.select('open'),
-  transitionStatus: store.select('transitionStatus'),
+  open: open.value,
+  transitionStatus: transitionStatus.value,
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
@@ -56,7 +56,7 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   ref: createElementSetter(store.context.backdropRef, { keepWhileHeld: true }),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
-    { role: 'presentation', hidden: !store.select('mounted'), style: BACKDROP_STYLE },
+    { role: 'presentation', hidden: !mounted.value, style: BACKDROP_STYLE },
     attrs,
   ],
 });

@@ -2,11 +2,9 @@ import { defineComponent, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { getEmptyRootStore } from '../../src/utils/popups/floating-root/getEmptyRootStore';
 import { FloatingFocusManager } from '../fixtures/floatingFocusManagerHarness';
-import { safePolygon } from '../../src/utils/popups/interactions/safePolygon';
 import { useDismiss } from '../../src/utils/popups/interactions/useDismiss';
 import { useTriggerFocus as useFocus } from '../../src/utils/popups/usePopupTrigger';
-import { useHoverPopupInteraction } from '../../src/utils/popups/interactions/useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from '../../src/utils/popups/interactions/useHoverTriggerInteraction';
+import { usePopupHover } from '../../src/utils/popups/interactions/usePopupHover';
 import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
 import type { InteractionProps } from '../../src/utils/popups/types';
@@ -101,12 +99,11 @@ export const NavigationItem = defineComponent({
     });
 
     const hoverStore = hasChildren ? context.rootStore : fallbackStore;
-    const handleClose = safePolygon();
-    const hoverReferenceProps = useHoverTriggerInteraction(hoverStore, {
-      handleClose: () => handleClose,
+    const hoverReferenceProps = usePopupHover(hoverStore).trigger({
+      safePolygon: true,
       triggerElement: hasChildren ? refs.reference : undefined,
     });
-    useHoverPopupInteraction(hoverStore);
+    usePopupHover(hoverStore).popup();
 
     const focusProps = useFocus(context.rootStore, { enabled: hasChildren });
     const { getReferenceProps, getFloatingProps } = useTestInteractions([

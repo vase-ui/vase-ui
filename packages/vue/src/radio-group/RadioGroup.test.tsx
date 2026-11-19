@@ -3680,6 +3680,17 @@ describe('<RadioGroup />', () => {
       ]);
     });
 
+    it('VUE-81: takes an unnamed radio pressed before the previously selected one in document order', async () => {
+      const fixture = await hydratePressed({ value: 'c' }, pressLabel('label-a'));
+
+      expect(fixture.getByTestId('changes').textContent).toBe('a (vase-ui)');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: true, radio: 'true' },
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+      ]);
+    });
+
     it('keeps the value of a parent that keeps it', async () => {
       const fixture = await hydratePressed(
         { mode: 'keeps', named: true, value: 'a' },

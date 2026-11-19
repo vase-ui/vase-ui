@@ -124,9 +124,6 @@
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },
-    "src/internals/checkedInputProps.test.tsx": {
-      "fails": {}
-    },
     "src/internals/composite/item/useCompositeItem.test.tsx": {
       "fails": {}
     },
@@ -149,6 +146,9 @@
       "fails": {}
     },
     "src/internals/useAnimationsFinished.test.tsx": {
+      "fails": {}
+    },
+    "src/internals/useCheckedInput.test.tsx": {
       "fails": {}
     },
     "src/internals/useFormReset.test.tsx": {
@@ -324,13 +324,13 @@
         "<Tooltip.Positioner /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
-    "src/tooltip/root/TooltipOwner.test.tsx": {
+    "src/tooltip/root/TooltipRoot.owner.test.tsx": {
       "fails": {}
     },
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },
-    "src/utils/popups/interactions/hoverIntent.test.ts": {
+    "src/utils/popups/interactions/usePopupHover.session.test.ts": {
       "fails": {}
     },
     "src/utils/popups/useDomEffect.test.tsx": {
@@ -370,6 +370,9 @@
       "fails": {}
     },
     "test/withoutVaporAnchors.test.tsx": {
+      "fails": {}
+    },
+    "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
       "fails": {}
     }
   }

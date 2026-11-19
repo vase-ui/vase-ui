@@ -20,11 +20,10 @@ import { computed, provide } from 'vue';
 import { closestInEventPath } from '../../common/shadowDom';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
+import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
@@ -59,7 +58,7 @@ const {
 const fallbackStore = getEmptyRootStore();
 const store = () => floatingRootStore.value ?? fallbackStore;
 
-useHoverPopupInteraction(store, {
+usePopupHover(store).popup({
   enabled: () =>
     floatingRootStore.value != null &&
     (positionerElement.value != null || viewportElement.value != null || value.value == null),

@@ -38,8 +38,7 @@ import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { useTestClick as useClick } from '../../../../test/fixtures/useFloating';
 import { useDismiss } from '../interactions/useDismiss';
-import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
-import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
+import { usePopupHover } from '../interactions/usePopupHover';
 import { usePortalContext } from '../portal/FloatingPortalContext';
 import type { PortalContextValue } from '../portal/FloatingPortalContext';
 import FloatingPortal from '../portal/FloatingPortal.vue';
@@ -5684,10 +5683,10 @@ describe('FloatingFocusManager', () => {
           onOpenChange: setOpenOf(isOpen),
         });
 
-        const hoverReferenceProps = useHoverTriggerInteraction(context.rootStore, {
+        const hoverReferenceProps = usePopupHover(context.rootStore).trigger({
           triggerElement: refs.reference,
         });
-        useHoverPopupInteraction(context.rootStore);
+        usePopupHover(context.rootStore).popup();
 
         const { getReferenceProps, getFloatingProps } = useTestInteractions([
           { reference: hoverReferenceProps },

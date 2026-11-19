@@ -145,7 +145,7 @@
     {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
-      "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/ReactiveStore.test.tsx` tests the writes of the Vue store."
+      "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/handleStoreAdapter.test.tsx` tests the writes of the Vue store."
     },
     {
       "upstream": "packages/utils/src/store/Store.spec.ts",
@@ -160,7 +160,7 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.spec.ts",
       "kind": "not-applicable",
-      "reason": "It tests the types of the React hooks of `ReactStore`. `packages/vue/src/utils/popups/ReactiveStore.spec.ts` tests the types of `select`, `set` and `update`."
+      "reason": "It tests the types of the React hooks of `ReactStore`. `packages/vue/src/utils/popups/handleStoreAdapter.spec.ts` tests the types of `select`, `set` and `update`."
     },
     {
       "upstream": "packages/utils/src/store/createSelector.test.ts",
@@ -276,6 +276,20 @@
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
       "member": "useEnhancedClickHandler",
       "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.vue",
+      "member": "getDefaultFormSubmitter",
+      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx",
+      "behavior": "Enter activates the first submit button of the form.",
+      "witness": "packages/vue/src/checkbox/root/CheckboxRoot.submitter.test.tsx"
     }
   ]
 }

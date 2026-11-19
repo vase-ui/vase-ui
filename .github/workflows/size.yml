@@ -1,0 +1,109 @@
+name: Package size
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'packages/vue/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.node-version'
+      - 'tsconfig.json'
+      - 'patches/**'
+      - 'LICENSE'
+      - 'README.md'
+      - 'THIRD_PARTY_NOTICES.md'
+      - 'scripts/size/**'
+      - '.github/workflows/size.yml'
+
+permissions: {}
+
+concurrency:
+  group: size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      report: ${{ steps.report.outputs.report }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Match the merge to the pull request event
+        id: merge
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/size/merge.sh "$BASE_SHA" "$HEAD_SHA"
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile --filter @vase-ui/vue
+      - name: Measure the base build
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          base="$RUNNER_TEMP/size-base"
+          git worktree add --detach "$base" "$BASE_SHA"
+          (cd "$base" && pnpm install --frozen-lockfile --filter @vase-ui/vue)
+          node scripts/size/measure.ts "$base/packages/vue" "$RUNNER_TEMP/base-size.json"
+      - name: Measure the merge build
+        if: steps.merge.outcome == 'success'
+        timeout-minutes: 5
+        run: node scripts/size/measure.ts packages/vue "$RUNNER_TEMP/merge-size.json"
+      - name: Compare the builds
+        id: report
+        if: ${{ !cancelled() }}
+        run: |
+          report="$RUNNER_TEMP/size-report.md"
+          node scripts/size/report.ts "$RUNNER_TEMP/base-size.json" "$RUNNER_TEMP/merge-size.json" > "$report"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          jq -Rsr '"report=" + tojson' "$report" >> "$GITHUB_OUTPUT"
+
+  comment:
+    needs: measure
+    # GitHub gives forks and Dependabot a read-only token. Their report stays in the job summary.
+    if: >-
+      ${{ !cancelled() && needs.measure.outputs.report != '' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Update the size comment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BODY: |-
+            <!-- vase:size -->
+
+            ${{ fromJSON(needs.measure.outputs.report) }}
+            [Build details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        run: |
+          head=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')
+          [[ "$head" == "$HEAD_SHA" ]] || exit 0
+          comments="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments"
+          id=$(gh api --paginate "$comments?per_page=100" | jq -sr '
+            first(.[][] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- vase:size -->\n"))) | .id) // empty')
+          if [[ -n "$id" ]]; then
+            gh api --silent --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$BODY"
+          else
+            gh api --silent --method POST "$comments" -f body="$BODY"
+          fi

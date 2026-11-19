@@ -1,8 +1,11 @@
+import type { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
 import type { PopoverStore } from '../store/PopoverStore';
 
-export type PopoverRootContext<Payload = unknown> = PopoverStore<Payload>;
+export type PopoverRootContext<Payload = unknown> = ReturnType<
+  typeof usePopupRoot<PopoverStore<Payload>>
+>;
 
 export const PopoverRootContext: InjectionKey<PopoverRootContext<any>> = Symbol();
 

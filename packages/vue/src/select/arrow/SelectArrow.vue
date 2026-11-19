@@ -46,7 +46,7 @@ defineSlots<{
 }>();
 
 const store = useSelectRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles, alignItemWithTriggerActive } =
+const { createArrowRef, side, align, arrowUncentered, arrowStyles, alignItemWithTriggerActive } =
   useSelectPositionerContext();
 
 const state = computed<SelectArrowState>(() => ({
@@ -58,7 +58,7 @@ const state = computed<SelectArrowState>(() => ({
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
   state,
-  ref: [arrowRef],
+  ref: createArrowRef(),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [{ style: arrowStyles.value, 'aria-hidden': true }, attrs],
 });

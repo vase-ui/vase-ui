@@ -5,7 +5,7 @@ import type {
   VaseUIComponentProps,
   WithVaseUIEvent,
 } from '../../internals/types';
-import type { HandleCloseContextBase } from '../../utils/popups/interactions/useHoverShared';
+import type { HandleCloseContextBase } from '../../utils/popups/interactions/usePopupHover';
 
 export interface NavigationMenuTriggerState {
   /**
@@ -112,11 +112,8 @@ import {
 import type { FocusableElement } from '../../utils/popups/focus/tabbable';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
-import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import { usePopupHover, useHoverPointerStyle } from '../../utils/popups/interactions/usePopupHover';
 import { useTriggerPress } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
@@ -255,10 +252,10 @@ const floatingRootStore = useFloatingRootStore({
   },
 });
 
-const hoverIntent = () => getHoverIntent(floatingRootStore);
+const hover = usePopupHover(floatingRootStore);
 
 function restoreOutsidePointerEvents() {
-  hoverIntent().restoreOutsidePointerEvents();
+  hover.session.value.restoreOutsidePointerEvents();
 }
 
 // A change of `open` and the unmount release the pointer events that the safe polygon blocked. A
@@ -269,8 +266,8 @@ watch(open, (isOpen) => {
     stickIfOpenTimeout.clear();
     pointerType.value = '';
     floatingRootStore.context.openEvent = undefined;
-    hoverIntent().reset();
-    hoverIntent().cancelPendingOpen();
+    hover.session.value.reset();
+    hover.session.value.cancelPendingOpen();
   }
 });
 onBeforeUnmount(restoreOutsidePointerEvents);
@@ -293,15 +290,11 @@ function getInlineHandleCloseContext() {
   return getHandleCloseContext(trigger, popup, nodeId);
 }
 
-const handleClose = computed(() =>
-  safePolygon({ blockPointerEvents: shouldBlockSafePolygonPointerEvents.value, getScope }),
-);
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(floatingRootStore, {
+const hoverProps = hover.trigger({
   enabled: hoverInteractionsEnabled,
   move: false,
-  handleClose,
+  safePolygon: () => ({ blockPointerEvents: shouldBlockSafePolygonPointerEvents.value, getScope }),
   restMs: () => (mounted.value && positionerElement.value ? 0 : delay.value),
   delay: () => ({ close: closeDelay.value }),
   triggerElement,
@@ -382,7 +375,7 @@ function handleActivation(event: MouseEvent | KeyboardEvent) {
     const applyPointerEventsMutation = () => {
       const scopeElement = getScope() ?? currentTarget.ownerDocument.body;
 
-      hoverIntent().blockOutsidePointerEvents({
+      hover.session.value.blockOutsidePointerEvents({
         scopeElement,
         triggerElement: currentTarget,
         positionerElement: popup,

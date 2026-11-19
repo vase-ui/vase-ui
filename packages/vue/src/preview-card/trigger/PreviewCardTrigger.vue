@@ -49,11 +49,9 @@ export interface PreviewCardTriggerProps<Payload = unknown>
 import { computed } from 'vue';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
-import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import { getInlineRectTriggerProps } from '../positioner/PreviewCardPositionerContext';
 import { usePopupTrigger, useTriggerOwner } from '../../utils/popups/usePopupTrigger';
-import { useHoverPointerStyle } from '../../utils/popups/interactions/hoverPointerEvents';
-import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { useHoverPointerStyle, usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 import type { PreviewCardHandleStore } from '../store/PreviewCardStore';
@@ -71,7 +69,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>;
 }>();
 
-const rootStore = usePreviewCardRootContext(true);
+const rootStore = usePreviewCardRootContext(true)?.store;
 const store = useTriggerOwner<PreviewCardHandleStore<unknown>>(
   rootStore,
   () => props.handle,
@@ -92,14 +90,11 @@ const {
   closeDelay: props.closeDelay,
 }));
 
-// The handlers that one safe polygon makes share its timer, so each trigger has its own.
-const handleClose = safePolygon();
-
 const hoverStyle = useHoverPointerStyle(triggerElement);
-const hoverProps = useHoverTriggerInteraction(store, {
+const hoverProps = usePopupHover(store).trigger({
   mouseOnly: true,
   move: false,
-  handleClose: () => handleClose,
+  safePolygon: true,
   delay: () => ({ open: props.delay, close: props.closeDelay }),
   triggerElement,
   isActiveTrigger: isTriggerActive,

@@ -52,7 +52,7 @@ export type CheckboxGroupChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide, watch } from 'vue';
+import { computed, provide, shallowReactive, watch } from 'vue';
 import { areArraysEqual } from '../common/areArraysEqual';
 import { EMPTY_ARRAY } from '../common/empty';
 import { useControlled } from '../common/useControlled';
@@ -60,7 +60,7 @@ import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { createChangeEventDetails } from '../internals/createVaseUIEventDetails';
-import { useRegisterFieldControl } from '../internals/field-register-control';
+import { useFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
 import { given } from '../internals/givenAttributes';
@@ -73,8 +73,7 @@ import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useVaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
-import { CheckboxGroupContext } from './CheckboxGroupContext';
-import { useCheckboxGroupParent } from './useCheckboxGroupParent';
+import { CheckboxGroupContext } from './checkboxContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -143,11 +142,71 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
   groupValue.value = nextValue;
 }
 
-const parent = useCheckboxGroupParent({
-  allValues: () => props.allValues,
-  value: groupValue,
-  onValueChange: setValue,
+// A mixed selection returns on the third parent press.
+let childrenValue = groupValue.value;
+let status: 'mixed' | 'on' | 'off' = 'mixed';
+const childStates = new Set<readonly [value: string, disabled: boolean]>();
+const childIds = shallowReactive(new Map<string, readonly string[]>());
+
+const hasParent = computed(() => props.allValues !== undefined);
+const parent = computed(() => {
+  const values = props.allValues;
+  if (!values) return undefined;
+  const count = groupValue.value.length;
+  return {
+    checked: count === values.length,
+    indeterminate: count > 0 && count !== values.length,
+    controls: values.flatMap((value) => childIds.get(value) ?? EMPTY_ARRAY).join(' ') || undefined,
+  };
 });
+
+function registerChildId(value: string, id: string) {
+  childIds.set(value, [...(childIds.get(value) ?? EMPTY_ARRAY), id]);
+  return () => {
+    const remaining = childIds.get(value)?.filter((childId) => childId !== id);
+    if (remaining?.length) childIds.set(value, remaining);
+    else childIds.delete(value);
+  };
+}
+
+function registerDisabled(value: string, disabled: boolean) {
+  const entry = [value, disabled] as const;
+  childStates.add(entry);
+  return () => childStates.delete(entry);
+}
+
+function toggleParent(details: CheckboxGroupChangeEventDetails) {
+  const values = props.allValues;
+  if (!values) return;
+  const disabledStates = new Map(childStates);
+  const none = values.filter((value) => disabledStates.get(value) && childrenValue.includes(value));
+  const all = values.filter((value) => !disabledStates.get(value) || childrenValue.includes(value));
+  if (childrenValue.length === 0 || childrenValue.length === all.length) {
+    setValue(groupValue.value.length === all.length ? none : all, details);
+    return;
+  }
+
+  const next = status === 'mixed' ? 'on' : status === 'on' ? 'off' : 'mixed';
+  setValue(next === 'on' ? all : next === 'off' ? none : childrenValue, details);
+  if (!details.isCanceled) status = next;
+}
+
+function setChildChecked(
+  value: string,
+  checked: boolean,
+  details: CheckboxGroupChangeEventDetails,
+) {
+  const withParent = hasParent.value;
+  let next = groupValue.value.slice();
+  if (checked) next.push(value);
+  else if (withParent) next.splice(next.indexOf(value), 1);
+  else next = next.filter((item) => item !== value);
+  setValue(next, details);
+  if (withParent && !details.isCanceled) {
+    childrenValue = next;
+    status = 'mixed';
+  }
+}
 
 // The group is the control of the field and takes its name from `aria-labelledby`, so `Field.Label`
 // must not point `for` at one checkbox of the group.
@@ -175,18 +234,14 @@ function getFormValue() {
 
 // The registration has no `name`. The field takes a registered name as its own name when its `name`
 // prop is absent. The name that the group reads from the field would then keep itself.
-useRegisterFieldControl(
-  () => validation.getInputControl(),
-  fieldControlId,
-  () => groupValue.value,
-  getFormValue,
-  () => !!fieldName.value && !isDisabled.value,
-);
+useFieldControl(() => validation.getInputControl(), {
+  id: fieldControlId,
+  value: groupValue,
+  getValue: getFormValue,
+  enabled: () => !!fieldName.value && !isDisabled.value,
+});
 
-// A server runs the `setup` of a checkbox after it wrote the parts that come after the group, so
-// the group sets the first `filled` state itself.
-setFilled(groupValue.value.length > 0);
-watch(groupValue, (value) => setFilled(value.length > 0));
+watch(groupValue, (value) => setFilled(value.length > 0), { immediate: true });
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout
@@ -221,14 +276,13 @@ function reset(event: Event) {
   const defaultValue = props.defaultValue ?? EMPTY_ARRAY;
 
   if (props.modelValue === undefined) {
-    if (areArraysEqual(groupValue.value, defaultValue)) {
-      parent.reset(defaultValue.slice());
-    } else {
-      const details = createChangeEventDetails(REASONS.none, event);
-      setValue(defaultValue.slice(), details);
-
-      if (!details.isCanceled) {
-        parent.reset(defaultValue.slice());
+    const changed = !areArraysEqual(groupValue.value, defaultValue);
+    const details = createChangeEventDetails(REASONS.none, event);
+    if (changed) setValue(defaultValue.slice(), details);
+    if (!details.isCanceled) {
+      childrenValue = defaultValue.slice();
+      status = 'mixed';
+      if (changed) {
         isResetChangePending = true;
         return;
       }
@@ -245,8 +299,11 @@ const state = computed<CheckboxGroupState>(() => ({
 
 provide(CheckboxGroupContext, {
   value: groupValue,
-  setValue,
-  allValues: computed(() => props.allValues),
+  setChildChecked,
+  toggleParent,
+  hasParent,
+  registerChildId,
+  registerDisabled,
   parent,
   disabled: isDisabled,
   validation,

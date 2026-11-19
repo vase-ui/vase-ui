@@ -1,7 +1,7 @@
 import { NOOP } from '../../common/empty';
 import { REASONS } from '../../internals/reasons';
-import { updateInlineRectCoords } from '../../utils/popups/inlineRect';
-import type { InlineRectCoordsRef } from '../../utils/popups/inlineRect';
+import { updateInlineRectCoords } from '../positioner/PreviewCardPositionerContext';
+import type { InlineRectCoordsRef } from '../positioner/PreviewCardPositionerContext';
 import {
   NullStore,
   BasePopupStore,
@@ -10,7 +10,7 @@ import {
   getHoverPopupInstantType,
   popupStoreSelectors,
 } from '../../utils/popups/usePopupRoot';
-import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
+import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginMiddleware';
 import type {
   PopupStoreContext,
   PopupStoreState,

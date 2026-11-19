@@ -80,7 +80,7 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
       "member": "TooltipStore",
-      "witness": "packages/vue/src/tooltip/root/TooltipOwner.test.tsx"
+      "witness": "packages/vue/src/tooltip/root/TooltipRoot.owner.test.tsx"
     },
     {
       "upstream": "packages/react/src/tooltip/utils/constants.ts",

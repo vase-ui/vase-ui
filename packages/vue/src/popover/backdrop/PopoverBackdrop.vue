@@ -38,11 +38,11 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PopoverBackdropState>;
 }>();
 
-const store = usePopoverRootContext();
+const { store, open, mounted, transitionStatus } = usePopoverRootContext();
 
 const state = computed<PopoverBackdropState>(() => ({
-  open: store.select('open'),
-  transitionStatus: store.select('transitionStatus'),
+  open: open.value,
+  transitionStatus: transitionStatus.value,
 }));
 
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
@@ -52,10 +52,10 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
   props: (attrs) => [
     {
       role: 'presentation',
-      hidden: store.select('mounted') ? undefined : true,
+      hidden: mounted.value ? undefined : true,
       style: {
         'pointer-events':
-          store.select('openChangeReason') === REASONS.triggerHover ? 'none' : undefined,
+          store.state.openChangeReason === REASONS.triggerHover ? 'none' : undefined,
         'user-select': 'none',
         '-webkit-user-select': 'none',
       },

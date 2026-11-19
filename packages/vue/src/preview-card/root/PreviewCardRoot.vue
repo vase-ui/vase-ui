@@ -113,14 +113,7 @@ defineSlots<{
   default(props: { payload: Payload | undefined }): unknown;
 }>();
 
-const {
-  store,
-  bindParts,
-  triggerId: activeId,
-  open: isOpen,
-  payload,
-  actions,
-} = usePopupRoot(
+const owner = usePopupRoot(
   props,
   (initialState, defaultPopupId) => new PreviewCardStore<Payload>(initialState, defaultPopupId),
   {
@@ -138,6 +131,7 @@ const {
     },
   },
 );
+const { store, bindParts, triggerId: activeId, open: isOpen, payload, actions } = owner;
 
 watch([isOpen, activeId], ([openNow, activeTriggerId]) => {
   if (openNow && activeTriggerId == null) {
@@ -148,7 +142,7 @@ watch([isOpen, activeId], ([openNow, activeTriggerId]) => {
 const dismiss = useDismiss(store, { externalTree: tree });
 bindParts({ trigger: () => dismiss.reference, popup: () => dismiss.floating });
 
-provide(PreviewCardRootContext, store);
+provide(PreviewCardRootContext, owner);
 
 defineExpose(actions);
 </script>

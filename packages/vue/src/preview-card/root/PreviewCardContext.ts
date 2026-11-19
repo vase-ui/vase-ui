@@ -1,8 +1,11 @@
+import type { usePopupRoot } from '../../utils/popups/usePopupRoot';
 import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
 import type { PreviewCardStore } from '../store/PreviewCardStore';
 
-export type PreviewCardRootContext<Payload = unknown> = PreviewCardStore<Payload>;
+export type PreviewCardRootContext<Payload = unknown> = ReturnType<
+  typeof usePopupRoot<PreviewCardStore<Payload>>
+>;
 
 export const PreviewCardRootContext: InjectionKey<PreviewCardRootContext<any>> = Symbol();
 
