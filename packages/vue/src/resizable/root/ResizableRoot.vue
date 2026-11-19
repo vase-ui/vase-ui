@@ -184,7 +184,16 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
-import { computed, inject, onScopeDispose, provide, shallowReactive, shallowRef, watch } from 'vue';
+import {
+  computed,
+  inject,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowReactive,
+  shallowRef,
+  watch,
+} from 'vue';
 import type { Component } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { useResizeObserver } from '../../common/useResizeObserver';
@@ -1104,13 +1113,15 @@ useResizeObserver(
   measure,
 );
 
-watch(
-  [element, list.map],
-  () => {
-    if (!isHeld.value && typeof ResizeObserver !== 'undefined') measure();
-  },
-  { flush: 'post' },
-);
+onMounted(() => {
+  watch(
+    [element, list.map, rootOrientation],
+    () => {
+      if (!isHeld.value) measure();
+    },
+    { flush: 'post' },
+  );
+});
 
 useDomEffect(
   [usesViewportLengths, element],

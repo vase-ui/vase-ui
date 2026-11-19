@@ -129,6 +129,42 @@ describe('automatic edges', () => {
     await waitFor(() => expect(edges().map((edge) => edge.offsetLeft)).toEqual([195]));
   });
 
+  it('ends a press when a split edge loses the node that took the press', async () => {
+    const size = shallowRef(10);
+    const commit = vi.fn();
+    await render(() => (
+      <Resizable.Root
+        data-testid="root"
+        dragEdges
+        hitAreaSize={size.value}
+        resizeMode="on-release"
+        onLayoutCommitted={commit}
+        style={{ width: '440px', height: '40px' }}
+      >
+        <Resizable.Panel id="a" />
+        <div style={{ flex: '0 0 40px' }} />
+        <Resizable.Panel id="b" />
+      </Resizable.Root>
+    ));
+    await waitSingleFrame();
+    const [first, second] = edges() as [HTMLElement, HTMLElement];
+    const press = { pointerId: 1, pointerType: 'mouse', buttons: 1, clientX: 0 };
+    await fireEvent.pointerDown(second, press);
+    await fireEvent.pointerMove(second, { ...press, clientX: 40 });
+    expect(first).toHaveAttribute('data-dragging');
+
+    size.value = 50;
+    await nextTick();
+    expect(edges()).toEqual([first]);
+    expect(first).not.toHaveAttribute('data-dragging');
+    expect(commit).not.toHaveBeenCalled();
+
+    await fireEvent.pointerDown(first, press);
+    await fireEvent.pointerMove(first, { ...press, clientX: 20 });
+    await fireEvent.pointerUp(first, { ...press, clientX: 20, buttons: 0 });
+    expect(commit).toHaveBeenCalledExactlyOnceWith({ a: 55, b: 45 }, expect.anything());
+  });
+
   it('cancels a preview on one edge node and commits the next drag on the other', async () => {
     const commit = vi.fn();
     await render(

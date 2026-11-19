@@ -232,8 +232,11 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
     const pending = root.pendingLayout.value;
     root.stopDragging();
     const endEvent = event ?? lastEvent;
+    const shown = root.shown.value;
     const release =
-      apply && pending && !areLayoutsEqual(pending, root.shown.value) ? pending : undefined;
+      apply && pending && hasSamePanels(pending, shown) && !areLayoutsEqual(pending, shown)
+        ? pending
+        : undefined;
     // In the mode `'on-release'` the drag has written nothing yet, so the release writes the layout.
     const layout = release
       ? root.changeLayout(release, createChangeEventDetails(REASONS.drag, endEvent))
@@ -436,8 +439,11 @@ export function useResizeHandle(root: ResizableRootContext, options: ResizeHandl
 
   watchPostEffect((onCleanup) => {
     if (isHeld.value) return;
+    const elements = toValue(options.elements);
+    // A removed capture target sends lostpointercapture to the document.
+    if (captured && !elements.includes(captured)) finish(undefined, false);
     const hitArea = toValue(options.hitArea);
-    const remove = toValue(options.elements).flatMap((element) =>
+    const remove = elements.flatMap((element) =>
       element
         ? [registerHandle({ ...own, element, hitAreaSize: () => root.hitAreaSize.value }, hitArea)]
         : [],

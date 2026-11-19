@@ -2006,6 +2006,24 @@ describe('<Resizable.Root />', () => {
   });
 
   describe('sizes with a unit', () => {
+    it('keeps the pixel size of a fixed panel when the root changes its axis', async () => {
+      const orientation = shallowRef<'horizontal' | 'vertical'>('horizontal');
+      await render(() => (
+        <Resizable.Root orientation={orientation.value} style={{ width: '400px', height: '200px' }}>
+          <Resizable.Panel id="a" data-testid="a" defaultSize="100px" rootResizeBehavior="fixed" />
+          <Resizable.Panel id="b" />
+        </Resizable.Root>
+      ));
+      const panel = screen.getByTestId('a');
+      expect(panel.offsetWidth).toBe(100);
+      await waitSingleFrame();
+
+      orientation.value = 'vertical';
+      await nextTick();
+      expect(panel.offsetHeight).toBe(100);
+      expect(panel.style.flexGrow).toBe('50');
+    });
+
     it('gives the parent its measured layout at mount without ResizeObserver', async () => {
       vi.stubGlobal('ResizeObserver', undefined);
       onTestFinished(() => {
@@ -2915,6 +2933,33 @@ describe('<Resizable.Root />', () => {
       await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
 
       expect(calls).toEqual(['draggingChange false']);
+    });
+
+    it('discards a preview when a panel leaves between the last move and the release', async () => {
+      const third = shallowRef(true);
+      const commit = vi.fn();
+      await render(() => (
+        <Resizable.Root
+          resizeMode="on-release"
+          onLayoutCommitted={commit}
+          style={{ width: '400px' }}
+        >
+          <Resizable.Panel id="a" data-testid="a" />
+          <Resizable.Handle data-testid="handle" />
+          <Resizable.Panel id="b" data-testid="b" />
+          {third.value && <Resizable.Panel id="c" />}
+        </Resizable.Root>
+      ));
+      const handle = screen.getByTestId('handle');
+      await fireEvent.pointerDown(handle, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(handle, { ...pointer, clientX: 40, buttons: 1 });
+      expect(handle.style.getPropertyValue('--resizable-handle-preview-offset')).toBe('40px');
+
+      third.value = false;
+      await nextTick();
+      await fireEvent.pointerUp(handle, { ...pointer, clientX: 40 });
+      expect(commit).not.toHaveBeenCalled();
+      expect(grows('a', 'b')).toEqual(['50', '50']);
     });
 
     it('emits no change for a release at the start point', async () => {
