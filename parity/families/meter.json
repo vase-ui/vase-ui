@@ -13,8 +13,8 @@
       "describe": ["<Meter.Root />", "server-side rendering"],
       "title": "formats with en-US until hydrated, then with the runtime locale",
       "kind": "replaced",
-      "test": "packages/vue/src/meter/Meter.test.ts",
-      "reason": "With no `locale`, the text is `en-US` on the server and in the browser, so the server HTML and the first render of the browser agree. The developer gives the locale of the page. The case \"with no locale, the text is en-US, also in a browser with another locale\" tests it."
+      "test": "packages/vue/src/locale-provider/LocaleProvider.test.ts",
+      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser (VUE-169). The server HTML and the first render of the browser then agree."
     },
     {
       "upstream": "packages/react/src/meter/label/MeterLabel.test.tsx",
@@ -41,8 +41,8 @@
       "describe": ["<Meter.Value />", "server-side rendering"],
       "title": "hydrates $name without a mismatch, then uses the runtime locale",
       "kind": "replaced",
-      "test": "packages/vue/src/meter/Meter.hydration.test.ts",
-      "reason": "With no `locale`, the text is `en-US` on the server and in the browser, so it does not change after the hydration. `Meter.hydration.test.ts` hydrates the parts with no message. The value reads its text from the root, so a value in `<Suspense>` needs no case of its own."
+      "test": "packages/vue/src/locale-provider/LocaleProvider.test.ts",
+      "reason": "With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-169). The case of VUE-169 hydrates `Meter.Value` with no message. The value reads its text from the root, so a value in `<Suspense>` needs no case of its own."
     },
     {
       "upstream": "packages/react/src/meter/track/MeterTrack.test.tsx",
@@ -67,7 +67,7 @@
       "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state of the root is `{}`, so a state type and a `state` slot prop give the developer nothing. The default of `locale` is `en-US` and not the locale of the browser, so that the server HTML and the first render of the browser agree. The developer gives the locale of the page."
+      "reason": "The state of the root is `{}`, so a state type and a `state` slot prop give the developer nothing. The default of `locale` is the locale of the nearest `LocaleProvider`, else `en-US`, and not the locale of the browser, so that the server HTML and the first render of the browser agree (VUE-169)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/meter/types.md",

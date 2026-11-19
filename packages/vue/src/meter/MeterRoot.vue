@@ -11,13 +11,14 @@ import {
 } from 'vue';
 import { clamp } from '../common/clamp';
 import { useElement } from '../common/element';
+import { useLocale } from '../common/locale';
 import { visuallyHidden } from '../common/visuallyHidden';
 import { meterKey } from './root';
 import type { MeterRootProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<MeterRootProps>(), { min: 0, max: 100, locale: 'en-US' });
+const props = withDefaults(defineProps<MeterRootProps>(), { min: 0, max: 100 });
 defineSlots<{
   default?(): unknown;
   element?(scope: {
@@ -29,6 +30,7 @@ defineSlots<{
 const attrs = useAttrs();
 const labelId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
+const textLocale = useLocale(() => props.locale);
 
 // `aria-valuenow` must not leave the range (WAI-ARIA 1.2, `meter`), and `NaN` is in no range.
 const heldValue = computed(() =>
@@ -39,7 +41,7 @@ const percent = computed(
   () => ((heldValue.value - props.min) / (props.max - props.min)) * 100 || 0,
 );
 const formatter = computed(
-  () => new Intl.NumberFormat(props.locale, props.format ?? { style: 'percent' }),
+  () => new Intl.NumberFormat(textLocale.value, props.format ?? { style: 'percent' }),
 );
 const formattedValue = computed(() =>
   formatter.value.format(props.format ? heldValue.value : percent.value / 100),

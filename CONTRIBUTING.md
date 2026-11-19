@@ -692,7 +692,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress and Meter follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -724,6 +724,7 @@ The public form:
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
 12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
 13. A form gives the typed values of its fields at its submit: `submit(event, values)`. `validate` of a field gets the value of its control and the same values.
+14. A part that formats a text in a locale gets the locale from `useLocale` of `src/common/locale.ts`. The locale is the `locale` prop of the part, else the nearest `LocaleProvider`, else `en-US`. No part uses the locale of the visitor, so the server and the browser write the same text.
 
 Measure before you write code that guards, tracks, repairs or copies a behavior:
 
@@ -858,7 +859,7 @@ The hydration state:
 - The first render of a client-only mount also reads `true` from `useIsHydrating()`. The component renders again in the flush after the mount, before a paint.
 - Each call is for the component that calls it. A part that can hydrate after its root calls the helper itself. An example is an async component in `<Suspense>`.
 - Do not keep the result in a module variable or in the context of the root.
-- For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
+- For a value in a locale format, a family that is not refactored calls `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
 - The server HTML and the first client render then have the same text.
 - A composable that filters text with a locale calls `useFormatLocale` too. The first client render then gives the list that the server HTML has. `Combobox.useFilter` and `Autocomplete.useFilter` are examples.
 - Read browser values in `onMounted` so the first client render uses the server value. By default, `useMediaQuery` takes its initial value from `ssrMatchMedia` or `defaultMatches` and updates at mount if the values differ. With `noSsr`, it uses an available `matchMedia` for the initial value.

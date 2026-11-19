@@ -1,0 +1,10 @@
+{
+  "id": "VUE-169",
+  "evidence": [
+    "https://tc39.es/ecma402/#sec-defaultlocale",
+    "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch",
+    "https://vuejs.org/guide/components/provide-inject.html"
+  ],
+  "behavior": "With no `locale` prop, `Meter.Root` and `Progress.Root` format their text in the locale of the nearest `LocaleProvider`, else in `en-US`. The server and the browser use the same locale, so the text does not change after the hydration. Base UI formats in `en-US` until the hydration, and then in the locale of the browser.",
+  "dueWith": "packages/react/src/meter/root/MeterRoot.tsx"
+}
