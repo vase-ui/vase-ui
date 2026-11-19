@@ -118,6 +118,7 @@ describe('prop: defaultLayout', () => {
       sizes: ['33.334', '33.333', '33.333'],
     },
     { name: 'strings in percent', layout: { a: '20', b: '30%' }, sizes: ['20', '30', '50'] },
+    { name: 'a length', layout: { a: '100px' }, sizes: ['25', '37.5', '37.5'] },
   ])('gives each panel its size: $name', async ({ layout, sizes }) => {
     const { root } = await mountLayout({ root: { defaultLayout: layout }, parts: three() });
     expect(grows(root, 'a', 'b', 'c')).toEqual(sizes);
@@ -708,6 +709,31 @@ describe('panels that mount and unmount', () => {
     await settle();
     expect([grow('a'), grow('b'), grow('c')]).toEqual(['20', '30', '50']);
     expect(log).toEqual([]);
+  });
+
+  test('KeepAlive: a held panel keeps its collapsed state, with no collapsedChange', async () => {
+    const events: boolean[] = [];
+    const scene = reactive({
+      show: true,
+      root: { defaultLayout: { a: 20, b: 80, c: 0 } },
+      panel: {
+        collapsible: true,
+        minSize: 10,
+        onCollapsedChange: (collapsed: boolean) => events.push(collapsed),
+      },
+    });
+    const { root } = mount(ResizableKeptAlive, { scene });
+    await settle();
+    const panel = () => root.querySelector<HTMLElement>('#c')!;
+    expect(panel()).toHaveAttribute('data-collapsed');
+    const held = panel();
+    scene.show = false;
+    await settle();
+    expect(held).toHaveAttribute('data-collapsed');
+    scene.show = true;
+    await settle();
+    expect(panel()).toHaveAttribute('data-collapsed');
+    expect(events).toEqual([]);
   });
 });
 

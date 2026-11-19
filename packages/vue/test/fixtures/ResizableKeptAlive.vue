@@ -6,7 +6,11 @@ import LastPanel from './ResizableLastPanel.vue';
 // The panel `c` with its handle, in `KeepAlive`, which holds them while `scene.show` is `false`.
 defineProps({
   scene: {
-    type: Object as PropType<{ show: boolean; root?: Record<string, unknown> }>,
+    type: Object as PropType<{
+      show: boolean;
+      root?: Record<string, unknown>;
+      panel?: Record<string, unknown>;
+    }>,
     required: true,
   },
 });
@@ -23,7 +27,7 @@ defineProps({
       <Resizable.Handle data-key="h1" aria-label="Resize a" />
       <Resizable.Panel id="b" />
       <KeepAlive>
-        <LastPanel v-if="scene.show" />
+        <LastPanel v-if="scene.show" v-bind="scene.panel" />
       </KeepAlive>
     </Resizable.Root>
   </div>

@@ -311,6 +311,17 @@ describe('keys', () => {
     }
   });
 
+  test('a key reads the font size of the root again', async () => {
+    const { at, flex, spec } = await mountHandles({
+      root: { step: '2em', style: 'font-size: 10px' },
+    });
+    spec.root!.style = 'font-size: 20px';
+    await nextTick();
+    await key(at('h1'), '{ArrowRight}');
+    // 2em is 40 px of the 400 px of the panels.
+    expect(Number(flex(0)[0])).toBeCloseTo(60, 3);
+  });
+
   test('a key during a drag changes nothing; the release commits the drag', async () => {
     const log: unknown[][] = [];
     const { at } = await mountHandles({ root: logged(log) });

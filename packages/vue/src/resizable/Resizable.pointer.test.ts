@@ -256,17 +256,28 @@ describe('a drag', () => {
 });
 
 describe('the focus, the selection and the click', () => {
-  // Each browser shows a ring for a focus that a script gives, unless a mouse gave the last focus.
-  test('a press gives the handle the focus; after a focus that a mouse gave, with no focus ring', async () => {
-    const { at, root } = await mountLayout({
-      parts: three().map((each) => (each.key === 'a' ? { ...each, controls: ['A'] } : each)),
-    });
-    await userEvent.click(root.querySelector<HTMLElement>('#A')!);
-    await press(at('h1'));
-    expect(at('h1')).toHaveFocus();
-    expect(at('h1').matches(':focus-visible')).toBe(false);
-    await release();
-  });
+  // Each browser shows a ring for a focus that a script gives, unless a mouse gave the last focus
+  // (M5).
+  test.each(['a mouse', 'a key'])(
+    'a press gives the handle the focus with no focus ring, after %s moved the focus',
+    async (before) => {
+      const { at, root } = await mountLayout({
+        parts: three().map((each) => (each.key === 'a' ? { ...each, controls: ['A', 'B'] } : each)),
+      });
+      const button = root.querySelector<HTMLElement>('#B')!;
+      if (before === 'a mouse') {
+        await userEvent.click(button);
+      } else {
+        root.querySelector<HTMLElement>('#A')!.focus();
+        await userEvent.keyboard('{Tab}');
+        expect(button.matches(':focus-visible')).toBe(true);
+      }
+      await press(at('h1'));
+      expect(at('h1')).toHaveFocus();
+      expect(at('h1').matches(':focus-visible')).toBe(false);
+      await release();
+    },
+  );
 
   test('a drag across a paragraph selects no text', async () => {
     const { root, at } = await mountLayout({
@@ -490,6 +501,20 @@ describe('resize mode on-release', () => {
     }
   });
 
+  test('a release with no move after a panel mounts writes nothing', async () => {
+    const log: string[] = [];
+    const { spec, at } = await mountLayout({ root: onRelease(log), parts: three() });
+    const pointer = pointerOf(at('h1'));
+    const start = await press(at('h1'));
+    await moveTo({ x: start.x + 40, y: start.y });
+    spec.parts.push({ kind: 'panel', key: 'late' });
+    await settle();
+    // The release of the test browser comes after a move, so this release comes alone.
+    at('h1').dispatchEvent(new PointerEvent('pointerup', { pointerId: pointer.id, bubbles: true }));
+    await release();
+    expect(log.filter((each) => each.startsWith('layout'))).toEqual([]);
+  });
+
   test('a cancel at the release keeps the layout; a key writes at once; a controlled root shows the layout of the parent', async () => {
     const log: string[] = [];
     const cancelled = await mountLayout({
@@ -503,6 +528,7 @@ describe('resize mode on-release', () => {
       [],
     );
     expect(grows(cancelled.root, 'a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    expect(offset(cancelled.at('h1'))).toBe('');
 
     const keyLog: string[] = [];
     const keys = await mountLayout({ root: onRelease(keyLog), parts: three() });

@@ -741,6 +741,21 @@ describe('prop: rootResizeBehavior', () => {
     expect(width(1)).toBeCloseTo(160 * (40 / 65), 0);
   });
 
+  test.each([
+    { name: 'defaultLayout', root: { defaultLayout: { nav: '140px', editor: 40, preview: 25 } } },
+    { name: 'v-model', root: { modelValue: { nav: '140px', editor: 40, preview: 25 } } },
+  ])(
+    'the pixels of a fixed panel in the layout at the mount hold at each size of the root: $name',
+    async ({ root }) => {
+      const { width, resizeFrame } = await mountPanels(fixedFirst, { root });
+      expect(width(0)).toBeCloseTo(140, 0);
+      // The panels with a number share the rest in the ratio of their numbers.
+      expect(width(1)).toBeCloseTo(260 * (40 / 65), 0);
+      await resizeFrame(300);
+      expect(width(0)).toBeCloseTo(140, 0);
+    },
+  );
+
   // The pixels come from the size in percent, which has three decimals.
   test('a key step of less than half a pixel moves a fixed panel', async () => {
     const log: ResizableLayout[] = [];
@@ -809,6 +824,42 @@ describe('prop: rootResizeBehavior', () => {
     await resizeFrame(300);
     expect(width(0)).toBeCloseTo(100 * (300 / 400) + 25, -1);
     expect(width(2)).toBeCloseTo(late, 0);
+  });
+
+  test.each([
+    {
+      name: 'a panel that becomes fixed',
+      root: {},
+      change: (spec: LayoutSpec) => {
+        spec.parts[0]!.attrs = { id: 'a', defaultSize: 25, rootResizeBehavior: 'fixed' };
+      },
+      index: 0,
+    },
+    {
+      name: 'a fixed panel that mounts with an entry of a controlled root',
+      root: { modelValue: { a: 25, b: 50, late: 25 } },
+      change: (spec: LayoutSpec) => {
+        spec.parts.push(
+          { kind: 'handle', key: 'h2' },
+          { kind: 'panel', key: 'p2', attrs: { id: 'late', rootResizeBehavior: 'fixed' } },
+        );
+      },
+      index: 2,
+    },
+  ])('takes its pixels with no event: $name', async ({ root, change, index }) => {
+    const log: ResizableLayout[] = [];
+    const { spec, width, resizeFrame } = await mountPanels(
+      [{ id: 'a', defaultSize: 25 }, { id: 'b' }],
+      {
+        root: { ...root, 'onUpdate:modelValue': (layout: ResizableLayout) => log.push(layout) },
+      },
+    );
+    change(spec);
+    await settle();
+    expect(width(index)).toBeCloseTo(100, 0);
+    await resizeFrame(300);
+    expect(width(index)).toBeCloseTo(100, 0);
+    expect(log).toEqual([]);
   });
 
   test('the fixed panel with the greater priority gives way first, else the first one', async () => {

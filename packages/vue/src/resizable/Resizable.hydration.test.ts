@@ -105,15 +105,24 @@ describe('the server HTML', () => {
     expect((at('off').lastElementChild as HTMLElement).style.pointerEvents).toBe('none');
   });
 
-  test('a first size in a length: flex 0 1 L, no variable, and no value for each handle of the root', async () => {
+  test('a first size in a length: flex 0 1 L, no variable, not collapsed, and no value for each handle of the root', async () => {
     const { at, container } = await serverLayout({
       parts: panelsAndHandles('a', 'b').map((each) =>
         each.key === 'a'
-          ? { ...each, attrs: { defaultSize: '240px', rootResizeBehavior: 'fixed' } }
+          ? {
+              ...each,
+              attrs: {
+                defaultSize: '240px',
+                rootResizeBehavior: 'fixed',
+                collapsible: true,
+                minSize: 10,
+              },
+            }
           : each,
       ),
     });
     expect(at('a').style.flex).toBe('0 1 240px');
+    expect(at('a')).not.toHaveAttribute('data-collapsed');
     expect(at('a').style.getPropertyValue('--resizable-panel-size')).toBe('');
     expect(grows(container)).toEqual(['0', '100']);
     expect(handleValues(at('h1'))).toEqual(['0', 'a', null, null, null, null, null]);
