@@ -220,11 +220,7 @@ const {
     }
 
     emit('openChangeComplete', false);
-    activationDirection.value = null;
-    floatingRootStore.value = undefined;
-
     sizes.value = { popup: null, positioner: null };
-    currentContentRef.value = null;
     closeReason = undefined;
   },
 });
