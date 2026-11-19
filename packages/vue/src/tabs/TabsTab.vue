@@ -84,7 +84,8 @@ function onClick(event: MouseEvent) {
     event.stopImmediatePropagation();
     return;
   }
-  // Safari gives a pressed button no focus. The arrow keys continue from the pressed tab.
+  // A click from a script or from an assistive technology moves no focus. The tabs example of the
+  // Authoring Practices gives the tab the focus, so the arrow keys continue from it.
   element.value?.focus();
   root.select(props.value, event);
 }
@@ -92,16 +93,13 @@ function onClick(event: MouseEvent) {
 function onKeydown(event: KeyboardEvent) {
   list.onKeydown(event, tab);
   const target = element.value;
-  if (event.defaultPrevented || !target || target.localName === 'button' || props.disabled) return;
-  // The browser activates a `<button>` with Enter and Space, and a link with Enter.
-  if (event.key === ' ' || (event.key === 'Enter' && !isLink(target))) {
+  if (!target || target.localName === 'button') return;
+  // The browser activates a `<button>` with Enter and Space. The click listener stops the click of
+  // a disabled tab.
+  if (event.key === ' ' || event.key === 'Enter') {
     event.preventDefault();
     target.click();
   }
-}
-
-function isLink(target: HTMLElement) {
-  return target.localName === 'a' && target.hasAttribute('href');
 }
 </script>
 

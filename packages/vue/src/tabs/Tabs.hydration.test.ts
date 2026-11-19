@@ -1,4 +1,4 @@
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { nextTick } from 'vue';
 import TabsIndicatorLayouts from '../../test/fixtures/TabsIndicatorLayouts.vue';
 import TabsParts from '../../test/fixtures/TabsParts.vue';
@@ -209,15 +209,19 @@ describe('the indicator', () => {
     expect(readVariables(indicator)).toEqual(variables);
   });
 
-  test('hydrates with no message when its list is mounted before it', async () => {
-    const props = { ...layout, late: true };
-    const root = await renderOnServer('TabsIndicatorLayouts', props);
-    const indicator = root.querySelector<HTMLElement>('.Indicator')!;
-    hydrate(TabsIndicatorLayouts, props, root);
-    for (let tick = 0; tick < 10 && indicator.hasAttribute('hidden'); tick++) await settle();
-    expect(readVariables(indicator)).toEqual(variables);
-    expect(root.querySelector('.Indicator')).toBe(indicator);
-  });
+  // Vue 3.6 runs no `<Suspense>` in a Vapor app with Vapor parts.
+  test.skipIf(inject('app') === 'vapor')(
+    'hydrates with no message when its list is mounted before it',
+    async () => {
+      const props = { ...layout, late: true };
+      const root = await renderOnServer('TabsIndicatorLayouts', props);
+      const indicator = root.querySelector<HTMLElement>('.Indicator')!;
+      hydrate(TabsIndicatorLayouts, props, root);
+      for (let tick = 0; tick < 10 && indicator.hasAttribute('hidden'); tick++) await settle();
+      expect(readVariables(indicator)).toEqual(variables);
+      expect(root.querySelector('.Indicator')).toBe(indicator);
+    },
+  );
 
   test('renders no indicator and no script for a value of null', async () => {
     const props = {

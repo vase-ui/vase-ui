@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { markRaw, nextTick, reactive } from 'vue';
 import type { TabsRootChangeEventDetails } from '@vase-ui/vue/tabs';
@@ -465,7 +465,7 @@ describe('the changes that the root makes', () => {
 });
 
 describe('activation', () => {
-  test('a press gives the tab the focus in each browser, so the arrow keys continue from it', async () => {
+  test('a press and a click from a script give the tab the focus, so the arrow keys continue from it', async () => {
     const { tab, focused } = await mountTabs({
       root: { defaultValue: 'a' },
       tabs: items('a', 'b', 'c'),
@@ -474,6 +474,8 @@ describe('activation', () => {
     expect(focused()).toBe('b');
     await press('{ArrowRight}');
     expect(focused()).toBe('c');
+    tab('a').click();
+    expect(focused()).toBe('a');
   });
 
   test('Enter and Space activate the focused tab', async () => {
@@ -487,6 +489,18 @@ describe('activation', () => {
     tab('c').focus();
     await press(' ');
     expect(selected()).toEqual(['c']);
+  });
+
+  test('Space activates a button tab at its release, as a native button', async () => {
+    const { tab, selected } = await mountTabs({
+      root: { defaultValue: 'a' },
+      tabs: items('a', 'b'),
+    });
+    tab('b').focus();
+    await userEvent.keyboard('[Space>]');
+    expect(selected()).toEqual(['a']);
+    await press('[/Space]');
+    expect(selected()).toEqual(['b']);
   });
 
   test('a focus, also from a script and with activateOnFocus, activates nothing', async () => {
@@ -569,11 +583,14 @@ describe('keys', () => {
     'the arrows move the focus and loop, Home and End go to the ends, and a disabled tab takes the focus: $name',
     async ({ orientation, dir, next, previous }) => {
       const log: string[] = [];
-      const { tab, focused, selected } = await mountTabs({
+      const { tab, focused, selected, list } = await mountTabs({
         root: rootEvents(log, { defaultValue: 'a', orientation }),
         tabs: [{ key: 'a' }, { key: 'b', attrs: { disabled: true } }, { key: 'c' }],
         dir,
       });
+      // A key that the list handles does not scroll the page.
+      const prevented: boolean[] = [];
+      list.addEventListener('keydown', (event) => prevented.push(event.defaultPrevented));
       tab('a').focus();
       const steps: (string | null)[] = [];
       for (const key of [next, next, next, previous, '{End}', '{Home}']) {
@@ -581,6 +598,7 @@ describe('keys', () => {
         steps.push(focused());
       }
       expect(steps).toEqual(['b', 'c', 'a', 'c', 'c', 'a']);
+      expect(prevented).toEqual([true, true, true, true, true, true]);
       expect(selected()).toEqual(['a']);
       expect(log).toEqual([]);
     },
@@ -756,6 +774,15 @@ describe('the tab stop', () => {
     expect(tabStops()).toEqual(['a']);
   });
 
+  test('with no active tab, is the first tab in the document, also a tab that mounts before the others', async () => {
+    const tabs = reactive<Item[]>(items('b', 'c'));
+    const { tabStops } = await mountTabs({ root: { modelValue: null }, tabs });
+    expect(tabStops()).toEqual(['b']);
+    tabs.unshift({ key: 'a' });
+    await nextTick();
+    expect(tabStops()).toEqual(['a']);
+  });
+
   test('keeps the first tab when the active tab and the first tab unmount one after the other', async () => {
     const tabs = reactive<Item[]>(items('a', 'b', 'c', 'd'));
     const { tabStops } = await mountTabs({ root: { modelValue: 'b' }, tabs });
@@ -801,27 +828,48 @@ describe('the tab stop', () => {
 });
 
 describe('the scroll at the mount', () => {
-  async function mountScrolled(orientation: string, style: string, tabStyle = '') {
+  async function mountScrolled(orientation: string, style: string, tabStyle = '', dir = '') {
     const before = window.scrollY;
     const { list, tab } = await mountTabs({
       root: { defaultValue: 'h', orientation },
       list: { style: `margin-top: 200vh; ${style}` },
       tabs: 'abcdefghij'.split('').map((key) => ({ key, attrs: { style: tabStyle } })),
+      dir,
     });
     const listRect = list.getBoundingClientRect();
     const tabRect = tab('h').getBoundingClientRect();
     return { list, tabRect, listRect, pageScrolled: window.scrollY !== before };
   }
 
-  test('a list that overflows shows its active tab; the page does not scroll', async () => {
+  test('a list that overflows shows its active tab, with the scroll-margin of the tab; the page does not scroll', async () => {
     const { list, listRect, tabRect, pageScrolled } = await mountScrolled(
       'horizontal',
       'display: flex; width: 120px; overflow: auto',
-      'flex: none; width: 60px',
+      'flex: none; width: 60px; scroll-margin-right: 6px',
     );
     expect(list.scrollLeft).toBeGreaterThan(0);
-    expect(tabRect.right).toBeCloseTo(listRect.left + list.clientLeft + list.clientWidth, 0);
+    expect(tabRect.right).toBeCloseTo(listRect.left + list.clientLeft + list.clientWidth - 6, 0);
     expect(pageScrolled).toBe(false);
+  });
+
+  test('a right-to-left list scrolls to the left', async () => {
+    const { list, listRect, tabRect } = await mountScrolled(
+      'horizontal',
+      'display: flex; width: 120px; overflow: auto',
+      'flex: none; width: 60px',
+      'rtl',
+    );
+    expect(list.scrollLeft).toBeLessThan(0);
+    expect(tabRect.left).toBeCloseTo(listRect.left + list.clientLeft, 0);
+  });
+
+  test('a tab longer than the list shows its start', async () => {
+    const { listRect, tabRect } = await mountScrolled(
+      'horizontal',
+      'display: flex; width: 120px; overflow: auto',
+      'flex: none; width: 200px',
+    );
+    expect(tabRect.left).toBeCloseTo(listRect.left, 0);
   });
 
   test('a vertical list reads its scroll-padding', async () => {
@@ -832,6 +880,26 @@ describe('the scroll at the mount', () => {
     );
     expect(list.scrollTop).toBeGreaterThan(0);
     expect(tabRect.bottom).toBeCloseTo(listRect.top + list.clientTop + list.clientHeight - 10, 0);
+  });
+
+  test('a list that gets its first tabs after the mount shows its active tab', async () => {
+    const tabs = reactive<Item[]>([]);
+    const { list, tab } = await mountTabs({
+      root: { defaultValue: 'h' },
+      list: { style: 'display: flex; width: 120px; overflow: auto' },
+      tabs,
+    });
+    tabs.push(
+      ...'abcdefghij'
+        .split('')
+        .map((key) => ({ key, attrs: { style: 'flex: none; width: 60px' } })),
+    );
+    await nextTick();
+    expect(list.scrollLeft).toBeGreaterThan(0);
+    expect(tab('h').getBoundingClientRect().right).toBeCloseTo(
+      list.getBoundingClientRect().left + list.clientLeft + list.clientWidth,
+      0,
+    );
   });
 
   test('a list that does not overflow sets nothing', async () => {
@@ -1011,7 +1079,7 @@ describe('the activation direction', () => {
   });
 
   test.each([
-    { name: 'numbers', values: [1, 2], directions: ['right'] },
+    { name: 'numbers', values: [2, 1], directions: ['left', 'right'] },
     { name: 'strings out of order', values: ['b', 'a'], directions: ['left', 'right'] },
   ])(
     'with a new tab that mounts in the same update, comes from the values, then from the elements: $name',
@@ -1071,16 +1139,21 @@ describe('other families', () => {
     expect(panel('other')).not.toHaveAttribute('hidden');
   });
 
-  test.each(['popover', 'dialog'] as const)('works inside a %s', async (host) => {
-    mount(TabsInPopups, { host });
-    await nextTick();
-    await waitForLaterMillisecond(async () => {
-      await userEvent.click(screen.getByRole('button', { name: 'Open' }));
-      await waitFor(() => expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus());
-    });
-    await press('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Projects' })).toHaveFocus();
-  });
+  // In a Vapor app with Vapor parts, Vue 3.6 runs no portal of Popover and Dialog: the portal
+  // returns a render function, and a Vapor component must return a block.
+  test.skipIf(inject('app') === 'vapor').each(['popover', 'dialog'] as const)(
+    'works inside a %s',
+    async (host) => {
+      mount(TabsInPopups, { host });
+      await nextTick();
+      await waitForLaterMillisecond(async () => {
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus());
+      });
+      await press('{ArrowRight}');
+      expect(screen.getByRole('tab', { name: 'Projects' })).toHaveFocus();
+    },
+  );
 
   test('VUE-87: a toolbar item in a panel and beside the panels stays an item of the toolbar', async () => {
     mount(TabsInPopups, { host: 'toolbar' });
@@ -1104,6 +1177,11 @@ describe('a tab that is not a button', () => {
       navigations.push((event.target as Element).localName);
       event.preventDefault();
     });
+    // Space does not scroll the page.
+    const spaces: boolean[] = [];
+    root.addEventListener('keydown', (event) => {
+      if (event.key === ' ') spaces.push(event.defaultPrevented);
+    });
     span.focus();
     await press('{Enter}');
     expect(span).toHaveAttribute('aria-selected', 'true');
@@ -1115,6 +1193,7 @@ describe('a tab that is not a button', () => {
     link.focus();
     await press('{Enter}');
     expect(navigations).toEqual(['span', 'a', 'span', 'a']);
+    expect(spaces).toEqual([true, true]);
     expect(link).toHaveAttribute('aria-selected', 'true');
   });
 

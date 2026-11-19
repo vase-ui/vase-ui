@@ -19,8 +19,8 @@ export function measureActiveTab(tab: HTMLElement, list: HTMLElement): ActiveTab
   const { width: listWidth, height: listHeight } = getCssDimensions(list);
   const tabRect = tab.getBoundingClientRect();
   const listRect = list.getBoundingClientRect();
-  const scaleX = listWidth > 0 ? listRect.width / listWidth : 1;
-  const scaleY = listHeight > 0 ? listRect.height / listHeight : 1;
+  const scaleX = listRect.width / listWidth;
+  const scaleY = listRect.height / listHeight;
 
   // The layout offset ignores transforms, but it has no sub-pixel precision.
   let { left, top } = getLayoutOffset(tab, list);
@@ -32,8 +32,8 @@ export function measureActiveTab(tab: HTMLElement, list: HTMLElement): ActiveTab
   // A rotation, a skew, a flip, a perspective or a 3D transform on the tab or on an ancestor
   // distorts it, and the division by the scale cannot undo that. When the two offsets agree up to
   // the layout rounding, no distortion is in effect, and the offset from the rect is safe to use.
-  // A list that is scaled to zero gives `NaN` or `Infinity` above. That fails the same check, so the
-  // layout offset stays and the scale needs no guard.
+  // A list that is scaled to zero, or that has no size, gives `NaN` or `Infinity` above. That fails
+  // the same check, so the layout offset stays and the scale needs no guard.
   // The translation of the tab itself moves the rect and not the layout offset, so the check removes
   // it. The indicator is a sibling of the tab and does not get its transform. It then follows a tab
   // that moves itself, such as `translateX(12px)` on the active tab.
@@ -113,7 +113,7 @@ function getTranslation(element: HTMLElement) {
   // The computed `transform` does not include the `translate` longhand. A computed value keeps a
   // percentage, which resolves against the border box of the tab.
   const { translate } = computedStyle;
-  if (translate && translate !== 'none') {
+  if (translate !== 'none') {
     const parts = translate.split(' ');
     translateX += resolveTranslateLength(parts[0], element.offsetWidth);
     translateY += resolveTranslateLength(parts[1], element.offsetHeight);
@@ -122,15 +122,9 @@ function getTranslation(element: HTMLElement) {
   return { x: translateX, y: translateY };
 }
 
-// A value that is not a number or a percentage, such as `calc(...)`, counts as no translation. The
-// indicator then uses the layout offset and does not guess.
-function resolveTranslateLength(value: string | undefined, referenceSize: number): number {
-  if (!value) {
-    return 0;
-  }
+// A value that is not a number or a percentage, such as `calc(...)`, gives `NaN`. The caller then
+// refuses the offset from the rect, and the indicator keeps the layout offset and does not guess.
+function resolveTranslateLength(value = '0', referenceSize: number): number {
   const numeric = Number.parseFloat(value);
-  if (!Number.isFinite(numeric)) {
-    return 0;
-  }
   return value.endsWith('%') ? (numeric / 100) * referenceSize : numeric;
 }

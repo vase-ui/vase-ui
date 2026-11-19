@@ -85,18 +85,26 @@ describe('a press of a button', () => {
   });
 
   // MDN, `<button>`, "Clicking and focus": Safari on macOS gives no focus to a pressed button or
-  // link. WebKit on Linux gives the focus.
-  test('gives the focus to the button or the link at its click in Chromium and Firefox, and not in WebKit on macOS', async () => {
-    html(`<button id="button">A</button><a id="link" href="#link">B</a>`);
+  // link. WebKit on Linux gives the focus. With a `tabindex`, each browser gives the focus.
+  test('gives the focus to the button or the link at its click in Chromium and Firefox, and in WebKit on macOS only with a tabindex', async () => {
+    html(`<button id="button">A</button><a id="link" href="#link">B</a>
+      <button id="stop" tabindex="0">C</button><button id="other" tabindex="-1">D</button>`);
     const focusedAtClick: string[] = [];
     root!.addEventListener('click', (event) => {
       event.preventDefault();
-      focusedAtClick.push((document.activeElement as HTMLElement).localName);
+      focusedAtClick.push((document.activeElement as HTMLElement).id || 'body');
     });
-    await userEvent.click(element('button'));
-    await userEvent.click(element('link'));
+    for (const id of ['button', 'link', 'stop', 'other']) await userEvent.click(element(id));
     const focuses = server.browser !== 'webkit' || server.platform !== 'darwin';
-    expect(focusedAtClick).toEqual(focuses ? ['button', 'a'] : ['body', 'body']);
+    expect(focusedAtClick).toEqual(
+      focuses ? ['button', 'link', 'stop', 'other'] : ['body', 'body', 'stop', 'other'],
+    );
+  });
+
+  test('of a script gives no focus', () => {
+    html(`<button id="tab" tabindex="-1">A</button>`);
+    element('tab').click();
+    expect(document.activeElement).not.toBe(element('tab'));
   });
 });
 

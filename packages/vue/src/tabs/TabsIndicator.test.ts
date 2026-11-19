@@ -172,6 +172,20 @@ describe('<Tabs.Indicator />', () => {
       expectVariablesOfActiveTab(indicator(), list, activeTab());
     });
 
+    test('updates the right variable when only the list is resized', async () => {
+      const { indicator, list } = await mountLayout({
+        listStyle: 'display: flex; position: relative; width: 300px',
+        root: { modelValue: 1 },
+        tabs: fixedTabs('width: 100px; flex-shrink: 0', 2),
+      });
+      expect(variable(indicator(), 'right')).toBe('200px');
+      // The first notification of the observers comes after two frames.
+      await nextFrame();
+      await nextFrame();
+      list.style.width = '400px';
+      await waitFor(() => expect(variable(indicator(), 'right')).toBe('300px'));
+    });
+
     test('should account for scroll and border when the tab list is transformed', async () => {
       const { indicator, list, activeTab } = await mountLayout({
         wrapperStyle: 'transform: scale(1.5)',
@@ -198,7 +212,7 @@ describe('<Tabs.Indicator />', () => {
       await waitForIndicatorOverActiveTab(indicator(), activeTab());
     });
 
-    test.each([
+    test.each<{ name: string; wrapperStyle: string; listStyle?: string }>([
       { name: 'an ancestor has a 2D rotation', wrapperStyle: 'transform: rotate(40deg)' },
       { name: 'an ancestor has a size-preserving flip', wrapperStyle: 'transform: scaleX(-1)' },
       { name: 'an ancestor uses the rotate longhand', wrapperStyle: 'rotate: 40deg' },
@@ -207,10 +221,16 @@ describe('<Tabs.Indicator />', () => {
         name: 'an ancestor has a 3D rotation (#4837)',
         wrapperStyle: 'transform: perspective(600px) rotateY(35deg)',
       },
-    ])('overlays the active tab when $name', async ({ wrapperStyle }) => {
+      {
+        name: 'an ancestor has a 2D rotation and the list has a border',
+        wrapperStyle: 'transform: rotate(40deg)',
+        listStyle: 'display: flex; position: relative; border: 6px solid',
+      },
+    ])('overlays the active tab when $name', async ({ wrapperStyle, listStyle }) => {
       placeIndicatorOverActiveTab();
       const { indicator, activeTab } = await mountLayout({
         wrapperStyle,
+        ...(listStyle && { listStyle }),
         root: { modelValue: 3 },
         tabs: fixedTabs('width: 80px; height: 32px'),
       });
@@ -325,6 +345,9 @@ describe('<Tabs.Indicator />', () => {
       ]);
       const { indicator } = await mountLayout({ root: { modelValue: 'b' }, tabs });
       expect(variable(indicator(), 'left')).toBe('50px');
+      // The first notification of the observers comes after two frames.
+      await nextFrame();
+      await nextFrame();
       tabs.reverse();
       await waitFor(() => expect(variable(indicator(), 'left')).toBe('0px'));
     });
