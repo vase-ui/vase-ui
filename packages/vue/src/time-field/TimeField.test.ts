@@ -59,6 +59,19 @@ describe('the segments', () => {
     expect(segments().map((s) => s.value)).toEqual(['09', 'AM']);
   });
 
+  test('the element slots render the elements of the developer, and the attributes of the developer stay', async () => {
+    const { group } = await mountFields([{ defaultValue: time('09:05') }], { elementSlots: true });
+    const segments = [...group.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')];
+    expect(types(segments)).toEqual(['hour', 'minute', 'dayPeriod']);
+    expect(segments.map((s) => [s.className, s.placeholder])).toEqual([
+      ['Part Mine', '?'],
+      ['Part Mine', '?'],
+      ['Part Mine', '?'],
+    ]);
+    const literals = [...group.querySelectorAll('b')];
+    expect(literals.map((literal) => literal.className)).toEqual(['Part Mine', 'Part Mine']);
+  });
+
   test('a letter selects the day period whose text starts with it, and the focus goes on', async () => {
     const log: string[] = [];
     const { segment, root } = await mountFields([record(log, { defaultValue: time('09:30') })]);

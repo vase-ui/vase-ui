@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onMounted, useAttrs, watch } from 'vue';
+import { computed, mergeProps, onMounted, useAttrs, useSlots, watch } from 'vue';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
 import { writeAttributes } from '../common/writeAttributes';
@@ -20,6 +20,7 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
+const slots = useSlots();
 const clock = injectClock();
 const { element, setElement } = useElement<HTMLElement>();
 const state = computed<TimeClockNumberState>(() => {
@@ -49,8 +50,10 @@ watch(
   { flush: 'sync' },
 );
 
+// The element of the `element` slot can have attributes of the developer that win over those of
+// the part, so the part writes only to its own element.
 onMounted(() => {
-  if (element.value) writeAttributes(element.value, elementProps());
+  if (element.value && !slots.element) writeAttributes(element.value, elementProps());
 });
 
 defineExpose({ element });

@@ -21,19 +21,20 @@ defineExpose({ root, input, clear });
           :data-empty-field="state.empty"
         >
           <template v-for="(segment, index) in segments" :key="index">
-            <DateField.Segment v-if="segment.editable" :segment="segment">
+            <DateField.Segment v-if="segment.editable" :segment="segment" class="Part">
               <template #element="slot">
                 <input
                   v-bind="slot.props"
                   :ref="slot.elementRef"
                   class="Segment"
+                  placeholder="?"
                   :data-placeholder-shown="slot.state.placeholder"
                 />
               </template>
             </DateField.Segment>
-            <DateField.Literal v-else :segment="segment">
+            <DateField.Literal v-else :segment="segment" class="Part">
               <template #element="slot">
-                <b v-bind="slot.props" :ref="slot.elementRef">{{ segment.text }}</b>
+                <b v-bind="slot.props" :ref="slot.elementRef" class="Literal">{{ segment.text }}</b>
               </template>
             </DateField.Literal>
           </template>

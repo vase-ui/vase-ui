@@ -7,7 +7,7 @@ import { takeReportedMessages } from '../../test/reportedMessages';
 // The parts compile as Vapor components in these setups of `vitest.vue-3.6.config.ts`.
 const isVaporParts = ['vapor', 'vdom-interop'].includes(inject('app'));
 
-/** Each element of the clock, with its attributes in order of name and its text. */
+/** Each element of the clock, with its attributes in order of name, its text and its value. */
 const elementsOf = (root: Element) =>
   [...root.querySelectorAll('[role="group"] *')].map((element) => {
     // The server writes a style with no spaces, and the browser with spaces.
@@ -18,7 +18,8 @@ const elementsOf = (root: Element) =>
       )
       .sort();
     const text = element.children.length === 0 ? element.textContent : '';
-    return `${element.localName} ${attributes.join(' ')} ${text}`;
+    const value = element instanceof HTMLInputElement ? ` value ${element.value}` : '';
+    return `${element.localName} ${attributes.join(' ')} ${text}${value}`;
   });
 
 const textsOf = (root: Element) =>
@@ -75,14 +76,22 @@ describe('server render and hydration', () => {
     );
   });
 
-  test('a server with another hour cycle and a face with no numbers: the range input of the browser, with no message', async () => {
-    const props = { value: '13:45', withoutNumbers: true };
-    const root = await renderOnServer('TimeClockOnServer', { ...props, hourCycle: 24 });
-    const range = root.querySelector('input[type="range"]')!;
-    hydrate(TimeClockOnServer, { ...props, hourCycle: 12 }, root);
-    await settle();
-    expect(root.querySelector('input[type="range"]')).toBe(range);
-    expect([range.getAttribute('min'), range.getAttribute('max')]).toEqual(['1', '12']);
-    expect(takeReportedMessages()).toEqual([]);
-  });
+  // A range input of a server with the hours 1 to 12 clamps the hour 13 that Vue writes while it
+  // hydrates, so the face writes the value again after the range.
+  test.each([
+    { server: 24, browser: 12, range: ['1', '12', '1'] },
+    { server: 12, browser: 24, range: ['0', '23', '13'] },
+  ] as const)(
+    'a face with no numbers, $server hours on the server and $browser in the browser: the range input of the browser, with no message',
+    async ({ server, browser, range: expected }) => {
+      const props = { value: '13:45', withoutNumbers: true };
+      const root = await renderOnServer('TimeClockOnServer', { ...props, hourCycle: server });
+      const range = root.querySelector<HTMLInputElement>('input[type="range"]')!;
+      hydrate(TimeClockOnServer, { ...props, hourCycle: browser }, root);
+      await settle();
+      expect(root.querySelector('input[type="range"]')).toBe(range);
+      expect([range.getAttribute('min'), range.getAttribute('max'), range.value]).toEqual(expected);
+      expect(takeReportedMessages()).toEqual([]);
+    },
+  );
 });

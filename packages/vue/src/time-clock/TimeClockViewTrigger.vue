@@ -46,9 +46,10 @@ const text = computed(() =>
       }),
 );
 
-// A server with other `Intl` data has another name.
+// The element of the `element` slot can have attributes of the developer that win over those of
+// the part, so the part writes only to its own element.
 onMounted(() => {
-  if (element.value) writeAttributes(element.value, elementProps());
+  if (element.value && !slots.element) writeAttributes(element.value, elementProps());
 });
 
 defineExpose({ element });

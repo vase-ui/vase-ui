@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onMounted, useAttrs } from 'vue';
+import { computed, mergeProps, onMounted, useAttrs, useSlots } from 'vue';
 import { useElement } from '../common/element';
 import { writeAttributes } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
@@ -19,6 +19,7 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
+const slots = useSlots();
 const clock = injectClock();
 const { element, setElement } = useElement<HTMLElement>();
 // A minute or a second has a number for each 5.
@@ -28,8 +29,10 @@ const state = computed<TimeClockHandState>(() => ({
   betweenNumbers: clock.view !== 'hour' && clock.selectedNumber.value % 5 !== 0,
 }));
 
+// The element of the `element` slot can have attributes of the developer that win over those of
+// the part, so the part writes only to its own element.
 onMounted(() => {
-  if (element.value) writeAttributes(element.value, elementProps());
+  if (element.value && !slots.element) writeAttributes(element.value, elementProps());
 });
 
 defineExpose({ element });

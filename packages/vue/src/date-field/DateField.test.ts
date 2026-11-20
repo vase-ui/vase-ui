@@ -146,7 +146,7 @@ describe('the parts', () => {
     expect(clear!.disabled).toBe(false);
   });
 
-  test('the element slots render the elements of the developer, with the state; each part exposes its element', async () => {
+  test('the element slots render the elements of the developer, with the state; the attributes of the developer stay; each part exposes its element', async () => {
     const date = reactive<Record<string, unknown>>({ defaultValue: day('2026-11-14') });
     const { root, exposed } = mount(DateFieldSlots, { date });
     await nextTick();
@@ -160,7 +160,13 @@ describe('the parts', () => {
       'spinbutton',
       'spinbutton',
     ]);
-    expect(root.querySelectorAll('b')).toHaveLength(2);
+    expect(segments.map((segment) => [segment.className, segment.placeholder])).toEqual([
+      ['Part Segment', '?'],
+      ['Part Segment', '?'],
+      ['Part Segment', '?'],
+    ]);
+    const literals = [...root.querySelectorAll('b')];
+    expect(literals.map((literal) => literal.className)).toEqual(['Part Literal', 'Part Literal']);
     const clear = root.querySelector<HTMLButtonElement>('.StyledButton')!;
     expect(exposed.clear.element).toBe(clear);
     expect(clear).toHaveAttribute('data-cleared', 'false');

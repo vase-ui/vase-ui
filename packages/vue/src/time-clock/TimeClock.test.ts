@@ -5,6 +5,7 @@ import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
 import { reset as resetWarnings } from '../common/warn';
 import { dataAttributes } from '../../test/field';
 import TimeClockParts from '../../test/fixtures/TimeClockParts.vue';
+import TimeClockSlots from '../../test/fixtures/TimeClockSlots.vue';
 import { mount, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { pointOnFace } from '../../test/time-clockTestUtils';
@@ -123,7 +124,7 @@ describe('the parts', () => {
     expect(range().id).toBe('clock-hour');
   });
 
-  test('the triggers and the day periods are buttons with `aria-pressed`, and the developer `type` wins', async () => {
+  test('the triggers and the day periods are buttons with `aria-pressed`', async () => {
     const { byTestId } = await mountClock({ clock: { defaultValue: time('15:30') } });
     const pm = byTestId('pm') as HTMLButtonElement;
     expect(pm.type).toBe('button');
@@ -133,6 +134,34 @@ describe('the parts', () => {
     expect(byTestId('hour-trigger')).toHaveTextContent('03');
     expect(byTestId('hour-trigger')).toHaveAttribute('aria-label', 'hour 03');
     expect(byTestId('hour-trigger')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('the element slots render the elements of the developer, with the state; the attributes of the developer win; each part exposes its element', async () => {
+    const { root, exposed } = mount(TimeClockSlots);
+    await nextTick();
+    const section = root.querySelector('section')!;
+    expect(exposed.root.element).toBe(section);
+    expect(section).toHaveAttribute('role', 'group');
+    expect(section).toHaveAttribute('aria-label', 'Time');
+    expect(section).toHaveAttribute('data-root-view', 'hour');
+    const [trigger, pm] = root.querySelectorAll('button');
+    expect(exposed.trigger.element).toBe(trigger);
+    expect(trigger).toHaveAttribute('aria-label', 'Pick the hour');
+    expect(trigger).toHaveAttribute('aria-pressed', 'true');
+    expect(trigger).toHaveAttribute('data-active', 'true');
+    expect(pm).toHaveAttribute('type', 'submit');
+    expect(pm).toHaveAttribute('aria-pressed', 'true');
+    const hand = root.querySelector('i')!;
+    expect(exposed.hand.element).toBe(hand);
+    expect(hand.className).toBe('Hand Mine');
+    expect(hand.style.getPropertyValue('--time-clock-hand-angle')).toBe('90deg');
+    expect(hand).toHaveAttribute('data-inner-hand', 'false');
+    const numbers = [...root.querySelectorAll('b')];
+    expect(numbers).toHaveLength(12);
+    expect(numbers.every((number) => number.className === 'Number Mine')).toBe(true);
+    expect(numbers[3]).toHaveAttribute('data-picked', 'true');
+    expect(numbers[3]).toHaveAttribute('data-selected');
+    expect(root.querySelector('input[type="range"]')).toHaveAttribute('aria-label', 'Hour');
   });
 });
 
