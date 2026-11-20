@@ -25,7 +25,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -34,7 +34,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -42,7 +42,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -121,11 +121,11 @@
   @media (prefers-color-scheme: dark) {
     opacity: 0.5;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.BackdropHidden {
+  opacity: 0;
 }
 
 .Popup {
@@ -171,13 +171,13 @@
   &[data-nested-dialog-open]::after {
     opacity: 1;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    translate: -50% calc(-50% + 0.25rem + 1.25rem * var(--nested-dialogs));
-    scale: 0.96;
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.PopupHidden {
+  opacity: 0;
+  translate: -50% calc(-50% + 0.25rem + 1.25rem * var(--nested-dialogs));
+  scale: 0.96;
 }
 
 .Intro {

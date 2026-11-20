@@ -125,7 +125,7 @@ Do not use `<AnimatePresence>` and the `exit` prop for the close of a popup. For
 
 A popup of another family can take `motion.div` in the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
-<<< ../examples/animation/MotionAsProp.vue{10,14-16}
+<<< ../examples/animation/MotionAsProp.vue{10,15-17}
 
 ### Animate a popup that stays in the DOM
 
@@ -178,7 +178,7 @@ The root then emits `openChangeComplete` with `false`. The popup then leaves the
 
 ::: code-group
 
-<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,34}
+<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,35}
 
 :::
 

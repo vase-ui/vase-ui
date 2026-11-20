@@ -2,6 +2,9 @@
 import { Dialog } from '@vase-ui/vue/dialog';
 import styles from './index.module.css';
 
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.PopupHidden;
+
 const CONTENT_SECTIONS = [
   {
     title: 'What a dialog is for',
@@ -94,25 +97,33 @@ const CONTENT_SECTIONS = [
   <Dialog.Root>
     <Dialog.Trigger :class="styles.Button">Open dialog</Dialog.Trigger>
     <Dialog.Portal>
-      <Dialog.Backdrop :class="styles.Backdrop" />
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
+      >
+        <Dialog.Backdrop :class="styles.Backdrop" />
+      </Transition>
       <Dialog.Viewport :class="styles.Viewport">
-        <Dialog.Popup :class="styles.Popup">
-          <div :class="styles.Header">
-            <Dialog.Title :class="styles.Title">Dialog</Dialog.Title>
-            <Dialog.Description :class="styles.Description">
-              This layout keeps the popup fully on screen while allowing its content to scroll.
-            </Dialog.Description>
-          </div>
-          <div :class="styles.Body" tabindex="0">
-            <section v-for="item in CONTENT_SECTIONS" :key="item.title" :class="styles.Section">
-              <h3 :class="styles.SectionTitle">{{ item.title }}</h3>
-              <p :class="styles.SectionBody">{{ item.body }}</p>
-            </section>
-          </div>
-          <div :class="styles.Actions">
-            <Dialog.Close :class="styles.Button">Close</Dialog.Close>
-          </div>
-        </Dialog.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Dialog.Popup :class="styles.Popup">
+            <div :class="styles.Header">
+              <Dialog.Title :class="styles.Title">Dialog</Dialog.Title>
+              <Dialog.Description :class="styles.Description">
+                This layout keeps the popup fully on screen while allowing its content to scroll.
+              </Dialog.Description>
+            </div>
+            <div :class="styles.Body" tabindex="0">
+              <section v-for="item in CONTENT_SECTIONS" :key="item.title" :class="styles.Section">
+                <h3 :class="styles.SectionTitle">{{ item.title }}</h3>
+                <p :class="styles.SectionBody">{{ item.body }}</p>
+              </section>
+            </div>
+            <div :class="styles.Actions">
+              <Dialog.Close :class="styles.Button">Close</Dialog.Close>
+            </div>
+          </Dialog.Popup>
+        </Transition>
       </Dialog.Viewport>
     </Dialog.Portal>
   </Dialog.Root>

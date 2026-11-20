@@ -591,9 +591,11 @@
   color: oklch(70.7% 0.165 254.624deg);
 }
 
-/* The red button rule of `DemoFrame.vue`, for a button in a popup. */
-.dark [data-vase-ui-portal] [class*='_Button_'][data-color='red']:active:not([data-disabled]),
-.dark [data-vase-ui-portal] [class*='_DangerButton_']:active:not([data-disabled]) {
+/* The red button rule of `DemoFrame.vue`, for a button in a popup. A popup of the popup layer is
+   in `<body>` outside the app of the site, with no portal element. */
+.dark
+  :where([data-vase-ui-portal], body > :not(#app))
+  :is([class*='_Button_'][data-color='red'], [class*='_DangerButton_']):active:not(:disabled) {
   color: oklch(80.8% 0.114 19.571deg);
 }
 

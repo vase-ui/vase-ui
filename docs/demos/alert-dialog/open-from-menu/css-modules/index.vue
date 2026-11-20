@@ -6,6 +6,8 @@ import { Menu } from '@vase-ui/vue/menu';
 import styles from './index.module.css';
 
 const dialogOpen = shallowRef(false);
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.DialogPopupHidden;
 
 const CaretDownIcon: FunctionalComponent = () =>
   h(
@@ -41,19 +43,27 @@ const CaretDownIcon: FunctionalComponent = () =>
 
   <AlertDialog.Root v-model:open="dialogOpen">
     <AlertDialog.Portal>
-      <AlertDialog.Backdrop :class="styles.Backdrop" />
-      <AlertDialog.Popup :class="styles.DialogPopup">
-        <div :class="styles.Intro">
-          <AlertDialog.Title :class="styles.Title">Delete playlist?</AlertDialog.Title>
-          <AlertDialog.Description :class="styles.Description">
-            You can't undo this action.
-          </AlertDialog.Description>
-        </div>
-        <div :class="styles.Actions">
-          <AlertDialog.Close :class="styles.Button">Cancel</AlertDialog.Close>
-          <AlertDialog.Close data-color="red" :class="styles.Button">Delete</AlertDialog.Close>
-        </div>
-      </AlertDialog.Popup>
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
+      >
+        <AlertDialog.Backdrop :class="styles.Backdrop" />
+      </Transition>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <AlertDialog.Popup :class="styles.DialogPopup">
+          <div :class="styles.Intro">
+            <AlertDialog.Title :class="styles.Title">Delete playlist?</AlertDialog.Title>
+            <AlertDialog.Description :class="styles.Description">
+              You can't undo this action.
+            </AlertDialog.Description>
+          </div>
+          <div :class="styles.Actions">
+            <AlertDialog.Close :class="styles.Button">Cancel</AlertDialog.Close>
+            <AlertDialog.Close data-color="red" :class="styles.Button">Delete</AlertDialog.Close>
+          </div>
+        </AlertDialog.Popup>
+      </Transition>
     </AlertDialog.Portal>
   </AlertDialog.Root>
 </template>

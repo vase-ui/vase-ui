@@ -6,6 +6,8 @@ import { Menu } from '@vase-ui/vue/menu';
 import styles from './index.module.css';
 
 const dialogOpen = shallowRef(false);
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.DialogPopupHidden;
 
 const CaretDownIcon: FunctionalComponent = () =>
   h(
@@ -41,18 +43,26 @@ const CaretDownIcon: FunctionalComponent = () =>
 
   <Dialog.Root v-model:open="dialogOpen">
     <Dialog.Portal>
-      <Dialog.Backdrop :class="styles.Backdrop" />
-      <Dialog.Popup :class="styles.DialogPopup">
-        <div :class="styles.Intro">
-          <Dialog.Title :class="styles.Title">Playlist details</Dialog.Title>
-          <Dialog.Description :class="styles.Description">
-            This playlist contains 24 songs and was last updated today.
-          </Dialog.Description>
-        </div>
-        <div :class="styles.Actions">
-          <Dialog.Close :class="styles.Button">Close</Dialog.Close>
-        </div>
-      </Dialog.Popup>
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
+      >
+        <Dialog.Backdrop :class="styles.Backdrop" />
+      </Transition>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Dialog.Popup :class="styles.DialogPopup">
+          <div :class="styles.Intro">
+            <Dialog.Title :class="styles.Title">Playlist details</Dialog.Title>
+            <Dialog.Description :class="styles.Description">
+              This playlist contains 24 songs and was last updated today.
+            </Dialog.Description>
+          </div>
+          <div :class="styles.Actions">
+            <Dialog.Close :class="styles.Button">Close</Dialog.Close>
+          </div>
+        </Dialog.Popup>
+      </Transition>
     </Dialog.Portal>
   </Dialog.Root>
 </template>
