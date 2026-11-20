@@ -241,7 +241,7 @@
   background-color: transparent;
   cursor: pointer;
 
-  &:hover:not([data-disabled]) {
+  &:hover:not(:disabled, [aria-disabled='true']) {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -249,7 +249,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:is(:disabled, [aria-disabled='true']) {
     opacity: 0.4;
     cursor: default;
   }
@@ -299,7 +299,7 @@
   background-color: transparent;
   cursor: pointer;
 
-  &:hover:not([data-selected]):not([data-disabled]):not([disabled]) {
+  &:hover:not([data-selected], [aria-selected='true'], :disabled) {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -307,12 +307,11 @@
     }
   }
 
-  &[data-today],
-  &[data-current] {
+  &[aria-current='date'] {
     border-color: oklch(70.8% 0 0deg);
   }
 
-  &[data-selected] {
+  &:is([data-selected], [aria-selected='true']) {
     color: white;
     background-color: oklch(14.5% 0 0deg);
 
@@ -326,8 +325,7 @@
     color: oklch(55.6% 0 0deg);
   }
 
-  &[disabled],
-  &[data-disabled] {
+  &:disabled {
     cursor: default;
     opacity: 0.4;
   }
@@ -449,7 +447,7 @@
   background-color: transparent;
   cursor: pointer;
 
-  &:hover:not([data-disabled]) {
+  &:hover:not(:disabled, [aria-disabled='true']) {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -457,7 +455,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:is(:disabled, [aria-disabled='true']) {
     opacity: 0.4;
     cursor: default;
   }

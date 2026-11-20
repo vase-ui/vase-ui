@@ -27,7 +27,7 @@ function vaporMode(vapor: RegExp | undefined): Plugin {
     enforce: 'pre',
     transform(code, id) {
       return vapor?.test(id)
-        ? code.replace(/<script setup(?! vapor)/, '<script setup vapor')
+        ? code.replace(/<script\b[^>]*\bsetup\b(?! vapor)/, (tag) => `${tag} vapor`)
         : undefined;
     },
   };

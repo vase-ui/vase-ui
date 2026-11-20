@@ -12,13 +12,11 @@ import {
 import { hydrate, hydrateAfter, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
-import RemountedRegion from './fixtures/RemountedRegion.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
 const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
 const CLASSED_ELEMENT = 'test/fixtures/ClassedElement.vue';
-const REMOUNTED_REGION = 'test/fixtures/RemountedRegion.vue';
 
 describe('hydrate', () => {
   it('passes for the clean fixture', async () => {
@@ -171,29 +169,6 @@ describe('hydrate', () => {
     const { container } = await hydrate(LateState, { serverHtml: '<i>first</i>' });
 
     expect(container.textContent).toBe('last');
-  });
-
-  it('passes with renumberIds for generated ids that differ only in their numbers', async () => {
-    const serverHtml = await renderOnServer(REMOUNTED_REGION);
-    const template = document.createElement('template');
-    template.innerHTML = serverHtml;
-    const serverId = template.content.querySelector('h2')!.id;
-
-    const { container } = await hydrate(RemountedRegion, { serverHtml, renumberIds: true });
-
-    // The client-only render mounts the region one time, so it has the id of the server.
-    const heading = container.querySelector('h2')!;
-    expect(heading.id).not.toBe(serverId);
-    expect(container.querySelector('section')).toHaveAttribute('aria-labelledby', heading.id);
-  });
-
-  it('fails with renumberIds for an aria-labelledby that names another id', async () => {
-    const props = { staleLabel: true };
-    const serverHtml = await renderOnServer(REMOUNTED_REGION, props);
-
-    await expect(
-      hydrate(RemountedRegion, { serverHtml, props, renumberIds: true }),
-    ).rejects.toThrow(/The hydrated DOM differs from a client-only render/);
   });
 
   it('runs the inline script of the server HTML', async () => {

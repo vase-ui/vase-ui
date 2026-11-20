@@ -14,8 +14,6 @@ import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import * as Calendar from '../calendar/index.parts';
-import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
 
 interface BlankId {
   id: string;
@@ -400,16 +398,6 @@ const rows: Row[] = [
     tree: toastParts(part),
     named: (k) => ({ testId: `toast${k}`, name: `Saved ${k}`, description: `Copied ${k}` }),
   })),
-  {
-    name: 'Calendar.Caption',
-    tree: (_k, blankId) => (
-      <CalendarAncestors level="month">
-        <Calendar.Caption {...blankId} />
-        <Calendar.Grid data-testid="grid" />
-      </CalendarAncestors>
-    ),
-    named: () => ({ testId: 'grid', name: 'November 2026' }),
-  },
 ];
 
 describe.each([

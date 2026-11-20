@@ -47,5 +47,3 @@ export type {
   PopoverDescriptionProps as DateRangePickerDescriptionProps,
   PopoverDescriptionState as DateRangePickerDescriptionState,
 } from '../popover/types';
-
-export * as DateRangePickerCalendarDataAttributes from '../range-calendar/root/RangeCalendarRootDataAttributes';

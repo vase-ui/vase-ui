@@ -53,7 +53,7 @@
   cursor: pointer;
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -62,7 +62,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:is(:disabled, [aria-disabled='true']) {
     cursor: default;
     opacity: 0.4;
   }
@@ -122,7 +122,7 @@
   -webkit-user-select: none;
   user-select: none;
 
-  &[data-today] {
+  &[aria-current='date'] {
     font-weight: 700;
     text-decoration: underline;
   }
@@ -147,7 +147,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     cursor: default;
     opacity: 0.4;
   }

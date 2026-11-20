@@ -9,10 +9,9 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 <template>
   <Calendar.Root
     v-model="selected"
-    iso-week
     locale="en-US"
     aria-label="Start of the sprint"
-    :class="[styles.Root, styles.WithWeekNumbers]"
+    :class="[styles.Root, styles.SixWeeks, styles.WithWeekNumbers]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>

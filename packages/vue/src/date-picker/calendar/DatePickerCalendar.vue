@@ -4,43 +4,51 @@ import type {
   CalendarRootProps,
   CalendarRootState,
   CalendarRootView,
-} from '../../calendar/root/CalendarRoot.vue';
+} from '../../calendar/types';
+import type { VaseUIComponentProps } from '../../internals/types';
 
 export interface DatePickerCalendarState extends CalendarRootState {}
 
 /**
  * The props of `Calendar.Root` that the picker does not own. The root of the picker owns the
- * value, the limits, the locale, the calendar, the time zone and the states `disabled` and
- * `readOnly`. The calendar takes the focus when the popup opens, so it has no `autoFocus`.
+ * value, the limits, the locale, the calendar and the states `disabled` and `readonly`. The
+ * calendar takes the focus when the popup opens, so it has no `autofocus`.
  */
-export interface DatePickerCalendarProps extends Omit<
-  CalendarRootProps,
-  | 'modelValue'
-  | 'defaultValue'
-  | 'multiple'
-  | 'minDays'
-  | 'maxDays'
-  | 'minDate'
-  | 'maxDate'
-  | 'unavailableDates'
-  | 'locale'
-  | 'calendar'
-  | 'timeZone'
-  | 'disabled'
-  | 'readOnly'
-  | 'autoFocus'
-> {}
+export interface DatePickerCalendarProps
+  extends
+    Omit<
+      CalendarRootProps,
+      | 'as'
+      | 'modelValue'
+      | 'defaultValue'
+      | 'multiple'
+      | 'minDays'
+      | 'maxDays'
+      | 'min'
+      | 'max'
+      | 'unavailableDates'
+      | 'locale'
+      | 'calendar'
+      | 'disabled'
+      | 'readonly'
+      | 'autofocus'
+    >,
+    Pick<VaseUIComponentProps<DatePickerCalendarState>, 'as'> {}
 </script>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
-import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
+import { computed, useSlots, useTemplateRef } from 'vue';
+import CalendarRoot from '../../calendar/CalendarRoot.vue';
 import {
   PickerCalendarOwner,
   providePickerControl,
 } from '../../internals/date-time/picker/PickerControlContext';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { warnWithoutCalendarElement } from '../../internals/date-time/picker/warnWithoutCalendarElement';
+import { displayCalendar } from '../../internals/date-time/displayCalendar';
+import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
+import { createChangeEventDetails as createPickerEventDetails } from '../../internals/createVaseUIEventDetails';
 import { givenAttributes } from '../../internals/givenAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
@@ -100,17 +108,30 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerCalendarState>;
 }>();
 
+const slots = useSlots();
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
-// This part renders `Calendar.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Calendar.Root` dynamic. Vue then renders `Calendar.Root` again each time this part renders.
+// The popup is not in the server HTML, so the calendar reads the clock in its setup and has its page
+// and its tab stop in its first render. It also reads the locale of the browser, which the field
+// shows with no `locale`. The bridge goes when the pickers move to the new calendar.
+const template = picker.template.value;
+const clockToday = Temporal.Now.plainDateISO(
+  picker.props.timeZone ?? (isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined),
+);
+const browserLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
+
+// This part renders `Calendar.Root` with `as`, or with `#render` in the `element` slot of the root.
+// A `v-if` on a slot template makes the slots of the root dynamic, so the template has two roots.
 const calendar = useTemplateRef<{
   element: HTMLElement | null;
   focus: (date?: DateValue) => void;
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
+warnWithoutCalendarElement(
+  () => element.value,
+  () => !!slots.render,
+);
 
 providePickerControl(PickerCalendarOwner, (event) => {
   if (picker.closeOnSelect.value && popup.open.value) {
@@ -118,11 +139,17 @@ providePickerControl(PickerCalendarOwner, (event) => {
   }
 });
 
+// The listeners of the picker get the details of its own API.
 function handleValueChange(
   value: DatePickerRootValue | null,
-  details: DatePickerRootChangeEventDetails,
+  details: CalendarRootChangeEventDetails,
 ) {
-  picker.commit(value, details);
+  const pickerDetails = createPickerEventDetails(
+    details.reason,
+    details.event,
+  ) as DatePickerRootChangeEventDetails;
+  picker.commit(value, pickerDetails);
+  if (pickerDetails.isCanceled) details.cancel();
 }
 
 const calendarHandlers = {
@@ -149,26 +176,32 @@ const calendarHandlers = {
 // `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
 // default value gives the kind of a new value, the same kind as for the field.
-function calendarProps(attributes: Record<string, unknown>) {
+function calendarProps(attributes: Record<string, unknown>): Record<string, unknown> {
   const root = picker.props;
   const valueProps: Record<string, any> = {
     modelValue: picker.value.value,
     defaultValue: picker.template.value,
   };
+  const { as: _as, ...own } = props;
+  const locale = root.locale ?? browserLocale;
   return {
     ...mergeProps(calendarHandlers, givenAttributes(attributes)),
-    ...props,
+    ...own,
     ...valueProps,
-    minDate: root.minDate,
-    maxDate: root.maxDate,
+    today: props.today ?? clockToday,
+    min: root.minDate,
+    max: root.maxDate,
     unavailableDates: root.unavailableDates,
-    locale: root.locale,
-    calendar: root.calendar,
-    timeZone: root.timeZone,
+    locale,
+    // The field shows the calendar of its locale, and the grid shows the same calendar.
+    calendar: displayCalendar(root.calendar, picker.template.value, locale),
     disabled: picker.disabled.value,
-    readOnly: root.readOnly,
+    readonly: root.readOnly,
   };
 }
+
+// An older part takes a component with a type parameter in `as`, and `Calendar.Root` renders it.
+const rootAs = () => props.as as CalendarRootProps['as'];
 
 defineExpose({
   element,
@@ -186,18 +219,19 @@ defineExpose({
     v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
     @value-change="handleValueChange"
   >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+    <template #element="{ props: elementProps, elementRef, state }">
+      <slot name="render" :props="{ ...elementProps, ref: elementRef }" :state="state" />
     </template>
   </CalendarRoot>
   <CalendarRoot
     v-else
     ref="calendar"
     v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
+    :as="rootAs()"
     @value-change="handleValueChange"
   >
-    <template #default="slotProps">
-      <slot v-bind="slotProps" />
+    <template #default="{ state }">
+      <slot :state="state" />
     </template>
   </CalendarRoot>
 </template>

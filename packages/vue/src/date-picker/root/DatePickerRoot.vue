@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CalendarChangeEventReason } from '../../internals/date-time/calendar/calendarProps';
+import type { CalendarRootChangeEventReason } from '../../calendar/types';
 import type {
   DateTimeFieldChangeEventReason,
   DateTimeFieldGranularity,
@@ -22,7 +22,7 @@ export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
 // `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DatePickerRootChangeEventReason =
-  CalendarChangeEventReason | DateTimeFieldChangeEventReason | 'none';
+  CalendarRootChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DatePickerRootChangeEventDetails = ChangeEventDetails<DatePickerRootChangeEventReason>;
 
 export type DatePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;

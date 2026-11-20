@@ -1,12 +1,12 @@
 <script lang="ts">
 import type { ChangeEventDetails } from '../../common/changeEventDetails';
-import type {
-  RangeChangeEventReason,
-  RangeValue,
-} from '../../internals/date-time/calendar/rangeSelection';
 import type { DateTimeFieldChangeEventReason } from '../../common/date-time-field/field';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
+import type {
+  RangeCalendarRootChangeEventReason,
+  RangeCalendarRootValue,
+} from '../../range-calendar/types';
 import type {
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
@@ -16,13 +16,14 @@ import type {
 export interface DateRangePickerRootState {}
 
 /** The first day and the last day of a range. An end is `null` while it has no value. */
-export type DateRangePickerRootValue<Value extends DateValue = DateValue> = RangeValue<Value>;
+export type DateRangePickerRootValue<Value extends DateValue = DateValue> =
+  RangeCalendarRootValue<Value>;
 
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 
 // `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DateRangePickerRootChangeEventReason =
-  RangeChangeEventReason | DateTimeFieldChangeEventReason | 'none';
+  RangeCalendarRootChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DateRangePickerRootChangeEventDetails =
   ChangeEventDetails<DateRangePickerRootChangeEventReason>;
 

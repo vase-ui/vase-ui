@@ -55,7 +55,7 @@ function onWrongKind(value: [Temporal.PlainTime | null, Temporal.PlainTime | nul
     <DateRangePicker.Positioner />
     <DateRangePicker.Calendar :number-of-months="2" :min-days="2" />
     <!-- @vue-expect-error the root owns the limits -->
-    <DateRangePicker.Calendar :min-date="Temporal.PlainDate.from('2026-11-14')" />
+    <DateRangePicker.Calendar :min="Temporal.PlainDate.from('2026-11-14')" />
     <!-- @vue-expect-error the root owns the name of the form entry -->
     <DateRangePicker.StartField name="from" />
     <!-- @vue-expect-error the root owns the name of the form entry -->
