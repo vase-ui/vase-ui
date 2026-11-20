@@ -260,6 +260,7 @@ describe('the tab stops of a container (N3)', () => {
       <fieldset disabled><input id="in-fieldset" aria-label="In fieldset"></fieldset>
       <input id="minus-one" tabindex="-1" aria-label="Minus one">
       <div id="host"></div>
+      <div id="editable" contenteditable="true">Edit</div>
       <a id="link" href="#x">Link</a></div><input id="end" aria-label="End">`);
     const shadow = element('host').attachShadow({ mode: 'open' });
     const inShadow = document.createElement('input');
@@ -268,16 +269,16 @@ describe('the tab stops of a container (N3)', () => {
     shadow.append(inShadow);
     element('start').focus();
     const order: string[] = [];
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 6; index += 1) {
       await userEvent.keyboard('{Tab}');
       const active = document.activeElement?.shadowRoot?.activeElement ?? document.activeElement;
       order.push(active?.id ?? '');
     }
     const stops = tabbables(element('box')).map((stop) => stop.id);
-    expect(stops).toEqual(['radio-b', 'summary', 'in-shadow', 'link']);
+    expect(stops).toEqual(['radio-b', 'summary', 'in-shadow', 'editable', 'link']);
     expect(order).toEqual(
       server.browser === 'webkit'
-        ? ['radio-b', 'summary', 'in-shadow', 'end', '']
+        ? ['radio-b', 'summary', 'in-shadow', 'editable', 'end', '']
         : [...stops, 'end'],
     );
   });
