@@ -321,6 +321,8 @@ Give a modal popup a `position` so that it appears above the fixed element of th
 
 The popup gets `aria-labelledby` and `aria-describedby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. Do the same with `Dialog.Description` and `aria-describedby`.
 
+A change of `disabled` mounts the parts again, so the DOM state of the parts, such as the text of an uncontrolled input, starts again.
+
 ### Detached triggers
 
 A trigger can be inside or outside `Dialog.Root`. For a simple interaction, put `Dialog.Trigger` inside `Dialog.Root`, as the example at the top of this page does.

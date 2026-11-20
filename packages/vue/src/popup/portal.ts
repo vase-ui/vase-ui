@@ -32,7 +32,7 @@ export interface PopupPortalProps {
    * `body`. While it is `null`, the portal renders nothing.
    */
   to?: PortalTarget | undefined;
-  /** Renders the content in place, also on the server. */
+  /** Renders the content in place, also on the server. A change mounts the content again. */
   disabled?: boolean | undefined;
   /** Moves the content after the other content of the same update mounted. */
   defer?: boolean | undefined;
