@@ -42,16 +42,18 @@ export function useCollapsiblePanel(
   // a new element that enters during that leave no enter (test/measurements/collapsible.test.ts),
   // so the new element waits for the old one to go.
   const waiting = shallowRef(false);
-  let leaving: Element | null = null;
+  // A weak reference lets the browser free the removed element of a closed panel.
+  let leaving: WeakRef<Element> | undefined;
   watch(
     () => part.open,
     (open) => {
       writeSize();
       if (!open) {
-        leaving = options.element.value;
+        const element = options.element.value;
+        leaving = element ? new WeakRef(element) : undefined;
         return;
       }
-      const gone = leaving;
+      const gone = leaving?.deref();
       const parent = gone?.parentNode;
       // A kept element stays in the DOM, so it does not leave.
       if (!gone || !parent || gone === options.element.value) return;
