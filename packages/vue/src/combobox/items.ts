@@ -3,8 +3,8 @@ import {
   compareItemEquality,
   defaultItemEquality,
   type ItemEqualityComparer,
-} from '../internals/itemEquality';
-import { flattenLeafItems, stringifyAsLabel, type Group } from '../internals/resolveValueLabel';
+} from '../common/itemEquality';
+import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 
 export type ComboboxPrimitiveValue = string | number | bigint | boolean;
 

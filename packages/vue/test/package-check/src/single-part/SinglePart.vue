@@ -9,7 +9,7 @@ export interface SinglePartState {
 </script>
 
 <script setup lang="ts">
-import { markPart } from '../internals/part-marker';
+import { markPart } from '../common/part-marker';
 
 const props = withDefaults(defineProps<SinglePartProps>(), {
   orientation: 'horizontal',

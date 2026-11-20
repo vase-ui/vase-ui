@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { useLiveRegionReady } from '../common/liveRegion';
+import { useLiveRegionReady } from './liveRegion';
 import { injectComboboxRoot } from './root';
 import type { ComboboxEmptyProps, ComboboxEmptyState } from './types';
 

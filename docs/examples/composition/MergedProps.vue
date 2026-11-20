@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mergeProps } from '@vase-ui/vue/merge-props';
+import { mergeProps } from 'vue';
 import { Menu } from '@vase-ui/vue/menu';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
@@ -19,11 +19,10 @@ function handleMenuClick() {}
         <template #element="{ props, elementRef }">
           <Menu.Trigger
             v-bind="
-              mergeProps(props, {
-                class: 'menu-trigger',
-                style: { color: 'blue' },
-                onClick: handleMenuClick,
-              })
+              mergeProps(
+                { class: 'menu-trigger', style: { color: 'blue' }, onClick: handleMenuClick },
+                props,
+              )
             "
             :ref="elementRef"
           >

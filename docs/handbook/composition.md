@@ -60,15 +60,15 @@ Attributes that you write beside `v-bind="props"` follow the rules of Vue. When 
 
 A part can name another part by its `id`: a trigger names its panel, and a dialog names its title. When an `id` that you write in the slot wins, the part names that `id` after the named part mounts, and follows each change of it. An empty `id` in the slot gives the element no `id`, so no part names it. The server HTML names the `id` that the part gives. To make the server HTML name the element, give the `id` to the part and not to the slot.
 
-For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). To stop an event before the part gets it, see [Stop a native event before a part gets it](/handbook/customization#stop-a-native-event-before-a-part-gets-it). For example, this toolbar button renders a menu trigger in its `element` slot:
+For your listener to run first, give your attributes and `props` to `mergeProps` of Vue, with yours first. To stop an event before the part gets it, see [Stop a native event before a part gets it](/handbook/customization#stop-a-native-event-before-a-part-gets-it). For example, this toolbar button renders a menu trigger in its `element` slot:
 
-<<< ../examples/composition/MergedProps.vue{14-18,22-26}
+<<< ../examples/composition/MergedProps.vue{14-18,22-25}
 
 The rendered `<button>` gets:
 
-- `class="menu-trigger toolbar-button"`: class names are combined, and the rightmost set comes first.
-- `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips the listeners of that element that run after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
+- `class="menu-trigger toolbar-button"`: Vue joins the class names in the order of the arguments.
+- `style="color: red; padding: 4px;"`: Vue merges the style objects, and the last argument wins.
+- Both click listeners, in the order of the arguments, so `handleMenuClick` runs first.
 
 An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call the setter of the slot in a function ref: `:ref="(element) => { elementRef(element); own = element }"`.
 

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, VNodeChild } from 'vue';
 import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
-import type { Group } from '../internals/resolveValueLabel';
+import type { Group } from '../common/resolveValueLabel';
 import type { FocusTarget } from '../popup/focus';
 import type { Align, PlacementProps, Side } from '../popup/placement';
 import type { PopupPortalProps } from '../popup/portal';
@@ -18,7 +18,7 @@ export type {
   Side,
   VirtualElement,
 } from '../popup/placement';
-export type { Filter as ComboboxFilter } from '../internals/filter';
+export type { Filter as ComboboxFilter } from '../common/filter';
 export type { ComboboxFilterOptions } from './filter';
 export type {
   ComboboxGroup,

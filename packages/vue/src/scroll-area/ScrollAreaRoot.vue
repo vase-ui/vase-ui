@@ -11,8 +11,8 @@ import {
   watch,
 } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import StyleDisableScrollbar from '../utils/StyleDisableScrollbar.vue';
-import { useStyleDisableScrollbar } from '../utils/styles';
+import StyleDisableScrollbar from './StyleDisableScrollbar.vue';
+import { useStyleDisableScrollbar } from '../common/styles';
 import { edgeDistances, thumbLength, thumbPlace } from './geometry';
 import {
   readTrack,

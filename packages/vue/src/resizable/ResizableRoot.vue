@@ -16,7 +16,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
-import { tabbable } from '../utils/popups/focus/tabbable';
+import { tabbable } from './tabbable';
 import {
   adjustLayoutToSize,
   applyFixedSizes,

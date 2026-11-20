@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DatePicker } from '../../src/date-picker';
 import { Popover } from '../../src/popover';
-import PlainPart from './PlainPart.vue';
+import PartForm from './PartForm.vue';
 
 defineProps<{
   hasElementSlot: boolean;
@@ -24,8 +24,8 @@ defineProps<{
       >
         <template #element="{ props, elementRef }">
           <section v-bind="props" :ref="elementRef">
-            <PlainPart data-testid="inner" @vue:mounted="onInnerRender" @vue:updated="onInnerRender"
-              >Content</PlainPart
+            <PartForm data-testid="inner" @vue:mounted="onInnerRender" @vue:updated="onInnerRender"
+              >Content</PartForm
             >
           </section>
         </template>
@@ -37,8 +37,8 @@ defineProps<{
         @vue:mounted="onPartRender"
         @vue:updated="onPartRender"
       >
-        <PlainPart data-testid="inner" @vue:mounted="onInnerRender" @vue:updated="onInnerRender"
-          >Content</PlainPart
+        <PartForm data-testid="inner" @vue:mounted="onInnerRender" @vue:updated="onInnerRender"
+          >Content</PartForm
         >
       </DatePicker.Positioner>
     </Popover.Portal>

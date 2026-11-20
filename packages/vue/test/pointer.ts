@@ -4,12 +4,6 @@ import { onTestFinished } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { fireEvent } from './fireEvent';
 
-export async function enterWithMouse(element: HTMLElement, init?: MouseEventInit) {
-  await fireEvent.pointerEnter(element, { pointerType: 'mouse', ...init });
-  await fireEvent.mouseEnter(element, init);
-  await fireEvent.mouseMove(element, init);
-}
-
 export async function moveMouse(from: HTMLElement, to: HTMLElement) {
   await fireEvent.pointerLeave(from, {
     pointerType: 'mouse',
@@ -60,28 +54,6 @@ export const firePointer = {
   move: (element: Element, init: PointerInit) => firePointerEvent('pointerMove', element, init),
   up: (element: Element, init: PointerInit) => firePointerEvent('pointerUp', element, init),
 };
-
-/**
- * Presses an element the way a touch screen does before the click: a touch `pointerdown`
- * followed by the compatibility `mousedown`.
- */
-export async function pressWithTouch(element: HTMLElement) {
-  await fireEvent.pointerDown(element, { pointerType: 'touch' });
-  await fireEvent.mouseDown(element);
-}
-
-/**
- * Presses an element the way Chrome performs a screen reader activation (TalkBack, VoiceOver,
- * NVDA): a zero-pressure 1x1 mouse press with no buttons, followed by a `detail: 0` click.
- */
-export async function pressWithScreenReader(element: Element) {
-  const pointerInit = { pointerType: 'mouse', width: 1, height: 1, pressure: 0 };
-  await fireEvent.pointerDown(element, { ...pointerInit, detail: 0, buttons: 0 });
-  await fireEvent.mouseDown(element, { detail: 0 });
-  await fireEvent.pointerUp(element, pointerInit);
-  await fireEvent.mouseUp(element, { detail: 0 });
-  await fireEvent.click(element, { detail: 0 });
-}
 
 /**
  * Returns the client point of the center of `element` as the init of a mouse event. A dispatched

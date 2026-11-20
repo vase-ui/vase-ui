@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { mergeProps, onMounted, onUnmounted, provide, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { styleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar } from '../common/styles';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
 import type { ScrollAreaViewportProps, ScrollAreaViewportState } from './types';
 

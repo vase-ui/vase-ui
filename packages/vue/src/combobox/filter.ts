@@ -1,6 +1,6 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
-import { getFilter, type Filter, type GetFilterParameters } from '../internals/filter';
-import { isGroupedItems, stringifyAsLabel, type Group } from '../internals/resolveValueLabel';
+import { getFilter, type Filter, type GetFilterParameters } from '../common/filter';
+import { isGroupedItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 import { useLocale } from '../locale-provider/part';
 
 export type { Filter };

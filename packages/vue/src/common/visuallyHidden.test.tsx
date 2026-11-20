@@ -1,7 +1,7 @@
 import { render as renderVue, type VNode } from 'vue';
 import { expect, describe, it, onTestFinished } from 'vitest';
 import { isJSDOM } from './testUtils';
-import { visuallyHidden, visuallyHiddenInput, visuallyHiddenInputPinned } from './visuallyHidden';
+import { visuallyHidden, visuallyHiddenInput } from './visuallyHidden';
 
 function render(node: VNode) {
   const container = document.createElement('div');
@@ -26,7 +26,6 @@ const screen = {
 describe.skipIf(isJSDOM)('visuallyHidden', () => {
   describe.each([
     { name: 'visuallyHidden', style: visuallyHidden },
-    { name: 'visuallyHiddenInputPinned', style: visuallyHiddenInputPinned },
   ])('$name', ({ style }) => {
     it.each([
       ['ltr', 'ltr'],

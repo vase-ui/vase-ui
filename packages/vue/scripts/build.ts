@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import type { Rolldown, UserConfig } from 'tsdown';
 import Vue from 'unplugin-vue/rolldown';
 
-const NOT_ENTRY_FOLDERS = new Set(['internals', 'utils', 'common']);
+const NOT_ENTRY_FOLDERS = new Set(['common', 'list', 'popup']);
 const PREHYDRATION_SCRIPT = 'prehydrationScript.min';
 
 // The first line of the `index.ts` of an entry whose declarations name a `Temporal` type. The
@@ -32,10 +32,7 @@ export function familyEntries(sourceRoot: string): Record<string, string> {
 }
 
 function isInBarrel(sourceRoot: string, name: string): boolean {
-  return (
-    !name.startsWith('unstable-') &&
-    !readFileSync(join(sourceRoot, name, 'index.ts'), 'utf8').startsWith(TEMPORAL_REFERENCE)
-  );
+  return !readFileSync(join(sourceRoot, name, 'index.ts'), 'utf8').startsWith(TEMPORAL_REFERENCE);
 }
 
 export function writeBarrel(barrelFile: string, sourceRoots: string[]): void {
@@ -61,7 +58,7 @@ export function writeBarrel(barrelFile: string, sourceRoots: string[]): void {
 // The stub is the file that the `browser` condition of that import gives.
 function prehydrationEntries(sourceRoots: string[]): Record<string, string> {
   const entries: Record<string, string> = {
-    'internals/prehydrationScript.stub': 'src/internals/prehydrationScript.stub.ts',
+    'common/prehydrationScript.stub': 'src/common/prehydrationScript.stub.ts',
   };
   for (const sourceRoot of sourceRoots.filter((root) => existsSync(root))) {
     for (const file of readdirSync(sourceRoot, { encoding: 'utf8', recursive: true })) {

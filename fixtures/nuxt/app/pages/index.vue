@@ -32,7 +32,6 @@
       <li><NuxtLink to="/csp-provider">CSP Provider</NuxtLink></li>
       <li><NuxtLink to="/use-element">useElement</NuxtLink></li>
       <li><NuxtLink to="/rtl">Right to left</NuxtLink></li>
-      <li><NuxtLink to="/portal">Portal</NuxtLink></li>
       <li><NuxtLink to="/toast">Toast</NuxtLink></li>
       <li><NuxtLink to="/select">Select</NuxtLink></li>
       <li><NuxtLink to="/navigation-menu">Navigation Menu</NuxtLink></li>

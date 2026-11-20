@@ -1,7 +1,7 @@
 import { computed, onUnmounted, type Ref } from 'vue';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { useTimeout } from '../common/useTimeout';
-import { getMaxScrollOffset, normalizeScrollOffset } from '../utils/scrollEdges';
+import { getMaxScrollOffset, normalizeScrollOffset } from '../common/scrollEdges';
 import { injectSelectPositioner, injectSelectRoot, type SelectContext } from './root';
 import type { SelectScrollArrowState } from './types';
 

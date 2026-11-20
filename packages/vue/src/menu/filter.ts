@@ -10,7 +10,7 @@ import {
 } from 'vue';
 import { activeElement } from '../common/shadowDom';
 import { ownerDocument, ownerWindow } from '../common/owner';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
+import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
 import { isComposing } from '../popup/layer';
 import type { MenuContext } from './root';
 import { submenuOf } from './root';

@@ -9,7 +9,7 @@ export const PREHYDRATION_SCRIPT_PART_SCRIPT =
 import { computed } from 'vue';
 import { useIsHydrating } from '../../src/common/hydration';
 import { CSPProvider } from '../../src/csp-provider';
-import PrehydrationScript from '../../src/internals/PrehydrationScript.vue';
+import PrehydrationScript from '../../src/tabs/PrehydrationScript.vue';
 
 defineProps<{
   /** The nonce that the part gives to `CSPProvider`. */

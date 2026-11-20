@@ -84,7 +84,7 @@ import type {
 } from './types';
 
 export { createHandle, MenuHandle as Handle } from './root';
-export { getFilter as useFilter } from '../internals/filter';
+export { getFilter as useFilter } from '../common/filter';
 
 /**
  * Groups the parts of the menu.

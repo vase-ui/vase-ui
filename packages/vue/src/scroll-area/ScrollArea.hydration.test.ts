@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import ScrollAreaOnServer from '../../test/fixtures/ScrollAreaOnServer.vue';
 import { hydrate, renderOnServer, settle } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
-import { styleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar } from '../common/styles';
 
 function disableScrollbarStyles(root: ParentNode) {
   return [...root.querySelectorAll('style')].filter((style) =>

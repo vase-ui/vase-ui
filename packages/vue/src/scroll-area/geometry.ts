@@ -1,5 +1,5 @@
 import { clamp } from '../common/clamp';
-import { normalizeScrollOffset } from '../utils/scrollEdges';
+import { normalizeScrollOffset } from '../common/scrollEdges';
 
 /** The shortest thumb, in pixels. */
 export const MIN_THUMB_LENGTH = 16;

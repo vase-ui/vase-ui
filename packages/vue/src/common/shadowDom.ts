@@ -1,4 +1,4 @@
-import { isElement, isNode, isShadowRoot } from '@floating-ui/utils/dom';
+import { isElement, isShadowRoot } from '@floating-ui/utils/dom';
 
 // Goes down through open shadow roots. For a closed shadow root, `shadowRoot` is `null`.
 export function activeElement(doc: Document) {
@@ -74,27 +74,4 @@ export function closest(
   }
 
   return null;
-}
-
-export function closestInEventPath(
-  event: Event,
-  matches: (element: Element) => boolean,
-): Element | null {
-  const path = event.composedPath?.();
-  if (path?.length) {
-    return path.find((node): node is Element => isElement(node) && matches(node)) ?? null;
-  }
-  // The browser clears the path after dispatch. The target still has its composed ancestors.
-  return isNode(event.target) ? closest(event.target, matches) : null;
-}
-
-export function getTarget(event: Event) {
-  if ('composedPath' in event) {
-    // The composed path is empty after dispatch, so use `target` then.
-    return event.composedPath()[0] ?? event.target;
-  }
-
-  // TypeScript assumes that `composedPath` always exists.
-  // An old browser with no shadow DOM does not have it.
-  return (event as Event).target;
 }

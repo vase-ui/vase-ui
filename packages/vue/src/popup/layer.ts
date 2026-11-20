@@ -12,8 +12,8 @@ import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { isShadowRoot } from '@floating-ui/utils/dom';
 import { activeElement } from '../common/shadowDom';
-import { useScrollLock } from '../common/useScrollLock';
-import { followRootNode } from '../internals/observeRootNode';
+import { useScrollLock } from './useScrollLock';
+import { followRootNode } from '../common/observeRootNode';
 import type { PopupRoot } from './root';
 
 /** What an open root gives to the stack. The properties are reactive. */
@@ -108,24 +108,10 @@ export function layerOf(root: PopupRoot) {
   return layersOfRoots.get(root);
 }
 
-/** The layer is open and no open layer is above it. */
-export function isTopLayer(layer: Layer) {
-  return stack.at(-1)?.layer === layer;
-}
-
 /** The open layers above the layer, from the lowest one. */
 export function layersAbove(layer: Layer): Layer[] {
   const index = stack.findIndex((entry) => entry.layer === layer);
   return index === -1 ? [] : stack.slice(index + 1).map((entry) => entry.layer);
-}
-
-/**
- * The node is inside the layer of the open root: in its popup, its sentinels or its triggers, or in
- * a layer above it. A closed root has no layer.
- */
-export function isInside(root: PopupRoot, node: Node) {
-  const entry = stack.find((each) => each.layer.root === root);
-  return !!entry && insideElements(entry).some((element) => element.contains(node));
 }
 
 /** The element is in the popup of the layer, or in a layer above it. */

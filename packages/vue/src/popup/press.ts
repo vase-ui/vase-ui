@@ -3,8 +3,8 @@ import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { isElement } from '../common/element';
 import { ownerDocument } from '../common/owner';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
-import { isReleaseAtPressPoint } from '../utils/popups/isReleaseAtPressPoint';
+import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
+import { isReleaseAtPressPoint } from './isReleaseAtPressPoint';
 import type { PopupRoot } from './root';
 
 /** The times in milliseconds from the press after which its release acts. */

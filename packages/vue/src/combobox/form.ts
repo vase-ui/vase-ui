@@ -1,7 +1,7 @@
 import { inject } from 'vue';
 import { useValueInputs } from '../common/valueInputs';
 import { fieldKey } from '../field/control';
-import { isSelectedValueDirty } from '../internals/itemEquality';
+import { isSelectedValueDirty } from '../common/itemEquality';
 import type { ComboboxRootContext } from './root';
 import { createComboboxDetails } from './root';
 

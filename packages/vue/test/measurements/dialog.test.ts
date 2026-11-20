@@ -104,7 +104,6 @@ describe('a part in a `<Transition>` in an element (D3)', () => {
   ])(
     'leaves with its classes only while the element stays: viewportStays=$viewportStays',
     async ({ viewportStays, classes }) => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const scene = reactive({ open: true });
       mount(MeasureLeaveInElement, { scene, viewportStays });
       await nextTick();
