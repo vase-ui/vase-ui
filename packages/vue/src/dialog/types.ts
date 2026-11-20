@@ -114,7 +114,8 @@ export interface DialogPopupProps
   initialFocus?: FocusTarget | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
-   * had the focus before the open.
+   * had the focus before the open. For an element that is no tab stop, the focus goes to its first
+   * tab stop outside the popup. An element in the popup is no target.
    */
   finalFocus?: FocusTarget | undefined;
 }

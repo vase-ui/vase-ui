@@ -24,9 +24,9 @@ const CANDIDATES =
  * elements in `skipped` are none.
  */
 export function tabbables(container: Element, skipped?: Element): HTMLElement[] {
-  const found: HTMLElement[] = [];
-  collect(container, found);
-  if (skipped) found.splice(0, Infinity, ...found.filter((element) => !skipped.contains(element)));
+  const collected: HTMLElement[] = [];
+  collect(container, collected);
+  const found = skipped ? collected.filter((element) => !skipped.contains(element)) : collected;
   return found.filter((element) => {
     if (!isNamedRadio(element)) return true;
     const group = found.filter(

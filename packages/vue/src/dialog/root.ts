@@ -1,7 +1,6 @@
 import {
   computed,
   inject,
-  mergeProps,
   provide,
   shallowRef,
   useAttrs,
@@ -220,7 +219,7 @@ export function useDialogTrigger(
   function elementProps() {
     const popup = context.value?.root.popup;
     return trigger.button.mergeAttributes(
-      mergeProps({
+      {
         id: elementId.value,
         'aria-haspopup': 'dialog',
         'aria-expanded': trigger.open.value ? 'true' : 'false',
@@ -229,7 +228,7 @@ export function useDialogTrigger(
         onKeydown: (event: KeyboardEvent) => {
           if (trigger.open.value) context.value?.focus.onTriggerKeydown(event);
         },
-      }),
+      },
       attrs,
     );
   }
