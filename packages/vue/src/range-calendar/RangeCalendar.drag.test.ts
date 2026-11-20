@@ -90,6 +90,18 @@ describe('a drag with the real pointer', () => {
     expect(log).toEqual(['valueChange 2026-11-10 2026-11-12 drag']);
   });
 
+  test('does nothing in a read-only range', async () => {
+    const { at, log, shown } = await mountRange({ readonly: true });
+    await userEvent.pointer([
+      { coords: at('2026-11-10'), keys: '[MouseLeft>]' },
+      { coords: at('2026-11-12') },
+    ]);
+    expect(shown()).toEqual({ start: [], end: [] });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    await nextTick();
+    expect(log).toEqual([]);
+  });
+
   test('stops at the last day that maxDays allows', async () => {
     const { at, log } = await mountRange({ maxDays: 2 });
     await userEvent.pointer([

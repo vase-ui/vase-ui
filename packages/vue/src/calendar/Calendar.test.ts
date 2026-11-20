@@ -472,10 +472,30 @@ describe('today and the calendar of the grid', () => {
     clock.mockRestore();
   });
 
+  test('with no today, the root reads the clock at a move of a page of weeks in its month', async () => {
+    const clock = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(day('2026-11-02'));
+    const { root, button, next } = await mountCalendar({
+      root: {
+        locale: 'en-US',
+        visibleDuration: { weeks: 1 },
+        defaultFocusedDate: day('2026-11-02'),
+      },
+    });
+    expect(root.querySelector('[aria-current=date]')).toBe(button('2026-11-02'));
+    clock.mockReturnValue(day('2026-11-10'));
+    next().click();
+    await nextTick();
+    expect(root.querySelector('[aria-current=date]')).toBe(button('2026-11-10'));
+    clock.mockRestore();
+  });
+
   test('the grid takes no calendar from the locale', async () => {
-    const { cell } = await mountCalendar({ root: { today, locale: 'fa-IR' } });
-    expect(cell('2026-11-01')).toHaveAttribute('role', 'gridcell');
-    expect(cell('2026-11-01').querySelector('button')).not.toBeNull();
+    const { root } = await mountCalendar({ root: { today, locale: 'fa-IR' } });
+    // A Persian grid would show the month from 2026-10-23 to 2026-11-21.
+    const days = [...root.querySelectorAll('[data-date]')]
+      .filter((cell) => cell.querySelector('button'))
+      .map((cell) => cell.getAttribute('data-date'));
+    expect([days[0], days.at(-1)]).toEqual(['2026-11-01', '2026-11-30']);
   });
 
   test('a value that becomes empty keeps the kind of its last value for the next value', async () => {

@@ -98,7 +98,7 @@ export interface CalendarForPart {
   dayButtonProps(day: Temporal.PlainDate): Record<string, unknown> | undefined;
   press(day: Temporal.PlainDate, event: MouseEvent): void;
   canMove(direction: 1 | -1): boolean;
-  /** Moves the page one step. Returns `false` at a limit, after a cancel and when the parent keeps the month. */
+  /** Moves the page one step. Returns `false` at a limit and after a cancel. */
   move(direction: 1 | -1, event: Event): boolean;
   /** Shows `month` in the page at `index`, for a select. */
   showMonth(month: Temporal.PlainYearMonth, index: number, event: Event): void;
@@ -492,6 +492,8 @@ export function useCalendar(
   ) {
     const start = { day, month };
     if (isOfVisibleMonth(start)) {
+      // The page moves in its month, so `setMonth` does not read the clock.
+      if (details && props.today === undefined) readClock();
       durationStart.value = start;
       requestedStart.value = null;
       return true;

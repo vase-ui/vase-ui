@@ -243,7 +243,6 @@ async function renderOnClient(
   }
 }
 
-// `useVaseUiId` gives `vase-ui-` and the id of Vue's `useId`, such as `v-0` or `v-1-2`.
 function serializeChildren(element: Element): string {
   return Array.from(element.childNodes, serialize).join('');
 }

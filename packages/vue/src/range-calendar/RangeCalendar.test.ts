@@ -75,6 +75,39 @@ describe('the range', () => {
     ]);
   });
 
+  test('a press that makes a range shorter than minDays starts a new range', async () => {
+    const { button, log } = await mountRange({ minDays: 3 });
+    button('2026-11-10').click();
+    button('2026-11-11').click();
+    expect(log).toEqual([
+      'valueChange 2026-11-10 null day-press',
+      'valueChange 2026-11-11 null day-press',
+    ]);
+  });
+
+  test('a new end has the kind, the time and the zone of the end that it replaces', async () => {
+    const tokyo = (date: string) => Temporal.ZonedDateTime.from(`${date}T09:30[Asia/Tokyo]`);
+    const { button, log } = await mountRange({
+      defaultValue: [tokyo('2026-11-02'), tokyo('2026-11-04')],
+    });
+    button('2026-11-10').click();
+    expect(log).toEqual(['valueChange 2026-11-10T09:30:00+09:00[Asia/Tokyo] null day-press']);
+  });
+
+  test('a read-only range takes no press, no preview and no Escape', async () => {
+    const { button, log, shown } = await mountRange({
+      readonly: true,
+      defaultValue: [day('2026-11-10'), null],
+    });
+    button('2026-11-12').click();
+    await userEvent.hover(button('2026-11-13'));
+    button('2026-11-13').focus();
+    await userEvent.keyboard('{Escape}');
+    await nextTick();
+    expect(log).toEqual([]);
+    expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
+  });
+
   test('a range does not cross an unavailable day, unless allowNonContiguousRanges', async () => {
     const unavailableDates = day('2026-11-11');
     const blocked = await mountRange({ unavailableDates });

@@ -190,7 +190,7 @@ export interface CalendarBaseProps extends AsProps, /* @vue-ignore */ Omit<HTMLA
   locale?: Intl.LocalesArgument | undefined;
   /**
    * The calendar of the grid, such as `gregory` or `persian`. The default is the calendar of a
-   * value that is not ISO, else the calendar of the locale. The value keeps its own calendar.
+   * value that is not ISO, else `gregory`. The value keeps its own calendar.
    */
   calendar?: string | undefined;
   /**
@@ -258,7 +258,7 @@ export interface CalendarRootProps<
   disabledYears?: ((year: Temporal.PlainYearMonth) => boolean) | undefined;
 }
 
-/** The props of a part that renders a `<div>` and has no prop of its own. */
+/** `as` and the attributes of the element of a part. */
 interface DivProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 /** WAI-ARIA 1.3 gives each element `aria-description`, and the types of Vue do not list it. */
