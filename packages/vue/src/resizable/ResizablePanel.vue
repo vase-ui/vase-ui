@@ -188,6 +188,7 @@ defineExpose({
   expand: () => root.expandPanel(panelId.value),
   /** Gives the panel a size, as far as the constraints allow. No other panel collapses for it. */
   resize: (wanted: number | string) => root.resizePanel(panelId.value, wanted),
+  /** Returns `true` while the panel is collapsed. */
   isCollapsed: () => state.value.collapsed,
 });
 </script>

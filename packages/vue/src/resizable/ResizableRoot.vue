@@ -66,11 +66,15 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   resizeMode: 'live',
 });
 const emit = defineEmits<{
-  /** The user changes the layout. `details.cancel()` keeps the layout. */
+  /**
+   * The user changes the layout. `details.cancel()` keeps the layout, so a listener can write a
+   * layout of its own to `v-model`, such as a layout that snaps to a rule of the app.
+   */
   layoutChange: [layout: ResizableLayout, details: ResizableRootChangeEventDetails];
   /**
    * Comes after `layoutChange`, unless a listener cancelled it. Also comes alone after a method of a
-   * panel, and after a panel that mounts with no entry.
+   * panel, and after a panel that mounts with no entry. A change of the size of the root emits
+   * nothing.
    */
   'update:modelValue': [layout: ResizableLayout];
   /** The user ends a change: the release of a drag, a key, a double click. */

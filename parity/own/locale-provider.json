@@ -5,6 +5,6 @@
     "https://vuejs.org/guide/components/provide-inject.html",
     "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch"
   ],
-  "reason": "Base UI has no provider for the locale. A developer gives the locale of the page once, and each part below the provider formats its text in that locale, on the server and in the browser.",
+  "reason": "A developer gives the locale of the page one time, and each part below the provider uses that locale, on the server and in the browser.",
   "parts": ["LocaleProvider"]
 }

@@ -3,6 +3,6 @@
     "https://vuejs.org/guide/essentials/template-refs.html#function-refs",
     "https://vuejs.org/guide/components/attrs.html"
   ],
-  "reason": "The Vue form of `useRender` of Base UI. A component of the developer gets its native element from a function ref, and a component in its `element` slot gives the element that it exposes. The component and a part can then be the element of each other.",
+  "reason": "`useElement` is the Vue form of `useRender` of Base UI. A component of the developer gets its native element from a function ref, and a component in its `element` slot gives the element that it exposes. The component and a part can then be the element of each other.",
   "functions": ["useElement"]
 }

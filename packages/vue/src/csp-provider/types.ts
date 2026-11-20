@@ -1,10 +1,9 @@
 export interface CSPProviderProps {
-  /**
-   * The nonce value to apply to inline `<style>` and `<script>` tags.
-   */
+  /** The `nonce` attribute of the inline `<style>` and `<script>` elements of the parts. */
   nonce?: string | undefined;
   /**
-   * Whether inline `<style>` elements created by Vase UI components should not be rendered. Instead, components must specify the CSS styles via custom class names or other methods.
+   * The parts render no inline `<style>` element. Put the rules of each such element in your own
+   * style sheet.
    * @default false
    */
   disableStyleElements?: boolean | undefined;
