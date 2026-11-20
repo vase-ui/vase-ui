@@ -142,9 +142,12 @@ describe('the swipe (B8)', () => {
     let pointerId = 0;
     root.addEventListener('pointerdown', (event) => (pointerId = event.pointerId));
     await drag(root, down(20, 60), false);
+    expect(root).toHaveAttribute('data-swiping');
     root.releasePointerCapture(pointerId);
-    await nextTick();
-    expect(root).not.toHaveAttribute('data-swiping');
+    // The browser sends `lostpointercapture` before the next pointer event.
+    const start = startOf(root);
+    await userEvent.pointer({ coords: { x: start.x + 1, y: start.y + 61 } });
+    await waitFor(() => expect(root).not.toHaveAttribute('data-swiping'));
     expect(root.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     await nextTick();

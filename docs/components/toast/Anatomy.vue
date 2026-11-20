@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Toast } from '@vase-ui/vue/toast';
 
-defineProps<{ toast: Toast.Root.ToastObject }>();
+const { toasts } = Toast.useToastManager();
 </script>
 
 <template>
-  <Toast.Provider>
-    <Toast.Portal>
-      <Toast.Viewport>
+  <Toast.Portal>
+    <Toast.Viewport aria-label="Notifications">
+      <TransitionGroup name="toast">
         <!-- Stacked toasts -->
-        <Toast.Root :toast="toast">
+        <Toast.Root v-for="toast in toasts" :key="toast.id" :toast="toast">
           <Toast.Content>
             <Toast.Title />
             <Toast.Description />
@@ -17,9 +17,15 @@ defineProps<{ toast: Toast.Root.ToastObject }>();
             <Toast.Close />
           </Toast.Content>
         </Toast.Root>
+      </TransitionGroup>
+    </Toast.Viewport>
+  </Toast.Portal>
 
-        <!-- Anchored toasts -->
-        <Toast.Positioner :toast="toast">
+  <!-- Anchored toasts, in a provider of their own -->
+  <Toast.Portal>
+    <Toast.Viewport aria-label="Anchored notifications">
+      <TransitionGroup name="toast" :duration="100">
+        <Toast.Positioner v-for="toast in toasts" :key="toast.id" :toast="toast">
           <Toast.Root :toast="toast">
             <Toast.Arrow />
             <Toast.Content>
@@ -30,7 +36,7 @@ defineProps<{ toast: Toast.Root.ToastObject }>();
             </Toast.Content>
           </Toast.Root>
         </Toast.Positioner>
-      </Toast.Viewport>
-    </Toast.Portal>
-  </Toast.Provider>
+      </TransitionGroup>
+    </Toast.Viewport>
+  </Toast.Portal>
 </template>

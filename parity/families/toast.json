@@ -3,47 +3,281 @@
   "matchedCommit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "exceptions": [
     {
-      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
-      "describe": ["<Toast.Action />"],
-      "title": "renders content passed through the render prop",
+      "upstream": "packages/react/src/toast/action/ToastActionDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/close/ToastCloseDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/content/ToastContentDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/description/ToastDescriptionDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/root/ToastRootCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/root/ToastRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/title/ToastTitleDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/viewport/ToastViewportCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/viewport/ToastViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/focusVisible.ts",
+      "kind": "not-applicable",
+      "reason": "The parts ask the browser with `matches(':focus-visible')` where they need the rule."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/test-utils.tsx",
+      "kind": "not-applicable",
+      "reason": "The fixtures `test/fixtures/Toast*.vue` hold the components of the tests."
+    },
+    {
+      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the action: its `<button type=\"button\">`, `as`, the content of `actionProps.children` over the slot, the attributes and listeners of `actionProps`, and no render with no content. The part reads its element, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "packages/react/src/toast/arrow/ToastArrow.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the arrow: `aria-hidden` and the side of its positioner, and the error outside a positioner."
+    },
+    {
+      "upstream": "packages/react/src/toast/close/ToastClose.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the close button: its `<button type=\"button\">`, the close at a press, and `aria-hidden` while the stack is collapsed."
+    },
+    {
+      "upstream": "packages/react/src/toast/content/ToastContent.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the content: `data-behind`, `data-expanded` and a new measure of the root when the content changes."
+    },
+    {
+      "upstream": "packages/react/src/toast/createToastManager.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/provider.test.ts",
+      "reason": "`provider.test.ts` and `Toast.test.ts` test the manager: `add`, `update`, `close` and `promise` in each provider from the mount to the unmount, the timers of an update, and the promise of each provider (VUE-90). The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/toast/description/ToastDescription.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the description: its `<p>`, its id in `aria-describedby`, and the name of a toast with no title (VUE-99)."
+    },
+    {
+      "upstream": "packages/react/src/toast/title/ToastTitle.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the title: its `<h2>`, its id in `aria-labelledby`, and an empty `id` (VUE-93)."
+    },
+    {
+      "upstream": "packages/react/src/toast/portal/ToastPortal.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the portal: the viewport in `<body>`, and in place with no portal. The portal renders no element of its own, so it has no `render` and `className`."
+    },
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositioner.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the positioner: the place at the anchor of `positionerProps`, a prop of the part over `positionerProps`, the defaults with no anchor, `--toast-index`, and a positioner in `<TransitionGroup>` with `duration`. A positioner in its leave keeps its last index, because Vue does not patch an element that leaves."
     },
     {
       "upstream": "packages/react/src/toast/provider/ToastProvider.test.tsx",
-      "describe": ["<Toast.Provider />"],
-      "title": "does not sync provider props from an abandoned render",
-      "kind": "not-applicable",
-      "reason": "The case suspends a React transition, and React then abandons a render. Vue has no render that it abandons."
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/provider.test.ts",
+      "reason": "`provider.test.ts` tests the provider: a change of `timeout` and `limit` that a part below reads in the same update, and the timers. The provider has no pause for a held branch: Vue has no `Activity`, and a part keeps no state about `KeepAlive` (rule 5)."
+    },
+    {
+      "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the root: the role, the variables, the ids, Escape (VUE-127), the priority `high`, the `inert` of a limited toast and the leave in `<TransitionGroup>`. `Toast.swipe.test.ts` tests the swipe with a real pointer. A list with an index key gives a root another toast; a list of toasts needs `:key=\"toast.id\"`, as the Vue guide asks. The second name `data-swipe-ignore` is cut: the one name is `data-vase-ui-swipe-ignore`. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/toast/store.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/provider.test.ts",
+      "reason": "`provider.test.ts` and `Toast.test.ts` test the list and the timers: the time that is left at a stop, a full time for a timer with no time left, and each state that stops the timers. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the composable: `add`, `update`, `close`, `promise`, `limit`, `timeout`, the ids and the list with the parts. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
     },
     {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
-      "describe": ["hasRenderableChildren"],
-      "title": "requires an element whose children are renderable",
       "kind": "replaced",
-      "test": "packages/vue/src/toast/utils/useToastLabelPart.test.tsx",
-      "reason": "The case builds React elements. A Vue part cannot read the children of a vnode, so Vase UI has no `hasRenderableChildren`. The cases of the label parts test the rule that replaces it: a part renders only while it has a default slot or a label with content."
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the content rule of the label parts: `0` is content, and an empty text, `null` and a Boolean are none. A part cannot read the children of a vnode."
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
-      "title": "renders content passed through the render prop",
-      "kind": "not-applicable",
-      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the label parts: the render only with content, a label that is a function, the last title and description (VUE-56), and the `element` slot."
     },
     {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
-      "title": "renders content passed through a render function",
-      "kind": "not-applicable",
-      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.test.ts",
+      "reason": "`Toast.test.ts` tests the viewport: the region, F6, Tab and Shift+Tab with the sentinels, Escape (VUE-130), the focus at a close, the hover, the window and the page (BUG-6174, VUE-76), and the alerts. The viewport has no default name: the developer gives `aria-label` in the language of the page (rule 8.13)."
     },
     {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
-      "title": "`wires ${attribute} to a part rendered through the render prop`",
+      "upstream": "packages/react/src/toast/createToastManager.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.spec.ts",
+      "reason": "`Toast.spec.ts` tests the types of the manager, its data and the result of `useToastManager`."
+    },
+    {
+      "upstream": "packages/react/src/toast/useToastManager.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/Toast.spec.ts",
+      "reason": "`Toast.spec.ts` tests the types of the manager, its data and the result of `useToastManager`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastActionDataAttributes",
       "kind": "not-applicable",
-      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastCloseDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastContentDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastDescriptionDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastRootCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastTitleDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastViewportCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "ToastViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the root has no `data-starting-style`, `data-ending-style` and `data-limited`: `<TransitionGroup>` around the roots animates them, and a limited root has `[inert]` (rules 8.9 and 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "Close",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
+      "entry": "Action",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -141,6 +375,11 @@
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal moves its content after the other content of the same update mounted, as `defer` of `<Teleport>` does."
     }
   ],
   "returnTypeDifferences": [
@@ -155,5 +394,154 @@
       "reason": "`setup` runs one time, so a plain array does not follow a change of the toasts. `toasts` of the result is thus a `ComputedRef` of the array. The source of Base UI returns `UseToastManagerReturnValue<Data>`, and its `types.md` prints the type argument as `{}`."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/toast/action/ToastAction.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastAction.vue",
+      "behavior": "The button of the action of a toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/arrow/ToastArrow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastArrow.vue",
+      "behavior": "The arrow of an anchored toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/close/ToastClose.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastClose.vue",
+      "behavior": "The button that closes a toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/content/ToastContent.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastContent.vue",
+      "behavior": "The content of a toast, and the measure of its root.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/createToastManager.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/manager.ts",
+      "behavior": "The manager and the ids of the toasts.",
+      "witness": "packages/vue/src/toast/provider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/description/ToastDescription.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastDescription.vue",
+      "behavior": "The description of a toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/parts.ts",
+      "behavior": "The parts of the family and their types.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/portal/ToastPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastPortal.vue",
+      "behavior": "The portal of the viewport.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastPositioner.vue",
+      "behavior": "The place of an anchored toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/positioner/ToastPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/root.ts",
+      "behavior": "What the positioner gives to the arrow.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/provider/ToastProvider.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastProvider.vue",
+      "behavior": "The provider of the toasts and its alerts.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/provider/ToastProviderContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider.ts",
+      "behavior": "What the provider gives to its parts.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/root/ToastRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastRoot.vue",
+      "behavior": "One toast: its roles, its variables, its keys and its leave.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/root/ToastRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/root.ts",
+      "behavior": "What the root gives to its parts.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/store.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider.ts",
+      "behavior": "The list of the open toasts and their timers.",
+      "witness": "packages/vue/src/toast/provider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/title/ToastTitle.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastTitle.vue",
+      "behavior": "The title of a toast.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/useToastManager.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider.ts",
+      "behavior": "The composable that gives the toasts and the methods of the provider.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/isRenderableNode.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/label.ts",
+      "behavior": "The content rule of the label parts.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/resolvePromiseOptions.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/provider.ts",
+      "behavior": "The options of a state of `promise`.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/label.ts",
+      "behavior": "The slot read of the label parts.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toast/viewport/ToastViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toast/ToastViewport.vue",
+      "behavior": "The region of the toasts: F6, the sentinels, the hover, the focus and the window.",
+      "witness": "packages/vue/src/toast/Toast.test.ts"
+    }
+  ]
 }

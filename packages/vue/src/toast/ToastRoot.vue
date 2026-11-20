@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, mergeProps, onBeforeUnmount, onMounted, onUnmounted, shallowRef, useAttrs } from 'vue';
+import {
+  computed,
+  mergeProps,
+  onBeforeUnmount,
+  onMounted,
+  onUnmounted,
+  shallowRef,
+  useAttrs,
+} from 'vue';
 import { useElement } from '../common/element';
 import { isComposing } from '../popup/layer';
 import { injectToastProvider } from './provider';
@@ -33,7 +41,10 @@ const swipe = useToastSwipe({
   close: () => provider.close(props.toast.id),
 });
 
-type Label = { kind: 'title' | 'description'; label: { readonly id: string; readonly shown: boolean } };
+type Label = {
+  kind: 'title' | 'description';
+  label: { readonly id: string; readonly shown: boolean };
+};
 const labels = shallowRef<Label[]>([]);
 const lastLabel = (kind: Label['kind']) =>
   labels.value.findLast((entry) => entry.kind === kind && entry.label.shown)?.label.id;

@@ -115,8 +115,7 @@ export interface ToastManager<Data extends object = any> {
   update: <T extends Data = Data>(
     id: string,
     options:
-      | ToastManagerUpdateOptions<T>
-      | ((toast: ToastObject<T>) => ToastManagerUpdateOptions<T>),
+      ToastManagerUpdateOptions<T> | ((toast: ToastObject<T>) => ToastManagerUpdateOptions<T>),
   ) => void;
   /** Shows a toast for each state of the promise. Gives a promise with its result. */
   promise: <Value, T extends Data = Data>(

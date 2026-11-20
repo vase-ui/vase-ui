@@ -16,6 +16,7 @@ import {
   type Slots,
 } from 'vue';
 import { touchDrag } from '../pointer';
+import { takeReportedMessages } from '../reportedMessages';
 
 const engine = server.browser;
 let root: HTMLElement | undefined;
@@ -44,7 +45,8 @@ function mountVue(css: string, render: () => ReturnType<typeof h>) {
   app.mount(element('app'));
 }
 
-const FADE = '.t-enter-active, .t-leave-active { transition: opacity 300ms } .t-enter-from, .t-leave-to { opacity: 0 }';
+const FADE =
+  '.t-enter-active, .t-leave-active { transition: opacity 300ms } .t-enter-from, .t-leave-to { opacity: 0 }';
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const frames = () =>
   new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -58,7 +60,8 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
         list.value.map((id) => h('div', { key: id, 'data-id': id }, id)),
       ),
     );
-    const read = () => [...document.querySelectorAll('[data-id="a"]')].map((each) => each.className);
+    const read = () =>
+      [...document.querySelectorAll('[data-id="a"]')].map((each) => each.className);
     list.value = ['b'];
     await nextTick();
     expect(read()).toEqual(['t-leave-from t-leave-active']);
@@ -72,7 +75,10 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
 
   test('T2: Vue does not patch an element that leaves, a DOM write stays, `onBeforeUnmount` comes before the leave classes, and an inline `transition: none` removes the element at once', async () => {
     const list = ref(['a', 'b', 'c']);
-    const items: Record<string, { dir: { value: string }; none: { value: boolean }; el?: Element }> = {};
+    const items: Record<
+      string,
+      { dir: { value: string }; none: { value: boolean }; el?: Element }
+    > = {};
     const Item = {
       props: ['id'],
       setup(props: { id: string }) {
@@ -191,6 +197,12 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     list.value = ['b'];
     await nextTick();
     expect(a.className).toBe('t-leave-from t-leave-active');
+    // Vue warns in development, because the root of the component is the fragment of the slot.
+    const messages = takeReportedMessages();
+    expect(messages.length).toBeGreaterThan(0);
+    for (const message of messages) {
+      expect(message).toContain('renders non-element root node that cannot be animated');
+    }
   });
 
   test('T14: with `duration`, the keyed element stays while its child animates; with none, Vue removes it at once', async () => {
@@ -228,7 +240,8 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     const vp = element('vp');
     if (withToast) vp.innerHTML = '<div class="toast" id="a">a</div>';
     const log: string[] = [];
-    for (const type of ['mouseenter', 'mouseleave']) vp.addEventListener(type, () => log.push(type));
+    for (const type of ['mouseenter', 'mouseleave'])
+      vp.addEventListener(type, () => log.push(type));
     await userEvent.pointer({ coords: { x: 10, y: 10 } });
     await userEvent.pointer({ coords: { x: 400, y: 320 } });
     await wait(50);
@@ -254,9 +267,11 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     const overs: string[] = [];
     const onMouseover = (event: MouseEvent) =>
       overs.push((event.target as Element).id || (event.target as Element).localName);
-    document.addEventListener('mouseover', onMouseover, true);
     try {
-      const result = await atRest(() => element('a').remove());
+      const result = await atRest(() => {
+        document.addEventListener('mouseover', onMouseover, true);
+        element('a').remove();
+      });
       expect(result).toEqual({
         atOnce: engine === 'webkit' ? [] : ['mouseleave'],
         afterAMove: [],
@@ -269,11 +284,12 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
   });
 
   test('T6: a toast under the pointer moves away in a transition: `mouseleave` at once in Firefox and WebKit, at the next move in Chromium', async () => {
-    const result = await atRest(() => (element('a').style.transform = 'translateX(400px)'));
-    expect(result).toEqual(
-      engine === 'chromium'
-        ? { atOnce: [], afterAMove: ['mouseleave'] }
-        : { atOnce: ['mouseleave'], afterAMove: [] },
+    const { atOnce, afterAMove } = await atRest(
+      () => (element('a').style.transform = 'translateX(400px)'),
+    );
+    // WebKit can send `mouseenter` and `mouseleave` again in the transition.
+    expect([atOnce.at(-1), afterAMove]).toEqual(
+      engine === 'chromium' ? [undefined, ['mouseleave']] : ['mouseleave', []],
     );
   });
 
@@ -315,13 +331,16 @@ describe('the size of a content (T7)', () => {
 });
 
 describe('the focus of the window (T8, T20)', () => {
-  test('T8, T20: the focus that goes into a frame of the page gives the window `blur`; the page has the focus; the frame is the active element at the event in Chromium and WebKit, and one task later in the three', async () => {
+  test('T8, T20: the focus that goes into a frame of the page gives the window `blur`; one task later the page has the focus and the frame is the active element in the three', async () => {
     html(
       `<button id="outer">Outer</button><iframe id="frame" title="Frame" style="width: 200px; height: 100px" srcdoc="<button style='width: 150px; height: 60px'>In</button>"></iframe>`,
     );
     const frame = element<HTMLIFrameElement>('frame');
     await new Promise((resolve) => {
-      if (frame.contentDocument?.readyState === 'complete' && frame.contentDocument.body?.firstChild)
+      if (
+        frame.contentDocument?.readyState === 'complete' &&
+        frame.contentDocument.body?.firstChild
+      )
         resolve(null);
       else frame.addEventListener('load', resolve, { once: true });
     });
@@ -344,11 +363,9 @@ describe('the focus of the window (T8, T20)', () => {
         keys: '[MouseLeft]',
       });
       await wait(100);
-      const atEvent = engine === 'firefox' ? 'body' : 'iframe';
-      expect(log).toEqual([
-        `true ${atEvent}, later true iframe`,
-        `true ${atEvent}, later true iframe`,
-      ]);
+      // In the test frame, Firefox gives `false` for the focus of the page at the event.
+      const atEvent = engine === 'firefox' ? 'false body' : 'true iframe';
+      expect(log).toEqual([`${atEvent}, later true iframe`, `${atEvent}, later true iframe`]);
     } finally {
       window.removeEventListener('blur', onBlur);
     }
@@ -403,7 +420,9 @@ describe('a touch (T12, T22, N1, N2, N3)', () => {
         if (type === 'pointermove') {
           const move = event as PointerEvent;
           if (!log.some((each) => each.startsWith('first move')))
-            log.push(`first move ${Math.hypot(move.clientX - down!.clientX, move.clientY - down!.clientY)}`);
+            log.push(
+              `first move ${Math.hypot(move.clientX - down!.clientX, move.clientY - down!.clientY)}`,
+            );
           return;
         }
         log.push(type);
@@ -475,7 +494,9 @@ describe('a focused element that leaves (T13, T18, T21)', () => {
   });
 
   test('T21: `blur()` on the focused root sends `focusout` with no related target; the later removal sends nothing', async () => {
-    html('<div id="vp"><div id="a" tabindex="0">a</div><div id="b" tabindex="0" inert>b</div></div>');
+    html(
+      '<div id="vp"><div id="a" tabindex="0">a</div><div id="b" tabindex="0" inert>b</div></div>',
+    );
     const log: string[] = [];
     element('vp').addEventListener('focusout', (event) =>
       log.push(`focusout ${(event.relatedTarget as Element | null)?.id ?? null}`),
@@ -572,7 +593,8 @@ describe('a mouse drag on text (T19)', () => {
         box.addEventListener('pointermove', (event) => {
           if (!start) return;
           if (how === 'pointermove') event.preventDefault();
-          if (axes === 'both axes') box.style.setProperty('--x', `${event.clientX - start.clientX}px`);
+          if (axes === 'both axes')
+            box.style.setProperty('--x', `${event.clientX - start.clientX}px`);
           box.style.setProperty('--y', `${event.clientY - start.clientY}px`);
         });
         getSelection()?.removeAllRanges();

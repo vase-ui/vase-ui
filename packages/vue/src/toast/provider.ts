@@ -175,7 +175,11 @@ export function useToastProvider(
     write(id, typeof options === 'function' ? options(toast) : options, false);
   }
 
-  function write(id: string, options: ToastManagerUpdateOptions & { id?: unknown }, restart: boolean) {
+  function write(
+    id: string,
+    options: ToastManagerUpdateOptions & { id?: unknown },
+    restart: boolean,
+  ) {
     // The function of `update` can change the list.
     const previous = find(id);
     if (!previous) return;
@@ -363,7 +367,8 @@ export function useToastProvider(
 }
 
 function optionsOf<Value>(
-  options: string | ToastManagerUpdateOptions | ((value: Value) => string | ToastManagerUpdateOptions),
+  options:
+    string | ToastManagerUpdateOptions | ((value: Value) => string | ToastManagerUpdateOptions),
   value?: Value,
 ): ToastManagerUpdateOptions {
   const given = typeof options === 'function' ? options(value as Value) : options;

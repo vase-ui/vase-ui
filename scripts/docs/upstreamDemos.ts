@@ -33,7 +33,7 @@ const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate
  * The families whose demos style the parts with the selectors of native elements and ARIA
  * attributes, such as `:checked` and `[aria-selected="true"]`, in place of the data attributes of
  * Base UI. A demo can add an element of its own for a mark or a thumb, and animate a part with
- * `<Transition>`. Its classes and its style sheets thus differ from those of the Base UI demo. A
+ * `<Transition>` or `<TransitionGroup>`. Its classes and its style sheets thus differ from those of the Base UI demo. A
  * demo of another family that imports such a family styles its parts in the same way.
  */
 const RESTYLED_FAMILIES = new Set([
@@ -52,6 +52,7 @@ const RESTYLED_FAMILIES = new Set([
   'radio-group',
   'switch',
   'tabs',
+  'toast',
   'toggle',
   'toggle-group',
 ]);

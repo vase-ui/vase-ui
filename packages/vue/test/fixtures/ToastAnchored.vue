@@ -19,10 +19,7 @@ defineExpose({
 </script>
 
 <template>
-  <button
-    id="anchor"
-    style="position: fixed; left: 200px; top: 200px; width: 100px; height: 40px"
-  >
+  <button id="anchor" style="position: fixed; left: 200px; top: 200px; width: 100px; height: 40px">
     Anchor
   </button>
   <Toast.Provider>

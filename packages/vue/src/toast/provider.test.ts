@@ -45,12 +45,14 @@ describe('the list with no viewport', () => {
   });
 
   test('a change of `timeout` and `limit` holds for a part that adds a toast in the same update', async () => {
-    const props = reactive<Props>({ provider: { timeout: 5000, limit: 3 }, addKey: 0 });
-    const { provider } = await mountProviders(props);
+    const props = reactive({ timeout: 5000, limit: 3 });
+    const add = reactive({ key: 0 });
+    const { provider } = await mountProviders({ provider: props, add });
     provider.add({ id: 'first' });
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
-    props.provider = { timeout: 100, limit: 1 };
-    props.addKey = 1;
+    props.timeout = 100;
+    props.limit = 1;
+    add.key = 1;
     await nextTick();
     expect(ids(provider)).toEqual(['added-1', 'first']);
     expect(provider.toasts.map((toast) => toast.limited)).toEqual([false, true]);
@@ -114,14 +116,14 @@ describe('a manager', () => {
   test('adds to each mounted provider from the mount to the unmount, and follows a change of the prop; with no mounted provider it keeps no toast', async () => {
     const first = Toast.createToastManager();
     first.add({ id: 'before' });
-    const props = reactive<Props>({ count: 2, provider: { toastManager: first } });
-    const { provider, unmount } = await mountProviders(props);
+    const props = reactive<Props>({ toastManager: first });
+    const { provider, unmount } = await mountProviders({ count: 2, provider: props });
     expect(ids(provider)).toEqual([]);
     first.add({ id: 'a' });
     first.update('a', { title: 'A' });
     expect(provider.toasts[0]).toMatchObject({ id: 'a', title: 'A' });
     const second = Toast.createToastManager();
-    props.provider = { toastManager: second };
+    props.toastManager = second;
     await nextTick();
     first.add({ id: 'b' });
     second.add({ id: 'c' });
@@ -212,19 +214,22 @@ describe('a manager', () => {
     test.each([
       { name: 'one provider', count: 1 },
       { name: 'two providers', count: 2 },
-    ])('an error of the `success` function rejects the returned promise: $name', async ({ count }) => {
-      const manager = Toast.createToastManager();
-      mount(ToastProviders, { count, provider: { toastManager: manager } });
-      await nextTick();
-      const error = new Error('success');
-      await expect(
-        manager.promise(Promise.resolve('value'), {
-          ...options,
-          success: () => {
-            throw error;
-          },
-        }),
-      ).rejects.toBe(error);
-    });
+    ])(
+      'an error of the `success` function rejects the returned promise: $name',
+      async ({ count }) => {
+        const manager = Toast.createToastManager();
+        mount(ToastProviders, { count, provider: { toastManager: manager } });
+        await nextTick();
+        const error = new Error('success');
+        await expect(
+          manager.promise(Promise.resolve('value'), {
+            ...options,
+            success: () => {
+              throw error;
+            },
+          }),
+        ).rejects.toBe(error);
+      },
+    );
   });
 });

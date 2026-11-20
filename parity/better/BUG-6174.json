@@ -1,6 +1,6 @@
 {
   "id": "BUG-6174",
   "evidence": ["https://github.com/mui/base-ui/issues/6174"],
-  "behavior": "The timers of a toast keep running while the focus is in a frame of the page. They pause while the page is hidden, also when a frame has the focus. They also pause when the window loses the focus while a frame of the same origin has it.",
+  "behavior": "The timers of a toast keep running while the focus is in a frame of the page. They pause while the page is hidden, also when a frame has the focus.",
   "dueWith": "packages/react/src/toast/viewport/ToastViewport.tsx"
 }

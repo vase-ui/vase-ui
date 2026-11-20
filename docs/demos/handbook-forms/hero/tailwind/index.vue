@@ -4,7 +4,7 @@ import ExampleForm from './ExampleForm.vue';
 </script>
 
 <template>
-  <ToastProvider>
+  <ToastProvider aria-label="Form notifications">
     <ExampleForm />
   </ToastProvider>
 </template>

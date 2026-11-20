@@ -6,7 +6,7 @@ type Props = Record<string, unknown>;
 
 // Each toast has a root with its `id` in `data-id`, a content, a title, a description, an action
 // and a close button, in a `<TransitionGroup>` with the name `toast`. `titleText` and
-// `descriptionText` give the default slots.
+// `descriptionText` give the default slots. `secondTitle` adds a second title after the first.
 defineProps({
   viewport: Object as PropType<Props>,
   group: { type: Object as PropType<Props>, default: () => ({}) },
@@ -15,6 +15,7 @@ defineProps({
   titleText: String,
   description: Object as PropType<Props>,
   descriptionText: String,
+  secondTitle: Boolean,
   action: Object as PropType<Props>,
   close: Object as PropType<Props>,
 });
@@ -36,6 +37,7 @@ defineExpose({ manager });
           <Toast.Title v-bind="title">
             <template v-if="titleText" #default>{{ titleText }}</template>
           </Toast.Title>
+          <Toast.Title v-if="secondTitle">Second</Toast.Title>
           <Toast.Description v-bind="description">
             <template v-if="descriptionText" #default>{{ descriptionText }}</template>
           </Toast.Description>
