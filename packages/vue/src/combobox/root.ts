@@ -628,7 +628,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (details.isCanceled) return false;
     textState.setOwn(next);
     emit.updateText(next);
-    if (source.mode === 'none') field?.onEdit();
+    // The field reads the validity of the form input after its render.
+    if (source.mode === 'none') void nextTick(() => field?.onEdit());
     return true;
   }
 
@@ -637,7 +638,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (details.isCanceled) return false;
     valueState.setOwn(next);
     emit.updateValue(next);
-    field?.onEdit();
+    void nextTick(() => field?.onEdit());
     return true;
   }
 
@@ -734,6 +735,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     event.preventDefault();
     // A virtual window has the items of only some values, so the keys count on the values.
     const count = filteredValues.value.length;
+    if (count === 0) return true;
     const current = lastHighlight.index;
     let next = current === -1 ? (step === 1 ? 0 : count - 1) : current + step;
     if (next < 0 || next >= count) {
@@ -742,7 +744,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       else next = current;
     }
     emitHighlight(next === -1 ? undefined : filteredValues.value[next], next, 'keyboard', event);
-    list.highlight(next === -1 ? null : itemOfIndex(next), 'keyboard', event);
+    // An item that is not mounted gets the highlight when it mounts.
+    const target = next === -1 ? null : itemOfIndex(next);
+    list.highlight(target, target || next === -1 ? 'keyboard' : 'none', event);
     return true;
   }
 

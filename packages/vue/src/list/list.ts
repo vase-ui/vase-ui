@@ -67,7 +67,6 @@ export function useList(options: ListOptions): List {
   };
   // The position of the pointer, while the list knows it.
   let pointer: { x: number; y: number } | null = null;
-  let over: { x: number; y: number } | null = null;
 
   watch(highlighted, (item) => options.onHighlight?.(item, last.reason, last.event), {
     flush: 'post',
@@ -77,7 +76,6 @@ export function useList(options: ListOptions): List {
     () => options.container(),
     (container, _, onCleanup) => {
       pointer = null;
-      over = null;
       if (!container) return;
       onCleanup(
         mergeCleanups(
@@ -87,13 +85,6 @@ export function useList(options: ListOptions): List {
             const item = isMove && hovers() ? itemOf(event.target) : undefined;
             if (item) highlight(item, 'pointer', event);
           }),
-          addEventListener(container, 'pointerover', (event) => {
-            const point = { x: event.clientX, y: event.clientY };
-            // A `pointerover` at the place of the one before it: the content moved under a
-            // pointer that rests (test/measurements/combobox.test.ts, C2 and C7).
-            if (over?.x === point.x && over.y === point.y) pointer = point;
-            over = point;
-          }),
           addEventListener(container, 'pointerout', (event) => {
             const item = highlighted.value;
             if (!item || !hovers() || !item.element.contains(event.target as Node)) return;
@@ -101,10 +92,7 @@ export function useList(options: ListOptions): List {
             if (item.element.contains(to) || itemOf(to) || options.keepOnLeave?.(item)) return;
             highlight(null, 'pointer', event);
           }),
-          addEventListener(container, 'pointerleave', () => {
-            pointer = null;
-            over = null;
-          }),
+          addEventListener(container, 'pointerleave', () => (pointer = null)),
         ),
       );
     },

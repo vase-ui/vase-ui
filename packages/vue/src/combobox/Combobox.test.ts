@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import {
   Combobox,
@@ -7,8 +7,12 @@ import {
   type ComboboxRootHighlightEventDetails,
 } from '@vase-ui/vue/combobox';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
+import ComboboxClearInTransition from '../../test/fixtures/ComboboxClearInTransition.vue';
+import { touchDrag } from '../../test/pointer';
+import ComboboxInline from '../../test/fixtures/ComboboxInline.vue';
 import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
 import TextareaCombobox from '../../test/fixtures/ComboboxTextarea.vue';
+import ComboboxVirtual from '../../test/fixtures/ComboboxVirtual.vue';
 import { mount, mountError } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -431,6 +435,18 @@ describe('highlight', () => {
     ]);
   });
 
+  test('a virtualized list counts the keys on the filtered values; an item that mounts gets the highlight', async () => {
+    const { exposed } = mount(ComboboxVirtual);
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    for (let step = 0; step < 7; step += 1) await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 6'));
+    expect(exposed.highlights.at(-1)).toBe('Item 6 6');
+    expect(input()).toHaveAttribute('aria-activedescendant', byTestId('item-6')!.id);
+    expect(byTestId('item-0')).toBe(null);
+  });
+
   test('with `loopFocus` false, the highlight stays at the last item', async () => {
     await mountCombobox({ items: ['Apple', 'Banana'], root: { loopFocus: false } });
     await userEvent.click(input());
@@ -783,6 +799,137 @@ describe('fixes of Base UI', () => {
     await opened();
     await waitFor(() => expect(textarea).toHaveAttribute('role', 'combobox'));
     expect(textarea).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
+describe('more rules of 3.1', () => {
+  test('an input in the popup starts with no text when the trigger shows the value', async () => {
+    await mountCombobox({ inputInPopup: true, root: { defaultValue: 'Lemon' } });
+    await userEvent.click(trigger());
+    await opened();
+    expect(input().value).toBe('');
+  });
+
+  test('the developer value of `autocorrect` is the one attribute of the input', async () => {
+    await mountCombobox({ input: { autocorrect: 'on' } });
+    expect(input().getAttribute('autocorrect')).toBe('on');
+  });
+
+  test('a press on the clear button or in the group keeps the popup open', async () => {
+    await mountCombobox({ clear: {}, root: { defaultValue: 'Apple' } });
+    await userEvent.click(input());
+    await opened();
+    await userEvent.click(byTestId('clear')!);
+    await nextTick();
+    expect(popup()).not.toBe(null);
+    expect(document.activeElement).toBe(input());
+  });
+
+  test('a clear button in a <Transition> that shows again while it leaves enters again', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const root = reactive<Props>({ modelValue: 'Apple' });
+    mount(ComboboxClearInTransition, { root });
+    await nextTick();
+    const first = byTestId('clear')!;
+    root.modelValue = null;
+    await nextTick();
+    expect(first.className).toContain('fade-leave-active');
+    root.modelValue = 'Banana';
+    await nextTick();
+    await waitFor(() => expect(first.isConnected).toBe(false));
+    await waitFor(() => expect(byTestId('clear')).not.toBe(null));
+    expect(byTestId('clear')!.className).toContain('fade-enter');
+  });
+
+  test('typed text puts the list at its top', async () => {
+    await mountCombobox({ list: { style: 'max-height: 60px; overflow: auto' } });
+    await userEvent.click(input());
+    await opened();
+    list().scrollTop = 100;
+    await userEvent.keyboard('e');
+    await waitFor(() => expect(list().scrollTop).toBe(0));
+  });
+
+  test('the highlight of an inline list goes at a blur and comes back at a focus', async () => {
+    mount(ComboboxInline);
+    await nextTick();
+    input().focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Banana'));
+    document.getElementById('outside')!.focus();
+    await waitFor(() => expect(highlighted()).toBe(undefined));
+    input().focus();
+    await waitFor(() => expect(highlighted()).toBe('Banana'));
+  });
+
+  test('a filter that makes the popup smaller keeps the side of its flip', async () => {
+    await mountCombobox({ positioner: { sideOffset: 4 } });
+    byTestId('group')!.style.cssText = 'position: fixed; bottom: 10px; left: 10px; width: 200px';
+    await userEvent.click(input());
+    await opened();
+    await waitFor(() => expect(byTestId('positioner')).toHaveAttribute('data-side', 'top'));
+    await userEvent.keyboard('peac');
+    await waitFor(() => expect(itemNames()).toEqual(['Peach']));
+    await nextTick();
+    expect(byTestId('positioner')).toHaveAttribute('data-side', 'top');
+  });
+
+  test('a modal popup blocks the page and leaves the group of the input free', async () => {
+    await mountCombobox({ root: { modal: true, defaultOpen: true } });
+    await opened();
+    const block = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('body > div[role="presentation"]');
+      expect(element).not.toBe(null);
+      return element!;
+    });
+    await waitFor(() => expect(block.style.clipPath).toContain('polygon'));
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch that drags outside closes nothing, and a tap outside closes',
+    async () => {
+      await mountCombobox({ root: { defaultOpen: true } });
+      await opened();
+      const outside = document.getElementById('outside')!.getBoundingClientRect();
+      const point = { x: outside.left + 5, y: outside.top + 5 };
+      await touchDrag(point, { x: point.x - 40, y: point.y - 40 }, 4);
+      await nextTick();
+      expect(popup()).not.toBe(null);
+      await touchDrag(point, point, 0);
+      await closed();
+    },
+  );
+
+  test('the release of the press of the trigger on an item selects it; at a place outside it closes', async () => {
+    const values: unknown[] = [];
+    await mountCombobox({
+      inputInPopup: true,
+      root: { 'onUpdate:modelValue': (value: unknown) => values.push(value) },
+    });
+    const start = trigger().getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: start.left + 5, y: start.top + 5 },
+      keys: '[MouseLeft>]',
+    });
+    await opened();
+    await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+    const target = item('Banana').getBoundingClientRect();
+    await userEvent.pointer({ coords: { x: target.left + 5, y: target.top + 5 } });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    await closed();
+    expect(values).toEqual(['Banana']);
+    const log: string[] = [];
+    await userEvent.pointer({
+      coords: { x: start.left + 5, y: start.top + 5 },
+      keys: '[MouseLeft>]',
+    });
+    await opened();
+    const away = document.getElementById('outside')!.getBoundingClientRect();
+    document.addEventListener('pointerup', () => log.push('up'), { once: true });
+    await userEvent.pointer({ coords: { x: away.left + 5, y: away.top + 5 } });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    await closed();
+    expect(log).toEqual(['up']);
   });
 });
 
