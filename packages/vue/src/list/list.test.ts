@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import ComboboxGrid from '../../test/fixtures/ComboboxGrid.vue';
 import ListFixture from '../../test/fixtures/ListFixture.vue';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
@@ -184,4 +185,48 @@ describe('the pointer', () => {
       expect(highlighted()).toBe('b');
     },
   );
+});
+
+describe('the grid keys', () => {
+  const input = () => document.querySelector<HTMLInputElement>('[data-testid="input"]')!;
+  const gridItem = (name: string) => document.querySelector(`[data-testid="item-${name}"]`)!;
+  const highlightedText = () => document.querySelector('[data-highlighted]')?.textContent?.trim();
+
+  async function mountGrid(props: Record<string, unknown> = {}) {
+    mount(ComboboxGrid, props);
+    await nextTick();
+    input().focus();
+  }
+
+  test('with no highlight, ArrowLeft and ArrowRight stay with the input; ArrowDown gives the first item', async () => {
+    await mountGrid();
+    await userEvent.keyboard('{ArrowLeft}{ArrowRight}');
+    expect(highlightedText()).toBe(undefined);
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlightedText()).toBe('a1'));
+  });
+
+  test('ArrowRight and ArrowLeft move in the row and on to the next row; ArrowDown and ArrowUp keep the column', async () => {
+    await mountGrid();
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}{ArrowRight}{ArrowRight}');
+    await waitFor(() => expect(highlightedText()).toBe('b1'));
+    await userEvent.keyboard('{ArrowRight}{ArrowUp}');
+    await waitFor(() => expect(highlightedText()).toBe('a2'));
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(highlightedText()).toBe('a1'));
+    expect(gridItem('a1')).toHaveAttribute('role', 'gridcell');
+    expect(gridItem('a1').parentElement).toHaveAttribute('role', 'row');
+  });
+
+  test('a shorter row gives its last item', async () => {
+    await mountGrid();
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}{ArrowRight}{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlightedText()).toBe('c2'));
+  });
+
+  test('in a right-to-left list, ArrowLeft moves forward', async () => {
+    await mountGrid({ dir: 'rtl' });
+    await userEvent.keyboard('{ArrowDown}{ArrowLeft}');
+    await waitFor(() => expect(highlightedText()).toBe('a2'));
+  });
 });

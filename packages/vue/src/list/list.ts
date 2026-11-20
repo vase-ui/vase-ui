@@ -1,12 +1,4 @@
-import {
-  computed,
-  nextTick,
-  shallowReactive,
-  shallowRef,
-  watch,
-  type ComputedRef,
-  type Ref,
-} from 'vue';
+import { computed, shallowReactive, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { arrowKeyTarget } from '../common/arrowKeyTarget';
 import { byDocumentOrder } from '../common/element';
@@ -59,6 +51,11 @@ export interface ListOptions {
   hover?(): boolean;
   /** A pointer that leaves the item keeps its highlight. */
   keepOnLeave?(item: ListItem): boolean;
+  /**
+   * The items are in elements with the role `row`. The keys of the orientation move in a row, and
+   * the two other arrow keys move to the same column of another row.
+   */
+  rows?(): boolean;
   /** Runs after the DOM update of each change of the highlight. */
   onHighlight?(item: ListItem | null, reason: HighlightReason, event: Event | undefined): void;
 }
@@ -76,21 +73,23 @@ export function useList(options: ListOptions): List {
   const highlighted = shallowRef<ListItem | null>(null);
   const virtual = computed(() => !!options.owner?.());
 
-  // The place of the pointer, from the events in the container. A `pointerover` alone is no
-  // reference: a move in one step sends `pointerover` and then `pointermove` at one place
-  // (test/measurements/menu.test.ts). A second `pointerover` at the place of the first one comes
-  // from content that moved under a pointer that rests.
+  // The place of the pointer, from the `pointermove` events of the document of the owner, else of
+  // the container. A list then knows the place of a pointer that rests where it opens: WebKit on
+  // Linux gives no `pointerover` there, and after a scroll it gives a `pointermove` at that place.
+  // A `pointerover` alone is no reference: a move in one step sends `pointerover` and then
+  // `pointermove` at one place (test/measurements/menu.test.ts). A second `pointerover` at the place
+  // of the first one comes from content that moved under a pointer that rests.
   let known: Point | null = null;
   let over: Point | null = null;
   const moves = new WeakMap<Event, boolean>();
   watch(
-    () => options.container(),
-    (container, _, onCleanup) => {
-      if (!container) return;
+    () => options.owner?.() ?? options.container(),
+    (element, _, onCleanup) => {
+      if (!element) return;
       onCleanup(
         mergeCleanups(
           addEventListener(
-            container,
+            ownerDocument(element),
             'pointermove',
             (event) => {
               moves.set(event, !same(known, event));
@@ -98,6 +97,20 @@ export function useList(options: ListOptions): List {
             },
             true,
           ),
+          () => {
+            known = null;
+          },
+        ),
+      );
+    },
+    { flush: 'post', immediate: true },
+  );
+  watch(
+    () => options.container(),
+    (container, _, onCleanup) => {
+      if (!container) return;
+      onCleanup(
+        mergeCleanups(
           addEventListener(
             container,
             'pointerover',
@@ -108,7 +121,6 @@ export function useList(options: ListOptions): List {
             true,
           ),
           addEventListener(container, 'pointerleave', () => {
-            known = null;
             over = null;
           }),
         ),
@@ -116,6 +128,16 @@ export function useList(options: ListOptions): List {
     },
     { flush: 'post', immediate: true },
   );
+
+  // The cause of the last change of the highlight. The watcher of `onHighlight` comes before the
+  // watchers of the caller, which then see the reason of the change.
+  let last: { reason: HighlightReason; event: Event | undefined } = {
+    reason: 'none',
+    event: undefined,
+  };
+  watch(highlighted, (item) => options.onHighlight?.(item, last.reason, last.event), {
+    flush: 'post',
+  });
 
   // An item that leaves the list takes the highlight with it, also when another item takes its
   // place in the same update.
@@ -142,6 +164,67 @@ export function useList(options: ListOptions): List {
     return !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
   }
 
+  // The item of a key in a list of one line. `undefined`: the key is not a key of the list.
+  function lineTarget(key: string, all: ListItem[], current: ListItem | null, isRtl: boolean) {
+    const orientation = options.orientation();
+    const [forward, backward] =
+      orientation === 'vertical'
+        ? ['ArrowDown', 'ArrowUp']
+        : isRtl
+          ? ['ArrowLeft', 'ArrowRight']
+          : ['ArrowRight', 'ArrowLeft'];
+    if (key === 'Home') return all[0];
+    if (key === 'End') return all.at(-1);
+    if (key !== forward && key !== backward) return undefined;
+    if (!current) return key === forward ? all[0] : all.at(-1);
+    const next = arrowKeyTarget(
+      key,
+      current.element,
+      all.map((item) => item.element),
+      { orientation, rtl: isRtl, loop: false },
+    );
+    if (next && next !== current.element) return all.find((item) => item.element === next);
+    if (options.canLeave?.()) return null;
+    if (options.loop()) return key === forward ? all[0] : all.at(-1);
+    return current;
+  }
+
+  // The item of a key in a list whose items are in rows.
+  function rowTarget(key: string, all: ListItem[], current: ListItem | null, isRtl: boolean) {
+    const rows: ListItem[][] = [];
+    let row: Element | null | undefined;
+    for (const item of all) {
+      const around = item.element.closest('[role="row"]');
+      if (around !== row || rows.length === 0) rows.push([item]);
+      else rows.at(-1)?.push(item);
+      row = around;
+    }
+    const [forward, back] = isRtl ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft'];
+    if (!current) {
+      if (key === 'ArrowDown') return all[0];
+      if (key === 'ArrowUp') return all.at(-1);
+      return undefined;
+    }
+    const rowIndex = rows.findIndex((each) => each.includes(current));
+    const column = rows[rowIndex]?.indexOf(current) ?? 0;
+    if (key === forward || key === back) {
+      const step = key === forward ? 1 : -1;
+      return (
+        all[all.indexOf(current) + step] ??
+        (options.loop() ? (step === 1 ? all[0] : all.at(-1)) : current)
+      );
+    }
+    if (key !== 'ArrowDown' && key !== 'ArrowUp') return undefined;
+    const step = key === 'ArrowDown' ? 1 : -1;
+    let nextRow: ListItem[] | undefined = rows[rowIndex + step];
+    if (!nextRow) {
+      if (options.canLeave?.()) return null;
+      if (!options.loop()) return current;
+      nextRow = step === 1 ? rows[0] : rows.at(-1);
+    }
+    return nextRow?.[column] ?? nextRow?.at(-1);
+  }
+
   const list: List = {
     get highlighted() {
       return highlighted.value;
@@ -162,6 +245,7 @@ export function useList(options: ListOptions): List {
     },
     highlight(item, reason, event) {
       const previous = highlighted.value;
+      if (item !== previous) last = { reason, event };
       highlighted.value = item;
       if (item) {
         if (!virtual.value) item.element.focus({ preventScroll: true });
@@ -176,7 +260,6 @@ export function useList(options: ListOptions): List {
           options.container()?.focus({ preventScroll: true });
         }
       }
-      if (item !== previous) void nextTick(() => options.onHighlight?.(item, reason, event));
     },
     moved(event) {
       return moves.get(event) ?? true;
@@ -186,34 +269,11 @@ export function useList(options: ListOptions): List {
       if (isComposing(event)) return false;
       const all = items();
       if (all.length === 0) return false;
-      const orientation = options.orientation();
-      const isRtl = rtl();
-      const [forward, backward] =
-        orientation === 'vertical'
-          ? ['ArrowDown', 'ArrowUp']
-          : isRtl
-            ? ['ArrowLeft', 'ArrowRight']
-            : ['ArrowRight', 'ArrowLeft'];
       const current = highlighted.value?.element.isConnected ? highlighted.value : null;
-      let target: ListItem | null | undefined;
-      if (event.key === 'Home') target = all[0];
-      else if (event.key === 'End') target = all.at(-1);
-      else if (event.key !== forward && event.key !== backward) return false;
-      else if (!current) target = event.key === forward ? all[0] : all.at(-1);
-      else {
-        const next = arrowKeyTarget(
-          event.key,
-          current.element,
-          all.map((item) => item.element),
-          { orientation, rtl: isRtl, loop: false },
-        );
-        if (next && next !== current.element) target = all.find((item) => item.element === next);
-        else if (options.canLeave?.()) target = null;
-        else if (options.loop()) target = event.key === forward ? all[0] : all.at(-1);
-        else target = current;
-      }
+      const target = (options.rows?.() ? rowTarget : lineTarget)(event.key, all, current, rtl());
+      if (target === undefined) return false;
       event.preventDefault();
-      if (target !== undefined) list.highlight(target, 'keyboard', event);
+      list.highlight(target, 'keyboard', event);
       return true;
     },
   };
@@ -228,7 +288,7 @@ export function useList(options: ListOptions): List {
 export function useListItem(
   list: List,
   element: Readonly<Ref<HTMLElement | null>>,
-  item: { label(): string | undefined; disabled(): boolean },
+  item: { label?(): string | undefined; disabled(): boolean },
 ): { highlighted: ComputedRef<boolean>; attributes: ComputedRef<Record<string, unknown>> } {
   let entry: ListItem | undefined;
   watch(
@@ -238,7 +298,7 @@ export function useListItem(
       const created: ListItem = {
         element: el,
         get label() {
-          return item.label();
+          return item.label?.();
         },
         get disabled() {
           return item.disabled();

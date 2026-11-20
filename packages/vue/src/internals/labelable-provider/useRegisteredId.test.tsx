@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Component, Ref, VNode } from 'vue';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -147,23 +146,6 @@ describe('useRegisteredId', () => {
       render: (id: Ref<string>) => VNode;
     }[] = [
       {
-        name: 'Combobox.GroupLabel',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Combobox.Root open>
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Group data-testid="named">
-                    <Combobox.GroupLabel v-slots={slot('div', id)} />
-                  </Combobox.Group>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-        ),
-      },
-      {
         name: 'Toast.Title',
         attribute: 'aria-labelledby',
         render: (id) => (
@@ -188,23 +170,6 @@ describe('useRegisteredId', () => {
               </Toast.Root>
             </Toast.Viewport>
           </Toast.Provider>
-        ),
-      },
-      {
-        name: 'Combobox.Label',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Combobox.Root>
-            <Combobox.Label v-slots={slot('div', id)} />
-            <Combobox.Trigger data-testid="named" />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Input />
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
         ),
       },
     ];

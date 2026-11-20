@@ -227,9 +227,9 @@ Wrap your submit function with `handleSubmit`. It validates the form. When the f
 
 `handleSubmit` takes a second function. VeeValidate calls it when the form is not valid, with the errors by field name. The names are in the sequence in which the fields mount. Find the element of the form that has the first name. Move the focus to that element:
 
-<<< ../examples/forms/VeeValidateSubmit.vue{17,19-27,31}
+<<< ../examples/forms/VeeValidateSubmit.vue{17,19-29,33}
 
-Where a part has a hidden input, as `Select` and `NumberField` have, that input has the name. The input of `NumberField` gives the focus to its control. The inputs of `Select` are `type="hidden"`, so the code gives the focus to the trigger in the same root.
+Where a part has a hidden input, as `Select`, `Combobox` and `NumberField` have, that input has the name. The input of `NumberField` gives the focus to its control. The named inputs of `Select` and `Combobox` are `type="hidden"`, so the code gives the focus to the text input or the trigger in the same root.
 
 Do not use `Form` here. A field that shows an error stops the `submit` event of `Form`. `handleSubmit` then does not run, and VeeValidate does not show the errors of the other fields. Add `novalidate`, as `Form` does, so that the browser shows no message of its own.
 

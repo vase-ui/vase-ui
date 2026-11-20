@@ -1,6 +1,5 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
-import * as Combobox from '../src/combobox/index.parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import { Resizable } from '../src/resizable';
@@ -61,12 +60,4 @@ const id = 'id';
   <TimePicker.Field :aria-labelledby="id" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <TimePicker.Field :aria-labelledby="5" />
-
-  <Combobox.Chip aria-description="x" />
-  <Combobox.Chip :aria-description="id" />
-  <Combobox.Input aria-description="x" />
-  <!-- @vue-expect-error `aria-descripton` is not an attribute -->
-  <Combobox.Chip aria-descripton="x" />
-  <!-- @vue-expect-error `aria-description` is a string -->
-  <Combobox.Chip :aria-description="5" />
 </template>

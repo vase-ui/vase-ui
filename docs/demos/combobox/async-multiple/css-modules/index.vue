@@ -64,7 +64,7 @@ const emptyMessage = computed(() => {
   return 'Try a different search term.';
 });
 
-function handleOpenChangeComplete(open: boolean) {
+function handleOpenChange(open: boolean) {
   if (!open) {
     searchResults.value = selectedValues.value;
     blockStartStatus.value = false;
@@ -273,6 +273,8 @@ const allUsers: DirectoryUser[] = [
     title: 'DevOps Engineer',
   },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -282,7 +284,7 @@ const allUsers: DirectoryUser[] = [
     :is-item-equal-to-value="(item: DirectoryUser, value: DirectoryUser) => item.id === value.id"
     multiple
     :filter="null"
-    @open-change-complete="handleOpenChangeComplete"
+    @update:open="handleOpenChange"
     @value-change="handleValueChange"
     @input-value-change="handleInputValueChange"
   >
@@ -323,39 +325,41 @@ const allUsers: DirectoryUser[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
-          <div :class="styles.Viewport">
-            <Combobox.Status>
-              <div v-if="isPending || statusText" :class="styles.Status">
-                <template v-if="isPending">
-                  <span :class="styles.Spinner" aria-hidden="true" />
-                  Searching…
-                </template>
-                <template v-else>{{ statusText }}</template>
-              </div>
-            </Combobox.Status>
-            <Combobox.Empty>
-              <div v-if="emptyMessage" :class="styles.Empty">{{ emptyMessage }}</div>
-            </Combobox.Empty>
-            <Combobox.List>
-              <template #item="{ item: user }">
-                <Combobox.Item :class="styles.Item" :value="user">
-                  <Combobox.ItemIndicator :class="styles.ItemIndicator">
-                    <CheckIcon />
-                  </Combobox.ItemIndicator>
-                  <span :class="styles.ItemText">
-                    <span :class="styles.ItemTitle">{{ user.name }}</span>
-                    <span :class="styles.ItemEmail">{{ user.email }}</span>
-                    <span :class="styles.ItemSubtitle">
-                      <span>@{{ user.username }}</span>
-                      <span>{{ user.title }}</span>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
+            <div :class="styles.Viewport">
+              <Combobox.Status>
+                <div v-if="isPending || statusText" :class="styles.Status">
+                  <template v-if="isPending">
+                    <span :class="styles.Spinner" aria-hidden="true" />
+                    Searching…
+                  </template>
+                  <template v-else>{{ statusText }}</template>
+                </div>
+              </Combobox.Status>
+              <Combobox.Empty>
+                <div v-if="emptyMessage" :class="styles.Empty">{{ emptyMessage }}</div>
+              </Combobox.Empty>
+              <Combobox.List>
+                <template #item="{ item: user }">
+                  <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="user">
+                    <span v-if="state.selected" :class="styles.ItemIndicator">
+                      <CheckIcon />
                     </span>
-                  </span>
-                </Combobox.Item>
-              </template>
-            </Combobox.List>
-          </div>
-        </Combobox.Popup>
+                    <span :class="styles.ItemText">
+                      <span :class="styles.ItemTitle">{{ user.name }}</span>
+                      <span :class="styles.ItemEmail">{{ user.email }}</span>
+                      <span :class="styles.ItemSubtitle">
+                        <span>@{{ user.username }}</span>
+                        <span>{{ user.title }}</span>
+                      </span>
+                    </span>
+                  </Combobox.Item>
+                </template>
+              </Combobox.List>
+            </div>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

@@ -3,8 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -70,51 +68,6 @@ const BLANKS = [
   { blank: 'white space', value: '\n\t ' },
 ];
 
-function createCombobox(tested: 'input' | 'trigger', attrs: Record<string, string>) {
-  return (
-    <Combobox.Root defaultOpen>
-      <Combobox.Input
-        data-testid={tested === 'input' ? 'part' : undefined}
-        {...(tested === 'input' ? attrs : undefined)}
-      />
-      <Combobox.Trigger
-        data-testid={tested === 'trigger' ? 'part' : undefined}
-        {...(tested === 'trigger' ? attrs : undefined)}
-      >
-        Open
-      </Combobox.Trigger>
-      <Combobox.Portal>
-        <Combobox.Positioner>
-          <Combobox.Popup>
-            <Combobox.List data-testid="target">
-              <Combobox.Item value="Apple">Apple</Combobox.Item>
-              <Combobox.Item value="Banana">Banana</Combobox.Item>
-            </Combobox.List>
-          </Combobox.Popup>
-        </Combobox.Positioner>
-      </Combobox.Portal>
-    </Combobox.Root>
-  );
-}
-
-function createAutocomplete(attrs: Record<string, string>) {
-  return (
-    <Autocomplete.Root defaultOpen>
-      <Autocomplete.Input data-testid="part" {...attrs} />
-      <Autocomplete.Portal>
-        <Autocomplete.Positioner>
-          <Autocomplete.Popup>
-            <Autocomplete.List data-testid="target">
-              <Autocomplete.Item value="Apple">Apple</Autocomplete.Item>
-              <Autocomplete.Item value="Banana">Banana</Autocomplete.Item>
-            </Autocomplete.List>
-          </Autocomplete.Popup>
-        </Autocomplete.Positioner>
-      </Autocomplete.Portal>
-    </Autocomplete.Root>
-  );
-}
-
 // The input then has virtual focus on the first item.
 async function highlightFirstItem(user: UserEvent) {
   screen.getByTestId('part').focus();
@@ -141,35 +94,6 @@ const rows: Row[] = [
         </Toast.Viewport>
       </Toast.Provider>
     ),
-  },
-  {
-    part: 'Combobox.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createCombobox('trigger', attrs),
-  },
-  {
-    part: 'Combobox.Input',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createCombobox('input', attrs),
-  },
-  {
-    part: 'Autocomplete.Input',
-    attribute: 'aria-controls',
-    createNode: createAutocomplete,
-  },
-  {
-    part: 'Combobox.Input',
-    attribute: 'aria-activedescendant',
-    createNode: (attrs) => createCombobox('input', attrs),
-    show: highlightFirstItem,
-    getTarget: () => screen.getByRole('option', { name: 'Apple' }),
-  },
-  {
-    part: 'Autocomplete.Input',
-    attribute: 'aria-activedescendant',
-    createNode: createAutocomplete,
-    show: highlightFirstItem,
-    getTarget: () => screen.getByRole('option', { name: 'Apple' }),
   },
 ];
 

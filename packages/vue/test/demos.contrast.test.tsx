@@ -146,7 +146,7 @@ async function openWithKeyboard(trigger: HTMLElement) {
   trigger.focus();
   await userEvent.keyboard('{ArrowDown}');
   await waitFor(() => {
-    expect(trigger).toHaveAttribute('data-pressed');
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
   return trigger;
 }

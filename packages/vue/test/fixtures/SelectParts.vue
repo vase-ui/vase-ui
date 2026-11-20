@@ -40,6 +40,8 @@ defineProps({
   },
   /** The scroll arrows. */
   arrows: Object as PropType<Props>,
+  /** A separator after the items, with these props. */
+  separator: Object as PropType<Props>,
   noPortal: Boolean,
 });
 const rootPart = useTemplateRef('rootPart');
@@ -85,6 +87,7 @@ defineExpose({ root: rootPart, popup: popupPart });
               <span :data-state="JSON.stringify(state)" />
             </Select.Item>
           </component>
+          <Select.Separator v-if="separator" data-testid="separator" v-bind="separator" />
           <Select.ScrollDownArrow v-if="arrows" data-testid="down" v-bind="arrows" />
         </Select.Popup>
       </Select.Positioner>

@@ -236,6 +236,8 @@ const countries: Country[] = [
   { code: 'zm', value: 'zambia', label: 'Zambia', continent: 'Africa' },
   { code: 'zw', value: 'zimbabwe', label: 'Zimbabwe', continent: 'Africa' },
 ];
+
+const popupHiddenClass = 'scale-90 opacity-0';
 </script>
 
 <template>
@@ -246,7 +248,7 @@ const countries: Country[] = [
         >Country</Combobox.Label
       >
       <Combobox.Trigger
-        class="flex h-8 min-w-40 cursor-default items-center justify-between gap-3 border border-neutral-950 bg-white pl-2 pr-1 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:bg-neutral-100 active:bg-neutral-200 data-pressed:bg-neutral-100 data-placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:data-placeholder:text-neutral-400 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:bg-neutral-800 dark:active:bg-neutral-700 dark:data-pressed:bg-neutral-800"
+        class="flex h-8 min-w-40 cursor-default items-center justify-between gap-3 border border-neutral-950 bg-white pl-2 pr-1 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:bg-neutral-100 active:bg-neutral-200 aria-expanded:bg-neutral-100 data-placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:data-placeholder:text-neutral-400 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:bg-neutral-800 dark:active:bg-neutral-700 dark:aria-expanded:bg-neutral-800"
       >
         <Combobox.Value placeholder="Select country" />
         <Combobox.Icon class="text-neutral-950 dark:text-white">
@@ -255,39 +257,46 @@ const countries: Country[] = [
       </Combobox.Trigger>
       <Combobox.Portal>
         <Combobox.Positioner align="start" :side-offset="4">
-          <Combobox.Popup
-            class="[--input-container-height:2rem] max-h-[24.5rem] max-w-[var(--available-width)] origin-[var(--transform-origin)] bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-150 data-starting-style:scale-90 data-starting-style:opacity-0 data-ending-style:scale-90 data-ending-style:opacity-0 dark:bg-neutral-950 dark:text-white dark:shadow-none"
-            aria-label="Select country"
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
           >
-            <Combobox.Input
-              placeholder="e.g. United Kingdom"
-              class="h-8 w-full min-w-80 border border-neutral-950 bg-white px-2 text-sm font-normal text-neutral-950 placeholder:text-neutral-500 focus:outline-2 focus:-outline-offset-2 focus:outline-neutral-950 any-pointer-coarse:text-base dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400 dark:border-white dark:focus:outline-white"
-            />
-            <div class="border-x border-b border-neutral-950 dark:border-white">
-              <Combobox.Empty>
-                <div
-                  class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"
-                >
-                  No countries found.
-                </div>
-              </Combobox.Empty>
-              <Combobox.List
-                class="max-h-[min(calc(24.5rem-var(--input-container-height)-2px),calc(var(--available-height)-var(--input-container-height)-2px))] overflow-auto overscroll-contain py-1 scroll-py-1 empty:p-0"
-              >
-                <template #item="{ item: country }">
-                  <Combobox.Item
-                    :value="country"
-                    class="grid min-w-[var(--anchor-width)] cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+            <Combobox.Popup
+              class="[--input-container-height:2rem] max-h-[24.5rem] max-w-[var(--available-width)] origin-[var(--transform-origin)] bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-150 dark:bg-neutral-950 dark:text-white dark:shadow-none"
+              aria-label="Select country"
+            >
+              <Combobox.Input
+                placeholder="e.g. United Kingdom"
+                class="h-8 w-full min-w-80 border border-neutral-950 bg-white px-2 text-sm font-normal text-neutral-950 placeholder:text-neutral-500 focus:outline-2 focus:-outline-offset-2 focus:outline-neutral-950 any-pointer-coarse:text-base dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400 dark:border-white dark:focus:outline-white"
+              />
+              <div class="border-x border-b border-neutral-950 dark:border-white">
+                <Combobox.Empty>
+                  <div
+                    class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"
                   >
-                    <Combobox.ItemIndicator class="col-start-1">
-                      <CheckIcon />
-                    </Combobox.ItemIndicator>
-                    <span class="col-start-2">{{ country.label }}</span>
-                  </Combobox.Item>
-                </template>
-              </Combobox.List>
-            </div>
-          </Combobox.Popup>
+                    No countries found.
+                  </div>
+                </Combobox.Empty>
+                <Combobox.List
+                  class="max-h-[min(calc(24.5rem-var(--input-container-height)-2px),calc(var(--available-height)-var(--input-container-height)-2px))] overflow-auto overscroll-contain py-1 scroll-py-1 empty:p-0"
+                >
+                  <template #item="{ item: country }">
+                    <Combobox.Item
+                      v-slot="{ state }"
+                      :value="country"
+                      class="grid min-w-[var(--anchor-width)] cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+                    >
+                      <span v-if="state.selected" class="col-start-1">
+                        <CheckIcon />
+                      </span>
+                      <span class="col-start-2">{{ country.label }}</span>
+                    </Combobox.Item>
+                  </template>
+                </Combobox.List>
+              </div>
+            </Combobox.Popup>
+          </Transition>
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>

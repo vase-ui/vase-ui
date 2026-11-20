@@ -31,8 +31,8 @@ import { Combobox } from '@vase-ui/vue/combobox';
 
           <Combobox.List>
             <Combobox.Row>
-              <Combobox.Item>
-                <Combobox.ItemIndicator />
+              <Combobox.Item v-slot="{ state }">
+                <span v-if="state.selected">✓</span>
               </Combobox.Item>
             </Combobox.Row>
 
@@ -41,8 +41,6 @@ import { Combobox } from '@vase-ui/vue/combobox';
             <Combobox.Group>
               <Combobox.GroupLabel />
             </Combobox.Group>
-
-            <Combobox.Collection />
           </Combobox.List>
         </Combobox.Popup>
       </Combobox.Positioner>

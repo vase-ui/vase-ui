@@ -26,11 +26,11 @@ const groups: ProduceGroupItem[] = [
         <Autocomplete.Popup>
           <Autocomplete.List>
             <template #item="{ item: group }">
-              <Autocomplete.Group :items="group.items">
+              <Autocomplete.Group>
                 <Autocomplete.GroupLabel>{{ group.value }}</Autocomplete.GroupLabel>
-                <Autocomplete.Collection v-slot="{ item }">
+                <template v-for="item in group.items" :key="item.value">
                   <Autocomplete.Item :value="item">{{ item }}</Autocomplete.Item>
-                </Autocomplete.Collection>
+                </template>
               </Autocomplete.Group>
             </template>
           </Autocomplete.List>

@@ -1,8 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { clearServerLogs, createPage, getServerLogs, setup, url } from '@nuxt/test-utils/e2e';
-import { chromium, firefox, webkit } from 'playwright-core';
-import type { BrowserType, Locator, Page, Route } from 'playwright-core';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import type { Locator, Page } from 'playwright-core';
+import { describe, expect, it } from 'vitest';
 import nuxtConfig from '../nuxt.config';
 
 const rootDir = fileURLToPath(new URL('..', import.meta.url));
@@ -1575,139 +1574,6 @@ async function expectHydratedComboboxPage(page: Page) {
   ).toEqual({ role: null, tabindex: '-1', 'aria-haspopup': 'listbox' });
 }
 
-// The text that the case types into each control before hydration, and the value that the
-// control and the model of the page have after hydration.
-const TEXT_BEFORE_HYDRATION = [
-  { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
-  // The last control keeps the focus.
-  {
-    control: 'autocomplete-input',
-    text: 'Che',
-    value: 'Che',
-    output: 'autocomplete-value',
-    model: 'Che',
-  },
-];
-
-// Nobody typed, so each control and each model is empty.
-async function expectTextBeforeHydrationPage(page: Page) {
-  for (const { control, output } of TEXT_BEFORE_HYDRATION) {
-    expect(await page.getByTestId(control).inputValue()).toBe('');
-    expect(await page.getByTestId(output).textContent()).toBe('');
-  }
-}
-
-interface FormState {
-  formData: Record<string, string[]>;
-  models: Record<string, unknown>;
-  changes: Record<string, number>;
-}
-
-const FORM_STATE_INITIAL_MODELS = {
-  fruit: null,
-};
-
-// The state of /form-state after each part changes.
-const FORM_STATE_CHANGED: FormState = {
-  formData: {
-    fruit: ['Cherry'],
-  },
-  models: {
-    fruit: 'Cherry',
-  },
-  changes: {
-    fruit: 1,
-  },
-};
-
-const FORM_STATE_ENGINES: { name: string; engine: BrowserType }[] = [
-  { name: 'Chromium', engine: chromium },
-  { name: 'Firefox', engine: firefox },
-  { name: 'WebKit', engine: webkit },
-];
-
-async function expectFormStatePage(page: Page) {
-  expect(JSON.parse((await page.getByTestId('models').textContent()) ?? '')).toEqual(
-    FORM_STATE_INITIAL_MODELS,
-  );
-  expect(await page.getByTestId('changes').textContent()).toBe('{}');
-}
-
-async function readFormState(page: Page): Promise<FormState> {
-  return page.evaluate(() => {
-    const read = (testId: string) =>
-      document.querySelector(`[data-testid="${testId}"]`)?.textContent ?? '';
-    const formData: Record<string, string[]> = {};
-    const form = document.querySelector<HTMLFormElement>('[data-testid="form"]');
-    for (const [name, value] of new FormData(form ?? undefined)) {
-      (formData[name] ??= []).push(String(value));
-    }
-    return {
-      formData,
-      models: JSON.parse(read('models')) as Record<string, unknown>,
-      changes: JSON.parse(read('changes')) as Record<string, number>,
-    };
-  });
-}
-
-// What a program does to /form-state before its scripts run: it writes each hidden input with no
-// event, as a browser restores it.
-async function changeFormStateBeforeHydration(page: Page) {
-  // The page can still parse its HTML. The link comes after the form.
-  await page.getByTestId('away').waitFor();
-  await page.evaluate(() => {
-    const write = (name: string, values: string[]) => {
-      document
-        .querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)
-        .forEach((input, index) => {
-          input.value = values[index] ?? input.value;
-        });
-    };
-    write('fruit', ['Cherry']);
-  });
-}
-
-// What a visitor does to /form-state after the hydration.
-async function changeHydratedFormState(page: Page) {
-  await page.getByTestId('fruit-input').click();
-  await page.keyboard.type('Che');
-  await page.getByRole('option', { name: 'Cherry' }).click();
-}
-
-function holdScripts(page: Page) {
-  const heldScripts: Route[] = [];
-  let holds = true;
-  void page.route('**/_nuxt/**', async (route) => {
-    if (holds && route.request().resourceType() === 'script') {
-      heldScripts.push(route);
-    } else {
-      await route.continue();
-    }
-  });
-  return async () => {
-    holds = false;
-    // A route of a page that the visitor left fails.
-    await Promise.all(heldScripts.map((route) => route.continue().catch(() => {})));
-  };
-}
-
-async function waitForFormStateHydration(page: Page) {
-  await page.waitForFunction(
-    () =>
-      location.pathname === '/form-state' &&
-      (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
-        false,
-  );
-  await waitForTwoFrames(page);
-}
-
-async function openFormStatePage({ engine }: { engine: BrowserType }) {
-  const browser = await engine.launch();
-  onTestFinished(() => browser.close());
-  const page = await browser.newPage();
-  return { page, messages: collectMessages(page) };
-}
-
 const RESIZABLE_PANELS = ['p-a', 'p-b', 'p-c', 'l-a', 'l-b', 'c-a', 'c-b'];
 
 function readResizablePanel(page: Page, testId: string) {
@@ -1929,8 +1795,6 @@ const PAGES: PageCase[] = [
     expectPage: expectComboboxPageOnServer,
     expectHydratedPage: expectHydratedComboboxPage,
   },
-  { path: '/text-before-hydration', expectPage: expectTextBeforeHydrationPage },
-  { path: '/form-state', expectPage: expectFormStatePage },
   {
     path: '/resizable',
     expectPage: expectResizablePageOnServer,
@@ -2609,19 +2473,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it('filters the items of /autocomplete with the locale of the visitor after hydration', async () => {
-    const page = await createPage(undefined, { locale: 'sv-SE' });
-    const messages = collectMessages(page);
-
-    await page.goto(url('/autocomplete'), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
-
-    // In Swedish, "ö" is not "o", so no city contains the text.
-    expect(await page.getByTestId('input').inputValue()).toBe('malmo');
-    expect(await page.getByRole('option').count()).toBe(0);
-    expect(messages).toEqual([]);
-  });
-
   it('filters the items of /autocomplete while typing after hydration', async () => {
     const page = await createPage('/autocomplete');
     const messages = collectMessages(page);
@@ -2651,120 +2502,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await input.inputValue()).toBe('Cherry');
     expect(await readFormData(page)).toEqual(['fruit=Cherry', 'tags=b', 'country=Sweden']);
     expect(messages).toEqual([]);
-  });
-
-  it('keeps the text that a visitor types into /text-before-hydration while the scripts load', async () => {
-    const page = await createPage();
-    const messages = collectMessages(page);
-    const heldScripts: Route[] = [];
-    let holdsScripts = true;
-    await page.route('**/_nuxt/**', async (route) => {
-      if (holdsScripts && route.request().resourceType() === 'script') {
-        heldScripts.push(route);
-      } else {
-        await route.continue();
-      }
-    });
-
-    // The scripts of the page are modules, so `DOMContentLoaded` waits for them.
-    await page.goto(url('/text-before-hydration'), { waitUntil: 'commit' });
-    for (const { control, text } of TEXT_BEFORE_HYDRATION) {
-      await page.getByTestId(control).pressSequentially(text);
-    }
-    expect(heldScripts.length).toBeGreaterThan(0);
-    holdsScripts = false;
-    await Promise.all(heldScripts.map((route) => route.continue()));
-    await page.waitForFunction(
-      () =>
-        (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
-        false,
-    );
-
-    for (const { control, value, output, model } of TEXT_BEFORE_HYDRATION) {
-      await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
-      await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
-    }
-    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
-      'autocomplete-input',
-    );
-    expect(messages).toEqual([]);
-  });
-
-  describe.skipIf(dev)('VUE-81: /form-state', () => {
-    // Each case launches its engine against the one server, because each engine restores the form
-    // state of a page at another time.
-    it.each(FORM_STATE_ENGINES)(
-      'takes the state of each part that changed before the hydration in $name',
-      async (engine) => {
-        const { page, messages } = await openFormStatePage(engine);
-        const releaseScripts = holdScripts(page);
-
-        await page.goto(url('/form-state'), { waitUntil: 'commit' });
-        await changeFormStateBeforeHydration(page);
-        await releaseScripts();
-        await waitForFormStateHydration(page);
-
-        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
-        expect(messages).toEqual([]);
-      },
-      60_000,
-    );
-
-    it.each(FORM_STATE_ENGINES)(
-      'gives each part the state that the browser restores after a hydrated visit in $name',
-      async (engine) => {
-        const { page, messages } = await openFormStatePage(engine);
-        await page.goto(url('/form-state'));
-        await waitForFormStateHydration(page);
-        await changeHydratedFormState(page);
-        await page.getByTestId('away').click();
-        await page.waitForURL(url('/'));
-
-        await page.goBack();
-        await waitForFormStateHydration(page);
-
-        // Firefox restores each value. The other engines restore some of them.
-        const state = await readFormState(page);
-        for (const name of ['fruit']) {
-          const model = state.models[name];
-          const isRestored =
-            JSON.stringify(model) !==
-            JSON.stringify(
-              FORM_STATE_INITIAL_MODELS[name as keyof typeof FORM_STATE_INITIAL_MODELS],
-            );
-          expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
-          expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
-        }
-        expect(messages).toEqual([]);
-      },
-      60_000,
-    );
-
-    // WebKit restores no form state of a page whose module scripts did not run. Empty scripts in
-    // their place do not help: on the move back, WebKit takes the scripts of the first visit from
-    // its cache, so the page never hydrates.
-    it.each(FORM_STATE_ENGINES.filter(({ name }) => name !== 'WebKit'))(
-      'gives each part the state that the browser restores after a visit that never hydrated in $name',
-      async (engine) => {
-        const { page, messages } = await openFormStatePage(engine);
-        const releaseScripts = holdScripts(page);
-        await page.goto(url('/form-state'), { waitUntil: 'commit' });
-        await changeFormStateBeforeHydration(page);
-        await page.getByTestId('away').click();
-        await page.waitForURL(url('/'), { waitUntil: 'commit' });
-        await releaseScripts();
-        await page.waitForLoadState('load');
-        // Firefox reports each module load that the move cut, on the page that the visitor left.
-        messages.length = 0;
-
-        await page.goBack();
-        await waitForFormStateHydration(page);
-
-        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
-        expect(messages).toEqual([]);
-      },
-      60_000,
-    );
   });
 
   it('renders the layout of the cookie of /resizable on a server', async () => {

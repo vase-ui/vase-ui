@@ -6,100 +6,330 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/combobox/arrow/ComboboxArrow.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the popup parts with the popup layer, which the arrow shares with Popover. `Popover.test.ts` tests the arrow of the layer: its element, `aria-hidden` and the attributes of its side."
+    },
+    {
+      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the popup parts with the popup layer, which the backdrop shares with Popover. `Popover.test.ts` tests the backdrop of the layer."
+    },
+    {
+      "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the chips: a press on `ChipRemove` removes its value, keeps the focus on the input and leaves `touched` false."
+    },
+    {
+      "upstream": "packages/react/src/combobox/chip/ComboboxChip.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the keys of a chip: the arrow keys between the chips and to the input, and Backspace and Delete."
+    },
+    {
+      "upstream": "packages/react/src/combobox/chips/ComboboxChips.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the chips: the role `toolbar` while the root has a value, and the keys of the input in the chips."
+    },
+    {
+      "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the clear button: a press empties the text and the value and moves the focus to the input, and a kept button has `hidden` with no value."
+    },
+    {
+      "upstream": "packages/react/src/combobox/collection/ComboboxCollection.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "The part is cut: `v-for` over the items of a group, and the `item` slot of `List`, render the items. `Combobox.test.ts` tests that the filter renders the filtered items and that an item keeps its element when the filter moves it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests `Empty`: its role, its text one task after the mount, and its slot only for an empty list."
+    },
+    {
+      "upstream": "packages/react/src/combobox/group-label/ComboboxGroupLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests that a group has the id of its label in `aria-labelledby`."
+    },
+    {
+      "upstream": "packages/react/src/combobox/group/ComboboxGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the groups: the role, the label and a group with no item that the filter leaves out."
+    },
+    {
+      "upstream": "packages/react/src/combobox/group/ComboboxGroupContext.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "A part outside its root throws an error that names the part. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/icon/ComboboxIcon.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests that `Icon` is a hidden `<span>` with an arrow."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the group: its role, its state attributes, and a press on its padding that moves the focus to the input and opens the popup."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input/ComboboxInput.android.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.android.test.ts",
+      "reason": "`Combobox.android.test.ts` tests that the input writes the text at each `input` of a composition on Android."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input/ComboboxInput.gecko.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/test/measurements/combobox.test.ts",
+      "reason": "The caret after `setSelectionRange` is at the same index in each direction in each browser (C13), so the input has no code for Gecko. The measurement states it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input/ComboboxInput.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the input: its role and its ARIA attributes, the text model, the composition, the keys, and Home and End."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "The part is cut: the default slot of `Item` gives `state.selected`, so the developer renders an element with `v-if`, and `[aria-selected=\"true\"]` styles a selected item. `Combobox.test.ts` tests the state and the attribute."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item/ComboboxItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the items: the pick by a press and by a key, a disabled item, the highlight by the pointer and by the keys, and `aria-selected`."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item/ComboboxItemContext.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "A part outside its root throws an error that names the part. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/items.test.ts",
+      "reason": "`items.test.ts` tests `createItems`: the derived value of a pick, the label in the input and in `Value`, the filter by label, the form data, the typeahead and the first read of the accessors."
+    },
+    {
+      "upstream": "packages/react/src/combobox/label/ComboboxLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Label` names the control, the input or the trigger, with `aria-labelledby`, and a press on it moves the focus to the control. `Combobox.test.ts` tests both. The label gives no warning, because it names each control."
+    },
+    {
+      "upstream": "packages/react/src/combobox/list/ComboboxList.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the list: its role, `aria-multiselectable`, `aria-readonly` and the `item` slot. The list takes no focus, so Enter is a key of the input."
+    },
+    {
+      "upstream": "packages/react/src/combobox/popup/ComboboxPopup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the popup: its role, a dialog while the trigger is the control, the first focus and the Tab order."
+    },
+    {
+      "upstream": "packages/react/src/combobox/portal/ComboboxPortal.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests a kept popup, and `Popover.test.ts` tests the portal of the popup layer."
+    },
+    {
+      "upstream": "packages/react/src/combobox/portal/ComboboxPortalContext.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "A part outside its root throws an error that names the part. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests that the positioner anchors to the group of the input and gives its side to the input and the group."
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerContext.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "A part outside its root throws an error that names the part. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the root through its parts: the control, the open state with each reason, the text, the filter, the highlight, the pick, the chips, the clear button and the focus. `Combobox.form.test.ts` tests the form and the field, `Combobox.hydration.test.ts` the server render, and `Combobox.renders.test.ts` the renders. The parts have no transition status and no unmount action (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRootContext.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "A part outside its root throws an error that names the part. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/index.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/filter.test.ts",
+      "reason": "`filter.test.ts` tests the filters of `useFilter`."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/useFilter.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/filter.test.ts",
+      "reason": "`filter.test.ts` tests `useFilter`: the matches, the option `value` and `multiple`, and the locale."
+    },
+    {
+      "upstream": "packages/react/src/combobox/status/ComboboxStatus.iOS.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "The text of `Status` comes one task after the mount, on each platform. `Combobox.test.ts` tests it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/status/ComboboxStatus.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests `Status`: its role, `aria-live`, `aria-atomic`, and its text one task after the mount."
+    },
+    {
+      "upstream": "packages/react/src/combobox/store.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "The root holds its state in refs of Vue, not in a store. `Combobox.test.ts` tests that state through the parts."
+    },
+    {
+      "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the trigger: as the control and beside an input, the press, the keys and the typeahead. `items.test.ts` tests the typeahead of a collection, and `Combobox.form.test.ts` a required trigger in a field (BUG-1425)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/handleInputPress.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests a press on the input and on the padding of the group."
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/parts.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests the parts that read the state of the root: the side of the popup and the empty list."
+    },
+    {
+      "upstream": "packages/react/src/combobox/value/ComboboxValue.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` tests `Value`: the label of the value and the placeholder. `items.test.ts` tests the label of a derived value."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.spec.tsx",
+      "reason": "`Combobox.spec.tsx` tests the types of the value, of a collection and of the details."
+    },
+    {
+      "upstream": "packages/react/src/combobox/arrow/ComboboxArrowDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/clear/ComboboxClearDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/input/ComboboxInputDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item/ComboboxItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/popup/ComboboxPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/trigger/ComboboxTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/combobox/collection/ComboboxCollection.tsx",
+      "kind": "not-applicable",
+      "reason": "The part is cut. `v-for` over the items of a group, and the `item` slot of `List`, render the items, as Vue does."
+    },
+    {
+      "upstream": "packages/react/src/combobox/collection/GroupCollectionContext.tsx",
+      "kind": "not-applicable",
+      "reason": "The context gave the items of a group to `Collection`, which is cut. `v-for` reads the items of the group."
+    },
+    {
+      "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicator.tsx",
+      "kind": "not-applicable",
+      "reason": "The part is cut. The default slot of `Item` gives `state.selected`, so the developer renders an element with `v-if` or `v-show`, and `<Transition>` animates it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx",
+      "kind": "not-applicable",
+      "reason": "The hidden dismiss buttons are cut: they had a fixed English name (rule 8.13), and the Tab order of the popup layer is the way out of the popup."
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part writes its data attributes in its own template."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/constants.ts",
+      "kind": "not-applicable",
+      "reason": "The constants marked no highlight in the index registry. The highlight is an item of the list, so the root has no index registry."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Root",
       "prop": "multiple",
       "kind": "not-applicable",
       "reason": "The row gives the default `false`. The prop has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean` (TS2322). Vue gives an absent Boolean prop the value `false`, and the JSDoc has `@default false` for the API reference."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chips/ComboboxChips.test.tsx",
-      "describe": ["<Combobox.Chips />"],
-      "title": "does not focus the input when pressing content in a nested React portal",
-      "kind": "not-applicable",
-      "reason": "React sends the press of a portal up the React tree, so the chips get it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the chips. The chips thus get no such press."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.test.tsx",
-      "describe": ["<Combobox.InputGroup />"],
-      "title": "does not focus the input when pressing content in a nested React portal",
-      "kind": "not-applicable",
-      "reason": "React sends the press of a portal up the React tree, so the input group gets it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the input group. The group thus gets no such press."
-    },
-    {
-      "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
-      "describe": ["Combobox.createItems", "integration"],
-      "title": "resolves a server-rendered defaultValue label from the external window",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/items/createItems.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
-    },
-    {
-      "upstream": "packages/react/src/combobox/label/ComboboxLabel.test.tsx",
-      "describe": ["<Combobox.Label />"],
-      "title": "does not run the development warning in production",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/label/ComboboxLabel.node.test.tsx",
-      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "server-side rendering"],
-      "title": "sets combobox aria attributes on the input",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "server-side rendering"],
-      "title": "sets combobox aria attributes on the trigger when input is inside popup",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "server-side rendering"],
-      "title": "does not link Combobox.Label to trigger before hydration",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
-      "reason": "The case renders on a server only. Vase UI links the label in the server HTML (VUE-51). The case \"VUE-51: names the trigger with a label that comes before it\" asserts that link. The case \"names the trigger that comes before it\" of `ComboboxLabel.node.test.tsx` asserts it for a label after the trigger."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />"],
-      "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
-      "kind": "not-applicable",
-      "reason": "React sends the press of a portal up the React tree, so the popup knows that the press is inside it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the popup. The press is thus a press outside the popup, and it closes the popup."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />"],
-      "title": "does not navigate the list with arrow keys from portalled controls inside the popup",
-      "kind": "not-applicable",
-      "reason": "React sends the key of a portal up the React tree, so the list could get it. A Vue key goes up the DOM only, and a `Teleport` puts its content outside the list. The list thus gets no such key."
-    },
-    {
-      "upstream": "packages/react/src/combobox/group-label/ComboboxGroupLabel.test.tsx",
-      "describe": ["<Combobox.GroupLabel />", "a11y attributes"],
-      "title": "allows overriding aria-hidden",
-      "kind": "replaced",
-      "test": "packages/vue/src/combobox/group-label/ComboboxGroupLabel.test.tsx",
-      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "Field"],
-      "title": "[data-focused]",
-      "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "Field", "[data-focused] without a blur event"],
-      "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
@@ -144,18 +374,145 @@
       "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
     },
     {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />"],
-      "title": "does not dismiss when pressing content inside a nested popover",
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The case nests a Popover and a Combobox of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Combobox moves to it. The change that moves Combobox to the popup layer ports the case again."
+      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1), so it takes `as`. `readonly` and `autocomplete` replace `readOnly` and `autoComplete` (rule 8.2). The `id` prop is on `Input` and `Trigger`, the part that has the role (rule 8.4). `inputRef` and `actionsRef` are the template ref, with `inputElement`, `close()` and `element`. `form` names the form of the hidden inputs, as the native attribute does. The unmount action and `openChangeComplete` are cut: the `<Transition>` hooks run after the animations (rule 8.9). No part sends `close-press`: only the hidden dismiss buttons sent it, and they are cut."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Clear",
+      "kind": "not-applicable",
+      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). `<Transition>` animates it, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Portal",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. It takes `defer` and `disabled` of `<Teleport>`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "`<Transition>` animates the backdrop, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "`<Transition>` animates the popup, and a kept popup has `[hidden]`, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Item",
+      "kind": "not-applicable",
+      "reason": "The item reads its element, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Group",
+      "kind": "not-applicable",
+      "reason": "`v-for` over the items of the group renders them, so the group takes no `items`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ChipRemove",
+      "kind": "not-applicable",
+      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "Collection",
+      "kind": "not-applicable",
+      "reason": "The part is cut. `v-for` over the items of a group, and the `item` slot of `List`, render the items."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ItemIndicator",
+      "kind": "not-applicable",
+      "reason": "The part is cut. The default slot of `Item` gives `state.selected`, so the developer renders an element with `v-if` or `v-show`, and `[aria-selected=\"true\"]` styles a selected item."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxClearDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxItemIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
+      "entry": "ComboboxSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
     {
-      "entry": "Trigger",
+      "entry": "Root",
+      "prop": "as",
+      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1). `as` gives it another tag or a component (rule 6.1)."
+    },
+    {
+      "entry": "Root",
+      "prop": "readonly",
+      "reason": "The native name of the attribute (rule 8.2). A read-only root opens and moves the highlight, and the user cannot change its value."
+    },
+    {
+      "entry": "Root",
+      "prop": "autocomplete",
+      "reason": "The native name of the attribute (rule 8.2). It is the autofill purpose of the hidden text input."
+    },
+    {
+      "entry": "Root",
+      "exposed": "element",
+      "reason": "A template ref of a part has its element (rule 6.2)."
+    },
+    {
+      "entry": "List",
       "prop": "id",
-      "reason": "The part reads `id` to name its element. While the input is inside the popup, the part also registers `id` as the id of the control of the field, so it is a declared prop. Base UI reads `id` from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` for `aria-controls` of the input, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "List",
@@ -163,19 +520,39 @@
       "reason": "The slot renders each filtered item with `{ item, index }`. It replaces the function child of the list in Base UI."
     },
     {
-      "entry": "GroupLabel",
-      "prop": "id",
-      "reason": "The part gives `id` to the group for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the group label, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "ChipRemove",
-      "prop": "disabled",
-      "reason": "The part reads `disabled` and disables its button when the prop or the root says so, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
     },
     {
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "Item",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-activedescendant` of the input, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "GroupLabel",
+      "prop": "id",
+      "reason": "The part gives `id` to the group for `aria-labelledby`, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "ChipRemove",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` and disables its button when the prop or the root says so, so it is a declared prop."
+    },
+    {
+      "entry": "Empty",
+      "stateField": "empty",
+      "reason": "The state says that the list is empty, for an element of the developer in the `element` slot."
     }
   ],
   "returnTypeDifferences": [
@@ -195,5 +572,301 @@
       "reason": "`setup` runs one time, so a plain array does not follow a change of the filtered items. The composable thus returns a `ComputedRef` of the array."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/combobox/arrow/ComboboxArrow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxArrow.vue",
+      "behavior": "The arrow points to the anchor.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxBackdrop.vue",
+      "behavior": "The backdrop is an overlay under the popup.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxChipRemove.vue",
+      "behavior": "The button removes the value of its chip.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/chip/ComboboxChip.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxChip.vue",
+      "behavior": "A chip is a selected value, with its keys.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/chip/ComboboxChipContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "What a chip gives to its button.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/chips/ComboboxChips.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxChips.vue",
+      "behavior": "The chips hold the chips and the input.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/chips/ComboboxChipsContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "What the chips give to their chips and to the input.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/clear/ComboboxClear.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxClear.vue",
+      "behavior": "The button clears the value and the text.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxEmpty.vue",
+      "behavior": "The text of an empty list.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/group-label/ComboboxGroupLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxGroupLabel.vue",
+      "behavior": "The label names its group.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/group/ComboboxGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxGroup.vue",
+      "behavior": "A group of items.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/group/ComboboxGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "What a group gives to its label.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/icon/ComboboxIcon.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxIcon.vue",
+      "behavior": "The icon of the trigger.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/parts.ts",
+      "behavior": "The parts of the namespace `Combobox`.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxInputGroup.vue",
+      "behavior": "The group of the input and its buttons.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/input/ComboboxInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxInput.vue",
+      "behavior": "The input of the text, which keeps the focus.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/item/ComboboxItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxItem.vue",
+      "behavior": "An item of the list.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/item/ComboboxItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxItem.vue",
+      "behavior": "The state of an item, which its default slot gets.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/items/createItems.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/items.ts",
+      "behavior": "`createItems` makes a collection for `items`.",
+      "witness": "packages/vue/src/combobox/items.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/items/itemCollection.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/items.ts",
+      "behavior": "The collection of `createItems`.",
+      "witness": "packages/vue/src/combobox/items.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/label/ComboboxLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxLabel.vue",
+      "behavior": "The label names the control.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/list/ComboboxList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxList.vue",
+      "behavior": "The list renders the filtered items.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/popup/ComboboxPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxPopup.vue",
+      "behavior": "The popup holds the list.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/portal/ComboboxPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxPortal.vue",
+      "behavior": "The portal moves the popup to `<body>`.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/portal/ComboboxPortalContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "The portal marks the parts in it.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxPositioner.vue",
+      "behavior": "The positioner places the popup at its anchor.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "What the positioner gives to the popup and the arrow.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/AriaCombobox.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "The root of Combobox and Autocomplete: the value, the text, the filter, the highlight and the pick.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxRoot.vue",
+      "behavior": "The root of the combobox.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRootContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "What the root gives to its parts.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/index.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/filter.ts",
+      "behavior": "The filter of the root.",
+      "witness": "packages/vue/src/combobox/filter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/useFilter.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/filter.ts",
+      "behavior": "`useFilter` gives the matches of `Intl.Collator`.",
+      "witness": "packages/vue/src/combobox/filter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/utils/useFilteredItems.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "`useFilteredItems` gives the items that the filter keeps.",
+      "witness": "packages/vue/src/combobox/filter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/row/ComboboxRow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxRow.vue",
+      "behavior": "A row of a grid.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/row/ComboboxRowContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "An item in a row is a cell of a grid.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/separator/ComboboxSeparator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxSeparator.vue",
+      "behavior": "The separator of groups of items.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/status/ComboboxStatus.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxStatus.vue",
+      "behavior": "The live region of the status of the list.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/store.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "The state of the root.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxTrigger.vue",
+      "behavior": "The trigger opens the popup.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/handleInputPress.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxInput.vue",
+      "behavior": "A press on the input opens the popup.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/utils/parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/root.ts",
+      "behavior": "The side of the popup and the empty list, which the parts read.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/combobox/value/ComboboxValue.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxValue.vue",
+      "behavior": "The label of the value.",
+      "witness": "packages/vue/src/combobox/Combobox.test.ts"
+    }
+  ]
 }

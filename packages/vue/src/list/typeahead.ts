@@ -3,6 +3,38 @@ import { useTimeout } from '../common/useTimeout';
 import { isComposing } from '../popup/layer';
 import type { List, ListItem } from './list';
 
+/** The time in milliseconds after the last key, after which a typed string starts again. */
+export const TYPEAHEAD_RESET_MS = 500;
+
+/**
+ * The index of the next text that starts with the typed string, with no regard to case, or -1.
+ * Each key of one string searches from the text after `start`, the text that had the highlight
+ * when the string began. When no text starts with a string of one letter typed more than one time,
+ * the search is for that letter, from the text after `current`.
+ */
+export function nextTextMatch(
+  texts: readonly string[],
+  typed: string,
+  start: number,
+  current: number,
+): number {
+  const lower = typed.toLocaleLowerCase();
+  const fits = (text: string, prefix: string) => text.toLocaleLowerCase().startsWith(prefix);
+  let prefix = lower;
+  let from = start;
+  // One letter typed more than one time.
+  const repeated = /^(.)\1+$/su.exec(lower);
+  if (repeated && !texts.some((text) => fits(text, lower))) {
+    prefix = repeated[1] ?? '';
+    from = current;
+  }
+  for (let step = 1; step <= texts.length; step += 1) {
+    const index = (from + step + texts.length) % texts.length;
+    if (fits(texts[index] ?? '', prefix)) return index;
+  }
+  return -1;
+}
+
 export interface MatchOptions {
   /** A disabled item does not match. */
   skipDisabled?: boolean | undefined;
@@ -11,29 +43,8 @@ export interface MatchOptions {
 }
 
 /**
- * The first item after `from` whose text starts with `typed`, with no regard to case. The search
- * goes on from the first item after the last one.
- */
-export function nextMatch(
-  list: List,
-  typed: string,
-  from: ListItem | null,
-  options: MatchOptions = {},
-): ListItem | undefined {
-  const items = list.items({ hidden: options.hidden });
-  const start = from ? items.indexOf(from) + 1 : 0;
-  const search = typed.toLocaleLowerCase();
-  return [...items.slice(start), ...items.slice(0, start)].find(
-    (item) =>
-      !(options.skipDisabled && item.disabled) &&
-      list.text(item).toLocaleLowerCase().startsWith(search),
-  );
-}
-
-/**
  * The typeahead of a list: the keys of one character make a string, and the string goes 500 ms
- * after the last key. Each key of one string searches from the item after the one that had the
- * highlight when the string began.
+ * after the last key. The match follows `nextTextMatch`.
  */
 export function useTypeahead(
   list: List,
@@ -68,15 +79,19 @@ export function useTypeahead(
       }
       const text = typed.value + key;
       typed.value = text;
-      timer.start(options.resetMs ?? 500, () => (typed.value = ''));
+      timer.start(options.resetMs ?? TYPEAHEAD_RESET_MS, () => (typed.value = ''));
       event.preventDefault();
-      // With no item that starts with a double letter, the same key again goes to the next item
-      // with that letter.
-      const match =
-        nextMatch(list, text, from, options) ??
-        (text === key.repeat(text.length / key.length)
-          ? nextMatch(list, key, last, options)
-          : undefined);
+      const items = list.items({ hidden: options.hidden });
+      const texts = items.map((item) =>
+        options.skipDisabled && item.disabled ? '' : list.text(item),
+      );
+      const index = nextTextMatch(
+        texts,
+        text,
+        from ? items.indexOf(from) : -1,
+        last ? items.indexOf(last) : -1,
+      );
+      const match = items[index];
       if (!match) return true;
       last = match;
       if (options.onMatch) options.onMatch(match, event);

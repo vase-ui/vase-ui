@@ -75,6 +75,8 @@ function groupProduce(items: Produce[]): ProduceGroup[] {
 }
 
 const groupedProduce: ProduceGroup[] = groupProduce(produceData);
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -96,28 +98,30 @@ const groupedProduce: ProduceGroup[] = groupProduce(produceData);
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup">
-          <Combobox.Empty>
-            <div :class="styles.Empty">No produce found.</div>
-          </Combobox.Empty>
-          <Combobox.List :class="styles.List">
-            <template #item="{ item: group }">
-              <Combobox.Group :items="group.items" :class="styles.Group">
-                <Combobox.GroupLabel :class="styles.GroupLabel">
-                  {{ group.value }}
-                </Combobox.GroupLabel>
-                <Combobox.Collection v-slot="{ item }">
-                  <Combobox.Item :class="styles.Item" :value="item">
-                    <Combobox.ItemIndicator :class="styles.ItemIndicator">
-                      <CheckIcon />
-                    </Combobox.ItemIndicator>
-                    <span :class="styles.ItemText">{{ item.label }}</span>
-                  </Combobox.Item>
-                </Combobox.Collection>
-              </Combobox.Group>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup :class="styles.Popup">
+            <Combobox.Empty>
+              <div :class="styles.Empty">No produce found.</div>
+            </Combobox.Empty>
+            <Combobox.List :class="styles.List">
+              <template #item="{ item: group }">
+                <Combobox.Group :class="styles.Group">
+                  <Combobox.GroupLabel :class="styles.GroupLabel">
+                    {{ group.value }}
+                  </Combobox.GroupLabel>
+                  <template v-for="item in group.items" :key="item.value">
+                    <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="item">
+                      <span v-if="state.selected" :class="styles.ItemIndicator">
+                        <CheckIcon />
+                      </span>
+                      <span :class="styles.ItemText">{{ item.label }}</span>
+                    </Combobox.Item>
+                  </template>
+                </Combobox.Group>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

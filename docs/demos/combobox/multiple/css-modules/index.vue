@@ -50,6 +50,8 @@ const langs: ProgrammingLanguage[] = [
   { id: 'rust', value: 'Rust' },
   { id: 'swift', value: 'Swift' },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -94,21 +96,23 @@ const langs: ProgrammingLanguage[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup">
-          <Combobox.Empty>
-            <div :class="styles.Empty">No languages found.</div>
-          </Combobox.Empty>
-          <Combobox.List>
-            <template #item="{ item: language }">
-              <Combobox.Item :class="styles.Item" :value="language">
-                <Combobox.ItemIndicator :class="styles.ItemIndicator">
-                  <CheckIcon />
-                </Combobox.ItemIndicator>
-                <span :class="styles.ItemText">{{ language.value }}</span>
-              </Combobox.Item>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup :class="styles.Popup">
+            <Combobox.Empty>
+              <div :class="styles.Empty">No languages found.</div>
+            </Combobox.Empty>
+            <Combobox.List>
+              <template #item="{ item: language }">
+                <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="language">
+                  <span v-if="state.selected" :class="styles.ItemIndicator">
+                    <CheckIcon />
+                  </span>
+                  <span :class="styles.ItemText">{{ language.value }}</span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

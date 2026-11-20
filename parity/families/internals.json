@@ -290,6 +290,38 @@
       "kind": "replaced",
       "test": "packages/vue/src/field/Field.test.ts",
       "reason": "The case tests a click on a `Field.Label` that is not a `<label>`. `Field.test.ts` tests such a label."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel", "%s"],
+      "title": "focuses the trigger without opening the popup in the document",
+      "kind": "replaced",
+      "test": "packages/vue/src/select/Select.field.test.ts",
+      "reason": "The case renders Select and Combobox, which use no `useLabel`. `Select.field.test.ts` tests that a click on `Select.Label` gives the trigger the focus and opens nothing. `Combobox.test.ts` tests that a press on the label moves the focus to the control."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel", "%s"],
+      "title": "focuses the trigger in its shadow root without opening the popup (outer matching ID: %s)",
+      "kind": "replaced",
+      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
+      "reason": "The case renders Select and Combobox, which use no `useLabel`. The cases of `with a label and a control` test a label and a control in shadow roots with the label part of the test."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "focuses a control in the light DOM from a label in a shadow root",
+      "kind": "replaced",
+      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
+      "reason": "The case renders Select, which uses no `useLabel`. The case of the same title in `with a label and a control` tests it with the label part of the test."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "focuses a control in an ancestor shadow root from a label in a nested shadow root",
+      "kind": "replaced",
+      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
+      "reason": "The case renders Select, which uses no `useLabel`. The case of the same title in `with a label and a control` tests it with the label part of the test."
     }
   ],
   "surfaceAdditions": [],
