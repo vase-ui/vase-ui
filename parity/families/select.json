@@ -185,62 +185,62 @@
     {
       "upstream": "packages/react/src/select/arrow/SelectArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/backdrop/SelectBackdropDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/icon/SelectIconDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/item-indicator/SelectItemIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/item/SelectItemDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/popup/SelectPopupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/positioner/SelectPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/positioner/SelectPositionerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/trigger/SelectTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/value/SelectValueDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
@@ -298,7 +298,7 @@
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the items: the keys, a disabled item, the press, the drag and the release, Enter and Space, and the highlight and its attribute. A listener that calls `preventDefault()` stops the list (rule 8.7), so `preventVaseUIHandler` has no case."
+      "reason": "`Select.test.ts` tests the items: the keys, a disabled item, the press, the drag and the release, Enter and Space, and the highlight and its attribute. A listener that calls `preventDefault()` stops the list, so `preventVaseUIHandler` has no case."
     },
     {
       "upstream": "packages/react/src/select/label/SelectLabel.test.tsx",
@@ -388,149 +388,149 @@
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The names `readonly` and `autocomplete` are the names of the native attributes in a Vue template (rule 8.2). `multiple` has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean`; Vue gives an absent Boolean prop `false`. `openChangeComplete` and the `unmount` action are cut: `@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations, and with `:css=\"false\"` the `leave` hook keeps the popup until it calls `done` (rule 8.9). A template ref has `close()`. `valueChange` sends two reasons, `item-press` and `none`, so `SelectRootChangeEventReason` has these two. `openChange` sends the ten reasons of Base UI in `SelectRootOpenChangeEventReason`."
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations, in place of `openChangeComplete`. With `:css=\"false\"`, the `leave` hook keeps the popup until it calls `done`, in place of the `unmount` action. A template ref gives `inputElement`, `close()` and `element`, in place of `inputRef` and `actionsRef`. `readonly` and `autocomplete` have the names of the native attributes. `multiple` has no declared default, because `withDefaults` refuses a default for the generic type `Multiple & boolean`, and Vue gives an absent Boolean prop `false`. `SelectRootChangeEventReason` has the two reasons that `valueChange` sends: `item-press` and `none`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Trigger",
       "kind": "not-applicable",
-      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3). The state has `readonly` (rule 8.2) and no `focused`: CSS selects `:focus-visible` (rule 8.15)."
+      "reason": "The trigger reads its element, so it needs no `nativeButton`. `:focus-visible` selects the focus, so the state has no `focused`. The state key `readonly` has the name of the native attribute."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Item",
       "kind": "not-applicable",
-      "reason": "The item reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The item reads its element, so it needs no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Label",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`: CSS selects `:focus-visible` on the trigger, and `:has()` on the root for the label (rule 8.15)."
+      "reason": "`:focus-visible` on the trigger and `:has()` on the root select the focus, so the state has no `focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Portal",
       "kind": "not-applicable",
-      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+      "reason": "A `<Teleport>` moves the content, and `to` names its target. The portal has no element of its own, so it takes no `as` and has no `element` slot."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`: a `<Transition>` around the backdrop animates it (rule 8.9)."
+      "reason": "A `<Transition>` around the backdrop animates it, so the state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`: a `<Transition>` around the popup animates it (rule 8.9)."
+      "reason": "A `<Transition>` around the popup animates it, so the state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "ItemIndicator",
       "kind": "not-applicable",
-      "reason": "The part is cut. The default slot of `Select.Item` gives `state.selected`, so the developer writes `v-if` or `v-show` on an element, and `<Transition>` animates it."
+      "reason": "The default slot of `Select.Item` gives `state.selected`. A `v-if` or a `v-show` on an element of the developer shows the mark, and `<Transition>` animates it. The part is cut."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectBackdropDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectIconDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectItemDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectItemIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectPopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectPositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectPositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectScrollDownArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectScrollUpArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "SelectValueDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Root",
       "prop": "as",
-      "reason": "The root renders a `<div>` that holds the form inputs (rule 8.1), and each part that renders an element takes `as` (rule 6.1)."
+      "reason": "The root renders a `<div>` that holds the inputs of its form. `as` gives it another tag or a component, as on each part with an element."
     },
     {
       "entry": "Root",
       "prop": "autocomplete",
-      "reason": "The name of the native attribute in a Vue template (rule 8.2). Base UI has the row `autoComplete`."
+      "reason": "The name of the native attribute. Base UI has `autoComplete`."
     },
     {
       "entry": "Root",
       "prop": "readonly",
-      "reason": "The name of the native attribute in a Vue template (rule 8.2). Base UI has the row `readOnly`."
+      "reason": "The name of the native attribute. Base UI has `readOnly`."
     },
     {
       "entry": "Root",
       "exposed": "element",
-      "reason": "A template ref of a part has `element` (rule 6.2). The root renders a `<div>`."
+      "reason": "A template ref of a part gives its element. The root renders a `<div>`."
     },
     {
       "entry": "Trigger",
@@ -541,7 +541,7 @@
     {
       "entry": "Trigger",
       "stateField": "readonly",
-      "reason": "The state key of Base UI `readOnly` has the name of the native attribute in a Vue template (rule 8.2)."
+      "reason": "The name of the native attribute. Base UI has `readOnly`."
     },
     {
       "entry": "Trigger",
@@ -575,7 +575,7 @@
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+      "reason": "A disabled portal renders its content in place, also on the server (VUE-128)."
     },
     {
       "entry": "Portal",
