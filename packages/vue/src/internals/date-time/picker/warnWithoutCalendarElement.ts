@@ -17,6 +17,8 @@ export function warnWithoutCalendarElement(
         'The `#render` slot gave no element to the part.',
         'The part cannot find its element, so the behavior that needs the element does not work.',
         'Bind `props` on the element: `v-bind="props"`.',
+        'In a Vapor component, also bind the `ref` setter by name: `:ref="props.ref"`.',
+        'If the element has a `ref` of its own, call `props.ref` in it.',
       );
     } else {
       warn(
