@@ -23,7 +23,7 @@ Give text and the parts of each control enough contrast with their background. [
 
 ## Accessible labels
 
-`Field`, `Fieldset` and `Form` connect each form control to its label, its description and its error. The [forms guide](/handbook/forms#naming-form-controls) shows how. A native `<label>` also names an input.
+`Field` and `Fieldset` connect each form control to its label, its description and its error. The [forms guide](/handbook/forms#naming-form-controls) shows how. A native `<label>` also names an input.
 
 A control with no visible label needs a name from `aria-label` or `aria-labelledby`. An icon button is an example. An image that gives information needs `alt` text. The [accessible name computation](https://www.w3.org/TR/accname-1.2/) gives the rules.
 
