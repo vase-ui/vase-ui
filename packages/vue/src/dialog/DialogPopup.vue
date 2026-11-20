@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDialog, injectDialogPortal } from './root';
 import type { DialogPopupProps, DialogPopupState } from './types';
@@ -13,11 +13,7 @@ const props = withDefaults(defineProps<DialogPopupProps>(), {
 });
 defineSlots<{
   default?(scope: { state: DialogPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DialogPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DialogPopupState>): unknown;
 }>();
 
 const context = injectDialog('Popup');

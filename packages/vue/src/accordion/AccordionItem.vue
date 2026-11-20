@@ -2,7 +2,7 @@
 import { computed, mergeProps, provide, shallowReactive, useAttrs, useId } from 'vue';
 import type { CollapsiblePanelEntry } from '../collapsible/part';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAccordionRoot } from './item';
 import { accordionItemKey, type AccordionTriggerEntry } from './part';
 import type {
@@ -26,11 +26,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: AccordionItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AccordionItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AccordionItemState>): unknown;
 }>();
 
 const root = injectAccordionRoot();

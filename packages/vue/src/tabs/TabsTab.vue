@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectTabsList } from './list';
 import { injectTabsRoot, rootStateAttributes, type RootTab } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<TabsTabProps<Value>>();
 defineSlots<{
   default?(scope: { state: TabsTabState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TabsTabState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TabsTabState>): unknown;
 }>();
 
 const root = injectTabsRoot();

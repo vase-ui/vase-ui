@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../utils/styles';
 import { injectSelectPositioner, injectSelectRoot } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<SelectListProps>();
 defineSlots<{
   default?(scope: { state: SelectListState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectListState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectListState>): unknown;
 }>();
 
 const context = injectSelectRoot('List');

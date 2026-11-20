@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPopoverRoot, injectPortal } from './root';
 import type { PopoverBackdropProps, PopoverBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<PopoverBackdropProps>();
 defineSlots<{
   default?(scope: { state: PopoverBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverBackdropState>): unknown;
 }>();
 
 const context = injectPopoverRoot('Backdrop');

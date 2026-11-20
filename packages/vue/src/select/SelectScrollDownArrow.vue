@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useScrollArrow } from './scrollArrow';
 import type { SelectScrollDownArrowProps, SelectScrollDownArrowState } from './types';
 
@@ -10,11 +10,7 @@ const props = withDefaults(defineProps<SelectScrollDownArrowProps>(), { keepMoun
 defineSlots<{
   /** The content. The default is `▼`. */
   default?(scope: { state: SelectScrollDownArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectScrollDownArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectScrollDownArrowState>): unknown;
 }>();
 
 const attrs = useAttrs();

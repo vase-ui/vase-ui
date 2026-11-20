@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupViewport } from '../popup/viewport';
 import { injectMenu } from './root';
 import type { MenuViewportProps, MenuViewportState } from './types';
@@ -11,11 +11,7 @@ defineProps<MenuViewportProps>();
 defineSlots<{
   /** Give the content the `triggerId` as its `key` in a `<Transition>`, so that it leaves and enters at a move. */
   default?(scope: { state: MenuViewportState; triggerId: string | null }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuViewportState>): unknown;
 }>();
 
 const context = injectMenu('Viewport');

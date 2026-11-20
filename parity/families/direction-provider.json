@@ -10,15 +10,55 @@
       "upstream": "packages/react/src/internals/direction-context/index.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/direction-context`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/DirectionProvider.tsx",
+      "kind": "not-applicable",
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/index.parts.ts",
+      "kind": "not-applicable",
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/index.ts",
+      "kind": "not-applicable",
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/DirectionProvider.spec.tsx",
+      "kind": "not-applicable",
+      "reason": "The types of `DirectionProvider` and `useDirection` go with the cut. `dir` is a native attribute, and its type is that of Vue."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
+      "describe": ["<DirectionProvider />"],
+      "title": "defaults useDirection to ltr outside a provider",
+      "kind": "not-applicable",
+      "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."
+    },
+    {
+      "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
+      "describe": ["<DirectionProvider />"],
+      "title": "provides the configured direction to descendants",
+      "kind": "not-applicable",
+      "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/direction-provider/types.md",
+      "entry": "DirectionProvider",
+      "kind": "not-applicable",
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/direction-provider/types.md",
+      "entry": "useDirection",
+      "kind": "not-applicable",
+      "reason": "The cut has a better way: the CSS pseudo-class `:dir(rtl)` for a style, and `getComputedStyle(element).direction` in a listener. Both give the direction that the element has, also below an element with `dir`."
     }
   ],
   "surfaceAdditions": [],
-  "returnTypeDifferences": [
-    {
-      "entry": "useDirection",
-      "returns": "ComputedRef<TextDirection>",
-      "reason": "`setup` runs one time, so a plain value does not follow a change of the provider. The composable returns a `ComputedRef` of the direction."
-    }
-  ],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

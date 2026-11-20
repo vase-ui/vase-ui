@@ -2,7 +2,7 @@
 import { computed, mergeProps, useAttrs, useId, watch, type TransitionProps } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- Vue has no other API that tells a client-only mount from a hydration in `setup`: it sets `vnode.el` before `setup` only when it hydrates the component. A Vapor component gets no instance, and it waits for its mount.
 import { getCurrentInstance } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
 import { ownerDocument } from '../common/owner';
@@ -20,11 +20,7 @@ const props = withDefaults(defineProps<NavigationMenuContentProps>(), {
 });
 defineSlots<{
   default?(scope: { state: NavigationMenuContentState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuContentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuContentState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Content');

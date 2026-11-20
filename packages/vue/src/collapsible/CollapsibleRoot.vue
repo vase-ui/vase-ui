@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, shallowReactive, useAttrs } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { collapsibleKey, type CollapsiblePanelEntry } from './part';
 import type {
@@ -28,11 +28,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: CollapsibleRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CollapsibleRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CollapsibleRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

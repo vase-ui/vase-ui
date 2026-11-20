@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAccordionItem } from './part';
 import type { AccordionHeaderProps, AccordionHeaderState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<AccordionHeaderProps>();
 defineSlots<{
   default?(scope: { state: AccordionHeaderState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AccordionHeaderState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AccordionHeaderState>): unknown;
 }>();
 
 const item = injectAccordionItem();

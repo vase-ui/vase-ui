@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import type { ButtonProps, ButtonState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -12,11 +12,7 @@ const props = withDefaults(defineProps<ButtonProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ButtonState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ButtonState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ButtonState>): unknown;
 }>();
 
 const attrs = useAttrs();

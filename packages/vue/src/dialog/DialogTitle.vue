@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDialog } from './root';
 import type { DialogTitleProps, DialogTitleState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<DialogTitleProps>();
 defineSlots<{
   default?(scope: { state: DialogTitleState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DialogTitleState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DialogTitleState>): unknown;
 }>();
 
 const { root } = injectDialog('Title');

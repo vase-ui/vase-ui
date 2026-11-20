@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectPopoverRoot } from './root';
 import type { PopoverCloseProps, PopoverCloseState } from './types';
 
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<PopoverCloseProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: PopoverCloseState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverCloseState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverCloseState>): unknown;
 }>();
 
 const context = injectPopoverRoot('Close');

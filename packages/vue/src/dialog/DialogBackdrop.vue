@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { keepFocus } from '../popup/portal';
 import { injectDialog, injectDialogPortal } from './root';
 import type { DialogBackdropProps, DialogBackdropState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<DialogBackdropProps>(), { forceRender: false });
 defineSlots<{
   default?(scope: { state: DialogBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DialogBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DialogBackdropState>): unknown;
 }>();
 
 const context = injectDialog('Backdrop');

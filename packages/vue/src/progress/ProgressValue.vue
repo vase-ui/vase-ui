@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectProgressRoot, statusAttributes } from './root';
 import type { ProgressValueProps, ProgressValueState } from './types';
 
@@ -13,13 +13,12 @@ defineSlots<{
     value: number | null;
     state: ProgressValueState;
   }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ProgressValueState;
-    formattedValue: string | null;
-    value: number | null;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<ProgressValueState> & {
+      formattedValue: string | null;
+      value: number | null;
+    },
+  ): unknown;
 }>();
 
 const root = injectProgressRoot('Value');

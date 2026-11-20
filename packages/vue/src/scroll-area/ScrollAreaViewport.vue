@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onMounted, onUnmounted, provide, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { styleDisableScrollbar } from '../utils/styles';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
 import type { ScrollAreaViewportProps, ScrollAreaViewportState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ScrollAreaViewportProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaViewportState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ScrollAreaViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ScrollAreaViewportState>): unknown;
 }>();
 
 const root = injectScrollArea('Viewport');

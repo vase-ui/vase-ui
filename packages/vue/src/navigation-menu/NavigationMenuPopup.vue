@@ -9,7 +9,7 @@ import {
   watch,
   type CSSProperties,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { sizeVariables, usePopupSizes } from '../popup/viewport';
 import { injectNavigationMenuRoot, injectPositioner, sizesKey } from './root';
 import type { NavigationMenuPopupProps, NavigationMenuPopupState } from './types';
@@ -19,11 +19,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuPopupProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuPopupState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Popup');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, nextTick, onUnmounted, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { trackPressPosition, wheelPosition } from './geometry';
 import { injectScrollArea, readTrack, scrollbarKey, stateAttributes } from './root';
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<ScrollAreaScrollbarProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ScrollAreaScrollbarState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ScrollAreaScrollbarState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ScrollAreaScrollbarState>): unknown;
 }>();
 
 const root = injectScrollArea('Scrollbar');

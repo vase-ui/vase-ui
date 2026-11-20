@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, mergeProps, useAttrs, useId, useSlots, watch } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useOpenOnFocus, usePopupHover } from '../popup/hover';
 import { isInPopup } from '../popup/layer';
@@ -19,11 +19,7 @@ const props = withDefaults(defineProps<TooltipTriggerProps<Payload>>(), {
 });
 defineSlots<{
   default?(scope: { state: TooltipTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TooltipTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TooltipTriggerState>): unknown;
 }>();
 
 // The open delay of Base UI for a trigger with no `delay` and no provider.

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectProgressRoot, statusAttributes } from './root';
 import type { ProgressTrackProps, ProgressTrackState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ProgressTrackProps>();
 defineSlots<{
   default?(scope: { state: ProgressTrackState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ProgressTrackState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ProgressTrackState>): unknown;
 }>();
 
 const root = injectProgressRoot('Track');

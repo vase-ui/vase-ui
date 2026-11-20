@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, useAttrs, useId } from 'vue';
 import { useChecked } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
@@ -21,11 +21,7 @@ const emit = defineEmits<{
   'update:modelValue': [checked: boolean];
 }>();
 const slots = defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SwitchState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SwitchState>): unknown;
 }>();
 
 const attrs = useAttrs();

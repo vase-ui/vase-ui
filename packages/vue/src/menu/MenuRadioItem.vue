@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = unknown">
 import { computed, useAttrs } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useMenuItem } from './item';
 import { injectRadioGroup } from './radio';
 import type { MenuRadioItemProps, MenuRadioItemState } from './types';
@@ -13,11 +13,7 @@ const props = withDefaults(defineProps<MenuRadioItemProps<Value>>(), {
 });
 defineSlots<{
   default?(scope: { state: MenuRadioItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuRadioItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuRadioItemState>): unknown;
 }>();
 
 const attrs = useAttrs();

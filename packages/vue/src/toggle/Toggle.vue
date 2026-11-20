@@ -2,7 +2,7 @@
 import { computed, inject, useAttrs, useId, watch, watchPostEffect } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { error } from '../common/error';
 import { useModel } from '../common/model';
 import { toggleGroupKey } from '../toggle-group/toggle';
@@ -24,11 +24,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: ToggleState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToggleState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToggleState>): unknown;
 }>();
 
 const group = inject(toggleGroupKey, null);

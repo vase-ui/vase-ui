@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { formatText } from '../internals/date-time/calendar/formatText';
 import { isSameDay } from '../internals/date-time/temporal';
@@ -22,12 +22,11 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<CalendarDayButtonProps>();
 defineSlots<{
   default?(scope: { state: CalendarDayButtonState; text: string }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarDayButtonState;
-    text: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarDayButtonState> & {
+      text: string;
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

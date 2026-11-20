@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent, h, type Component } from 'vue';
 import { DatePicker } from '../date-picker';
 import { TimePicker } from '../time-picker';
-import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
@@ -19,19 +18,9 @@ function message(wrapper: string, part: string, prop: string) {
   return (
     `console.warn: Vase UI: <${wrapper}> gives \`${prop}: false\` to <${part}>, but its caller did not set \`${prop}\`. ` +
     'Vue sets an absent Boolean prop to `false`, so the part cannot use its default or the value of its parent. ' +
-    `Give \`${prop}\` the default \`undefined\` in <${wrapper}>, or forward the props with \`useForwardProps\`.`
+    `Give \`${prop}\` the default \`undefined\` in <${wrapper}>, or do not declare it.`
   );
 }
-
-// A wrapper that forwards its props with `useForwardProps`.
-const WrapperForward = defineComponent({
-  name: 'WrapperForward',
-  props: { open: Boolean, closeOnSelect: Boolean },
-  setup(props, { slots }) {
-    const forwarded = useForwardProps(props);
-    return () => <TimePicker.Root {...forwarded.value}>{slots.default?.()}</TimePicker.Root>;
-  },
-});
 
 describe('useCastBooleanWarning', () => {
   const { render } = createRenderer();
@@ -63,12 +52,11 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([]);
   });
 
-  it('gives no warning for the default undefined, for the default false, and with useForwardProps', async () => {
+  it('gives no warning for the default undefined and for the default false', async () => {
     await render(() => (
       <>
         <WrapperUndefined>Content</WrapperUndefined>
         <WrapperFalseDefault>Content</WrapperFalseDefault>
-        <WrapperForward>Content</WrapperForward>
       </>
     ));
     expect(takeReportedMessages()).toEqual([]);

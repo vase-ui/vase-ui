@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { accordionRootKey } from './item';
 import type {
@@ -32,11 +32,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: AccordionRootState<Value> }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AccordionRootState<Value>;
-  }): unknown;
+  element?(scope: ElementSlotProps<AccordionRootState<Value>>): unknown;
 }>();
 
 const attrs = useAttrs();

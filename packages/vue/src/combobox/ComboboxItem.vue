@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useListItem } from '../list/list';
 import { injectComboboxRoot, rowKey } from './root';
@@ -15,11 +15,7 @@ const props = withDefaults(defineProps<ComboboxItemProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ComboboxItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxItemState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Item');

@@ -10,7 +10,7 @@ import {
   watch,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
 import { rootStateAttributes, tabsRootKey, type RootPanel, type RootTab } from './root';
@@ -43,11 +43,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: TabsRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TabsRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TabsRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

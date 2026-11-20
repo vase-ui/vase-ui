@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAttrs } from 'vue';
 import { useCollapsiblePanel } from '../collapsible/panel';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAccordionItem } from './part';
 import type { AccordionPanelProps, AccordionPanelState } from './types';
 
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<AccordionPanelProps>(), {
 });
 defineSlots<{
   default?(scope: { state: AccordionPanelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AccordionPanelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AccordionPanelState>): unknown;
 }>();
 
 const item = injectAccordionItem();

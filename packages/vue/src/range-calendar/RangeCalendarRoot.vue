@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, inject, mergeProps, provide, useAttrs } from 'vue';
 import { calendarKey, useCalendar } from '../calendar/root';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { assertTemporal } from '../internals/date-time/temporal';
 import type { DateValue } from '../internals/date-time/temporal';
 import { rangeCalendarHostKey } from './host';
@@ -40,11 +40,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: RangeCalendarRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: RangeCalendarRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<RangeCalendarRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

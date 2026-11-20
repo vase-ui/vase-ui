@@ -1,7 +1,28 @@
-import type { Component } from 'vue';
-import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../types';
+import type { Component, ComponentPublicInstance, HTMLAttributes, VNode } from 'vue';
 
-export type { HTMLProps, VaseUIEvent, ComponentRenderFn };
+/**
+ * The attributes and listeners that a part gives to its element, and the `ref` setter of the part.
+ */
+export type HTMLProps = HTMLAttributes & {
+  ref: (element: Element | ComponentPublicInstance | null) => void;
+};
+
+/**
+ * Shape of the `#render` slot: a function that gets the props to bind on the element and the state
+ * of the part, and returns the element.
+ *
+ * @template Props Props to bind on the rendered element.
+ * @template State State of the part.
+ */
+export type ComponentRenderFn<Props, State> = (slotProps: {
+  props: Props;
+  state: State;
+}) => VNode | VNode[];
+
+export type VaseUIEvent<E extends Event> = E & {
+  preventVaseUIHandler: () => void;
+  readonly vaseUIHandlerPrevented?: boolean | undefined;
+};
 
 export type MaybeVaseUIEvent<E extends Event> = E &
   Partial<Pick<VaseUIEvent<E>, 'preventVaseUIHandler' | 'vaseUIHandlerPrevented'>>;

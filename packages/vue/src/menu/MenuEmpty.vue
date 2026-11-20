@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, nextTick, onMounted, shallowRef, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectFilter } from './filter';
 import { injectMenu } from './root';
 import type { MenuEmptyProps, MenuEmptyState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<MenuEmptyProps>();
 defineSlots<{
   default?(scope: { state: MenuEmptyState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuEmptyState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuEmptyState>): unknown;
 }>();
 
 const filter = injectFilter(injectMenu('Empty'), 'Empty');

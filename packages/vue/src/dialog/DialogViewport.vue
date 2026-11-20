@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { keepFocus } from '../popup/portal';
 import { injectDialog, injectDialogPortal } from './root';
 import type { DialogViewportProps, DialogViewportState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<DialogViewportProps>();
 defineSlots<{
   default?(scope: { state: DialogViewportState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DialogViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DialogViewportState>): unknown;
 }>();
 
 const context = injectDialog('Viewport');

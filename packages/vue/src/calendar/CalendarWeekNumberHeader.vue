@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { formatFieldName } from './pages';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarWeekNumberHeaderProps, CalendarWeekNumberHeaderState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<CalendarWeekNumberHeaderProps>();
 defineSlots<{
   default?(scope: { state: CalendarWeekNumberHeaderState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarWeekNumberHeaderState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CalendarWeekNumberHeaderState>): unknown;
 }>();
 
 const calendar = injectCalendar();

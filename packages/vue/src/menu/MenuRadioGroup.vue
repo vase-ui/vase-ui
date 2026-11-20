@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="Value = unknown">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { useGroupItems } from './filter';
 import { useGroupLabel } from './group';
@@ -27,11 +27,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: MenuRadioGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuRadioGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuRadioGroupState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -518,20 +518,34 @@ async function expectInputPage(page: Page) {
   ).toEqual({ 'data-invalid': null, 'aria-invalid': 'true' });
 }
 
-async function expectProvidersPage(page: Page) {
-  expect(await page.getByTestId('outside').textContent()).toBe('ltr');
-  expect(await page.getByTestId('inside').textContent()).toBe('rtl');
-  expect(await page.getByTestId('button').getAttribute('type')).toBe('button');
-  // A provider renders its slot and no element.
-  expect(
-    await page
-      .getByTestId('providers')
-      .locator(':scope > *')
-      .evaluateAll((elements) => elements.map((element) => element.getAttribute('data-testid'))),
-  ).toEqual(['inside', 'button']);
+// The provider renders its slot and no element.
+async function readProvidersChildren(page: Page) {
+  return page
+    .getByTestId('providers')
+    .locator(':scope > *')
+    .evaluateAll((elements) => elements.map((element) => element.getAttribute('data-testid')));
 }
 
-async function expectUseRenderPage(page: Page) {
+// The style element of the scroll area and the script of the tab indicator have the nonce of the
+// provider.
+async function expectCSPProviderPage(page: Page) {
+  expect(await readProvidersChildren(page)).toEqual(['scroll-area', 'tabs']);
+  expect(await readDisableScrollbarStyles(page)).toEqual([
+    { nonce: 'test-nonce', parent: 'div', parentTestId: 'scroll-area', isFirstChild: true },
+  ]);
+  expect(await page.locator('[role="tablist"] script').getAttribute('nonce')).toBe('test-nonce');
+}
+
+// After the mount, the scroll area uses one style element in the head, and the script is gone.
+async function expectHydratedCSPProviderPage(page: Page) {
+  expect(await readProvidersChildren(page)).toEqual(['scroll-area', 'tabs']);
+  const styles = await readDisableScrollbarStyles(page);
+  expect(styles).toHaveLength(1);
+  expect(styles[0]).toMatchObject({ nonce: 'test-nonce', parent: 'head' });
+  expect(await page.locator('[role="tablist"] script').count()).toBe(0);
+}
+
+async function expectUseElementPage(page: Page) {
   const attributeNames = ['role', 'data-tone', 'class', 'href'];
 
   expect(await readElement(page.getByTestId('default-tag'), attributeNames)).toEqual({
@@ -539,24 +553,25 @@ async function expectUseRenderPage(page: Page) {
     text: 'Default tag',
     attributes: { role: 'note', 'data-tone': 'info', class: 'highlight', href: null },
   });
-  expect(await readElement(page.getByTestId('as-tag'), attributeNames)).toEqual({
-    tag: 'section',
-    text: 'As tag',
-    attributes: { role: 'note', 'data-tone': 'warning', class: null, href: null },
-  });
-  expect(await readElement(page.getByTestId('render-slot'), attributeNames)).toEqual({
+  expect(await readElement(page.getByTestId('link'), attributeNames)).toEqual({
     tag: 'a',
-    text: 'Render slot',
+    text: 'Link',
+    attributes: { role: 'note', 'data-tone': 'warning', class: null, href: '/button' },
+  });
+  expect(await readElement(page.getByTestId('nuxt-link'), attributeNames)).toEqual({
+    tag: 'a',
+    text: 'Nuxt link',
     attributes: { role: 'note', 'data-tone': 'info', class: null, href: '/button' },
   });
-  expect(await page.getByTestId('merged').getAttribute('class')).toBe('second first');
-  expect(await page.getByTestId('calls').locator('li').allTextContents()).toEqual([]);
 }
 
-// The server renders `defaultMatches`. The default screen of the browser is wider than the query,
-// so the value stays `true` after the mount.
-async function expectMediaQueryPage(page: Page) {
-  expect(await page.getByTestId('wide').textContent()).toBe('true');
+// `dir="rtl"` of the root places the thumb in the server HTML, and the place stays after the
+// hydration.
+async function expectRtlPage(page: Page) {
+  expect(await page.locator('html').getAttribute('dir')).toBe('rtl');
+  expect(
+    await page.getByTestId('thumb').evaluate((element) => (element as HTMLElement).style.translate),
+  ).toBe('50% -50%');
 }
 
 async function readSwitchPage(page: Page) {
@@ -1724,9 +1739,13 @@ const PAGES: PageCase[] = [
   { path: '/date-range-picker', expectPage: expectDateRangePickerPage },
   { path: '/time-picker', expectPage: expectTimePickerPage },
   { path: '/number-field', expectPage: expectNumberFieldPage },
-  { path: '/providers', expectPage: expectProvidersPage },
-  { path: '/use-render', expectPage: expectUseRenderPage },
-  { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
+  {
+    path: '/csp-provider',
+    expectPage: expectCSPProviderPage,
+    expectHydratedPage: expectHydratedCSPProviderPage,
+  },
+  { path: '/use-element', expectPage: expectUseElementPage },
+  { path: '/rtl', expectPage: expectRtlPage },
   {
     path: '/portal',
     expectPage: expectPortalPageOnServer,
@@ -2614,15 +2633,21 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it('shows the media query of the visitor after hydration', async () => {
-    // The screen is narrower than the query, so the real value differs from `defaultMatches`.
-    const page = await createPage(undefined, { viewport: { width: 400, height: 800 } });
+  it('moves the focus of /rtl to the next tab with ArrowLeft, and raises the slider with ArrowLeft after hydration', async () => {
+    const page = await createPage('/rtl');
     const messages = collectMessages(page);
 
-    await page.goto(url('/unstable-use-media-query'), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
+    await page.getByRole('tab', { name: 'A' }).focus();
+    await page.keyboard.press('ArrowLeft');
+    expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('B');
 
-    expect(await page.getByTestId('wide').textContent()).toBe('false');
+    const input = page.getByTestId('thumb').locator('input');
+    await input.focus();
+    await page.keyboard.press('ArrowLeft');
+    expect(await input.inputValue()).toBe('31');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    expect(await input.inputValue()).toBe('29');
     expect(messages).toEqual([]);
   });
 
@@ -2737,14 +2762,5 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.keyboard.press('Escape');
     await detachedPopup.waitFor({ state: 'detached' });
     expect(messages).toEqual([]);
-  });
-
-  it('runs the handlers of mergeProps from the rightmost set after hydration', async () => {
-    const page = await createPage('/use-render');
-    const calls = page.getByTestId('calls').locator('li');
-
-    expect(await calls.allTextContents()).toEqual([]);
-    await page.getByTestId('merged').click();
-    expect(await calls.allTextContents()).toEqual(['second', 'first']);
   });
 });

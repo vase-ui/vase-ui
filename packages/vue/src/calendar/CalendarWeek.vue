@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarWeekProps, CalendarWeekState } from './types';
 
@@ -12,12 +12,11 @@ defineSlots<{
   default?(): unknown;
   /** One day of the week. */
   day?(scope: { day: Temporal.PlainDate; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarWeekState;
-    days: readonly Temporal.PlainDate[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarWeekState> & {
+      days: readonly Temporal.PlainDate[];
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarMonthGridRowProps, CalendarMonthGridRowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<CalendarMonthGridRowProps>();
 defineSlots<{
   default?(scope: { state: CalendarMonthGridRowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarMonthGridRowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CalendarMonthGridRowState>): unknown;
 }>();
 
 const calendar = injectCalendar();

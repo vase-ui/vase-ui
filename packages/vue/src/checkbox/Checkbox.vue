@@ -3,7 +3,7 @@ import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
 import { checkboxGroupKey } from '../checkbox-group/checkbox';
 import { useChecked, type CheckedOwner } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldKey, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
@@ -24,11 +24,7 @@ const emit = defineEmits<{
   'update:indeterminate': [indeterminate: false];
 }>();
 const slots = defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CheckboxState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CheckboxState>): unknown;
 }>();
 
 const attrs = useAttrs();

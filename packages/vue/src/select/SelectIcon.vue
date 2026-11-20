@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSelectRoot } from './root';
 import type { SelectIconProps, SelectIconState } from './types';
 
@@ -10,11 +10,7 @@ defineProps<SelectIconProps>();
 defineSlots<{
   /** The content. The default is `▼`. */
   default?(scope: { state: SelectIconState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectIconState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectIconState>): unknown;
 }>();
 
 const { root } = injectSelectRoot('Icon');

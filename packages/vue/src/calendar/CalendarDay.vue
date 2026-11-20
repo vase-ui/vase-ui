@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { dayAttributes } from './days';
 import { dayKey, injectRequiredMonth } from './month';
 import { injectCalendar } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<CalendarDayProps>();
 defineSlots<{
   default?(scope: { state: CalendarDayState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarDayState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CalendarDayState>): unknown;
 }>();
 
 const calendar = injectCalendar();

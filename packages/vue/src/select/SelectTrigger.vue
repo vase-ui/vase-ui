@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { controlAttributes, describedByWith } from '../field/control';
 import { isInPopup } from '../popup/layer';
@@ -14,11 +14,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<SelectTriggerProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: SelectTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectTriggerState>): unknown;
 }>();
 
 const context = injectSelectRoot('Trigger');

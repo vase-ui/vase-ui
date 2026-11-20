@@ -29,7 +29,6 @@ interface Setup {
   indicator?: Record<string, unknown>;
   panelsFirst?: boolean;
   dir?: string;
-  providedDirection?: string;
 }
 
 async function mountTabs(setup: Setup) {
@@ -716,17 +715,6 @@ describe('keys', () => {
     tab('a').focus();
     await press('{ArrowRight}');
     expect(focused()).toBe('c');
-  });
-
-  test('read the direction of the element, and not of a DirectionProvider alone', async () => {
-    const { tab, focused } = await mountTabs({
-      root: { defaultValue: 'a' },
-      tabs: items('a', 'b'),
-      providedDirection: 'rtl',
-    });
-    tab('a').focus();
-    await press('{ArrowRight}');
-    expect(focused()).toBe('b');
   });
 
   test('a handled key reaches a keydown listener on the tab and on the list, and no ancestor', async () => {

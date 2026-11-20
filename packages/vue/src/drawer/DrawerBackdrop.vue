@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectDialogPortal } from '../dialog/root';
 import { keepFocus } from '../popup/portal';
 import { injectDrawer } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<DrawerBackdropProps>(), { forceRender: false });
 defineSlots<{
   default?(scope: { state: DrawerBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerBackdropState>): unknown;
 }>();
 
 const drawer = injectDrawer('Backdrop');

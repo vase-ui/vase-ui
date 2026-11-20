@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useAttributesAfterMount } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockHandProps, TimeClockHandState } from './types';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<TimeClockHandProps>();
 defineSlots<{
   default?(scope: { state: TimeClockHandState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeClockHandState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeClockHandState>): unknown;
 }>();
 
 const attrs = useAttrs();

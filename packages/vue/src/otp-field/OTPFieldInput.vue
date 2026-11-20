@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch, type InputHTMLAttributes } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { platform } from '../common/platform';
 import { fieldStateAttributes } from '../field/control';
 import { injectOTPFieldRoot } from './root';
@@ -14,11 +14,7 @@ defineOptions({ inheritAttrs: false });
 defineProps</* @vue-ignore */ Attributes>();
 
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: OTPFieldInputState;
-  }): unknown;
+  element?(scope: ElementSlotProps<OTPFieldInputState>): unknown;
 }>();
 
 const root = injectOTPFieldRoot();

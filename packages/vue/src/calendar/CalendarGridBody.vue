@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectRequiredMonth } from './month';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarGridBodyProps, CalendarGridBodyState, CalendarWeek } from './types';
@@ -11,12 +11,11 @@ defineProps<CalendarGridBodyProps>();
 defineSlots<{
   /** One week of the month. */
   week?(scope: { week: CalendarWeek; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarGridBodyState;
-    weeks: readonly CalendarWeek[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarGridBodyState> & {
+      weeks: readonly CalendarWeek[];
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

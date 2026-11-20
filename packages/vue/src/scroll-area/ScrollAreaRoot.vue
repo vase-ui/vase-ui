@@ -10,7 +10,7 @@ import {
   useAttrs,
   watch,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import StyleDisableScrollbar from '../utils/StyleDisableScrollbar.vue';
 import { useStyleDisableScrollbar } from '../utils/styles';
 import { edgeDistances, thumbLength, thumbPlace } from './geometry';
@@ -29,11 +29,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ScrollAreaRootProps>(), { overflowEdgeThreshold: 0 });
 defineSlots<{
   default?(scope: { state: ScrollAreaRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ScrollAreaRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ScrollAreaRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

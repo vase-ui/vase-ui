@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { dragPosition } from './geometry';
 import { injectScrollArea, injectScrollbar, readTrack } from './root';
 import type { ScrollAreaThumbProps, ScrollAreaThumbState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ScrollAreaThumbProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaThumbState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ScrollAreaThumbState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ScrollAreaThumbState>): unknown;
 }>();
 
 const scrollbar = injectScrollbar();

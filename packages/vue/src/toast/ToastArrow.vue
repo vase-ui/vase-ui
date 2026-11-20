@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPositioner } from './root';
 import type { ToastArrowProps, ToastArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ToastArrowProps>();
 defineSlots<{
   default?(scope: { state: ToastArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastArrowState>): unknown;
 }>();
 
 const placement = injectPositioner('Arrow');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectItem, injectNavigationMenuRoot } from './root';
 import type { NavigationMenuIconProps, NavigationMenuIconState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuIconProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuIconState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuIconState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuIconState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Icon');

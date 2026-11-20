@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarViewTriggerProps, CalendarViewTriggerState } from './types';
 
@@ -13,12 +13,11 @@ const props = withDefaults(defineProps<CalendarViewTriggerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: CalendarViewTriggerState; text: string }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarViewTriggerState;
-    text: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarViewTriggerState> & {
+      text: string;
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectPopoverRoot } from './root';
 import type { PopoverDescriptionProps, PopoverDescriptionState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<PopoverDescriptionProps>();
 defineSlots<{
   default?(scope: { state: PopoverDescriptionState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverDescriptionState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverDescriptionState>): unknown;
 }>();
 
 const { root } = injectPopoverRoot('Description');

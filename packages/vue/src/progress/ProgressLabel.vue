@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectProgressRoot, statusAttributes } from './root';
 import type { ProgressLabelProps, ProgressLabelState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<ProgressLabelProps>();
 defineSlots<{
   default?(scope: { state: ProgressLabelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ProgressLabelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ProgressLabelState>): unknown;
 }>();
 
 const root = injectProgressRoot('Label');

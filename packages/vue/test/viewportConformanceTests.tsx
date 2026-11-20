@@ -4,7 +4,7 @@ import type { UserEvent } from '@testing-library/user-event';
 import { expect, describe, it, beforeEach, afterEach } from 'vitest';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
-import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import TextDirectionProvider from '../src/internals/direction-context/TextDirectionProvider.test.vue';
 import { isJSDOM } from '../src/common/testUtils';
 import type { Side } from '../src/internals/useAnchorPositioning';
 import { nextAnimationsRead, nextEndingStyle, nextEvent } from './animation';
@@ -182,7 +182,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
       'anchors the popup for side=$side in $direction mode',
       async ({ side, direction, expected }) => {
         await render(
-          <DirectionProvider direction={direction}>
+          <TextDirectionProvider direction={direction}>
             {createComponent({
               root: { open: true },
               triggers: [{ children: 'Trigger' }],
@@ -190,7 +190,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
               popup: { 'data-testid': 'popup' },
               renderContent: () => 'Content',
             })}
-          </DirectionProvider>,
+          </TextDirectionProvider>,
         );
 
         // The positioner shows the popup after its first position pass. The side is then final.

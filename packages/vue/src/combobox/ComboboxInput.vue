@@ -12,7 +12,7 @@ import {
   watch,
 } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
@@ -34,11 +34,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ComboboxInputProps>(), { disabled: false });
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxInputState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxInputState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Input');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePlacement, type PlacementProps } from '../popup/placement';
 import { injectToastProvider } from './provider';
 import { providePositioner } from './root';
@@ -26,11 +26,7 @@ const props = withDefaults(defineProps<ToastPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ToastPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastPositionerState>): unknown;
 }>();
 
 const provider = injectToastProvider('<Toast.Positioner>');

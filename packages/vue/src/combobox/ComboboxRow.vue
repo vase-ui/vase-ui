@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectComboboxRoot, rowKey } from './root';
 import type { ComboboxRowProps, ComboboxRowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxRowProps>();
 defineSlots<{
   default?(scope: { state: ComboboxRowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxRowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxRowState>): unknown;
 }>();
 
 injectComboboxRoot('Row');
