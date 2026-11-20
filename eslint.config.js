@@ -36,7 +36,7 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   releaseFunction:
-    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`. See "What differs from the React source" in CONTRIBUTING.md.',
+    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`. See "Lifetime" in CONTRIBUTING.md.',
   staleRootNode:
     'A root node that a watcher, a hook or a `computed` reads is stale after `Teleport` moves the element. Use `observeRootNode` or `followRootNode` of `src/common`, or read the root node at the time of the event.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
