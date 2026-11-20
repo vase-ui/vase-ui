@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { reactive } from 'vue';
 import ToolbarCompose from '../../test/fixtures/ToolbarCompose.vue';
@@ -31,10 +31,6 @@ async function focusTrigger(trigger: HTMLElement, next = '{ArrowRight}') {
   await userEvent.keyboard(next);
   expect(document.activeElement).toBe(trigger);
 }
-
-// In a Vapor app with Vapor parts, Vue 3.6 runs no portal of the older popup families: the portal
-// returns a render function, and a Vapor component must return a block.
-const olderPortal = inject('app') === 'vapor';
 
 describe.each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
   const popupRole = {
@@ -110,7 +106,7 @@ describe('a menu trigger', () => {
   });
 });
 
-describe.skipIf(olderPortal)('a select trigger', () => {
+describe('a select trigger', () => {
   test('ArrowDown of the other axis opens the list; a choice closes it and gives the focus back', async () => {
     const { entries, trigger } = await mountCompose({ kind: 'select' });
     await focusTrigger(trigger);

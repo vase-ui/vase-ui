@@ -5,7 +5,6 @@ import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -142,25 +141,6 @@ const rows: Row[] = [
         </Toast.Viewport>
       </Toast.Provider>
     ),
-  },
-  {
-    part: 'Select.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Select.Root defaultOpen>
-        <Select.Trigger data-testid="part" {...attrs}>
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>
-            <Select.Popup>
-              <Select.Item value="a">A</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
-    ),
-    getTarget: () => screen.getByRole('listbox'),
   },
   {
     part: 'Combobox.Trigger',

@@ -105,6 +105,8 @@ const SERVER_TYPES = [
 ];
 
 const protocols = ['http', 'https', 'ssh'];
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -202,18 +204,25 @@ const protocols = ['http', 'https', 'ssh'];
         </div>
         <Select.Portal>
           <Select.Positioner>
-            <Select.Popup>
-              <Select.ScrollUpArrow />
-              <Select.List>
-                <Select.Item v-for="{ label, value } in SERVER_TYPES" :key="label" :value="value">
-                  <Select.ItemIndicator>
-                    <CheckIcon />
-                  </Select.ItemIndicator>
-                  <Select.ItemText>{{ label }}</Select.ItemText>
-                </Select.Item>
-              </Select.List>
-              <Select.ScrollDownArrow />
-            </Select.Popup>
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+              <Select.Popup>
+                <Select.ScrollUpArrow />
+                <Select.List>
+                  <Select.Item
+                    v-for="{ label, value } in SERVER_TYPES"
+                    :key="label"
+                    :value="value"
+                    v-slot="{ state }"
+                  >
+                    <span v-if="state.selected" class="col-start-1">
+                      <CheckIcon />
+                    </span>
+                    <Select.ItemText>{{ label }}</Select.ItemText>
+                  </Select.Item>
+                </Select.List>
+                <Select.ScrollDownArrow />
+              </Select.Popup>
+            </Transition>
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>

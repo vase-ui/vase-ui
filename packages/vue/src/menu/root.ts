@@ -7,21 +7,18 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
-import { addEventListener } from '../common/addEventListener';
-import { isElement } from '../common/element';
-import { ownerDocument, ownerWindow } from '../common/owner';
+import { ownerWindow } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
 import { useList, type List, type ListItem } from '../list/list';
+import { useTypeahead } from '../list/typeahead';
 import { menubarKey, menubarOfTrigger, type MenubarForMenu } from '../menubar/menu';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import type { usePlacement, VirtualElement } from '../popup/placement';
+import { usePopupPress } from '../popup/press';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
 import type { ViewportSizes } from '../popup/viewport';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
-import { isReleaseAtPressPoint } from '../utils/popups/isReleaseAtPressPoint';
 import { filterProviderKey, useMenuFilter, type MenuFilterRoot } from './filter';
-import { useTypeahead } from './typeahead';
 import type { MenuRootChangeEventReason, MenuRootOrientation } from './types';
 
 /** Opens and closes a menu from code, and connects triggers outside the root to it. */
@@ -36,19 +33,6 @@ export function createHandle<Payload = unknown>() {
  * The place of a menu: a menu with no parent, a submenu, a menu of a menubar, or a context menu.
  */
 export type MenuKind = 'menu' | 'submenu' | 'menubar' | 'context';
-
-/** A press that opened a menu, and whose release acts by its place. */
-export interface MenuPress {
-  x: number;
-  y: number;
-  time: number;
-  /** The element that the press opened the menu from. */
-  trigger: Element | null;
-  /** The time from the press after which a release on an item clicks it. */
-  itemDelay: number;
-  /** The time from the press after which a release outside the menu closes it. */
-  outsideDelay: number;
-}
 
 /** What a menu gives to its parts and to its submenus. The properties are reactive. */
 export interface MenuContext<Payload = unknown> {
@@ -103,8 +87,8 @@ export interface MenuContext<Payload = unknown> {
   onKeydown(event: KeyboardEvent): boolean;
   /** Asks the root menu for a close. */
   close(reason: MenuRootChangeEventReason, event: Event): void;
-  /** The release of the press acts by its place. */
-  startDrag(press: MenuPress): void;
+  /** The press that opened the menu, whose release acts by its place. */
+  readonly press: ReturnType<typeof usePopupPress>;
   setAnchor(anchor: VirtualElement | undefined): void;
   /** Gives a key that the menu did not use to its parent menu, or to its menubar. */
   passUp(event: KeyboardEvent): boolean;
@@ -233,9 +217,7 @@ export function useMenuRoot<Payload>(
   const placed = shallowRef(false);
   const listElement = shallowRef<HTMLElement | null>(null);
   const finalFocus = shallowRef<FocusTarget>();
-  const hover = shallowRef<MenuContext['hover']['value']>(
-    null,
-  );
+  const hover = shallowRef<MenuContext['hover']['value']>(null);
   // A context menu that opens with no press, as with `defaultOpen`, opens at the top left of the
   // view.
   const anchor = shallowRef<VirtualElement | undefined>(
@@ -302,7 +284,7 @@ export function useMenuRoot<Payload>(
       if (kind.value === 'menubar' && root.reason === 'outside-press') return false;
       return parent?.filter?.input.value ?? undefined;
     },
-    restoreLostFocus: true,
+    lostFocus: () => root.popup,
     closeBefore: true,
     exit: () => context.rootMenu.root,
   });
@@ -416,44 +398,18 @@ export function useMenuRoot<Payload>(
     return !!menubar.value?.onMenuKey(event, context);
   }
 
-  const drag = shallowRef<MenuPress | null>(null);
-  watch(
-    drag,
-    (press, _, onCleanup) => {
-      if (!press) return;
-      onCleanup(
-        addEventListener(
-          ownerDocument(press.trigger),
-          'pointerup',
-          (event) => {
-            drag.value = null;
-            release(press, event);
-          },
-          true,
-        ),
-      );
+  const press = usePopupPress(root, {
+    itemAt(path) {
+      const item = path.find((element) => menuItems.has(element));
+      return item &&
+        isInPopup(layer, item) &&
+        !submenus.has(item) &&
+        !menuItems.get(item)?.disabled()
+        ? (item as HTMLElement)
+        : null;
     },
-    { flush: 'sync' },
-  );
-  function startDrag(press: MenuPress) {
-    drag.value = press;
-  }
-
-  function release(press: MenuPress, event: PointerEvent) {
-    if (!root.open || isReleaseAtPressPoint({ clientX: press.x, clientY: press.y }, event)) return;
-    const elapsed = event.timeStamp - press.time;
-    const path = event.composedPath().filter(isElement);
-    const item = path.find((node) => menuItems.has(node));
-    if (item && isInPopup(layer, item)) {
-      if (!submenus.has(item) && !menuItems.get(item)?.disabled() && elapsed >= press.itemDelay) {
-        (item as HTMLElement).focus({ preventScroll: true });
-        dispatchClickWithModifiers(item, event, { detail: 1, pointerType: 'mouse' });
-      }
-      return;
-    }
-    if (path.some((node) => node === press.trigger || isInPopup(layer, node))) return;
-    if (elapsed >= press.outsideDelay) root.request(false, 'cancel-open', event);
-  }
+    inside: (element) => isInPopup(layer, element),
+  });
 
   const context: MenuContext<Payload> = {
     root,
@@ -512,7 +468,7 @@ export function useMenuRoot<Payload>(
     close(reason, event) {
       context.rootMenu.root.request(false, reason, event);
     },
-    startDrag,
+    press,
     setAnchor(value) {
       anchor.value = value;
     },

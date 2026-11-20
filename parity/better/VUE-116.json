@@ -2,10 +2,9 @@
   "id": "VUE-116",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/labelable-provider/useLabel.ts#L28-L43",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/label/SelectLabel.tsx#L34-L36",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/label/ComboboxLabel.tsx#L38",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useRenderElement.tsx#L171"
   ],
-  "behavior": "A click on `Select.Label` focuses the trigger element of its root. A click on `Combobox.Label` does the same while the input is inside the popup. The id of the trigger element does not matter. Base UI finds the trigger by an id: the control id of the field, or the id of the trigger element with no field. The props of the `render` element win over those of the part, so its `id` replaces the id of the trigger. In a field, the click then focuses nothing when the `render` element has another id than the control id of the field. With no field, it focuses nothing when the `render` element has an empty id.",
-  "dueWith": "packages/react/src/select/label/SelectLabel.tsx"
+  "behavior": "A click on `Combobox.Label` focuses the trigger element of its root while the input is inside the popup. The id of the trigger element does not matter. Base UI finds the trigger by an id: the control id of the field, or the id of the trigger element with no field. The props of the `render` element win over those of the part, so its `id` replaces the id of the trigger. In a field, the click then focuses nothing when the `render` element has another id than the control id of the field. With no field, it focuses nothing when the `render` element has an empty id.",
+  "dueWith": "packages/react/src/combobox/label/ComboboxLabel.tsx"
 }

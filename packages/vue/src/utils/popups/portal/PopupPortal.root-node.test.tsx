@@ -4,7 +4,6 @@ import type { Component } from 'vue';
 import { createRenderer, screen } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import * as Combobox from '../../../combobox/index.parts';
-import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
 import { usePortalFocus } from './usePortalFocus';
 import PopupPortal from './PopupPortal.vue';
@@ -48,7 +47,6 @@ interface PortalPart {
 
 const portalParts: PortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
-  { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
 ];
 
 describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root node', () => {

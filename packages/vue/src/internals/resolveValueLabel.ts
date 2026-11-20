@@ -111,7 +111,9 @@ export function resolveSelectedLabel(
 
   // Items provided as plain record map
   if (items && !Array.isArray(items)) {
-    const label = Object.hasOwn(items, value) ? (items as any)[value] : undefined;
+    // Vue tracks `in` on a reactive record and does not track `Object.hasOwn`, which keeps out an
+    // inherited key such as `constructor`.
+    const label = value in items && Object.hasOwn(items, value) ? (items as any)[value] : undefined;
     return label ?? fallback();
   }
 

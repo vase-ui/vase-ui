@@ -86,15 +86,8 @@ function onPointerdown(event: PointerEvent) {
   const wasOpen = trigger.open.value;
   trigger.onPointerdown(event);
   openedAtPress = !wasOpen && trigger.open.value && event.pointerType === 'mouse';
-  if (!menu || !openedAtPress) return;
-  menu.startDrag({
-    x: event.clientX,
-    y: event.clientY,
-    time: event.timeStamp,
-    trigger: element.value,
-    itemDelay: 200,
-    outsideDelay: 0,
-  });
+  if (!menu || !openedAtPress || !element.value) return;
+  menu.press.start(event, element.value, { item: 200 });
 }
 
 // The `mousedown` of a press that opened the menu would give the focus back to a button, after the

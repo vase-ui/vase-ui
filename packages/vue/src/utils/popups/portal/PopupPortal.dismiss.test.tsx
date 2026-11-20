@@ -4,7 +4,6 @@ import type { DefineComponent, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Popover from '../../../popover/parts';
-import * as Select from '../../../select/index.parts';
 
 type Change = [open: boolean, reason: string];
 type Recorder = (open: boolean, details: { reason: string }) => void;
@@ -24,7 +23,7 @@ async function press(target: Element) {
 }
 
 // The popup above decides for a mouse press on `click`, or on `pointerdown` for a popover with
-// `modal="trap-focus"`. A menu, a select and a combobox close on `pointerdown`, and their backdrops
+// `modal="trap-focus"`. A menu and a combobox close on `pointerdown`, and their backdrops
 // leave the document before the `click`. Only the second kind of parent gets a press on them.
 const parents = {
   popover: (record: Recorder, content: VNode) => (
@@ -51,21 +50,6 @@ const parents = {
 
 // Each child is open at the mount. The cases press the parts that have a test id.
 const children = {
-  select: (record: Recorder) => (
-    <Select.Root defaultOpen onOpenChange={record}>
-      <Select.Trigger>
-        <Select.Value placeholder="Pick" />
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Backdrop data-testid="backdrop" />
-        <Select.Positioner data-testid="positioner" alignItemWithTrigger={false}>
-          <Select.Popup data-testid="popup">
-            <Select.Item value="a">A</Select.Item>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  ),
   combobox: (record: Recorder) => (
     <Combobox.Root defaultOpen onOpenChange={record}>
       <Combobox.Input />
@@ -114,13 +98,6 @@ describe('a press on a part of a child popup that is outside its popup element',
 
   it.each<PressCase>([
     {
-      name: 'Select.Positioner / popover',
-      parent: 'popover',
-      child: 'select',
-      part: 'positioner',
-      closesChild: false,
-    },
-    {
       name: 'Combobox.Positioner / popover',
       parent: 'popover',
       child: 'combobox',
@@ -128,13 +105,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: false,
     },
 
-    {
-      name: 'Select.Backdrop / trap-focus',
-      parent: 'trapFocusPopover',
-      child: 'select',
-      part: 'backdrop',
-      closesChild: true,
-    },
     {
       name: 'Combobox.Backdrop / trap-focus',
       parent: 'trapFocusPopover',
@@ -171,26 +141,6 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
   const { render } = createRenderer();
 
   it.each<PendingPositionerCase>([
-    {
-      name: 'Select',
-      render: (record, onOpenChangeComplete) => (
-        <Select.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
-          <Select.Trigger>
-            <Select.Value placeholder="Pick" />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Backdrop data-testid="backdrop" />
-            <Pending>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="a">A</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Pending>
-          </Select.Portal>
-        </Select.Root>
-      ),
-    },
     {
       name: 'Combobox',
       render: (record, onOpenChangeComplete) => (

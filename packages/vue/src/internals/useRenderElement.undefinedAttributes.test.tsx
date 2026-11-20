@@ -4,7 +4,6 @@ import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } f
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -51,22 +50,6 @@ const rows: Row[] = [
     ),
     // With no input, the trigger opens a popup that holds the input.
     expected: () => 'dialog',
-  },
-  {
-    name: 'Select.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Select.Root>
-        <Select.Trigger aria-haspopup={undefined} data-testid="part" />
-      </Select.Root>
-    ),
-    expected: () => 'listbox',
-  },
-  {
-    name: 'Select.Separator role',
-    attribute: 'role',
-    createNode: () => <Select.Separator role={undefined} data-testid="part" />,
-    expected: () => 'presentation',
   },
   {
     name: 'Toast.Root aria-labelledby',

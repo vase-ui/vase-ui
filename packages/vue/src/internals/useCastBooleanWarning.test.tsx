@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, type Component } from 'vue';
 import { DatePicker } from '../date-picker';
-import * as Select from '../select/index.parts';
+import * as Combobox from '../combobox/index.parts';
 import { TimePicker } from '../time-picker';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
@@ -146,14 +146,14 @@ describe('useCastBooleanWarning', () => {
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
     const Wrapper = defineComponent({
-      name: 'MySelect',
+      name: 'MyCombobox',
       props: { open: Boolean },
       setup(props) {
-        return () => <Select.Root open={props.open} />;
+        return () => <Combobox.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MySelect', 'Select.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([message('MyCombobox', 'Combobox.Root', 'open')]);
   });
 
   it('gives one warning for a part that gives the prop to another part', async () => {
@@ -179,67 +179,67 @@ describe('useCastBooleanWarning', () => {
     ]);
   });
 
-  it('warns for the default true of Select.Root modal', async () => {
+  it('warns for the default true of Combobox.Root loopFocus', async () => {
     const Wrapper = defineComponent({
-      name: 'MySelect',
-      props: { modal: Boolean },
+      name: 'MyCombobox',
+      props: { loopFocus: Boolean },
       setup(props) {
-        return () => <Select.Root modal={props.modal} />;
+        return () => <Combobox.Root loopFocus={props.loopFocus} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MySelect', 'Select.Root', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('MyCombobox', 'Combobox.Root', 'loopFocus')]);
   });
 
-  it('warns for Select.Trigger nativeButton', async () => {
+  it('warns for Combobox.Trigger nativeButton', async () => {
     const Wrapper = defineComponent({
       name: 'MyTrigger',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Select.Root>
-            <Select.Trigger as="span" nativeButton={props.nativeButton}>
+          <Combobox.Root>
+            <Combobox.Trigger as="span" nativeButton={props.nativeButton}>
               Action
-            </Select.Trigger>
-          </Select.Root>
+            </Combobox.Trigger>
+          </Combobox.Root>
         );
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      message('MyTrigger', 'Select.Trigger', 'nativeButton'),
+      message('MyTrigger', 'Combobox.Trigger', 'nativeButton'),
     ]);
   });
 
-  it('warns for the Boolean union of Select.Popup finalFocus', async () => {
+  it('warns for the Boolean union of Combobox.Popup finalFocus', async () => {
     const Wrapper = defineComponent({
-      name: 'MySelectPopup',
+      name: 'MyComboboxPopup',
       props: { finalFocus: Boolean },
       setup(props) {
-        return () => <Select.Popup finalFocus={props.finalFocus} aria-label="Example" />;
+        return () => <Combobox.Popup finalFocus={props.finalFocus} aria-label="Example" />;
       },
     });
     await render(() => (
-      <Select.Root defaultOpen>
-        <Select.Portal>
-          <Select.Positioner>
+      <Combobox.Root defaultOpen>
+        <Combobox.Portal>
+          <Combobox.Positioner>
             <Wrapper />
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
     ));
     await flushMicrotasks();
     expect(takeReportedMessages()).toEqual([
-      message('MySelectPopup', 'Select.Popup', 'finalFocus'),
+      message('MyComboboxPopup', 'Combobox.Popup', 'finalFocus'),
     ]);
   });
 
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MySelect',
+      name: 'MyCombobox',
       props: { open: Boolean },
       setup(props) {
-        return () => <Select.Root open={props.open} />;
+        return () => <Combobox.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -251,12 +251,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <Select.Root open={props.open} />;
+        return () => <Combobox.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <Select.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <Combobox.Root>'),
     ]);
   });
 
