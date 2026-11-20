@@ -171,7 +171,7 @@
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the root through its parts: the control, the open state with each reason, the text, the filter, the highlight, the pick, the chips, the clear button and the focus. `Combobox.form.test.ts` tests the form and the field, `Combobox.hydration.test.ts` the server render, and `Combobox.renders.test.ts` the renders. The parts have no transition status and no unmount action (rule 8.9)."
+      "reason": "`Combobox.test.ts` tests the root through its parts: the control, the open state with each reason, the text, the filter, the highlight, the pick, the chips, the clear button and the focus. `Combobox.form.test.ts` tests the form and the field, `Combobox.hydration.test.ts` the server render, and `Combobox.renders.test.ts` the renders. The parts have no transition status and no unmount action."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRootContext.test.tsx",
@@ -242,57 +242,57 @@
     {
       "upstream": "packages/react/src/combobox/arrow/ComboboxArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdropDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/clear/ComboboxClearDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/input/ComboboxInputDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/item/ComboboxItemDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/popup/ComboboxPopupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/trigger/ComboboxTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.tsx",
@@ -312,7 +312,7 @@
     {
       "upstream": "packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx",
       "kind": "not-applicable",
-      "reason": "The hidden dismiss buttons are cut: they had a fixed English name (rule 8.13), and the Tab order of the popup layer is the way out of the popup."
+      "reason": "The hidden dismiss buttons are cut: they had a fixed English name, and the Tab order of the popup layer is the way out of the popup."
     },
     {
       "upstream": "packages/react/src/combobox/utils/stateAttributesMapping.ts",
@@ -326,88 +326,81 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
-      "entry": "Root",
-      "prop": "multiple",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `false`. The prop has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean` (TS2322). Vue gives an absent Boolean prop the value `false`, and the JSDoc has `@default false` for the API reference."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Trigger",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The trigger reads its element, so it needs no `nativeButton`. `:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Input",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Label",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "InputGroup",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxInputDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxInputGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1), so it takes `as`. `readonly` and `autocomplete` replace `readOnly` and `autoComplete` (rule 8.2). The `id` prop is on `Input` and `Trigger`, the part that has the role (rule 8.4). `inputRef` and `actionsRef` are the template ref, with `inputElement`, `close()` and `element`. `form` names the form of the hidden inputs, as the native attribute does. The unmount action and `openChangeComplete` are cut: the `<Transition>` hooks run after the animations (rule 8.9). No part sends `close-press`: only the hidden dismiss buttons sent it, and they are cut."
+      "reason": "The root renders a `<div>` that holds the inputs of its form, so it takes `as`. `@after-enter` and `@after-leave` of a `<Transition>` run after the animations, in place of `openChangeComplete` and the `unmount` action. A template ref gives `inputElement`, `close()` and `element`, in place of `inputRef` and `actionsRef`. `readonly` and `autocomplete` have the names of the native attributes. `Input` and `Trigger` take `id`, because they have the role. `form` names the form of the hidden inputs, as the native attribute does. `multiple` has no declared default, because `withDefaults` refuses a default for the generic type `Multiple & boolean`, and Vue gives an absent Boolean prop `false`. No part sends `close-press`, because the popup has no hidden dismiss buttons."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Clear",
       "kind": "not-applicable",
-      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). `<Transition>` animates it, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "The button reads its element, so it needs no `nativeButton`. A `<Transition>` animates it, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Portal",
       "kind": "not-applicable",
-      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. It takes `defer` and `disabled` of `<Teleport>`."
+      "reason": "A `<Teleport>` moves the content, and `to` names its target. The portal has no element of its own, so it takes no `as` and has no `element` slot. It takes `defer` and `disabled` of `<Teleport>`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the backdrop, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "A `<Transition>` around the backdrop animates it, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the popup, and a kept popup has `[hidden]`, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "A `<Transition>` around the popup animates it, and a kept popup has `hidden`, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Item",
       "kind": "not-applicable",
-      "reason": "The item reads its element, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The item reads its element, so it needs no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
@@ -419,95 +412,95 @@
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ChipRemove",
       "kind": "not-applicable",
-      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The button reads its element, so it needs no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Collection",
       "kind": "not-applicable",
-      "reason": "The part is cut. `v-for` over the items of a group, and the `item` slot of `List`, render the items."
+      "reason": "`v-for` over the items of a group, and the `item` slot of `List`, render the items. The part is cut."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ItemIndicator",
       "kind": "not-applicable",
-      "reason": "The part is cut. The default slot of `Item` gives `state.selected`, so the developer renders an element with `v-if` or `v-show`, and `[aria-selected=\"true\"]` styles a selected item."
+      "reason": "The default slot of `Item` gives `state.selected`. A `v-if` or a `v-show` on an element of the developer shows the mark, and `[aria-selected=\"true\"]` selects a selected item. The part is cut."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxBackdropDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxClearDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxItemDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxItemIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxPopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxPositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxPositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "ComboboxSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Root",
       "prop": "as",
-      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1). `as` gives it another tag or a component (rule 6.1)."
+      "reason": "The root renders a `<div>` that holds the inputs of its form. `as` gives it another tag or a component."
     },
     {
       "entry": "Root",
       "prop": "readonly",
-      "reason": "The native name of the attribute (rule 8.2). A read-only root opens and moves the highlight, and the user cannot change its value."
+      "reason": "The name of the native attribute. A read-only root opens and moves the highlight, and the user cannot change its value."
     },
     {
       "entry": "Root",
       "prop": "autocomplete",
-      "reason": "The native name of the attribute (rule 8.2). It is the autofill purpose of the hidden text input."
+      "reason": "The name of the native attribute. It is the autofill purpose of the hidden text input."
     },
     {
       "entry": "Root",
       "exposed": "element",
-      "reason": "A template ref of a part has its element (rule 6.2)."
+      "reason": "A template ref of a part gives its element."
     },
     {
       "entry": "List",
@@ -518,7 +511,7 @@
     {
       "entry": "List",
       "slot": "item",
-      "reason": "The slot renders each filtered item with `{ item, index }`. It replaces the function child of the list in Base UI."
+      "reason": "The slot renders each filtered item with `{ item, index }`, in place of the function child of the list."
     },
     {
       "entry": "Portal",
@@ -528,7 +521,7 @@
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+      "reason": "A disabled portal renders its content in place, also on the server (VUE-128)."
     },
     {
       "entry": "Popup",
@@ -564,17 +557,17 @@
     {
       "entry": "createItems",
       "returns": "ComboboxItemCollection<Item, Value>",
-      "reason": "Base UI documents the second type argument of the result as `ComboboxPrimitiveValue`. The function is generic in `Value`, as the Base UI source is, and the result has the type argument `Value` of the call."
+      "reason": "The function is generic in `Value`, so the result has the type argument `Value` of the call. Base UI documents `ComboboxPrimitiveValue` in that place."
     },
     {
       "entry": "useFilter",
       "returns": "Filter",
-      "reason": "Base UI documents the return type as `ComboboxFilter`. The composable returns `Filter`, and `ComboboxFilter` is that type under another name."
+      "reason": "The composable returns `Filter`. `ComboboxFilter`, the name that Base UI documents, is the same type."
     },
     {
       "entry": "useFilteredItems",
       "returns": "ComputedRef<T[]>",
-      "reason": "`setup` runs one time, so a plain array does not follow a change of the filtered items. The composable thus returns a `ComputedRef` of the array."
+      "reason": "`setup` runs one time, so the composable returns a `ComputedRef` that follows each change of the filtered items. A plain array does not follow them."
     }
   ],
   "notApplicableCommits": [],

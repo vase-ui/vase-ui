@@ -15,7 +15,7 @@
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
-      "reason": "`Autocomplete.test.ts` tests the root through its parts: the text as the value, `autoHighlight`, `keepHighlight`, the modes and the inline completion, the form and `submitOnItemClick`. `Autocomplete.hydration.test.ts` tests the one name of the server HTML. The parts of Combobox, which Autocomplete exports, have their tests in the folder of Combobox. The parts have no transition status and no unmount action (rule 8.9)."
+      "reason": "`Autocomplete.test.ts` tests the root through its parts: the text as the value, `autoHighlight`, `keepHighlight`, the modes and the inline completion, the form and `submitOnItemClick`. `Autocomplete.hydration.test.ts` tests the one name of the server HTML. The parts of Combobox, which Autocomplete exports, have their tests in the folder of Combobox. The parts have no transition status and no unmount action."
     },
     {
       "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
@@ -32,58 +32,58 @@
     {
       "upstream": "packages/react/src/autocomplete/clear/AutocompleteClearDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/autocomplete/input-group/AutocompleteInputGroupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/autocomplete/item/AutocompleteItemDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1), so it takes `as`. `readonly` replaces `readOnly` (rule 8.2). The `id` prop is on `Input` and `Trigger`, the part that has the role (rule 8.4). `inputRef` and `actionsRef` are the template ref, with `inputElement`, `close()` and `element`. `form` names the form of the inputs, as the native attribute does. The unmount action and `openChangeComplete` are cut: the `<Transition>` hooks run after the animations (rule 8.9). No part sends `close-press`: only the hidden dismiss buttons sent it, and they are cut. No part of Autocomplete sends `chip-remove-press`."
+      "reason": "The root renders a `<div>` that holds the inputs of its form, so it takes `as`. `@after-enter` and `@after-leave` of a `<Transition>` run after the animations, in place of `openChangeComplete` and the `unmount` action. A template ref gives `inputElement`, `close()` and `element`, in place of `inputRef` and `actionsRef`. `readonly` has the name of the native attribute. `Input` and `Trigger` take `id`, because they have the role. `form` names the form of the inputs, as the native attribute does. No part sends `close-press`, because the popup has no hidden dismiss buttons, and no part of Autocomplete sends `chip-remove-press`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Clear",
       "kind": "not-applicable",
-      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). `<Transition>` animates it, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "The button reads its element, so it needs no `nativeButton`. A `<Transition>` animates it, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Portal",
       "kind": "not-applicable",
-      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. It takes `defer` and `disabled` of `<Teleport>`."
+      "reason": "A `<Teleport>` moves the content, and `to` names its target. The portal has no element of its own, so it takes no `as` and has no `element` slot. It takes `defer` and `disabled` of `<Teleport>`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the backdrop, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "A `<Transition>` around the backdrop animates it, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the popup, and a kept popup has `[hidden]`, so its state has no `transitionStatus` (rule 8.9)."
+      "reason": "A `<Transition>` around the popup animates it, and a kept popup has `hidden`, so its state has no `transitionStatus`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Item",
       "kind": "not-applicable",
-      "reason": "The item reads its element, so it has no `nativeButton` (rule 8.3). Autocomplete exports the item of Combobox, and its props are the props of that part."
+      "reason": "The item reads its element, so it needs no `nativeButton`. `Autocomplete.Item` is `Combobox.Item`, and it takes the props of that part."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
@@ -95,108 +95,108 @@
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Collection",
       "kind": "not-applicable",
-      "reason": "The part is cut. `v-for` over the items of a group, and the `item` slot of `List`, render the items."
+      "reason": "`v-for` over the items of a group, and the `item` slot of `List`, render the items. The part is cut."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteBackdropDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteClearDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteItemDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompletePopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompletePositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompletePositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Trigger",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The trigger reads its element, so it needs no `nativeButton`. `:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "Input",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "InputGroup",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`:focus`, `:focus-visible` and `:focus-within` select the focus, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteInputDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteInputGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
       "entry": "AutocompleteTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within`."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Root",
       "prop": "as",
-      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1). `as` gives it another tag or a component (rule 6.1)."
+      "reason": "The root renders a `<div>` that holds the inputs of its form. `as` gives it another tag or a component."
     },
     {
       "entry": "Root",
       "prop": "readonly",
-      "reason": "The native name of the attribute (rule 8.2). A read-only root opens and moves the highlight, and the user cannot change its text."
+      "reason": "The name of the native attribute. A read-only root opens and moves the highlight, and the user cannot change its text."
     },
     {
       "entry": "Root",
       "exposed": "element",
-      "reason": "A template ref of a part has its element (rule 6.2)."
+      "reason": "A template ref of a part gives its element."
     },
     {
       "entry": "List",
@@ -207,7 +207,7 @@
     {
       "entry": "List",
       "slot": "item",
-      "reason": "The slot renders each filtered item with `{ item, index }`. It replaces the function child of the list in Base UI."
+      "reason": "The slot renders each filtered item with `{ item, index }`, in place of the function child of the list."
     },
     {
       "entry": "Portal",
@@ -217,7 +217,7 @@
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+      "reason": "A disabled portal renders its content in place, also on the server (VUE-128)."
     },
     {
       "entry": "Popup",
@@ -247,12 +247,12 @@
     {
       "entry": "useFilter",
       "returns": "Filter",
-      "reason": "Base UI documents the return type as `AutocompleteFilter`. The composable returns `Filter`, and `AutocompleteFilter` is that type under another name."
+      "reason": "The composable returns `Filter`. `AutocompleteFilter`, the name that Base UI documents, is the same type."
     },
     {
       "entry": "useFilteredItems",
       "returns": "ComputedRef<T[]>",
-      "reason": "`setup` runs one time, so a plain array does not follow a change of the filtered items. The composable thus returns a `ComputedRef` of the array."
+      "reason": "`setup` runs one time, so the composable returns a `ComputedRef` that follows each change of the filtered items. A plain array does not follow them."
     }
   ],
   "notApplicableCommits": [],
