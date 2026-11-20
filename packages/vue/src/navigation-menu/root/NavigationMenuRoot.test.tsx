@@ -20,7 +20,7 @@ import {
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';

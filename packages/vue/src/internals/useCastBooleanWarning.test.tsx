@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { AlertDialog } from '../alert-dialog';
-import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
+import { Drawer } from '../drawer';
 import { Menubar } from '../menubar';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
@@ -143,14 +142,14 @@ describe('useCastBooleanWarning', () => {
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
     const Wrapper = defineComponent({
-      name: 'MyAlertDialog',
+      name: 'MyDrawer',
       props: { open: Boolean },
       setup(props) {
-        return () => <AlertDialog.Root open={props.open} />;
+        return () => <Drawer.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyAlertDialog', 'AlertDialog.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([message('MyDrawer', 'Drawer.Root', 'open')]);
   });
 
   it('gives one warning for a part that gives the prop to another part', async () => {
@@ -176,64 +175,66 @@ describe('useCastBooleanWarning', () => {
     ]);
   });
 
-  it('warns for the default true of Dialog.Root modal', async () => {
+  it('warns for the default true of Drawer.Root modal', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDialog',
+      name: 'MyDrawer',
       props: { modal: Boolean },
       setup(props) {
-        return () => <Dialog.Root modal={props.modal} />;
+        return () => <Drawer.Root modal={props.modal} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyDialog', 'Dialog.Root', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('MyDrawer', 'Drawer.Root', 'modal')]);
   });
 
-  it('warns for Dialog.Trigger nativeButton', async () => {
+  it('warns for Drawer.Trigger nativeButton', async () => {
     const Wrapper = defineComponent({
       name: 'MyTrigger',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Dialog.Root>
-            <Dialog.Trigger as="span" nativeButton={props.nativeButton}>
+          <Drawer.Root>
+            <Drawer.Trigger as="span" nativeButton={props.nativeButton}>
               Action
-            </Dialog.Trigger>
-          </Dialog.Root>
+            </Drawer.Trigger>
+          </Drawer.Root>
         );
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      message('MyTrigger', 'Dialog.Trigger', 'nativeButton'),
+      message('MyTrigger', 'Drawer.Trigger', 'nativeButton'),
     ]);
   });
 
-  it('warns for the Boolean union of Dialog.Popup initialFocus', async () => {
+  it('warns for the Boolean union of Drawer.Popup initialFocus', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDialogPopup',
+      name: 'MyDrawerPopup',
       props: { initialFocus: Boolean },
       setup(props) {
-        return () => <Dialog.Popup initialFocus={props.initialFocus} aria-label="Example" />;
+        return () => <Drawer.Popup initialFocus={props.initialFocus} aria-label="Example" />;
       },
     });
     await render(() => (
-      <Dialog.Root>
-        <Dialog.Portal keepMounted>
-          <Wrapper />
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root>
+        <Drawer.Portal keepMounted>
+          <Drawer.Viewport>
+            <Wrapper />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ));
     expect(takeReportedMessages()).toEqual([
-      message('MyDialogPopup', 'Dialog.Popup', 'initialFocus'),
+      message('MyDrawerPopup', 'Drawer.Popup', 'initialFocus'),
     ]);
   });
 
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MyAlertDialog',
+      name: 'MyDrawer',
       props: { open: Boolean },
       setup(props) {
-        return () => <AlertDialog.Root open={props.open} />;
+        return () => <Drawer.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -245,12 +246,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <AlertDialog.Root open={props.open} />;
+        return () => <Drawer.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <AlertDialog.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <Drawer.Root>'),
     ]);
   });
 

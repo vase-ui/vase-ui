@@ -15,7 +15,7 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';

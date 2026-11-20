@@ -38,11 +38,11 @@ import {
   createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
-import * as AlertDialog from '../../alert-dialog/index.parts';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { platform } from '../../common/platform';
 import { reset as resetWarnings } from '../../common/warn';
 import * as ContextMenu from '../../context-menu/index.parts';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -1974,7 +1974,7 @@ describe('<Menu.Root />', () => {
                         data-testid="dialog-trigger"
                         v-slots={{
                           render: ({ props }: { props: HTMLProps }) => (
-                            <Dialog.Trigger {...props} as="div" nativeButton={false}>
+                            <Dialog.Trigger {...props} as="div">
                               Open Dialog
                             </Dialog.Trigger>
                           ),

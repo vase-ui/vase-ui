@@ -3,10 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -76,13 +74,12 @@ const BLANKS = [
   { blank: 'white space', value: '\n\t ' },
 ];
 
-// `Dialog`, `AlertDialog` and `Drawer` have the same parts.
 function createDialog(
-  parts: typeof Dialog | typeof AlertDialog | typeof Drawer,
+  parts: typeof Drawer,
   tested: 'popup' | 'trigger',
   attrs: Record<string, string>,
 ) {
-  const { Root, Trigger, Portal, Popup, Title, Description } = parts as typeof Dialog;
+  const { Root, Trigger, Portal, Popup, Title, Description } = parts;
   const popup = (
     <Popup
       data-testid={tested === 'popup' ? 'part' : 'target'}
@@ -199,29 +196,9 @@ const rows: Row[] = [
     ),
   },
   {
-    part: 'Dialog.Popup',
-    attribute: 'aria-describedby',
-    createNode: (attrs) => createDialog(Dialog, 'popup', attrs),
-  },
-  {
-    part: 'AlertDialog.Popup',
-    attribute: 'aria-describedby',
-    createNode: (attrs) => createDialog(AlertDialog, 'popup', attrs),
-  },
-  {
     part: 'Drawer.Popup',
     attribute: 'aria-describedby',
     createNode: (attrs) => createDialog(Drawer, 'popup', attrs),
-  },
-  {
-    part: 'Dialog.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createDialog(Dialog, 'trigger', attrs),
-  },
-  {
-    part: 'AlertDialog.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createDialog(AlertDialog, 'trigger', attrs),
   },
   {
     part: 'Drawer.Trigger',

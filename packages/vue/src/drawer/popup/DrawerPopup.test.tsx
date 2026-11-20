@@ -18,7 +18,7 @@ import {
   waitForLaterMillisecond,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import type { DialogStore } from '../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';

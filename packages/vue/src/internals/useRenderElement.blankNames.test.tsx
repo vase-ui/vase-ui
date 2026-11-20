@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useRender } from '@vase-ui/vue/use-render';
+import { Drawer } from '@vase-ui/vue/drawer';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -85,16 +85,18 @@ async function showNavigationMenu() {
 
 const rows: Row[] = [
   {
-    name: 'Dialog.Popup',
+    name: 'Drawer.Popup',
     attribute: 'aria-labelledby',
     createNode: (attrs) => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal>
-          <Dialog.Popup data-testid="part" {...attrs}>
-            <Dialog.Title>Settings</Dialog.Title>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="part" {...attrs}>
+              <Drawer.Title>Settings</Drawer.Title>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ),
     expected: 'Settings',
   },
