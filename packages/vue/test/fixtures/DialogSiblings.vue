@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import { reactive, type PropType } from 'vue';
 import { AlertDialog } from '../../src/alert-dialog';
 import { Dialog } from '../../src/dialog';
 
@@ -20,9 +20,16 @@ type Sibling = {
 // fixed element of a modal dialog above it.
 defineProps({
   dialogs: { type: Array as PropType<Sibling[]>, required: true },
+  /** The open state of each dialog. `set` writes it. */
   scene: {
-    type: Object as PropType<{ open: Record<number, boolean> }>,
-    default: () => ({ open: {} }),
+    type: Object as PropType<{
+      open: Record<number, boolean>;
+      set(index: number, open: boolean): void;
+    }>,
+    default: () => {
+      const open = reactive<Record<number, boolean>>({});
+      return { open, set: (index: number, value: boolean) => (open[index] = value) };
+    },
   },
 });
 </script>
@@ -34,7 +41,7 @@ defineProps({
     :key="index"
     :open="scene.open[index]"
     v-bind="dialog.root"
-    @update:open="(open: boolean) => (scene.open[index] = open)"
+    @update:open="(open: boolean) => scene.set(index, open)"
   >
     <component
       :is="dialog.alert ? AlertDialog.Trigger : Dialog.Trigger"
@@ -44,14 +51,22 @@ defineProps({
       {{ index }}
     </component>
     <Dialog.Portal>
-      <Dialog.Backdrop v-if="dialog.backdrop" :data-testid="`backdrop-${index}`" v-bind="dialog.backdrop" />
-      <Dialog.Viewport v-if="dialog.viewport" :data-testid="`viewport-${index}`" v-bind="dialog.viewport">
+      <Dialog.Backdrop
+        v-if="dialog.backdrop"
+        :data-testid="`backdrop-${index}`"
+        v-bind="dialog.backdrop"
+      />
+      <Dialog.Viewport
+        v-if="dialog.viewport"
+        :data-testid="`viewport-${index}`"
+        v-bind="dialog.viewport"
+      >
         <Dialog.Popup
           :data-testid="`popup-${index}`"
           :style="`position: fixed; left: 0; top: ${index * 40}px`"
           v-bind="dialog.popup"
         >
-          <button :data-testid="`next-${index}`" @click="scene.open[index + 1] = true">Next</button>
+          <button :data-testid="`next-${index}`" @click="scene.set(index + 1, true)">Next</button>
         </Dialog.Popup>
       </Dialog.Viewport>
       <Dialog.Popup
@@ -60,7 +75,7 @@ defineProps({
         :style="`position: fixed; left: 0; top: ${index * 40}px`"
         v-bind="dialog.popup"
       >
-        <button :data-testid="`next-${index}`" @click="scene.open[index + 1] = true">Next</button>
+        <button :data-testid="`next-${index}`" @click="scene.set(index + 1, true)">Next</button>
       </Dialog.Popup>
     </Dialog.Portal>
   </component>

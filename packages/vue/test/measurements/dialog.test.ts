@@ -228,7 +228,7 @@ describe('a drag of a scrollbar that takes room, with preventDefault() at moused
 describe('the hooks of a component in a component (D9)', () => {
   test('`onMounted` runs for the child first; `onBeforeMount` runs for the parent first only in the virtual DOM', async () => {
     const log: string[] = [];
-    mount(MeasureMountOrder, { depth: 1, log });
+    mount(MeasureMountOrder, { depth: 1, log: { add: (entry: string) => log.push(entry) } });
     await nextTick();
     expect(log.filter((entry) => entry.startsWith('mounted'))).toEqual(['mounted 0', 'mounted 1']);
     expect(log.filter((entry) => entry.startsWith('beforeMount'))).toEqual(
@@ -247,7 +247,14 @@ describe('a dialog in place in a composite (D10)', () => {
         (button) => button.textContent === 'Inside',
       )!;
       inside.focus();
-      for (const key of ['{ArrowDown}', '{ArrowRight}', '{ArrowUp}', '{ArrowLeft}', '{Home}', '{End}']) {
+      for (const key of [
+        '{ArrowDown}',
+        '{ArrowRight}',
+        '{ArrowUp}',
+        '{ArrowLeft}',
+        '{Home}',
+        '{End}',
+      ]) {
         await userEvent.keyboard(key);
         await nextTick();
         expect(document.activeElement).toBe(inside);
@@ -260,7 +267,12 @@ describe('a component that replaces another one (D12)', () => {
   async function swap(wrapper: string, gates: Record<string, Promise<void>> = {}) {
     const log: string[] = [];
     const scene = reactive({ page: 'A' });
-    mount(MeasurePageSwap, { wrapper, scene, gates, log });
+    mount(MeasurePageSwap, {
+      wrapper,
+      scene,
+      gates,
+      log: { add: (entry: string) => log.push(entry) },
+    });
     await settle();
     log.length = 0;
     scene.page = 'B';

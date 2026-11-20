@@ -84,15 +84,8 @@ function currentTask() {
  * (test/measurements/dialog.test.ts).
  */
 function push(entry: Entry) {
-  let index = stack.length;
-  while (
-    index > 0 &&
-    stack[index - 1]!.task === entry.task &&
-    stack[index - 1]!.order > entry.order
-  ) {
-    index -= 1;
-  }
-  stack.splice(index, 0, entry);
+  const later = stack.findLastIndex((each) => each.task !== entry.task || each.order < entry.order);
+  stack.splice(later + 1, 0, entry);
 }
 
 /** The layers that the root of each popup has, by root, for the parts of a family. */

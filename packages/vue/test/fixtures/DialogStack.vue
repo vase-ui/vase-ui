@@ -5,12 +5,20 @@ import { Dialog } from '../../src/dialog';
 // Two modal dialogs side by side, by `scene`. The first one has a backdrop and a viewport that cover
 // the view, and its popup and its backdrop leave in a `<Transition>`.
 defineProps({
-  scene: { type: Object as PropType<{ first: boolean; second: boolean }>, required: true },
+  /** The open state of the two dialogs. `set` writes it. */
+  scene: {
+    type: Object as PropType<{
+      first: boolean;
+      second: boolean;
+      set(key: 'first' | 'second', open: boolean): void;
+    }>,
+    required: true,
+  },
 });
 </script>
 
 <template>
-  <Dialog.Root v-model:open="scene.first">
+  <Dialog.Root :open="scene.first" @update:open="scene.set('first', $event)">
     <Dialog.Portal>
       <Transition name="stack">
         <Dialog.Backdrop data-testid="first-backdrop" style="position: fixed; inset: 0" />
@@ -22,7 +30,7 @@ defineProps({
       </Dialog.Viewport>
     </Dialog.Portal>
   </Dialog.Root>
-  <Dialog.Root v-model:open="scene.second">
+  <Dialog.Root :open="scene.second" @update:open="scene.set('second', $event)">
     <Dialog.Portal>
       <Dialog.Popup data-testid="second-popup" style="position: fixed; left: 300px; top: 0">
         <button>Second</button>

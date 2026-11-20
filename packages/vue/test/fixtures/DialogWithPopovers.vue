@@ -15,9 +15,15 @@ defineProps({
     type: String as PropType<'triggers-in-popover' | 'popover-above' | 'popover-before'>,
     required: true,
   },
+  /** The open state of the nested dialog, the popover and the dialog. `set` writes it. */
   scene: {
-    type: Object as PropType<{ nested?: boolean; popover?: boolean; dialog?: boolean }>,
-    default: () => ({}),
+    type: Object as PropType<{
+      nested?: boolean;
+      popover?: boolean;
+      dialog?: boolean;
+      set(key: 'nested' | 'popover' | 'dialog', open: boolean): void;
+    }>,
+    default: () => ({ set() {} }),
   },
   log: { type: Object as PropType<{ add(entry: string): void }>, default: () => new Set() },
 });
@@ -51,7 +57,11 @@ const handle = Dialog.createHandle();
     >
       <Dialog.Portal>
         <Dialog.Popup data-testid="parent" :initial-focus="false">
-          <Dialog.Root v-model:open="scene.nested" :modal="false">
+          <Dialog.Root
+            :open="scene.nested"
+            @update:open="scene.set('nested', $event)"
+            :modal="false"
+          >
             <Dialog.Portal>
               <Dialog.Popup data-testid="nested" :initial-focus="false">Nested</Dialog.Popup>
             </Dialog.Portal>
@@ -60,7 +70,8 @@ const handle = Dialog.createHandle();
       </Dialog.Portal>
     </Dialog.Root>
     <Popover.Root
-      v-model:open="scene.popover"
+      :open="scene.popover"
+      @update:open="scene.set('popover', $event)"
       @open-change="(open: boolean, details) => log.add(`popover ${open} ${details.reason}`)"
     >
       <Popover.Trigger>Popover</Popover.Trigger>
@@ -82,7 +93,7 @@ const handle = Dialog.createHandle();
         </Popover.Positioner>
       </Popover.Portal>
     </Popover.Root>
-    <Dialog.Root v-model:open="scene.dialog">
+    <Dialog.Root :open="scene.dialog" @update:open="scene.set('dialog', $event)">
       <Dialog.Portal>
         <Dialog.Popup data-testid="dialog">
           <Dialog.Close>Close</Dialog.Close>

@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
-import {
-  createRenderer,
-  flushMicrotasks,
-  probeFrameAfterExit,
-  screen,
-  waitFor,
-} from '#test-utils';
+import { createRenderer, flushMicrotasks, probeFrameAfterExit, screen, waitFor } from '#test-utils';
 import MotionVDialog from './MotionVDialog.test.vue';
 import MotionVPanel from './MotionVPanel.test.vue';
 

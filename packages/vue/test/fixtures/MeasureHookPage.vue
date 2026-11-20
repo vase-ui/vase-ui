@@ -7,17 +7,17 @@ import MeasureHookWait from './MeasureHookWait.vue';
 // a child with an async `setup` that waits for the gate, so a `<Suspense>` waits for the page.
 const props = defineProps({
   name: { type: String, required: true },
-  log: { type: Array as PropType<string[]>, required: true },
+  log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
   gate: Promise as PropType<Promise<void>>,
 });
-props.log.push(`setup ${props.name}`);
+props.log.add(`setup ${props.name}`);
 watchPostEffect((onCleanup) => {
-  props.log.push(`effect ${props.name}`);
-  onCleanup(() => props.log.push(`effect end ${props.name}`));
+  props.log.add(`effect ${props.name}`);
+  onCleanup(() => props.log.add(`effect end ${props.name}`));
 });
-onScopeDispose(() => props.log.push(`scope end ${props.name}`));
-onMounted(() => props.log.push(`mounted ${props.name}`));
-onUnmounted(() => props.log.push(`unmounted ${props.name}`));
+onScopeDispose(() => props.log.add(`scope end ${props.name}`));
+onMounted(() => props.log.add(`mounted ${props.name}`));
+onUnmounted(() => props.log.add(`unmounted ${props.name}`));
 </script>
 
 <template>

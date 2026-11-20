@@ -13684,8 +13684,9 @@ describe('<Combobox.Root />', () => {
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
       expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute('data-highlighted');
 
+      const dialog = screen.getByRole('dialog');
       await fireEvent.keyDown(input, { key: 'Escape' });
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
 
       await waitForLaterMillisecond(async () => {
         await fireEvent.click(trigger);

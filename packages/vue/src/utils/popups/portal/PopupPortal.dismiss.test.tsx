@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
 import { defineAsyncComponent } from 'vue';
 import type { DefineComponent, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';

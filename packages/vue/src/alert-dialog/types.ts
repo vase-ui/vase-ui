@@ -31,8 +31,10 @@ export type AlertDialogRootChangeEventReason = DialogRootChangeEventReason;
 
 export type AlertDialogRootChangeEventDetails = DialogRootChangeEventDetails;
 
-export interface AlertDialogRootProps<Payload = unknown>
-  extends Omit<DialogRootProps<Payload>, 'modal' | 'disablePointerDismissal' | 'handle'> {
+export interface AlertDialogRootProps<Payload = unknown> extends Omit<
+  DialogRootProps<Payload>,
+  'modal' | 'disablePointerDismissal' | 'handle'
+> {
   /** Connects the root to triggers outside it and to code. */
   handle?: AlertDialogHandle<Payload> | undefined;
 }

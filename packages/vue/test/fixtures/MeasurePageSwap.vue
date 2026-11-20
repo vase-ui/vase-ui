@@ -11,7 +11,7 @@ defineProps({
   },
   scene: { type: Object as PropType<{ page: string }>, required: true },
   gates: { type: Object as PropType<Record<string, Promise<void>>>, default: () => ({}) },
-  log: { type: Array as PropType<string[]>, required: true },
+  log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
 });
 </script>
 

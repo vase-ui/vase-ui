@@ -101,7 +101,7 @@ describe('Alert Dialog', () => {
   });
 
   // The case throws in `setup`, so it is the last of the file.
-  test('its trigger with no root and no handle throws an error that names it', async () => {
+  test('its trigger with no root and no handle throws an error that names it', () => {
     const error = mountError(DialogPartAlone, { part: 'Trigger', alert: true });
     // After the error, Vapor renders the part with no setup, and warns about each binding.
     takeReportedMessages();

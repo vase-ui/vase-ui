@@ -136,8 +136,8 @@ export function useDialogRoot<Payload>(
       return () => (backdrops.value -= 1);
     },
   };
-  contexts.set(root, context as DialogForParts);
-  provide(dialogKey, context as DialogForParts);
+  contexts.set(root, context);
+  provide(dialogKey, context);
 
   return {
     root,

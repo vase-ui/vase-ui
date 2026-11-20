@@ -25,7 +25,8 @@ const { element, setElement } = useElement<HTMLElement>();
 
 // While another dialog is under it, the backdrop of a nested dialog would darken the page twice.
 const shown = computed(
-  () => ((root.open && !root.leaving) || root.keepMounted) && (props.forceRender || !context.nested),
+  () =>
+    ((root.open && !root.leaving) || root.keepMounted) && (props.forceRender || !context.nested),
 );
 const state = computed<DialogBackdropState>(() => ({ open: root.open }));
 

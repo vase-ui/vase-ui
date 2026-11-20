@@ -4,10 +4,10 @@ import { onBeforeMount, onMounted, type PropType } from 'vue';
 // A component in a component, `depth` levels deep. Each level writes its hooks in `log`.
 const props = defineProps({
   depth: { type: Number, required: true },
-  log: { type: Array as PropType<string[]>, required: true },
+  log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
 });
-onBeforeMount(() => props.log.push(`beforeMount ${props.depth}`));
-onMounted(() => props.log.push(`mounted ${props.depth}`));
+onBeforeMount(() => props.log.add(`beforeMount ${props.depth}`));
+onMounted(() => props.log.add(`mounted ${props.depth}`));
 </script>
 
 <template>

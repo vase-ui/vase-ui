@@ -32,6 +32,22 @@ const block = () => document.querySelector<HTMLElement>(BLOCK);
 const inert = (element: Element) => element.closest('[inert]') !== null;
 const hidden = (element: Element) => element.closest('[aria-hidden="true"]') !== null;
 
+/** A reactive state that a fixture writes with `set`. */
+function sceneOf<State extends object>(state: State) {
+  const data = reactive(state) as State;
+  return Object.assign(data, {
+    set: <Key extends keyof State>(key: Key, value: State[Key]) => {
+      data[key] = value;
+    },
+  });
+}
+
+/** The open state of each dialog of `DialogSiblings`, which writes it with `set`. */
+function siblings(open: Record<number, boolean>) {
+  const state = reactive(open);
+  return { open: state, set: (index: number, value: boolean) => (state[index] = value) };
+}
+
 async function mountDialog(setup: Props = {}) {
   const { root, exposed, unmount } = mount(DialogParts, setup);
   await nextTick();
@@ -693,7 +709,7 @@ describe('the dismissal', () => {
   });
 
   test('a press closes one dialog: the top one of two sibling modal dialogs, then the one below', async () => {
-    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    const scene = siblings({ 0: true });
     mount(DialogSiblings, { dialogs: [{}, {}], scene });
     await opened('popup-0');
     await userEvent.click(byTestId('next-0')!);
@@ -706,7 +722,7 @@ describe('the dismissal', () => {
   });
 
   test("a press outside a `'trap-focus'` dialog above a dialog that is not modal closes only the top one", async () => {
-    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    const scene = siblings({ 0: true });
     mount(DialogSiblings, {
       dialogs: [{ root: { modal: false } }, { root: { modal: 'trap-focus' } }],
       scene,
@@ -920,7 +936,7 @@ describe('the focus', () => {
   );
 
   async function openFrom(variant: 'menu' | 'popover') {
-    const scene = reactive({ open: false, popover: false });
+    const scene = sceneOf({ open: false, popover: false });
     mount(DialogCases, { variant, scene });
     await nextTick();
     await userEvent.click(byTestId('menu-trigger')!);
@@ -965,7 +981,7 @@ describe('the focus', () => {
 
   test('a dialog with no trigger that opened while <body> had the focus gives the focus to nothing at its close', async () => {
     const surface = append('div', 'position: fixed; right: 0; top: 0; width: 100px; height: 100px');
-    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    const scene = siblings({ 0: true });
     mount(DialogSiblings, {
       dialogs: [{ root: { modal: false, disablePointerDismissal: true } }, { trigger: false }],
       scene,
@@ -1023,7 +1039,7 @@ describe('nested dialogs', () => {
   });
 
   test('counts the dialogs above it that are not in its tree, and those have no data-nested', async () => {
-    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    const scene = siblings({ 0: true });
     mount(DialogSiblings, {
       dialogs: [{ root: { modal: false } }, { root: { modal: false } }],
       scene,
@@ -1175,7 +1191,7 @@ describe('the viewport, the backdrop and the leave', () => {
 
   test('the viewport and the backdrop of a dialog under a modal dialog are inert until that dialog closes; a dialog that closes under it stays inert while it leaves', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-    const scene = reactive({ first: true, second: false });
+    const scene = sceneOf({ first: true, second: false });
     mount(DialogStack, { scene });
     await opened('first-popup');
     const viewport = byTestId('first-viewport')!;
@@ -1342,7 +1358,7 @@ describe('with a popover', () => {
 
   test('BUG-6037: after a nested dialog closes, Escape closes the popover that opened above the dialogs', async () => {
     const log = new Set<string>();
-    const scene = reactive({ nested: true, popover: false });
+    const scene = sceneOf({ nested: true, popover: false });
     mount(DialogWithPopovers, { variant: 'popover-above', scene, log });
     await opened('nested');
     scene.popover = true;
@@ -1356,7 +1372,7 @@ describe('with a popover', () => {
   });
 
   test('a dialog with no trigger does not give the focus to the trigger of a popover that was open at the mount', async () => {
-    const scene = reactive({ dialog: false });
+    const scene = sceneOf({ dialog: false });
     mount(DialogWithPopovers, { variant: 'popover-before', scene });
     await waitFor(() => expect(button('Got it')).toBeTruthy());
     await userEvent.click(button('Got it'));

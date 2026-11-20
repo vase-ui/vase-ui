@@ -16,9 +16,14 @@ defineProps({
     type: String as PropType<'scroll-area' | 'display-contents' | 'menu' | 'popover'>,
     required: true,
   },
+  /** The open state of the dialog and of the popover. `set` writes it. */
   scene: {
-    type: Object as PropType<{ open: boolean; popover?: boolean }>,
-    default: () => ({ open: false }),
+    type: Object as PropType<{
+      open: boolean;
+      popover?: boolean;
+      set(key: 'open' | 'popover', open: boolean): void;
+    }>,
+    default: () => ({ open: false, set() {} }),
   },
 });
 </script>
@@ -47,15 +52,15 @@ defineProps({
     </Dialog.Portal>
   </Dialog.Root>
   <template v-else-if="variant === 'popover'">
-    <Popover.Root v-model:open="scene.popover">
+    <Popover.Root :open="scene.popover" @update:open="scene.set('popover', $event)">
       <Popover.Trigger data-testid="menu-trigger">Popover</Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner>
           <Popover.Popup>
             <button
               @click="
-                scene.popover = false;
-                scene.open = true;
+                scene.set('popover', false);
+                scene.set('open', true);
               "
             >
               Open dialog
@@ -71,13 +76,17 @@ defineProps({
       <Menu.Portal>
         <Menu.Positioner>
           <Menu.Popup>
-            <Menu.Item @click="scene.open = true">Open dialog</Menu.Item>
+            <Menu.Item @click="scene.set('open', true)">Open dialog</Menu.Item>
           </Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>
   </template>
-  <Dialog.Root v-if="variant === 'menu' || variant === 'popover'" v-model:open="scene.open">
+  <Dialog.Root
+    v-if="variant === 'menu' || variant === 'popover'"
+    :open="scene.open"
+    @update:open="scene.set('open', $event)"
+  >
     <Dialog.Portal>
       <Dialog.Popup data-testid="popup">
         <Dialog.Close>Close</Dialog.Close>
