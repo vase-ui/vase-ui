@@ -142,6 +142,7 @@ describe('the parts', () => {
     await nextTick();
     expect(trigger()).toHaveAttribute('aria-expanded', 'true');
     expect(trigger()).not.toHaveAttribute('aria-controls');
+    expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
   });
 
   test('render the tag of `as`', async () => {
