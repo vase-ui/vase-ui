@@ -10,6 +10,7 @@ import {
   type InjectionKey,
 } from 'vue';
 import { useIsHydrated } from '../common/hydration';
+import { ownerDocument } from '../common/owner';
 import { visuallyHidden } from '../common/visuallyHidden';
 import type { Layer } from './layer';
 import type { PopupRoot } from './root';
@@ -32,7 +33,7 @@ export interface PopupPortalProps {
    * `body`. While it is `null`, the portal renders nothing.
    */
   to?: PortalTarget | undefined;
-  /** Renders the content in place, also on the server. A change mounts the content again. */
+  /** Renders the content in place, also on the server. */
   disabled?: boolean | undefined;
   /** Moves the content after the other content of the same update mounted. */
   defer?: boolean | undefined;
@@ -47,6 +48,18 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   const inherited = inject(targetKey, () => 'body');
   const target = computed(() => (props.to === undefined ? inherited() : props.to));
   provide(targetKey, () => target.value);
+  // Vue 3.5.12 removes the first two nodes of the target when it unmounts a disabled `<Teleport>`
+  // that it hydrated. So a disabled portal gives Vue an element of its own, out of the document.
+  let inPlaceTarget: HTMLElement | undefined;
+  const teleportTarget = computed(() => {
+    // eslint-disable-next-line no-restricted-globals -- The typeof check tells a server from a client.
+    if (!props.disabled || typeof document === 'undefined') return target.value;
+    if (!inPlaceTarget) {
+      inPlaceTarget = ownerDocument(null).createElement('div');
+      inPlaceTarget.append('', '');
+    }
+    return inPlaceTarget;
+  });
 
   // The server HTML has no content of a teleport to `<body>`, and Vue cannot hydrate one. So the
   // portal renders its teleport after its mount (the Vue guide on server rendering, "Teleports").
@@ -106,7 +119,8 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   });
 
   return {
-    target,
+    /** The target of the `<Teleport>`. */
+    target: teleportTarget,
     rendered,
     sentinels,
     blocks,
