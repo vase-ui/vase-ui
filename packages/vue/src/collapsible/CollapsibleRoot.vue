@@ -39,16 +39,16 @@ const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const { value, setOwn } = useModel(() => props.open, props.defaultOpen);
 // JavaScript can give `null`.
-const open = computed(() => !!value.value);
+const isOpen = computed(() => !!value.value);
 const panels = shallowReactive<CollapsiblePanelEntry[]>([]);
 const state = computed<CollapsibleRootState>(() => ({
-  open: open.value,
+  open: isOpen.value,
   disabled: props.disabled,
 }));
 
 provide(collapsibleKey, {
   get open() {
-    return open.value;
+    return isOpen.value;
   },
   get disabled() {
     return props.disabled;
@@ -74,7 +74,7 @@ defineExpose({ element });
 function elementProps() {
   return mergeProps(
     {
-      'data-open': open.value ? '' : undefined,
+      'data-open': isOpen.value ? '' : undefined,
       'data-disabled': props.disabled ? '' : undefined,
     },
     attrs,

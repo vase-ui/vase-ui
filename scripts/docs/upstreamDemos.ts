@@ -37,9 +37,11 @@ const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate
  * demo of another family that imports such a family styles its parts in the same way.
  */
 const RESTYLED_FAMILIES = new Set([
+  'accordion',
   'button',
   'checkbox',
   'checkbox-group',
+  'collapsible',
   'field',
   'fieldset',
   'form',

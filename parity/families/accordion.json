@@ -6,11 +6,69 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/accordion/panel/AccordionPanel.test.tsx",
-      "describe": ["<Accordion.Panel />", "server-side rendering"],
+      "upstream": "packages/react/src/accordion/header/AccordionHeaderDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/AccordionItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanelDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanelCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part writes its own attributes from the state of the item. No mapping of the state to attributes is shared."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/accordion/panel/AccordionPanel.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/accordion/Accordion.test.ts",
+      "reason": "`Accordion.test.ts` tests the ARIA attributes and the manual ids, the uncontrolled and the controlled root, `null` values, custom and generated values, an array value, `multiple`, each cancel, the order of the events, `v-model`, a disabled root and item, the keys and axe. `Accordion.hydration.test.ts` tests the server HTML and the hydration. The root keeps no list of its items, so the items have no index."
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/AccordionItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/accordion/Accordion.test.ts",
+      "reason": "`Accordion.test.ts` tests the item: its value, `openChange`, a disabled item, the error outside a root and its state. The state has no `hidden`: `!state.open` gives it."
+    },
+    {
+      "upstream": "packages/react/src/accordion/header/AccordionHeader.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/accordion/Accordion.test.ts",
+      "reason": "`Accordion.test.ts` tests the `<h3>`, its attributes, `as` and the error outside an item."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/accordion/Accordion.test.ts",
+      "reason": "`Accordion.test.ts` tests a disabled trigger, an element that is not a button, the `id` prop, an empty `id` and the id that the panel names. `Accordion.hydration.test.ts` tests `aria-controls` after the hydration."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/accordion/Accordion.test.ts",
+      "reason": "`Accordion.test.ts` tests the defaults of the root for the panels, an empty `id`, `role`, `<Transition>` and find-in-page. `Accordion.hydration.test.ts` tests the server HTML and `aria-labelledby` in it. A `<Transition>` around the panel replaces `data-starting-style`, `data-ending-style` and `transitionStatus` (rule 8.9). Vue has no `Activity`, and a part keeps no state about `KeepAlive` (rule 5)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
@@ -28,13 +86,6 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
-      "entry": "Root",
-      "prop": "keepMounted",
-      "kind": "not-applicable",
-      "reason": "The part must tell an absent `keepMounted` from `keepMounted={false}`, because only the explicit `false` gets a warning when `hiddenUntilFound` is set. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. The part uses `false` for an absent prop, which is the default that Base UI documents."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Panel",
       "prop": "hiddenUntilFound",
       "kind": "not-applicable",
@@ -45,7 +96,73 @@
       "entry": "Panel",
       "prop": "keepMounted",
       "kind": "not-applicable",
-      "reason": "An absent `keepMounted` takes the value of `Accordion.Root`, and only an explicit `keepMounted={false}` gets a warning when `hiddenUntilFound` is set. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. With no value on the root, the part uses `false`, which is the default that Base UI documents."
+      "reason": "An absent `keepMounted` takes the value of `Accordion.Root`, and `keepMounted={false}` overrides it. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. With no value on the root, the part uses `false`, which is the default that Base UI documents."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The root has no `data-orientation`, which is always `vertical` (`parity/scope.json`). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Item",
+      "kind": "not-applicable",
+      "reason": "The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The item has no `data-index`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Header",
+      "kind": "not-applicable",
+      "reason": "The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The header has no `data-index`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Trigger",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3). The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The trigger has no `data-panel-open`, no `data-disabled` and no `data-index`: CSS selects `[aria-expanded=\"true\"]` and `:disabled` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Panel",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The panel has no `data-open`, `data-index` and `data-orientation`: CSS selects `:not([hidden])` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionHeaderDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionPanelDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionPanelCssVariables",
+      "kind": "not-applicable",
+      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
@@ -69,11 +186,67 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/accordion/item/stateAttributesMapping.ts",
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/accordion/root/AccordionRootContext.ts",
-      "member": "accordionStateAttributesMapping",
-      "witness": "packages/vue/src/accordion/root/AccordionRoot.test.tsx"
+      "destination": "packages/vue/src/accordion/AccordionRoot.vue",
+      "behavior": "The root holds the values of the open items and emits the change events.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/item.ts",
+      "behavior": "What the root gives to its items.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/AccordionItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/AccordionItem.vue",
+      "behavior": "The item is open while the root has its value, and gives the contract of a collapsible to its trigger and its panel.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/AccordionItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/part.ts",
+      "behavior": "What an item gives to its header, its trigger and its panel.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/header/AccordionHeader.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/AccordionHeader.vue",
+      "behavior": "The heading of an item.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/AccordionTrigger.vue",
+      "behavior": "The trigger of an item, with its id.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/AccordionPanel.vue",
+      "behavior": "The panel of an item, with its region and the defaults of the root.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/accordion/parts.ts",
+      "behavior": "The parts of the namespace `Accordion` and their namespace types.",
+      "witness": "packages/vue/src/accordion/Accordion.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/accordion/Accordion.spec.tsx",
+      "behavior": "The types of the generic value of the root and of the parts.",
+      "witness": "packages/vue/src/accordion/Accordion.spec.tsx"
     }
   ]
 }

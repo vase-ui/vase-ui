@@ -51,7 +51,7 @@ The return type describes the props, without listener keys. The listeners exist 
 In a development build, a part checks each Boolean prop for which an absent prop and `false` give different results. It makes the check one time, in `setup`. The part warns when it gets `false`, its wrapper declares that prop with no default, and the caller of the wrapper omits the prop:
 
 ```text
-Vase UI: <MyAccordionPanel> gives `keepMounted: false` to <Accordion.Panel>, but its caller did not set `keepMounted`. Vue sets an absent Boolean prop to `false`, so the part cannot use its default or the value of its parent. Give `keepMounted` the default `undefined` in <MyAccordionPanel>, or forward the props with `useForwardProps`.
+Vase UI: <MyMenubar> gives `modal: false` to <Menubar>, but its caller did not set `modal`. Vue sets an absent Boolean prop to `false`, so the part cannot use its default or the value of its parent. Give `modal` the default `undefined` in <MyMenubar>, or forward the props with `useForwardProps`.
 ```
 
 Each wrapper name, part and prop gets one message. A production bundle has no code for this check. [Wrap a part](/handbook/composition#wrap-a-part) lists the affected props and their behavior.

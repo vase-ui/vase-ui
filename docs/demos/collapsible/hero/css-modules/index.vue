@@ -24,12 +24,19 @@ const CaretRightIcon: FunctionalComponent = () =>
       Recovery keys
       <CaretRightIcon :class="styles.Icon" />
     </Collapsible.Trigger>
-    <Collapsible.Panel :class="styles.Panel">
-      <div :class="styles.Content">
-        <div>alien-bean-pasta</div>
-        <div>wild-irish-burrito</div>
-        <div>horse-battery-staple</div>
-      </div>
-    </Collapsible.Panel>
+    <Transition
+      :enter-from-class="styles.PanelClosed"
+      :enter-to-class="styles.PanelOpen"
+      :leave-from-class="styles.PanelOpen"
+      :leave-to-class="styles.PanelClosed"
+    >
+      <Collapsible.Panel :class="styles.Panel">
+        <div :class="styles.Content">
+          <div>alien-bean-pasta</div>
+          <div>wild-irish-burrito</div>
+          <div>horse-battery-staple</div>
+        </div>
+      </Collapsible.Panel>
+    </Transition>
   </Collapsible.Root>
 </template>

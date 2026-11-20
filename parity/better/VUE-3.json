@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/issues/5821",
     "https://github.com/vuejs/core/pull/13125"
   ],
-  "behavior": "With Vue 3.5.41 or later on the server, the server HTML of a closed panel with `hiddenUntilFound` has `hidden=\"until-found\"`. In Vue 3.6, the server writes it from 3.6.0-rc.3. A server with an earlier Vue writes a bare `hidden`, and the part writes `hidden=\"until-found\"` to the element at mount.",
+  "behavior": "With Vue 3.5.41 or later on the server, the server HTML of a closed panel with `hiddenUntilFound` has `hidden=\"until-found\"`. In Vue 3.6, the server writes it from 3.6.0-rc.3. A server with an earlier Vue writes a bare `hidden`, and find-in-page then finds the panel only after its first close.",
   "dueWith": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx"
 }

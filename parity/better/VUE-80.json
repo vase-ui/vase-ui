@@ -8,6 +8,6 @@
     "https://vuejs.org/api/composition-api-lifecycle.html#onserverprefetch",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/list/CompositeList.tsx#L188-L192"
   ],
-  "behavior": "An open `Collapsible.Trigger` or `Accordion.Trigger` names in `aria-controls` only a panel that is registered now, and an `Accordion.Panel` names in `aria-labelledby` only a trigger that is registered now. The three parts defer their server render, so the server HTML names the `id` prop of a panel or of a trigger, in each order of the two parts. With no such part, the attribute is absent. Base UI names a generated id until the first panel or trigger mounts. No element has that id in the server HTML of a part with an `id` prop, and in a root or an item that has no such part.",
+  "behavior": "An open `Collapsible.Trigger` or `Accordion.Trigger` names in `aria-controls` only a panel that is mounted now, and an `Accordion.Panel` names in `aria-labelledby` only a trigger that is mounted now. With no such part, the attribute is absent. In the server HTML, a part names only the part that comes before it, and the hydration gives the other name. Base UI names a generated id until the first panel or trigger mounts. No element has that id in the server HTML of a part with an `id` prop, and in a root or an item that has no such part.",
   "dueWith": "packages/react/src/collapsible/trigger/CollapsibleTrigger.tsx"
 }

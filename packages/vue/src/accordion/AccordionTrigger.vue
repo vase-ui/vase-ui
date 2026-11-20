@@ -23,14 +23,14 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const elementId = computed(() => givenId(props.id) ?? generatedId);
-const { disabled, elementProps: triggerProps } = useCollapsibleTrigger(item, {
+const { disabled: isDisabled, elementProps: triggerProps } = useCollapsibleTrigger(item, {
   element,
   disabled: () => props.disabled,
   as: () => props.as,
 });
 const state = computed<AccordionTriggerState>(() => ({
   ...item.state,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
 }));
 
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part

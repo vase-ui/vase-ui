@@ -37,10 +37,10 @@ const root = injectAccordionRoot();
 const attrs = useAttrs();
 const generatedValue = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const value = computed(() => props.value ?? generatedValue);
+const itemValue = computed(() => props.value ?? generatedValue);
 const state = computed<AccordionItemState>(() => ({
   value: root.value,
-  open: root.value.includes(value.value),
+  open: root.value.includes(itemValue.value),
   disabled: props.disabled || root.disabled,
 }));
 const panels = shallowReactive<CollapsiblePanelEntry[]>([]);
@@ -71,7 +71,7 @@ provide(accordionItemKey, {
   request(open, reason, event) {
     const details = createChangeEventDetails(reason, event);
     emit('openChange', open, details);
-    if (!details.isCanceled) root.change(value.value, open, details);
+    if (!details.isCanceled) root.change(itemValue.value, open, details);
   },
   addPanel(panel) {
     panels.push(panel);

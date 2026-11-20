@@ -20,14 +20,14 @@ defineSlots<{
 const collapsible = injectCollapsible();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const { disabled, elementProps: triggerProps } = useCollapsibleTrigger(collapsible, {
+const { disabled: isDisabled, elementProps: triggerProps } = useCollapsibleTrigger(collapsible, {
   element,
   disabled: () => props.disabled,
   as: () => props.as,
 });
 const state = computed<CollapsibleTriggerState>(() => ({
   open: collapsible.open,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
 }));
 
 defineExpose({ element });
