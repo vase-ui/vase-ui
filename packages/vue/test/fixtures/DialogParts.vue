@@ -29,6 +29,8 @@ defineProps({
   noPortal: Boolean,
   nested: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
   inTree: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
+  /** `scene.nested` set to `false` unmounts the dialog of `nested`. */
+  scene: { type: Object as PropType<{ nested?: boolean }>, default: () => ({}) },
 });
 const POPUP_STYLE = 'position: fixed; left: 200px; top: 100px';
 const rootPart = useTemplateRef('rootPart');
@@ -68,7 +70,7 @@ defineExpose({ root: rootPart, popup: popupPart });
             <input data-testid="field" aria-label="Field" />
             <button data-testid="button">Button</button>
             <Dialog.Close v-if="close" v-bind="close">Close</Dialog.Close>
-            <DialogNested v-if="nested" v-bind="nested" />
+            <DialogNested v-if="nested && scene.nested !== false" v-bind="nested" />
           </Dialog.Popup>
         </Dialog.Viewport>
         <Dialog.Popup
@@ -86,7 +88,7 @@ defineExpose({ root: rootPart, popup: popupPart });
           <input data-testid="field" aria-label="Field" />
           <button data-testid="button">Button</button>
           <Dialog.Close v-if="close" v-bind="close">Close</Dialog.Close>
-          <DialogNested v-if="nested" v-bind="nested" />
+          <DialogNested v-if="nested && scene.nested !== false" v-bind="nested" />
         </Dialog.Popup>
       </Dialog.Portal>
     </template>

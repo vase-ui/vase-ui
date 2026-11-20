@@ -10,6 +10,8 @@ import DialogPartAlone from '../../test/fixtures/DialogPartAlone.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
 import DialogRadioReturn from '../../test/fixtures/DialogRadioReturn.vue';
 import DialogSiblings from '../../test/fixtures/DialogSiblings.vue';
+import DialogStack from '../../test/fixtures/DialogStack.vue';
+import DialogTitles from '../../test/fixtures/DialogTitles.vue';
 import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
@@ -937,5 +939,335 @@ describe('the focus', () => {
     await closed('popup-1');
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(document.activeElement).toBe(document.body);
+  });
+});
+
+describe('nested dialogs', () => {
+  const nestedCount = (element: HTMLElement) => element.style.getPropertyValue('--nested-dialogs');
+
+  test('a dialog in another one is nested; the dialog below counts each dialog above it', async () => {
+    const { trigger } = await mountDialog({
+      root: { defaultOpen: true, modal: false },
+      viewport: {},
+      nested: { root: { modal: false }, viewport: {} },
+      inTree: { root: { modal: false } },
+    });
+    const element = await opened();
+    expect(element).not.toHaveAttribute('data-nested');
+    expect(element).not.toHaveAttribute('data-nested-dialog-open');
+    expect(nestedCount(element)).toBe('0');
+    await userEvent.click(document.querySelector<HTMLElement>('[data-testid="popup"] [data-key="nested"]')!);
+    const child = await opened('nested-popup');
+    expect(child).toHaveAttribute('data-nested');
+    expect(byTestId('nested-viewport')).toHaveAttribute('data-nested');
+    expect(element).toHaveAttribute('data-nested-dialog-open');
+    expect(byTestId('viewport')).toHaveAttribute('data-nested-dialog-open');
+    expect(nestedCount(element)).toBe('1');
+    expect(nestedCount(child)).toBe('0');
+    void trigger;
+  });
+
+  test('a child that was open before its parent does not count; a child that opens above it does', async () => {
+    const root = reactive<Props>({ open: false, modal: false });
+    await mountDialog({ root, inTree: { root: { defaultOpen: true, modal: false } } });
+    await opened('nested-popup');
+    root.open = true;
+    const element = await opened();
+    expect(nestedCount(element)).toBe('0');
+    expect(element).not.toHaveAttribute('data-nested-dialog-open');
+  });
+
+  test('counts the dialogs above it that are not in its tree, and those have no data-nested', async () => {
+    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    mount(DialogSiblings, { dialogs: [{ root: { modal: false } }, { root: { modal: false } }], scene });
+    const element = await opened('popup-0');
+    scene.open[1] = true;
+    const above = await opened('popup-1');
+    expect(element).toHaveAttribute('data-nested-dialog-open');
+    expect(nestedCount(element)).toBe('1');
+    expect(above).not.toHaveAttribute('data-nested');
+  });
+
+  test.each([
+    { alert: false, nestedAlert: true },
+    { alert: true, nestedAlert: false },
+  ])(
+    'an alert dialog and a dialog count each other: an alert root=$alert with an alert child=$nestedAlert',
+    async ({ alert, nestedAlert }) => {
+      await mountDialog({
+        alert,
+        root: { defaultOpen: true },
+        nested: { alert: nestedAlert, root: { defaultOpen: true } },
+      });
+      const element = await opened();
+      const child = await opened('nested-popup');
+      expect(child).toHaveAttribute('data-nested');
+      expect(child).toHaveAttribute('role', nestedAlert ? 'alertdialog' : 'dialog');
+      await waitFor(() => expect(nestedCount(element)).toBe('1'));
+    },
+  );
+
+  test('the backdrop of a nested dialog renders no element, unless it has forceRender', async () => {
+    await mountDialog({
+      root: { defaultOpen: true },
+      backdrop: {},
+      nested: { root: { defaultOpen: true }, backdrop: {} },
+    });
+    await opened('nested-popup');
+    expect(byTestId('backdrop')).not.toBe(null);
+    expect(byTestId('nested-backdrop')).toBe(null);
+    await mountDialog({
+      root: { defaultOpen: true },
+      nested: { root: { defaultOpen: true }, backdrop: { forceRender: true } },
+    });
+    await waitFor(() => expect(byTestId('nested-backdrop')).not.toBe(null));
+  });
+
+  test('Escape closes only the top dialog, also for a key press in the dialog below', async () => {
+    await mountDialog({
+      root: { defaultOpen: true, modal: false },
+      nested: { root: { defaultOpen: true, modal: false } },
+    });
+    const element = await opened();
+    await opened('nested-popup');
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await closed('nested-popup');
+    expect(popup()).not.toBe(null);
+    expect(nestedCount(element)).toBe('0');
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await closed();
+  });
+
+  test('a press outside both closes one dialog for each press, the top one first', async () => {
+    await mountDialog({
+      root: { defaultOpen: true, modal: false },
+      nested: { root: { defaultOpen: true, modal: false } },
+    });
+    await opened('nested-popup');
+    await press(byId('outside'));
+    await closed('nested-popup');
+    expect(popup()).not.toBe(null);
+    await press(byId('outside'));
+    await closed();
+  });
+
+  test('a child that unmounts while it is open does not count', async () => {
+    const scene = reactive({ nested: true });
+    await mountDialog({
+      root: { defaultOpen: true, modal: false },
+      nested: { root: { defaultOpen: true, modal: false } },
+      scene,
+    });
+    const element = await opened();
+    await opened('nested-popup');
+    expect(nestedCount(element)).toBe('1');
+    scene.nested = false;
+    await closed('nested-popup');
+    expect(nestedCount(element)).toBe('0');
+  });
+
+  test('of two roots open at the mount, the root in the tree of the other one is above it', async () => {
+    await mountDialog({
+      root: { defaultOpen: true },
+      inTree: { root: { defaultOpen: true } },
+    });
+    const element = await opened();
+    const child = await opened('nested-popup');
+    await waitFor(() => expect(inert(element)).toBe(true));
+    expect(inert(child)).toBe(false);
+    expect(element.compareDocumentPosition(child) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    await closed('nested-popup');
+    expect(popup()).not.toBe(null);
+  });
+});
+
+describe('the viewport, the backdrop and the leave', () => {
+  test('with keepMounted, the closed viewport, popup and backdrop stay with `hidden` and `inert`', async () => {
+    const root = reactive<Props>({ open: true });
+    await mountDialog({ root, portal: { keepMounted: true }, backdrop: {}, viewport: {} });
+    const element = await opened();
+    root.open = false;
+    await nextTick();
+    for (const part of [element, byTestId('viewport')!, byTestId('backdrop')!]) {
+      expect(part).toHaveAttribute('hidden');
+      expect(part).toHaveAttribute('inert');
+    }
+    root.open = true;
+    await nextTick();
+    for (const part of [element, byTestId('viewport')!, byTestId('backdrop')!]) {
+      expect(part).not.toHaveAttribute('hidden');
+      expect(part).not.toHaveAttribute('inert');
+    }
+  });
+
+  test('a popup in a <Transition> in the viewport gets its leave classes; the viewport and the backdrop stay inert while they leave, and a press reaches the page', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const log = new Set<string>();
+    mount(DialogInTransition, { root: { defaultOpen: true }, log });
+    const element = await opened();
+    const viewport = byTestId('viewport')!;
+    const backdrop = byTestId('backdrop')!;
+    await waitFor(() => expect(element.className).toBe(''));
+    const pressed: string[] = [];
+    byId('page').addEventListener('click', () => pressed.push('page'));
+    await userEvent.keyboard('{Escape}');
+    await nextTick();
+    expect(element.classList).toContain('pop-leave-active');
+    expect(backdrop.classList).toContain('fade-leave-active');
+    expect(viewport.isConnected).toBe(true);
+    expect(viewport).toHaveAttribute('inert');
+    expect(backdrop).toHaveAttribute('inert');
+    await press(byId('page'));
+    expect(pressed).toEqual(['page']);
+    await waitFor(() => expect(log.has('after-leave')).toBe(true));
+    await waitFor(() => expect(viewport.isConnected).toBe(false));
+  });
+
+  test('the viewport and the backdrop of a dialog under a modal dialog are inert until that dialog closes; a dialog that closes under it stays inert while it leaves', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const scene = reactive({ first: true, second: false });
+    mount(DialogStack, { scene });
+    await opened('first-popup');
+    const viewport = byTestId('first-viewport')!;
+    const backdrop = byTestId('first-backdrop')!;
+    scene.second = true;
+    await opened('second-popup');
+    await waitFor(() => expect(inert(viewport)).toBe(true));
+    expect(inert(backdrop)).toBe(true);
+    scene.second = false;
+    await closed('second-popup');
+    await waitFor(() => expect(inert(viewport)).toBe(false));
+    expect(inert(backdrop)).toBe(false);
+    scene.second = true;
+    await opened('second-popup');
+    await waitFor(() => expect(inert(viewport)).toBe(true));
+    scene.first = false;
+    await nextTick();
+    scene.second = false;
+    await closed('second-popup');
+    await nextTick();
+    expect(byTestId('first-popup')!.classList).toContain('stack-leave-active');
+    expect(viewport).toHaveAttribute('inert');
+    expect(backdrop).toHaveAttribute('inert');
+  });
+});
+
+describe('the portal', () => {
+  test('VUE-128: a disabled portal of a dialog that is not modal renders the popup in place with no sentinels, and Tab follows the order of the document', async () => {
+    const { trigger } = await mountDialog({ root: { modal: false }, portal: { disabled: true } });
+    await userEvent.click(trigger());
+    const element = await opened();
+    expect(trigger().nextElementSibling).toBe(element);
+    expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Tab}{Tab}');
+    expect(byId('after')).toHaveFocus();
+    await closed();
+  });
+
+  test('VUE-128: a disabled portal of a modal dialog keeps the focus in the popup; a change of modal while open applies; Escape closes', async () => {
+    const root = reactive<Props>({ defaultOpen: true, modal: false });
+    const { trigger } = await mountDialog({ root, portal: { disabled: true } });
+    const element = await opened();
+    expect(trigger().nextElementSibling).toBe(element);
+    root.modal = true;
+    await waitFor(() => expect(block()).toBe(null));
+    await waitFor(() => expect(document.querySelectorAll('[role="presentation"]').length).toBe(1));
+    byTestId('button')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(byTestId('field')).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+  });
+
+  test('`to` puts the content in a container; `null` renders nothing', async () => {
+    const container = append('div');
+    const portal = reactive<Props>({ to: container });
+    await mountDialog({ root: { defaultOpen: true }, portal });
+    const element = await opened();
+    expect(container.contains(element)).toBe(true);
+    portal.to = null;
+    await closed();
+  });
+});
+
+describe('the title, the description, the close and the trigger', () => {
+  test('the popup is named by its title and described by its description; an attribute of the developer wins', async () => {
+    const popupProps = reactive<Props>({});
+    mount(DialogTitles, { scene: { titles: ['a'] }, popup: popupProps });
+    const element = await opened();
+    expect(element).toHaveAttribute('aria-labelledby', byTestId('title-a')!.id);
+    expect(element).toHaveAttribute('aria-describedby', byTestId('description-a')!.id);
+    popupProps['aria-labelledby'] = 'mine';
+    await nextTick();
+    expect(element).toHaveAttribute('aria-labelledby', 'mine');
+  });
+
+  test('VUE-45: the popup names the title that mounted last, then the one that stays; a new title replaces the old one', async () => {
+    const scene = reactive({ titles: ['a'] });
+    mount(DialogTitles, { scene });
+    const element = await opened();
+    scene.titles.push('b');
+    await nextTick();
+    expect(element).toHaveAttribute('aria-labelledby', byTestId('title-b')!.id);
+    expect(element).toHaveAttribute('aria-describedby', byTestId('description-b')!.id);
+    scene.titles.splice(1, 1);
+    await nextTick();
+    expect(element).toHaveAttribute('aria-labelledby', byTestId('title-a')!.id);
+    expect(element).toHaveAttribute('aria-describedby', byTestId('description-a')!.id);
+    scene.titles.splice(0, 1, 'c');
+    await nextTick();
+    expect(element).toHaveAttribute('aria-labelledby', byTestId('title-c')!.id);
+    scene.titles.splice(0, 1);
+    await nextTick();
+    expect(element).not.toHaveAttribute('aria-labelledby');
+    expect(element).not.toHaveAttribute('aria-describedby');
+  });
+
+  test('a disabled Close closes nothing; a Close of a closed dialog that leaves emits nothing', async () => {
+    const log: string[] = [];
+    const close = reactive<Props>({ disabled: true, 'data-testid': 'close' });
+    await mountDialog({ root: rootEvents(log, { defaultOpen: true }), close });
+    await opened();
+    await userEvent.click(byTestId('close')!, { force: true });
+    expect(popup()).not.toBe(null);
+    expect(byTestId('close')).toBeDisabled();
+    close.disabled = false;
+    await nextTick();
+    const button = byTestId('close')!;
+    await userEvent.click(button);
+    await closed();
+    button.click();
+    expect(log).toEqual(['openChange false close-press', 'update false']);
+  });
+
+  test('a disabled trigger and a trigger in a disabled fieldset open nothing; Enter and Space open a trigger that is not a button', async () => {
+    const { trigger } = await mountDialog({
+      root: { modal: false },
+      triggers: [
+        { key: 'disabled', attrs: { disabled: true } },
+        { key: 'span', attrs: { as: 'span' } },
+      ],
+    });
+    await userEvent.click(trigger('disabled'), { force: true });
+    await nextTick();
+    expect(popup()).toBe(null);
+    expect(trigger('disabled')).toBeDisabled();
+    trigger('span').focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    trigger('span').focus();
+    await userEvent.keyboard(' ');
+    await opened();
+  });
+
+  test('VUE-73: aria-controls names the popup only while it is in the document', async () => {
+    const { trigger } = await mountDialog({ root: { defaultOpen: true }, noPopup: true });
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger()).not.toHaveAttribute('aria-controls');
   });
 });

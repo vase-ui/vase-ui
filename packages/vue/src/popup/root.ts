@@ -59,13 +59,13 @@ export interface PopupRoot<Payload = unknown> {
   readonly payload: Payload | undefined;
   /** The popup element, while it is in the document. */
   readonly popup: HTMLElement | null;
-  /** The sentinels and the fixed element of the portal, while they are in the document. */
+  /** The sentinels, the fixed element and the viewport, while they are in the document. */
   readonly portalElements: readonly Element[];
   /** The elements of the popup and the backdrop, while they are in the document. */
   readonly parts: readonly Element[];
-  /** The `id` of the last mounted title. */
+  /** The `id` of the mounted title that mounted last. */
   readonly titleId: string | undefined;
-  /** The `id` of the last mounted description. */
+  /** The `id` of the mounted description that mounted last. */
   readonly descriptionId: string | undefined;
   /**
    * The number of close requests: each accepted close that no hover made, and each close of a
@@ -237,9 +237,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const triggers = shallowReactive<PopupTrigger[]>([]);
   const leavingElements = shallowReactive<(() => Element | null)[]>([]);
   const portalElements = shallowReactive<(() => Element | null)[]>([]);
-  const labels = shallowReactive<Partial<Record<'title' | 'description', { readonly id: string }>>>(
-    {},
-  );
+  // The popup names the last mounted title and description. When it unmounts, the one before it.
+  const labels = {
+    title: shallowReactive<{ readonly id: string }[]>([]),
+    description: shallowReactive<{ readonly id: string }[]>([]),
+  };
   const popup = shallowRef<HTMLElement | null>(null);
   const keepMounted = shallowRef(false);
   const leaving = shallowRef(false);
@@ -402,10 +404,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
         .filter((element): element is Element => !!element);
     },
     get titleId() {
-      return labels.title?.id;
+      return labels.title.at(-1)?.id;
     },
     get descriptionId() {
-      return labels.description?.id;
+      return labels.description.at(-1)?.id;
     },
     get closeRequests() {
       return closeRequests.value;
@@ -429,13 +431,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
     addLeaving: (element) => add(leavingElements, element),
     addPortalElement: (element) => add(portalElements, element),
-    addLabel(kind, label) {
-      labels[kind] = label;
-      // A template can mount the new title before it unmounts the old one (CONTRIBUTING.md).
-      return () => {
-        if (labels[kind] === label) labels[kind] = undefined;
-      };
-    },
+    addLabel: (kind, label) => add(labels[kind], label),
   };
 
   onMounted(() => onScopeDispose(trackPointerType(ownerDocument(null))));
