@@ -1,8 +1,10 @@
 import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { FieldState } from '../field/control';
+import type { AsProps } from '../common/element';
 
-export interface RadioGroupProps<Value = any> extends /* @vue-ignore */ HTMLAttributes {
+export interface RadioGroupProps<Value = any>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   modelValue?: Value;
   defaultValue?: Value;
   name?: string;

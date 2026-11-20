@@ -4,10 +4,11 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 
 <template>
   <div>
-    <label for="verification-code">Verification code</label>
+    <label id="verification-code-label" for="verification-code">Verification code</label>
     <OTPField.Root
       id="verification-code"
       :length="6"
+      aria-labelledby="verification-code-label"
       aria-describedby="verification-code-description"
     >
       <OTPField.Input />

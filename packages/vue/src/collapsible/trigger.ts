@@ -1,5 +1,6 @@
-import { useSlots, type Ref } from 'vue';
+import type { Ref } from 'vue';
 import { useButton } from '../common/button';
+import { useAsTag } from '../common/element';
 import type { CollapsiblePart } from './part';
 
 /** The behavior of `Collapsible.Trigger` and `Accordion.Trigger`. */
@@ -12,16 +13,10 @@ export function useCollapsibleTrigger(
     as: () => unknown;
   },
 ) {
-  const slots = useSlots();
   const button = useButton({
     element: options.element,
     disabled: () => options.disabled() || part.disabled,
-    // A tag in `as` is known at the render. The element of a component or of the `element` slot,
-    // which wins over `as`, is known after the mount.
-    tag: () => {
-      const as = options.as();
-      return typeof as === 'string' && !slots.element ? as : undefined;
-    },
+    tag: useAsTag(options.as),
     type: 'button',
   });
 

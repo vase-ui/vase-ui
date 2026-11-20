@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NumberField } from '@vase-ui/vue/number-field';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Popover } from '@vase-ui/vue/popover';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
@@ -42,17 +42,17 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
     ]);
   });
 
-  it('opens a tooltip around a number field input whose focusin listener calls it', async () => {
+  it('opens a tooltip around a combobox input whose focusin listener calls it', async () => {
     const onTooltipOpenChange = vi.fn();
     const { user } = await render(
       <Tooltip.Root onOpenChange={onTooltipOpenChange}>
         <Tooltip.Trigger as="div" delay={0}>
-          <NumberField.Root defaultValue={1}>
-            <NumberField.Input
+          <Combobox.Root>
+            <Combobox.Input
               aria-label="Amount"
               onFocusin={(event) => event.preventVaseUIHandler()}
             />
-          </NumberField.Root>
+          </Combobox.Root>
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner>
@@ -63,7 +63,7 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
     );
 
     await user.keyboard('[Tab]');
-    expect(screen.getByRole('textbox', { name: 'Amount' })).toHaveFocus();
+    expect(screen.getByRole('combobox', { name: 'Amount' })).toHaveFocus();
 
     await waitFor(() => {
       expect(onTooltipOpenChange.mock.calls.map((call) => call[0])).toEqual([true]);

@@ -1,2 +1,8 @@
 export * as Meter from './parts';
-export type { MeterLabelProps, MeterRootProps } from './types';
+export type {
+  MeterIndicatorProps,
+  MeterLabelProps,
+  MeterRootProps,
+  MeterTrackProps,
+  MeterValueProps,
+} from './types';

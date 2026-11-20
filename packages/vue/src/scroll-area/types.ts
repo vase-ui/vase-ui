@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 
-export interface ScrollAreaRootProps extends /* @vue-ignore */ HTMLAttributes {
+export interface ScrollAreaRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The distance in pixels from an edge within which the edge has no overflow state. A number is for
    * each edge. A missing or negative number is `0`.
@@ -30,7 +31,8 @@ export interface ScrollAreaRootState {
 export type ScrollAreaViewportState = ScrollAreaRootState;
 export type ScrollAreaContentState = ScrollAreaRootState;
 
-export interface ScrollAreaScrollbarProps extends /* @vue-ignore */ HTMLAttributes {
+export interface ScrollAreaScrollbarProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The axis that the scrollbar scrolls.
    * @default 'vertical'
@@ -54,3 +56,15 @@ export interface ScrollAreaThumbState {
   scrolling: boolean;
   orientation: 'vertical' | 'horizontal';
 }
+
+export interface ScrollAreaViewportProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaContentProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaThumbProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaCornerProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}

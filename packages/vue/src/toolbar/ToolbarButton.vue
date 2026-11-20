@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { injectToolbar, useToolbarItem } from './item';
 import type { ToolbarButtonProps, ToolbarButtonState } from './types';
 
@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<ToolbarButtonProps>(), {
   disabled: false,
   focusableWhenDisabled: true,
 });
-const slots = defineSlots<{
+defineSlots<{
   default?(scope: { state: ToolbarButtonState }): unknown;
   element?(scope: {
     props: Record<string, unknown>;
@@ -28,7 +28,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   disabled: () => toolbar.disabled || props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',
-  tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
+  tag: useAsTag(() => props.as),
 });
 const tabindex = useToolbarItem(toolbar, element, {
   disabled: () => isDisabled.value,

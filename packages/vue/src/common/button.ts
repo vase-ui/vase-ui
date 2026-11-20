@@ -24,7 +24,7 @@ export function useButton(options: {
 }) {
   const tag = () => options.tag?.() ?? 'button';
   const isNative = computed(() =>
-    options.element.value ? isNativeButton(options.element.value) : tag() === 'button',
+    options.element.value ? isNativeButton(options.element.value) : isNativeTag(tag()),
   );
   const inDisabledFieldset = useInDisabledFieldset(options.element);
   const disabledByFieldset = computed(() => isNative.value && inDisabledFieldset.value);
@@ -107,6 +107,11 @@ function isNativeButton(element: Element) {
     element.localName === 'input' &&
     ['button', 'submit', 'reset', 'image'].includes((element as HTMLInputElement).type)
   );
+}
+
+/** The tag of a native button. The part reads the `type` of an `<input>` at the mount. */
+function isNativeTag(tag: string) {
+  return tag === 'button' || tag === 'input';
 }
 
 function isLink(element: Element) {

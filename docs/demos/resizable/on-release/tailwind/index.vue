@@ -15,7 +15,7 @@ import { Resizable } from '@vase-ui/vue/resizable';
     </Resizable.Panel>
     <Resizable.Handle
       aria-label="Resize the navigation"
-      class="w-px flex-none cursor-col-resize bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-at-max:cursor-w-resize data-at-min:cursor-e-resize data-at-min:data-at-max:cursor-default after:absolute after:inset-0 after:hidden after:translate-x-(--resizable-handle-preview-offset) after:bg-neutral-950 data-dragging:after:block dark:after:bg-white data-disabled:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
+      class="w-px flex-none cursor-col-resize pointer-coarse:[--resizable-handle-hit-area-size:24px] bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-at-max:cursor-w-resize data-at-min:cursor-e-resize data-at-min:data-at-max:cursor-default after:absolute after:inset-0 after:hidden after:translate-x-(--resizable-handle-preview-offset) after:bg-neutral-950 data-dragging:after:block dark:after:bg-white aria-disabled:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
     />
     <Resizable.Panel id="editor" class="box-border overflow-hidden p-4">
       <p class="text-sm font-medium text-neutral-950 dark:text-white">Editor</p>

@@ -74,4 +74,16 @@ describe('server render and hydration', () => {
     expect(root.querySelector('[role=separator]')).toBe(separator);
     expect(separator).toHaveAttribute('aria-orientation', 'vertical');
   });
+
+  test('a separator in an <hr>, which has no content, hydrates', async () => {
+    const props = {
+      items: [{ key: 'a' }, { key: 'line', kind: 'separator', attrs: { as: 'hr' } }],
+    };
+    const root = await renderOnServer('ToolbarParts', props);
+    const separator = root.querySelector('#line')!;
+    expect(separator.localName).toBe('hr');
+    hydrate(ToolbarParts, props, root);
+    await settle();
+    expect(root.querySelector('#line')).toBe(separator);
+  });
 });

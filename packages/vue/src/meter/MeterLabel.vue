@@ -41,6 +41,9 @@ function elementProps() {
 
 <template>
   <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot />
+  </component>
   <span v-else v-bind="elementProps()" :ref="setElement">
     <slot />
   </span>

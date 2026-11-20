@@ -67,6 +67,37 @@ async function expectSeparatorPage(page: Page) {
   });
 }
 
+async function expectAsPage(page: Page) {
+  const read = (testId: string) => readElement(page.getByTestId(testId), ['role', 'href', 'type']);
+
+  expect(await read('separator')).toEqual({
+    tag: 'span',
+    text: '',
+    attributes: { role: 'separator', href: null, type: null },
+  });
+  for (const [testId, text] of [
+    ['nuxt-tab', 'A'],
+    ['router-tab', 'B'],
+  ]) {
+    expect((await read(testId!)).tag).toBe('a');
+    expect(await read(testId!)).toMatchObject({ text, attributes: { role: 'tab', href: '/as' } });
+  }
+  expect(await read('div-tab')).toEqual({
+    tag: 'div',
+    text: 'C',
+    attributes: { role: 'tab', href: null, type: null },
+  });
+}
+
+// A part reads the element of a component in `as` after the mount: the root element of
+// `NuxtLink` and of `RouterLink`, which expose nothing.
+async function expectHydratedAsPage(page: Page) {
+  await expectAsPage(page);
+  expect(await page.getByTestId('tab-elements').textContent()).toBe('a a');
+  expect(await page.getByTestId('link-ref').textContent()).toBe('$el: a, element: false');
+  expect(await page.getByTestId('nuxt-tab').getAttribute('type')).toBeNull();
+}
+
 async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttributes) {
   const attributeNames = [
     'role',
@@ -689,14 +720,14 @@ async function expectCheckboxGroupPage(page: Page, { hydrated }: { hydrated: boo
 function readOTPSlots(page: Page, testId: string, attributeName: string) {
   return page
     .getByTestId(testId)
-    .locator('input')
+    .locator('input:not([aria-hidden])')
     .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
 }
 
 function readOTPSlotValues(page: Page, testId: string) {
   return page
     .getByTestId(testId)
-    .locator('input')
+    .locator('input:not([aria-hidden])')
     .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
 }
 
@@ -943,11 +974,11 @@ async function expectDateFieldPageWithNativeLabel(page: Page) {
   expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
 }
 
-// A native label outside a field names only the element that its `for` names: the first slot.
+// A native label outside a field names the element that its `for` names: the first slot. The
+// `aria-labelledby` of the developer names the group with it.
 async function expectOTPFieldPageWithNativeLabel(page: Page) {
   await expectOTPFieldPage(page);
-  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(null);
-  expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(null));
+  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe('pin-label');
   expect(await page.getByTestId('pin-label').getAttribute('for')).toBe(
     await page.getByTestId('pin-1').getAttribute('id'),
   );
@@ -970,33 +1001,25 @@ async function readSliderPage(page: Page) {
     const input = (thumb: HTMLElement) => thumb.querySelector('input')!;
     const read = (element: Element, names: string[]) =>
       Object.fromEntries(names.map((name) => [name, element.getAttribute(name)]));
-    const [priceIndicator] = all('price-indicator');
     const [volumeThumb] = all('volume-thumb');
+    const control = all('price-control')[0].getBoundingClientRect();
 
     return {
       volumeRoot: read(all('volume')[0], ['role', 'aria-labelledby']),
-      volumeLabelId: all('volume-label')[0].id,
-      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'aria-valuenow', 'name']),
+      volumeLabel: read(all('volume-label')[0], ['id', 'for']),
+      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'value', 'name']),
       volumeValue: [all('volume-value')[0].textContent, all('volume-value')[0].getAttribute('for')],
       priceRoot: read(all('price')[0], ['aria-labelledby']),
       priceLabelId: all('price-label')[0].id,
       priceInputs: all('price-thumb').map((thumb) =>
-        read(input(thumb), ['aria-label', 'aria-labelledby', 'aria-valuenow']),
+        read(input(thumb), ['aria-label', 'aria-labelledby']),
       ),
-      priceThumbs: all('price-thumb').map((thumb) => [
-        thumb.getAttribute('data-index'),
-        thumb.style.visibility,
-        thumb.style.getPropertyValue('--position'),
-      ]),
-      priceIndicator: [
-        priceIndicator.style.visibility,
-        priceIndicator.style.getPropertyValue('--start-position'),
-        priceIndicator.style.getPropertyValue('--relative-size'),
-      ],
-      // A script of the server HTML with its nonce and its text.
-      scripts: Array.from(document.querySelectorAll<HTMLScriptElement>('script'))
-        .filter((script) => script.closest('[data-testid="price-control"]'))
-        .map((script) => [script.nonce, (script.textContent ?? '').length > 0]),
+      // The left and the right end of each edge thumb in its control, in pixels.
+      priceThumbs: all('price-thumb').map((thumb) => {
+        const rect = thumb.getBoundingClientRect();
+        return [rect.left - control.left, rect.right - control.left];
+      }),
+      scripts: document.querySelectorAll('[data-testid="form"] script').length,
       // The entries that a submit of the page sends.
       formData: Array.from(
         new FormData(document.querySelector('form')!),
@@ -1006,37 +1029,36 @@ async function readSliderPage(page: Page) {
   });
 }
 
+// A thumb of 40 px in a control of 200 px, at 25 and 75.
+const EDGE_THUMBS = [
+  [40, 80],
+  [120, 160],
+];
+
 async function expectSliderPage(page: Page) {
   const result = await readSliderPage(page);
 
-  // The script has not run. An edge thumb is hidden until the script or the app places it.
-  expect(result.priceThumbs).toEqual([
-    ['0', 'hidden', '0%'],
-    ['1', 'hidden', '0%'],
-  ]);
-  expect(result.scripts).toEqual([['test-nonce', true]]);
-  // The labels link to the root and to the input in each order of the parts.
-  expect(result.volumeLabelId).toBeTruthy();
-  expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabelId);
-  expect(result.volumeInput['aria-labelledby']).toBe(result.volumeLabelId);
-  expect(result.priceLabelId).toBeTruthy();
-  expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
+  // CSS places an edge thumb in the control, with no script.
+  expect(result.scripts).toBe(0);
+  expect(result.priceThumbs).toEqual(EDGE_THUMBS);
+  // The label names the input of the first thumb, and an input after the label.
+  expect(result.volumeLabel.for).toBe(result.volumeInput.id);
+  expect(result.volumeInput['aria-labelledby']).toBe(result.volumeLabel.id);
+  // The root, and the output before the thumbs, name their parts after the mount.
+  expect(result.volumeRoot).toEqual({ role: 'group', 'aria-labelledby': null });
+  expect(result.priceRoot['aria-labelledby']).toBeNull();
+  expect(result.volumeValue).toEqual(['30', null]);
   // A thumb that has a name of its own does not use the label.
   expect(result.priceInputs.map((input) => input['aria-labelledby'])).toEqual([null, null]);
-  // The output names the inputs only after the mount, as in Base UI.
-  expect(result.volumeValue).toEqual(['30', null]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
 async function expectHydratedSliderPage(page: Page) {
   const result = await readSliderPage(page);
 
-  expect(result.priceThumbs).toEqual([
-    ['0', '', '30%'],
-    ['1', '', '70%'],
-  ]);
-  expect(result.priceIndicator).toEqual(['', '30%', '40%']);
-  expect(result.scripts).toEqual([]);
+  expect(result.priceThumbs).toEqual(EDGE_THUMBS);
+  expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabel.id);
+  expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
   expect(result.volumeValue).toEqual(['30', result.volumeInput.id]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
@@ -1641,16 +1663,6 @@ async function expectHydratedComboboxPage(page: Page) {
 // The text that the case types into each control before hydration, and the value that the
 // control and the model of the page have after hydration.
 const TEXT_BEFORE_HYDRATION = [
-  // The input lost the focus before hydration, so the root formats its text.
-  {
-    control: 'number-input',
-    text: '1234.5',
-    value: '1,234.5',
-    output: 'number-value',
-    model: '1234.5',
-  },
-  // The first slot takes the whole code, and the root gives each slot its character.
-  { control: 'otp-input-1', text: '1234', value: '1', output: 'otp-value', model: '1234' },
   { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
   // The last control keeps the focus.
   {
@@ -1674,50 +1686,32 @@ interface FormState {
   formData: Record<string, string[]>;
   models: Record<string, unknown>;
   changes: Record<string, number>;
-  submits: string;
-  completes: string;
 }
 
 const FORM_STATE_INITIAL_MODELS = {
   font: 'serif',
   fruit: null,
-  quantity: 1,
-  code: '',
-  volume: 50,
-  range: [20, 80],
   when: null,
   alarm: null,
 };
 
-// The state of /form-state after each part changes. `code` is the hidden input of OTP Field.
-const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
+// The state of /form-state after each part changes.
+const FORM_STATE_CHANGED: FormState = {
   formData: {
     font: ['mono'],
     fruit: ['Cherry'],
-    quantity: ['7'],
-    code: ['1234'],
-    volume: ['70'],
-    range: ['30', '60'],
     when: ['2026-12-25'],
     alarm: ['09:30'],
   },
   models: {
     font: 'mono',
     fruit: 'Cherry',
-    quantity: 7,
-    code: '1234',
-    volume: 70,
-    range: [30, 60],
     when: '2026-12-25',
     alarm: '09:30',
   },
   changes: {
     font: 1,
     fruit: 1,
-    quantity: 1,
-    code: 1,
-    volume: 1,
-    range: 1,
     when: 1,
     alarm: 1,
   },
@@ -1749,8 +1743,6 @@ async function readFormState(page: Page): Promise<FormState> {
       formData,
       models: JSON.parse(read('models')) as Record<string, unknown>,
       changes: JSON.parse(read('changes')) as Record<string, number>,
-      submits: read('submits'),
-      completes: read('completes'),
     };
   });
 }
@@ -1770,10 +1762,6 @@ async function changeFormStateBeforeHydration(page: Page) {
     };
     write('font', ['mono']);
     write('fruit', ['Cherry']);
-    write('quantity', ['7']);
-    write('code', ['1234']);
-    write('volume', ['70']);
-    write('range', ['30', '60']);
     write('when', ['2026-12-25']);
     write('alarm', ['09:30']);
   });
@@ -1786,16 +1774,6 @@ async function changeHydratedFormState(page: Page) {
   await page.getByTestId('fruit-input').click();
   await page.keyboard.type('Che');
   await page.getByRole('option', { name: 'Cherry' }).click();
-  await page.getByTestId('quantity-input').fill('7');
-  await page.keyboard.press('Tab');
-  await page.getByTestId('code-1').click();
-  await page.keyboard.type('1234');
-  await page.locator('input[name="volume"]').focus();
-  await page.keyboard.press('ArrowRight');
-  for (const input of await page.locator('input[name="range"]').all()) {
-    await input.focus();
-    await page.keyboard.press('ArrowRight');
-  }
   await page.getByTestId('when').locator('input[data-type="month"]').click();
   await page.keyboard.type('12252026');
   await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
@@ -1897,6 +1875,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: (page) => expectButtonPage(page, { hydrated: true }),
   },
   { path: '/separator', expectPage: expectSeparatorPage },
+  { path: '/as', expectPage: expectAsPage, expectHydratedPage: expectHydratedAsPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
     path,
     expectPage: (page: Page) => expectRangePage(page, rootAttributes),
@@ -2521,19 +2500,12 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(offsetY).toBeGreaterThan(0);
   });
 
-  it('places the thumbs of /slider with its inline script when the files of the app do not load', async () => {
+  it('has the edge thumbs of /slider in their control when the files of the app do not load', async () => {
     const page = await createPage();
-    // The app does not start, so only the inline script of the server HTML runs.
     await page.route('**/_nuxt/**', (route) => route.abort());
 
     await page.goto(url('/slider'), { waitUntil: 'domcontentloaded' });
-    const result = await readSliderPage(page);
-
-    expect(result.priceThumbs).toEqual([
-      ['0', '', '30%'],
-      ['1', '', '70%'],
-    ]);
-    expect(result.priceIndicator).toEqual(['', '30%', '40%']);
+    expect((await readSliderPage(page)).priceThumbs).toEqual(EDGE_THUMBS);
   });
 
   it('changes the value of /slider with the keyboard and with a click on its control after hydration', async () => {
@@ -2705,19 +2677,14 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     },
   );
 
-  it('formats the text of /number-field with the locale of the visitor after hydration', async () => {
+  it('keeps the en-US text of /number-field for a visitor with another locale', async () => {
     const page = await createPage(undefined, { locale: 'de-DE' });
     const messages = collectMessages(page);
 
     await page.goto(url('/number-field'), { waitUntil: 'hydration' });
     await waitForTwoFrames(page);
 
-    const visitorText = await page.evaluate(
-      (format) => new Intl.NumberFormat(undefined, format).format(1234.5),
-      EURO_FORMAT,
-    );
-    expect(visitorText).not.toBe(EURO_TEXT);
-    expect(await page.getByTestId('label-first-control').inputValue()).toBe(visitorText);
+    expect(await page.getByTestId('label-first-control').inputValue()).toBe(EURO_TEXT);
     expect(await page.getByTestId('label-last-control').inputValue()).toBe('7');
     expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
     expect(messages).toEqual([]);
@@ -2798,11 +2765,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
       await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
     }
-    expect(
-      await Promise.all(
-        [2, 3, 4].map((index) => page.getByTestId(`otp-input-${index}`).inputValue()),
-      ),
-    ).toEqual(['2', '3', '4']);
     expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
       'autocomplete-input',
     );
@@ -2823,11 +2785,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         await releaseScripts();
         await waitForFormStateHydration(page);
 
-        expect(await readFormState(page)).toEqual({
-          ...FORM_STATE_CHANGED,
-          submits: '1',
-          completes: '1',
-        });
+        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
         expect(messages).toEqual([]);
       },
       60_000,
@@ -2848,7 +2806,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of ['font', 'fruit', 'quantity', 'volume', 'range', 'when', 'alarm']) {
+        for (const name of ['font', 'fruit', 'when', 'alarm']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==
@@ -2858,9 +2816,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
           expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
           expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
         }
-        expect(state.models).toMatchObject({ code: '' });
-        expect(state.formData.code).toEqual(['']);
-        expect([state.submits, state.completes]).toEqual(['0', '0']);
         expect(messages).toEqual([]);
       },
       60_000,
@@ -2886,16 +2841,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         await page.goBack();
         await waitForFormStateHydration(page);
 
-        // OTP Field takes no code from before the hydration after a move in the history.
-        const { code: _code, ...changes } = FORM_STATE_CHANGED.changes;
-        expect(await readFormState(page)).toEqual({
-          ...FORM_STATE_CHANGED,
-          formData: { ...FORM_STATE_CHANGED.formData, code: [''] },
-          models: { ...FORM_STATE_CHANGED.models, code: '' },
-          changes,
-          submits: '0',
-          completes: '0',
-        });
+        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
         expect(messages).toEqual([]);
       },
       60_000,

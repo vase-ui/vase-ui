@@ -1,4 +1,5 @@
 import type { FieldsetHTMLAttributes, HTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 export interface FieldsetRootProps extends /* @vue-ignore */ Omit<
   FieldsetHTMLAttributes,
   'disabled'
@@ -11,6 +12,7 @@ export interface FieldsetRootState {
   disabled: boolean;
 }
 
-export interface FieldsetLegendProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface FieldsetLegendProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
 }

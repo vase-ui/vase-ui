@@ -7,7 +7,7 @@ import styles from './index.module.css';
 <template>
   <div dir="rtl">
     <DirectionProvider direction="rtl">
-      <Slider.Root :default-value="25">
+      <Slider.Root :default-value="25" dir="rtl">
         <Slider.Control :class="styles.Control">
           <Slider.Track :class="styles.Track">
             <Slider.Indicator :class="styles.Indicator" />

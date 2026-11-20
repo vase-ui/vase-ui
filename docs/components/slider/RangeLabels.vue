@@ -8,8 +8,8 @@ import { Slider } from '@vase-ui/vue/slider';
     <Slider.Control>
       <Slider.Track>
         <Slider.Indicator />
-        <Slider.Thumb :index="0" aria-label="Minimum price" />
-        <Slider.Thumb :index="1" aria-label="Maximum price" />
+        <Slider.Thumb aria-label="Minimum price" />
+        <Slider.Thumb aria-label="Maximum price" />
       </Slider.Track>
     </Slider.Control>
   </Slider.Root>

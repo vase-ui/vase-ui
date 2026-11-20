@@ -6,242 +6,335 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/slider/control/SliderControlDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/indicator/SliderIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/SliderThumbDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrackDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValueDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/prehydrationScript.min.ts",
+      "kind": "not-applicable",
+      "reason": "`thumbAlignment=\"edge\"` places each thumb with CSS: `translate` takes a percent of the size of the thumb. The server HTML has each thumb in the control with no script."
+    },
+    {
       "upstream": "packages/react/src/slider/thumb/prehydrationScript.template.js",
       "kind": "not-applicable",
-      "reason": "Vase UI keeps its prehydration script in `thumb/prehydrationScript.min.ts`. Slider.Thumb renders that script through its children component."
+      "reason": "`thumbAlignment=\"edge\"` places each thumb with CSS: `translate` takes a percent of the size of the thumb. The server HTML has each thumb in the control with no script."
     },
     {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "server-side rendering"],
-      "title": "does not link Slider.Label before hydration",
+      "upstream": "packages/react/src/slider/utils/test-utils.ts",
+      "kind": "not-applicable",
+      "reason": "The helper makes touch events. The slider has no touch listener: a touch drag gives pointer events, and `touch-action: none` on the control keeps them. `test/pointer.ts` drags a real touch in Chromium."
+    },
+    {
+      "upstream": "packages/react/src/slider/control/SliderControl.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/slider/root/SliderRoot.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case asserts that the server HTML has no `aria-labelledby` on the root and on the input of the thumb. Vase UI has both attributes on the server. The root assumes its label until it is mounted. The thumb defers its render. Its input then has the id of the label, with the label before or after the control. The case \"VUE-29: links the label to the root and to the input of each thumb, with the label $name\" asserts the server HTML."
+      "test": "packages/vue/src/slider/Slider.pointer.test.ts",
+      "reason": "`Slider.pointer.test.ts` tests the press and the drag with pointer events and capture: the nearest thumb, the thumbs at `max`, the least distance, a value area of 0, the end of a press, a second pointer, and a disabled or removed control. The touch rows go: the slider has no touch listener, and `touch-action: none` keeps a touch drag. The rows of a range that the parent edits during a drag go: each move starts from the values that the slider shows. One row stays: a parent removes a value during a drag."
     },
     {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "prop: disabled"],
-      "title": "explicitly blurs the focused thumb when disabled",
+      "upstream": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
-      "reason": "Base UI runs the case only in jsdom, and it asserts a call of `blur()` with a spy. A browser can move focus before the root calls `blur()`. The case \"does not keep the focus on a thumb that becomes disabled\" asserts the result in each engine: the thumb does not keep the focus."
+      "test": "packages/vue/src/slider/Slider.pointer.test.ts",
+      "reason": "`Slider.pointer.test.ts` tests the indicator of `thumbAlignment=\"edge\"`: each end is at the centre of its thumb. `Slider.test.ts` tests the inline style and the state attributes. The rows of `--start-position`, `--relative-size` and `visibility` go: no part sets them."
     },
     {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "prop: onValueChange"],
-      "title": "should pass \"name\" and \"value\" as part of the event.target for onValueChange",
+      "upstream": "packages/react/src/slider/label/SliderLabel.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/slider/root/SliderRoot.test.tsx",
-      "reason": "VUE-147 keeps the original event. The case with the same title checks its identity, the value argument and the input name."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Thumb",
-      "prop": "aria-valuetext",
-      "kind": "not-applicable",
-      "reason": "The part declares this prop as `ariaValuetext`, because Vue gives the attribute `aria-valuetext` to that prop. The prop has a row in `surfaceAdditions`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Thumb",
-      "prop": "tabIndex",
-      "kind": "not-applicable",
-      "reason": "The part declares this prop as `tabindex`, the name of the attribute in the types of Vue. The prop has a row in `surfaceAdditions`."
+      "test": "packages/vue/src/slider/Slider.test.ts",
+      "reason": "`Slider.Label` is a native `<label>` for the input of the first thumb. A click gives that input the focus and the focus ring in each browser. `Slider.test.ts` tests its `for`, its id, a click, and the `aria-labelledby` of the root and of each input. The shadow root rows go: `for` is the rule of the platform."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "Field"],
-      "title": "[data-focused]",
-      "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/Slider.test.ts",
+      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range (rule 8.13), `aria-valuenow` (the native value is the value), `preventVaseUIHandler` (rule 8.7), the reason `none` of a reset (rule 8.8), the touch listeners, and each `KeepAlive` row (section 5)."
     },
     {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "Field", "[data-focused] without a blur event"],
-      "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/Slider.test.ts",
+      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the page do not get them. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it. The `aria-valuetext` of a `format` has the locale of `Slider.Value`, also before the hydration (VUE-170)."
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/Slider.test.ts",
+      "reason": "`Slider.test.ts` tests the element and the state attributes of each part."
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValue.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/Slider.test.ts",
+      "reason": "`Slider.test.ts` tests the text of `Slider.Value`, its `for`, `format`, `locale`, and the default slot and the `element` slot with `values` and `formattedValues`. With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser, so it does not change after the hydration (VUE-170). `LocaleProvider.test.ts` hydrates `Slider.Value` with no message."
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getPushedThumbValues.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/values.test.ts",
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/getSliderValue.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/values.test.ts",
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/resolveThumbCollision.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/values.test.ts",
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/roundValueToStep.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/slider/values.test.ts",
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Value",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Indicator",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Track",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. The reason `none` is cut: a native reset emits only `update:modelValue` (rule 8.8), and each change of the user has a native event. `thumbAlignment` has no `'edge-client-only'`: `'edge'` needs no script. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Thumb",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Control",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. A template ref has the input as `input`, in the place of `inputRef`. `getAriaLabel` is cut: give each thumb an `aria-label`, because the developer writes each thumb and knows its index there. `aria-valuetext` and `tabindex` are plain attributes that go to the input. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Label",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. The element is a `<label>` for the input of the first thumb (rule 8.3)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderControlDataAttributes",
+      "entry": "Value",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderIndicatorDataAttributes",
+      "entry": "Control",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Track",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Indicator",
+      "kind": "not-applicable",
+      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderThumbDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderTrackDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderValueDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderControlDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderTrackDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderThumbDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
     {
-      "entry": "Root",
+      "entry": "Thumb",
       "prop": "id",
-      "reason": "The part reads `id` to make the id of `Slider.Label`, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+      "reason": "The `id` of the input, which has the role `slider` and takes the focus (rule 8.4). A native `<label for>` names that input."
     },
     {
-      "entry": "Root",
-      "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to name itself and the thumbs, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Thumb",
-      "prop": "ariaLabel",
-      "reason": "The part gives `aria-label` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Thumb",
-      "prop": "ariaLabelledby",
-      "reason": "The part gives `aria-labelledby` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Thumb",
-      "prop": "ariaDescribedby",
-      "reason": "The part gives `aria-describedby` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Thumb",
-      "prop": "ariaValuetext",
-      "reason": "The prop is `aria-valuetext` of Base UI. Vue gives the attribute `aria-valuetext` to the prop `ariaValuetext`."
-    },
-    {
-      "entry": "Thumb",
-      "prop": "tabindex",
-      "reason": "The prop is `tabIndex` of Base UI. A key in the types of Vue has the name of the attribute, `tabindex`."
+      "entry": "Label",
+      "prop": "id",
+      "reason": "The `id` of the label. The root and each input with no name of their own name the label by it."
     }
   ],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/slider/control/SliderControl.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderControl.vue",
+      "behavior": "The control takes a press and a drag with pointer capture, and moves the thumbs.",
+      "witness": "packages/vue/src/slider/Slider.pointer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/parts.ts",
+      "behavior": "The parts of the namespace `Slider`.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/indicator/SliderIndicator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderIndicator.vue",
+      "behavior": "The indicator shows the range of the values with an inline style.",
+      "witness": "packages/vue/src/slider/Slider.pointer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/label/SliderLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderLabel.vue",
+      "behavior": "The label names the input of the first thumb with `for`.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderRoot.vue",
+      "behavior": "The root holds the value, emits the changes and the commits, and gives the field its value.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/root.ts",
+      "member": "sliderKey",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
       "upstream": "packages/react/src/slider/root/stateAttributesMapping.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/root/SliderRootContext.ts",
-      "member": "sliderStateAttributesMapping",
-      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+      "destination": "packages/vue/src/slider/root.ts",
+      "member": "stateAttributes",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/SliderThumb.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderThumb.vue",
+      "behavior": "The thumb renders its range input, handles the keys and places itself with an inline style.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrack.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderTrack.vue",
+      "behavior": "The track is the containing block of the thumbs and the indicator.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValue.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/slider/SliderValue.vue",
+      "behavior": "The output shows the formatted values.",
+      "witness": "packages/vue/src/slider/Slider.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/asc.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "asc",
-      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "shownValues",
+      "witness": "packages/vue/src/slider/values.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/getMidpoint.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "getMidpoint",
-      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+      "destination": "packages/vue/src/slider/SliderControl.vue",
+      "behavior": "A press on a thumb keeps the distance between the pointer and the centre of the thumb.",
+      "witness": "packages/vue/src/slider/Slider.pointer.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/getPushedThumbValues.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "getPushedThumbValues",
-      "witness": "packages/vue/src/slider/utils/getPushedThumbValues.test.ts"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "dragThumb",
+      "witness": "packages/vue/src/slider/values.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/getSliderValue.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "getSliderValue",
-      "witness": "packages/vue/src/slider/utils/getSliderValue.test.ts"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "moveThumb",
+      "witness": "packages/vue/src/slider/values.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/resolveThumbCollision.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "resolveThumbCollision",
-      "witness": "packages/vue/src/slider/utils/resolveThumbCollision.test.ts"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "dragThumb",
+      "witness": "packages/vue/src/slider/values.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/roundValueToStep.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "roundValueToStep",
-      "witness": "packages/vue/src/slider/utils/roundValueToStep.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/slider/utils/test-utils.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/test/sliderTestUtils.ts",
-      "member": "createTouches",
-      "witness": "packages/vue/src/slider/control/SliderControl.test.tsx"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "snap",
+      "witness": "packages/vue/src/slider/values.test.ts"
     },
     {
       "upstream": "packages/react/src/slider/utils/validateMinimumDistance.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/slider/utils/thumbValues.ts",
-      "member": "validateMinimumDistance",
-      "witness": "packages/vue/src/slider/root/SliderRoot.test.tsx"
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "limits",
+      "witness": "packages/vue/src/slider/values.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/slider/Slider.spec.tsx",
+      "behavior": "The types of the value and of the details of the events.",
+      "witness": "packages/vue/src/slider/Slider.spec.tsx"
     }
   ]
 }

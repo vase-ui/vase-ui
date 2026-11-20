@@ -9,30 +9,6 @@
   @media (prefers-color-scheme: dark) {
     border-color: oklch(26.9% 0 0deg);
   }
-
-  & > [data-vase-ui-resizable-edge] {
-    cursor: col-resize;
-
-    &[data-at-min] {
-      cursor: e-resize;
-    }
-
-    &[data-at-max] {
-      cursor: w-resize;
-    }
-
-    &[data-at-min][data-at-max] {
-      cursor: default;
-    }
-
-    &:hover {
-      background-color: oklch(92.2% 0 0deg);
-
-      @media (prefers-color-scheme: dark) {
-        background-color: oklch(26.9% 0 0deg);
-      }
-    }
-  }
 }
 
 .Panel {
@@ -64,10 +40,45 @@
   }
 }
 
-.Panel + .Panel {
+.Handle + .Panel {
   border-left: 1px solid oklch(92.2% 0 0deg);
 
   @media (prefers-color-scheme: dark) {
     border-left-color: oklch(26.9% 0 0deg);
+  }
+}
+
+.Handle {
+  flex: none;
+  width: 0;
+  outline: none;
+  cursor: col-resize;
+
+  @media (pointer: coarse) {
+    --resizable-handle-hit-area-size: 24px;
+  }
+
+  &[data-at-min] {
+    cursor: e-resize;
+  }
+
+  &[data-at-max] {
+    cursor: w-resize;
+  }
+
+  &[data-at-min][data-at-max] {
+    cursor: default;
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid oklch(14.5% 0 0deg);
+
+    @media (prefers-color-scheme: dark) {
+      outline-color: white;
+    }
   }
 }

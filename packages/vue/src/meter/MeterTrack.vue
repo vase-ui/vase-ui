@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useAttrs, type HTMLAttributes } from 'vue';
+import { useAttrs } from 'vue';
 import { useElement } from '../common/element';
+import type { MeterTrackProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<MeterTrackProps>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {
@@ -21,6 +22,9 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.element" name="element" :props="attrs" :elementRef="setElement" />
+  <component :is="as" v-else-if="as" v-bind="attrs" :ref="setElement">
+    <slot />
+  </component>
   <div v-else v-bind="attrs" :ref="setElement">
     <slot />
   </div>

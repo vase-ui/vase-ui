@@ -63,6 +63,14 @@ function elementProps() {
     :state="field.state"
     :messages="messages"
   />
+  <component :is="as" v-else-if="shows && as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="field.state">
+      <template v-if="messages.length === 1">{{ messages[0] }}</template>
+      <ul v-else-if="messages.length > 1">
+        <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
+      </ul>
+    </slot>
+  </component>
   <div v-else-if="shows" v-bind="elementProps()" :ref="setElement">
     <slot :state="field.state">
       <template v-if="messages.length === 1">{{ messages[0] }}</template>

@@ -5,16 +5,18 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 const CODE_LENGTH = 6;
 
 const id = useId();
+const labelId = `${id}-label`;
 const descriptionId = `${id}-description`;
 </script>
 
 <template>
   <div class="flex w-full max-w-80 flex-col items-start gap-1">
-    <label :for="id" class="text-sm font-bold text-neutral-950 dark:text-white"
+    <label :id="labelId" :for="id" class="text-sm font-bold text-neutral-950 dark:text-white"
       >Recovery code</label
     >
     <OTPField.Root
       :id="id"
+      :aria-labelledby="labelId"
       :length="CODE_LENGTH"
       validation-type="alphanumeric"
       :aria-describedby="descriptionId"

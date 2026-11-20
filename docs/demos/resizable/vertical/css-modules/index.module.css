@@ -47,6 +47,10 @@
   outline: none;
   cursor: row-resize;
 
+  @media (pointer: coarse) {
+    --resizable-handle-hit-area-size: 24px;
+  }
+
   @media (prefers-color-scheme: dark) {
     background-color: oklch(26.9% 0 0deg);
   }
@@ -63,7 +67,7 @@
     cursor: default;
   }
 
-  &[data-disabled] {
+  &[aria-disabled='true'] {
     cursor: default;
   }
 

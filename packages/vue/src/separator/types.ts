@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 
-export interface SeparatorProps extends /* @vue-ignore */ HTMLAttributes {
+export interface SeparatorProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The orientation of the separator.
    * @default 'horizontal'

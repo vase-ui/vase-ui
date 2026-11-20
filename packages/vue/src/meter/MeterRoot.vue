@@ -98,6 +98,10 @@ function elementProps() {
 https://github.com/mui/base-ui/issues/4184 -->
 <template>
   <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot />
+    <span role="presentation" :style="visuallyHidden">x</span>
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot />
     <span role="presentation" :style="visuallyHidden">x</span>

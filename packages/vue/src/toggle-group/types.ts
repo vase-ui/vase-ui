@@ -1,14 +1,9 @@
-import type { Component, HTMLAttributes } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
-export interface ToggleGroupProps<
-  Value extends string = string,
-> extends /* @vue-ignore */ HTMLAttributes {
-  /**
-   * A tag or a component that the part renders in place of its `<div>`, with the same attributes
-   * and content. The `element` slot wins over it.
-   */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface ToggleGroupProps<Value extends string = string>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The values of the pressed toggles. With no value, the group owns its value. `null` is an empty
    * value, and the group stays controlled.

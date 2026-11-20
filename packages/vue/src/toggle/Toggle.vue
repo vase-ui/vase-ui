@@ -2,7 +2,7 @@
 import { computed, inject, useAttrs, useId, watch, watchPostEffect } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { error } from '../common/error';
 import { useModel } from '../common/model';
 import { toggleGroupKey } from '../toggle-group/toggle';
@@ -22,7 +22,7 @@ const emit = defineEmits<{
   /** Comes after the change event with the new state, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [pressed: boolean];
 }>();
-const slots = defineSlots<{
+defineSlots<{
   default?(scope: { state: ToggleState }): unknown;
   element?(scope: {
     props: Record<string, unknown>;
@@ -40,7 +40,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled || !!group?.disabled,
   type: 'button',
-  tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
+  tag: useAsTag(() => props.as),
 });
 
 const { value: ownPressed, setOwn } = useModel(

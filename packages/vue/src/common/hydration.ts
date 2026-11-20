@@ -1,9 +1,9 @@
 import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and each composable then acts as in a client-only mount.
 import { getCurrentInstance } from 'vue';
-import type { ComputedRef, Ref, RendererNode } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
 import { isHTMLElement, isNode } from '@floating-ui/utils/dom';
-import { ownerDocument, ownerWindow } from './owner';
+import { ownerDocument } from './owner';
 import { activeElement } from './shadowDom';
 
 // Vue has no public API that tells a hydration from a client-only mount in `setup`.
@@ -148,7 +148,7 @@ let isTaking = false;
 
 // A take that sends an event waits for the flush of that event before the next take runs, as a
 // real event in another control comes in a later task. A root that holds the values of several
-// controls, such as `OTPField.Root`, then has the new value of the earlier control in its props.
+// controls then has the new value of the earlier control in its props.
 async function runQueuedTakes() {
   for (let take = queuedTakes.shift(); take !== undefined; take = queuedTakes.shift()) {
     if (take()) {
@@ -190,13 +190,6 @@ function getUnchangedValue(control: TextControl): string {
   return fresh.value;
 }
 
-// A browser restores the form state of the page on these navigations, with no event.
-function isHistoryTraversalOrReload(serverNode: RendererNode) {
-  const navigation = ownerWindow(serverNode).performance.getEntriesByType('navigation')[0] as
-    PerformanceNavigationTiming | undefined;
-  return navigation?.type === 'back_forward' || navigation?.type === 'reload';
-}
-
 function leave(control: TextControl) {
   const doc = ownerDocument(control);
   const active = activeElement(doc);
@@ -231,14 +224,9 @@ function useControlValueBeforeHydration(
   isNativeControl: boolean,
   control: () => Element | null,
   leaves: boolean,
-  restorable: boolean,
 ): Readonly<Ref<boolean>> {
   const serverNode = getCurrentInstance()?.vnode.el;
-  if (
-    !isNativeControl ||
-    serverNode == null ||
-    (!restorable && isHistoryTraversalOrReload(serverNode))
-  ) {
+  if (!isNativeControl || serverNode == null) {
     return shallowRef(true);
   }
 
@@ -299,17 +287,13 @@ function useControlValueBeforeHydration(
  * In a client-only mount, and for a component in `as`, the result is `true` from the start.
  * @param componentProps The props of the part. The composable reads `as`.
  * @param control Gives the element of the part.
- * @param options With `restorable: false`, the result is also `true` from the start after a move
- * in the history or a reload. Vue then writes the value of the part over a value that the browser
- * restored.
  */
 export function useValueBeforeHydration(
   componentProps: { as?: unknown },
   control: () => Element | null,
-  { restorable = true }: { restorable?: boolean } = {},
 ): Readonly<Ref<boolean>> {
   const rendersElement = typeof componentProps.as === 'string' || useSlots().render !== undefined;
-  return useControlValueBeforeHydration(rendersElement, control, true, restorable);
+  return useControlValueBeforeHydration(rendersElement, control, true);
 }
 
 /**
@@ -317,11 +301,9 @@ export function useValueBeforeHydration(
  * {@link useValueBeforeHydration} with one difference: the input gets only the `input` event,
  * because the user cannot focus or leave it.
  * @param input Gives the hidden input.
- * @param options As for {@link useValueBeforeHydration}.
  */
 export function useHiddenValueBeforeHydration(
   input: () => HTMLInputElement | null,
-  { restorable = true }: { restorable?: boolean } = {},
 ): Readonly<Ref<boolean>> {
-  return useControlValueBeforeHydration(true, input, false, restorable);
+  return useControlValueBeforeHydration(true, input, false);
 }

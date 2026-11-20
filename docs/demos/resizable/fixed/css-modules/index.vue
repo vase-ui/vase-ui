@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { Resizable } from '@vase-ui/vue/resizable';
+import { ref } from 'vue';
+import { Resizable, type ResizableLayout } from '@vase-ui/vue/resizable';
 import styles from './index.module.css';
+
+// The layout has the width of the navigation in pixels.
+const layout = ref<ResizableLayout>({});
 </script>
 
 <template>
-  <Resizable.Root :class="styles.Root">
+  <Resizable.Root v-model="layout" :class="styles.Root">
     <Resizable.Panel
       id="navigation"
       default-size="240px"
@@ -20,6 +24,7 @@ import styles from './index.module.css';
     <Resizable.Panel id="editor" :class="styles.Panel">
       <p :class="styles.Label">Editor</p>
       <p :class="styles.Description">The editor takes the rest of the width.</p>
+      <p :class="styles.Description">The layout: {{ JSON.stringify(layout) }}</p>
     </Resizable.Panel>
   </Resizable.Root>
 </template>

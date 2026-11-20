@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
+import { mergeProps, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { injectMeterRoot } from './root';
+import type { MeterIndicatorProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<MeterIndicatorProps>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {
@@ -30,6 +31,9 @@ function elementProps() {
 
 <template>
   <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot />
   </div>
