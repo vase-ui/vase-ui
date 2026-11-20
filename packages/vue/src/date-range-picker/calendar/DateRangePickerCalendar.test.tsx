@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { formatText } from '../../internals/date-time/calendar/formatText';
 import DateRangePickerAnatomy from '../root/DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -53,6 +54,18 @@ describe('<DateRangePicker.Calendar />', () => {
       />,
     );
   }
+
+  it('shows the calendar of the locale of the picker, as the fields do', async () => {
+    await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20'), locale: 'fa-IR' });
+    const month = day('2026-11-18').withCalendar('persian').toPlainYearMonth();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('calendar')).toHaveAttribute(
+        'aria-label',
+        formatText(month, { month: 'long', year: 'numeric' }, 'fa-IR'),
+      );
+    });
+  });
 
   it('shows the range of the picker', async () => {
     await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20') });

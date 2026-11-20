@@ -34,6 +34,7 @@ export interface DateRangePickerCalendarProps
 
 <script setup lang="ts">
 import { computed, provide, useSlots, useTemplateRef } from 'vue';
+import { displayCalendar } from '../../internals/date-time/displayCalendar';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import {
@@ -99,11 +100,13 @@ const picker = useDateRangePickerRootContext();
 const popup = usePickerPopup();
 
 // The popup is not in the server HTML, so the calendar reads the clock in its setup and has its page
-// and its tab stop in its first render. The bridge goes when the pickers move to the new calendar.
+// and its tab stop in its first render. It also reads the locale of the browser, which the fields
+// show with no `locale`. The bridge goes when the pickers move to the new calendar.
 const template = picker.template.value;
 const clockToday = Temporal.Now.plainDateISO(
   picker.props.timeZone ?? (isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined),
 );
+const browserLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
 
 // This part renders `RangeCalendar.Root` with `as`, or with `#render` in the `element` slot of the
 // root. A `v-if` on a slot template makes the slots of the root dynamic, so the template has two
@@ -180,6 +183,7 @@ function calendarProps(attributes: Record<string, unknown>): Record<string, unkn
     defaultValue: [picker.template.value, picker.template.value],
   };
   const { as: _as, ...own } = props;
+  const locale = root.locale ?? browserLocale;
   return {
     ...mergeProps(calendarHandlers, givenAttributes(attributes)),
     ...own,
@@ -188,14 +192,16 @@ function calendarProps(attributes: Record<string, unknown>): Record<string, unkn
     min: root.minDate,
     max: root.maxDate,
     unavailableDates: root.unavailableDates,
-    locale: root.locale,
-    calendar: root.calendar,
+    locale,
+    // The fields show the calendar of their locale, and the grid shows the same calendar.
+    calendar: displayCalendar(root.calendar, picker.template.value, locale),
     disabled: picker.disabled.value,
     readonly: root.readOnly,
   };
 }
 
-// An older part takes a component with a type parameter in `as`, and `Calendar.Root` renders it.
+// An older part takes a component with a type parameter in `as`, and `RangeCalendar.Root` renders
+// it.
 const rootAs = () => props.as as RangeCalendarRootProps['as'];
 
 defineExpose({

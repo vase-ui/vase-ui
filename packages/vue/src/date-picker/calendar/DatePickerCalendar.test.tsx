@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { formatText } from '../../internals/date-time/calendar/formatText';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
 import { createPartRef } from '../root/test-utils';
 
@@ -213,6 +214,40 @@ describe('<DatePicker.Calendar />', () => {
         expect(screen.getByTestId('calendar')).toHaveAttribute('data-disabled');
       });
       expect(dayButton('2026-11-20')).toBeDisabled();
+    });
+  });
+
+  describe('the picker owns the locale and the calendar', () => {
+    it('shows the calendar of the locale of the picker, as the field does', async () => {
+      await renderOpen({ defaultValue: day('2026-11-18'), locale: 'fa-IR' });
+      const month = day('2026-11-18').withCalendar('persian').toPlainYearMonth();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('calendar')).toHaveAttribute(
+          'aria-label',
+          formatText(month, { month: 'long', year: 'numeric' }, 'fa-IR'),
+        );
+      });
+    });
+
+    it('shows the locale of the browser with no locale, as the field does', async () => {
+      const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+      // The browser of the test has the locale `fr`.
+      const spy = vi
+        .spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions')
+        .mockImplementation(function (this: Intl.DateTimeFormat) {
+          return { ...resolvedOptions.call(this), locale: 'fr' };
+        });
+      onTestFinished(() => spy.mockRestore());
+      await renderOpen({ defaultValue: day('2026-11-18'), locale: undefined });
+      const month = Temporal.PlainYearMonth.from('2026-11');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('calendar')).toHaveAttribute(
+          'aria-label',
+          formatText(month, { month: 'long', year: 'numeric' }, 'fr'),
+        );
+      });
     });
   });
 
