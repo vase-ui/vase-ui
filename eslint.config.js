@@ -41,7 +41,7 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   releaseFunction:
-    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`, or return it from `useDomEffect`. See "Lifetime" in CONTRIBUTING.md.',
+    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`. See "Lifetime" in CONTRIBUTING.md.',
   heldCopy:
     'A copy of `isHeld` can differ from its source. Give `isHeld` to the watcher as a source.',
   staleRootNode:

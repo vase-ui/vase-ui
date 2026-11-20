@@ -63,7 +63,7 @@ To run `pnpm test:vapor` or `pnpm test:vapor-parts` on your machine, install the
 - `vitepress` stays at exactly `2.0.0-alpha.21`. The stable release, 1.6.4, installs a second Vite from the 5.x line, which has advisories that no 5.x release corrects. Install the stable 2.0 release when VitePress publishes it.
 - ESLint renders each page with the VitePress of `docs`. Do not add `vitepress` to the root `package.json`. The release job `stage` installs the root dependencies in a step that can get an OIDC token.
 - `postcss` in `docs/package.json` has the version that Vite uses, as `pnpm why postcss -r` shows. The workspace then has one copy. Change the version when Vite uses another one.
-- `tailwindcss` and `@tailwindcss/vite` have the same exact version, in `docs` and in `packages/vue`. The plugin depends on that exact version, so another version installs a second copy.
+- `tailwindcss` of `docs` and `@tailwindcss/vite` of `docs` and `packages/vue` have the same exact version. The plugin depends on that exact version, so another version installs a second copy.
 - The CI jobs that start a browser run in the image `mcr.microsoft.com/playwright`, which has the browsers of one Playwright version. When you change the version of `playwright`, change the tag of each image in `.github/workflows/ci.yml`.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
@@ -79,12 +79,12 @@ Each pnpm patch in `patches` corrects a fault of a dependency. When a release of
 | `rolldown-plugin-dts` | A bundled declaration file loses its `/// <reference lib="…" />` line, so a date or time entry point loses the `Temporal` types. Remove the patch when `tsdown` uses a release with the correction. | "Check the declarations that name Temporal" in `pnpm check:package` |
 | `vitepress` | The search box returns the focus to `<body>` when it closes, and the Tab key of some browsers leaves the open box. | `pnpm docs:search-focus` |
 
-For a release without the correction, make the patch again: pnpm refuses an install when a patch names a version that the dependencies do not have.
+For a release without the correction, make the patch again. pnpm refuses an install when a patch names a version that the dependencies do not have.
 
 When you change the version of a tool, do these checks too:
 
-- `vitepress`: compare the two expressions of `localSearchPlugin.ts` with their copy in `scripts/docs/searchIndex.test.ts`. Then run `pnpm docs:dev`, open a component page and edit a JSDoc description of its API reference in `packages/vue/src`. The open page must show the new text, through `docs/.vitepress/viteFollowSource.ts`.
-- `vitest`: search the `dist` folder of the new version for `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`. [Where a test runs](#where-a-test-runs) gives the reason for the variable. When a release keeps the modules in the cache of the browser ([vitest-dev/vitest#11914](https://github.com/vitest-dev/vitest/pull/11914)), delete the variable from `.github/workflows/ci.yml`.
+- `vitepress`: compare the two expressions of `localSearchPlugin.ts` with their copy in `scripts/docs/searchIndex.test.ts`. When they differ, change the copy and the headings that `apiReferenceSearchHtml` writes. Then run `pnpm docs:dev`, open a component page and edit a JSDoc description of its API reference in `packages/vue/src`. The open page must show the new text, through `docs/.vitepress/viteFollowSource.ts`.
+- `vitest`: search the `dist` folder of the new version for `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`. When the version does not read the variable, find another way to collect the garbage of Chromium after each test file. [Where a test runs](#where-a-test-runs) gives the reason. When a release keeps the modules in the cache of the browser ([vitest-dev/vitest#11914](https://github.com/vitest-dev/vitest/pull/11914)), delete the variable from `.github/workflows/ci.yml`.
 - Node.js: `common/date-time-field/layout.node.test.ts` makes the layouts of `my`, `ksh` and `sc` in Node.js. When `.node-version` names a release with the correction of [nodejs/node#67076](https://github.com/nodejs/node/issues/67076), its cases and `test/measurements/date-time-field.node.test.ts` fail. Change those cases and each page of the docs that gives these layouts. Keep the check of `getSegmentLayout`, because Firefox and WebKit have no `year` in `resolvedOptions()` for these formats either.
 
 ## Pull requests
@@ -95,7 +95,7 @@ When you change the version of a tool, do these checks too:
 - The check `required` must pass.
 - On a pull request, CI runs only the test files that the changed files can affect. [Where a test runs](#where-a-test-runs) gives the rules.
 - A pull request merges through the merge queue, which runs each check and each test file on the pull request on top of `main`. `main` then moves to the commit that the merge queue tested. A push to `main` starts no CI run.
-- When a pull request changes the package, the `Package size` workflow compares the size of the tarball and of each public import at the base and at the merge. Read its report in the comment of the pull request.
+- When a pull request changes the package, the `Package size` workflow compares the sizes at the base and at the merge. It measures the tarball and each public import. Read its report in the comment of the pull request.
 
 ## Base UI parity
 
@@ -131,7 +131,7 @@ Each family has a file `parity/families/<family>.json` and an extract, `parity/f
 | `relocations` | Optional. Each Base UI file whose counterpart is in another file: `merged-into`, `inlined-into` or `moved-test`, with its destination and the test that shows it. |
 
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`. `entry` is the title of the part in the `types.md`.
-- Give a `prop` row `"nativeAttribute": true` for a native attribute of the element, such as `id`, that a developer gives to the Base UI part in the same way. The page of the family does not list such a row.
+- Give `"nativeAttribute": true` to the `prop` row of a native attribute of the element, such as `id`. A developer gives that attribute to the Base UI part in the same way. The page of the family does not list such a row.
 - A `types.md` can have a prop row for a native attribute that the React part does not read, such as `aria-valuetext` of `Progress.Root`. Do not declare that prop. It goes to the element through the attributes. Give the row a `not-applicable` exception row.
 - `parity/scope.json` lists the Base UI paths that are out of scope, and what Vase UI does not port, each with its reason. Add an `except` glob to an `outOfScope` rule only for a path that a family ports.
 - Write a reason in the present tense, with the form of Vue or of the browser first. The docs page of a family shows the reasons of the rows of its parts and its functions.
@@ -226,8 +226,8 @@ Each part follows the rules of this section.
 - Nuxt removes each call of a client hook, such as `onUnmounted`, from its server build, with its arguments. Call a registration before the hook, and give the hook the function that the registration returns: `const removeLeaving = root.addLeaving(() => element.value); onUnmounted(removeLeaving);`.
 - Give each listener, observer and registration to the watcher or the scope that creates it. Release it in the cleanup of the watcher (`onCleanup` or `onWatcherCleanup`), or in `onScopeDispose`. Register the cleanup before the first `await`.
 - Keep state in the smallest component or composable that owns it. Use `shallowRef` for an element, an outside object or a list that changes by replacement.
-- Derive a value with a pure `computed`. Read a prop, a ref or a getter in the handler that needs it, not in a copy that `setup` makes.
-- Use `watch` for a change between two values or an explicit source, and `watchEffect` for an effect whose synchronous reads are its sources. Use `flush: 'post'` for work that needs the patched DOM. Use `flush: 'sync'` only for a deadline in the same task, with a case that fails under the default flush.
+- Derive a value with a pure `computed`. Read a prop, a ref or a getter in the handler that needs it. Do not copy it in `setup`.
+- Use `watch` for a change between two values or for an explicit source. Use `watchEffect` for an effect whose synchronous reads are its sources. Use `flush: 'post'` for work that needs the patched DOM. Use `flush: 'sync'` only for a deadline in the same task, with a case that fails under the default flush.
 - A composable takes `MaybeRefOrGetter<T>` for a live input and reads it with `toValue` where it needs the value. A callback has its own type, because `toValue` calls a function.
 
 ### The element of a part
@@ -263,14 +263,14 @@ Each part follows the rules of this section.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the part stops `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
 - A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. A `type` of the developer wins.
 - A part that the user drags takes `usePointerPress` of `src/common/pointerPress.ts`. The press captures its pointer, so the element of the part gets each move and the release, also outside the element.
-- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract, such as `field/control.ts` for a control and its field. A reader calls `inject(key, null)`, so it gets `null` with no provider.
+- Two families share a contract through `provide` and `inject`. Each contract has a typed key in one module, such as `field/control.ts` for a control and its field. A reader calls `inject(key, null)`, so it gets `null` with no provider.
 
 ### The public form
 
 1. A prop that mirrors a native attribute has the name of the attribute in a Vue template: `readonly`, `autocomplete`. An ARIA attribute is a plain attribute, not a prop.
 2. No prop says what element the developer renders. A part reads its element after the mount, and a tag in `as` before the mount.
 3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element. A blank `id` counts as absent: read it with `givenId` of `src/common/id.ts`.
-4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:open`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`.
+4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:open`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`. Give a Boolean model prop the default `undefined` in `withDefaults`. Vue otherwise gives an absent Boolean prop the value `false`, and the part is controlled.
 5. A change event comes before the update of its model, in the same task. Its last argument is the details object, `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, with `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`.
 6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
 7. `<Transition>` animates a part that appears and goes. Content that a user or a developer would lose, such as a closed panel, stays in the DOM with `hidden` when the part has `keepMounted`.
@@ -287,9 +287,9 @@ Each part follows the rules of this section.
 
 Write no code that guards, tracks, repairs or copies a behavior on an assumption:
 
-1. Build the smallest case with plain Vue and native elements, and see what Chromium, Firefox and WebKit do. Keep the case as a test in `packages/vue/test/measurements/<family>.test.ts`.
+1. Build the smallest case with plain Vue and native elements, and see what Chromium, Firefox and WebKit do. Keep the case as a test, as [Measurements](#measurements) says.
 2. When the browser or Vue does the right thing in the three browsers, write no code.
-3. When the browsers differ and a person notices it, write the least code that makes them agree with the HTML Standard and the WAI-ARIA Authoring Practices. A preference of the user, such as the macOS preference for the Tab key, is not a difference to smooth over.
+3. When the browsers differ and a person notices it, write the least code that makes them agree. The target is the HTML Standard and the WAI-ARIA Authoring Practices. A preference of the user, such as the macOS preference for the Tab key, is not a difference to smooth over.
 4. A comment at such code names its measurement, such as `(test/measurements/dialog.test.ts)`.
 
 A part handles the events that the browser sends. It detects no value that an element got with no event. Examples are text before the hydration, a press on a label before the hydration, and form state that the browser restores.
@@ -299,7 +299,7 @@ A part handles the events that the browser sends. It detects no value that an el
 - A behavior of a part rests only on features that MDN marks "Baseline Widely available". The build supports the browsers of [Compiler flags](#compiler-flags).
 - `Temporal` is one exception: the date and time families need it, and an app loads a polyfill where a browser lacks it. The `focusVisible` option of `focus()` is the other: a part can give it where Base UI gives it, and a browser without it decides the focus ring.
 - Each feature of Base UI stays, in the form of Vue. A feature is cut only for a better way that gives the developer or the user the same thing. The family file names that way.
-- Where Vase UI agrees with Base UI, match Base UI. Where another behavior is better for the user and the developer, keep it with a row of `parity/better` and its test.
+- Where Vase UI agrees with Base UI, match Base UI. Where another behavior is better for the user and the developer, keep it. Give it a row of `parity/better` and a test.
 - The library uses `@floating-ui/vue` only to place a popup beside its anchor.
 
 ### Popups
@@ -317,10 +317,10 @@ A part handles the events that the browser sends. It detects no value that an el
 
 ### Dates and times
 
-The date and time families call `Temporal` and `Intl` through the functions of `src/common/date-time`. They have no adapter and no provider.
+The date and time families call `Temporal` and `Intl` directly, with the shared functions of `src/common/date-time`. They have no date adapter.
 
 - No module reads `Temporal` when it loads: no constant and no default of a prop. The first read is in a function that a part calls after `assertTemporal` in `setup`.
-- Compare two values with `compareDates` or `compareMoments`. Make an emitted value with `withDate` or `withTime`, which keep the kind, the calendar and the zone of the value.
+- Compare two values with `compareDates`, or with `compareMoments` of `src/common/date-time-field/limits.ts`. Make an emitted value with `withDate` or `withTime`, which keep the kind, the calendar and the zone of the value.
 - `displayCalendar` gives the calendar in which a part shows a value. The locale gives only that calendar, never the calendar of a value.
 - No render reads the clock. With no `today` prop, a part reads today after the mount.
 - Make the days of a list with a step of one day, never of 24 hours. A change of the clock in a time zone then does not repeat or skip a day.
@@ -334,11 +334,12 @@ The date and time families call `Temporal` and `Intl` through the functions of `
 - The server HTML and the first client render are the same. A value that a server cannot know, such as a measure or today, gets one fixed default on both sides. The part reads the browser value after the mount.
 - Read `localStorage` only after the mount. Node.js prints a warning at the first read of `localStorage` in a process with no `--localstorage-file`.
 - With Vue 3.6, a server stops the effect scope of each component after the render, so a callback of `onScopeDispose` runs on a server. It does not touch `window` or `document`.
-- Give `data-allow-mismatch` only for an expected difference, with its category. A part that writes a date or a time as text binds the category `text`, because the `Intl` data of a server and a browser can differ. Vue allows a text mismatch only for an element whose only child is a text.
+- Give `data-allow-mismatch` only for an expected difference, with its category. The `Intl` data of a server and a browser can differ, so a part that writes a date or a time as text allows a mismatch of that text.
+- Vue allows a text mismatch only for an element whose only child is a text. Such an element binds the category `text`. An element that holds such elements, such as `DateField.Input`, binds `children`.
 - A part that binds the id of a part that can render after it calls `useDeferredServerRender()` of `src/common/deferredServerRender.ts` in `setup`. Its JSDoc gives the reason.
 - A root whose label renders after its attributes assumes a label until the mount, as `Progress.Root` and `Fieldset.Root` do. The server HTML then names the label.
 - While Vue hydrates, it keeps the attributes and the style of the server HTML on each element that it keeps. A later render writes a value only when it differs from the first client render. A part whose attributes depend on the `Intl` data writes them again after the mount with `useAttributesAfterMount` of `src/common/writeAttributes.ts`.
-- `src/common/hydration.ts` has the helpers of the hydration, such as `useIsHydrated` and `useValueBeforeHydration`. Their JSDoc gives their results.
+- `useIsHydrated` and `useIsHydrating` of `src/common/hydration.ts` give the hydration state of the component that calls them. Their JSDoc says when each is `true`.
 - One SFC, `PrehydrationScript.vue`, renders each script that runs before the hydration. It writes the text only on a server. The text is a constant of the library, never a value of a consumer.
 - A family whose server render depends on an id, a locale, a script or a portal has a page and its cases in the Nuxt fixture, `fixtures/nuxt`.
 
@@ -386,7 +387,7 @@ Run `pnpm lint:fix`, then `pnpm typecheck` and `pnpm lint`. The last two show th
 - Write `void` before a promise that the code does not wait for.
 - Write `import type` on its own line.
 - An optional parameter has no `| undefined`. An optional prop has it, so that a consumer with `exactOptionalPropertyTypes` can pass `undefined`.
-- Write a class member that only its class uses as an ECMAScript private member, such as `#entries`. Keep `protected` for a member that a subclass uses.
+- Keep `protected` for a class member that a subclass uses.
 - A reactive proxy of an object breaks its `#` members: a method that reads one throws a `TypeError`. Do not put such an object in `ref()`, `reactive()` or `readonly()`. Give it to other code with `provide`, a `shallowRef` or a prop, or call `markRaw(this)` in its constructor.
 - Write a development check as `process.env.NODE_ENV !== 'production'`.
 
@@ -417,15 +418,15 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handl
 
 - A file `*.test.ts` or `*.test.tsx` runs in Chromium, Firefox and WebKit. A file `*.node.test.ts` or `*.node.test.tsx` runs in Node.js with no DOM, for the server render and for logic with no DOM. There is no jsdom.
 - A file `*.spec.ts`, `*.spec.tsx` or `*.spec.vue` is a type test. vue-tsc checks it, and no test runner runs it. A `.spec.vue` file starts with `<!-- @strictTemplates true -->`, so vue-tsc reports an unknown prop as it does for a consumer that sets `strictTemplates`.
-- `pnpm --filter @vase-ui/vue test:vue-3.6` runs the `.test.ts` files of the family folders in the four setups of Vue 3.6. Only an SFC compiles in Vapor mode, so a test of a family mounts SFC fixtures.
-- In the project `vapor`, `createRenderer` of `#test-utils` mounts each test in a Vapor app. The project `vapor-parts` compiles each part as a Vapor component and runs the files of `test/vaporParts/expectedFailures.json`. Each file lists the cases that fail for a cause in Vue, with an issue link. A fault of Vase UI gets no entry.
+- [Setup](#setup) gives the commands that run the tests with Vue 3.6. Only an SFC compiles in Vapor mode, so a test of a family mounts SFC fixtures.
+- Each file of `test/vaporParts/expectedFailures.json` lists the cases that fail in the project `vapor-parts` for a cause in Vue. Each cause has an issue link. A fault of Vase UI gets no entry.
 - The jobs that run Vue 3.6 install a prerelease, so `required` does not need them.
 - `test/server/engineInstances.ts` runs the test files of Firefox one at a time, because Firefox has one mouse for all its windows. Its comments give the reasons for the preferences of Firefox.
 - The job `test-browser` of CI runs the Firefox tests and the WebKit tests in shards. To run one shard on your machine, add its flag: `pnpm test:firefox --shard=1/3`. Add a WebKit shard when the files of a shard pass about 400.
 - On a pull request, the job `select` runs `scripts/ci/selectTests.ts` on the changed files. Each test job then runs only what those files can change. The merge queue skips `select`, so each test job there runs each test file.
-- Keep a file that a test reads by a path, and does not import, in the folder of the test or below it. For a file elsewhere, add its path to the files of `scripts/ci/selectTests.ts` that run each test file.
-- Set the `timeout-minutes` of a CI job to 1.5 times the 95th percentile of the time of its passed runs in the merge queue. Round it up to a multiple of 5 minutes. For a job with a matrix, use the slowest entry. When a passed run takes more than two thirds of the limit, measure the job again.
-- On macOS, `test/server/engineInstances.ts` starts WebKit with full keyboard access through `test/webkitFullKeyboardAccess.sh`. Full keyboard access does not put a link in the order of the Tab key, so a case that tabs to a link fails in WebKit on macOS.
+- A test can read a file by its path and not import it. Keep such a file in the folder of the test or below it. For a file elsewhere, add its path to the files of `scripts/ci/selectTests.ts` that run each test file.
+- Set the `timeout-minutes` of a job to 1.5 times the 95th percentile of its passed runs in the merge queue. Round it up to a multiple of 5 minutes. For a job with a matrix, use the slowest entry. When a passed run takes more than two thirds of the limit, measure the job again.
+- On macOS, `test/server/engineInstances.ts` starts WebKit with full keyboard access through `test/webkitFullKeyboardAccess.sh`. Full keyboard access does not put a link in the order of the Tab key. So a case that tabs to a link fails in WebKit on macOS.
 - On Linux, Chromium keeps a block of shared memory for each module that a new test frame loads, until a garbage collection. CI sets `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`, so Vitest collects the garbage after each test file. Without it, a long run loses its connection with `Browser connection was closed`.
 - The tests of `fixtures/nuxt` run in Node and read the pages of the Nuxt app in Chromium. The job `test-nuxt` runs them, and `required` needs that job.
 
@@ -459,7 +460,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - Do not poll a state that exists only while an animation runs. Record it in a `MutationObserver`, or read it when `nextAnimationsRead` resolves. Then wait for a state that stays, such as `hidden` or the removal of the element.
 - Give a duration of 100 s to each animation that a case ends with its own call, such as `finish()`. A late frame can end a short animation before the part reads it.
 - A case of a date part gives the part `today`, or a value and a time zone, so that it does not depend on the clock. Compute an expected text in a locale with the same locale and options as the part.
-- To test a server whose `Intl` data give another layout than the browser, give the server render a `-u-hc-`, `-u-ca-`, `-u-fw-` or `-u-rg-` keyword in `locale`. Hydrate with the plain locale.
+- A server can have `Intl` data that give another layout than the browser. To test it, give the server render a `-u-hc-`, `-u-ca-`, `-u-fw-` or `-u-rg-` keyword in `locale`. Hydrate with the plain locale.
 - Do not write a generated id in a test. Read the id from the element or from the HTML.
 - A case that depends on the Vue version or on the browser probes for the behavior, and each outcome has a case with `runIf`. A case that needs a command of the Chrome DevTools Protocol, such as `Input.imeSetComposition`, has `runIf(platform.engine.blink)` and a comment with the reason.
 - A real touch or pen exists only in Chromium, through `cdp()` of `vitest/browser`. Give the same behavior a dispatched case that runs in each engine.
@@ -467,7 +468,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 
 ### Measurements
 
-A measurement shows what the browser or Vue does with native elements and plain Vue, with no code of the library. It is a case in `packages/vue/test/measurements/<family>.test.ts`. Where the browsers differ, it asserts what each one does. A measurement that decides code stays as long as that code stays.
+A measurement shows what the browser or Vue does with native elements and plain Vue, with no code of the library. It is a case in `packages/vue/test/measurements/<name>.test.ts`, with the name of the family or of the shared module, such as `popup.test.ts`. Where the browsers differ, it asserts what each one does. A measurement that decides code stays as long as that code stays.
 
 ## Documentation site
 
@@ -478,7 +479,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores it when a workflow publishes the site.
 - A page is a Markdown file in `docs`, with an `order` in its front matter. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
-- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`, because GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
+- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
 - The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same commands. Change them together.
 - Text from `parity/` and from Base UI commits is data. A page shows it only through a component of `docs/.vitepress/components`, with text interpolation. ESLint cannot see a name that a value holds, so it cannot find each API that renders a string as HTML.
 - When a page includes a file that `PAGE_FILES` in `eslint.config.js` lacks, add the file to the list.
@@ -512,11 +513,9 @@ A page with `<BaseUiDifferences />` has the page template, and `pnpm test:docs` 
 
 - A demo is `docs/demos/<family>/<demo>/<variant>/index.vue`, with one folder for each variant that Base UI has: `css-modules` and `tailwind`. It keeps the elements and the attributes of its Base UI file.
 - The demos of a family of Base UI are the demo folders of Base UI at the `matchedCommit` of the family. `docs/demos/<family>/upstream.json` records them with the SHA-256 of each file. `pnpm docs:demos` writes the record and the style sheets. Do not edit them.
-- The style sheet of a CSS-module demo is the Base UI file, byte for byte. A family in `RESTYLED_FAMILIES` of `scripts/docs/upstreamDemos.ts` is the exception. Its demos style a state with a selector of CSS or ARIA, such as `:checked`.
-- The two Vue files of a demo are equal apart from their classes and the import of the style sheet. A demo that Base UI has in one variant has one Vue file, and its frame shows no select.
 - In a Tailwind demo, write `class` in place of `className`, and an array in `:class` in place of `clsx`. A constant that holds class names ends with `Class`, `ClassName` or `Classes`.
 - The text and the links of a demo are about Vase UI. A link to a page of this site starts with `import.meta.env.BASE_URL`, because VitePress does not add the base to a link in a demo.
-- Give each landmark of one role on a page a name of its own with `aria-label`, such as the viewport of a toast. The name says what the demo shows: "Undo notifications".
+- Give each landmark of one role on a page its own name with `aria-label`. The viewport of a toast is such a landmark. The name says what the demo shows: "Undo notifications".
 - A popup with the role `dialog` and no title part has `aria-label`. A scroll container that holds no control has `tabindex="0"`, because WebKit gives it no keyboard focus.
 - A demo of a date or time component sets `locale="en-US"` and gives a calendar no `today`. A value that follows today is an empty `shallowRef` that `onMounted` sets. Make each `Temporal` value in the script, because a template cannot read `Temporal`.
 - A demo of a component of Vase UI's own has the two variants. Its class strings follow the Tailwind demos of Base UI and the colors of `docs/demos/tailwind.css`. `packages/vue/test/demos.ownVariants.test.tsx` compares the two variants.
@@ -537,7 +536,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - The Default column shows the `@default` tag of a prop in the exported props interface of the part. A property that an interface declares again does not get the tag of the base interface.
 - `@ignore` keeps a prop out of the reference.
 - The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:*` too.
-- Write each selector and each CSS variable of a part as a tag in the JSDoc of its constant, after the line that names its element: ``@selector `[hidden]` The panel is closed.`` or ``@cssVariable `--collapsible-panel-height` The height of the content of the panel, in pixels.`` The reference shows them in the tables Selectors and CSS variables.
+- Write each selector and each CSS variable of a part as a tag in the JSDoc of its constant. Put the tags after the line that names the element: ``@selector `[hidden]` The panel is closed.`` or ``@cssVariable `--collapsible-panel-height` The height of the content of the panel, in pixels.`` The reference shows them in the tables Selectors and CSS variables.
 - Write one selector for each state that a developer styles, as CSS writes it for the element of the part. Write no selector for `:hover`, `:focus`, `:focus-visible` or `:active`.
 - The slots `default` and `element` and the exposed `element` share one description when their JSDoc is empty. On a page with the template, each other prop, slot and exposed member needs a JSDoc.
 - `<ApiReference name="…" />` shows one function, class or type, such as `Dialog.createHandle`, with no heading. The page writes the heading.
@@ -560,7 +559,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
 - The theme of the site is the class `dark` of the root element. `docs/.vitepress/postcssFollowSiteTheme.ts` changes each `@media (prefers-color-scheme: dark)` rule into a rule for that class.
 - `postcssIsolateStyles` keeps each style sheet of `docs/.vitepress/theme` out of the demos. Put a rule for the frame of a demo in `DemoFrame.vue`.
-- A copied style sheet can give text less than the AA contrast of WCAG. Do not edit the sheet. Add a rule to `look.css` for a popup, or to `DemoFrame.vue` with `:deep()` for text in the frame, with the nearest value that passes. Name the part and its state in the selector, not the demo. Give each selector a row in `packages/vue/test/demos.contrast.test.tsx`.
+- A copied style sheet can give text less than the AA contrast of WCAG. Do not edit the sheet. For a popup, add a rule to `look.css`. For text in the frame, add a rule with `:deep()` to `DemoFrame.vue`. Use the nearest value that passes. Name the part and its state in the selector, not the demo. Give each selector a row in `packages/vue/test/demos.contrast.test.tsx`.
 - A class string or a style sheet of a demo can make a list cut the text of an option. Add a rule to the part "Popups of demos" of `look.css` that lets the text wrap.
 - A component of the site that shows a table puts it in `<ScrollBox>` with a `label` that names the table. The box takes the focus only while it scrolls.
 - A heading that a component of the site writes is one level below the page heading above the component.
