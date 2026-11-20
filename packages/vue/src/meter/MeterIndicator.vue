@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type AsProps } from '../common/element';
 import { injectMeterRoot } from './root';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {
@@ -30,6 +30,9 @@ function elementProps() {
 
 <template>
   <slot v-if="$slots.element" name="element" :props="elementProps()" :elementRef="setElement" />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot />
   </div>

@@ -88,6 +88,37 @@ async function expectSeparatorPage(page: Page) {
   });
 }
 
+async function expectAsPage(page: Page) {
+  const read = (testId: string) => readElement(page.getByTestId(testId), ['role', 'href', 'type']);
+
+  expect(await read('separator')).toEqual({
+    tag: 'span',
+    text: '',
+    attributes: { role: 'separator', href: null, type: null },
+  });
+  for (const [testId, text] of [
+    ['nuxt-tab', 'A'],
+    ['router-tab', 'B'],
+  ]) {
+    expect((await read(testId!)).tag).toBe('a');
+    expect(await read(testId!)).toMatchObject({ text, attributes: { role: 'tab', href: '/as' } });
+  }
+  expect(await read('div-tab')).toEqual({
+    tag: 'div',
+    text: 'C',
+    attributes: { role: 'tab', href: null, type: null },
+  });
+}
+
+// A part reads the element of a component in `as` after the mount: the root element of
+// `NuxtLink` and of `RouterLink`, which expose nothing.
+async function expectHydratedAsPage(page: Page) {
+  await expectAsPage(page);
+  expect(await page.getByTestId('tab-elements').textContent()).toBe('a a');
+  expect(await page.getByTestId('link-ref').textContent()).toBe('$el: a, element: false');
+  expect(await page.getByTestId('nuxt-tab').getAttribute('type')).toBeNull();
+}
+
 async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttributes) {
   const attributeNames = [
     'role',
@@ -1928,6 +1959,7 @@ interface PageCase {
 const PAGES: PageCase[] = [
   { path: '/button', expectPage: expectButtonPage },
   { path: '/separator', expectPage: expectSeparatorPage },
+  { path: '/as', expectPage: expectAsPage, expectHydratedPage: expectHydratedAsPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
     path,
     expectPage: (page: Page) => expectRangePage(page, rootAttributes),

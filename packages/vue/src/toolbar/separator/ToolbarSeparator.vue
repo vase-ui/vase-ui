@@ -47,7 +47,7 @@ defineExpose({ element });
       <slot name="element" v-bind="scope" />
     </template>
   </Separator>
-  <Separator v-else ref="separator" :orientation="separatorOrientation">
+  <Separator v-else ref="separator" :as="as" :orientation="separatorOrientation">
     <template #default="scope">
       <slot v-bind="scope" />
     </template>

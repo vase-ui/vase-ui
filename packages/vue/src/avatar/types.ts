@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -43,7 +44,7 @@ export interface AvatarImageProps extends /* @vue-ignore */ Omit<
 
 export type AvatarImageState = AvatarRootState;
 
-export interface AvatarFallbackProps extends /* @vue-ignore */ HTMLAttributes {
+export interface AvatarFallbackProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * How long to wait before showing the fallback. Specified in milliseconds.
    * @default 0

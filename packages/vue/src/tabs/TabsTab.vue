@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Value = any">
-import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
+import { computed, mergeProps, onUnmounted, useAttrs, useId, useSlots } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectTabsList } from './list';
@@ -21,6 +21,7 @@ defineSlots<{
 const root = injectTabsRoot();
 const list = injectTabsList();
 const attrs = useAttrs();
+const slots = useSlots();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
@@ -54,8 +55,12 @@ onUnmounted(unregister);
 defineExpose({ element });
 
 function elementProps() {
-  // The element of the `element` slot is known after the mount.
-  const button = !element.value || element.value.localName === 'button';
+  // A tag in `as` is known at the render, so the server writes the `type` of the client. The element
+  // of a component or of the `element` slot is known after the mount.
+  const button =
+    typeof props.as === 'string' && !slots.element
+      ? props.as === 'button'
+      : !element.value || element.value.localName === 'button';
   return mergeProps(
     {
       role: 'tab',
@@ -112,6 +117,9 @@ function onKeydown(event: KeyboardEvent) {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
   <button v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </button>

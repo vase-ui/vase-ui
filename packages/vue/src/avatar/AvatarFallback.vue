@@ -47,6 +47,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="root.state"
   />
+  <component :is="as" v-else-if="shows && as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="root.state" />
+  </component>
   <span v-else-if="shows" v-bind="elementProps()" :ref="setElement">
     <slot :state="root.state" />
   </span>

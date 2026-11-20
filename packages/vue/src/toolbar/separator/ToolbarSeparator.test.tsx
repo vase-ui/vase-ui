@@ -32,6 +32,16 @@ describe('<Toolbar.Separator />', () => {
     },
   );
 
+  it('renders the tag of `as`', async () => {
+    await render(
+      <Toolbar.Root>
+        <Toolbar.Separator as="li" />
+      </Toolbar.Root>,
+    );
+
+    expect(screen.getByRole('separator').tagName).toBe('LI');
+  });
+
   it('allows its orientation to be overridden', async () => {
     await render(
       <Toolbar.Root orientation="horizontal">

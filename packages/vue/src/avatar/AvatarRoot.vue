@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, provide, shallowRef, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { computed, provide, shallowRef, useAttrs, type HTMLAttributes } from 'vue';
+import { useElement, type AsProps } from '../common/element';
 import { avatarKey } from './root';
 import type { AvatarRootState, ImageLoadingStatus } from './types';
 
 defineOptions({ inheritAttrs: false });
 
+defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
 defineSlots<{
   default?(scope: { state: AvatarRootState }): unknown;
   element?(scope: {
@@ -44,6 +45,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
   <span v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </span>
