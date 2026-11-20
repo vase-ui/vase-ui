@@ -46,9 +46,6 @@
     "src/internals/useTransitionStatus.test.tsx": {
       "fails": {}
     },
-    "src/internals/withoutPropsOf.test.ts": {
-      "fails": {}
-    },
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },

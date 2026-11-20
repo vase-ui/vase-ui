@@ -306,24 +306,23 @@ The template of each such part has the `#render` slot, then the element, and no 
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A provider whose only output is its children renders `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
-A part that Base UI writes as another part renders that part and no element of its own. `ContextMenu.Positioner` is the example:
+A part that Base UI writes as another part renders that part and no element of its own. `DatePicker.Calendar` is the example:
 
-- Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper.
-- ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC that its `exceptions` do not name. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
+- Set `inheritAttrs: false`. Declare only the props that the wrapper reads. Bind `mergeProps(attrs, owned)` on `InnerPart`, with `attrs` from `useAttrs()`. `owned` comes last. It holds the values that the wrapper gives, and `undefined` for each prop of `InnerPart` that the wrapper keeps out. Each other prop, attribute and listener reaches `InnerPart`.
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
 - Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot has no slot template in the second form.
 - Do not write `v-if` on a slot template, as in `<template v-if="$slots.render" #render>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
 - If that part reads `$slots.default`, add a third form. The second form then has `v-else-if="$slots.default"`, and the third form has `v-else` and no slot. Without the third form, that part always gets a default slot, so it never shows its own content.
 - Fallback content in the `<slot>` of that part needs no third form. Vue shows the fallback when the slot renders nothing. The check mark of `ItemIndicator.vue` is an example.
 - `test/stableSlots.test.tsx` checks this rule. Add a fixture and a row to its `partsWithPopup` for each new part that has a popup below it.
-- Declare the wrapper's public component events with `defineEmits`. Relay each declared event once with its original arguments, before the inner emit returns. For a cancelable change, the inner part then checks `details.isCanceled` before it requests the model update. Forward undeclared listeners to their intended element or component through the filtered attributes.
+- Declare the wrapper's public component events with `defineEmits`. Relay each declared event once with its original arguments, before the inner emit returns. For a cancelable change, the inner part then checks `details.isCanceled` before it requests the model update. Undeclared listeners reach the inner part through `attrs`.
 - Expose the `element` of that part.
-- To add listeners, pass the filtered attributes from the template to the function that calls `mergeProps(listeners, givenAttributes(attributes))`. Use `useAttrs()` only to read an individual attribute. A listener of the consumer with the same key then runs first, and `event.preventVaseUIHandler()` stops the listener of the part. An attribute of the consumer that is not given keeps the value of the part.
+- To add a listener, put it in `owned`. `mergeProps` runs a listener of the consumer with the same key first.
 
 A root that Base UI writes as the root of another family renders that root:
 
-- Set `inheritAttrs: false` on the wrapper root. Bind `withoutPropsOf($attrs, OtherRoot)` on `OtherRoot` before its named props. An attribute thus sets no prop that the wrapper root omits. The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
-- Its props interface extends an `Omit` of the props interface of the other root. The template binds each prop on the other root by name.
+- Set `inheritAttrs: false` on the wrapper root. Bind `mergeProps(attrs, owned)` on `OtherRoot`, as above. The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
+- Its props interface extends an `Omit` of the props interface of the other root.
 - The rule above for events applies to the events of the other root.
 - It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
 
@@ -1195,7 +1194,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - A disabled portal renders the element or the render slot at its source, also on the server. A change of `disabled` mounts the content again.
 - Each family controls when to mount its portal. Pass `keepMounted` to child parts through the family context where the family supports it.
 - The guarded portal owns the outside guards and the element with `aria-owns`. It follows the ID on the rendered element. The popup supplies its focus state through `PortalContext`.
-- A public portal filters private props with `withoutPropsOf`. It forwards its render slot or its default content through separate branches. This keeps static slots stable on parent updates.
+- A public portal forwards its render slot or its default content through separate branches. This keeps static slots stable on parent updates.
 - Pass `children` to the render slot. Use `PopupBackdropChildren.vue` for a family with an internal backdrop. Provide its visibility, cutout and element target in the public portal. Other portals use `PopupPortalChildren.vue`.
 - `PopupPortal.parts.test.tsx` checks slot updates. `PopupPortal.root-node.test.tsx` checks transitions on the portal element. `PopupPortal.guards.test.tsx` checks tab order at the portal source.
 
