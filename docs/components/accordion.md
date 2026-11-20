@@ -138,7 +138,7 @@ In a [wrapper of `Accordion.Panel`](/handbook/composition#wrap-a-part), give `ke
 
 `Accordion.Header` renders an `<h3>`. Give it another level with `as`, such as `<Accordion.Header as="h2">`, or render your own heading in its `element` slot.
 
-Each panel has `role="region"`, with the name of its trigger. The WAI-ARIA Authoring Practices say to avoid the role with more than about six panels that can be open at one time. Give such panels another `role`, or no role with `:role="undefined"`. The `role` of the developer wins.
+Each panel has `role="region"`, with the name of its trigger. The WAI-ARIA Authoring Practices say to avoid the role with more than about six panels that can be open at one time. Give such panels another `role`, such as `role="group"`. The `role` of the developer wins.
 
 An item has no index. Use the index of your `v-for`, or `:nth-child()` in CSS.
 

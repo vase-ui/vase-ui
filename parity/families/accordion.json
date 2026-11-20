@@ -82,7 +82,7 @@
       "entry": "Root",
       "prop": "orientation",
       "kind": "not-applicable",
-      "reason": "Base UI deprecated the prop, and it does not change the keyboard. `parity/scope.json` lists it as not ported. The state keeps `orientation` with the default value of Base UI, `vertical`, so each part has `data-orientation=\"vertical\"`."
+      "reason": "Base UI deprecated the prop, and it does not change the keyboard. `parity/scope.json` lists it as not ported. The parts have no state `orientation` and no `data-orientation`, which is always `vertical`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",

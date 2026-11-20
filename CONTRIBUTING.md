@@ -705,9 +705,9 @@ The element of a part:
 - The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
 - Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
 - `src/common/` holds only what two callers use.
-- A part that acts as a button takes `useButton` of `common/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
+- A part that acts as a button takes `useButton` of `common/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Before the mount, a tag in `as` is the element, and an `<input>` is a native button. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
-- A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. `Button` passes the option `type` of `useButton`, and `Tabs.Tab` writes the attribute. A `type` of the developer wins, `undefined` too.
+- A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. `Button` and the triggers of Collapsible and Accordion pass the option `type` of `useButton`, and `Tabs.Tab` writes the attribute. A `type` of the developer wins, `undefined` too.
 
 The public form:
 
@@ -742,7 +742,7 @@ Platform and parity:
 - Register composables that need component hooks synchronously in `setup`. Start browser work after mount. Keep mutable server state local to each request.
 - Match the server HTML and the first client render. Use `data-allow-mismatch` only for an expected difference in the named category.
 - A part that names a label or a message that can come after it in the server HTML calls `useDeferredServerRender()` in `setup`.
-- `Tabs.Tab` and `Tabs.Panel` do not defer their server render. The server HTML names only the part that comes before, and the hydration gives the other name.
+- `Tabs.Tab`, `Tabs.Panel` and the parts of Collapsible and Accordion do not defer their server render. The server HTML names only the part that comes before, and the hydration gives the other name.
 - Check the first interaction with a part that hydrates late. Vue can replay the event that starts hydration.
 - Put a Teleport target in place before the Teleport needs it. With `defer`, the target must exist in the same mount or update tick.
 - Allocate component ids with `useId()` during `setup`, in the same order on the server and client.
