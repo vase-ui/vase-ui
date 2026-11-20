@@ -3,15 +3,7 @@
 // the `pageshow` event. A new `revision` renders the part again with the same value, as a render
 // before that event does.
 export type FormRestoreFamily =
-  | 'toolbar'
-  | 'toolbar-default'
-  | 'select'
-  | 'combobox'
-  | 'number-field'
-  | 'slider'
-  | 'range'
-  | 'date-field'
-  | 'time-field';
+  'select' | 'combobox' | 'number-field' | 'slider' | 'range' | 'date-field' | 'time-field';
 </script>
 
 <script setup lang="ts">
@@ -22,7 +14,6 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 
 const props = defineProps<{
   family: FormRestoreFamily;
@@ -33,7 +24,6 @@ const props = defineProps<{
 const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 
-const text = shallowRef('server');
 const font = shallowRef<string | null>('serif');
 const fruit = shallowRef<string | null>(null);
 const quantity = shallowRef<number | null>(1);
@@ -43,8 +33,6 @@ const when = shallowRef<Temporal.PlainDate | null>(null);
 const alarm = shallowRef<Temporal.PlainTime | null>(null);
 
 const MODELS = {
-  toolbar: text,
-  'toolbar-default': text,
   select: font,
   combobox: fruit,
   'number-field': quantity,
@@ -60,33 +48,12 @@ const changes = shallowRef<string[]>([]);
 function record(value: unknown, details: { reason: string }) {
   changes.value = [...changes.value, `${String(value)} (${details.reason})`];
 }
-
-function handleToolbarInput(event: Event) {
-  text.value = (event.currentTarget as HTMLInputElement).value;
-  changes.value = [...changes.value, `${text.value} (input)`];
-}
 </script>
 
 <template>
   <form @submit.prevent>
-    <Toolbar.Root v-if="family === 'toolbar'">
-      <Toolbar.Input
-        :value="text"
-        name="filter"
-        :data-revision="revision"
-        @input="handleToolbarInput"
-      />
-    </Toolbar.Root>
-    <Toolbar.Root v-else-if="family === 'toolbar-default'">
-      <Toolbar.Input
-        default-value="server"
-        name="filter"
-        :data-revision="revision"
-        @input="handleToolbarInput"
-      />
-    </Toolbar.Root>
     <Select.Root
-      v-else-if="family === 'select'"
+      v-if="family === 'select'"
       v-model="font"
       name="font"
       :items="{ ...FONTS }"

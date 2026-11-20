@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, useAttrs, useId, watch, watchPostEffect } from 'vue';
+import { computed, inject, useAttrs, useId, watch, watchPostEffect } from 'vue';
 import { useButton } from '../button/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { error } from '../common/error';
 import { useModel } from '../common/model';
-import { useCompositeItem } from '../internals/composite/root/useCompositeRoot';
 import { toggleGroupKey } from '../toggle-group/toggle';
-import type { ToolbarRootItemMetadata } from '../toolbar/root/ToolbarRoot.vue';
-import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
+import { toolbarKey, useToolbarItem } from '../toolbar/item';
 import type { ToggleChangeEventDetails, ToggleProps, ToggleState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -34,17 +32,13 @@ const slots = defineSlots<{
 }>();
 
 const group = inject(toggleGroupKey, null);
-// The Toolbar family replaces the toolbar lines of this file with the item contract of its toolbar.
-const toolbar = useToolbarRootContext(true);
+const toolbar = inject(toolbarKey, null);
 const attrs = useAttrs();
 const generatedValue = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled || !!group?.disabled,
-  // `Toolbar.Button` writes `data-focusable` on the toggle that it renders and that keeps the focus
-  // when it is disabled.
-  focusableWhenDisabled: () => !!toolbar && attrs['data-focusable'] !== undefined,
   type: 'button',
   tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
 });
@@ -58,14 +52,12 @@ const itemValue = computed(() => props.value || generatedValue);
 const pressed = computed(() => (group ? group.value.includes(itemValue.value) : ownPressed.value));
 const state = computed<ToggleState>(() => ({ pressed: pressed.value, disabled: isDisabled.value }));
 
-const compositeItem =
+// A toggle with no group is an item of a toolbar through `Toolbar.Button`.
+const toolbarTabindex =
   group && toolbar
-    ? useCompositeItem(element, {
-        metadata: computed<ToolbarRootItemMetadata>(() => ({
-          disabled: isDisabled.value,
-          focusableWhenDisabled: false,
-        })),
-        disabled: isDisabled,
+    ? useToolbarItem(toolbar, element, {
+        disabled: () => isDisabled.value,
+        focusable: () => !isDisabled.value,
       })
     : undefined;
 
@@ -110,10 +102,8 @@ function elementProps() {
   };
   const tabStop = group?.tabStop;
   if (tabStop) own.tabindex = tabStop.element === element.value ? 0 : -1;
-  return mergeAttributes(
-    compositeItem ? mergeProps(compositeItem.attributes.value, compositeItem.events, own) : own,
-    attrs,
-  );
+  if (toolbarTabindex?.value !== undefined) own.tabindex = toolbarTabindex.value;
+  return mergeAttributes(own, attrs);
 }
 
 function onClick(event: MouseEvent) {

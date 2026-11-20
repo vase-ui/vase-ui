@@ -17,7 +17,11 @@ const COMMENT = 3;
 const DIRECTIVE = 7;
 const builtIns = new Set(['Teleport', 'KeepAlive', 'Suspense', 'Transition', 'TransitionGroup']);
 const exceptions: Record<string, { reason: string }> = {
-  '../toolbar/separator/ToolbarSeparator.vue': {
+  '../toolbar/ToolbarInput.vue': {
+    reason:
+      'The wrapper declares each prop of `Input` that it gives on, so an attribute cannot set a prop of `Input`. The attributes fall through to `Input`.',
+  },
+  '../toolbar/ToolbarSeparator.vue': {
     reason:
       'Each prop of `Separator` is a prop of the wrapper, so an attribute cannot set a prop that the wrapper does not have. The attributes fall through to `Separator`.',
   },

@@ -24,6 +24,8 @@ import { isVueMinor } from '../../../test/vaporParts/isVueMinor';
 import { createSlotHost } from '../../../test/fixtures/slotHost';
 import PopoverPopupReplace from './PopoverPopupReplace.test.vue';
 
+type ElementSlot = { props: Record<string, unknown>; elementRef: (target: unknown) => void };
+
 describe('<Popover.Popup />', () => {
   const { render } = createRenderer();
 
@@ -195,7 +197,15 @@ describe('<Popover.Popup />', () => {
         <Toolbar.Root>
           <Toolbar.Button>First</Toolbar.Button>
           <Popover.Root>
-            <Toolbar.Button as={Popover.Trigger}>Open</Toolbar.Button>
+            <Toolbar.Button
+              v-slots={{
+                element: ({ props, elementRef }: ElementSlot) => (
+                  <Popover.Trigger {...props} ref={elementRef}>
+                    Open
+                  </Popover.Trigger>
+                ),
+              }}
+            />
             <Popover.Portal>
               <Popover.Positioner>
                 <Popover.Popup>{slots.default?.()}</Popover.Popup>
@@ -237,8 +247,7 @@ describe('<Popover.Popup />', () => {
       expect(screen.getByRole('button', { name: 'Last' })).not.toHaveFocus();
     });
 
-    // Shielding the toolbar must not disable the keys inside the popup: only propagation is
-    // stopped, so native caret movement in popup content keeps working.
+    // The toolbar acts only on a key of its items, so an arrow key moves the caret in the popup.
     it('keeps composite keys working inside the popup content', async () => {
       const { user } = await render(
         <ToolbarPopover>
@@ -345,13 +354,21 @@ describe('<Popover.Popup />', () => {
     expect(handle.store.state.focusManagerModal).toBe(false);
   });
 
-  it('stops a composite key in a toolbar that holds the portal container', async () => {
+  it('keeps the focus in a popup that a portal puts in the toolbar', async () => {
     const container = shallowRef<HTMLElement | null>(null);
     const { user } = await render(() => (
       <Toolbar.Root>
         <Toolbar.Button>First</Toolbar.Button>
         <Popover.Root defaultOpen>
-          <Toolbar.Button as={Popover.Trigger}>Open</Toolbar.Button>
+          <Toolbar.Button
+            v-slots={{
+              element: ({ props, elementRef }: ElementSlot) => (
+                <Popover.Trigger {...props} ref={elementRef}>
+                  Open
+                </Popover.Trigger>
+              ),
+            }}
+          />
           <Popover.Portal to={container.value}>
             <Popover.Positioner>
               <Popover.Popup>

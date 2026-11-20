@@ -12,7 +12,6 @@ import * as Slider from '../slider/index.parts';
 import * as TimeClock from '../time-clock/index.parts';
 import * as TimeField from '../time-field/index.parts';
 import * as TimePicker from '../time-picker/index.parts';
-import * as Toolbar from '../toolbar/index.parts';
 import type { EditableDateTimeFieldSegment } from './date-time/field/useDateTimeFieldSegment';
 
 declare const segment: EditableDateTimeFieldSegment;
@@ -31,7 +30,6 @@ declare const segment: EditableDateTimeFieldSegment;
   <NumberField.Input :autocomplete="null" />
   <OTPField.Input :autocomplete="null" />
   <TimeField.Segment :segment="segment" :autocomplete="null" />
-  <Toolbar.Input :autocomplete="null" />
 
   <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
   <DateField.Root :aria-labelledby="null" />

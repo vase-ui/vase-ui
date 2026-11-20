@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Popover } from '@vase-ui/vue/popover';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 
@@ -69,28 +68,5 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
     await waitFor(() => {
       expect(onTooltipOpenChange.mock.calls.map((call) => call[0])).toEqual([true]);
     });
-  });
-
-  it('moves the focus of a toolbar with a root listener after a call on a button', async () => {
-    const { user } = await render(
-      <Toolbar.Root onKeydown={() => {}}>
-        <Toolbar.Button
-          onKeydown={(event) => {
-            if (event.key === 'ArrowRight') {
-              event.preventVaseUIHandler();
-            }
-          }}
-        >
-          One
-        </Toolbar.Button>
-        <Toolbar.Button>Two</Toolbar.Button>
-      </Toolbar.Root>,
-    );
-
-    await user.keyboard('[Tab]');
-    expect(screen.getByRole('button', { name: 'One' })).toHaveFocus();
-    await user.keyboard('[ArrowRight]');
-
-    expect(screen.getByRole('button', { name: 'Two' })).toHaveFocus();
   });
 });

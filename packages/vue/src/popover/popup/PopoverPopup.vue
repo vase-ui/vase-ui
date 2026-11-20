@@ -65,14 +65,12 @@ import {
 } from '../../utils/popups/popupBindings';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { computed, provide, watch } from 'vue';
-import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { PopupStyleContext } from '../../utils/popups/viewport/PopupViewportContext';
-import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -100,7 +98,6 @@ defineSlots<{
 
 const { store, open, mounted, transitionStatus, trigger } = usePopoverRootContext();
 const { side, align } = usePopoverPositionerContext();
-const insideToolbar = useToolbarRootContext(true) !== undefined;
 const hasClosePart = useClosePartCount();
 
 const activeTriggerElement = computed(() => {
@@ -137,14 +134,6 @@ const state = computed<PopoverPopupState>(() => ({
   transitionStatus: transitionStatus.value,
 }));
 
-function handleKeydown(event: KeyboardEvent) {
-  // A portal container inside the toolbar puts the popup in the toolbar element. The composite
-  // handler of the toolbar would then move the focus out of the popup.
-  if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
-    event.stopPropagation();
-  }
-}
-
 const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
   PopoverPopupState,
   HTMLElement
@@ -161,7 +150,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
       ...FOCUSABLE_POPUP_PROPS,
       'aria-labelledby': store.state.titleElementId,
       'aria-describedby': store.state.descriptionElementId,
-      onKeydown: handleKeydown,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
     focusBindings(attrs),

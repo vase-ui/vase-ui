@@ -59,7 +59,6 @@ import { menuPopups } from '../../utils/popups/registeredParts';
 import { useElementRegistration } from '../../internals/useElementRegistration';
 import { computed, inject, provide, toRaw, watch } from 'vue';
 import { contains } from '../../common/shadowDom';
-import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { given } from '../../internals/givenAttributes';
@@ -73,7 +72,6 @@ import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { usePopupHover } from '../../utils/popups/interactions/usePopupHover';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { createElementSetter, popupElementTarget } from '../../utils/popups/createElementSetter';
-import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { MenuFilterImplContext, useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import type { MenuRootChangeEventReason } from '../root/MenuRoot.vue';
@@ -96,7 +94,6 @@ defineSlots<{
 const { store, popupLabelId, orientation, virtualFocus } = useMenuRootContext();
 const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
-const insideToolbar = useToolbarRootContext(true) !== undefined;
 // A filterable menu makes the popup a dialog that holds the input, and the input takes the focus.
 const filterPopup = useMenuFilterImpl()?.usePopup();
 
@@ -191,9 +188,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
           event.preventVaseUIHandler();
         }
         submenuRootContext.value?.onPopupKeydown?.(event);
-        if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
-          event.stopPropagation();
-        }
       },
       onFocusin: parentHandoff?.handleFocus,
     },

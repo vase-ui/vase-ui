@@ -1,7 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Ref } from 'vue';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -198,8 +197,6 @@ describe('useFormRestoreAsInput', () => {
   });
 });
 
-const LEAVES = ['input', 'change', 'blur', 'focusout'];
-
 function getInputs(container: HTMLElement, name: string) {
   return [...container.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)];
 }
@@ -219,24 +216,6 @@ interface RestoredFamily {
 }
 
 const RESTORED_FAMILIES: RestoredFamily[] = [
-  {
-    name: 'Toolbar.Input with a value',
-    family: 'toolbar',
-    inputName: 'filter',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (input)',
-    events: LEAVES,
-  },
-  {
-    name: 'Toolbar.Input with a default value',
-    family: 'toolbar-default',
-    inputName: 'filter',
-    written: ['restored'],
-    model: 'restored',
-    changes: 'restored (input)',
-    events: LEAVES,
-  },
   {
     name: 'Select.Root',
     family: 'select',
@@ -304,61 +283,6 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
 
 describe('VUE-81: a render before the page show', () => {
   const { render } = createRenderer();
-
-  it.each([{ name: 'Toolbar.Input', family: 'toolbar-default', inputName: 'filter' }] as const)(
-    'takes only a silent edit of uncontrolled $name',
-    async ({ family, inputName }) => {
-      const { container } = await render(<FormRestoreRender family={family} revision={0} />);
-      const [input] = getInputs(container, inputName);
-      input!.value = 'typed';
-      input!.dispatchEvent(new InputEvent('input', { bubbles: true }));
-      await flushMicrotasks();
-      const events = recordInputEvents(container);
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-      await flushMicrotasks();
-      expect(events).toEqual([]);
-
-      input!.value = input!.defaultValue;
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-      await flushMicrotasks();
-      expect(events).toEqual(LEAVES);
-    },
-  );
-
-  it.each([
-    {
-      name: 'Toolbar.Input',
-      Part: Toolbar.Input,
-      Root: Toolbar.Root,
-      valueProps: { value: 'model' },
-    },
-  ])('starts a replacement $name with its own value', async ({ Part, Root, valueProps }) => {
-    mockPageBeforeLoad();
-    const tag = shallowRef<'input' | 'textarea'>('input');
-    const { container } = await render(() => (
-      <Root>
-        <Part as={tag.value} aria-label="controlled" {...valueProps} />
-        <Part as={tag.value} aria-label="uncontrolled" defaultValue="default" />
-      </Root>
-    ));
-    const controlled = screen.getByLabelText<HTMLInputElement>('controlled');
-    const uncontrolled = screen.getByLabelText<HTMLInputElement>('uncontrolled');
-    uncontrolled.value = 'typed';
-    uncontrolled.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    await flushMicrotasks();
-    controlled.value = 'restored';
-
-    tag.value = 'textarea';
-    await flushMicrotasks();
-    const events = recordInputEvents(container);
-    expect(screen.getByLabelText('controlled')).toHaveValue('model');
-    expect(screen.getByLabelText('uncontrolled')).toHaveValue('default');
-
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-    expect(events).toEqual([]);
-  });
 
   it.each(RESTORED_FAMILIES)(
     'takes the value that the browser restored into $name',

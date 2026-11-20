@@ -23,7 +23,6 @@ import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
@@ -370,12 +369,6 @@ const rows: Row[] = [
       </form>
     ),
     expected: () => 'button',
-  },
-  {
-    name: 'Toolbar.Root role',
-    attribute: 'role',
-    createNode: () => <Toolbar.Root role={undefined} data-testid="part" />,
-    expected: () => 'toolbar',
   },
   {
     name: 'Tooltip.Popup data-open',

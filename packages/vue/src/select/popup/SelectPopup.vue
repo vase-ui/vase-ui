@@ -52,7 +52,6 @@ import { clamp } from '../../common/clamp';
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
-import { COMPOSITE_KEYS } from '../../internals/composite/listIndex';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
@@ -60,7 +59,6 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { usePopupFocus } from '../../utils/popups/focus/usePopupFocus';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
@@ -97,7 +95,6 @@ const {
   isPositioned,
   setControlledAlignItemWithTrigger,
 } = useSelectPositionerContext();
-const insideToolbar = useToolbarRootContext(true) !== undefined;
 const direction = useDirection();
 
 const open = computed(() => store.select('open'));
@@ -500,10 +497,6 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement<
           // `event.preventVaseUIHandler()` in a listener of an item thus stops them too.
           if (event.vaseUIHandlerPrevented) {
             event.preventVaseUIHandler();
-          }
-          // The arrow keys of the popup must not move the focus of a toolbar around the trigger.
-          if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
-            event.stopPropagation();
           }
         },
         onScroll(event: Event) {

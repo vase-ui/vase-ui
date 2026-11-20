@@ -24,4 +24,5 @@ export const REFACTORED_FOLDERS = [
   'tabs',
   'toggle',
   'toggle-group',
+  'toolbar',
 ];
