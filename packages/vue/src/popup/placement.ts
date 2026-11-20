@@ -249,18 +249,21 @@ export function usePlacement(
             ...common,
             mainAxis: alignMode.value !== 'none',
             crossAxis: props.sticky || shiftsSide || !!options.shiftAcross?.(),
+            // The layout viewport as the root boundary stops the popup from moving during a pinch
+            // zoom.
             rootBoundary: options.shiftAcross?.() ? 'layoutViewport' : undefined,
-            limiter: props.sticky
-              ? undefined
-              : limitShift((state) => {
-                  const arrow = arrowElement.value?.getBoundingClientRect();
-                  if (!arrow) return {};
-                  const vertical = getSideAxis(getSide(state.placement)) === 'y';
-                  const room = vertical
-                    ? padding.value.left + padding.value.right
-                    : padding.value.top + padding.value.bottom;
-                  return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
-                }),
+            limiter:
+              props.sticky || options.shiftAcross?.()
+                ? undefined
+                : limitShift((state) => {
+                    const arrow = arrowElement.value?.getBoundingClientRect();
+                    if (!arrow) return {};
+                    const vertical = getSideAxis(getSide(state.placement)) === 'y';
+                    const room = vertical
+                      ? padding.value.left + padding.value.right
+                      : padding.value.top + padding.value.bottom;
+                    return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
+                  }),
           });
     // https://floating-ui.com/docs/flip#combining-with-shift
     const collision =

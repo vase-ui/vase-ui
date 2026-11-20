@@ -165,6 +165,8 @@ export function useMenuRoot<Payload>(
   provide(filterProviderKey, null);
 
   let lastEvent: Event | undefined;
+  // The open closed another menu of the menubar.
+  let replacesSibling = false;
   const root = usePopupRoot<Payload>({
     name: 'Menu',
     open: () => props.open,
@@ -186,15 +188,15 @@ export function useMenuRoot<Payload>(
         return;
       }
       const sibling = parent ? parent.openChild : (menubar.value?.openMenu ?? null);
-      if (sibling && sibling !== context) sibling.root.request(false, 'sibling-open', event);
+      replacesSibling = !!sibling && sibling !== context;
+      if (replacesSibling) sibling?.root.request(false, 'sibling-open', event);
     },
     emitOpen: (open) => emit('update:open', open),
     emitTriggerId: (id) => emit('update:triggerId', id),
     instantOf(open, reason, event) {
       if (kind.value === 'menubar') {
-        const other = menubar.value?.openMenu;
         if (reason === 'sibling-open' || reason === 'list-navigation') return 'group';
-        if (open && other && other !== context) return 'group';
+        if (open && replacesSibling) return 'group';
       }
       if (reason === 'trigger-press' && (event as MouseEvent).detail === 0) return 'click';
       if (!open && (reason === 'escape-key' || reason === 'none')) return 'dismiss';

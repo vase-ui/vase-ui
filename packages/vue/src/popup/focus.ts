@@ -15,6 +15,9 @@ export type FocusTarget =
   | null
   | ((interaction: InteractionType) => HTMLElement | boolean | null | undefined | void);
 
+/** The element that had the focus before the open of each root. */
+const befores = new WeakMap<PopupRoot, Element | null>();
+
 const CANDIDATES =
   'a[href],area[href],button,input:not([type="hidden"]),select,textarea,iframe,summary,details,audio[controls],video[controls],[tabindex],[contenteditable]:not([contenteditable="false"])';
 
@@ -112,6 +115,7 @@ export function usePopupFocus(
     (open) => {
       if (open) {
         before = activeElement(ownerDocument(root.activeTrigger));
+        befores.set(root, before);
         took = false;
         return;
       }
@@ -212,9 +216,10 @@ export function usePopupFocus(
       } else {
         const exit = options.exit?.() ?? root;
         const trigger = exit.activeTrigger;
+        // With no trigger, such as a context menu, the focus goes back where it was.
         const next = trigger
           ? nextTabStop(trigger, [exit.popup, ...exit.portalElements, popup, ...root.portalElements])
-          : undefined;
+          : (befores.get(exit) as HTMLElement | null | undefined);
         exit.request(false, 'focus-out', event);
         focus(next);
       }

@@ -261,8 +261,9 @@ export function useListItem(
       if (related && list.items().some((other) => other.element.contains(related))) return;
       list.highlight(null, 'pointer', event);
     },
+    // A screen reader and a touch can give an item the real focus.
     onFocus() {
-      if (entry && !list.virtual && list.highlighted !== entry) list.highlight(entry, 'none');
+      if (entry && list.highlighted !== entry) list.highlight(entry, 'none');
     },
     // The owner keeps the focus at a press (test/measurements/menu.test.ts).
     onMousedown: list.virtual ? (event: MouseEvent) => event.preventDefault() : undefined,
