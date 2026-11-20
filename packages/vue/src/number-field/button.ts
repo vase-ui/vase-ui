@@ -47,9 +47,7 @@ export function useStepButton(
   watch(
     () => root.state.disabled || root.state.readonly,
     (off) => {
-      if (!off) return;
-      endHold();
-      pressed = false;
+      if (off) endHold();
     },
   );
   onBeforeUnmount(endHold);
@@ -96,8 +94,7 @@ export function useStepButton(
     if (mouse) stepHeld(current);
     const next = () => {
       if (!current.out) stepHeld(current);
-      // At its bound the button is disabled, and the repeat stops.
-      if (!disabled.value) current.timer = setTimeout(next, repeat);
+      current.timer = setTimeout(next, repeat);
     };
     current.timer = setTimeout(next, firstRepeat);
     // An ancestor can stop `pointerup` before it gets to the button (measured).
@@ -118,9 +115,7 @@ export function useStepButton(
   }
 
   function onCancel(event: PointerEvent) {
-    if (event.pointerId !== hold?.pointerId) return;
-    endHold();
-    pressed = false;
+    if (event.pointerId === hold?.pointerId) endHold();
   }
 
   function endHold() {

@@ -17,6 +17,7 @@ import { screen } from '../../test/queries';
 import { mount, mountError, settle, typeAtEnd } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { fireTouch } from '../../test/touch';
+import { waitFor } from '../../test/waitFor';
 
 type Attrs = Record<string, unknown>;
 
@@ -224,33 +225,23 @@ describe('the parts', () => {
     expect(input.value).toBe('5');
   });
 
-  test('a v-if that replaces the input gives the root the new input; with no input the buttons have no aria-controls, and an aria-controls of the developer wins', async () => {
-    const scene = reactive({ second: false });
-    const { root } = mount(NumberFieldParts, { root: { defaultValue: 5 }, scene });
-    await nextTick();
-    const decrement = root.querySelector('button[aria-label=Decrease]')!;
-    expect(decrement).toHaveAttribute(
-      'aria-controls',
-      root.querySelector('input[aria-label=First]')!.id,
-    );
-    scene.second = true;
-    await nextTick();
-    const second = root.querySelector<HTMLInputElement>('input[aria-label=Second]')!;
-    expect(decrement).toHaveAttribute('aria-controls', second.id);
-    second.focus();
-    await userEvent.keyboard('{ArrowUp}');
-    expect(second.value).toBe('6');
-
-    const parts = reactive({ input: true });
-    const { increment, decrement: other } = await mountField({
+  test('a v-if in a Transition that replaces the input gives the root the new input; with no input the buttons have no aria-controls, and an aria-controls of the developer wins', async () => {
+    let left = 0;
+    const parts = reactive({ input: true, second: false });
+    const { increment, decrement } = await mountField({
       parts,
       increment: { 'aria-controls': '' },
+      onInputLeft: () => left++,
     });
-    expect(other).toHaveAttribute('aria-controls', 'amount');
+    expect(decrement).toHaveAttribute('aria-controls', 'amount');
     expect(increment).toHaveAttribute('aria-controls', '');
-    parts.input = false;
-    await nextTick();
-    expect(other).not.toHaveAttribute('aria-controls');
+    // The new input mounts before `<Transition>` removes the old one.
+    Object.assign(parts, { input: false, second: true });
+    await waitFor(() => expect(left).toBe(1));
+    expect(decrement).toHaveAttribute('aria-controls', 'second');
+    parts.second = false;
+    await waitFor(() => expect(left).toBe(2));
+    expect(decrement).not.toHaveAttribute('aria-controls');
   });
 });
 
@@ -542,7 +533,7 @@ describe('paste and composition', () => {
     await settle();
     expect(input.value).toBe('1342');
     expect(input.selectionStart).toBe(3);
-    source.value = '3.4.5';
+    source.value = '-';
     source.focus();
     source.select();
     await userEvent.copy();
@@ -689,6 +680,31 @@ describe('the blur and the commit', () => {
     ]);
   });
 
+  test('the blur rounds only a number that the user typed: with a parent that keeps its value, the blur emits nothing', async () => {
+    const log: string[] = [];
+    const { input } = await mountField({
+      root: record(log, { modelValue: 1.23456, format: { maximumFractionDigits: 2 } }),
+    });
+    await typeAtEnd(input, '7');
+    input.blur();
+    await settle();
+    expect(input.value).toBe('1.23');
+    expect(log).toEqual(['change 1.237 input-change', 'update 1.237']);
+  });
+
+  test('a blur after typed edits that give back the value of the focus commits nothing', async () => {
+    const log: string[] = [];
+    const root = bound(log, 1);
+    const { input } = await mountField({ root });
+    root.modelValue = 2;
+    await nextTick();
+    await typeAtEnd(input, '3');
+    await userEvent.keyboard('{Backspace}');
+    input.blur();
+    await settle();
+    expect(commits(log)).toEqual([]);
+  });
+
   test('the native change of the text input gives no valueChange', async () => {
     const log: string[] = [];
     const { input } = await mountField({ root: record(log, { defaultValue: 1 }) });
@@ -821,13 +837,15 @@ describe('steps', () => {
       'commit 100 keyboard',
       'commit 0 keyboard',
     ]);
-    input.addEventListener('keydown', (event) => prevented.push(event.defaultPrevented));
-    await userEvent.keyboard('{PageUp}{PageDown}');
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Alt') prevented.push(event.defaultPrevented);
+    });
+    await userEvent.keyboard('{PageUp}{PageDown}{Alt>}{End}{/Alt}');
     root.min = undefined;
     await nextTick();
     await userEvent.keyboard('{Home}');
     await Promise.resolve();
-    expect(prevented).toEqual([false, false, false]);
+    expect(prevented).toEqual([false, false, false, false]);
     expect(input.value).toBe('0');
   });
 
@@ -971,6 +989,17 @@ describe('the buttons', () => {
     expect(log).toEqual([]);
   });
 
+  test('a press on a disabled button that is not a native button steps nothing', async () => {
+    const { root } = mount(NumberFieldParts, { root: { defaultValue: 1, disabled: true } });
+    await nextTick();
+    const increment = root.querySelector('div[aria-label=Increase]')!;
+    expect(increment).toHaveAttribute('aria-disabled', 'true');
+    pointer(increment, 'pointerdown');
+    pointer(increment, 'pointerup');
+    await settle();
+    expect(root.querySelector('output')).toHaveTextContent('1');
+  });
+
   test('a button is disabled at its bound and by its prop; at the bound the repeat stops, and the release commits', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const log: string[] = [];
@@ -1085,8 +1114,11 @@ describe('the scrub area', () => {
       area: { pixelSensitivity: 4 },
     });
     expect(noSelect(area)).toBe(true);
+    input.setSelectionRange(0, 0);
     expect(pointer(area, 'pointerdown', { clientX: 100, clientY: 10 }).defaultPrevented).toBe(true);
+    // In each browser, the caret is at the end of the text.
     expect(document.activeElement).toBe(input);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([1, 1]);
     await nextTick();
     expect(field).toHaveAttribute('data-scrubbing');
     expect(area).toHaveAttribute('data-scrubbing');

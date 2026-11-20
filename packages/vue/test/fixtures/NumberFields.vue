@@ -6,7 +6,8 @@ type Attrs = Record<string, unknown>;
 
 // One number field in a form. Each prop gives the attributes of a part. With no `area`, the field
 // has no scrub area, and with `input: null` no text input. `parts` can remove the buttons, the
-// input or the scrub area after the mount.
+// input or the scrub area after the mount, and put a second input in a `<Transition>` in the place
+// of the input.
 defineProps({
   root: Object as PropType<Attrs>,
   input: { type: Object as PropType<Attrs | null>, default: () => ({}) },
@@ -14,11 +15,17 @@ defineProps({
   decrement: Object as PropType<Attrs>,
   area: Object as PropType<Attrs>,
   parts: {
-    type: Object as PropType<{ buttons?: boolean; input?: boolean; area?: boolean }>,
+    type: Object as PropType<{
+      buttons?: boolean;
+      input?: boolean;
+      second?: boolean;
+      area?: boolean;
+    }>,
     default: () => ({}),
   },
   submitButton: Boolean,
 });
+defineEmits<{ inputLeft: [] }>();
 const field = useTemplateRef('field');
 defineExpose({ field });
 </script>
@@ -37,7 +44,10 @@ defineExpose({ field });
           v-bind="decrement"
           >−</NumberField.Decrement
         >
-        <NumberField.Input v-if="input && parts.input !== false" id="amount" v-bind="input" />
+        <Transition @after-leave="$emit('inputLeft')">
+          <NumberField.Input v-if="input && parts.input !== false" id="amount" v-bind="input" />
+          <NumberField.Input v-else-if="parts.second" id="second" aria-label="Second" />
+        </Transition>
         <NumberField.Increment
           v-if="parts.buttons !== false"
           aria-label="Increase"

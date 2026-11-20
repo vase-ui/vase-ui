@@ -27,7 +27,7 @@ const blocksImplicitSubmission = new Set([
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<NumberFieldInputProps>();
-const slots = defineSlots<{
+defineSlots<{
   element?(scope: {
     props: Record<string, unknown>;
     elementRef: (target: unknown) => void;
@@ -58,8 +58,7 @@ watch(
       root.setInput({
         element: el,
         get id() {
-          // The `element` slot can give the element another `id`.
-          return (slots.element && el.id) || elementId.value;
+          return elementId.value;
         },
       }),
     );
@@ -115,18 +114,14 @@ function showText(el: HTMLInputElement) {
 }
 
 function onBeforeinput(event: InputEvent) {
-  if (composing || event.isComposing) return;
   const data = event.data ?? event.dataTransfer?.getData('text/plain');
   if (!data) return;
   const el = event.currentTarget as HTMLInputElement;
   const { value, selectionStart, selectionEnd } = el;
-  // A drop puts its text at the point of the drop, and keeps the selection.
   const next =
-    event.inputType === 'insertFromDrop'
-      ? value + data
-      : value.slice(0, selectionStart ?? value.length) +
-        data +
-        value.slice(selectionEnd ?? value.length);
+    value.slice(0, selectionStart ?? value.length) +
+    data +
+    value.slice(selectionEnd ?? value.length);
   const { text } = root;
   if (
     !text.accepts(next, root.negative) ||
@@ -167,7 +162,6 @@ function onCompositionend(event: CompositionEvent) {
     root.edit(el.value, 'input-change', event);
   } else {
     root.holdText(textBeforeComposition);
-    el.value = textBeforeComposition;
   }
 }
 

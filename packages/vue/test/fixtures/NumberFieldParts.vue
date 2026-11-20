@@ -3,11 +3,8 @@ import { useTemplateRef, type PropType } from 'vue';
 import { NumberField } from '../../src/number-field';
 import StyledInput from './StyledInput.vue';
 
-// Parts in the `element` slot of each part, a swap of the text input, and parts in `as`.
-defineProps({
-  root: Object as PropType<Record<string, unknown>>,
-  scene: { type: Object as PropType<{ second: boolean }>, default: () => ({ second: false }) },
-});
+// Parts in the `element` slot of each part, and parts in `as`.
+defineProps({ root: Object as PropType<Record<string, unknown>> });
 const input = useTemplateRef('input');
 const increment = useTemplateRef('increment');
 defineExpose({ input, increment });
@@ -27,12 +24,11 @@ defineExpose({ input, increment });
                 buttonState.disabled ? 'off' : '−'
               }}</template>
             </NumberField.Decrement>
-            <NumberField.Input v-if="!scene.second" id="parts-input" ref="input" aria-label="First">
+            <NumberField.Input id="parts-input" ref="input" aria-label="First">
               <template #element="{ props: inputProps, elementRef: inputRef }">
                 <StyledInput v-bind="inputProps" :ref="inputRef" />
               </template>
             </NumberField.Input>
-            <NumberField.Input v-else aria-label="Second" />
             <NumberField.Increment ref="increment" aria-label="Increase">
               <template #element="{ props: buttonProps, elementRef: buttonRef }">
                 <div v-bind="buttonProps" :ref="buttonRef">+</div>

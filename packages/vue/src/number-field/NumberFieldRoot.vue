@@ -124,9 +124,9 @@ watch(
         get readOnly() {
           return props.readonly;
         },
-        // The browser validates the hidden input, which has the value and the constraints.
+        // The browser validates the hidden input, which has the value and the constraints. It
+        // gives the focus to the text input.
         inputs: [hidden],
-        focusElement: text?.element,
       }),
     );
   },
@@ -137,12 +137,10 @@ useFormReset(hiddenInput, () => {
   field?.onReset(firstValue);
   typed.value = null;
   edited = false;
-  committed = firstValue;
   if (value.value !== firstValue) {
     setOwn(firstValue);
     emit('update:modelValue', firstValue);
   }
-  nextTick(showInputs);
 });
 
 provide(numberFieldKey, {
@@ -176,9 +174,7 @@ provide(numberFieldKey, {
   },
   setInput(added) {
     input.value = added;
-    return () => {
-      if (input.value === added) input.value = undefined;
-    };
+    return () => (input.value = undefined);
   },
   atBound(direction) {
     const current = value.value;
@@ -194,15 +190,11 @@ provide(numberFieldKey, {
     typed.value = { text, value: value.value };
   },
   startEdit() {
-    edited = false;
     committed = value.value;
   },
   endEdit,
   step: stepBy,
-  change(next, reason, event) {
-    typed.value = null;
-    return change(next, reason, event);
-  },
+  change,
   commit,
   focusInput,
   setScrubbing(scrubbing) {
@@ -290,9 +282,7 @@ function edit(text: string, reason: 'input-change' | 'input-paste', event: Event
   else if (parsed !== undefined)
     next = intoRange(parsed, typedRange.value.min, typedRange.value.max);
   typed.value = { text, value: next };
-  if (next !== value.value && !change(next, parsed === null ? 'input-clear' : reason, event)) {
-    typed.value = null;
-  }
+  if (next !== value.value) change(next, parsed === null ? 'input-clear' : reason, event);
 }
 
 function endEdit(event: FocusEvent) {
@@ -346,13 +336,12 @@ function stepBy(
           },
         );
   if (next === current) return undefined;
-  typed.value = null;
   return change(next, reason, event, current === null ? undefined : direction) ? next : undefined;
 }
 
 function focusInput() {
   const el = input.value?.element;
-  if (!el || el.matches(':focus')) return;
+  if (!el) return;
   // `focus()` puts the caret at 0 in Chromium and Firefox and selects the text in WebKit. A caret
   // set before the focus stays, and a `focusin` listener of the developer can still select
   // (measured).
@@ -366,7 +355,6 @@ function onFill(event: Event) {
     ? null
     : intoRange(valueAsNumber, typedRange.value.min, typedRange.value.max);
   if (!isDisabled.value && !props.readonly && next !== value.value) {
-    typed.value = null;
     if (change(next, 'none', event)) commit(next, 'none', event);
   }
   nextTick(showInputs);

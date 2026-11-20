@@ -490,8 +490,9 @@ describe('lifetime', () => {
     const { root } = mount(InputsInForm, { inputs });
     inputs.pop();
     await nextTick();
+    // `reset` bubbles, so the listener is on the root node of the input.
     expect(resetListeners(added)).toEqual([
-      { target: root.querySelector('form'), type: 'reset', listener: expect.any(Function) },
+      { target: root.getRootNode(), type: 'reset', listener: expect.any(Function) },
     ]);
     expect(resetListeners(removed)).toEqual(resetListeners(added));
   });

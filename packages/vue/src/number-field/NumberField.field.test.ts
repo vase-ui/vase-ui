@@ -154,6 +154,30 @@ describe('the native form', () => {
     expect(log).toEqual(['update 3']);
   });
 
+  test('a reset with no change of the value emits nothing, and the text shows the format', async () => {
+    const log: string[] = [];
+    const { form, input } = await mountField({ root: record(log, { defaultValue: 5 }) });
+    input.focus();
+    input.select();
+    await userEvent.keyboard('5.0');
+    form.reset();
+    await settle();
+    expect(input.value).toBe('5');
+    expect(log).toEqual([]);
+  });
+
+  test('a reset ends the edit, so the blur after it commits nothing', async () => {
+    const log: string[] = [];
+    const { form, input } = await mountField({ root: record(log, { defaultValue: 5 }) });
+    await typeAtEnd(input, '0');
+    await userEvent.keyboard('{ArrowUp}2');
+    form.reset();
+    await settle();
+    input.blur();
+    await settle();
+    expect(log.filter((line) => line.startsWith('commit'))).toEqual(['commit 51 keyboard']);
+  });
+
   test('a reset that a listener prevented changes nothing', async () => {
     const { form, input } = await mountField({ root: { defaultValue: 5 } });
     await typeAtEnd(input, '0');
@@ -165,6 +189,9 @@ describe('the native form', () => {
 
   test('a required empty field fails the submit, and the focus that the browser gives the hidden input goes to the text input', async () => {
     const { form, input, hidden } = await mountField({ root: { required: true } });
+    // The text input has text, so the browser finds the hidden input invalid first.
+    await typeAtEnd(input, '-');
+    input.blur();
     expect(hidden.validity.valueMissing).toBe(true);
     form.requestSubmit();
     await settle();
@@ -193,6 +220,16 @@ describe('Enter', () => {
 
   test('with a submit button, the browser clicks it one time', async () => {
     const { input } = await mountField({ root: { defaultValue: 1 }, submitButton: true });
+    input.focus();
+    await userEvent.keyboard('{Enter}');
+    await settle();
+    expect(submitsPrevented).toEqual([false]);
+  });
+
+  test('with an image button, the browser clicks it one time', async () => {
+    const { form, input } = await mountField({ root: { defaultValue: 1 } });
+    const image = form.appendChild(document.createElement('input'));
+    image.type = 'image';
     input.focus();
     await userEvent.keyboard('{Enter}');
     await settle();
@@ -262,6 +299,20 @@ describe('Field and Form', () => {
     expect(dataAttributes(input)).toEqual(['data-dirty', 'data-filled', 'data-touched']);
   });
 
+  test('an edit removes the error that the form gives the field', async () => {
+    const form = reactive<Attrs>({ errors: { amount: 'Taken.' } });
+    form['onUpdate:errors'] = (errors: unknown) => (form.errors = errors);
+    const { input } = await mountInField({
+      form,
+      field: { name: 'amount' },
+      root: { defaultValue: 1 },
+    });
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    await typeAtEnd(input, '2');
+    await settle();
+    expect(input).not.toHaveAttribute('aria-invalid');
+  });
+
   test('a disabled field disables each part', async () => {
     const { input, hidden, numberField, root } = await mountInField({ field: { disabled: true } });
     expect(input.disabled && hidden.disabled).toBe(true);
@@ -318,7 +369,11 @@ describe('VUE-112: a disabled fieldset', () => {
     increment.click();
     await settle();
     expect(input.value).toBe('5');
-    if (native) expect(input.matches(':disabled')).toBe(true);
+    if (native) {
+      expect(input.matches(':disabled')).toBe(true);
+      // A disabled control has no validity: its field, outside the fieldset, is not invalid.
+      expect(input).not.toHaveAttribute('aria-invalid');
+    }
     scene.disabled = false;
     await settle();
     expect(increment).not.toBeDisabled();
