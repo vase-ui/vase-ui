@@ -13,7 +13,7 @@ Base UI, arranged for Vue.
 
 Unstyled Vue components from [Base UI](https://base-ui.com). Actively maintained. All 38 Base UI components, plus date, time and resizable panels. It ships no styles. A vase should not pick your flowers.
 
-Vase UI is maintained independently: every Base UI release is ported within two weeks, and more than 23,000 tests run in Chromium, Firefox and WebKit before each merge.
+Vase UI is maintained independently: every Base UI release is ported within two weeks, and more than 6,500 tests run in each of Chromium, Firefox and WebKit before each merge.
 
 Vase UI also has some components that Base UI does not have, such as Resizable. [The parity page](https://vase-ui.com/parity) lists them.
 
@@ -21,7 +21,7 @@ Vase UI is an independent project. It is not affiliated with MUI.
 
 ## Our guarantee
 
-Every Base UI component and documented API has a Vase UI counterpart.
+Every Base UI feature has a Vase UI form. The parity page names each feature that Vue or the browser gives in a better way.
 
 - [The parity page](https://vase-ui.com/parity) shows, for every component, the Base UI commit it matches, and every Base UI change with its state: mirrored, queued, or not applicable to Vue, with the reason.
 - Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.

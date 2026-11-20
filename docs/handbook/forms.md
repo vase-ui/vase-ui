@@ -46,6 +46,8 @@ The demos on this page use Tailwind CSS, and the files in `components` give each
 
 <<< ../demos/handbook-forms/components/form.ts
 
+<<< ../demos/handbook-forms/components/input.ts
+
 <<< ../demos/handbook-forms/components/number-field.ts
 
 <<< ../demos/handbook-forms/components/radio-group.ts
@@ -109,9 +111,9 @@ To label a group of controls, put the group in `<Fieldset.Root>`, and its label 
 
 Put a checkbox group or a radio group in `Fieldset.Root`. Wrap each option in `<Field.Item>`. Each control then has its own label and description:
 
-<<< ../components/radio-group/FieldsetLegend.vue{11,15,19}
+<<< ../examples/forms/RadioGroupFieldset.vue{11,13,17}
 
-<<< ../components/checkbox-group/FieldsetLegend.vue{11,15,20}
+<<< ../examples/forms/CheckboxGroupFieldset.vue{11,13,18}
 
 ## Building form fields
 
@@ -140,9 +142,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 <<< ../examples/forms/ConstraintValidation.vue{8}
 
-A form component such as `Select` or `NumberField` uses a hidden input to take part in native form submission and validation. `Input`, `Checkbox`, `Radio` and `Switch` are native inputs, so the browser places their messages. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport. The hidden input of `NumberField.Root` is its last child, and it is `position: absolute` also with no `name`.
-
-The root of `Select` is a `<div>` that holds its inputs, and its text input is `position: absolute`. Give `Select.Root` `position: relative`, and the message points at the select.
+`Input`, `Checkbox`, `Radio` and `Switch` render native inputs, so the browser shows their validation messages at the control. A component such as `Select` or `NumberField` takes part in native submission and validation with a visually hidden input. That input is in the element of the component, and it is `position: absolute`. Give the root of the component, or an element around it, `position: relative`. The native validation message then points at the control.
 
 ## Custom validation
 
@@ -164,11 +164,13 @@ Use the `validationMode` prop to set when the validation runs:
 
 Bind the errors that a server returns after a submission with `v-model:errors` of `Form`. The form gives them to each field for display.
 
-`errors` is an object. Its keys are field names, and each value is an error string or an array of error strings. An edit of a field asks to remove the key of that field with `update:errors`.
+`errors` is an object. Its keys are field names, and each value is an error string or an array of error strings. An edit of a field asks to remove the key of that field with `update:errors`. A native reset of the form asks to remove the key of each field.
 
 <<< ../examples/forms/ServerErrors.vue{15,19,24}
 
-A demo on the [Form page](/components/form#submit-to-a-server) shows the errors of a server after a submission.
+After a submit that passes the validation, the next change of `errors` moves the focus to the first field that has an error. An edit or a reset before that change cancels the move.
+
+The demo [Submit to a server](/components/form#submit-to-a-server) of the Form page shows the errors of a server after a submission.
 
 ## Displaying errors
 
@@ -295,3 +297,18 @@ To submit the form:
 3. Give a function to `onSubmitInvalid` in `useForm`. TanStack Form calls it when the form is not valid. Vase UI gives `aria-invalid="true"` to the control of a field that is invalid. Find the first such element in the form. Move the focus to that element.
 
 <<< ../examples/forms/TanstackSubmit.vue{5,9-17,22,24}
+
+## Differences from Base UI
+
+| Base UI                                            | Vase UI                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `onFormSubmit(formValues, eventDetails)`           | The `submit` event of `Form`, with the native `SubmitEvent` and the values. It comes after the validation passes.         |
+| `onSubmit` with `event.preventDefault()`           | `@submit` on `Form`. The form prevents the native submit while it has a `submit` listener.                                |
+| `errors` of `Form`                                 | `v-model:errors`. An edit of a field removes the key of that field.                                                       |
+| `validationMode`: `onSubmit`, `onBlur`, `onChange` | `validationMode`: `submit`, `blur`, `change`.                                                                             |
+| `actionsRef` of `Form` and `Field.Root`            | A template ref with `validate()`. The `validate(name?)` of `Form` returns `true` when each field that it checks is valid. |
+| `dirty` and `touched` of `Field.Root`              | `v-model:dirty` and `v-model:touched`.                                                                                    |
+| `Field.Control`                                    | `Input`.                                                                                                                  |
+| `Field.Validity`                                   | The default slot of `Field.Root`. It gives `state`, `validity`, `errors`, `value` and `initialValue`.                     |
+| `match={true}` on `Field.Error`                    | `invalid` on `Field.Root`. `Field.Error` with no `match` shows while the field is invalid.                                |
+| React Hook Form                                    | [VeeValidate](#veevalidate), a form library for Vue.                                                                      |
