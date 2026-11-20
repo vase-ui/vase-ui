@@ -72,13 +72,15 @@ export interface PopupRoot<Payload = unknown> {
   readonly closeRequests: number;
   /**
    * Asks for a change of the state after an action of the user. A request for the state that the
-   * root has, for the same trigger, emits nothing.
+   * root has, for the same trigger, emits nothing. `interaction` replaces the input that the root
+   * reads from the event.
    */
   request(
     open: boolean,
     reason: string,
     event: Event,
     trigger?: Element | null,
+    interaction?: InteractionType,
   ): PopupChangeEventDetails;
   addTrigger(trigger: PopupTrigger): () => void;
   setPopup(element: HTMLElement | null): void;
@@ -258,7 +260,13 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   );
   const activeTrigger = computed(() => activeEntry.value?.element ?? lastTrigger.value);
 
-  function change(next: boolean, why: string, event: Event, entry: PopupTrigger | undefined) {
+  function change(
+    next: boolean,
+    why: string,
+    event: Event,
+    entry: PopupTrigger | undefined,
+    input = interactionOf(event),
+  ) {
     const element = entry?.element ?? activeTrigger.value;
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = next && entry ? entry.id : activeTriggerId.value;
@@ -271,8 +279,8 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     options.emitChange(next, details);
     if (details.isCanceled) return details;
     reason.value = why;
-    if (next) interaction.value = interactionOf(event);
-    else closeInteraction.value = interactionOf(event);
+    if (next) interaction.value = input;
+    else closeInteraction.value = input;
     instant.value = options.instantOf?.(next, why, event);
     if (nextId !== activeTriggerId.value) {
       triggerIdModel.setOwn(nextId);
@@ -377,9 +385,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     get closeRequests() {
       return closeRequests.value;
     },
-    request(next, why, event, trigger) {
+    request(next, why, event, trigger, input) {
       const entry = trigger ? triggers.find((each) => each.element === trigger) : undefined;
-      return change(next, why, event, entry);
+      return change(next, why, event, entry, input);
     },
     addTrigger: (trigger) => add(triggers, trigger),
     setPopup(element) {

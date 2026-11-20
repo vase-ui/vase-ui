@@ -1,6 +1,6 @@
 import { computed, onMounted, watch, type Ref } from 'vue';
 import { useButton } from '../common/button';
-import type { PopupRoot } from './root';
+import { interactionOf, type InteractionType, type PopupRoot } from './root';
 
 /**
  * A trigger of a popup: a button that registers with its root while it is mounted, and that
@@ -17,6 +17,17 @@ export function usePopupTrigger(
     tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;
+    /**
+     * A press of the main mouse button opens or closes the popup at `pointerdown`, and the `click`
+     * of that press does nothing. A touch, a pen, a key and a script act at `click`.
+     */
+    pressAtPointerdown?: boolean;
+    /**
+     * The trigger knows a key click by the Enter or Space `keydown` before it, and not by `detail`.
+     * The `click` of a native label has `detail` 0 in WebKit only
+     * (test/measurements/select.test.ts), so each other click is a pointer click.
+     */
+    keyClickByKeydown?: boolean;
   },
 ) {
   const button = useButton({
@@ -61,15 +72,42 @@ export function usePopupTrigger(
   });
   const open = computed(() => active.value && !!root()?.open);
 
-  function onClick(event: MouseEvent) {
+  let pressed = false;
+  let keyed = false;
+
+  function toggle(event: MouseEvent, interaction?: InteractionType) {
     const current = root();
     if (!current) return;
-    if (open.value && (options.closesAtPress?.(event) ?? true)) {
-      current.request(false, 'trigger-press', event, options.element.value);
-    } else {
-      current.request(true, 'trigger-press', event, options.element.value);
-    }
+    const close = open.value && (options.closesAtPress?.(event) ?? true);
+    current.request(!close, 'trigger-press', event, options.element.value, interaction);
   }
 
-  return { button, active, open, onClick };
+  function onClick(event: MouseEvent) {
+    const wasPressed = pressed;
+    const wasKeyed = keyed;
+    pressed = false;
+    keyed = false;
+    if (wasPressed && event.detail !== 0) return;
+    if (!options.keyClickByKeydown) {
+      toggle(event);
+      return;
+    }
+    const interaction = interactionOf(event);
+    toggle(event, wasKeyed ? 'keyboard' : interaction === 'keyboard' ? '' : interaction);
+  }
+
+  function onPointerdown(event: PointerEvent) {
+    pressed = false;
+    if (!options.pressAtPointerdown || event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (button.disabled.value) return;
+    pressed = true;
+    toggle(event);
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    pressed = false;
+    keyed = event.key === 'Enter' || event.key === ' ';
+  }
+
+  return { button, active, open, onClick, onPointerdown, onKeydown };
 }

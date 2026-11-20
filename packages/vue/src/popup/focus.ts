@@ -96,6 +96,10 @@ export function usePopupFocus(
     placed: () => boolean;
     initialFocus: () => FocusTarget | undefined;
     finalFocus: () => FocusTarget | undefined;
+    /** A sentinel that gets the focus from the popup closes it, after Tab and after Shift+Tab. */
+    sentinelCloses?: boolean;
+    /** The element that takes the focus when the focused element of the popup leaves or hides. */
+    lostFocus?: () => HTMLElement | null;
   },
 ) {
   let before: Element | null = null;
@@ -130,6 +134,36 @@ export function usePopupFocus(
         return;
       }
       focus(popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup);
+    },
+    { flush: 'post' },
+  );
+
+  // Only Chromium sends `focusout` when the focused element leaves the DOM, and no browser sends
+  // one when it hides (test/measurements/menu.test.ts), so an observer looks after each change.
+  watch(
+    () => (root.open && options.lostFocus ? root.popup : null),
+    (popup, _, onCleanup) => {
+      if (!popup) return;
+      let focused: Element | null = null;
+      const onFocusin = (event: FocusEvent) => (focused = event.target as Element);
+      const observer = new MutationObserver(() => {
+        const doc = ownerDocument(popup);
+        const active = activeElement(doc);
+        if (!focused || (active && active !== doc.body)) return;
+        focused = null;
+        focus(options.lostFocus?.());
+      });
+      observer.observe(popup, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['hidden'],
+      });
+      popup.addEventListener('focusin', onFocusin);
+      onCleanup(() => {
+        observer.disconnect();
+        popup.removeEventListener('focusin', onFocusin);
+      });
     },
     { flush: 'post' },
   );
@@ -173,6 +207,7 @@ export function usePopupFocus(
       } else if (layer.trap) {
         focus(place === 'before' ? last : first);
       } else if (place === 'before') {
+        if (options.sentinelCloses) root.request(false, 'focus-out', event);
         focus(root.activeTrigger as HTMLElement | null);
       } else {
         const trigger = root.activeTrigger;

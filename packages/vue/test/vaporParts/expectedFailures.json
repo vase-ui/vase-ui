@@ -172,14 +172,6 @@
         "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
-    "src/select/item-text/SelectItemText.test.tsx": {
-      "fails": {
-        "<Select.ItemText /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/select/trigger/SelectTrigger.press.test.tsx": {
-      "fails": {}
-    },
     "src/toast/action/ToastAction.test.tsx": {
       "fails": {
         "<Toast.Action /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
