@@ -1,7 +1,5 @@
 {
-  "upstreamPaths": [
-    "packages/utils/src/**"
-  ],
+  "upstreamPaths": ["packages/utils/src/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
@@ -236,19 +234,13 @@
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": [
-        "hydration",
-        "React 17 paths"
-      ],
+      "describe": ["hydration", "React 17 paths"],
       "kind": "not-applicable",
       "reason": "The cases test the code path for React 17."
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": [
-        "hydration",
-        "useIsHydrated"
-      ],
+      "describe": ["hydration", "useIsHydrated"],
       "title": "does not report hydrated while rendering on the server",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
@@ -256,10 +248,7 @@
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": [
-        "hydration",
-        "useIsHydrating"
-      ],
+      "describe": ["hydration", "useIsHydrating"],
       "title": "reports hydrating while rendering on the server",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
@@ -322,19 +311,14 @@
     },
     {
       "upstream": "packages/utils/src/empty.test.ts",
-      "describe": [
-        "empty"
-      ],
+      "describe": ["empty"],
       "title": "keeps the shared EMPTY_OBJECT frozen",
       "kind": "not-applicable",
       "reason": "No part of Vase UI uses a shared empty object, so `common/empty.ts` has none."
     },
     {
       "upstream": "packages/utils/src/shadowDom.test.ts",
-      "describe": [
-        "shadow DOM utilities",
-        "getTarget"
-      ],
+      "describe": ["shadow DOM utilities", "getTarget"],
       "kind": "not-applicable",
       "reason": "No part of Vase UI uses `getTarget`, so `common/shadowDom.ts` has none. A part reads `event.composedPath()` where it needs the target in a shadow root."
     }

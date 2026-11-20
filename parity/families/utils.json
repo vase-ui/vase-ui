@@ -18,9 +18,7 @@
     },
     {
       "upstream": "packages/react/src/utils/useIsHydrating.test.tsx",
-      "describe": [
-        "useIsHydrating"
-      ],
+      "describe": ["useIsHydrating"],
       "title": "returns true before hydration for server-rendered markup",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
@@ -49,9 +47,7 @@
     },
     {
       "upstream": "packages/react/src/utils/useRegisteredLabelId.test.tsx",
-      "describe": [
-        "useRegisteredLabelId"
-      ],
+      "describe": ["useRegisteredLabelId"],
       "title": "does not let an older label cleanup clear a newer label",
       "kind": "replaced",
       "test": "packages/vue/src/fieldset/Fieldset.test.ts",

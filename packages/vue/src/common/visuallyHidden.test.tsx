@@ -24,9 +24,7 @@ const screen = {
 };
 
 describe.skipIf(isJSDOM)('visuallyHidden', () => {
-  describe.each([
-    { name: 'visuallyHidden', style: visuallyHidden },
-  ])('$name', ({ style }) => {
+  describe.each([{ name: 'visuallyHidden', style: visuallyHidden }])('$name', ({ style }) => {
     it.each([
       ['ltr', 'ltr'],
       ['ltr', 'rtl'],

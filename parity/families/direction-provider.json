@@ -33,18 +33,14 @@
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
-      "describe": [
-        "<DirectionProvider />"
-      ],
+      "describe": ["<DirectionProvider />"],
       "title": "defaults useDirection to ltr outside a provider",
       "kind": "not-applicable",
       "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
-      "describe": [
-        "<DirectionProvider />"
-      ],
+      "describe": ["<DirectionProvider />"],
       "title": "provides the configured direction to descendants",
       "kind": "not-applicable",
       "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."

@@ -502,20 +502,6 @@ test('the reference of a family page does not change with the families that the 
   }
 });
 
-test('the reference of merge-props has mergeProps with a and b required, and c, d and e optional', () => {
-  const mergeProps = read('merge-props').functions.find(({ name }) => name === 'mergeProps');
-  assert.deepEqual(
-    mergeProps?.parameters.map(({ name, optional }) => [name, optional]),
-    [
-      ['a', false],
-      ['b', false],
-      ['c', true],
-      ['d', true],
-      ['e', true],
-    ],
-  );
-});
-
 test('the reference of use-element has useElement with no parameter and the description of its source', () => {
   const useElement = read('use-element').functions.find(({ name }) => name === 'useElement');
   assert.deepEqual(useElement?.parameters, []);

@@ -1,7 +1,5 @@
 {
-  "upstreamPaths": [
-    "packages/react/src/utils/popups/portal/**"
-  ],
+  "upstreamPaths": ["packages/react/src/utils/popups/portal/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
