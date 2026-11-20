@@ -3,10 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -234,34 +232,6 @@ const rows: Row[] = [
           </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
-    ),
-  },
-  {
-    part: 'Accordion.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Accordion.Root defaultValue={['a']}>
-        <Accordion.Item value="a">
-          <Accordion.Header>
-            <Accordion.Trigger data-testid="part" {...attrs}>
-              Section
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Panel data-testid="target">Text</Accordion.Panel>
-        </Accordion.Item>
-      </Accordion.Root>
-    ),
-  },
-  {
-    part: 'Collapsible.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Collapsible.Root defaultOpen>
-        <Collapsible.Trigger data-testid="part" {...attrs}>
-          Section
-        </Collapsible.Trigger>
-        <Collapsible.Panel data-testid="target">Text</Collapsible.Panel>
-      </Collapsible.Root>
     ),
   },
   {

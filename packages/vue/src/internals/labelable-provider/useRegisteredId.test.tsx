@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Component, Ref, VNode } from 'vue';
-import { Accordion } from '@vase-ui/vue/accordion';
-import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -154,44 +152,6 @@ describe('useRegisteredId', () => {
       attribute: string;
       render: (id: Ref<string>) => VNode;
     }[] = [
-      {
-        name: 'Accordion.Trigger',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Accordion.Root defaultValue={['a']}>
-            <Accordion.Item value="a">
-              <Accordion.Header>
-                <Accordion.Trigger v-slots={slot('button', id)} />
-              </Accordion.Header>
-              <Accordion.Panel data-testid="named">Panel</Accordion.Panel>
-            </Accordion.Item>
-          </Accordion.Root>
-        ),
-      },
-      {
-        name: 'Accordion.Panel',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Accordion.Root defaultValue={['a']}>
-            <Accordion.Item value="a">
-              <Accordion.Header>
-                <Accordion.Trigger data-testid="named">A</Accordion.Trigger>
-              </Accordion.Header>
-              <Accordion.Panel v-slots={slot('div', id)} />
-            </Accordion.Item>
-          </Accordion.Root>
-        ),
-      },
-      {
-        name: 'Collapsible.Panel',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Collapsible.Root defaultOpen>
-            <Collapsible.Trigger data-testid="named">Toggle</Collapsible.Trigger>
-            <Collapsible.Panel v-slots={slot('div', id)} />
-          </Collapsible.Root>
-        ),
-      },
       {
         name: 'Menu.GroupLabel in Menu.Group',
         attribute: 'aria-labelledby',

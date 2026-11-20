@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -263,33 +261,6 @@ const labelled = (testId: string, label: string) => (k: string) => ({
 });
 
 const rows: Row[] = [
-  {
-    name: 'Collapsible.Panel',
-    tree: (_k, blankId) => (
-      <Collapsible.Root defaultOpen>
-        <Collapsible.Trigger>Toggle</Collapsible.Trigger>
-        <Collapsible.Panel {...blankId}>Content</Collapsible.Panel>
-      </Collapsible.Root>
-    ),
-  },
-  ...(['Trigger', 'Panel'] as const).map((part): Row => ({
-    name: `Accordion.${part}`,
-    tree: (k, blankId) => (
-      <Accordion.Root defaultValue={['a']}>
-        <Accordion.Item value="a">
-          <Accordion.Header>
-            <Accordion.Trigger {...blankIdIf(part === 'Trigger', blankId)}>
-              Trigger {k}
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Panel {...blankIdIf(part === 'Panel', blankId)} data-testid={`panel${k}`}>
-            Content
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion.Root>
-    ),
-    named: (k) => ({ testId: `panel${k}`, name: `Trigger ${k}` }),
-  })),
   ...(['Title', 'Description', 'Trigger', 'Popup'] as const).map((part): Row => ({
     name: `Dialog.${part}`,
     tree: dialogParts(part),

@@ -42,6 +42,11 @@
       "upstream": "packages/react/src/utils/resolveClassName.ts",
       "kind": "not-applicable",
       "reason": "The file resolves the React `className` prop, which is a string or a function of the state. Vase UI accepts the native `class` attribute. A render slot can bind it from state."
+    },
+    {
+      "upstream": "packages/react/src/utils/collapsibleOpenStateMapping.ts",
+      "kind": "not-applicable",
+      "reason": "The parts of Collapsible and Accordion write their own attributes from their state. A trigger has `aria-expanded` and a panel has `hidden`, which CSS selects (rule 8.15), so no mapping of the open state to attributes is shared."
     }
   ],
   "surfaceAdditions": [],

@@ -19,6 +19,13 @@ const PlusIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M1.5 8h13M8 14.5v-13' })],
   );
+
+// The panel animates its height from 0 to the height of its content, and back.
+const enterFromClass = styles.PanelClosed;
+const enterToClass = styles.PanelOpen;
+const leaveFromClass = styles.PanelOpen;
+const leaveToClass = styles.PanelClosed;
+const panelTransition = { enterFromClass, enterToClass, leaveFromClass, leaveToClass };
 </script>
 
 <template>
@@ -30,12 +37,14 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
-        <div :class="styles.Content">
-          Vase UI is a library of unstyled, accessible Vue components for design systems and web
-          apps.
-        </div>
-      </Accordion.Panel>
+      <Transition v-bind="panelTransition">
+        <Accordion.Panel :class="styles.Panel">
+          <div :class="styles.Content">
+            Vase UI is a library of unstyled, accessible Vue components for design systems and web
+            apps.
+          </div>
+        </Accordion.Panel>
+      </Transition>
     </Accordion.Item>
 
     <Accordion.Item :class="styles.Item">
@@ -45,12 +54,14 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
-        <div :class="styles.Content">
-          Head to the “Quick start” guide in the docs. If you’ve used unstyled libraries before,
-          you’ll feel at home.
-        </div>
-      </Accordion.Panel>
+      <Transition v-bind="panelTransition">
+        <Accordion.Panel :class="styles.Panel">
+          <div :class="styles.Content">
+            Head to the “Quick start” guide in the docs. If you’ve used unstyled libraries before,
+            you’ll feel at home.
+          </div>
+        </Accordion.Panel>
+      </Transition>
     </Accordion.Item>
 
     <Accordion.Item :class="styles.Item">
@@ -60,9 +71,11 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
-        <div :class="styles.Content">Yes. Vase UI is free and open source.</div>
-      </Accordion.Panel>
+      <Transition v-bind="panelTransition">
+        <Accordion.Panel :class="styles.Panel">
+          <div :class="styles.Content">Yes. Vase UI is free and open source.</div>
+        </Accordion.Panel>
+      </Transition>
     </Accordion.Item>
   </Accordion.Root>
 </template>

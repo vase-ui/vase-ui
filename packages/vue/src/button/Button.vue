@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useElement } from '../common/element';
-import { useButton } from './button';
+import { useButton } from '../common/button';
 import type { ButtonProps, ButtonState } from './types';
 
 defineOptions({ inheritAttrs: false });

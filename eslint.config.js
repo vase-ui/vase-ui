@@ -20,7 +20,7 @@ const MESSAGES = {
     'The current instance is null in Vapor mode. Use `provide` and `inject`, a prop or an exposed value.',
   cloneVNode: 'Vapor mode cannot clone a vnode. Use the `as` prop or the `#render` slot.',
   slotCall: 'Vapor mode cannot call a slot in script. Render the slot in the template.',
-  $el: 'A Vapor ref has no `$el`. Use `resolveElement` or the exposed `element`.',
+  $el: 'A Vapor ref has no `$el`. Use `useElement`, `resolveElement` or the exposed `element`.',
   $parent: 'Vapor mode has no `$parent`. Use `provide` and `inject`.',
   arrayCopyMethod:
     'The build supports Firefox 114, and Firefox 114 does not have this array method. Use `sort`, `reverse` or `splice` on a copy. See "Compiler flags" in CONTRIBUTING.md.',
@@ -1106,7 +1106,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['packages/vue/src/internals/resolveElement.ts'],
+    files: ['packages/vue/src/common/element.ts', 'packages/vue/src/internals/resolveElement.ts'],
     rules: {
       'no-restricted-properties': [
         'error',

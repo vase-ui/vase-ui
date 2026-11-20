@@ -105,9 +105,9 @@ You can instead give each optional Boolean prop the default `undefined`. An expl
 
 You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
 
-A development build warns when a wrapper gives a part a cast `false` that replaces a default or parent value. The message names the wrapper, the part, the prop and both corrections. See [the development warning](/utils/use-forward-props#the-development-warning) for its limits.
+In a development build, some parts warn when a wrapper gives them a cast `false` that replaces a default or parent value. `Accordion.Panel` does not warn. The message names the wrapper, the part, the prop and both corrections. See [the development warning](/utils/use-forward-props#the-development-warning) for its limits.
 
-An absent prop and `false` give different results in four cases.
+An absent prop and `false` give different results in three cases.
 
 ### Parent or internal state
 
@@ -150,10 +150,6 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 - `nativeButton` on button parts such as `Dialog.Trigger` and `Toolbar.Button`.
 - `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
-
-### A warning in development
-
-- `Collapsible.Panel`, `Accordion.Root` and `Accordion.Panel`: with `hiddenUntilFound`, an explicit `false` for `keepMounted` gives a warning.
 
 ## Vapor mode
 

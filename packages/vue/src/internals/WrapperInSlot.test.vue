@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Accordion } from '@vase-ui/vue/accordion';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 
-defineProps<{ keepMounted?: boolean }>();
+defineProps<{ focusableWhenDisabled?: boolean }>();
 </script>
 
 <template>
-  <Accordion.Item>
-    <Accordion.Panel :keep-mounted="keepMounted"><slot /></Accordion.Panel>
-  </Accordion.Item>
+  <Toolbar.Root>
+    <Toolbar.Button :focusable-when-disabled="focusableWhenDisabled"><slot /></Toolbar.Button>
+  </Toolbar.Root>
 </template>
