@@ -13,49 +13,9 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
-      "describe": ["PopupTriggerMap"],
-      "title": "does not throw in production when the same element is registered under multiple ids",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.node.test.ts",
-      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
-      "describe": ["popupId selector"],
-      "title": "uses the default popup id as the popup id",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
-      "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
-      "describe": ["popupId selector"],
-      "title": "associates a lone trigger with the popup id unless the popup opened without a trigger",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
-      "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
-    },
-    {
       "upstream": "packages/react/test/dialogRootSharedTests.tsx",
       "kind": "not-applicable",
       "reason": "The file is a suite that the roots of Dialog and Alert Dialog share. `Dialog.test.ts` tests the trigger and the reason in `openChange`, the `close` action and `openWithPayload()` with no shared suite. The `unmount` action is cut (rule 8.9)."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
-      "describe": ["concrete popup handles"],
-      "title": "$component handle ignores openWithPayload() with a warning while detached",
-      "kind": "replaced",
-      "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "The table has the one row Drawer. The handle of Drawer is the handle of Dialog, and the case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests `openWithPayload()` with no root."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
-      "describe": ["concrete popup handles"],
-      "title": "$component handle is closed and names itself in warnings while no root is attached",
-      "kind": "replaced",
-      "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "Each family of the table has the handle of the popup layer, which gives no warning with no root. The case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests that such a handle is closed and does nothing."
     },
     {
       "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
@@ -73,6 +33,206 @@
       "kind": "replaced",
       "test": "packages/vue/src/menu/Menu.test.ts",
       "reason": "Vase UI has no guards beside a trigger. The block `the focus` of this test covers Tab and Shift+Tab from the popup. The next tab stop comes from the tab order at the time of the key."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/CommonTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/InternalBackdrop.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/portal.ts` covers the page for a modal popup, and the backdrop parts render their own element. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/NullStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/constants.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/createAttribute.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/createEventEmitter.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/element.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/element.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/event.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/event.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/FloatingRootStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/dispatchOpenChange.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/getEmptyRootStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/useFloatingRootStore.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/floating-root/useFloatingRootStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupHandle.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupPositioner.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupRoot.tsx",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStateMapping.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStateMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.spec.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupTriggerMap.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.spec.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.test.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/store.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/types.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/useScrollLock.ts` locks the scroll of the page for each modal popup. Each popup family tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/usePopupHandleStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/value-popup/ValuePopupStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+    },
+    {
+      "upstream": "packages/react/test/detachedTriggersConformanceTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
+    },
+    {
+      "upstream": "packages/react/test/popupConformanceTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
+    },
+    {
+      "upstream": "packages/react/test/popupFocusPropsTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
+    },
+    {
+      "upstream": "packages/react/test/popupListConformanceTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
+    },
+    {
+      "upstream": "packages/react/test/popupStoreTestUtils.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
     }
   ],
   "surfaceAdditions": [],
@@ -80,115 +240,11 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/utils/popups/popupRoot.tsx",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
-      "member": "usePopupRoot",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/store.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
-      "member": "BasePopupStore",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupTriggerMap.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
-      "member": "PopupTriggerMap",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/NullStore.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
-      "member": "NullStore",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.nullStore.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/floating-root/dispatchOpenChange.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.ts",
-      "member": "dispatchOpenChange",
-      "witness": "packages/vue/src/utils/popups/floating-root/FloatingRootStore.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "usePopupTrigger",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
-      "additional": [
-        {
-          "destination": "packages/vue/src/utils/popups/popupBindings.ts",
-          "member": "bindPopupParts"
-        }
-      ]
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/usePopupHandleStore.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "usePopupHandleStore",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.handle.test.tsx"
-    },
-    {
       "upstream": "packages/react/src/utils/popups/inlineRect.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/preview-card/line.ts",
       "member": "lineMiddleware",
       "witness": "packages/vue/src/preview-card/line.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupPositioner.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
-      "member": "usePopupPositioner",
-      "witness": "packages/vue/src/utils/popups/usePopupPositioner.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.test.tsx",
-      "member": "createRootRef",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts",
-      "behavior": "Adds, replaces and removes registered trigger elements.",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.triggerMap.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/store.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts",
-      "member": "createState",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/store.spec.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupRoot.store.spec.ts",
-      "member": "useTypeTests",
-      "witness": "packages/vue/src/utils/popups/usePopupRoot.store.spec.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.spec.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/popupBindings.spec.ts",
-      "member": "useTypeTests",
-      "witness": "packages/vue/src/utils/popups/popupBindings.spec.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
-      "member": "RegisteredTrigger",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx"
     }
   ]
 }

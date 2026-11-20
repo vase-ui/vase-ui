@@ -7,13 +7,6 @@
   "matchedCommit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/getPseudoElementBounds.test.ts",
-      "describe": ["getPseudoElementBounds"],
-      "title": "does not read pseudo-element styles in jsdom",
-      "kind": "not-applicable",
-      "reason": "The case tests the branch for jsdom, which has no `getComputedStyle` for a pseudo-element. Vase UI runs no test in jsdom, so the function has no such branch."
-    },
-    {
       "upstream": "packages/react/src/utils/resolveRef.ts",
       "kind": "not-applicable",
       "reason": "The file reads the `current` of a React ref object. Vue `toValue` reads a ref, a getter or a value."
@@ -24,15 +17,10 @@
       "reason": "The file resolves the React `style` prop, which is an object or a function of the state. Vase UI accepts the native `style` attribute. A render slot can bind it from state."
     },
     {
-      "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",
-      "describe": ["useFormatLocale"],
-      "title": "returns the runtime locale on the first client-only render",
-      "kind": "not-applicable",
-      "reason": "React tells a hydration from a client-only mount with the server snapshot of `useSyncExternalStore`. Vue has no public API that tells them apart in `setup`, so the first render of a client-only mount also gets en-US. The case \"returns en-US for the first render of a client-only mount, then the runtime locale\" states what Vase UI does."
-    },
-    {
       "upstream": "packages/react/src/utils/useIsHydrating.test.tsx",
-      "describe": ["useIsHydrating"],
+      "describe": [
+        "useIsHydrating"
+      ],
       "title": "returns true before hydration for server-rendered markup",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
@@ -61,7 +49,9 @@
     },
     {
       "upstream": "packages/react/src/utils/useRegisteredLabelId.test.tsx",
-      "describe": ["useRegisteredLabelId"],
+      "describe": [
+        "useRegisteredLabelId"
+      ],
       "title": "does not let an older label cleanup clear a newer label",
       "kind": "replaced",
       "test": "packages/vue/src/fieldset/Fieldset.test.ts",
@@ -77,6 +67,116 @@
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
       "reason": "`Combobox.test.ts` and `Select.test.ts` test the separator of each family: the role `presentation`, `data-orientation` with its default `horizontal`, and no `aria-orientation`. `Autocomplete.Separator` is the part of Combobox."
+    },
+    {
+      "upstream": "packages/react/src/utils/ItemIndicator.tsx",
+      "kind": "not-applicable",
+      "reason": "The families cut their item indicator parts. The default slot of an item gives its state, so the developer renders an indicator with `v-if` or `v-show`."
+    },
+    {
+      "upstream": "packages/react/src/utils/getElementAtPoint.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/getFiniteAnimations.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/utils/getHighlightReason.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/getPseudoElementBounds.test.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/getPseudoElementBounds.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/arrow.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/useFloating.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/positioning/usePositioner.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/resolveAriaLabelledBy.ts",
+      "kind": "not-applicable",
+      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/scrollable.ts",
+      "kind": "not-applicable",
+      "reason": "`toast/swipe.ts` and `drawer/swipe.ts` replace the file. Each of the two families tests its swipe in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/useFocusableWhenDisabled.ts",
+      "kind": "not-applicable",
+      "reason": "`common/button.ts` keeps a disabled part focusable with `aria-disabled` when the part asks for it."
+    },
+    {
+      "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Each part reads its locale through `locale-provider/` (rule 8.14)."
+    },
+    {
+      "upstream": "packages/react/src/utils/useFormatLocale.ts",
+      "kind": "not-applicable",
+      "reason": "Each part reads its locale through `locale-provider/` (rule 8.14)."
+    },
+    {
+      "upstream": "packages/react/src/utils/useSwipeDismiss.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`toast/swipe.ts` and `drawer/swipe.ts` replace the file. Each of the two families tests its swipe in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/useSwipeDismiss.ts",
+      "kind": "not-applicable",
+      "reason": "`toast/swipe.ts` and `drawer/swipe.ts` replace the file. Each of the two families tests its swipe in its own test file."
     }
   ],
   "surfaceAdditions": [],
@@ -114,80 +214,60 @@
       ]
     },
     {
-      "upstream": "packages/react/src/utils/useFocusableWhenDisabled.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/use-button/useButton.ts",
-      "member": "useFocusableWhenDisabled",
-      "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/arrow.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
-      "member": "arrow",
-      "witness": "packages/vue/src/internals/useAnchorPositioning.arrow.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
-      "member": "hide",
-      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts",
-      "additional": [
-        {
-          "destination": "packages/vue/src/popup/placement.ts",
-          "member": "hide"
-        }
-      ]
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
-      "member": "DEFAULT_SIDES",
-      "witness": "packages/vue/src/utils/popups/positioning/adaptiveOriginMiddleware.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
-      "member": "positionerVars",
-      "witness": "packages/vue/src/internals/useAnchorPositioning.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/useFloating.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
-      "member": "useVaseUIFloating",
-      "witness": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/usePositioner.tsx",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
-      "member": "usePositioner",
-      "witness": "packages/vue/src/utils/popups/usePopupPositioner.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts",
-      "member": "createState",
-      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx",
-      "member": "createPositioner",
-      "witness": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx"
-    },
-    {
       "upstream": "packages/react/src/utils/useIsHydrating.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/common/hydration.ts",
       "member": "useIsHydrating",
       "witness": "packages/vue/src/common/hydration.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/dispatchClickWithModifiers.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/dispatchClickWithModifiers.ts",
+      "member": "dispatchClickWithModifiers",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/getCssDimensions.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/tabs/getCssDimensions.test.ts",
+      "behavior": "The size of an element in CSS pixels.",
+      "witness": "packages/vue/src/tabs/getCssDimensions.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/getCssDimensions.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/getCssDimensions.ts",
+      "member": "getCssDimensions",
+      "witness": "packages/vue/src/tabs/getCssDimensions.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/getElementTransform.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/getElementTransform.ts",
+      "member": "getElementTransform",
+      "witness": "packages/vue/src/common/getElementTransform.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/scrollEdges.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/common/scrollEdges.test.ts",
+      "behavior": "The distance of a scroll position to its edges.",
+      "witness": "packages/vue/src/common/scrollEdges.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/scrollEdges.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/scrollEdges.ts",
+      "member": "normalizeScrollOffset",
+      "witness": "packages/vue/src/common/scrollEdges.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/utils/styles.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/styles.ts",
+      "member": "styleDisableScrollbar",
+      "witness": "packages/vue/src/common/styles.test.tsx"
     }
   ]
 }

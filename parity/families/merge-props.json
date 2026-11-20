@@ -4,24 +4,48 @@
     "docs/src/app/(docs)/react/utils/merge-props/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [
+  "exceptions": [
     {
-      "entry": "makeEventPreventable",
-      "returns": "VaseUIEvent<T>",
-      "reason": "Vue has no synthetic event. The event is the DOM event, and `VaseUIEvent` adds `preventVaseUIHandler()` to it."
+      "upstream": "packages/react/src/merge-props/index.ts",
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `mergeProps` of Vue (`import { mergeProps } from 'vue'`). It joins `class`, merges `style` and calls each listener of the same name. In a template, attributes beside `v-bind=\"props\"` do the same."
     },
     {
+      "upstream": "packages/react/src/merge-props/mergeProps.test.ts",
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `mergeProps` of Vue (`import { mergeProps } from 'vue'`). It joins `class`, merges `style` and calls each listener of the same name. In a template, attributes beside `v-bind=\"props\"` do the same."
+    },
+    {
+      "upstream": "packages/react/src/merge-props/mergeProps.ts",
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `mergeProps` of Vue (`import { mergeProps } from 'vue'`). It joins `class`, merges `style` and calls each listener of the same name. In a template, attributes beside `v-bind=\"props\"` do the same."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/merge-props/types.md",
       "entry": "mergeProps",
-      "returns": "MergedProps<T>",
-      "reason": "With a type argument, the type is `NativeElements[T]`: the attributes of the element `T`, as Vue declares them. With no type argument, it is `NativeElements['div']`: the attributes that each HTML element has. Base UI's type is then in effect `any`. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `mergeProps` of Vue (`import { mergeProps } from 'vue'`). It joins `class`, merges `style` and calls each listener of the same name. In a template, attributes beside `v-bind=\"props\"` do the same."
     },
     {
+      "upstream": "docs/src/app/(docs)/react/utils/merge-props/types.md",
       "entry": "mergePropsN",
-      "returns": "MergedProps<T>",
-      "reason": "With a type argument, the type is `NativeElements[T]`: the attributes of the element `T`, as Vue declares them. With no type argument, it is `NativeElements['div']`: the attributes that each HTML element has. Base UI's type is then in effect `any`. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `mergeProps(...sets)` of Vue, which takes each number of sets."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/merge-props/types.md",
+      "entry": "mergeClassNames",
+      "kind": "not-applicable",
+      "reason": "Cut. The better way is `:class=\"[a, b]\"`, or `normalizeClass([a, b])` of Vue in a script."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/merge-props/types.md",
+      "entry": "makeEventPreventable",
+      "kind": "not-applicable",
+      "reason": "Cut (rule 8.7). The better way is `details.cancel()` in the change event of a part. For a native event with no change event, a capture listener on the part calls `event.stopPropagation()`."
     }
   ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

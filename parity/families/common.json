@@ -1,5 +1,7 @@
 {
-  "upstreamPaths": ["packages/utils/src/**"],
+  "upstreamPaths": [
+    "packages/utils/src/**"
+  ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
@@ -234,13 +236,19 @@
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": ["hydration", "React 17 paths"],
+      "describe": [
+        "hydration",
+        "React 17 paths"
+      ],
       "kind": "not-applicable",
       "reason": "The cases test the code path for React 17."
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": ["hydration", "useIsHydrated"],
+      "describe": [
+        "hydration",
+        "useIsHydrated"
+      ],
       "title": "does not report hydrated while rendering on the server",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
@@ -248,27 +256,14 @@
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
-      "describe": ["hydration", "useIsHydrating"],
+      "describe": [
+        "hydration",
+        "useIsHydrating"
+      ],
       "title": "reports hydrating while rendering on the server",
       "kind": "replaced",
       "test": "packages/vue/src/common/hydration.node.test.tsx",
       "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
-    },
-    {
-      "upstream": "packages/utils/src/useControlled.test.tsx",
-      "describe": ["useControlled"],
-      "title": "warns when switching from uncontrolled to controlled",
-      "kind": "replaced",
-      "test": "packages/vue/src/common/useControlled.test.tsx",
-      "reason": "VUE-141 (B3): A parent can take control after mount. The case checks the new value and the absence of a warning."
-    },
-    {
-      "upstream": "packages/utils/src/useControlled.test.tsx",
-      "describe": ["useControlled"],
-      "title": "warns and falls back to the default when switching from controlled to uncontrolled",
-      "kind": "replaced",
-      "test": "packages/vue/src/common/useControlled.test.tsx",
-      "reason": "VUE-141 (B3): When the parent releases the prop, the part keeps the last value and accepts a local write."
     },
     {
       "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
@@ -279,6 +274,69 @@
       "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
       "kind": "not-applicable",
       "reason": "The file tests `getDefaultFormSubmitter`, which no part needs: the browser submits the form at Enter in a native checkbox."
+    },
+    {
+      "upstream": "packages/utils/src/isElementDisabled.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/utils/src/mergeObjects.ts",
+      "kind": "not-applicable",
+      "reason": "Vue merges the attributes of a part (rule 6.3)."
+    },
+    {
+      "upstream": "packages/utils/src/useAnimationFrame.test.ts",
+      "kind": "not-applicable",
+      "reason": "No part schedules a frame through the file. A part waits for a frame with `requestAnimationFrame` where it needs one."
+    },
+    {
+      "upstream": "packages/utils/src/useAnimationFrame.ts",
+      "kind": "not-applicable",
+      "reason": "No part schedules a frame through the file. A part waits for a frame with `requestAnimationFrame` where it needs one."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.ts",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/utils/src/useInterval.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.spec.ts",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/empty.test.ts",
+      "describe": [
+        "empty"
+      ],
+      "title": "keeps the shared EMPTY_OBJECT frozen",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses a shared empty object, so `common/empty.ts` has none."
+    },
+    {
+      "upstream": "packages/utils/src/shadowDom.test.ts",
+      "describe": [
+        "shadow DOM utilities",
+        "getTarget"
+      ],
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses `getTarget`, so `common/shadowDom.ts` has none. A part reads `event.composedPath()` where it needs the target in a shadow root."
     }
   ],
   "surfaceAdditions": [],
@@ -286,11 +344,11 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "upstream": "packages/utils/src/useScrollLock.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "useEnhancedClickHandler",
-      "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+      "destination": "packages/vue/src/popup/useScrollLock.ts",
+      "member": "useScrollLock",
+      "witness": "packages/vue/src/popup/useScrollLock.test.tsx"
     }
   ]
 }

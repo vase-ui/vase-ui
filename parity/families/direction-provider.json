@@ -33,14 +33,18 @@
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
-      "describe": ["<DirectionProvider />"],
+      "describe": [
+        "<DirectionProvider />"
+      ],
       "title": "defaults useDirection to ltr outside a provider",
       "kind": "not-applicable",
       "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
-      "describe": ["<DirectionProvider />"],
+      "describe": [
+        "<DirectionProvider />"
+      ],
       "title": "provides the configured direction to descendants",
       "kind": "not-applicable",
       "reason": "The provider and `useDirection` are cut. Each family tests its keys in right-to-left on its own element, and the Nuxt fixture page `/rtl` tests the server HTML."
@@ -56,6 +60,11 @@
       "entry": "useDirection",
       "kind": "not-applicable",
       "reason": "The cut has a better way: the CSS pseudo-class `:dir(rtl)` for a style, and `getComputedStyle(element).direction` in a listener. Both give the direction that the element has, also below an element with `dir`."
+    },
+    {
+      "upstream": "packages/react/src/internals/direction-context/DirectionContext.tsx",
+      "kind": "not-applicable",
+      "reason": "The provider and `useDirection` are cut. Each part reads the direction of its own element (rule 8.16)."
     }
   ],
   "surfaceAdditions": [],

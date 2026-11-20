@@ -1,9 +1,0 @@
-{
-  "id": "VUE-123",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/internals/createBaseUIEventDetails.ts#L129-L177",
-    "https://github.com/microsoft/TypeScript/pull/56794"
-  ],
-  "behavior": "The event detail factories infer custom properties only from their arguments. An expected type cannot hide a wrong reason or supply an absent property. Base UI permits both through return type inference.",
-  "dueWith": "packages/react/src/internals/createBaseUIEventDetails.ts"
-}
