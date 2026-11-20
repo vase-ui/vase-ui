@@ -60,7 +60,6 @@ const reference: ApiReference = {
       name: 'Sample.Root',
       badge: null,
       description: 'Groups the parts.',
-      hasChildren: false,
       props: [
         {
           name: 'closeDelay',

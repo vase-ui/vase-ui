@@ -62,8 +62,6 @@ export interface ApiPart {
   /** The badge that the Base UI page shows on the heading of the part, or `null`. */
   badge: HeadingBadge | null;
   description: string;
-  /** Whether the `#render` slot of the part gets the `children` slot prop, which the slot must mount in its element. */
-  hasChildren: boolean;
   props: ApiProp[];
   events: ApiMember[];
   slots: ApiSlot[];
@@ -206,8 +204,6 @@ export function buildApiParts(
         name: match.path,
         badge: badges.get(title) ?? null,
         description: component.description,
-        hasChildren:
-          component.slots.get('render')?.props.some(({ name }) => name === 'children') === true,
         props: propsOf(component, documentedDefaults(project, entryFile, `${flatName}Props`)),
         events: membersOf(component.emits),
         slots: [...component.slots].map(([name, { description, props }]) => ({

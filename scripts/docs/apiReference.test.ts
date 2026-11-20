@@ -217,22 +217,6 @@ test('the selectors and the CSS variables of a part are the @selector and @cssVa
   ]);
 });
 
-test('a part with the children slot prop of its render slot has children', () => {
-  assert.equal(part('Sample.Popup').hasChildren, false);
-  assert.equal(part('Sample.Root').hasChildren, false);
-  const withChildren = withTexts(
-    [
-      [
-        POPUP,
-        'render(props: { props: Record<string, unknown>; state: SamplePopupState }): unknown;',
-        'render(props: {\n    props: Record<string, unknown>;\n    state: SamplePopupState;\n    children: Component;\n  }): unknown;',
-      ],
-    ],
-    () => part('Sample.Popup'),
-  );
-  assert.equal(withChildren.hasChildren, true);
-});
-
 test('the description of a part is the JSDoc of its export', () => {
   const described = withTexts(
     [

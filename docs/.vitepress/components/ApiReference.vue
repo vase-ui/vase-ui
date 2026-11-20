@@ -232,11 +232,6 @@ function signatureOf({ name, parameters }: ApiClass['methods'][number]): string 
       >
     </h3>
     <p v-if="part.description"><TextWithCode :text="part.description" /></p>
-    <p v-if="part.hasChildren">
-      A <code>#render</code> slot must mount the <code>children</code> slot prop in its element,
-      with the content in it. <code>children</code> adds the nodes of the part itself, where the
-      part has such nodes.
-    </p>
     <template v-if="part.props.length > 0">
       <h4>Props</h4>
       <ScrollBox class="api-table" :label="`Props of ${part.name}`">
