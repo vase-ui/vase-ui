@@ -405,11 +405,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // A handle holds its root only on the client. A handle in a module of a server would otherwise
   // hold the roots of each request.
   onMounted(() => {
-    watch(
-      () => ownerDocument(null),
-      (doc, _, onCleanup) => onCleanup(trackPointerType(doc)),
-      { immediate: true },
-    );
+    onScopeDispose(trackPointerType(ownerDocument(null)));
     watch(
       () => options.handle(),
       (handle, _, onCleanup) => {
