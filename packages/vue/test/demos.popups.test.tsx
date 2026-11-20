@@ -177,13 +177,26 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
   return [];
 }
 
+// A portal of `utils/popups` has an element of its own. A portal of the popup layer moves each part
+// to `<body>`, so each child of `<body>` outside the demo is a portal there.
 function portals() {
-  return [...document.querySelectorAll<HTMLElement>('[data-vase-ui-portal]')];
+  const moved = [...document.body.children].filter(
+    (child): child is HTMLElement =>
+      child instanceof HTMLElement &&
+      !child.matches('script, style') &&
+      !child.querySelector('.demo-frame'),
+  );
+  return [
+    ...new Set([...document.querySelectorAll<HTMLElement>('[data-vase-ui-portal]'), ...moved]),
+  ];
 }
 
+// A closed popup that stays in the DOM is `hidden`.
 function openPopups() {
   return portals().flatMap((portal) => [
-    ...portal.querySelectorAll<HTMLElement>('[data-open], [role="dialog"], [role="alertdialog"]'),
+    ...portal.querySelectorAll<HTMLElement>(
+      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+    ),
   ]);
 }
 
@@ -313,7 +326,9 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         let portalElementsBeforeOpen = new Set<Element>();
         for (const [depth, index] of path.entries()) {
           const trigger = triggersAt(name, depth, frame, portalElementsBeforeOpen)[index]!;
-          portalElementsBeforeOpen = new Set(document.querySelectorAll('[data-vase-ui-portal] *'));
+          portalElementsBeforeOpen = new Set(
+            portals().flatMap((portal) => [...portal.querySelectorAll('*')]),
+          );
           const openBefore = new Set(openPopups());
           // The next open can click a trigger of this popup. Vue skips a listener for an event in
           // the millisecond in which Vue attached the listener.
