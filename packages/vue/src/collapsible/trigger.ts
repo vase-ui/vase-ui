@@ -1,4 +1,4 @@
-import type { Ref } from 'vue';
+import { useSlots, type Ref } from 'vue';
 import { useButton } from '../common/button';
 import type { CollapsiblePart } from './part';
 
@@ -12,13 +12,15 @@ export function useCollapsibleTrigger(
     as: () => unknown;
   },
 ) {
+  const slots = useSlots();
   const button = useButton({
     element: options.element,
     disabled: () => options.disabled() || part.disabled,
-    // The element of a component is known after the mount.
+    // A tag in `as` is known at the render. The element of a component or of the `element` slot,
+    // which wins over `as`, is known after the mount.
     tag: () => {
       const as = options.as();
-      return typeof as === 'string' ? as : undefined;
+      return typeof as === 'string' && !slots.element ? as : undefined;
     },
     type: 'button',
   });

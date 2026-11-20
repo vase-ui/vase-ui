@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick } from 'vue';
+import CollapsibleElements from '../../test/fixtures/CollapsibleElements.vue';
 import CollapsibleParts from '../../test/fixtures/CollapsibleParts.vue';
 import { hydrate, renderOnServer } from '../../test/render';
 
@@ -53,5 +54,19 @@ describe('server render and hydration', () => {
     hydrate(CollapsibleParts, props, root);
     await nextTick();
     expect(root.querySelector('[aria-expanded]')).toBe(trigger);
+  });
+
+  test('a button of the `element` slot has the attributes of a button in the server HTML, also beside a tag in `as`', async () => {
+    const props = { trigger: { as: 'span' }, triggerTag: 'button' };
+    const root = await renderOnServer('CollapsibleElements', props);
+    const trigger = root.querySelector('[aria-expanded]')!;
+    expect(trigger.tagName).toBe('BUTTON');
+    expect(trigger).toHaveAttribute('type', 'button');
+    expect(trigger).not.toHaveAttribute('role');
+    expect(trigger).not.toHaveAttribute('tabindex');
+    hydrate(CollapsibleElements, props, root);
+    await nextTick();
+    expect(root.querySelector('[aria-expanded]')).toBe(trigger);
+    expect(trigger).not.toHaveAttribute('role');
   });
 });

@@ -3,8 +3,8 @@ import { useTemplateRef } from 'vue';
 import { Collapsible } from '../../src/collapsible';
 
 // Each part renders its element in the `element` slot, and writes its state in `data-state`. The
-// trigger is a `<span>`.
-defineProps({ root: Object, trigger: Object });
+// trigger is a `<span>`, or the tag of `triggerTag`.
+defineProps({ root: Object, trigger: Object, triggerTag: { type: String, default: 'span' } });
 const rootPart = useTemplateRef('rootPart');
 const triggerPart = useTemplateRef('triggerPart');
 const panelPart = useTemplateRef('panelPart');
@@ -18,9 +18,14 @@ defineExpose({ root: rootPart, trigger: triggerPart, panel: panelPart });
       <section v-bind="rootProps" :ref="rootRef" :data-state="JSON.stringify(rootState)">
         <Collapsible.Trigger ref="triggerPart" v-bind="trigger">
           <template #element="{ props: triggerProps, elementRef: triggerRef, state }">
-            <span v-bind="triggerProps" :ref="triggerRef" :data-state="JSON.stringify(state)">
+            <component
+              :is="triggerTag"
+              v-bind="triggerProps"
+              :ref="triggerRef"
+              :data-state="JSON.stringify(state)"
+            >
               Trigger
-            </span>
+            </component>
           </template>
         </Collapsible.Trigger>
         <Collapsible.Panel ref="panelPart">
