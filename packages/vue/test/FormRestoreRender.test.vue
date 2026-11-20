@@ -3,13 +3,7 @@
 // the `pageshow` event. A new `revision` renders the part again with the same value, as a render
 // before that event does.
 export type FormRestoreFamily =
-  | 'toolbar'
-  | 'toolbar-default'
-  | 'select'
-  | 'combobox'
-  | 'number-field'
-  | 'slider'
-  | 'range';
+  'toolbar' | 'toolbar-default' | 'select' | 'combobox' | 'number-field' | 'slider' | 'range';
 </script>
 
 <script setup lang="ts">

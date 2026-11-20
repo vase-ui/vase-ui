@@ -178,15 +178,15 @@ On a Node.js version before 26, load a `Temporal` polyfill before the server sta
 
 Each segment is a stop of the Tab key. Left and Right swap in a right-to-left document.
 
-| Key                | Result                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Key                | Result                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from midnight. |
-| Page Up, Page Down | Adds or takes 2 for an hour, and 15 for a minute or a second.                                                    |
-| Home, End          | The least and the greatest number of the segment.                                                                |
-| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number. |
-| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                  |
-| Left, Right        | The segment before or after.                                                                                     |
-| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.   |
+| Page Up, Page Down | Adds or takes 2 for an hour, and 15 for a minute or a second.                                                                    |
+| Home, End          | The least and the greatest number of the segment.                                                                                |
+| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number.                 |
+| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                                  |
+| Left, Right        | The segment before or after.                                                                                                     |
+| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.                   |
 
 The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments. Enter submits the form, as in a native time input. A key with Control, Alt or Meta keeps its native action.
 

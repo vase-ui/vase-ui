@@ -291,15 +291,15 @@ In three languages, the field takes its layout from another format because of a 
 
 Each segment is a stop of the Tab key. Left and Right swap in a right-to-left document.
 
-| Key                | Result                                                                                                                        |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Key                | Result                                                                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from today. A year does not wrap. |
-| Page Up, Page Down | Adds or takes 5 for a year, 2 for a month, 7 for a day, 2 for an hour, and 15 for a minute or a second.                       |
-| Home, End          | The least and the greatest number of the segment.                                                                             |
-| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number.              |
-| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                               |
-| Left, Right        | The segment before or after.                                                                                                  |
-| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.                |
+| Page Up, Page Down | Adds or takes 5 for a year, 2 for a month, 7 for a day, 2 for an hour, and 15 for a minute or a second.                                             |
+| Home, End          | The least and the greatest number of the segment.                                                                                                   |
+| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number.                                    |
+| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                                                     |
+| Left, Right        | The segment before or after.                                                                                                                        |
+| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.                                      |
 
 The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments. Enter submits the form, as in a native date input. A key with Control, Alt or Meta keeps its native action.
 
