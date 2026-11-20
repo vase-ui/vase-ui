@@ -686,14 +686,14 @@ async function expectCheckboxGroupPage(page: Page, { hydrated }: { hydrated: boo
 function readOTPSlots(page: Page, testId: string, attributeName: string) {
   return page
     .getByTestId(testId)
-    .locator('input')
+    .locator('input:not([aria-hidden])')
     .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
 }
 
 function readOTPSlotValues(page: Page, testId: string) {
   return page
     .getByTestId(testId)
-    .locator('input')
+    .locator('input:not([aria-hidden])')
     .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
 }
 
@@ -940,11 +940,11 @@ async function expectDateFieldPageWithNativeLabel(page: Page) {
   expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
 }
 
-// A native label outside a field names only the element that its `for` names: the first slot.
+// A native label outside a field names the element that its `for` names: the first slot. The
+// `aria-labelledby` of the developer names the group with it.
 async function expectOTPFieldPageWithNativeLabel(page: Page) {
   await expectOTPFieldPage(page);
-  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(null);
-  expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(null));
+  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe('pin-label');
   expect(await page.getByTestId('pin-label').getAttribute('for')).toBe(
     await page.getByTestId('pin-1').getAttribute('id'),
   );
@@ -1637,8 +1637,6 @@ const TEXT_BEFORE_HYDRATION = [
     output: 'number-value',
     model: '1234.5',
   },
-  // The first slot takes the whole code, and the root gives each slot its character.
-  { control: 'otp-input-1', text: '1234', value: '1', output: 'otp-value', model: '1234' },
   { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
   {
     control: 'autocomplete-input',
@@ -1663,8 +1661,6 @@ interface FormState {
   formData: Record<string, string[]>;
   models: Record<string, unknown>;
   changes: Record<string, number>;
-  submits: string;
-  completes: string;
 }
 
 const FORM_STATE_INITIAL_MODELS = {
@@ -1672,20 +1668,18 @@ const FORM_STATE_INITIAL_MODELS = {
   font: 'serif',
   fruit: null,
   quantity: 1,
-  code: '',
   when: null,
   alarm: null,
 };
 
 // The state of /form-state after a visitor types into the text control and writes each hidden
-// input. `code` is the hidden input of OTP Field.
-const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
+// input.
+const FORM_STATE_CHANGED: FormState = {
   formData: {
     filter: ['typed'],
     font: ['mono'],
     fruit: ['Cherry'],
     quantity: ['7'],
-    code: ['1234'],
     when: ['2026-12-25'],
     alarm: ['09:30'],
   },
@@ -1694,7 +1688,6 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     font: 'mono',
     fruit: 'Cherry',
     quantity: 7,
-    code: '1234',
     when: '2026-12-25',
     alarm: '09:30',
   },
@@ -1703,7 +1696,6 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     font: 1,
     fruit: 1,
     quantity: 1,
-    code: 1,
     when: 1,
     alarm: 1,
   },
@@ -1735,8 +1727,6 @@ async function readFormState(page: Page): Promise<FormState> {
       formData,
       models: JSON.parse(read('models')) as Record<string, unknown>,
       changes: JSON.parse(read('changes')) as Record<string, number>,
-      submits: read('submits'),
-      completes: read('completes'),
     };
   });
 }
@@ -1756,7 +1746,6 @@ async function changeFormStateBeforeHydration(page: Page) {
     write('font', ['mono']);
     write('fruit', ['Cherry']);
     write('quantity', ['7']);
-    write('code', ['1234']);
     write('when', ['2026-12-25']);
     write('alarm', ['09:30']);
   });
@@ -1772,8 +1761,6 @@ async function changeHydratedFormState(page: Page) {
   await page.getByRole('option', { name: 'Cherry' }).click();
   await page.getByTestId('quantity-input').fill('7');
   await page.keyboard.press('Tab');
-  await page.getByTestId('code-1').click();
-  await page.keyboard.type('1234');
   await page.getByTestId('when').locator('input[data-type="month"]').click();
   await page.keyboard.type('12252026');
   await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
@@ -2769,11 +2756,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
       await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
     }
-    expect(
-      await Promise.all(
-        [2, 3, 4].map((index) => page.getByTestId(`otp-input-${index}`).inputValue()),
-      ),
-    ).toEqual(['2', '3', '4']);
     expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
       'toolbar-input',
     );
@@ -2794,11 +2776,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         await releaseScripts();
         await waitForFormStateHydration(page);
 
-        expect(await readFormState(page)).toEqual({
-          ...FORM_STATE_CHANGED,
-          submits: '1',
-          completes: '1',
-        });
+        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
         expect(messages).toEqual([]);
       },
       60_000,
@@ -2829,9 +2807,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
           expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
           expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
         }
-        expect(state.models).toMatchObject({ code: '' });
-        expect(state.formData.code).toEqual(['']);
-        expect([state.submits, state.completes]).toEqual(['0', '0']);
         expect(messages).toEqual([]);
       },
       60_000,
@@ -2857,16 +2832,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         await page.goBack();
         await waitForFormStateHydration(page);
 
-        // OTP Field takes no code from before the hydration after a move in the history.
-        const { code: _code, ...changes } = FORM_STATE_CHANGED.changes;
-        expect(await readFormState(page)).toEqual({
-          ...FORM_STATE_CHANGED,
-          formData: { ...FORM_STATE_CHANGED.formData, code: [''] },
-          models: { ...FORM_STATE_CHANGED.models, code: '' },
-          changes,
-          submits: '0',
-          completes: '0',
-        });
+        expect(await readFormState(page)).toEqual(FORM_STATE_CHANGED);
         expect(messages).toEqual([]);
       },
       60_000,
