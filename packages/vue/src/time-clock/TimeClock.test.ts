@@ -144,10 +144,12 @@ describe('press and drag', () => {
     const { face } = await mountClock({
       clock: record(log, { hourCycle: 24, granularity: 'hour' }),
     });
-    await pressAt(face(), 90, 0.5);
-    await releaseAt(face(), 90, 0.5);
-    await pressAt(face(), 90, 0.9);
-    await releaseAt(face(), 90, 0.9);
+    // The outer ring is at 60 px from the center and the inner ring at 36 px, so a press at 70 px is
+    // on the outer ring, which the edge of the face would not give.
+    await pressAt(face(), 90, 0.36);
+    await releaseAt(face(), 90, 0.36);
+    await pressAt(face(), 90, 0.7);
+    await releaseAt(face(), 90, 0.7);
     expect(log.filter((line) => line.startsWith('valueChange 1'))).toEqual([
       'valueChange 15:00:00 drag',
     ]);
@@ -237,6 +239,23 @@ describe('keys', () => {
       'valueCommitted 00:01:00 keyboard',
       'viewChange second keyboard',
     ]);
+  });
+
+  // Chromium and WebKit submit a form at Enter in a range input (test/measurements/time-clock.test.ts).
+  test('Enter in the range input submits no form', async () => {
+    const form = document.body.appendChild(document.createElement('form'));
+    form.append(document.createElement('button'));
+    const submits: string[] = [];
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      submits.push('submit');
+    });
+    mount(TimeClockParts, {}, form);
+    await nextTick();
+    form.querySelector<HTMLInputElement>('input[type="range"]')!.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(submits).toEqual([]);
+    form.remove();
   });
 
   test('a key with Alt, Ctrl or Meta stays native', async () => {

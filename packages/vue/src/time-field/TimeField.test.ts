@@ -86,6 +86,18 @@ describe('the segments', () => {
 });
 
 describe('the value', () => {
+  test('a partial entry goes when the hour cycle changes', async () => {
+    const field = reactive<Record<string, unknown>>({ hourCycle: 12 });
+    const { segment, root } = await mountFields([field]);
+    segment('hour').focus();
+    await userEvent.keyboard('3');
+    expect(segment('hour').value).toBe('3');
+    field.hourCycle = 24;
+    await nextTick();
+    const segments = [...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')];
+    expect(segments.map((s) => s.value)).toEqual(['', '']);
+  });
+
   test('a new time keeps the date and the zone of the value', async () => {
     const log: string[] = [];
     const { segment } = await mountFields([
@@ -156,5 +168,18 @@ describe('the form input', () => {
     check.value = '08:00';
     expect(formInput.validationMessage).toBe(check.validationMessage);
     expect([...new FormData(form)]).toEqual([['start', '2026-11-14T08:00']]);
+  });
+
+  test('a value with a date: the step goes from midnight', async () => {
+    const { formInput } = await mountFields([
+      { defaultValue: Temporal.PlainDateTime.from('2026-11-14T09:05'), step: 600 },
+    ]);
+    await settle();
+    expect(formInput.validity.customError).toBe(true);
+    const check = document.createElement('input');
+    check.type = 'time';
+    check.step = '600';
+    check.value = '09:05';
+    expect(formInput.validationMessage).toBe(check.validationMessage);
   });
 });

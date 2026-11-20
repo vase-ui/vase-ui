@@ -245,6 +245,33 @@ describe('the value', () => {
     expect(document.activeElement).toBe(segment('month'));
   });
 
+  test('a partial entry that a controlled parent refuses goes, so a later `null` of the parent shows each segment empty', async () => {
+    const log: string[] = [];
+    const field = model(log, day('2026-11-14'), { write: false });
+    const { segments } = await mountFields([field]);
+    segments[1]!.focus();
+    await userEvent.keyboard('{Backspace}');
+    await settle();
+    expect(values(segments)).toEqual(['11', '14', '2026']);
+    field.modelValue = null;
+    await nextTick();
+    expect(values(segments)).toEqual(['', '', '']);
+  });
+
+  test('a typed year takes the era of `referenceDate`', async () => {
+    const log: string[] = [];
+    const { segment } = await mountFields([
+      record(log, { calendar: 'japanese', referenceDate: day('2026-01-01') }),
+    ]);
+    segment('year').focus();
+    await userEvent.keyboard('5');
+    segment('month').focus();
+    await userEvent.keyboard('11');
+    segment('day').focus();
+    await userEvent.keyboard('14');
+    expect(log.at(-2)).toBe('valueChange 2023-11-14 input-change');
+  });
+
   test('`clear()` empties each segment and gives only `update:modelValue`', async () => {
     const log: string[] = [];
     const { exposed, segments } = await mountFields([
@@ -358,6 +385,10 @@ describe('keys', () => {
     segments[0]!.focus();
     await userEvent.keyboard('{ArrowUp}5{Backspace}{ArrowRight}');
     expect(document.activeElement).toBe(segments[1]);
+    const paste = new Event('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, 'clipboardData', { value: { getData: () => '2027-01-01' } });
+    segments[1]!.dispatchEvent(paste);
+    await nextTick();
     expect(values(segments)).toEqual(['11', '14', '2026']);
     const event = new KeyboardEvent('keydown', { key: 'ArrowUp', altKey: true, cancelable: true });
     segments[1]!.dispatchEvent(event);
@@ -421,6 +452,16 @@ describe('paste and input methods', () => {
       'valueChange 2026-12-14 input-change',
     ]);
     expect(month.value).toBe('12');
+  });
+
+  // WebKit sends key code 229 with no `isComposing`, and before `compositionstart`.
+  test('a key with the key code 229 belongs to the input method', async () => {
+    const { segments } = await mountFields([{ defaultValue: day('2026-11-14') }]);
+    const event = new KeyboardEvent('keydown', { key: 'ArrowUp', keyCode: 229, cancelable: true });
+    segments[0]!.dispatchEvent(event);
+    await nextTick();
+    expect(event.defaultPrevented).toBe(false);
+    expect(segments[0]!.value).toBe('11');
   });
 
   test('text of an `input` with no `beforeinput` that could be cancelled counts as typed text', async () => {

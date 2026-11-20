@@ -16,7 +16,8 @@ defineExpose({ root, face: facePart });
 // The numbers sit on two rings, as a style sheet of a developer places them.
 function place(number: TimeClockFaceNumber, view: string) {
   const angle = (number.value % (view === 'hour' ? 12 : 60)) * (view === 'hour' ? 30 : 6);
-  const radius = number.inner ? 0.6 * 45 : 45;
+  // The rings are nearer the center than the edge, so a press measures them.
+  const radius = number.inner ? 0.6 * 30 : 30;
   const radians = (angle * Math.PI) / 180;
   return {
     position: 'absolute',

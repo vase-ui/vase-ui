@@ -15,7 +15,7 @@ const buttonClassName =
 const dayButtonClassName =
   'm-0 box-border size-9 cursor-pointer select-none rounded-md border-0 bg-transparent p-0 font-[inherit] text-inherit focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-range-end:bg-neutral-950 data-range-end:text-white data-range-middle:rounded-none data-range-middle:bg-neutral-100 data-range-start:bg-neutral-950 data-range-start:text-white data-today:font-bold data-today:underline data-unavailable:line-through dark:focus-visible:outline-white dark:data-range-end:bg-white dark:data-range-end:text-neutral-950 dark:data-range-middle:bg-neutral-800 dark:data-range-start:bg-white dark:data-range-start:text-neutral-950';
 const segmentClassName =
-  'px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600';
+  'field-sizing-content px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600';
 const literalClassName = 'whitespace-pre text-neutral-600 dark:text-neutral-400';
 const inputClassName =
   'flex items-center text-sm font-normal tabular-nums any-pointer-coarse:text-base';
@@ -34,7 +34,7 @@ const inputClassName =
               <DateField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                :class="field-sizing-content segmentClassName"
+                :class="segmentClassName"
               />
               <DateField.Literal v-else :segment="segment" :class="literalClassName" />
             </template>
@@ -49,7 +49,7 @@ const inputClassName =
               <DateField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                :class="field-sizing-content segmentClassName"
+                :class="segmentClassName"
               />
               <DateField.Literal v-else :segment="segment" :class="literalClassName" />
             </template>
