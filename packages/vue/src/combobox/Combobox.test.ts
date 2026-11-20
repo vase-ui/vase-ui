@@ -1,10 +1,11 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
   ComboboxRootChangeEventDetails,
   ComboboxRootHighlightEventDetails,
 } from '@vase-ui/vue/combobox';
+import ComboboxAround from '../../test/fixtures/ComboboxAround.vue';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
 import ComboboxClearInTransition from '../../test/fixtures/ComboboxClearInTransition.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
@@ -770,19 +771,6 @@ describe('the parts of the popup', () => {
     expect(byTestId('positioner')).toHaveAttribute('data-empty');
     expect(input()).toHaveAttribute('data-list-empty');
   });
-
-  test('Escape on an empty list with no Empty goes on to a popup around it', async () => {
-    await mountCombobox({ root: { defaultOpen: true } });
-    await opened();
-    input().focus();
-    await userEvent.keyboard('zz');
-    const outer: string[] = [];
-    // The listener of the layers is on the document, and a stopped event does not get to the window.
-    window.addEventListener('keydown', (event) => outer.push(event.key), { once: true });
-    await userEvent.keyboard('{Escape}');
-    await closed();
-    expect(outer).toEqual(['Escape']);
-  });
 });
 
 describe('fixes of Base UI', () => {
@@ -1037,6 +1025,48 @@ describe('focus', () => {
     await userEvent.keyboard('{Tab}');
     await closed();
     expect(document.activeElement).not.toBe(input());
+  });
+});
+
+// In a Vapor app with Vapor parts, Vue 3.6 runs no portal of Popover: the portal returns a render
+// function, and a Vapor component must return a block.
+describe('around the combobox', () => {
+  test.skipIf(inject('app') === 'vapor')(
+    'in a popover: a pick and Escape close only the combobox; Escape on an empty list with no Empty also closes the popover',
+    async () => {
+      mount(ComboboxAround, { around: 'popover' });
+      await waitFor(() => expect(byTestId('popover')).not.toBe(null));
+      await userEvent.click(input());
+      await opened();
+      await userEvent.click(item('Apple'));
+      await closed();
+      expect(byTestId('popover')).not.toBe(null);
+      await userEvent.click(input());
+      await opened();
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      expect(byTestId('popover')).not.toBe(null);
+      await userEvent.click(input());
+      await opened();
+      await userEvent.keyboard('zz');
+      await waitFor(() => expect(itemNames()).toEqual([]));
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      await waitFor(() => expect(byTestId('popover')).toBe(null));
+    },
+  );
+
+  test('in Toolbar.Input: ArrowDown opens the list, and ArrowLeft at the start of the text goes to the button before', async () => {
+    mount(ComboboxAround, { around: 'toolbar' });
+    await nextTick();
+    input().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await opened();
+    await waitFor(() => expect(highlighted()).toBe('Apple'));
+    expect(document.activeElement).toBe(input());
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement).toBe(byTestId('first'));
+    await closed();
   });
 });
 
