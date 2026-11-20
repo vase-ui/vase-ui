@@ -27,7 +27,8 @@ import type {
 
 /**
  * Groups all parts of the slider. The slider reads the text direction of its element at the mount,
- * and at each focus, press and key of the user. Bind `dir` on a page that changes its direction.
+ * and at each focus, press and key of the user. On a page that changes its direction, bind `dir`
+ * to the root.
  * Renders a `<div>` element.
  * @selector `[data-orientation]` The orientation of the slider: `horizontal` or `vertical`.
  * @selector `[data-disabled]` The slider is disabled.
