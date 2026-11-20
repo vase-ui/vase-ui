@@ -4,9 +4,17 @@ import { AlertDialog } from '../../src/alert-dialog';
 import { Dialog } from '../../src/dialog';
 
 type Props = Record<string, unknown>;
-type Sibling = { alert?: boolean; root?: Props; backdrop?: Props; viewport?: Props; popup?: Props };
+type Sibling = {
+  alert?: boolean;
+  root?: Props;
+  trigger?: false;
+  backdrop?: Props;
+  viewport?: Props;
+  popup?: Props;
+};
 
-// Dialogs side by side, none in another. The trigger of dialog `n` has the `data-key` `n`, and its
+// Dialogs side by side, none in another. The trigger of dialog `n`, unless `trigger` is `false`, has
+// the `data-key` `n`, and its
 // popup the `data-testid` `popup-n`, with a button that opens the next dialog. Each popup is fixed
 // at the top left, a little lower than the one before, so a press on a lower popup goes to the
 // fixed element of a modal dialog above it.
@@ -28,7 +36,11 @@ defineProps({
     v-bind="dialog.root"
     @update:open="(open: boolean) => (scene.open[index] = open)"
   >
-    <component :is="dialog.alert ? AlertDialog.Trigger : Dialog.Trigger" :data-key="index">
+    <component
+      :is="dialog.alert ? AlertDialog.Trigger : Dialog.Trigger"
+      v-if="dialog.trigger !== false"
+      :data-key="index"
+    >
       {{ index }}
     </component>
     <Dialog.Portal>

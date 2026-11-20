@@ -2,12 +2,15 @@ import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Dialog, type DialogRootChangeEventDetails } from '@vase-ui/vue/dialog';
+import DialogConfirm from '../../test/fixtures/DialogConfirm.vue';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
 import DialogInTransition from '../../test/fixtures/DialogInTransition.vue';
 import DialogPages from '../../test/fixtures/DialogPages.vue';
 import DialogPartAlone from '../../test/fixtures/DialogPartAlone.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
+import DialogRadioReturn from '../../test/fixtures/DialogRadioReturn.vue';
 import DialogSiblings from '../../test/fixtures/DialogSiblings.vue';
+import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
@@ -449,4 +452,490 @@ describe('the handle', () => {
       expect(byTestId('popup-a')).toBe(null);
     },
   );
+});
+
+describe('modal', () => {
+  test('`true` makes the rest of the page and the trigger inert, renders a fixed element with no hole, locks the scroll and makes the popup aria-modal', async () => {
+    const { trigger } = await mountDialog({ root: { defaultOpen: true } });
+    const element = await opened();
+    await waitFor(() => expect(inert(byId('before'))).toBe(true));
+    expect(inert(trigger())).toBe(true);
+    expect(inert(element)).toBe(false);
+    expect(block()!.style.position).toBe('fixed');
+    expect(block()!.style.clipPath).toBe('');
+    expect(element).toHaveAttribute('aria-modal', 'true');
+    await waitFor(() => expect(isScrollLocked()).toBe(true));
+  });
+
+  test("`'trap-focus'` hides the rest of the page and the trigger with aria-hidden; the page stays in use, with no lock; a press on the trigger closes", async () => {
+    const log: string[] = [];
+    const { trigger } = await mountDialog({ root: rootEvents(log, { modal: 'trap-focus' }) });
+    await userEvent.click(trigger());
+    const element = await opened();
+    await waitFor(() => expect(hidden(byId('before'))).toBe(true));
+    expect(hidden(trigger())).toBe(true);
+    expect(inert(byId('before'))).toBe(false);
+    expect(element).not.toHaveAttribute('aria-modal');
+    expect(block()).toBe(null);
+    expect(isScrollLocked()).toBe(false);
+    await userEvent.click(trigger());
+    await closed();
+    expect(log).toEqual([
+      'openChange true trigger-press',
+      'update true',
+      'openChange false trigger-press',
+      'update false',
+    ]);
+  });
+
+  test('`false` leaves the page and the trigger in use; a press on the trigger closes', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountDialog({ root: rootEvents(log, { modal: false }) });
+    await userEvent.click(trigger());
+    const element = await opened();
+    await nextTick();
+    expect(inert(byId('before')) || hidden(byId('before'))).toBe(false);
+    expect(element).not.toHaveAttribute('aria-modal');
+    expect(block()).toBe(null);
+    expect(isScrollLocked()).toBe(false);
+    await userEvent.click(trigger());
+    await closed();
+    expect(log.at(-2)).toBe('openChange false trigger-press');
+  });
+
+  test.each([
+    { modal: true, trap: true },
+    { modal: 'trap-focus', trap: true },
+    { modal: false, trap: false },
+  ])(
+    'with modal=$modal, the focus stays in the popup=$trap; else Shift+Tab goes to the trigger, and Tab on it goes back into the popup',
+    async ({ modal, trap }) => {
+      const { trigger } = await mountDialog({ root: { defaultOpen: true, modal } });
+      await opened();
+      await waitFor(() => expect(byTestId('field')).toHaveFocus());
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+      expect(trap ? byTestId('button') : trigger()).toHaveFocus();
+      await userEvent.keyboard('{Tab}');
+      expect(byTestId('field')).toHaveFocus();
+      expect(popup()).not.toBe(null);
+    },
+  );
+
+  test('a dialog that is not modal closes with `focus-out` when Tab leaves it, and the focus goes to the element after the trigger', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountDialog({ root: rootEvents(log, { modal: false }) });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Tab}{Tab}');
+    await closed();
+    expect(byId('after')).toHaveFocus();
+    expect(log.at(-2)).toBe('openChange false focus-out');
+  });
+
+  test('with disablePointerDismissal, a dialog that is not modal stays open when the focus leaves; Tab on the trigger goes back into the popup', async () => {
+    const { trigger } = await mountDialog({
+      root: { modal: false, disablePointerDismissal: true },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Tab}{Tab}');
+    expect(byId('after')).toHaveFocus();
+    expect(popup()).not.toBe(null);
+    await userEvent.click(byId('outside'));
+    expect(popup()).not.toBe(null);
+    trigger().focus();
+    await userEvent.keyboard('{Tab}');
+    expect(byTestId('field')).toHaveFocus();
+  });
+
+  test.each([
+    { modal: true, backdrop: false, at: 'click' },
+    { modal: 'trap-focus', backdrop: false, at: 'pointerdown' },
+    { modal: 'trap-focus', backdrop: true, at: 'click' },
+    { modal: false, backdrop: false, at: 'click' },
+    { modal: false, backdrop: true, at: 'click' },
+  ])(
+    'an outside mouse press with modal=$modal and a backdrop=$backdrop closes at $at',
+    async ({ modal, backdrop, at }) => {
+      const reasons: string[] = [];
+      await mountDialog({
+        root: {
+          defaultOpen: true,
+          modal,
+          onOpenChange: (_: boolean, details: DialogRootChangeEventDetails) =>
+            reasons.push(`${details.reason} ${details.event.type}`),
+        },
+        backdrop: backdrop ? { style: 'position: fixed; inset: 0' } : undefined,
+      });
+      await opened();
+      await userEvent.pointer([{ coords: centerOf(byId('outside')) }, '[MouseLeft>]']);
+      await nextTick();
+      expect(popup() === null).toBe(at === 'pointerdown');
+      await userEvent.pointer('[/MouseLeft]');
+      await closed();
+      expect(reasons).toEqual([`outside-press ${at}`]);
+    },
+  );
+
+  test('a change of modal while the dialog is open applies at once and emits nothing', async () => {
+    const log: string[] = [];
+    const root = rootEvents(log, { defaultOpen: true, modal: true });
+    await mountDialog({ root });
+    const element = await opened();
+    await waitFor(() => expect(inert(byId('before'))).toBe(true));
+    root.modal = 'trap-focus';
+    await waitFor(() => expect(hidden(byId('before'))).toBe(true));
+    expect(inert(byId('before'))).toBe(false);
+    expect(block()).toBe(null);
+    expect(isScrollLocked()).toBe(false);
+    expect(element).not.toHaveAttribute('aria-modal');
+    root.modal = false;
+    await waitFor(() => expect(hidden(byId('before'))).toBe(false));
+    root.modal = true;
+    await waitFor(() => expect(inert(byId('before'))).toBe(true));
+    expect(block()).not.toBe(null);
+    expect(element).toHaveAttribute('aria-modal', 'true');
+    expect(log).toEqual([]);
+  });
+
+  describe.skipIf(server.browser !== 'chromium')('a touch outside', () => {
+    async function touchDialog(modal: boolean | 'trap-focus', backdrop: boolean) {
+      const reasons: string[] = [];
+      await mountDialog({
+        root: {
+          defaultOpen: true,
+          modal,
+          onOpenChange: (_: boolean, details: DialogRootChangeEventDetails) =>
+            reasons.push(`${details.reason} ${details.event.type}`),
+        },
+        popup: { initialFocus: false },
+        backdrop: backdrop ? { style: 'position: fixed; inset: 0; touch-action: none' } : undefined,
+      });
+      await opened();
+      return reasons;
+    }
+    const point = { x: 60, y: 300 };
+    const surface = 'position: fixed; left: 0; top: 200px; width: 150px; height: 200px; touch-action: none';
+
+    test.each([
+      { modal: true, backdrop: false },
+      { modal: 'trap-focus', backdrop: true },
+      { modal: false, backdrop: true },
+    ] as const)(
+      'with modal=$modal and a backdrop=$backdrop closes at the `click` of a tap, and not at a drag',
+      async ({ modal, backdrop }) => {
+        append('div', surface);
+        const reasons = await touchDialog(modal, backdrop);
+        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(popup()).not.toBe(null);
+        await touchDrag(point, point, 0);
+        await closed();
+        expect(reasons).toEqual(['outside-press click']);
+      },
+    );
+
+    test.each(['trap-focus', false] as const)(
+      'with modal=%s and no backdrop closes at a drag',
+      async (modal) => {
+        append('div', surface);
+        const reasons = await touchDialog(modal, false);
+        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await closed();
+        expect(reasons).toEqual(['outside-press pointermove']);
+      },
+    );
+
+    test('a pinch closes nothing', async () => {
+      append('div', surface);
+      await touchDialog(false, false);
+      const { cdp } = await import('vitest/browser');
+      const session = cdp();
+      const frame = window.frameElement!.getBoundingClientRect();
+      const scale = frame.width / window.innerWidth || 1;
+      const at = (x: number, y: number) => ({ x: frame.left + x * scale, y: frame.top + y * scale });
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [at(60, 250)],
+      });
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [at(60, 250), at(100, 350)],
+      });
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [at(60, 230), at(100, 380)],
+      });
+      await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(popup()).not.toBe(null);
+    });
+  });
+});
+
+describe('the dismissal', () => {
+  test('Escape closes the top dialog first: one Escape for each of three sibling dialogs that open at the mount', async () => {
+    mount(DialogSiblings, {
+      dialogs: [0, 1, 2].map(() => ({ root: { defaultOpen: true }, popup: { initialFocus: false } })),
+    });
+    await opened('popup-2');
+    for (const index of [2, 1, 0]) {
+      expect(byTestId(`popup-${index}`)).not.toBe(null);
+      await userEvent.keyboard('{Escape}');
+      await closed(`popup-${index}`);
+    }
+  });
+
+  test('a press closes one dialog: the top one of two sibling modal dialogs, then the one below', async () => {
+    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    mount(DialogSiblings, { dialogs: [{}, {}], scene });
+    await opened('popup-0');
+    await userEvent.click(byTestId('next-0')!);
+    await opened('popup-1');
+    await press(byId('outside'));
+    await closed('popup-1');
+    expect(byTestId('popup-0')).not.toBe(null);
+    await press(byId('outside'));
+    await closed('popup-0');
+  });
+
+  test("a press outside a `'trap-focus'` dialog above a dialog that is not modal closes only the top one", async () => {
+    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    mount(DialogSiblings, {
+      dialogs: [{ root: { modal: false } }, { root: { modal: 'trap-focus' } }],
+      scene,
+    });
+    await opened('popup-0');
+    await userEvent.click(byTestId('next-0')!);
+    await opened('popup-1');
+    await press(byId('outside'));
+    await closed('popup-1');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(byTestId('popup-0')).not.toBe(null);
+    await press(byId('outside'));
+    await closed('popup-0');
+  });
+
+  test('a press on the fixed element, on a backdrop and on the viewport closes with `outside-press`; a press in the popup closes nothing', async () => {
+    for (const part of ['block', 'backdrop', 'viewport'] as const) {
+      const reasons: string[] = [];
+      const { unmount } = await mountDialog({
+        root: {
+          defaultOpen: true,
+          onOpenChange: (_: boolean, details: DialogRootChangeEventDetails) =>
+            reasons.push(details.reason),
+        },
+        backdrop: part === 'backdrop' ? { style: 'position: fixed; inset: 0' } : undefined,
+        viewport: part === 'viewport' ? { style: 'position: fixed; inset: 0' } : undefined,
+      });
+      await opened();
+      await press(byTestId('field')!);
+      expect(popup()).not.toBe(null);
+      await press(byId('outside'));
+      await closed();
+      expect(reasons).toEqual(['outside-press']);
+      unmount();
+    }
+  });
+
+  test('a press that starts in the popup and ends outside closes nothing; a right button closes nothing', async () => {
+    await mountDialog({ root: { defaultOpen: true, modal: 'trap-focus' } });
+    const element = await opened();
+    await userEvent.pointer([
+      { coords: centerOf(byTestId('button')!) },
+      '[MouseLeft>]',
+      { coords: centerOf(byId('outside')) },
+      '[/MouseLeft]',
+    ]);
+    await userEvent.click(byId('outside'), { button: 'right' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).toBe(element);
+  });
+
+  test('with disablePointerDismissal, an outside press closes nothing, and Escape closes', async () => {
+    await mountDialog({ root: { defaultOpen: true, disablePointerDismissal: true } });
+    await opened();
+    await press(byId('outside'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).not.toBe(null);
+    await userEvent.keyboard('{Escape}');
+    await closed();
+  });
+
+  test('a click with no press on the document closes', async () => {
+    await mountDialog({ root: { defaultOpen: true } });
+    await opened();
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await closed();
+  });
+
+  test.each([
+    { modal: true, at: 'an element of the page' },
+    { modal: false, at: 'an element of the page' },
+    { modal: false, at: 'an element of the shadow root' },
+  ])(
+    'a dialog in a shadow root with modal=$modal closes at a press on $at',
+    async ({ modal, at }) => {
+      const host = append('div');
+      const shadow = host.attachShadow({ mode: 'open' });
+      const outside = document.createElement('button');
+      outside.textContent = 'In shadow';
+      outside.style.cssText = 'position: fixed; left: 0; bottom: 0';
+      shadow.append(outside);
+      await mountDialog({ root: { defaultOpen: true, modal }, portal: { to: shadow } });
+      await waitFor(() => expect(shadow.querySelector('[role="dialog"]')).not.toBe(null));
+      await press(at === 'an element of the page' ? byId('outside') : outside);
+      await waitFor(() => expect(shadow.querySelector('[role="dialog"]')).toBe(null));
+    },
+  );
+
+  test('the first click outside after a scrub of a NumberField in the popup closes', async () => {
+    mount(DialogWithScrub);
+    await opened();
+    const scrub = byTestId('scrub')!;
+    scrub.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }),
+    );
+    document.body.dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }),
+    );
+    await new Promise((resolve) => setTimeout(resolve));
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await closed();
+  });
+});
+
+describe('the focus', () => {
+  test('goes to the first tab stop at a press open, to the popup after a touch open, and back to the trigger at the close', async () => {
+    const { trigger } = await mountDialog({ root: { modal: false } });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await waitFor(() => expect(trigger()).toHaveFocus());
+    expect(trigger().matches(':focus-visible')).toBe(true);
+  });
+
+  test.skipIf(server.browser !== 'chromium')('a touch open focuses the popup', async () => {
+    const { trigger } = await mountDialog({ root: { modal: false } });
+    await touchDrag(centerOf(trigger()), centerOf(trigger()), 0);
+    const element = await opened();
+    await waitFor(() => expect(element).toHaveFocus());
+  });
+
+  test('`initialFocus` gets the interaction type, and an element with autofocus takes the focus by default', async () => {
+    const types: string[] = [];
+    const { trigger } = await mountDialog({
+      root: { modal: false },
+      popup: {
+        initialFocus: (type: string) => {
+          types.push(type);
+          return true;
+        },
+      },
+    });
+    trigger().focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    expect(types).toEqual(['keyboard']);
+  });
+
+  test('`finalFocus` replaces the return target', async () => {
+    const { trigger } = await mountDialog({
+      root: { defaultOpen: true },
+      popup: { finalFocus: () => byId('after') },
+    });
+    await opened();
+    void trigger;
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await waitFor(() => expect(byId('after')).toHaveFocus());
+  });
+
+  test.each(['block', 'viewport', 'backdrop'] as const)(
+    'a press on the %s keeps the focus in the field; a refused close opens an alert dialog, whose close gives the focus back to the field',
+    async (part) => {
+      const { root } = mount(DialogConfirm, { backdrop: part === 'backdrop' });
+      await nextTick();
+      await userEvent.click(root.querySelector('button')!);
+      await opened();
+      const text = byTestId('text') as HTMLTextAreaElement;
+      await waitFor(() => expect(text).toHaveFocus());
+      await userEvent.keyboard('x');
+      const target =
+        part === 'block'
+          ? { x: window.innerWidth - 10, y: window.innerHeight - 10 }
+          : { x: 20, y: 20 };
+      await userEvent.pointer({ coords: target, keys: '[MouseLeft]' });
+      await opened('confirm');
+      await waitFor(() => expect(byTestId('back')).toHaveFocus());
+      await userEvent.keyboard('{Enter}');
+      await closed('confirm');
+      await waitFor(() => expect(text).toHaveFocus());
+      expect(popup()).not.toBe(null);
+    },
+  );
+
+  test('an `initialFocus` on an inert element moves the focus to <body>, and the next Tab goes into the popup', async () => {
+    const { trigger } = await mountDialog({ popup: { initialFocus: () => byId('before') } });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(document.body));
+    await userEvent.keyboard('{Tab}');
+    expect(byTestId('field')).toHaveFocus();
+  });
+
+  test.each([true, false])(
+    'BUG-6037: a `finalFocus` container gives the focus to its radio that stays, when the radio in the popup that leaves is checked=%s',
+    async (checked) => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      mount(DialogRadioReturn, { checked });
+      const element = await opened();
+      element.querySelector('input')!.focus();
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() =>
+        expect(document.activeElement).toHaveAttribute('aria-label', 'Outside'),
+      );
+      expect(element.isConnected).toBe(true);
+    },
+  );
+
+  test('BUG-5519: the focus goes back to the trigger at the close while the popup leaves, and the trigger is in use', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const { root } = mount(DialogInTransition);
+    await nextTick();
+    const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
+    await userEvent.click(trigger);
+    const element = await opened();
+    await waitFor(() => expect(element.querySelector('button')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(element.isConnected).toBe(true);
+    expect(inert(trigger) || hidden(trigger)).toBe(false);
+  });
+
+  test('a dialog with no trigger that opened while <body> had the focus gives the focus to nothing at its close', async () => {
+    const surface = append('div', 'position: fixed; right: 0; top: 0; width: 100px; height: 100px');
+    const scene = reactive({ open: { 0: true } as Record<number, boolean> });
+    mount(DialogSiblings, {
+      dialogs: [{ root: { modal: false, disablePointerDismissal: true } }, { trigger: false }],
+      scene,
+    });
+    const element = await opened('popup-0');
+    const button = element.querySelector('button')!;
+    await waitFor(() => expect(button).toHaveFocus());
+    await press(surface);
+    expect(document.activeElement).toBe(document.body);
+    scene.open[1] = true;
+    await opened('popup-1');
+    await waitFor(() => expect(byTestId('popup-1')!.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await closed('popup-1');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).toBe(document.body);
+  });
 });

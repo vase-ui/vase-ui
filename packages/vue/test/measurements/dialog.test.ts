@@ -6,6 +6,7 @@ import { afterEach, describe, expect, inject, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureHydratedAttribute from '../fixtures/MeasureHydratedAttribute.vue';
+import MeasureDialogInComposite from '../fixtures/MeasureDialogInComposite.vue';
 import MeasureLeaveInElement from '../fixtures/MeasureLeaveInElement.vue';
 import MeasureMountOrder from '../fixtures/MeasureMountOrder.vue';
 import MeasurePageSwap from '../fixtures/MeasurePageSwap.vue';
@@ -234,6 +235,25 @@ describe('the hooks of a component in a component (D9)', () => {
       vaporFixtures() ? ['beforeMount 0', 'beforeMount 1'] : ['beforeMount 1', 'beforeMount 0'],
     );
   });
+});
+
+describe('a dialog in place in a composite (D10)', () => {
+  test.each(['toolbar', 'tabs'])(
+    'in a %s keeps the focus in the popup at the arrow keys, Home and End',
+    async (host) => {
+      mount(MeasureDialogInComposite, { host });
+      await nextTick();
+      const inside = [...document.querySelectorAll('button')].find(
+        (button) => button.textContent === 'Inside',
+      )!;
+      inside.focus();
+      for (const key of ['{ArrowDown}', '{ArrowRight}', '{ArrowUp}', '{ArrowLeft}', '{Home}', '{End}']) {
+        await userEvent.keyboard(key);
+        await nextTick();
+        expect(document.activeElement).toBe(inside);
+      }
+    },
+  );
 });
 
 describe('a component that replaces another one (D12)', () => {
