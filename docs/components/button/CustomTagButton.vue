@@ -3,5 +3,9 @@ import { Button } from '@vase-ui/vue/button';
 </script>
 
 <template>
-  <Button as="div" :native-button="false">Button that can contain complex children</Button>
+  <Button>
+    <template #element="{ props, elementRef }">
+      <div v-bind="props" :ref="elementRef">Button that can contain complex children</div>
+    </template>
+  </Button>
 </template>

@@ -12,6 +12,7 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 );
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
+const PROVIDER_TEXT = new Intl.NumberFormat('fr-FR', { style: 'percent' }).format(0.42);
 const EURO_FORMAT = { style: 'currency', currency: 'EUR' } as const;
 const EURO_TEXT = new Intl.NumberFormat('en-US', EURO_FORMAT).format(1234.5);
 
@@ -38,43 +39,21 @@ async function readElement(locator: Locator, attributeNames: string[]) {
   };
 }
 
-async function expectButtonPage(page: Page) {
+async function expectButtonPage(page: Page, { hydrated = false } = {}) {
   const attributeNames = ['type', 'tabindex', 'disabled', 'aria-disabled', 'data-disabled', 'role'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+  const none = Object.fromEntries(attributeNames.map((name) => [name, null]));
 
   expect(await page.getByTestId('counter').textContent()).toBe('Count 0');
-  expect(await read('counter')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': null,
-    'data-disabled': null,
-    role: null,
-  });
-  expect(await read('disabled')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: '',
-    'aria-disabled': null,
-    'data-disabled': '',
-    role: null,
-  });
-  expect(await read('focusable')).toEqual({
-    type: 'button',
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': 'true',
-    'data-disabled': '',
-    role: null,
-  });
-  expect(await read('span')).toEqual({
-    type: null,
-    tabindex: '0',
-    disabled: null,
-    'aria-disabled': null,
-    'data-disabled': null,
-    role: 'button',
-  });
+  const button = { ...none, type: 'button' };
+  expect(await read('counter')).toEqual(button);
+  expect(await read('disabled')).toEqual({ ...button, disabled: '' });
+  expect(await read('focusable')).toEqual({ ...button, 'aria-disabled': 'true' });
+  // The part knows the element of its `element` slot after the mount. Until then, it writes the
+  // attributes of a native button.
+  expect(await read('span')).toEqual(
+    hydrated ? { ...none, tabindex: '0', role: 'button' } : button,
+  );
 }
 
 async function expectSeparatorPage(page: Page) {
@@ -117,8 +96,17 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
   ).toBe('25%');
 }
 
+// A root in a `LocaleProvider` has the locale of the provider.
+async function expectProviderRoot(page: Page) {
+  expect(await page.getByTestId('provider-value').textContent()).toBe(PROVIDER_TEXT);
+  expect(await page.getByTestId('provider-root').getAttribute('aria-valuetext')).toBe(
+    PROVIDER_TEXT,
+  );
+}
+
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
+  await expectProviderRoot(page);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
   expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
@@ -450,8 +438,9 @@ async function expectIndicatorUnderTab(
   );
 }
 
-// Panel `a` is not mounted, so no tab names it.
-async function expectTabIds(page: Page) {
+// Panel `a` is not mounted, so no tab names it. The server HTML names only the part that comes
+// before: the panels after the list name their tabs, and a tab after its panel names the panel.
+async function expectTabIds(page: Page, hydrated: boolean) {
   const after = await readTabsRoot(page, 'panels-after');
   const before = await readTabsRoot(page, 'panels-before');
 
@@ -462,29 +451,29 @@ async function expectTabIds(page: Page) {
     after.tabs[1].id,
     after.tabs[2].id,
   ]);
-  expect(after.tabs.map((tab) => tab.controls)).toEqual([
-    null,
-    after.panels[0].id,
-    after.panels[1].id,
-  ]);
+  expect(after.tabs.map((tab) => tab.controls)).toEqual(
+    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
+  );
   expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
-  expect(before.panels.map((panel) => panel.labelledby)).toEqual([before.tabs[1].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
+    hydrated ? before.tabs[1].id : null,
+  ]);
 }
 
 // The server cannot measure the layout, so the indicator is hidden and has no variable. The script
-// after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
+// in it has the nonce of the provider. It does not run here, because this page has no JavaScript.
 async function expectTabsPage(page: Page) {
-  await expectTabIds(page);
+  await expectTabIds(page, false);
 
   expect(
     await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
       scripts.map((script) => ({
         nonce: script.getAttribute('nonce'),
-        follows: script.previousElementSibling?.getAttribute('data-testid'),
+        parent: script.parentElement?.getAttribute('data-testid'),
         hasText: script.textContent?.includes('currentScript'),
       })),
     ),
-  ).toEqual([{ nonce: 'test-nonce', follows: 'indicator', hasText: true }]);
+  ).toEqual([{ nonce: 'test-nonce', parent: 'indicator', hasText: true }]);
   expect(await readAttributes(page.getByTestId('indicator'), ['hidden', 'role'])).toEqual({
     hidden: '',
     role: 'presentation',
@@ -495,7 +484,7 @@ async function expectTabsPage(page: Page) {
 }
 
 async function expectHydratedTabsPage(page: Page) {
-  await expectTabIds(page);
+  await expectTabIds(page, true);
 
   expect(await page.locator('[role="tablist"] script').count()).toBe(0);
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
@@ -1925,7 +1914,11 @@ interface PageCase {
 }
 
 const PAGES: PageCase[] = [
-  { path: '/button', expectPage: expectButtonPage },
+  {
+    path: '/button',
+    expectPage: expectButtonPage,
+    expectHydratedPage: (page) => expectButtonPage(page, { hydrated: true }),
+  },
   { path: '/separator', expectPage: expectSeparatorPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
     path,
@@ -2701,7 +2694,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
   });
 
   it.each(RANGE_PAGES)(
-    'keeps the en-US text of $path for a visitor in de-DE after hydration',
+    'keeps the text of $path in the locale of each root for a visitor in de-DE after hydration',
     async ({ path, rootAttributes }) => {
       const page = await createPage(undefined, { locale: 'de-DE' });
       const messages = collectMessages(page);
@@ -2718,6 +2711,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         PERCENT_TEXT,
       );
       await expectCurrencyRoot(page, rootAttributes);
+      await expectProviderRoot(page);
       expect(messages).toEqual([]);
     },
   );

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Button } from '@vase-ui/vue/button';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
@@ -16,8 +15,8 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { Toast } from '@vase-ui/vue/toast';
+import { Toggle } from '@vase-ui/vue/toggle';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
@@ -245,19 +244,6 @@ const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   </Field.Root>
 );
 
-const tabsParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Tabs.Root defaultValue="a">
-    <Tabs.List>
-      <Tabs.Tab value="a" {...blankIdIf(part === 'Tab', blankId)}>
-        Tab {k}
-      </Tabs.Tab>
-    </Tabs.List>
-    <Tabs.Panel value="a" {...blankIdIf(part === 'Panel', blankId)} data-testid={`panel${k}`}>
-      Panel
-    </Tabs.Panel>
-  </Tabs.Root>
-);
-
 const toastParts = (part: string) => (k: string, blankId: BlankId) => (
   <Toast.Provider>
     <Toast.Viewport>
@@ -454,11 +440,6 @@ const rows: Row[] = [
     ),
     named: labelled('slider', 'Volume'),
   },
-  ...(['Tab', 'Panel'] as const).map((part): Row => ({
-    name: `Tabs.${part}`,
-    tree: tabsParts(part),
-    named: (k) => ({ testId: `panel${k}`, name: `Tab ${k}` }),
-  })),
   ...(['Title', 'Description'] as const).map((part): Row => ({
     name: `Toast.${part}`,
     tree: toastParts(part),
@@ -523,8 +504,8 @@ describe.each([
     expect(unresolvedReferences()).toEqual([]);
   });
 
-  it('removes the id from a Button that had a nonblank id attribute', async () => {
-    const { setProps } = await render(<Button id=" a b ">Save</Button>);
+  it('removes the id from a Toggle that had a nonblank id attribute', async () => {
+    const { setProps } = await render(<Toggle id=" a b ">Save</Toggle>);
     expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('id', ' a b ');
 
     await setProps({ id });

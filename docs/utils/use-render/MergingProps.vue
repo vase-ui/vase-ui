@@ -5,8 +5,10 @@ import { mergeProps } from '@vase-ui/vue/merge-props';
 
 <template>
   <Button>
-    <template #render="{ props }">
-      <button v-bind="mergeProps<'button'>(props, { class: 'button' })">Submit</button>
+    <template #element="{ props, elementRef }">
+      <button v-bind="mergeProps<'button'>(props, { class: 'button' })" :ref="elementRef">
+        Submit
+      </button>
     </template>
   </Button>
 </template>

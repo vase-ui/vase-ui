@@ -6,12 +6,14 @@
  */
 export const REFACTORED_FOLDERS = [
   'avatar',
+  'button',
   'checkbox',
   'checkbox-group',
   'field',
   'fieldset',
   'form',
   'input',
+  'locale-provider',
   'meter',
   'progress',
   'radio',
@@ -19,4 +21,5 @@ export const REFACTORED_FOLDERS = [
   'scroll-area',
   'separator',
   'switch',
+  'tabs',
 ];

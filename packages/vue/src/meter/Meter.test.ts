@@ -195,7 +195,7 @@ describe('the text of the value', () => {
     expect(value.textContent).toBe(new Intl.NumberFormat('de-DE', { style: 'percent' }).format(1));
   });
 
-  test('with no locale, the text is en-US, also in a browser with another locale', async () => {
+  test('with no locale and no LocaleProvider, the text is en-US, also in a browser with another locale', async () => {
     mockRuntimeLocale('de-DE');
     const { meter, value } = await mountMeter({
       root: { value: 1234.5, max: 2000, format: { maximumFractionDigits: 1 } },

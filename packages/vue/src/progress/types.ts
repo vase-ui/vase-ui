@@ -20,8 +20,8 @@ export interface ProgressRootProps extends /* @vue-ignore */ HTMLAttributes {
   /** The format of the text. With none, the text is the percent of the range. */
   format?: Intl.NumberFormatOptions;
   /**
-   * The locale of the text. Give the locale of the page: the server and the browser then agree.
-   * @default 'en-US'
+   * The locale of the text.
+   * @default the locale of the nearest LocaleProvider, else 'en-US'
    */
   locale?: Intl.LocalesArgument;
   /**

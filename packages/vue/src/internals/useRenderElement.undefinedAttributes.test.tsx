@@ -5,7 +5,6 @@ import { createRenderer, screen, waitFor } from '#test-utils';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Button } from '@vase-ui/vue/button';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
@@ -21,7 +20,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { Tabs } from '@vase-ui/vue/tabs';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
@@ -97,18 +95,6 @@ const rows: Row[] = [
       </Autocomplete.Root>
     ),
     expected: () => 'combobox',
-  },
-  {
-    name: 'Button type',
-    attribute: 'type',
-    createNode: () => (
-      <form>
-        <Button type={undefined} data-testid="part">
-          Save
-        </Button>
-      </form>
-    ),
-    expected: () => 'button',
   },
   {
     name: 'Calendar.Grid role',
@@ -339,21 +325,6 @@ const rows: Row[] = [
     expected: () => 'group',
   },
   {
-    name: 'Tabs.Tab aria-controls',
-    attribute: 'aria-controls',
-    createNode: () => (
-      <Tabs.Root defaultValue="a">
-        <Tabs.List>
-          <Tabs.Tab value="a" aria-controls={undefined} data-testid="part">
-            A
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="a" data-testid="target" />
-      </Tabs.Root>
-    ),
-    expected: targetId,
-  },
-  {
     name: 'TimeClock.Root role',
     attribute: 'role',
     createNode: () => <TimeClock.Root aria-label="Start" role={undefined} data-testid="part" />,
@@ -387,6 +358,18 @@ const rows: Row[] = [
       </Toast.Provider>
     ),
     expected: targetId,
+  },
+  {
+    name: 'Toggle type',
+    attribute: 'type',
+    createNode: () => (
+      <form>
+        <Toggle type={undefined} data-testid="part">
+          Bold
+        </Toggle>
+      </form>
+    ),
+    expected: () => 'button',
   },
   {
     name: 'Toggle aria-pressed',
