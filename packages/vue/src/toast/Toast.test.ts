@@ -532,7 +532,7 @@ describe('hover, focus and the window (B5)', () => {
     // a transition. The older toast is the lower one, so no toast is under the pointer after its
     // close. The pointer rests on the root itself, not on its content.
     style(
-      '[data-testid="viewport"] { position: fixed; top: 200px; left: 200px; width: 200px; height: 0 } [data-id] { position: absolute; left: 0; width: 200px; padding: 10px } [data-id="a"] { top: 80px } [data-id="b"] { top: 0 } .toast-leave-active { transition: opacity 100ms } .toast-leave-to { opacity: 0 }',
+      '[data-testid="viewport"] { position: fixed; top: 200px; left: 200px; width: 200px; height: 0 } [data-id] { position: absolute; left: 0; width: 200px; padding: 10px } [data-id="a"] { top: 400px } [data-id="b"] { top: 0 } .toast-leave-active { transition: opacity 100ms } .toast-leave-to { opacity: 0 }',
     );
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
