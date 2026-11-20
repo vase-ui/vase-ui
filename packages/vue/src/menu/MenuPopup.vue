@@ -35,7 +35,17 @@ const state = computed<MenuPopupState>(() => ({
   instant: root.instant,
 }));
 
-watch(element, (popup) => root.setPopup(popup), { flush: 'sync' });
+// The cleanup runs also at the unmount, where Vue stops the watcher before it clears the ref.
+watch(
+  element,
+  (popup, _, onCleanup) => {
+    root.setPopup(popup);
+    onCleanup(() => {
+      if (root.popup === popup) root.setPopup(null);
+    });
+  },
+  { flush: 'sync' },
+);
 watch(
   () => props.finalFocus,
   (finalFocus) => (menu.finalFocus.value = finalFocus),
@@ -51,18 +61,14 @@ watch(
   { flush: 'sync' },
 );
 const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(() => {
-  removeLeaving();
-  if (root.popup === element.value) root.setPopup(null);
-});
+onUnmounted(removeLeaving);
 
 function onKeydown(event: KeyboardEvent) {
   const filter = menu.filter;
-  if (!filter) {
+  if (!filter?.input.value) {
     menu.onKeydown(event);
     return;
   }
-  if (event.target === filter.input.value) return;
   if (menu.openChild?.root.popup?.contains(event.target as Node)) return;
   filter.takeKey(event);
 }

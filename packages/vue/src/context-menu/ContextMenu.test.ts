@@ -4,7 +4,7 @@ import { nextTick, reactive } from 'vue';
 import type { ContextMenuRootChangeEventDetails } from '@vase-ui/vue/context-menu';
 import ContextMenuParts from '../../test/fixtures/ContextMenuParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { penDrag, touchDrag } from '../../test/pointer';
+import { penDrag, sendTouch, touchDrag } from '../../test/pointer';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -82,6 +82,40 @@ describe('the open', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(reached).toBe(false);
     await waitFor(() => expect(popup()).not.toBe(null));
+  });
+
+  test('an attribute reaches the trigger and the positioner one time; the template refs give the elements and `close()`', async () => {
+    let presses = 0;
+    const log: string[] = [];
+    const { trigger, exposed } = await mountContextMenu({
+      root: rootEvents(log),
+      trigger: { class: 'mine', onPointerdown: () => (presses += 1) },
+      positioner: { class: 'mine' },
+    });
+    expect(trigger.getAttribute('class')).toBe('mine');
+    await rightPress(100, 80);
+    await placed();
+    await rightRelease();
+    expect(presses).toBe(1);
+    expect(byTestId('positioner')!.getAttribute('class')).toBe('mine');
+    const refs = exposed as {
+      root: { close(): void };
+      trigger: { element: Element | null };
+      positioner: { element: Element | null };
+    };
+    expect(refs.trigger.element).toBe(trigger);
+    expect(refs.positioner.element).toBe(byTestId('positioner'));
+    refs.root.close();
+    await waitFor(() => expect(popup()).toBe(null));
+    expect(log.at(-1)).toBe('false imperative-action vase-ui');
+  });
+
+  test('a press of the mouse that rests opens nothing', async () => {
+    await mountContextMenu();
+    await userEvent.pointer([{ coords: { x: 100, y: 80 } }, '[MouseLeft>]']);
+    await new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
+    await userEvent.pointer('[/MouseLeft]');
+    expect(popup()).toBe(null);
   });
 
   test('a disabled root prevents nothing and opens nothing', async () => {
@@ -213,6 +247,10 @@ describe('a second right press', () => {
     await rightRelease();
     await waitFor(() => expect(popup()).toBe(null));
     expect(event?.defaultPrevented).toBe(true);
+    // The menu key of a keyboard sends a `contextmenu` with no press.
+    const next = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    document.body.dispatchEvent(next);
+    expect(next.defaultPrevented).toBe(false);
   });
 });
 
@@ -229,6 +267,117 @@ describe('a long press', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(popup()).not.toBe(null);
       expect(log).toHaveLength(1);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'of a touch opens the menu at the touch, and again after a close',
+    async () => {
+      const point = { x: 100, y: 80 };
+      await mountContextMenu();
+      await touchDrag(point, point, 0, LONG_PRESS);
+      await placed();
+      // The anchor is a box of 10 px around the touch.
+      const box = popup()!.getBoundingClientRect();
+      expect(Math.round(box.left)).toBe(97);
+      expect(Math.round(box.top)).toBe(80);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(popup()).toBe(null));
+      await touchDrag(point, point, 0, LONG_PRESS);
+      await waitFor(() => expect(popup()).not.toBe(null));
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a tap, a second finger and a canceled touch open nothing',
+    async () => {
+      const point = { x: 100, y: 80 };
+      const rest = () => new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
+      await mountContextMenu();
+      await touchDrag(point, point, 0, 100);
+      await rest();
+      expect(popup()).toBe(null);
+      await sendTouch('touchStart', [point]);
+      await sendTouch('touchStart', [point, { x: 150, y: 80 }]);
+      await rest();
+      await sendTouch('touchEnd', []);
+      expect(popup()).toBe(null);
+      await sendTouch('touchStart', [point]);
+      await sendTouch('touchCancel', []);
+      await rest();
+      expect(popup()).toBe(null);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'of a touch in a trigger in a trigger opens the inner menu only',
+    async () => {
+      const outer: string[] = [];
+      await mountContextMenu({ root: rootEvents(outer), inner: {} });
+      const inner = byTestId('inner-trigger')!.getBoundingClientRect();
+      const point = { x: inner.left + 10, y: inner.top + 10 };
+      await touchDrag(point, point, 0, LONG_PRESS);
+      await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
+      expect(outer).toEqual([]);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a `contextmenu` in a long press opens the menu one time, at the point of the event',
+    async () => {
+      const log: string[] = [];
+      const { trigger } = await mountContextMenu({ root: rootEvents(log) });
+      const point = { x: 100, y: 80 };
+      // Chrome on Android sends `contextmenu` for a long press.
+      setTimeout(() => {
+        trigger.dispatchEvent(
+          new MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 100,
+            clientY: 80,
+          }),
+        );
+      }, 100);
+      await touchDrag(point, point, 0, LONG_PRESS);
+      await placed();
+      const box = popup()!.getBoundingClientRect();
+      expect(Math.round(box.left)).toBe(102);
+      expect(Math.round(box.top)).toBe(75);
+      expect(log).toEqual(['true trigger-press contextmenu']);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'the lift of a long press clicks nothing, and the next click of an item works',
+    async () => {
+      const clicks: string[] = [];
+      const point = { x: 100, y: 80 };
+      await mountContextMenu({ items: { a: { onClick: () => clicks.push('a') } } });
+      let lift: MouseEvent | undefined;
+      const record = (event: MouseEvent) => (lift ??= event);
+      window.addEventListener('click', record, true);
+      try {
+        await touchDrag(point, point, 0, LONG_PRESS);
+        await waitFor(() => expect(popup()).not.toBe(null));
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      } finally {
+        window.removeEventListener('click', record, true);
+      }
+      expect(lift?.defaultPrevented).toBe(true);
+      expect(clicks).toEqual([]);
+      item('a').focus();
+      await userEvent.keyboard('{Enter}');
+      expect(clicks).toEqual(['a']);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'of a pen that moves more than 10 px opens nothing',
+    async () => {
+      await mountContextMenu();
+      await penDrag({ x: 100, y: 80 }, { x: 130, y: 80 }, 3, LONG_PRESS);
+      expect(popup()).toBe(null);
     },
   );
 

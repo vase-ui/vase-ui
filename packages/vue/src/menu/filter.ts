@@ -167,8 +167,6 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
     takeKey(event) {
       if (!menu || event.target === input.value || !input.value) return;
       returnFocus();
-      // A key of one character types into the input.
-      if (event.key.length === 1 && event.key !== ' ') return;
       filter.onInputKeydown(event);
     },
     takePointer() {

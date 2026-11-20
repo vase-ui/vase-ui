@@ -30,7 +30,6 @@ const bars = new WeakMap<Element, MenubarForMenu>();
 /** Gives the trigger to the bar, so that a root that a handle connects to it is a menu of the bar. */
 export function addBarTrigger(element: Element, bar: MenubarForMenu) {
   bars.set(element, bar);
-  return () => bars.delete(element);
 }
 
 /** The menubar of a trigger. */

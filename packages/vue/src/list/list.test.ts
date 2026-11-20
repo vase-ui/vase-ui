@@ -106,6 +106,43 @@ describe('virtual mode', () => {
   });
 });
 
+describe('the keys that the list does not use', () => {
+  test('an arrow key moves the highlight and prevents its default; a key of a composition and a key in an empty list do nothing', async () => {
+    await mountList({ items: keys('a', 'b') });
+    container().focus();
+    const down = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    });
+    container().dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+    await nextTick();
+    expect(highlighted()).toBe('a');
+    const composing = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+      isComposing: true,
+    });
+    container().dispatchEvent(composing);
+    await nextTick();
+    expect(highlighted()).toBe('a');
+    expect(composing.defaultPrevented).toBe(false);
+  });
+
+  test('an empty list does not prevent an arrow key', async () => {
+    await mountList({ items: [] });
+    const down = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    });
+    container().dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+  });
+});
+
 describe('the pointer', () => {
   test('a move highlights an item and gives it the focus; a scroll under a pointer that rests highlights nothing', async () => {
     await mountList({ items: keys('a', 'b', 'c', 'd', 'e', 'f') });

@@ -42,7 +42,6 @@ export interface MenuPress {
   x: number;
   y: number;
   time: number;
-  button: number;
   /** The element that the press opened the menu from. */
   trigger: Element | null;
   /** The time from the press after which a release on an item clicks it. */
@@ -165,7 +164,6 @@ export function useMenuRoot<Payload>(
   const provider = place === 'context' ? null : inject(filterProviderKey, null);
   provide(filterProviderKey, null);
 
-  let lastEvent: Event | undefined;
   // The open closed another menu of the menubar.
   let replacesSibling = false;
   const root = usePopupRoot<Payload>({
@@ -177,7 +175,6 @@ export function useMenuRoot<Payload>(
     handle: () => props.handle,
     emitChange(open, details) {
       const event = details.event;
-      lastEvent = event;
       if (!open && details.reason === 'escape-key' && props.closeParentOnEsc && parent) {
         details.allowPropagation();
       }
@@ -342,11 +339,9 @@ export function useMenuRoot<Payload>(
     () => root.open,
     (open) => {
       if (!open) {
-        siblingTimer.clear();
-        drag.value = null;
         if (list.highlighted) list.highlight(null, 'none');
         // A parent that closes with no event of the user closes its submenu.
-        openChild.value?.root.request(false, 'sibling-open', lastEvent ?? new Event('vase-ui'));
+        openChild.value?.root.request(false, 'sibling-open', new Event('vase-ui'));
       }
       if (parent) {
         if (open) parent.setOpenChild(context);
@@ -369,9 +364,6 @@ export function useMenuRoot<Payload>(
 
   function onKeydown(event: KeyboardEvent): boolean {
     if (disabled.value) return false;
-    const child = openChild.value;
-    // The submenu takes the keys in its popup, also with a portal in place.
-    if (child?.root.popup?.contains(event.target as Node)) return false;
     if (typeahead.onKeydown(event) || list.onKeydown(event)) return true;
     if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
     const keys = cross();
@@ -391,7 +383,6 @@ export function useMenuRoot<Payload>(
 
   // A key that the menu did not use goes to the parent menu, or to the menubar.
   function passUp(event: KeyboardEvent): boolean {
-    if (!event.key.startsWith('Arrow')) return false;
     if (parent) {
       if (parent.orientation === 'horizontal' && parent.list.onKeydown(event)) {
         root.request(false, 'list-navigation', event);
@@ -412,7 +403,6 @@ export function useMenuRoot<Payload>(
           ownerDocument(press.trigger),
           'pointerup',
           (event) => {
-            if (event.button !== press.button) return;
             drag.value = null;
             release(press, event);
           },

@@ -59,7 +59,6 @@ export function useMenuItem(options: {
   // A link gives no click for Space (test/measurements/menu.test.ts).
   let spaceDown = false;
   function onKeydown(event: KeyboardEvent) {
-    if (event.target !== event.currentTarget) return;
     // While the user types a string, Space is a character of it, and the button rule then gives no
     // click.
     if (event.key === ' ' && menu.typeahead.typing) {

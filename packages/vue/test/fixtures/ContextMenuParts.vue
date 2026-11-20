@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import { useTemplateRef, type PropType } from 'vue';
 import { ContextMenu } from '../../src/context-menu';
 
 type Props = Record<string, unknown>;
@@ -8,6 +8,7 @@ type Props = Record<string, unknown>;
 // second context menu has its trigger in the first one.
 defineProps({
   root: Object as PropType<Props>,
+  trigger: Object as PropType<Props>,
   positioner: Object as PropType<Props>,
   popup: Object as PropType<Props>,
   backdrop: Object as PropType<Props>,
@@ -15,14 +16,21 @@ defineProps({
   inner: Object as PropType<Props>,
   items: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
 });
+
+const rootPart = useTemplateRef<{ close(): void }>('rootPart');
+const triggerPart = useTemplateRef<{ element: Element | null }>('triggerPart');
+const positionerPart = useTemplateRef<{ element: Element | null }>('positionerPart');
+defineExpose({ root: rootPart, trigger: triggerPart, positioner: positionerPart });
 </script>
 
 <template>
   <input id="before" aria-label="Before" />
-  <ContextMenu.Root v-bind="root">
+  <ContextMenu.Root ref="rootPart" v-bind="root">
     <ContextMenu.Trigger
+      ref="triggerPart"
       data-testid="trigger"
       style="display: block; width: 300px; height: 200px; background: #eee"
+      v-bind="trigger"
     >
       Area
       <ContextMenu.Root v-if="inner" v-bind="inner">
@@ -43,7 +51,7 @@ defineProps({
     </ContextMenu.Trigger>
     <ContextMenu.Portal v-bind="portal">
       <ContextMenu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
-      <ContextMenu.Positioner data-testid="positioner" v-bind="positioner">
+      <ContextMenu.Positioner ref="positionerPart" data-testid="positioner" v-bind="positioner">
         <ContextMenu.Popup data-testid="popup" v-bind="popup">
           <ContextMenu.Item
             v-for="key in ['a', 'b', 'c']"

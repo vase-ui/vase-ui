@@ -1,4 +1,6 @@
 import { watch } from 'vue';
+import { addEventListener } from '../common/addEventListener';
+import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
 import type { Layer } from './layer';
@@ -145,8 +147,8 @@ export function usePopupFocus(
   );
 
   // Only Chromium sends `focusout` when the focused element leaves the DOM
-  // (test/measurements/popup.test.ts), so a `MutationObserver` looks too. A hidden element sends
-  // `focusout` in each browser (test/measurements/menu.test.ts).
+  // (test/measurements/popup.test.ts), so a `MutationObserver` looks for the removal, and for an
+  // attribute that hides the element.
   watch(
     () => (options.restoreLostFocus && root.open ? root.popup : null),
     (popup, _, onCleanup) => {
@@ -154,20 +156,15 @@ export function usePopupFocus(
       let focused: Element | null = null;
       const restore = () => {
         if (!focused || (focused.isConnected && focused.checkVisibility())) return;
-        focused = null;
         const active = activeElement(ownerDocument(popup));
         if (!active || active === popup.ownerDocument.body) focus(popup);
       };
       const onFocusin = (event: FocusEvent) => (focused = event.target as Element);
       const observer = new MutationObserver(restore);
       observer.observe(popup, { childList: true, subtree: true, attributes: true });
-      popup.addEventListener('focusin', onFocusin);
-      popup.addEventListener('focusout', restore);
-      onCleanup(() => {
-        observer.disconnect();
-        popup.removeEventListener('focusin', onFocusin);
-        popup.removeEventListener('focusout', restore);
-      });
+      onCleanup(
+        mergeCleanups(() => observer.disconnect(), addEventListener(popup, 'focusin', onFocusin)),
+      );
     },
     { flush: 'post' },
   );

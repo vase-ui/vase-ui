@@ -93,9 +93,7 @@ export function usePopupHover(
       if (openTimer.isStarted()) startOpen(event);
       return;
     }
-    const current = root();
     if (openTimer.isStarted() || !options.enabled() || event.pointerType === 'touch') return;
-    if (current?.open && current.activeTrigger === options.trigger.value) return;
     if (options.startOnMove(event)) startOpen(event);
   }
 
@@ -155,7 +153,6 @@ export function usePopupHover(
     if (from && trigger && popup && isInTriangle(point, from, trigger, popup)) {
       inTriangle.value = true;
       restTimer.start(REST_IN_TRIANGLE, () => {
-        inTriangle.value = false;
         if (!options.passOn?.(target)) close();
       });
       return;

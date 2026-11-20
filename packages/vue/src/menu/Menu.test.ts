@@ -1,12 +1,17 @@
 import { describe, expect, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Menu, type MenuRootChangeEventDetails } from '@vase-ui/vue/menu';
 import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
+import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
+import MenuPartAlone from '../../test/fixtures/MenuPartAlone.vue';
+import MenuViewportParts from '../../test/fixtures/MenuViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { mount } from '../../test/render';
+import { touchDrag } from '../../test/pointer';
+import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -94,6 +99,52 @@ describe('the parts', () => {
     expect(group).toHaveAttribute('role', 'group');
     expect(group).toHaveAttribute('aria-labelledby', byTestId('group-label')!.id);
     expect(byTestId('radio-group')).toHaveAttribute('role', 'group');
+  });
+
+  test('each part gives its attributes to its element one time, and its template ref has the element', async () => {
+    const { exposed } = mount(MenuEachPart);
+    const { refs } = exposed as { refs: Record<string, { element?: Element | null } | null> };
+    const names = [
+      'Trigger',
+      'Backdrop',
+      'Positioner',
+      'Popup',
+      'Arrow',
+      'Viewport',
+      'List',
+      'Item',
+      'LinkItem',
+      'CheckboxItem',
+      'RadioGroup',
+      'RadioItem',
+      'Group',
+      'GroupLabel',
+      'SubmenuTrigger',
+      'Input',
+      'Clear',
+      'Empty',
+    ];
+    await waitFor(() => expect(names.filter((name) => !refs[name]?.element)).toEqual([]));
+    expect(names.filter((name) => refs[name]?.element?.getAttribute('class') !== 'part')).toEqual(
+      [],
+    );
+  });
+
+  test('a popup, a `List` or a label that leaves while the menu is open leaves no name of it', async () => {
+    const shown = reactive<Record<string, boolean>>({});
+    const { trigger } = await mountMenu({ list: {}, group: {}, shown });
+    await userEvent.click(trigger);
+    await placed();
+    expect(trigger).toHaveAttribute('aria-controls', byTestId('list')!.id);
+    expect(byTestId('group')).toHaveAttribute('aria-labelledby', byTestId('group-label')!.id);
+    shown.list = false;
+    shown.label = false;
+    await nextTick();
+    expect(trigger).toHaveAttribute('aria-controls', popup()!.id);
+    expect(byTestId('group')).not.toHaveAttribute('aria-labelledby');
+    shown.popup = false;
+    await nextTick();
+    expect(trigger).not.toHaveAttribute('aria-controls');
   });
 
   test('a `List` has the role and the name of the menu, and the popup is presentation', async () => {
@@ -283,6 +334,43 @@ describe('the trigger', () => {
     expect(active()).toBe(trigger);
   });
 
+  test('the open keys prevent their default; a prevented key opens nothing', async () => {
+    const { trigger: element } = await mountMenu();
+    element.focus();
+    const stop = (event: KeyboardEvent) => event.preventDefault();
+    element.addEventListener('keydown', stop, { capture: true });
+    await userEvent.keyboard('{ArrowDown}');
+    element.removeEventListener('keydown', stop, { capture: true });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).toBe(null);
+    let down: KeyboardEvent | undefined;
+    element.addEventListener('keydown', (event) => (down ??= event));
+    await userEvent.keyboard('{ArrowDown}');
+    expect(down?.defaultPrevented).toBe(true);
+    await opened();
+  });
+
+  test('a click with no press, as `click()` gives, opens the menu', async () => {
+    const { trigger } = await mountMenu();
+    trigger.click();
+    await opened();
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'after a key open and a close, a tap opens the menu with no highlight',
+    async () => {
+      const { trigger } = await mountMenu();
+      await openWithKeyboard(trigger);
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      await touchDrag(centerOf(trigger), centerOf(trigger), 0);
+      await opened();
+      await placed();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(document.querySelector('[data-highlighted]')).toBe(null);
+    },
+  );
+
   test('`data-pressed` marks a trigger that a press opened', async () => {
     const { trigger } = await mountMenu();
     await userEvent.click(trigger);
@@ -322,6 +410,38 @@ describe('press, drag, release', () => {
       'update false',
       'click b',
     ]);
+  });
+
+  test('the drag ends at its release: a later click on an item gives one click', async () => {
+    const clicks: string[] = [];
+    const { trigger } = await mountMenu({
+      items: [
+        { key: 'a', attrs: { closeOnClick: false, onClick: () => clicks.push('a') } },
+        { key: 'b', attrs: { closeOnClick: false, onClick: () => clicks.push('b') } },
+      ],
+    });
+    await userEvent.pointer([{ coords: centerOf(trigger) }, '[MouseLeft>]']);
+    await placed();
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await userEvent.pointer([{ coords: centerOf(item('a')) }, '[/MouseLeft]']);
+    expect(clicks).toEqual(['a']);
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await userEvent.click(item('b'));
+    expect(clicks).toEqual(['a', 'b']);
+  });
+
+  test('a release at the point of the press keeps the menu open when the trigger moved at the open (VUE-68)', async () => {
+    const style = reactive<Props>({ style: 'margin-left: 0' });
+    const { trigger } = await mountMenu({
+      trigger: style,
+      root: { onOpenChange: (open: boolean) => (style.style = `margin-left: ${open ? 200 : 0}px`) },
+    });
+    const point = centerOf(trigger);
+    await userEvent.pointer([{ coords: point }, '[MouseLeft>]']);
+    await placed();
+    expect(document.elementFromPoint(point.x, point.y)).not.toBe(trigger);
+    await userEvent.pointer('[/MouseLeft]');
+    expect(popup()).not.toBe(null);
   });
 
   test('a release on the trigger, in the popup, or within 8 px of the press keeps the menu open; a release outside closes it with `cancel-open`', async () => {
@@ -428,6 +548,41 @@ describe('the keys of the list', () => {
     expect(active()).toBe(item('c'));
   });
 
+  test('a Space before any letter is no character of the typed string', async () => {
+    const { trigger } = await mountMenu({
+      items: [
+        { key: 'a', text: 'Apple' },
+        { key: 'b', text: 'Banana' },
+      ],
+    });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(active()).toBe(popup()));
+    await userEvent.keyboard(' b');
+    expect(item('b')).toHaveAttribute('data-highlighted');
+  });
+
+  test('a root that becomes disabled while it is open takes no key', async () => {
+    const root = reactive<Props>({});
+    const { trigger } = await mountMenu({ root });
+    await openWithKeyboard(trigger);
+    root.disabled = true;
+    await nextTick();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(active()).toBe(item('a'));
+  });
+
+  test('a key open, a close and a press: the press opens the menu with no highlight', async () => {
+    const { trigger } = await mountMenu();
+    trigger.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await userEvent.click(trigger);
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+  });
+
   test('Space is a character of the typed string, and gives no click', async () => {
     const log: string[] = [];
     const { trigger } = await mountMenu({
@@ -468,6 +623,13 @@ describe('the keys of the list', () => {
     await userEvent.hover(item('b'));
     await nextTick();
     expect(item('b')).not.toHaveAttribute('data-highlighted');
+    // A key gives the highlight, and a pointer that leaves another item keeps it.
+    item('a').focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    expect(item('c')).toHaveAttribute('data-highlighted');
+    await userEvent.hover(item('a'));
+    await userEvent.pointer({ coords: { x: 2, y: window.innerHeight - 2 } });
+    expect(item('c')).toHaveAttribute('data-highlighted');
   });
 
   test('a menu that opens under a pointer that rests highlights nothing', async () => {
@@ -598,6 +760,51 @@ describe('the items', () => {
     ]);
   });
 
+  test('with `closeOnClick`, a checkbox item, a radio item and a link item close the menu with `item-press`', async () => {
+    const cases: [Props, string][] = [
+      [{ checkbox: { closeOnClick: true } }, 'checkbox'],
+      [{ radio: { items: { closeOnClick: true } } }, 'r2'],
+      [
+        { link: { closeOnClick: true, onClick: (event: MouseEvent) => event.preventDefault() } },
+        'link',
+      ],
+    ];
+    for (const [setup, key] of cases) {
+      const log: string[] = [];
+      const { trigger, unmount } = await mountMenu({ root: rootEvents(log), ...setup });
+      await userEvent.click(trigger);
+      await placed();
+      await userEvent.click(item(key));
+      await closed();
+      expect(log, key).toContain('openChange false item-press');
+      unmount();
+    }
+  });
+
+  test('a radio group emits update:modelValue after valueChange; a cancel keeps the value; its label names it; `disabled` gives `aria-disabled`', async () => {
+    const log: string[] = [];
+    const group = reactive<Props>({
+      defaultValue: 'r1',
+      onValueChange: (value: string, details: { cancel(): void }) => {
+        log.push(`valueChange ${value}`);
+        if (value === 'r3') details.cancel();
+      },
+      'onUpdate:modelValue': (value: string) => log.push(`update ${value}`),
+    });
+    const { trigger } = await mountMenu({ radio: { group, label: true } });
+    await userEvent.click(trigger);
+    await placed();
+    expect(byTestId('radio-group')).toHaveAttribute('aria-labelledby', byTestId('radio-label')!.id);
+    expect(byTestId('radio-group')).not.toHaveAttribute('aria-disabled');
+    await userEvent.click(item('r2'));
+    await userEvent.click(item('r3'));
+    expect(item('r2')).toHaveAttribute('aria-checked', 'true');
+    expect(log).toEqual(['valueChange r2', 'update r2', 'valueChange r3']);
+    group.disabled = true;
+    await nextTick();
+    expect(byTestId('radio-group')).toHaveAttribute('aria-disabled', 'true');
+  });
+
   test('a radio item checks its value; a press of the checked item emits nothing', async () => {
     const log: string[] = [];
     const { trigger } = await mountMenu({
@@ -631,9 +838,16 @@ describe('the items', () => {
     });
     await openWithKeyboard(trigger).catch(() => undefined);
     item('link').focus();
+    let space: KeyboardEvent | undefined;
+    item('link').addEventListener('keydown', (event) => (space ??= event));
     await userEvent.keyboard(' ');
+    // The page does not scroll for the Space.
+    expect(space?.defaultPrevented).toBe(true);
     expect(clicks).toEqual(['link']);
     await userEvent.keyboard('{Enter}');
+    expect(clicks).toEqual(['link', 'link']);
+    // A Space that went down on another element gives no click at its release on the link.
+    item('link').dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
     expect(clicks).toEqual(['link', 'link']);
   });
 });
@@ -651,6 +865,7 @@ describe('submenus', () => {
     expect(item('sub')).toHaveAttribute('aria-expanded', 'false');
     await userEvent.hover(item('sub'));
     const element = await opened(subPopup);
+    expect(item('sub')).toHaveAttribute('role', 'menuitem');
     expect(item('sub')).toHaveAttribute('aria-controls', element.id);
     expect(item('sub')).toHaveAttribute('data-popup-open');
     expect(element).toHaveAttribute('aria-labelledby', item('sub').id);
@@ -741,6 +956,107 @@ describe('submenus', () => {
     await opened(() => byTestId('sibling-popup'));
     await closed(subPopup);
     expect(sub).toEqual(['true trigger-hover', 'false sibling-open']);
+    // The closed submenu gives no focus back to its trigger.
+    expect(item('sibling')).toHaveAttribute('data-highlighted');
+    expect(active()).toBe(item('sibling'));
+  });
+
+  test('a submenu that the pointer entered stays open when the pointer leaves it; a new hover starts again', async () => {
+    const { trigger } = await mountMenu(submenu());
+    await userEvent.click(trigger);
+    await placed();
+    const corner = { x: 2, y: window.innerHeight - 2 };
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    await userEvent.hover(item('s1'));
+    await userEvent.pointer({ coords: corner });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(subPopup()).not.toBe(null);
+    // The trigger keeps the highlight of the parent while the pointer is in the submenu.
+    expect(item('sub')).toHaveAttribute('data-highlighted');
+    item('s1').focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await closed(subPopup);
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    await userEvent.pointer({ coords: corner });
+    await closed(subPopup);
+  });
+
+  test('a key across the menu on the trigger of a submenu that a hover opened highlights its first item; the next hover highlights nothing', async () => {
+    const { trigger } = await mountMenu(submenu());
+    await userEvent.click(trigger);
+    await placed();
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    await waitFor(() => expect(active()).toBe(item('sub')));
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowLeft}');
+    await closed(subPopup);
+    await userEvent.hover(item('a'));
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(item('s1')).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('the keys of an open submenu: an arrow key in the parent keeps it open; Ctrl+ArrowRight opens no submenu; the keys that open and close it prevent their default', async () => {
+    const { trigger } = await mountMenu(submenu());
+    await openWithKeyboard(trigger);
+    const keys: KeyboardEvent[] = [];
+    const record = (event: KeyboardEvent) => keys.push(event);
+    document.addEventListener('keydown', record);
+    try {
+      await userEvent.keyboard('{End}{Control>}{ArrowRight}{/Control}');
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(subPopup()).toBe(null);
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => expect(active()).toBe(item('s1')));
+      await userEvent.keyboard('{ArrowLeft}');
+      await closed(subPopup);
+    } finally {
+      document.removeEventListener('keydown', record);
+    }
+    const prevented = (key: string) =>
+      keys.filter((event) => event.key === key).at(-1)?.defaultPrevented;
+    expect(prevented('ArrowRight')).toBe(true);
+    expect(prevented('ArrowLeft')).toBe(true);
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    item('sub').focus();
+    await userEvent.keyboard('{ArrowUp}');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(subPopup()).not.toBe(null);
+  });
+
+  test('a canceled close of the parent keeps its submenu open; a close by the parent of the root closes it with an event', async () => {
+    const sub: string[] = [];
+    const root = reactive<Props>({
+      open: true,
+      onOpenChange: (open: boolean, details: MenuRootChangeEventDetails) => {
+        if (!open) details.cancel();
+      },
+    });
+    const { exposed } = await mountMenu({
+      root,
+      submenu: {
+        trigger: { delay: 0 },
+        root: {
+          onOpenChange: (open: boolean, details: MenuRootChangeEventDetails) =>
+            sub.push(`${open} ${details.reason}`),
+        },
+      },
+    });
+    await placed();
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    (exposed as { root: { close(): void } }).root.close();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(subPopup()).not.toBe(null);
+    root.open = false;
+    await closed();
+    expect(sub).toEqual(['true trigger-hover', 'false sibling-open']);
   });
 
   test('a mouse press on a submenu trigger that opens on hover does nothing; with `openOnHover` false it toggles', async () => {
@@ -749,6 +1065,9 @@ describe('submenus', () => {
     await placed();
     await userEvent.click(item('sub'));
     await opened(subPopup);
+    // A submenu that a press opened leaves the focus on its trigger.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(active()).toBe(item('sub'));
     await userEvent.click(item('sub'));
     await closed(subPopup);
   });
@@ -826,8 +1145,78 @@ describe('the positioner', () => {
     expect(positioner).toHaveAttribute('data-side', 'bottom');
     expect(positioner).toHaveAttribute('data-align', 'center');
     expect(popup()).toHaveAttribute('data-side', 'bottom');
+    expect(popup()).toHaveAttribute('data-align', 'center');
+    expect(positioner).not.toHaveAttribute('data-anchor-hidden');
     const box = positioner.getBoundingClientRect();
     expect(box.top).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().bottom - 1);
+  });
+});
+
+describe('the arrow and the anchor', () => {
+  const arrow = { style: 'width: 10px; height: 10px' };
+  const centerX = (element: Element) => centerOf(element).x;
+
+  test('the arrow points to the center of the trigger', async () => {
+    const { trigger } = await mountMenu({ arrow });
+    await userEvent.click(trigger);
+    await placed();
+    const element = byTestId('arrow')!;
+    await waitFor(() => expect(Math.abs(centerX(element) - centerX(trigger))).toBeLessThan(1));
+    expect(element).toHaveAttribute('data-align', 'center');
+    expect(element).not.toHaveAttribute('data-uncentered');
+  });
+
+  test('an arrow that cannot point to the center of a narrow trigger at the edge has `data-uncentered`', async () => {
+    const { trigger } = await mountMenu({
+      arrow,
+      trigger: { style: 'position: fixed; left: 0; top: 40px; width: 2px; padding: 0; border: 0' },
+    });
+    await userEvent.click(trigger);
+    await placed();
+    await waitFor(() => expect(byTestId('arrow')).toHaveAttribute('data-uncentered'));
+  });
+
+  test('the positioner has `data-anchor-hidden` while the trigger is out of view', async () => {
+    const { trigger } = await mountMenu({ root: { modal: false } });
+    const spacer = document.body.appendChild(document.createElement('div'));
+    spacer.style.height = '3000px';
+    try {
+      await userEvent.click(trigger);
+      await placed();
+      window.scrollTo(0, 2000);
+      await waitFor(() => expect(byTestId('positioner')).toHaveAttribute('data-anchor-hidden'));
+    } finally {
+      window.scrollTo(0, 0);
+      spacer.remove();
+    }
+  });
+});
+
+describe('the viewport', () => {
+  test('a move to another trigger gives the direction, the size of the popup, and `data-instant`', async () => {
+    mount(MenuViewportParts);
+    await nextTick();
+    await userEvent.click(document.getElementById('one')!);
+    const element = await opened();
+    await placed();
+    const sizes: string[] = [];
+    const observer = new MutationObserver(() => {
+      const size = element.style.getPropertyValue('--popup-height');
+      if (size) sizes.push(size);
+    });
+    observer.observe(element, { attributes: true });
+    try {
+      await userEvent.click(document.getElementById('two')!);
+      await waitFor(() =>
+        expect(byTestId('viewport')).toHaveAttribute('data-activation-direction', 'right '),
+      );
+      await waitFor(() =>
+        expect(byTestId('viewport')).toHaveAttribute('data-instant', 'trigger-change'),
+      );
+    } finally {
+      observer.disconnect();
+    }
+    expect(sizes).not.toEqual([]);
   });
 });
 
@@ -845,12 +1234,14 @@ describe('more behaviors of the parts', () => {
     expect(trigger).toHaveTextContent('true');
   });
 
-  test('with `keepMounted`, the closed popup stays with `hidden` and `inert`', async () => {
-    const { trigger } = await mountMenu({ portal: { keepMounted: true } });
+  test('with `keepMounted`, the closed popup and backdrop stay with `hidden` and `inert`', async () => {
+    const { trigger } = await mountMenu({ portal: { keepMounted: true }, backdrop: {} });
     await nextTick();
     const element = popup()!;
     expect(element).toHaveAttribute('hidden');
     expect(element).toHaveAttribute('inert');
+    expect(byTestId('backdrop')).toHaveAttribute('hidden');
+    expect(byTestId('backdrop')).toHaveAttribute('inert');
     await userEvent.click(trigger);
     await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
     expect(popup()).toBe(element);
@@ -964,5 +1355,19 @@ describe('a menu and a popover', () => {
     await userEvent.click(byTestId('inner-button')!);
     expect(popup()).not.toBe(null);
     expect(byTestId('inner-popup')).not.toBe(null);
+  });
+});
+
+// The case throws in `setup`, so it is the last of the file.
+describe('a part outside its parent', () => {
+  test('Backdrop and Positioner with no Portal throw an error that names the part', () => {
+    expect(String(mountError(MenuPartAlone, { part: 'Backdrop' }))).toContain(
+      '<Menu.Backdrop> must be inside <Menu.Portal>',
+    );
+    expect(String(mountError(MenuPartAlone, { part: 'Positioner' }))).toContain(
+      '<Menu.Positioner> must be inside <Menu.Portal>',
+    );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });

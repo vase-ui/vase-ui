@@ -60,12 +60,8 @@ if (bar) {
     element,
     (el, _, onCleanup) => {
       if (!el) return;
-      const removeTrigger = bar.addTrigger(el, () => context.value, isDisabled);
-      const removeBar = addBarTrigger(el, bar);
-      onCleanup(() => {
-        removeTrigger();
-        removeBar();
-      });
+      addBarTrigger(el, bar);
+      onCleanup(bar.addTrigger(el, () => context.value, isDisabled));
     },
     { immediate: true },
   );
@@ -93,7 +89,6 @@ function onPointerdown(event: PointerEvent) {
     x: event.clientX,
     y: event.clientY,
     time: event.timeStamp,
-    button: 0,
     trigger: element.value,
     itemDelay: 200,
     outsideDelay: 0,

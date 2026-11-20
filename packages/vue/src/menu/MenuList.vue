@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectMenu } from './root';
@@ -23,10 +23,17 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const state = computed<MenuListState>(() => ({}));
 
-watch(element, (list) => (menu.listElement.value = list), { flush: 'sync' });
-onUnmounted(() => {
-  if (menu.listElement.value === element.value) menu.listElement.value = null;
-});
+// The cleanup runs also at the unmount, where Vue stops the watcher before it clears the ref.
+watch(
+  element,
+  (list, _, onCleanup) => {
+    menu.listElement.value = list;
+    onCleanup(() => {
+      if (menu.listElement.value === list) menu.listElement.value = null;
+    });
+  },
+  { flush: 'sync' },
+);
 
 function elementProps() {
   const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;

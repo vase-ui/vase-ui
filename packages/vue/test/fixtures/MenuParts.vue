@@ -22,8 +22,8 @@ defineProps({
   },
   /** A checkbox item after the items. */
   checkbox: Object as PropType<Props>,
-  /** A radio group with three items after the items. */
-  radio: Object as PropType<{ group?: Props; items?: Props }>,
+  /** A radio group with three items after the items, and a label with `label`. */
+  radio: Object as PropType<{ group?: Props; items?: Props; label?: boolean }>,
   /** A link item after the items. */
   link: Object as PropType<Props>,
   /** A group with a label around the items. */
@@ -44,6 +44,8 @@ defineProps({
   sibling: Object as PropType<{ trigger?: Props; items?: Item[] }>,
   /** The root is in a disabled `<fieldset>`. */
   fieldset: Boolean,
+  /** The parts that a test removes while the menu is open: `popup`, `list` and `label`. */
+  shown: { type: Object as PropType<Record<string, boolean>>, default: () => ({}) },
 });
 const defaultItems = (prefix: string): Item[] => [{ key: `${prefix}1` }, { key: `${prefix}2` }];
 const rootPart = useTemplateRef('rootPart');
@@ -66,12 +68,20 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
     <Menu.Portal v-bind="portal">
       <Menu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <Menu.Positioner data-testid="positioner" v-bind="positioner">
-        <Menu.Popup ref="popupPart" data-testid="popup" v-bind="popup">
+        <Menu.Popup v-if="shown.popup !== false" ref="popupPart" data-testid="popup" v-bind="popup">
           <Menu.Arrow v-if="arrow" data-testid="arrow" v-bind="arrow" />
           <span v-if="list">Text</span>
-          <component :is="list ? Menu.List : 'div'" data-testid="list" v-bind="list">
+          <component
+            :is="list && shown.list !== false ? Menu.List : 'div'"
+            data-testid="list"
+            v-bind="list"
+          >
             <component :is="group ? Menu.Group : 'div'" data-testid="group">
-              <Menu.GroupLabel v-if="group" data-testid="group-label" v-bind="group.label">
+              <Menu.GroupLabel
+                v-if="group && shown.label !== false"
+                data-testid="group-label"
+                v-bind="group.label"
+              >
                 Group
               </Menu.GroupLabel>
               <Menu.Item
@@ -87,6 +97,7 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
               <template #default="{ state }">Checkbox {{ state.checked }}</template>
             </Menu.CheckboxItem>
             <Menu.RadioGroup v-if="radio" data-testid="radio-group" v-bind="radio.group">
+              <Menu.GroupLabel v-if="radio.label" data-testid="radio-label">Choice</Menu.GroupLabel>
               <Menu.RadioItem
                 v-for="value in ['r1', 'r2', 'r3']"
                 :key="value"

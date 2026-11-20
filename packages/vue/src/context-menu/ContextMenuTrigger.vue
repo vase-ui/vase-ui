@@ -57,7 +57,6 @@ function onContextmenu(event: MouseEvent) {
       x: event.clientX,
       y: event.clientY,
       time: event.timeStamp,
-      button: 2,
       trigger: element.value,
       itemDelay: 0,
       outsideDelay: 500,

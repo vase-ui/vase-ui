@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { MenuFilterProviderChangeEventDetails } from '@vase-ui/vue/menu';
 import MenuFilterParts from '../../test/fixtures/MenuFilterParts.vue';
@@ -63,6 +63,31 @@ describe('the parts', () => {
     expect(byTestId('clear')).toBe(null);
   });
 
+  test('the input takes its `id`; it has `data-highlighted` while it has the focus of a key and no item has the highlight', async () => {
+    const { trigger } = await mountFilter({ input: { id: 'query' } });
+    await open(trigger);
+    expect(input().id).toBe('query');
+    expect(highlighted()).toBe('apple');
+    expect(input()).not.toHaveAttribute('data-highlighted');
+    await userEvent.keyboard('{ArrowUp}');
+    expect(highlighted()).toBe(null);
+    expect(input()).toHaveAttribute('data-highlighted');
+    popup()!.focus();
+    await nextTick();
+    expect(input()).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('a menu whose input left works as a plain menu', async () => {
+    const shown = reactive<Record<string, boolean>>({});
+    const { trigger } = await mountFilter({ shown });
+    await open(trigger);
+    shown.input = false;
+    await waitFor(() => expect(active()).toBe(popup()));
+    popup()!.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+    await userEvent.keyboard('{ArrowDown}');
+    expect(active()).toBe(item('apricot'));
+  });
+
   test('a press opens the menu with the focus in the input and no highlight', async () => {
     const { trigger } = await mountFilter();
     await userEvent.click(trigger);
@@ -102,12 +127,52 @@ describe('the match', () => {
   });
 
   test('`filter` replaces the match, and `null` shows each item', async () => {
-    const { trigger } = await mountFilter({
-      provider: { filter: (text: string, query: string) => text.startsWith(query) },
+    const provider = reactive<Props>({
+      filter: (text: string, query: string) => text.startsWith(query),
     });
+    const { trigger } = await mountFilter({ provider });
     await open(trigger);
     await userEvent.keyboard('B');
     expect(shown()).toEqual(['banana']);
+    provider.filter = null;
+    await nextTick();
+    expect(shown()).toEqual(['apple', 'apricot', 'banana', 'carrot']);
+  });
+
+  test('`v-model` gets the query after `valueChange`', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountFilter({
+      provider: queryEvents(log, {
+        'onUpdate:modelValue': (value: string) => log.push(`update "${value}"`),
+      }),
+    });
+    await open(trigger);
+    await userEvent.keyboard('b');
+    expect(log).toEqual(['valueChange "b" input-change', 'update "b"']);
+  });
+
+  test('a composition gives the query at its end', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountFilter({ provider: queryEvents(log) });
+    await open(trigger);
+    const element = input();
+    element.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    element.value = 'k';
+    element.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    expect(log).toEqual([]);
+    element.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: 'k' }));
+    expect(log).toEqual(['valueChange "k" input-change']);
+    element.value = 'ki';
+    element.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    expect(log.at(-1)).toBe('valueChange "ki" input-change');
+  });
+
+  test('a group of radio items with no shown item is hidden', async () => {
+    const { trigger } = await mountFilter({ radio: true });
+    await open(trigger);
+    expect(byTestId('citrus')).not.toHaveAttribute('hidden');
+    await userEvent.keyboard('carrot');
+    expect(byTestId('citrus')).toHaveAttribute('hidden');
   });
 
   test('an item whose text changes while it is hidden shows when its new text matches', async () => {
@@ -137,6 +202,12 @@ describe('the highlight', () => {
     expect(highlighted()).toBe('carrot');
   });
 
+  test('with `autoHighlight` set to `always`, the first item has the highlight at the open', async () => {
+    const { trigger } = await mountFilter({ provider: { autoHighlight: 'always' } });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(highlighted()).toBe('apple'));
+  });
+
   test('a change of the query removes the highlight; with `autoHighlight` the first shown item has it', async () => {
     const provider = reactive<Props>({});
     const { trigger } = await mountFilter({ provider });
@@ -151,6 +222,33 @@ describe('the highlight', () => {
     provider.autoHighlight = 'always';
     await userEvent.keyboard('c{Backspace}');
     await waitFor(() => expect(highlighted()).toBe('apple'));
+  });
+
+  test('Enter on the input clicks the highlighted item one time and prevents its default; a key with a modifier or a prevented key does nothing', async () => {
+    const clicks: string[] = [];
+    const { trigger } = await mountFilter({
+      root: {
+        onOpenChange: (_: boolean, details: { reason: string; event: Event; cancel(): void }) => {
+          if (details.reason === 'item-press') {
+            clicks.push(String((details.event as MouseEvent).ctrlKey));
+            details.cancel();
+          }
+        },
+      },
+    });
+    await open(trigger);
+    let enter: KeyboardEvent | undefined;
+    input().addEventListener('keydown', (event) => (enter ??= event));
+    await userEvent.keyboard('{Enter}');
+    expect(enter?.defaultPrevented).toBe(true);
+    expect(clicks).toEqual(['false']);
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
+    expect(clicks).toEqual(['false']);
+    const stop = (event: KeyboardEvent) => event.preventDefault();
+    popup()!.addEventListener('keydown', stop, { capture: true });
+    await userEvent.keyboard('{ArrowDown}');
+    expect(highlighted()).toBe('apple');
+    popup()!.removeEventListener('keydown', stop, { capture: true });
   });
 
   test('Enter clicks the highlighted item; Space clicks it only while the input is empty', async () => {
@@ -229,6 +327,20 @@ describe('the query', () => {
 });
 
 describe('the focus', () => {
+  test('the focus that comes back to the input from an item removes the highlight; a pointer move in the popup gives the focus back to the input', async () => {
+    const { trigger } = await mountFilter();
+    await open(trigger);
+    item('banana').focus();
+    await nextTick();
+    expect(highlighted()).toBe('banana');
+    input().focus();
+    await nextTick();
+    expect(highlighted()).toBe(null);
+    item('banana').focus();
+    await userEvent.hover(item('carrot'));
+    await waitFor(() => expect(active()).toBe(input()));
+  });
+
   test('a key on an item that has the real focus gives the focus back to the input', async () => {
     const { trigger } = await mountFilter();
     await open(trigger);
@@ -249,19 +361,91 @@ describe('the focus', () => {
     await userEvent.keyboard('a{ArrowLeft}');
     expect(highlighted()).toBe(null);
     expect(input().selectionStart).toBe(0);
+    let down: KeyboardEvent | undefined;
+    input().addEventListener('keydown', (event) => (down ??= event));
     await userEvent.keyboard('{ArrowDown}');
+    expect(down?.defaultPrevented).toBe(true);
     expect(highlighted()).toBe('apple');
     await userEvent.keyboard('{ArrowRight}');
     expect(highlighted()).toBe('apricot');
   });
 
-  test('a submenu trigger that the query hides closes its submenu', async () => {
+  test('the key across the list opens the submenu and prevents its default; the other one closes it', async () => {
     const { trigger } = await mountFilter({ submenu: true });
     await open(trigger);
-    await userEvent.keyboard('{End}{ArrowRight}');
-    await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
+    await userEvent.keyboard('{End}');
+    let across: KeyboardEvent | undefined;
+    input().addEventListener('keydown', (event) => (across ??= event));
+    await userEvent.keyboard('{ArrowRight}');
+    expect(across?.defaultPrevented).toBe(true);
+    await waitFor(() => expect(active()).toBe(item('cherry')));
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => expect(byTestId('sub-popup')).toBe(null));
     await waitFor(() => expect(active()).toBe(input()));
   });
+
+  test('a submenu trigger that the query hides closes its submenu', async () => {
+    const provider = reactive<Props>({ modelValue: '' });
+    const { trigger } = await mountFilter({ submenu: true, provider });
+    await open(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
+    provider.modelValue = 'apple';
+    await waitFor(() => expect(byTestId('sub-popup')).toBe(null));
+  });
+
+  test('a submenu with no portal takes the keys of its popup', async () => {
+    const { trigger } = await mountFilter({ submenu: true, submenuPortal: { disabled: true } });
+    await open(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('cherry')));
+    await userEvent.keyboard('{ArrowDown}');
+    expect(active()).toBe(item('date'));
+  });
+
+  test('the key toward the start in the empty input of a filterable submenu closes it, and the focus goes back to the input of the parent', async () => {
+    const { trigger } = await mountFilter({ filterSubmenu: true });
+    await open(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(byTestId('sub-input')));
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(byTestId('sub-popup')).toBe(null));
+    await waitFor(() => expect(active()).toBe(input()));
+  });
+
+  test('a popup near the bottom of the view stays on its side while the query shrinks the list', async () => {
+    const style = reactive<Props>({ style: 'position: fixed; left: 10px; bottom: 0' });
+    const { trigger } = await mountFilter({ trigger: style });
+    const positioner = () => document.querySelector('[data-testid="positioner"]')!;
+    // The heights of the full list and of the list that the query shrinks.
+    await open(trigger);
+    await waitFor(() => expect(positioner()).toHaveAttribute('data-side', 'top'));
+    const full = popup()!.offsetHeight;
+    await userEvent.keyboard('carrot');
+    await waitFor(() => expect(shown()).toEqual(['carrot']));
+    const short = popup()!.offsetHeight;
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    // Under the trigger there is room for the short list only.
+    style.style = `position: fixed; left: 10px; bottom: ${Math.round((full + short) / 2)}px`;
+    await nextTick();
+    await open(trigger);
+    await waitFor(() => expect(positioner()).toHaveAttribute('data-side', 'top'));
+    await userEvent.keyboard('carrot');
+    await waitFor(() => expect(shown()).toEqual(['carrot']));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(positioner()).toHaveAttribute('data-side', 'top');
+  });
+
+  test.runIf(server.browser === 'webkit')(
+    'in WebKit, the highlighted item has `aria-selected` while the input has the focus',
+    async () => {
+      const { trigger } = await mountFilter();
+      await open(trigger);
+      expect(item('apple')).toHaveAttribute('aria-selected', 'true');
+      popup()!.focus();
+      await nextTick();
+      expect(item('apple')).not.toHaveAttribute('aria-selected');
+    },
+  );
 });

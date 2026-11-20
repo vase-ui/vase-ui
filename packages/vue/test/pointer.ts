@@ -160,6 +160,21 @@ export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, r
 }
 
 /**
+ * Sends one real touch event at the client points that touch the page after it. Only Chromium has
+ * the protocol that the helper uses: guard a case that calls it with `it.skipIf(!platform.engine.blink)`.
+ */
+export async function sendTouch(
+  type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel',
+  points: ClientPoint[],
+) {
+  const { cdp } = await import('vitest/browser');
+  await (cdp() as CDPSession).send('Input.dispatchTouchEvent', {
+    type,
+    touchPoints: points.map(getProtocolPoint),
+  });
+}
+
+/**
  * Drags a real pen from one client point of the test page to another, in `steps` moves, and lifts it
  * at the last point after `rest` milliseconds. The pen then moves out of the test page, so it hovers over no element that a
  * later test renders. Only Chromium has the protocol that the helper uses: guard a case that calls

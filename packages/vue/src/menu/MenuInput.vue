@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, shallowRef, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, shallowRef, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectFilter } from './filter';
@@ -26,10 +26,17 @@ const { element, setElement } = useElement<HTMLInputElement>();
 const revision = shallowRef(0);
 let composing = false;
 
-watch(element, (input) => (filter.input.value = input), { flush: 'sync' });
-onUnmounted(() => {
-  if (filter.input.value === element.value) filter.input.value = null;
-});
+// The cleanup runs also at the unmount, where Vue stops the watcher before it clears the ref.
+watch(
+  element,
+  (input, _, onCleanup) => {
+    filter.input.value = input;
+    onCleanup(() => {
+      if (filter.input.value === input) filter.input.value = null;
+    });
+  },
+  { flush: 'sync' },
+);
 
 const state = computed<MenuInputState>(() => ({ highlighted: filter.inputHighlighted }));
 
