@@ -196,11 +196,15 @@ describe('Tab after a key listener moved the focus to a sentinel (N3)', () => {
     expect(document.activeElement!.id).toBe('stop');
   });
 
-  test('to a link: Chromium and Firefox; WebKit only with Option, by the setting of the system', async () => {
+  test('to a link: Chromium and Firefox; WebKit by the setting of the system, and always with Option', async () => {
     scene('<a id="stop" href="#stop">Stop</a>');
     await userEvent.tab();
-    expect(document.activeElement!.id).toBe(server.browser === 'webkit' ? 'end' : 'stop');
-    if (server.browser !== 'webkit') return;
+    if (server.browser !== 'webkit') {
+      expect(document.activeElement!.id).toBe('stop');
+      return;
+    }
+    // WebKit on macOS skips a link unless the system setting says otherwise.
+    expect(['stop', 'end']).toContain(document.activeElement!.id);
     root!.querySelector<HTMLElement>('#trigger')!.focus();
     await userEvent.keyboard('{Alt>}{Tab}{/Alt}');
     expect(document.activeElement!.id).toBe('stop');
