@@ -4,7 +4,7 @@ Vase UI contains code that Base UI ported from the projects below.
 
 ## Floating UI
 
-This notice covers the popup modules that Base UI ported from [Floating UI](https://github.com/floating-ui/floating-ui), such as `FloatingFocusManager`, `FloatingPortal`, `FloatingTree` and the `arrow` middleware. Vase UI also has two run-time dependencies from the same project, each with the MIT license: `@floating-ui/vue` and `@floating-ui/utils`.
+This notice covers the popup code that Base UI ported from [Floating UI](https://github.com/floating-ui/floating-ui), such as the `arrow` middleware in `packages/vue/src/popup/placement.ts`. Vase UI also has two run-time dependencies from the same project, each with the MIT license: `@floating-ui/vue` and `@floating-ui/utils`.
 
 ```text
 MIT License
@@ -32,7 +32,7 @@ SOFTWARE.
 
 ## aria-hidden
 
-This notice covers `markOthers`, which Base UI ported from [aria-hidden](https://github.com/theKashey/aria-hidden) with changes.
+This notice covers the marks outside a modal popup in `packages/vue/src/popup/layer.ts`. They follow `markOthers`, which Base UI ported from [aria-hidden](https://github.com/theKashey/aria-hidden) with changes.
 
 ```text
 MIT License
