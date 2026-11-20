@@ -120,7 +120,7 @@ function demoPath(demo: string, variant: string) {
 
 function highlightedItem() {
   return waitFor(() => {
-    const item = document.querySelector('[data-vase-ui-portal] [data-highlighted]');
+    const item = document.querySelector('[data-highlighted]');
     expect(item).toBeInTheDocument();
     return item!;
   });

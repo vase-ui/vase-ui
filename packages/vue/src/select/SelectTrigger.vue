@@ -114,7 +114,8 @@ function elementProps() {
       'aria-labelledby': field?.labelId ?? context.labelId,
       'aria-readonly': context.readonly ? 'true' : undefined,
       'aria-required': context.required ? 'true' : undefined,
-      'data-pressed': open && root.reason === 'trigger-press' ? '' : undefined,
+      // Base UI marks the trigger of an open select as pressed, also after a key open.
+      'data-pressed': open ? '' : undefined,
       'data-popup-side': state.value.popupSide ?? undefined,
       'data-placeholder': state.value.placeholder ? '' : undefined,
       onClick: trigger.onClick,

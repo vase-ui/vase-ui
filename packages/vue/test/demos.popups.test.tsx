@@ -191,11 +191,11 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`.
+// A closed popup that stays in the DOM is `hidden`, or `inert` as the popup of a select.
 function openPopups() {
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden]), [role="listbox"]:not([inert], [inert] *)',
     ),
   ]);
 }
