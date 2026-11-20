@@ -106,7 +106,7 @@ const thumbs = computed(() => {
 });
 const firstThumb = computed(() => thumbs.value.find(Boolean));
 const isDisabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
-const labelId = computed(() => labels[0]?.id ?? field?.labelId);
+const labelId = computed(() => labels[0]?.id ?? field?.labelId ?? fieldset?.legendId);
 const rtl = computed(() => attrs.dir === 'rtl' || (attrs.dir !== 'ltr' && elementRtl.value));
 const state = computed<SliderRootState>(() => {
   const thumb = active.value;
@@ -287,7 +287,7 @@ function elementProps() {
   return mergeProps(
     {
       role: 'group',
-      'aria-labelledby': named ? undefined : (labelId.value ?? fieldset?.legendId),
+      'aria-labelledby': named ? undefined : labelId.value,
       ...stateAttributes(state.value),
     },
     attrs,

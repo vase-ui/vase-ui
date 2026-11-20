@@ -124,7 +124,7 @@ A slider with one thumb and no visible label, such as a volume control, takes it
 
 <<< ./slider/VisibleLabel.vue{7}
 
-`Slider.Label` is a `<label>` for the input of the first thumb. A click on it gives that input the focus in each browser. The root and each input with no `aria-label` and no `aria-labelledby` have the id of the label in `aria-labelledby`. A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
+`Slider.Label` is a `<label>` for the input of the first thumb. A click on it gives that input the focus in each browser. The root and each input with no `aria-label` and no `aria-labelledby` have the id of the label in `aria-labelledby`. With no `Slider.Label`, they take the label of the field, else the legend of a `Fieldset.Root` around the slider. A range slider with a visible label also needs an `aria-label` on each `Slider.Thumb`, so that each thumb has a name of its own:
 
 <<< ./slider/RangeLabels.vue{11-12}
 

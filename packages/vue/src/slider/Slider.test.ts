@@ -616,9 +616,28 @@ describe('the names', () => {
     expect(input(1)).toHaveAttribute('aria-labelledby', 'elsewhere');
   });
 
-  test('the legend of a Fieldset.Root names a slider with no label', async () => {
-    const { group } = await mountSlider({ fieldset: { native: false, disabled: false } });
+  test('the legend of a Fieldset.Root names a slider with no label and its thumbs; an aria-label or aria-labelledby of the developer on the root, also a blank one, stops only the name of the root', async () => {
+    const root = reactive<Attrs>({});
+    const { group, input } = await mountSlider({
+      root,
+      fieldset: { native: false, disabled: false },
+    });
     expect(group).toHaveAttribute('aria-labelledby', 'legend');
+    expect(input()).toHaveAttribute('aria-labelledby', 'legend');
+    for (const [name, value] of [
+      ['aria-label', 'Volume'],
+      ['aria-label', ''],
+      ['aria-labelledby', ''],
+    ] as const) {
+      root[name] = value;
+      await nextTick();
+      expect(group.getAttribute(name)).toBe(value);
+      if (name === 'aria-label') expect(group).not.toHaveAttribute('aria-labelledby');
+      expect(input()).toHaveAttribute('aria-labelledby', 'legend');
+      delete root[name];
+      await nextTick();
+      expect(group).toHaveAttribute('aria-labelledby', 'legend');
+    }
   });
 });
 
