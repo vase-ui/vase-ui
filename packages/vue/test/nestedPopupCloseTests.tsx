@@ -2,7 +2,6 @@ import { expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import type * as Dialog from '../src/dialog/index.parts';
 import type * as Drawer from '../src/drawer/index.parts';
 import * as Menu from '../src/menu/index.parts';
 import * as Select from '../src/select/index.parts';
@@ -14,17 +13,15 @@ import { flushMicrotasks } from './flushMicrotasks';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
 
-type PopupParts = Pick<typeof Dialog, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
+type PopupParts = Pick<typeof Drawer, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
 
 /**
- * Dialog and Drawer return focus at close, before the popup unmounts. These cases cover nested
- * popups (`BUG-5519`) and focus targets inside a popup that closes (`BUG-6037`).
+ * Drawer returns focus at close, before the popup unmounts. These cases cover nested popups
+ * (`BUG-5519`) and focus targets inside a popup that closes (`BUG-6037`).
  */
 export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
   const { parts, wrapPopup, render } = config;
-  // With a union of the two namespaces, JSX cannot type the parts. The suite only passes props
-  // that both namespaces accept.
-  const { Root, Trigger, Portal, Popup } = parts as PopupParts;
+  const { Root, Trigger, Portal, Popup } = parts;
 
   // An exit animation of 100 s for the popups with these classes.
   const exitStyle = (classes: string[]) => `
@@ -624,7 +621,7 @@ export interface NestedPopupCloseTestsConfig {
   /**
    * The component namespace to test.
    */
-  parts: PopupParts | Pick<typeof Drawer, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
+  parts: PopupParts;
   /**
    * Puts a popup in the parts that the family needs around it, such as `Drawer.Viewport`.
    */

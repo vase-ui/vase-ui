@@ -4,8 +4,8 @@ import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 // The page makes the handle in `setup`, so a request does not share it with another request.
 const handle = AlertDialog.createHandle<string>();
 
-// The internal backdrop covers the page with `position: fixed`. A positioned popup paints above
-// it, so a click reaches the close button.
+// A modal alert dialog covers the page with a fixed element. A positioned popup paints above it, so
+// a click reaches the close button.
 const OPEN_POPUP_STYLE = 'position: relative';
 </script>
 

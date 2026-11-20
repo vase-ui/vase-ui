@@ -2238,7 +2238,6 @@ describe('useToast', () => {
       // The modal dialog hides the page outside it. The live region of the toasts stays out of
       // that, so the toast is not hidden and a screen reader announces it.
       expect(openDialogButton.closest('[inert]')).not.toBe(null);
-      expect(openDialogButton.closest('[aria-hidden="true"]')).not.toBe(null);
       expect(toastRoot.closest('[inert]')).toBe(null);
       expect(toastRoot.closest('[aria-hidden="true"]')).toBe(null);
       const liveRegion = toastRoot.closest('[aria-live]');

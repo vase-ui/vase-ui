@@ -14,7 +14,7 @@ import {
   waitForLaterMillisecond,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DialogStore } from '../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
 import DrawerSwipeAreaHydration from './DrawerSwipeAreaHydration.test.vue';

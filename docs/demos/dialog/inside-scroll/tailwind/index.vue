@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Dialog } from '@vase-ui/vue/dialog';
 
+const backdropHiddenClass = 'opacity-0';
+const popupHiddenClass = 'scale-[0.98] opacity-0';
+
 const CONTENT_SECTIONS = [
   {
     title: 'What a dialog is for',
@@ -92,45 +95,53 @@ const CONTENT_SECTIONS = [
 <template>
   <Dialog.Root>
     <Dialog.Trigger
-      class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-disabled:bg-neutral-100 dark:hover:not-disabled:bg-neutral-800 active:not-disabled:bg-neutral-200 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
       >Open dialog</Dialog.Trigger
     >
     <Dialog.Portal>
-      <Dialog.Backdrop
-        class="fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-starting-style:opacity-0 data-ending-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute"
-      />
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
+      >
+        <Dialog.Backdrop
+          class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-150 supports-[-webkit-touch-callout:none]:absolute"
+        />
+      </Transition>
       <Dialog.Viewport
         class="fixed inset-0 flex items-center justify-center overflow-hidden py-6 [@media(min-height:600px)]:pb-12 [@media(min-height:600px)]:pt-8"
       >
-        <Dialog.Popup
-          class="relative flex w-[min(40rem,calc(100%-2rem))] max-h-full max-w-full min-h-0 flex-col bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
-        >
-          <div class="flex flex-col gap-1 p-4 border-b border-neutral-950 dark:border-white">
-            <Dialog.Title class="text-base font-bold">Dialog</Dialog.Title>
-            <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
-              This layout keeps the popup fully on screen while allowing its content to scroll.
-            </Dialog.Description>
-          </div>
-          <div
-            class="flex-auto overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-            tabindex="0"
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Dialog.Popup
+            class="relative flex w-[min(40rem,calc(100%-2rem))] max-h-full max-w-full min-h-0 flex-col bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out"
           >
-            <section
-              v-for="item in CONTENT_SECTIONS"
-              :key="item.title"
-              class="flex flex-col gap-1 p-4"
+            <div class="flex flex-col gap-1 p-4 border-b border-neutral-950 dark:border-white">
+              <Dialog.Title class="text-base font-bold">Dialog</Dialog.Title>
+              <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
+                This layout keeps the popup fully on screen while allowing its content to scroll.
+              </Dialog.Description>
+            </div>
+            <div
+              class="flex-auto overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+              tabindex="0"
             >
-              <h3 class="text-sm font-bold">{{ item.title }}</h3>
-              <p class="text-sm text-neutral-700 dark:text-neutral-300">{{ item.body }}</p>
-            </section>
-          </div>
-          <div class="flex justify-end gap-3 p-4 border-t border-neutral-950 dark:border-white">
-            <Dialog.Close
-              class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-              >Close</Dialog.Close
-            >
-          </div>
-        </Dialog.Popup>
+              <section
+                v-for="item in CONTENT_SECTIONS"
+                :key="item.title"
+                class="flex flex-col gap-1 p-4"
+              >
+                <h3 class="text-sm font-bold">{{ item.title }}</h3>
+                <p class="text-sm text-neutral-700 dark:text-neutral-300">{{ item.body }}</p>
+              </section>
+            </div>
+            <div class="flex justify-end gap-3 p-4 border-t border-neutral-950 dark:border-white">
+              <Dialog.Close
+                class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-disabled:bg-neutral-100 dark:hover:not-disabled:bg-neutral-800 active:not-disabled:bg-neutral-200 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+                >Close</Dialog.Close
+              >
+            </div>
+          </Dialog.Popup>
+        </Transition>
       </Dialog.Viewport>
     </Dialog.Portal>
   </Dialog.Root>

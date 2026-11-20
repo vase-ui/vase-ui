@@ -28,6 +28,7 @@ providePortal();
       :ref="portal.setBlock"
       role="presentation"
       :style="portal.blockStyle.value"
+      @mousedown="portal.onBlockMousedown"
     />
     <span
       v-if="portal.sentinels.value"

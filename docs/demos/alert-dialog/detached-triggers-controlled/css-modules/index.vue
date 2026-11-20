@@ -3,6 +3,9 @@ import { shallowRef } from 'vue';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import styles from '../../_index.module.css';
 
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.PopupHidden;
+
 type AlertPayload = { message: string };
 
 const demoAlertDialog = AlertDialog.createHandle<AlertPayload>();
@@ -63,23 +66,31 @@ function openProgrammatically() {
   >
     <template #default="{ payload }">
       <AlertDialog.Portal>
-        <AlertDialog.Backdrop :class="styles.Backdrop" />
-        <AlertDialog.Popup :class="styles.Popup">
-          <div :class="styles.Intro">
-            <AlertDialog.Title :class="styles.Title">
-              {{ payload?.message ?? 'Are you sure?' }}
-            </AlertDialog.Title>
-            <AlertDialog.Description :class="styles.Description">
-              This action cannot be undone.
-            </AlertDialog.Description>
-          </div>
-          <div :class="styles.Actions">
-            <AlertDialog.Close :class="styles.Button">Cancel</AlertDialog.Close>
-            <AlertDialog.Close :class="[styles.Button, styles.DangerButton]">
-              Confirm
-            </AlertDialog.Close>
-          </div>
-        </AlertDialog.Popup>
+        <Transition
+          :enter-from-class="backdropHiddenClass"
+          :leave-to-class="backdropHiddenClass"
+          appear
+        >
+          <AlertDialog.Backdrop :class="styles.Backdrop" />
+        </Transition>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <AlertDialog.Popup :class="styles.Popup">
+            <div :class="styles.Intro">
+              <AlertDialog.Title :class="styles.Title">
+                {{ payload?.message ?? 'Are you sure?' }}
+              </AlertDialog.Title>
+              <AlertDialog.Description :class="styles.Description">
+                This action cannot be undone.
+              </AlertDialog.Description>
+            </div>
+            <div :class="styles.Actions">
+              <AlertDialog.Close :class="styles.Button">Cancel</AlertDialog.Close>
+              <AlertDialog.Close :class="[styles.Button, styles.DangerButton]">
+                Confirm
+              </AlertDialog.Close>
+            </div>
+          </AlertDialog.Popup>
+        </Transition>
       </AlertDialog.Portal>
     </template>
   </AlertDialog.Root>

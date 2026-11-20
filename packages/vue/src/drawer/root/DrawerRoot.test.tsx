@@ -18,10 +18,9 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { platform } from '../../common/platform';
-import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAttributes';
-import * as Dialog from '../../dialog/index.parts';
-import type { DialogStore } from '../../dialog/store/DialogStore';
-import * as DrawerTriggerDataAttributes from '../../dialog/trigger/DialogTriggerDataAttributes';
+import * as DrawerCloseDataAttributes from '../dialog/close/DialogCloseDataAttributes';
+import type { DialogStore } from '../dialog/store/DialogStore';
+import * as DrawerTriggerDataAttributes from '../dialog/trigger/DialogTriggerDataAttributes';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -2364,10 +2363,10 @@ describe('<Drawer.Root />', () => {
     it('counts as a drawer for the dialog above it', async () => {
       let parent!: Store;
       await render(() => (
-        <Dialog.Root defaultOpen modal={false}>
+        <Drawer.Root defaultOpen modal={false}>
           <DialogStoreProbe onStore={(value) => (parent = value)} />
           <Drawer.Root defaultOpen modal={false} />
-        </Dialog.Root>
+        </Drawer.Root>
       ));
 
       expect(parent.select('nestedOpenDialogCount')).toBe(1);

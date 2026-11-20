@@ -163,11 +163,11 @@
   @media (prefers-color-scheme: dark) {
     opacity: 0.5;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.BackdropHidden {
+  opacity: 0;
 }
 
 .DialogPopup {
@@ -197,12 +197,12 @@
     color: white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.98);
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.DialogPopupHidden {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.98);
 }
 
 .Intro {

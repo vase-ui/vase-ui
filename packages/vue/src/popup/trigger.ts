@@ -1,6 +1,20 @@
 import { computed, onMounted, watch, type Ref } from 'vue';
 import { useButton } from '../common/button';
-import type { PopupRoot } from './root';
+import { useIsHydrated } from '../common/hydration';
+import { rootOfHandle, type PopupHandle, type PopupRoot } from './root';
+
+/**
+ * The root of the handle of a trigger. The trigger reads it after its own mount, so its first render
+ * is that of the server HTML, where no root has a handle. Vue keeps an attribute of the server HTML
+ * that the first client render changes (test/measurements/dialog.test.ts).
+ */
+export function useHandleRoot<Payload>(handle: () => PopupHandle<Payload> | undefined) {
+  const mounted = useIsHydrated();
+  return computed(() => {
+    const given = handle();
+    return given && mounted.value ? rootOfHandle(given) : null;
+  });
+}
 
 /**
  * A trigger of a popup: a button that registers with its root while it is mounted, and that

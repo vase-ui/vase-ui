@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
 import type { Component, Directive, VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
@@ -33,26 +31,6 @@ const vMark: Directive<HTMLElement, string> = {
 };
 
 const families: PopupFamily[] = [
-  {
-    name: 'Dialog.Popup',
-    part: Dialog.Popup,
-    tree: (popup) => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal>{popup}</Dialog.Portal>
-      </Dialog.Root>
-    ),
-    siblings: 'guards',
-  },
-  {
-    name: 'AlertDialog.Popup',
-    part: AlertDialog.Popup,
-    tree: (popup) => (
-      <AlertDialog.Root defaultOpen>
-        <AlertDialog.Portal>{popup}</AlertDialog.Portal>
-      </AlertDialog.Root>
-    ),
-    siblings: 'guards',
-  },
   {
     name: 'Drawer.Popup',
     part: Drawer.Popup,

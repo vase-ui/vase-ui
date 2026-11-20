@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
-import * as Dialog from '../../../dialog/index.parts';
+import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
@@ -32,14 +32,7 @@ const open = { defaultOpen: true };
 
 const portalParts = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
-  { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
-  {
-    name: 'Dialog.Portal in place',
-    root: Dialog.Root,
-    portal: Dialog.Portal,
-    rootProps: open,
-    portalProps: { disabled: true },
-  },
+  { name: 'Drawer.Portal', root: Drawer.Root, portal: Drawer.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
   {
     name: 'NavigationMenu.Portal',

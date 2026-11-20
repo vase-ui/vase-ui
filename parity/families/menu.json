@@ -145,6 +145,20 @@
       "kind": "replaced",
       "test": "packages/vue/src/separator/Separator.test.ts",
       "reason": "The call tests `Menu.Separator`, which is `Separator`. `Separator.test.ts` tests that component."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "opening"],
+      "title": "returns focus to the trigger from an alert dialog opened by an item after a screen reader press",
+      "kind": "not-applicable",
+      "reason": "The case nests an Alert Dialog and a Menu of the older popup code. Alert Dialog moved to the popup layer, and the two do not share a stack until Menu moves to it. The change that moves Menu to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "nested popups"],
+      "title": "keeps pending focus in a nested dialog when the pointer leaves the triggering menu item",
+      "kind": "not-applicable",
+      "reason": "The case nests a Dialog and a Menu of the older popup code. Dialog moved to the popup layer, and the two do not share a stack until Menu moves to it. The change that moves Menu to the popup layer ports the case again."
     }
   ],
   "surfaceAdditions": [

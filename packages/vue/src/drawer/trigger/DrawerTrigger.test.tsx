@@ -8,8 +8,8 @@ import {
   screen,
   withoutVaporAnchors,
 } from '#test-utils';
-import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
+import DialogTrigger from '../dialog/trigger/DialogTrigger.vue';
 import * as Drawer from '../index.parts';
 
 describe('<Drawer.Trigger />', () => {
@@ -18,11 +18,11 @@ describe('<Drawer.Trigger />', () => {
   it('renders the element of Dialog.Trigger, with the attributes and the listeners of the consumer', async () => {
     let clicks = 0;
     const { unmount } = await render(
-      <Dialog.Root>
-        <Dialog.Trigger id="trigger" class="trigger" data-kind="menu">
+      <Drawer.Root>
+        <DialogTrigger id="trigger" class="trigger" data-kind="menu">
           Open
-        </Dialog.Trigger>
-      </Dialog.Root>,
+        </DialogTrigger>
+      </Drawer.Root>,
     );
     const dialogTrigger = withoutVaporAnchors(
       screen.getByRole('button', { name: 'Open' }),

@@ -4,7 +4,7 @@ import type {
   DrawerRootChangeEventDetails,
   DrawerRootSnapPointChangeEventDetails,
 } from './DrawerRoot.vue';
-import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DialogStore } from '../dialog/store/DialogStore';
 import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
 import type { SwipeDirection } from '../../utils/useSwipeDismiss';
 

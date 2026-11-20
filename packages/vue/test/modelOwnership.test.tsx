@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
-import { Dialog } from '@vase-ui/vue/dialog';
+import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -46,21 +46,23 @@ it('VUE-141: Input keeps the last parent text and accepts typed edits after rele
   expect(input).toHaveValue('first');
 });
 
-it('VUE-142: a lone dialog trigger waits for the parent to select it', async () => {
+it('VUE-142: a lone drawer trigger waits for the parent to select it', async () => {
   const triggerId = shallowRef<string | null | undefined>(null);
   await render(() => (
-    <Dialog.Root
+    <Drawer.Root
       defaultOpen
       modal={false}
       triggerId={triggerId.value}
       v-slots={{
         default: ({ payload }: { payload: string | undefined }) => [
-          <Dialog.Trigger id="a" payload="from A">
+          <Drawer.Trigger id="a" payload="from A">
             A
-          </Dialog.Trigger>,
-          <Dialog.Portal>
-            <Dialog.Popup>{payload ?? 'no trigger'}</Dialog.Popup>
-          </Dialog.Portal>,
+          </Drawer.Trigger>,
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup>{payload ?? 'no trigger'}</Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>,
         ],
       }}
     />

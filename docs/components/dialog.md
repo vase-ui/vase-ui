@@ -70,6 +70,46 @@ Import the component and assemble its parts:
 
 <<< ./dialog/Anatomy.vue
 
+## Animation
+
+The popup and the backdrop are in the DOM only while the dialog is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at each open, so `<Transition>` needs `appear` to run the enter.
+
+`Dialog.Viewport` stays in the DOM while its popup leaves. To animate its leave, select it with `:has(> .v-leave-active)`, with the leave class of the `<Transition>` around the popup.
+
+With `keepMounted` on `Dialog.Portal`, the closed popup, backdrop and viewport stay in the DOM with `hidden`. Vue then runs no transition, so animate them with CSS on `[hidden]`.
+
+To keep the popup in the DOM until an animation of JavaScript ends, use the JavaScript hooks of `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
+
+## Modal
+
+The `modal` prop of `Dialog.Root` has three values:
+
+- `true` (the default): the focus stays in the popup, and the rest of the page is inert. The page does not scroll, and a fixed element takes each pointer from the page.
+- `'trap-focus'`: the focus stays in the popup, and screen readers do not read the rest of the page. The page stays in use for the pointer.
+- `false`: the page stays in use. The dialog closes when the focus leaves it, unless `disablePointerDismissal` is set.
+
+Put a `Dialog.Close` in a popup that keeps the focus. A user of a touch screen reader needs it to leave the dialog.
+
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                    | On                        | State                                                                             |
+| --------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `[aria-expanded="true"]`    | trigger                   | The dialog is open for this trigger.                                              |
+| `:disabled`                 | trigger, close            | The button is disabled. A part that is not a button has `[aria-disabled="true"]`. |
+| `[data-nested]`             | popup, viewport           | A dialog root is above the root of this dialog in the component tree.             |
+| `[data-nested-dialog-open]` | popup, viewport           | A dialog is open above this dialog.                                               |
+| `[hidden]`                  | popup, backdrop, viewport | The dialog is closed, with `keepMounted`.                                         |
+
+`[inert]` is no hook for a state: a modal dialog above makes the viewport of an open dialog inert.
+
+The popup sets `--nested-dialogs` to the number of dialogs that are open above it.
+
+## Server render
+
+`Dialog.Portal` renders its content after its mount, as the Vue guide for a server render says for a teleport. The server HTML thus has the triggers only. The popup of an open root comes one update after the mount. With `disabled` on `Dialog.Portal`, the content renders in place, also on the server.
+
 ## Examples
 
 ### State
@@ -123,7 +163,7 @@ To style the parent dialog while a nested dialog is open, use the `[data-nested-
 
 ### Custom focus management
 
-The `initialFocus` and `finalFocus` props of `Dialog.Popup` set the element that gets the focus when the dialog opens and when it closes. Each prop takes an element, a component or a template ref of one.
+The `initialFocus` and `finalFocus` props of `Dialog.Popup` set the element that gets the focus when the dialog opens and when it closes. Each prop takes an element.
 
 Set a prop to `false` to keep the focus where it is. Or give a function that gets the interaction type and returns the element to focus.
 
@@ -259,7 +299,7 @@ To show an element "outside" the colored area of the popup, keep it inside `Dial
 
 ### Portal targets
 
-Set `to` to a CSS selector, an element or a shadow root. Omit it to use the nearest portal element or the document body. Set `:to="null"` to wait for a target. Vue resolves a selector after the client mount.
+Set `to` on `Dialog.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. With no `to`, the target is that of the nearest portal above, else `<body>`. While `to` is `null`, such as a template ref before its mount, the portal renders nothing. `disabled` renders the content in place, and `defer` waits for the other content of the update, as with `<Teleport>`.
 
 ```vue-html
 <Dialog.Portal to="#overlays">
@@ -267,21 +307,19 @@ Set `to` to a CSS selector, an element or a shadow root. Omit it to use the near
 </Dialog.Portal>
 ```
 
-Replace the former `container` prop with `to`. Pass the element directly. Vue templates unwrap refs.
+`Dialog.Portal` renders no element of its own. An attribute on it reaches no element, so put the attribute on an element in the portal.
 
 ### Render in place
 
-Set `disabled` on `Dialog.Portal` to render the portal element and its parts at the place of the component. The server HTML then includes an open popup, and the portal ignores `to`. The name follows [Vue's `Teleport` prop](https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport).
+Set `disabled` on `Dialog.Portal` to render its parts at the place of the component. The server HTML then includes an open popup, and the portal ignores `to`. The name follows [Vue's `Teleport` prop](https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport).
 
 This panel stays beside a list on wide screens and becomes a modal sheet on narrow screens. It keeps one dialog tree and changes `modal` after hydration:
 
 <<< ./dialog/InPlace.vue
 
-Give a modal popup a `position` so that it appears above the backdrops. Hide `Dialog.Backdrop` with CSS while the dialog is not modal. A modal dialog includes its internal backdrop in the server HTML; use `:modal="false"` for a page that must work before hydration.
+Give a modal popup a `position` so that it appears above the fixed element of the dialog. Hide `Dialog.Backdrop` with CSS while the dialog is not modal. The server HTML has no fixed element, and the modal state starts at the mount.
 
-A nested popup keeps its portal inside the dialog's portal element, so an ancestor with `overflow: hidden` can clip it. A change of `disabled` mounts the parts again and discards DOM state, such as the text of an uncontrolled input.
-
-The popup gets `aria-labelledby` and `aria-describedby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. Do the same with `Dialog.Description` and `aria-describedby`. When `modal` becomes `true` with focus outside the popup, the dialog does not move focus into it.
+The popup gets `aria-labelledby` and `aria-describedby` after hydration. For a name in the server HTML, give `Dialog.Title` an `id`. Pass that id to the popup as `aria-labelledby`. Do the same with `Dialog.Description` and `aria-describedby`.
 
 ### Detached triggers
 
@@ -289,7 +327,7 @@ A trigger can be inside or outside `Dialog.Root`. For a simple interaction, put 
 
 When the content of the dialog cannot be next to its trigger, use a detached trigger. Put `Dialog.Trigger` outside `Dialog.Root`, and connect the two with a handle from `Dialog.createHandle()`.
 
-The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Dialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts, and a development build shows a warning for that call. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Dialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. When two mounted roots have the same handle, the handle acts on the root that took it last. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./dialog/DetachedTriggers.vue{4,8,10}
 
@@ -338,9 +376,9 @@ The type argument of `createHandle()` gives the type of the payload:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, give `open` to `Dialog.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with the `triggerId` prop of the root and the `id` of each `Dialog.Trigger`.
+To control the open state, give `open` to `Dialog.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with `v-model:trigger-id` on the root and the `id` of each `Dialog.Trigger`.
 
-The root has no event for a change of the trigger id. The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
+The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
 
 <DemoFrame>
   <DemoDialogDetachedTriggersControlled />
@@ -420,4 +458,4 @@ Creates a handle that connects a `Dialog.Root` with detached `Dialog.Trigger` pa
 
 <ApiReference name="Dialog.Handle" :heading-level="4" />
 
-When no trigger has the `id` that `open()` gets, it opens the dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.
+`open(null)`, and `open()` with an `id` that no trigger has, open the dialog with no trigger. `openWithPayload()` also opens the dialog with no trigger, and the default slot of the root gets its payload until a trigger opens the dialog. A `computed` that reads `isOpen` follows the open state.

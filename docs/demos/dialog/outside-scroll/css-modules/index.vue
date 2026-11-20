@@ -4,6 +4,12 @@ import type { FunctionalComponent } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import styles from './index.module.css';
 
+const backdropHiddenClass = styles.BackdropHidden;
+const backdropLeaveActiveClass = styles.BackdropLeaveActive;
+const popupEnterFromClass = styles.PopupEnterFrom;
+const popupLeaveToClass = styles.PopupLeaveTo;
+const popupLeaveActiveClass = styles.PopupLeaveActive;
+
 const popupRef = useTemplateRef('popup');
 
 const XIcon: FunctionalComponent = () =>
@@ -122,36 +128,50 @@ const RELATED_LINKS = [
   <Dialog.Root>
     <Dialog.Trigger :class="styles.Button">Open dialog</Dialog.Trigger>
     <Dialog.Portal>
-      <Dialog.Backdrop :class="styles.Backdrop" />
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        :leave-active-class="backdropLeaveActiveClass"
+        appear
+      >
+        <Dialog.Backdrop :class="styles.Backdrop" />
+      </Transition>
       <Dialog.Viewport :class="styles.Viewport">
         <div :class="styles.ScrollContent">
-          <Dialog.Popup ref="popup" :class="styles.Popup" :initial-focus="popupRef">
-            <div :class="styles.PopupHeader">
-              <Dialog.Title :class="styles.Title">Dialog</Dialog.Title>
-              <Dialog.Description :class="styles.Description">
-                This layout keeps an outer container scrollable while the dialog can extend past the
-                bottom edge.
-              </Dialog.Description>
-              <Dialog.Close :class="styles.Close" aria-label="Close">
-                <XIcon />
-              </Dialog.Close>
-            </div>
+          <Transition
+            :enter-from-class="popupEnterFromClass"
+            :leave-to-class="popupLeaveToClass"
+            :leave-active-class="popupLeaveActiveClass"
+            appear
+          >
+            <Dialog.Popup ref="popup" :class="styles.Popup" :initial-focus="popupRef?.element">
+              <div :class="styles.PopupHeader">
+                <Dialog.Title :class="styles.Title">Dialog</Dialog.Title>
+                <Dialog.Description :class="styles.Description">
+                  This layout keeps an outer container scrollable while the dialog can extend past
+                  the bottom edge.
+                </Dialog.Description>
+                <Dialog.Close :class="styles.Close" aria-label="Close">
+                  <XIcon />
+                </Dialog.Close>
+              </div>
 
-            <div :class="styles.Body">
-              <section v-for="item in CONTENT_SECTIONS" :key="item.title" :class="styles.Section">
-                <h3 :class="styles.SectionTitle">{{ item.title }}</h3>
-                <p :class="styles.SectionBody">{{ item.body }}</p>
-              </section>
-            </div>
+              <div :class="styles.Body">
+                <section v-for="item in CONTENT_SECTIONS" :key="item.title" :class="styles.Section">
+                  <h3 :class="styles.SectionTitle">{{ item.title }}</h3>
+                  <p :class="styles.SectionBody">{{ item.body }}</p>
+                </section>
+              </div>
 
-            <p :class="styles.FooterNote">
-              Related docs:
-              <template v-for="(item, index) in RELATED_LINKS" :key="item.href"
-                >{{ index > 0 ? ', ' : ''
-                }}<a :class="styles.FooterLink" :href="item.href">{{ item.label }}</a></template
-              >.
-            </p>
-          </Dialog.Popup>
+              <p :class="styles.FooterNote">
+                Related docs:
+                <template v-for="(item, index) in RELATED_LINKS" :key="item.href"
+                  >{{ index > 0 ? ', ' : ''
+                  }}<a :class="styles.FooterLink" :href="item.href">{{ item.label }}</a></template
+                >.
+              </p>
+            </Dialog.Popup>
+          </Transition>
         </div>
       </Dialog.Viewport>
     </Dialog.Portal>

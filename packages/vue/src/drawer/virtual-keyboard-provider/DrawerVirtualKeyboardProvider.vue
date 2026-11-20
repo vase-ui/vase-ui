@@ -256,7 +256,7 @@ import { platform } from '../../common/platform';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { useTimeout } from '../../common/useTimeout';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useDialogRootContext } from '../dialog/root/DialogRootContext';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import * as DrawerViewportCssVars from '../viewport/DrawerViewportCssVars';
 import { DrawerVirtualKeyboardContext } from './DrawerVirtualKeyboardContext';

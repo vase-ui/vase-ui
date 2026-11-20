@@ -4,6 +4,10 @@ import type { FunctionalComponent } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import styles from './index.module.css';
 
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.PopupRootHidden;
+const panelEnterFromClass = styles.PopupEnterFrom;
+
 const XIcon: FunctionalComponent = () =>
   h(
     'svg',
@@ -25,14 +29,24 @@ const XIcon: FunctionalComponent = () =>
   <Dialog.Root>
     <Dialog.Trigger :class="styles.Button">Open dialog</Dialog.Trigger>
     <Dialog.Portal>
-      <Dialog.Backdrop :class="styles.Backdrop" />
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
+      >
+        <Dialog.Backdrop :class="styles.Backdrop" />
+      </Transition>
       <Dialog.Viewport :class="styles.Viewport">
-        <Dialog.Popup :class="styles.PopupRoot" aria-label="Uncontained dialog">
-          <Dialog.Close :class="styles.Close" aria-label="Close">
-            <XIcon />
-          </Dialog.Close>
-          <div :class="styles.Popup" />
-        </Dialog.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Dialog.Popup :class="styles.PopupRoot" aria-label="Uncontained dialog">
+            <Dialog.Close :class="styles.Close" aria-label="Close">
+              <XIcon />
+            </Dialog.Close>
+            <Transition :enter-from-class="panelEnterFromClass" appear>
+              <div :class="styles.Popup" />
+            </Transition>
+          </Dialog.Popup>
+        </Transition>
       </Dialog.Viewport>
     </Dialog.Portal>
   </Dialog.Root>

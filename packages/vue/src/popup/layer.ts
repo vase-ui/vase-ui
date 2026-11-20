@@ -34,6 +34,16 @@ export interface Layer {
   /** Tab keeps the focus in the popup. */
   readonly trap: boolean;
   readonly lockScroll: boolean;
+  /**
+   * The active trigger stays in use: the layer does not hide it, and the fixed element has a hole
+   * at it.
+   */
+  readonly triggerInUse: boolean;
+  /**
+   * A touch outside closes the popup at its end and at a drag. Else only a tap closes it, at
+   * `click`.
+   */
+  readonly touchDrag: boolean;
 }
 
 export type LayerRules = Omit<Layer, 'root'>;
@@ -42,6 +52,10 @@ interface Entry {
   readonly layer: Layer;
   /** The children of `<body>` at the open. */
   readonly bodyChildren: WeakSet<Element>;
+  /** The task of the open. */
+  readonly task: number;
+  /** The place of the `setup` of the root among the roots. */
+  readonly order: number;
   /** For the press that started after the open: it started outside. */
   pressOutside?: boolean;
   /** For the press that started after the open: it ended outside. */
@@ -50,6 +64,29 @@ interface Entry {
 
 /** The open layers, in the order of their open. */
 const stack = shallowReactive<Entry[]>([]);
+
+let roots = 0;
+let task = 0;
+let taskStarted = false;
+
+function currentTask() {
+  if (!taskStarted) {
+    taskStarted = true;
+    task += 1;
+    queueMicrotask(() => (taskStarted = false));
+  }
+  return task;
+}
+
+/**
+ * Adds an open layer. Roots that open in one task enter in the order of their `setup`, as their
+ * portals enter `<body>`. `onMounted` of a child runs before that of its parent
+ * (test/measurements/dialog.test.ts).
+ */
+function push(entry: Entry) {
+  const later = stack.findLastIndex((each) => each.task !== entry.task || each.order < entry.order);
+  stack.splice(later + 1, 0, entry);
+}
 
 /** The layers that the root of each popup has, by root, for the parts of a family. */
 const layersOfRoots = new WeakMap<PopupRoot, Layer>();
@@ -63,10 +100,10 @@ export function isTopLayer(layer: Layer) {
   return stack.at(-1)?.layer === layer;
 }
 
-/** The number of open layers above the layer. */
-export function layersAbove(layer: Layer) {
+/** The open layers above the layer, from the lowest one. */
+export function layersAbove(layer: Layer): Layer[] {
   const index = stack.findIndex((entry) => entry.layer === layer);
-  return index === -1 ? 0 : stack.length - index - 1;
+  return index === -1 ? [] : stack.slice(index + 1).map((entry) => entry.layer);
 }
 
 /** The element is in the popup of the layer, or in a layer above it. */
@@ -108,8 +145,15 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     get lockScroll() {
       return current.value.lockScroll;
     },
+    get triggerInUse() {
+      return current.value.triggerInUse;
+    },
+    get touchDrag() {
+      return current.value.touchDrag;
+    },
   };
   layersOfRoots.set(root, layer);
+  const order = (roots += 1);
 
   const remove = () => {
     const index = stack.findIndex((entry) => entry.layer === layer);
@@ -121,7 +165,7 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
       (open, _, onCleanup) => {
         if (!open) return;
         const doc = ownerDocument(root.activeTrigger);
-        stack.push({ layer, bodyChildren: new WeakSet(doc.body.children) });
+        push({ layer, bodyChildren: new WeakSet(doc.body.children), task: currentTask(), order });
         startHide();
         onCleanup(mergeCleanups(remove, listen(doc)));
       },
@@ -203,22 +247,21 @@ function layerElements(entry: Entry): Element[] {
 
 /**
  * The elements inside the layer: its popup, its sentinels and its triggers, and each element of the
- * layers above it. Its backdrop and its fixed element are outside.
+ * layers above it. Its backdrop, its viewport and its fixed element are outside.
  */
 function insideElements(entry: Entry) {
   const { root } = entry.layer;
   const index = stack.indexOf(entry);
   const own = [
     root.popup,
-    ...root.portalElements.filter((element) => !(entry.layer.block && isFixed(element))),
+    ...root.portalElements.filter(isSentinel),
     ...root.triggers.map((trigger) => trigger.element),
   ].filter((element): element is Element => !!element?.isConnected);
   return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
 }
 
-// The fixed element of a block is the one portal element that is no sentinel.
-function isFixed(element: Element) {
-  return element.getAttribute('tabindex') !== '0';
+function isSentinel(element: Element) {
+  return element.getAttribute('tabindex') === '0';
 }
 
 /** The event path has an element inside the layer. */
@@ -284,16 +327,29 @@ let touch: TouchGesture | null = null;
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
+// The layer decides at `pointerdown` which layers the press can close.
 function onPointerdown(event: PointerEvent) {
   if (event.pointerType === 'touch') {
+    // A second touch makes a pinch, which zooms the page. The gesture then closes nothing.
+    if (!event.isPrimary) {
+      touch = null;
+      for (const entry of stack) entry.pressOutside = undefined;
+      return;
+    }
+    const outside = outsideEntries(event);
     // A touch that rests more than 1 s selects text or opens the menu of the system.
     touch = {
       x: event.clientX,
       y: event.clientY,
       time: event.timeStamp,
       moved: false,
-      entries: outsideEntries(event),
+      entries: outside.filter((entry) => entry.layer.touchDrag),
     };
+    // A layer with no drag rule closes at the `click` of a tap.
+    for (const entry of stack) {
+      entry.pressOutside = entry.layer.touchDrag ? undefined : outside.includes(entry);
+      entry.releaseOutside = undefined;
+    }
     return;
   }
   if (event.button !== 0) return;
@@ -322,6 +378,10 @@ function onPointermove(event: PointerEvent) {
 
 function onPointerup(event: PointerEvent) {
   if (event.pointerType === 'touch') {
+    // The release of a touch has the target of its press, so the press decides.
+    for (const entry of stack) {
+      if (entry.pressOutside !== undefined) entry.releaseOutside = entry.pressOutside;
+    }
     if (!touch) return;
     const { entries, moved, time } = touch;
     touch = null;
@@ -422,6 +482,9 @@ function onKeydown(event: KeyboardEvent) {
 // layer.
 let hideScope: EffectScope | undefined;
 const written = new Map<Element, 'inert' | 'aria-hidden'>();
+// The root of each marked element of a layer below. A part of a closed root writes `inert` itself
+// for its leave, so the layer leaves that attribute there.
+const rootsOfMarks = new WeakMap<Element, PopupRoot>();
 
 function startHide() {
   if (hideScope) return;
@@ -440,7 +503,7 @@ function startHide() {
             root.popup,
             ...root.parts,
             ...root.portalElements,
-            root.activeTrigger,
+            top.layer.triggerInUse ? root.activeTrigger : null,
             ...stack.slice(index + 1).flatMap(layerElements),
           ],
         };
@@ -455,7 +518,13 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next.hide) {
     const kept = new Set<Node>();
-    for (const element of next.inside) {
+    // A live region, such as the viewport of the toasts in the page, stays in use, so a screen
+    // reader announces its changes.
+    const documents = new Set(next.inside.map((element) => element?.ownerDocument));
+    const liveRegions = [...documents].flatMap((doc) => [
+      ...(doc?.querySelectorAll('[aria-live]') ?? []),
+    ]);
+    for (const element of [...next.inside, ...liveRegions]) {
       if (!element?.isConnected) continue;
       const body = element.ownerDocument.body;
       for (
@@ -469,21 +538,24 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
     }
     for (const node of kept) {
       for (const sibling of node.parentNode?.children ?? []) {
-        if (!kept.has(sibling) && !sibling.hasAttribute('aria-live')) {
-          wanted.set(sibling, next.hide);
-        }
+        if (!kept.has(sibling)) wanted.set(sibling, next.hide);
       }
     }
   }
   for (const [element, attribute] of written) {
     if (wanted.get(element) === attribute) continue;
-    element.removeAttribute(attribute);
+    if (attribute !== 'inert' || rootsOfMarks.get(element)?.open !== false) {
+      element.removeAttribute(attribute);
+    }
     written.delete(element);
+    rootsOfMarks.delete(element);
   }
   for (const [element, attribute] of wanted) {
     if (written.has(element) || element.hasAttribute(attribute)) continue;
     element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
     written.set(element, attribute);
+    const owner = stack.find((entry) => layerElements(entry).includes(element));
+    if (owner) rootsOfMarks.set(element, owner.layer.root);
   }
   if (stack.length === 0) {
     hideScope?.stop();

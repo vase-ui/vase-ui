@@ -2,11 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -43,14 +41,14 @@ const targetId = () => screen.getByTestId('target').id;
 
 const rows: Row[] = [
   {
-    name: 'AlertDialog.Trigger aria-haspopup',
+    name: 'Drawer.Trigger aria-haspopup',
     attribute: 'aria-haspopup',
     createNode: () => (
-      <AlertDialog.Root>
-        <AlertDialog.Trigger aria-haspopup={undefined} data-testid="part">
+      <Drawer.Root>
+        <Drawer.Trigger aria-haspopup={undefined} data-testid="part">
           Open
-        </AlertDialog.Trigger>
-      </AlertDialog.Root>
+        </Drawer.Trigger>
+      </Drawer.Root>
     ),
     expected: () => 'dialog',
   },
@@ -88,28 +86,32 @@ const rows: Row[] = [
     expected: () => '',
   },
   {
-    name: 'Dialog.Popup aria-labelledby',
+    name: 'Drawer.Popup aria-labelledby',
     attribute: 'aria-labelledby',
     createNode: () => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal>
-          <Dialog.Popup aria-labelledby={undefined} data-testid="part">
-            <Dialog.Title data-testid="target">Title</Dialog.Title>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup aria-labelledby={undefined} data-testid="part">
+              <Drawer.Title data-testid="target">Title</Drawer.Title>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ),
     expected: targetId,
   },
   {
-    name: 'Dialog.Portal id',
+    name: 'Drawer.Portal id',
     attribute: 'id',
     createNode: () => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal id={undefined} data-testid="part">
-          <Dialog.Popup />
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal id={undefined} data-testid="part">
+          <Drawer.Viewport>
+            <Drawer.Popup />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ),
     expected: () => expect.stringMatching(/./),
   },
@@ -228,15 +230,15 @@ const rows: Row[] = [
     expected: targetId,
   },
   {
-    name: 'Dialog.Trigger type',
+    name: 'Drawer.Trigger type',
     attribute: 'type',
     createNode: () => (
       <form>
-        <Dialog.Root>
-          <Dialog.Trigger type={undefined} data-testid="part">
+        <Drawer.Root>
+          <Drawer.Trigger type={undefined} data-testid="part">
             Open
-          </Dialog.Trigger>
-        </Dialog.Root>
+          </Drawer.Trigger>
+        </Drawer.Root>
       </form>
     ),
     expected: () => 'button',
