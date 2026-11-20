@@ -1,15 +1,17 @@
 import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { nextTick, reactive, type Component } from 'vue';
+import { nextTick, reactive } from 'vue';
 import { Popover, type PopoverRootChangeEventDetails } from '@vase-ui/vue/popover';
-import { Dialog } from '@vase-ui/vue/dialog';
+import OpenModalDialog from '../../test/fixtures/OpenModalDialog.vue';
 import PopoverHandles from '../../test/fixtures/PopoverHandles.vue';
 import PopoverInTransition from '../../test/fixtures/PopoverInTransition.vue';
+import PopoverPartAlone from '../../test/fixtures/PopoverPartAlone.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import PopoverViewportParts from '../../test/fixtures/PopoverViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -47,6 +49,26 @@ async function closed() {
 
 async function placed() {
   await waitFor(() => expect(positioner()?.style.visibility).toBe(''));
+}
+
+/**
+ * Mouse moves with 10 ms between them. A move of the test runner can take more than the 40 ms rest
+ * in the triangle of a hover, and the browser runs timers in the order of their ends.
+ */
+async function moveMouse(points: { x: number; y: number }[]) {
+  for (const point of points) {
+    const target = document.elementFromPoint(point.x, point.y) ?? document.documentElement;
+    target.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        composed: true,
+        pointerType: 'mouse',
+        clientX: point.x,
+        clientY: point.y,
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
 }
 
 function centerOf(element: Element) {
@@ -92,15 +114,6 @@ describe('the parts', () => {
     expect(trigger()).toHaveAttribute('role', 'button');
     expect(trigger()).not.toHaveAttribute('type');
     expect(element.localName).toBe('section');
-  });
-
-  test('throw an error that names the part with no root, and Positioner with no Portal', () => {
-    expect(String(mountError(Popover.Popup))).toContain(
-      '<Popover.Popup> must be inside <Popover.Root>',
-    );
-    expect(String(mountError(Popover.Trigger))).toContain(
-      '<Popover.Trigger> must be inside <Popover.Root>',
-    );
   });
 });
 
@@ -530,7 +543,7 @@ describe('modal (3.2, L4 to L6)', () => {
     await mountPopover({ root });
     await opened();
     await waitFor(() => expect(isScrollLocked()).toBe(true));
-    mount(Dialog.Root as Component, { open: true, modal: true });
+    mount(OpenModalDialog);
     root.open = false;
     await closed();
     await nextTick();
@@ -647,7 +660,7 @@ describe('the hover (L9)', () => {
     ]);
   });
 
-  test('the pointer that moves from the trigger to the popup keeps it open; a press in the first 500 ms keeps it open as after a press', async () => {
+  test('the pointer that moves in the triangle from the trigger to the popup keeps it open; a move out of the triangle closes it', async () => {
     const { trigger } = await mountPopover({
       triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
       positioner: { sideOffset: 20 },
@@ -655,15 +668,22 @@ describe('the hover (L9)', () => {
     await userEvent.hover(trigger());
     const element = await opened();
     await placed();
-    const from = centerOf(trigger());
+    const box = trigger().getBoundingClientRect();
+    const gap = { x: box.left + box.width / 2, y: box.bottom + 5 };
     const to = centerOf(element);
-    await userEvent.pointer([
-      { coords: { x: from.x, y: from.y + 10 } },
-      { coords: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 } },
-      { coords: to },
-    ]);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await moveMouse([gap, { x: (gap.x + to.x) / 2, y: (gap.y + to.y) / 2 }, to]);
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(popup()).toBe(element);
+    await moveMouse([centerOf(trigger()), gap, { x: gap.x, y: box.top - 5 }]);
+    await closed();
+  });
+
+  test('a press in the first 500 ms after a hover open keeps the popover open as after a press', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
+    });
+    await userEvent.hover(trigger());
+    const element = await opened();
     await userEvent.click(trigger());
     await nextTick();
     expect(popup()).toBe(element);
@@ -905,5 +925,22 @@ describe('the viewport (L11)', () => {
     expect(element.querySelector('.content')).toHaveTextContent('Two');
     expect(log).toContain('leave');
     expect(log).toContain('enter');
+  });
+});
+
+// The case throws in `setup`, so it is the last of the file.
+describe('a part outside its parent', () => {
+  test('throws an error that names the part with no root, and Positioner with no Portal', () => {
+    expect(String(mountError(PopoverPartAlone, { part: 'Popup' }))).toContain(
+      '<Popover.Popup> must be inside <Popover.Root>',
+    );
+    expect(String(mountError(PopoverPartAlone, { part: 'Trigger' }))).toContain(
+      '<Popover.Trigger> must be inside <Popover.Root>',
+    );
+    expect(String(mountError(PopoverPartAlone, { part: 'Positioner', inRoot: true }))).toContain(
+      '<Popover.Positioner> must be inside <Popover.Portal>',
+    );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });

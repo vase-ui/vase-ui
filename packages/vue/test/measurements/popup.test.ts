@@ -2,7 +2,7 @@
 // the library. Each one states what the browser or Vue does, so that the layer has code only where
 // they do not do it. Where the browsers differ, the measurement states each one. Vue does not patch
 // an element that leaves in a `<Transition>`: see `tabs.test.ts`.
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, inject, test } from 'vitest';
 import { page, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
@@ -244,7 +244,8 @@ describe('a <Transition> that mounts in the update of the open (M9)', () => {
       mount(MeasureTransitionMount, { scene, appear });
       scene.open = true;
       await nextTick();
-      expect(element('popup').className).toBe(classes);
+      const popup = document.querySelector('.popup')!;
+      expect([...popup.classList].filter((name) => name.startsWith('m-')).join(' ')).toBe(classes);
     },
   );
 });
@@ -301,16 +302,18 @@ describe('the tab stops of a container (N3)', () => {
 });
 
 describe('an open while the popup leaves (N5)', () => {
-  test('mounts a second popup element while the first one leaves', async () => {
+  test('mounts a second popup element beside the leaving one; the `<Transition>` of Vapor removes the leaving one', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const scene = reactive({ open: true });
     const { root: app } = mount(MeasureTransitionReopen, { scene });
     await nextTick();
     scene.open = false;
     await nextTick();
+    const leaving = app.querySelector('.popup');
     scene.open = true;
     await nextTick();
-    expect(app.querySelectorAll('.popup')).toHaveLength(2);
+    const popups = [...app.querySelectorAll('.popup')].map((popup) => popup === leaving);
+    expect(popups).toEqual(inject('app').startsWith('vapor') ? [false] : [true, false]);
   });
 });
 

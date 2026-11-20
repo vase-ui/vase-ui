@@ -22,7 +22,6 @@ import {
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import * as Popover from '../../popover/parts';
 import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
@@ -4430,30 +4429,6 @@ describe('<NavigationMenu.Root />', () => {
               </Dialog.Popup>
             </Dialog.Portal>
           </Dialog.Root>
-        </TestNavigationMenuWithNestedPopup>
-      );
-    }
-
-    function TestNavigationMenuWithPopover() {
-      return (
-        <TestNavigationMenuWithNestedPopup>
-          <Popover.Root>
-            <Popover.Trigger data-testid="popover-trigger">Open popover</Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Popover.Popup
-                  data-testid="popover-popup"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                  }}
-                >
-                  <button type="button" data-testid="popover-button">
-                    Popover button
-                  </button>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
         </TestNavigationMenuWithNestedPopup>
       );
     }

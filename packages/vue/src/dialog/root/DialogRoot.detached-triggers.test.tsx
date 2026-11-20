@@ -16,7 +16,6 @@ import {
   within,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Popover from '../../popover/parts';
 import DialogDelayedTriggerHydration from './DialogDelayedTriggerHydration.test.vue';
 import DialogDetachedTriggerHydration from './DialogDetachedTriggerHydration.test.vue';
 
