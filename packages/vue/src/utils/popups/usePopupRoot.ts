@@ -789,9 +789,8 @@ export abstract class BasePopupStore<
 }
 
 /**
- * Gives the `instantType` of a popup that opens on hover, such as a tooltip or a preview card. An
- * open on focus, and a close with the trigger or Escape, skip the transition. A hover change plays
- * it.
+ * Gives the `instantType` of a popup that opens on hover, such as a tooltip. An open on focus, and
+ * a close with the trigger or Escape, skip the transition. A hover change plays it.
  */
 export function getHoverPopupInstantType(
   nextOpen: boolean,
