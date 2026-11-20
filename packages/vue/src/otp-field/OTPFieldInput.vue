@@ -143,7 +143,7 @@ function onKeydown(event: KeyboardEvent) {
     event.preventDefault();
     root.focusSlot(target);
   } else if (event.key === 'Enter') {
-    root.onEnter(inputOf(event));
+    root.onEnter(inputOf(event), event);
   } else if (event.key === 'Backspace' || event.key === 'Delete') {
     event.preventDefault();
     root.remove(at, event.key, event.key === 'Backspace' && boundary, event);

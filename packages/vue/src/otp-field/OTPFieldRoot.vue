@@ -149,7 +149,10 @@ watch(
     const edit = pending;
     pending = undefined;
     if (edit?.code === next) {
-      if (edit.focus !== undefined) focusSlot(edit.focus);
+      // A parent can write the code after the user left the field.
+      if (edit.focus !== undefined && element.value?.matches(':focus-within')) {
+        focusSlot(edit.focus);
+      }
       if (edit.complete) complete(edit.complete);
     }
     if (activeIndex() > end.value) focusSlot(end.value);
@@ -217,12 +220,10 @@ if (process.env.NODE_ENV !== 'production') {
   // A slot adds itself in a later post-flush callback than this one, so the count waits a tick.
   watch(
     [() => mountedSlots.length, () => props.length],
-    async (_, __, onCleanup) => {
-      let stale = false;
-      onCleanup(() => (stale = true));
+    async () => {
       await nextTick();
       const count = mountedSlots.length;
-      if (stale || !validLength.value || count === 0 || count === props.length) return;
+      if (!validLength.value || count === 0 || count === props.length) return;
       warn(
         '<OTPField.Root> `length` must match the number of rendered ' +
           `<OTPField.Input /> parts. Received \`length={${props.length}}\` but rendered ` +
@@ -281,10 +282,16 @@ provide(otpFieldKey, {
     focused.value = slot;
     slot.select();
   },
-  onEnter(slot) {
-    const own: Element[] = [...mountedSlots];
-    if (formInput.value) own.push(formInput.value);
-    if (slot.form) submitImplicitly(slot.form, own);
+  onEnter(slot, event) {
+    const { form } = slot;
+    // A later listener, of the slot or of an ancestor, can prevent the submission, as for one text
+    // input. So the root waits for the end of the event.
+    setTimeout(() => {
+      if (!form || event.defaultPrevented) return;
+      const own: Element[] = [...mountedSlots];
+      if (formInput.value) own.push(formInput.value);
+      submitImplicitly(form, own);
+    });
   },
 });
 
@@ -352,7 +359,7 @@ function enter(index: number, text: string, reason: 'input-change' | 'input-past
     edit(removeAt(code.value, index), 'input-clear', event, undefined);
     return;
   }
-  const accepted = refuse(text, reason, event);
+  const accepted = accept(text, reason, event);
   if (accepted === '') {
     nextTick(showValue);
     return;
@@ -375,7 +382,6 @@ function remove(index: number, key: 'Backspace' | 'Delete', all: boolean, event:
   if (all) next = '';
   else if (key === 'Delete') next = removeAt(code.value, index);
   else next = removeAt(code.value, characters.value[index] ? index : before);
-  if (next === code.value) return;
   edit(next, 'keyboard', event, all ? 0 : key === 'Delete' ? index : before);
 }
 
@@ -385,7 +391,7 @@ function onFormInput(event: Event) {
     nextTick(showValue);
     return;
   }
-  const next = refuse((event.currentTarget as HTMLInputElement).value, 'input-change', event);
+  const next = accept((event.currentTarget as HTMLInputElement).value, 'input-change', event);
   // A fill must not take the focus from another control.
   const focus = element.value?.matches(':focus-within')
     ? Math.min(Array.from(next).length, props.length - 1)
@@ -394,7 +400,7 @@ function onFormInput(event: Event) {
 }
 
 /** The code of a text of the user. Emits `valueInvalid` when the text loses characters. */
-function refuse(text: string, reason: 'input-change' | 'input-paste', event: Event) {
+function accept(text: string, reason: 'input-change' | 'input-paste', event: Event) {
   const { code: accepted, refused } = toCode(text, props);
   if (refused) emit('valueInvalid', text, { reason, event } as OTPFieldRootInvalidEventDetails);
   return accepted;

@@ -74,7 +74,7 @@ Use `<Field.Label>` or a native `<label>` to label these controls:
 
 - `Input`
 - `NumberField`
-- `OTPField`
+- `OTPField`: a native `<label>` names the first input. See [Labeling an OTP field](/components/otp-field#labeling-an-otp-field).
 - `Autocomplete`
 - `Combobox` (input outside the popup)
 - `Checkbox`

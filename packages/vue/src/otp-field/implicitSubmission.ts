@@ -20,6 +20,10 @@ const blocksImplicitSubmission = new Set([
  * submits when no input other than `own` blocks the implicit submission.
  */
 export function submitImplicitly(form: HTMLFormElement, own: readonly Element[]) {
+  // `form.elements` has no image button (HTML Standard), and the browser clicks one too.
+  const root = form.getRootNode() as ParentNode;
+  const images = root.querySelectorAll<HTMLInputElement>('input[type=image]');
+  if ([...images].some((image) => image.form === form)) return;
   for (const element of form.elements) {
     const type = (element as HTMLInputElement).type;
     if (type === 'submit') return;

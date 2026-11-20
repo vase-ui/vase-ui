@@ -76,23 +76,43 @@ describe('M4: a list that children fill after a change of the parent', () => {
 });
 
 describe('M5: Enter in a form with six text inputs and one hidden text input', () => {
-  function form(button: boolean) {
+  const buttons = {
+    submit: '<button>Submit</button>',
+    image: '<input type="image" alt="Submit">',
+    none: '',
+  };
+
+  function form(button: keyof typeof buttons) {
     const inputs = Array.from({ length: 6 }, (_, index) => `<input aria-label="${index}">`);
     return html(
-      `<form>${inputs.join('')}<input tabindex="-1" style="${hidden}">${
-        button ? '<button>Submit</button>' : ''
-      }</form>`,
+      `<form>${inputs.join('')}<input tabindex="-1" style="${hidden}">${buttons[button]}</form>`,
     ).querySelector('form')!;
   }
 
-  test.each([true, false])('with a submit button: %s', async (button) => {
+  test.each(['submit', 'image', 'none'] as const)('with the button: %s', async (button) => {
     const element = form(button);
     const log: string[] = [];
     element.addEventListener('click', () => log.push('click'));
     element.addEventListener('submit', () => log.push('submit'));
     element.querySelector('input')!.focus();
     await userEvent.keyboard('{Enter}');
-    expect(log).toEqual(button ? ['click', 'submit'] : []);
+    expect(log).toEqual(button === 'none' ? [] : ['click', 'submit']);
+    // `form.elements` has no image button.
+    expect([...element.elements].map((control) => control.localName)).toEqual([
+      ...Array.from({ length: 7 }, () => 'input'),
+      ...(button === 'submit' ? ['button'] : []),
+    ]);
+  });
+
+  test('a listener of an ancestor that prevents Enter stops the submit of a form with one text input', async () => {
+    const element = html('<form><input aria-label="Code"></form>').querySelector('form')!;
+    const log: string[] = [];
+    element.addEventListener('submit', () => log.push('submit'));
+    element.querySelector('input')!.focus();
+    await userEvent.keyboard('{Enter}');
+    element.addEventListener('keydown', (event) => event.preventDefault());
+    await userEvent.keyboard('{Enter}');
+    expect(log).toEqual(['submit']);
   });
 });
 

@@ -579,6 +579,33 @@ describe('Enter', () => {
     expect(focused()).toBe(5);
   });
 
+  test('a listener that prevents Enter, on the slot or on an ancestor, stops the submission', async () => {
+    const preventEnter = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') event.preventDefault();
+    };
+    const { slots, form } = await mountField({
+      root: { defaultValue: '123456' },
+      inputs: [{ onKeydown: preventEnter }, {}, {}, {}, {}, {}],
+    });
+    const log: string[] = [];
+    form.addEventListener('submit', () => log.push('submit'));
+    await press(slots[0]!, '{Enter}');
+    form.addEventListener('keydown', preventEnter);
+    await press(slots[1]!, '{Enter}');
+    expect(log).toEqual([]);
+  });
+
+  test('with an image button, the browser clicks it, and the form submits one time', async () => {
+    const { slots, form } = await mountField({ root: { defaultValue: '123456' } });
+    const image = form.appendChild(document.createElement('input'));
+    image.type = 'image';
+    image.alt = 'Submit';
+    const log: string[] = [];
+    form.addEventListener('submit', () => log.push('submit'));
+    await press(slots[0]!, '{Enter}');
+    expect(log).toEqual(['submit']);
+  });
+
   test('with no submit button and another text input in the form, Enter submits nothing', async () => {
     const { slots, form } = await mountField({ around: true });
     const log: string[] = [];
@@ -662,6 +689,18 @@ describe('the focus and the tab stop', () => {
     const before = document.querySelector<HTMLElement>('#before')!;
     before.focus();
     root.modelValue = '';
+    await settle();
+    expect(document.activeElement).toBe(before);
+  });
+
+  test('a parent that writes the code after the focus left the field does not take the focus back', async () => {
+    const root = model('', [], false);
+    const { slots, root: container, focused } = await mountField({ root, around: true });
+    await type(slots[0]!, '1');
+    expect(focused()).toBe(0);
+    const before = container.querySelector<HTMLElement>('#before')!;
+    before.focus();
+    root.modelValue = '1';
     await settle();
     expect(document.activeElement).toBe(before);
   });
@@ -1033,6 +1072,28 @@ describe('the field', () => {
     }
     await userEvent.click(label);
     expect(slots[0]).toHaveFocus();
+  });
+
+  test('Field.Label follows an id of the developer on the first slot', async () => {
+    const { root, slots } = await mountField({ field: {}, inputs: [{ id: 'first' }, {}] });
+    expect(root.querySelector('label')).toHaveAttribute('for', 'first');
+    expect(slots[0]).toHaveAccessibleName('Code');
+  });
+
+  test('a Form does not validate a disabled or read-only field', async () => {
+    for (const lock of ['disabled', 'readonly']) {
+      const validate = vi.fn(() => 'Wrong code');
+      const { root, unmount } = mount(OTPFieldInForm, {
+        field: { name: 'code', validate },
+        root: { [lock]: true },
+      });
+      await nextTick();
+      root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
+      await settle();
+      expect(validate).not.toHaveBeenCalled();
+      expect(root.querySelector('#error')).toBeNull();
+      unmount();
+    }
   });
 
   test('a name of the developer wins: on the root it names the group only, on a slot that slot only; VUE-103: null removes', async () => {

@@ -83,7 +83,7 @@ In a `Field`, `Field.Label` names the group and each input that has no `aria-lab
 
 Set `autoSubmit` to submit the form of the field when each slot has a character. To act on the completion with no submit, listen to `valueComplete`.
 
-Enter in a slot submits the form, as Enter in one text input does.
+Enter in a slot submits the form, as Enter in one text input does. A listener that prevents the `keydown` of Enter stops the submit.
 
 ### Alphanumeric verification codes
 

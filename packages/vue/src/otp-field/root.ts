@@ -31,8 +31,8 @@ export interface OTPFieldForInput {
   focusSlot(index: number): void;
   /** A slot got the focus. */
   onFocus(index: number, slot: HTMLInputElement): void;
-  /** Enter in a slot. */
-  onEnter(slot: HTMLInputElement): void;
+  /** The `keydown` of Enter in a slot. */
+  onEnter(slot: HTMLInputElement, event: KeyboardEvent): void;
 }
 
 export const otpFieldKey: InjectionKey<OTPFieldForInput> = Symbol('otp field');
