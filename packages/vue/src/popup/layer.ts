@@ -237,7 +237,7 @@ function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
 
 // A press on a scrollbar sends `pointerdown` with an offset outside the client box of the element
 // that scrolls, and no `click` (test/measurements/popup.test.ts). Only a layer that closes at
-// `pointerdown` reads it.
+// `pointerdown` reads it. WebKit gives an element with its scrollbar on the left no `clientLeft`.
 function isScrollbarPress(event: PointerEvent | MouseEvent) {
   const target = event.target;
   if (!(target instanceof ownerWindow(target).HTMLElement)) return false;
@@ -437,7 +437,6 @@ function startHide() {
           inside: [
             root.popup,
             ...root.parts,
-            ...root.portalElements,
             root.activeTrigger,
             ...stack.slice(index + 1).flatMap(layerElements),
           ],

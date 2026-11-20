@@ -26,7 +26,7 @@ import {
   type VirtualElement,
 } from '@floating-ui/vue';
 
-import { computed, nextTick, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
+import { computed, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
 import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
 
@@ -280,8 +280,6 @@ export function usePlacement(
           const snap = (start: number, length: number) =>
             (Math.round((start + length) * ratio) - Math.round(start * ratio)) / ratio;
           anchorSize.value = { width: `${snap(x, width)}px`, height: `${snap(y, height)}px` };
-          // Floating UI measures the popup again after Vue writes the variables.
-          return nextTick();
         },
       }),
       arrow(() => ({
@@ -327,7 +325,6 @@ export function usePlacement(
   // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
   // so only the first placement hides the popup: the server HTML and the first render have no place.
   const placed = floating.isPositioned;
-  watch(arrowElement, () => floating.update());
 
   const placedSide = computed(() => getSide(floating.placement.value));
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));

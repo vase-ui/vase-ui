@@ -1,5 +1,4 @@
 import { nextTick, onUnmounted, shallowRef, watch, type ShallowRef } from 'vue';
-import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
 
 type Size = { width: number; height: number };
@@ -85,9 +84,6 @@ export function usePopupViewport(root: PopupRoot, slot: ShallowRef<ViewportSizes
       element.style.setProperty('--popup-width', `${popup.value.width}px`);
       element.style.setProperty('--popup-height', `${popup.value.height}px`);
       positioner.value = next;
-      const win = ownerWindow(element);
-      await new Promise((resolve) => win.requestAnimationFrame(resolve));
-      if (current !== move) return;
       popup.value = next;
       await nextTick();
       // A cancelled animation rejects its promise.
@@ -110,9 +106,9 @@ function sizeOf(element: HTMLElement): Size {
 function directionBetween(from: Element, to: Element) {
   const a = from.getBoundingClientRect();
   const b = to.getBoundingClientRect();
+  const side = (distance: number, positive: string, negative: string) =>
+    distance > 5 ? positive : distance < -5 ? negative : '';
   const dx = b.left + b.width / 2 - (a.left + a.width / 2);
   const dy = b.top + b.height / 2 - (a.top + a.height / 2);
-  const horizontal = dx > 5 ? 'right' : dx < -5 ? 'left' : '';
-  const vertical = dy > 5 ? 'down' : dy < -5 ? 'up' : '';
-  return `${horizontal} ${vertical}`;
+  return `${side(dx, 'right', 'left')} ${side(dy, 'down', 'up')}`;
 }

@@ -66,7 +66,7 @@ export interface PopupRoot<Payload = unknown> {
   /** The `id` of the last mounted description. */
   readonly descriptionId: string | undefined;
   /**
-   * The number of close requests that no hover made: each accepted close, and each close of a
+   * The number of close requests: each accepted close that no hover made, and each close of a
    * closed root. A hover close does not stop the hover open of another trigger.
    */
   readonly closeRequests: number;
@@ -249,7 +249,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = next && entry ? entry.id : activeTriggerId.value;
     if (next === open.value && nextId === activeTriggerId.value) {
-      if (!next && why !== 'trigger-hover') closeRequests.value += 1;
+      if (!next) closeRequests.value += 1;
       // A press keeps a popup open that a hover opened.
       if (next && why === 'trigger-press') reason.value = why;
       return details;
@@ -381,9 +381,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     addPortalElement: (element) => add(portalElements, element),
     addLabel(kind, label) {
       labels[kind] = label;
-      return () => {
-        if (labels[kind] === label) labels[kind] = undefined;
-      };
+      return () => (labels[kind] = undefined);
     },
   };
 

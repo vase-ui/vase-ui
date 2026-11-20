@@ -308,13 +308,25 @@ describe('in the DOM (L2)', () => {
     expect(element).not.toHaveAttribute('inert');
   });
 
-  test('the popup that leaves has the `data-instant` of its close', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-    mount(PopoverInTransition, { root: { defaultOpen: true } });
+  test('the popup that leaves has the `data-instant` of its close: `dismiss` after Escape, `focus` after a focus that left', async () => {
+    const { unmount } = mount(PopoverInTransition, { root: { defaultOpen: true } });
     const element = await opened();
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(element).toHaveAttribute('data-instant', 'dismiss');
+    unmount();
+    const outside = document.body.appendChild(document.createElement('input'));
+    try {
+      mount(PopoverInTransition, { root: { defaultOpen: true } });
+      const second = await opened();
+      await placed();
+      second.querySelector('button')!.focus();
+      outside.focus();
+      await nextTick();
+      expect(second).toHaveAttribute('data-instant', 'focus');
+    } finally {
+      outside.remove();
+    }
   });
 
   test('a kept popup that closes and opens again stays when `keepMounted` turns off', async () => {
@@ -642,6 +654,62 @@ describe('the dismissal (L4)', () => {
       expect(host).not.toHaveAttribute('inert');
     } finally {
       host.remove();
+    }
+  });
+
+  test('a popup in place in a shadow root that is open at the mount closes when the focus moves to another element of that root', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const shadow = host.attachShadow({ mode: 'open' });
+    const container = shadow.appendChild(document.createElement('div'));
+    const input = shadow.appendChild(document.createElement('input'));
+    const inShadow = () => container.querySelector<HTMLElement>('[data-testid="popup"]');
+    try {
+      mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
+      await waitFor(() =>
+        expect(container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility).toBe(''),
+      );
+      inShadow()!.querySelector('button')!.focus();
+      input.focus();
+      await waitFor(() => expect(inShadow()).toBe(null));
+    } finally {
+      host.remove();
+    }
+  });
+
+  test('a press on a scrollbar keeps a popover open that closes at the press of an outside element', async ({ skip }) => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '.scroller::-webkit-scrollbar { width: 12px; height: 12px }';
+    const box = (dir: string) => {
+      const element = document.body.appendChild(document.createElement('div'));
+      element.className = 'scroller';
+      element.dir = dir;
+      element.style.cssText = 'overflow: scroll; width: 200px; height: 100px';
+      element.innerHTML = '<div style="width: 400px; height: 400px"></div>';
+      return element;
+    };
+    const ltr = box('ltr');
+    const rtl = box('rtl');
+    try {
+      skip(ltr.offsetWidth === ltr.clientWidth, 'The scrollbars of this browser take no room.');
+      const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });
+      await userEvent.click(trigger());
+      await opened();
+      const press = async (x: number, y: number) => {
+        await userEvent.pointer([{ coords: { x, y } }, '[MouseLeft>]', '[/MouseLeft]']);
+        await nextTick();
+        expect(popup()).not.toBe(null);
+      };
+      const right = ltr.getBoundingClientRect();
+      await press(right.right - 6, right.top + 20);
+      await press(right.left + 20, right.bottom - 6);
+      // The content of a box from right to left starts at the right edge of its client box.
+      const left = rtl.getBoundingClientRect();
+      const onLeft = rtl.firstElementChild!.getBoundingClientRect().right > left.right - 6;
+      await press(onLeft ? left.left + 6 : left.right - 6, left.top + 20);
+    } finally {
+      ltr.remove();
+      rtl.remove();
+      style.remove();
     }
   });
 
@@ -1000,6 +1068,22 @@ describe('the focus (L7)', () => {
     expect(calls).toEqual(['keyboard']);
   });
 
+  test('a click with no pointer type, as in Safari before 18.2, takes the type of the press before it', async () => {
+    const types: string[] = [];
+    const { trigger } = await mountPopover({
+      popup: {
+        initialFocus: (type: string) => {
+          types.push(type);
+        },
+      },
+    });
+    await userEvent.click(byId('before'));
+    trigger().dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    await opened();
+    await placed();
+    await waitFor(() => expect(types).toEqual(['mouse']));
+  });
+
   test('the trigger shows its focus ring after a close with a key', async () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
@@ -1226,7 +1310,7 @@ describe('the hover (L9)', () => {
     const { trigger } = await mountPopover({
       triggers: [
         { key: 'a', attrs: { id: 'a', openOnHover: true, delay: 40 } },
-        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 40 } },
+        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 100 } },
       ],
     });
     await userEvent.hover(trigger('a'));
@@ -1293,8 +1377,26 @@ describe('the hover (L9)', () => {
     await placed();
     await new Promise((resolve) => setTimeout(resolve, 550));
     await userEvent.hover(element);
+    await userEvent.hover(trigger());
+    await new Promise((resolve) => setTimeout(resolve, 20));
     await userEvent.click(trigger());
     await closed();
+  });
+
+  test('an Escape stops the pending hover open of another trigger', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [
+        { key: 'a', attrs: { id: 'a' } },
+        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 100 } },
+      ],
+    });
+    await userEvent.click(trigger('a'));
+    await opened();
+    trigger('b').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(popup()).toBe(null);
   });
 });
 
@@ -1486,7 +1588,7 @@ describe('the placement (L10)', () => {
       first.unmount();
       await mountPopover({
         root: { defaultOpen: true },
-        positioner: { anchor, align: 'start', collisionAvoidance: { side: 'shift', align: 'shift' } },
+        positioner: { anchor, align: 'start', collisionAvoidance: { side: 'shift' } },
         popup: wide,
       });
       await opened();
@@ -1764,10 +1866,12 @@ describe('the viewport (L11)', () => {
     const record = (list: string[], value: string) => {
       if (list.at(-1) !== value) list.push(value);
     };
+    let animated = false;
     const observer = new MutationObserver(() => {
       record(popupSizes, element.style.getPropertyValue('--popup-height'));
       record(positionerSizes, positioner()!.style.getPropertyValue('--positioner-height'));
       if (element.getAnimations().length > 0) {
+        animated = true;
         expect(element).not.toHaveAttribute('data-instant');
         expect(element.style.getPropertyValue('--popup-height')).not.toBe('');
       }
@@ -1781,7 +1885,30 @@ describe('the viewport (L11)', () => {
     expect([popupSizes.length, start, end]).toEqual([3, old, '']);
     expect(next).not.toBe(old);
     expect(positionerSizes).toEqual([old, next, `${element.offsetHeight}px`]);
+    expect(animated).toBe(true);
   });
+
+  test.each(['top', 'left'] as const)(
+    'a popup with a viewport on the %s side has insets from the edges that face the trigger',
+    async (side) => {
+      mount(PopoverViewportParts, {
+        positioner: { side, sideOffset: 4, collisionAvoidance: { side: 'none' } },
+      });
+      await nextTick();
+      await userEvent.click(byId('two'));
+      await opened();
+      await placed();
+      const trigger = byId('two').getBoundingClientRect();
+      const place = positioner()!.getBoundingClientRect();
+      if (side === 'top') {
+        expect(positioner()!.style.bottom).toMatch(/px$/);
+        expect(Math.round(place.bottom)).toBe(Math.round(trigger.top - 4));
+      } else {
+        expect(positioner()!.style.right).toMatch(/px$/);
+        expect(Math.round(place.right)).toBe(Math.round(trigger.left - 4));
+      }
+    },
+  );
 
   test('a parent that closes and opens the root after a move gives the new popup no `data-instant`', async () => {
     const root = reactive<Props>({

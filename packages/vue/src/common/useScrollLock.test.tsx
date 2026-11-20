@@ -96,6 +96,14 @@ describe('useScrollLock', () => {
     expect(inline(page.body)).toEqual({});
   });
 
+  it('adds no horizontal scrollbar to a page with no horizontal overflow', async ({ skip }) => {
+    const { page, inset } = await createInsetDocument('#content { width: 10px }');
+    skip(!inset, 'The scrollbars of this browser take no room.');
+    const height = page.html.clientHeight;
+    await lock(page);
+    expect(page.html.clientHeight).toBe(height);
+  });
+
   it('puts the scroll position back at once on a page with a smooth `scroll-behavior`', async ({
     skip,
   }) => {
