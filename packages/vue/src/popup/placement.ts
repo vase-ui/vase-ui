@@ -170,6 +170,8 @@ export function usePlacement(
     insets: () => boolean;
     /** The anchor while the `anchor` prop has no value. With none, the active trigger. */
     anchor?: () => VirtualElement | undefined;
+    /** A middleware that runs first, before `flip()`: it can reset the rectangle of the anchor. */
+    inline?: Middleware;
   },
 ) {
   const rtl = shallowRef(false);
@@ -262,6 +264,7 @@ export function usePlacement(
         ? [shifting, flipping]
         : [flipping, shifting];
     return [
+      ...(options.inline ? [options.inline] : []),
       offset((state) => {
         const along = readOffset(props.alignOffset, state);
         return {
@@ -376,8 +379,15 @@ export function usePlacement(
     arrow: {
       style: arrowStyle,
       uncentered: arrowUncentered,
-      setElement(element: HTMLElement | null) {
+      /**
+       * Gives the element of an arrow to the placement. The cleanup takes it back, unless a newer
+       * arrow came: a replacement arrow can mount before the old one leaves.
+       */
+      addElement(element: HTMLElement) {
         arrowElement.value = element;
+        return () => {
+          if (arrowElement.value === element) arrowElement.value = null;
+        };
       },
     },
   };

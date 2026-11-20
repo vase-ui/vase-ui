@@ -140,13 +140,14 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
   if (depth === 0 && family === 'preview-card') {
     return [...root.querySelectorAll<HTMLElement>('a')].map((element) => ({
       element,
-      // A preview card opens 600 ms after the focus. The case moves a fake clock by that time.
-      open: () => {
+      // A preview card opens 600 ms after a focus with `:focus-visible`, and `focus()` after a key
+      // has it. The case moves a fake clock by that time.
+      open: async (user: User) => {
+        await user.keyboard('{Shift}');
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         element.focus();
         vi.advanceTimersByTime(600);
         vi.useRealTimers();
-        return Promise.resolve();
       },
     }));
   }
@@ -198,11 +199,17 @@ function portals() {
 // A closed popup that stays in the DOM is `hidden`. A popup of the popup layer can be a child of
 // `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
 // whole document. The older popups have `data-open`. A tooltip popup has no role: it is the element
-// with a side in its positioner.
+// with a side in its positioner. A preview card has no role and no attribute of its open state, so
+// its positioner in `<body>` counts while a link of the demo has `data-popup-open`.
 function openPopups(family: string | undefined) {
   const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
+  const cards =
+    family === 'preview-card' && document.querySelector('.demo-frame [data-popup-open]')
+      ? portals().filter((portal) => portal.matches('[data-side]'))
+      : [];
   return [
     ...new Set([
+      ...cards,
       ...portals().flatMap((portal) =>
         [portal, ...portal.querySelectorAll<HTMLElement>('[data-open]')].filter((element) =>
           element.matches('[data-open]'),

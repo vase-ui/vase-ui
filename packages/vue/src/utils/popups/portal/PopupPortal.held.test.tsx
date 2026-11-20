@@ -12,7 +12,6 @@ import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 
@@ -139,21 +138,6 @@ const families = [
       </Autocomplete.Root>
     ),
     marksPage: true,
-    movesFocus: false,
-  },
-  {
-    name: 'PreviewCard',
-    renderPart: () => (
-      <PreviewCard.Root defaultOpen>
-        <PreviewCard.Trigger href="#card">Link</PreviewCard.Trigger>
-        <PreviewCard.Portal data-testid="portal">
-          <PreviewCard.Positioner>
-            <PreviewCard.Popup data-testid="popup">Card</PreviewCard.Popup>
-          </PreviewCard.Positioner>
-        </PreviewCard.Portal>
-      </PreviewCard.Root>
-    ),
-    marksPage: false,
     movesFocus: false,
   },
   {

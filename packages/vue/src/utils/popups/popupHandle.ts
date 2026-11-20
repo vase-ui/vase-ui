@@ -128,7 +128,7 @@ export class BasePopupHandle<
    * @param componentName The name of the component. It starts the method names in the warnings:
    * `'Menu'` gives `MenuHandle.open()`.
    * @param throwOnMissingTrigger Whether `open(triggerId)` throws when no trigger has that id.
-   * Menu and Preview Card are anchored, so they need a trigger and they throw.
+   * Menu is anchored, so it needs a trigger and it throws.
    * Dialog is not anchored. It opens with no trigger and warns in a development build.
    */
   constructor(fallbackStore: HandleStore, componentName: string, throwOnMissingTrigger = true) {

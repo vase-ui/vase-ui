@@ -106,6 +106,15 @@ export function layersAbove(layer: Layer): Layer[] {
   return index === -1 ? [] : stack.slice(index + 1).map((entry) => entry.layer);
 }
 
+/**
+ * The node is inside the layer of the open root: in its popup, its sentinels or its triggers, or in
+ * a layer above it. A closed root has no layer.
+ */
+export function isInside(root: PopupRoot, node: Node) {
+  const entry = stack.find((each) => each.layer.root === root);
+  return !!entry && insideElements(entry).some((element) => element.contains(node));
+}
+
 /** The element is in the popup of the layer, or in a layer above it. */
 export function isInPopup(layer: Layer, element: Element) {
   const index = stack.findIndex((each) => each.layer === layer);
@@ -265,7 +274,7 @@ function isSentinel(element: Element) {
 }
 
 /** The event path has an element inside the layer. */
-function isInside(entry: Entry, path: readonly EventTarget[]) {
+function isPathInside(entry: Entry, path: readonly EventTarget[]) {
   const inside = insideElements(entry);
   return path.some((node) => inside.includes(node as Element));
 }
@@ -311,7 +320,8 @@ function closeOutside(event: Event, entries: Entry[]) {
 function outsideEntries(event: Event) {
   const path = event.composedPath();
   return fromTop().filter(
-    (entry) => entry.layer.outsidePress && !isInside(entry, path) && !isAddedElement(entry, path),
+    (entry) =>
+      entry.layer.outsidePress && !isPathInside(entry, path) && !isAddedElement(entry, path),
   );
 }
 
@@ -421,7 +431,7 @@ function onFocusout(event: FocusEvent) {
   const path = event.composedPath();
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {
-    if (!entry.layer.focusOut || !isInside(entry, path)) continue;
+    if (!entry.layer.focusOut || !isPathInside(entry, path)) continue;
     if (related) {
       if (!insideElements(entry).some((element) => element.contains(related))) {
         entry.layer.root.request(false, 'focus-out', event);
@@ -461,9 +471,13 @@ export function isComposing(event: KeyboardEvent) {
   return event.isComposing || event.keyCode === 229 || event.timeStamp - compositionEnd < 5;
 }
 
-// A layer gets each key press one time. With no `allowPropagation()`, the layer stops the event,
-// so one `cancel()` gives one change event for one key press.
-function onKeydown(event: KeyboardEvent) {
+/**
+ * The Escape listener of the stack. A part binds it on an element that has the focus outside the
+ * popup, so that a handled Escape does not reach the ancestors of that element. A layer gets each
+ * key press one time. With no `allowPropagation()`, the layer stops the event, so one `cancel()`
+ * gives one change event for one key press.
+ */
+export function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape' || event.defaultPrevented || isComposing(event)) return;
   const handled = escapesOfLayers.get(event) ?? new Set<Entry>();
   escapesOfLayers.set(event, handled);

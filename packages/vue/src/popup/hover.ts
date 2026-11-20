@@ -2,7 +2,9 @@ import { onScopeDispose, watch, type Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
+import { activeElement } from '../common/shadowDom';
 import { useTimeout } from '../common/useTimeout';
+import { isInPopup, layerOf } from './layer';
 import type { PopupRoot } from './root';
 
 type Point = { x: number; y: number };
@@ -15,7 +17,8 @@ const REST_IN_TRIANGLE = 40;
 /**
  * Opens a popup when a mouse rests on its trigger, and closes it when the pointer leaves the
  * trigger and the popup. The pointer can cross the space between them in the triangle from the
- * point where it left the trigger to the near edge of the popup.
+ * point where it left the trigger to the near edge of the popup. A popup that no hover and no press
+ * opened closes only when the pointer leaves its trigger.
  */
 export function usePopupHover(
   root: () => PopupRoot | null,
@@ -48,13 +51,20 @@ export function usePopupHover(
   /** The pointer is on a trigger in this trigger. */
   let onInner = false;
 
-  const hoverOpen = () => {
+  // The pointer closes a popup that is open for this trigger, unless a press opened or kept it.
+  const closedBy = () => {
     const current = root();
-    return (
-      !!current?.open &&
-      current.reason === 'trigger-hover' &&
-      current.activeTrigger === options.trigger.value
-    );
+    const trigger = options.trigger.value;
+    if (
+      !options.enabled() ||
+      !trigger ||
+      !current?.open ||
+      current.reason === 'trigger-press' ||
+      current.activeTrigger !== trigger
+    ) {
+      return null;
+    }
+    return current.reason === 'trigger-hover' ? 'hover' : 'trigger';
   };
 
   watch(
@@ -80,10 +90,8 @@ export function usePopupHover(
     }
   }
 
-  // A popup that is open for another trigger moves at once, and a popup that leaves after a hover
-  // close opens again at once.
   function startOpen(event: PointerEvent, current: PopupRoot) {
-    if (current.open || (current.leaving && current.reason === 'trigger-hover')) {
+    if (opensAtOnce(current)) {
       openTimer.clear();
       openAt(event);
       return;
@@ -126,35 +134,39 @@ export function usePopupHover(
     onInner = !!options.inner?.(event);
     if (onInner) {
       openTimer.clear();
-      if (hoverOpen()) root()?.request(false, 'trigger-hover', event);
+      if (closedBy() === 'hover') root()?.request(false, 'trigger-hover', event);
     } else if (wasInner) {
       onPointerenter(event);
     }
   }
 
-  // While the hover keeps the popup open, one listener of the document follows the pointer.
+  // While the popup is open for this trigger, one listener of the document follows the pointer.
+  // Vapor sets the ref of the trigger before it inserts the element, so the watcher reads the
+  // document of the trigger after the render.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
   watch(
-    hoverOpen,
-    (open, _, onCleanup) => {
-      if (!open) return;
+    closedBy,
+    (by, _, onCleanup) => {
+      if (!by) return;
       const doc = ownerDocument(options.trigger.value);
-      over = 'trigger';
+      const byHover = by === 'hover';
+      // The pointer of a popup that no hover opened can be anywhere.
+      over = byHover ? 'trigger' : 'outside';
       from = null;
       onCleanup(
         mergeCleanups(
-          addEventListener(doc, 'pointermove', follow, true),
-          addEventListener(doc.documentElement, 'pointerleave', close),
+          addEventListener(doc, 'pointermove', (event) => follow(event, byHover), true),
+          byHover && addEventListener(doc.documentElement, 'pointerleave', close),
           closeTimer.clear,
           restTimer.clear,
         ),
       );
     },
-    { flush: 'sync' },
+    { flush: 'post' },
   );
 
-  function follow(event: PointerEvent) {
+  function follow(event: PointerEvent, byHover: boolean) {
     const trigger = options.trigger.value;
     const target = event.target as Element;
     const point = { x: event.clientX, y: event.clientY };
@@ -167,10 +179,12 @@ export function usePopupHover(
     if (options.inside(target)) {
       over = 'popup';
       closeTimer.clear();
+      if (!byHover) from = null;
       return;
     }
     if (over === 'trigger') from = point;
     over = 'outside';
+    if (!byHover && !from) return;
     const popup = root()?.popup;
     const crosses = options.hoverablePopup?.() ?? true;
     if (crosses && from && trigger && popup && inTriangle(point, from, trigger, popup)) {
@@ -202,6 +216,115 @@ export function usePopupHover(
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);
     },
   };
+}
+
+/**
+ * Opens the popup after `delay` when its trigger gets the focus of a key, and closes it when the
+ * focus leaves the trigger and the popup. A press gives a button and a link no `:focus-visible`
+ * (test/measurements/tooltip.test.ts, test/measurements/preview-card.test.ts).
+ */
+export function useOpenOnFocus(
+  root: () => PopupRoot | null,
+  options: {
+    element: Readonly<Ref<HTMLElement | null>>;
+    /**
+     * The time from the focus to the open. A popup that is open for another trigger moves at once.
+     * @default () => 0
+     */
+    delay?: () => number;
+    /** The trigger opens nothing. */
+    disabled?: () => boolean;
+    /** The focus event comes from a trigger in this trigger. */
+    inner?: (event: FocusEvent) => boolean;
+    /**
+     * The focus of the trigger opens nothing, until the focus leaves the trigger. A window that
+     * loses the focus while the popup is closed sets it, so a popup that Escape closed stays closed
+     * when the window gets the focus back. The caller can also set it, as after a press. A text
+     * field matches `:focus-visible` at each focus.
+     */
+    blocked?: { value: boolean };
+  },
+) {
+  const openTimer = useTimeout();
+  const later = useTimeout();
+  const blocked = options.blocked ?? { value: false };
+
+  function onFocusin(event: FocusEvent) {
+    const current = root();
+    const element = options.element.value;
+    if (!current || !element || options.disabled?.() || blocked.value) return;
+    if (options.inner?.(event) || !(event.target as Element).matches(':focus-visible')) return;
+    const open = () => root()?.request(true, 'trigger-focus', event, element);
+    const delay = options.delay?.() ?? 0;
+    if (current.open || delay === 0) open();
+    else openTimer.start(delay, open);
+  }
+
+  // The focus stays in the popup: in its popup, or on another trigger of the root.
+  function staysInside(current: PopupRoot, target: Element) {
+    const layer = layerOf(current);
+    return (
+      options.element.value?.contains(target) ||
+      (!!layer && isInPopup(layer, target)) ||
+      current.triggers.some((trigger) => !trigger.disabled && trigger.element?.contains(target))
+    );
+  }
+
+  function close(event: FocusEvent) {
+    const current = root();
+    if (current?.open && current.activeTrigger === options.element.value) {
+      current.request(false, 'trigger-focus', event);
+    }
+  }
+
+  function onFocusout(event: FocusEvent) {
+    openTimer.clear();
+    const current = root();
+    const element = options.element.value;
+    if (!current || !element) return;
+    const related = event.relatedTarget as Element | null;
+    if (related && !related.shadowRoot) {
+      if (!staysInside(current, related)) {
+        blocked.value = false;
+        close(event);
+      }
+      return;
+    }
+    // A focus that moves into a shadow tree has the host as its related target, and a window that
+    // loses the focus gives none and keeps the trigger as its active element. A press on an element
+    // with no tab stop moves the focus to `<body>` (test/measurements/tooltip.test.ts). So the
+    // trigger reads the focused element one task later.
+    const doc = ownerDocument(element);
+    later.start(0, () => {
+      // Chromium sends `focusout` to a focused link that Vue removes
+      // (test/measurements/preview-card.test.ts).
+      if (!element.isConnected) return;
+      const focused = activeElement(doc);
+      if (focused === element) {
+        if (!current.open) blocked.value = true;
+        return;
+      }
+      if (focused && staysInside(current, focused)) return;
+      blocked.value = false;
+      close(event);
+    });
+  }
+
+  return { listeners: { onFocusin, onFocusout } };
+}
+
+/**
+ * A hover opens the popup with no delay while the popup is open for another trigger, and while it
+ * leaves after a hover close. A kept popup leaves while an animation of its element runs. An
+ * animation that ended and fills forwards does not run (test/measurements/preview-card.test.ts).
+ */
+function opensAtOnce(root: PopupRoot) {
+  if (root.open) return true;
+  if (root.reason !== 'trigger-hover') return false;
+  return (
+    root.leaving ||
+    !!root.popup?.getAnimations().some((animation) => animation.playState === 'running')
+  );
 }
 
 // The triangle from the point where the pointer left the trigger to the near edge of the popup.

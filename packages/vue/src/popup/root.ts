@@ -26,7 +26,7 @@ export interface PopupChangeEventDetails<
    */
   allowPropagation(): void;
   readonly isPropagationAllowed: boolean;
-  /** The element that the action is on. With no such element, the active trigger. */
+  /** The element of the action. With no such element, the active trigger in the document. */
   trigger: Element | undefined;
 }
 
@@ -282,6 +282,15 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const activeTrigger = computed(() =>
     activeTriggerId.value === null ? null : (activeEntry.value?.element ?? lastTrigger.value),
   );
+  // The popup keeps its payload while its active trigger is out of the DOM.
+  const lastPayload = shallowRef<{ id: string; payload: unknown }>();
+  watch(
+    () => activeEntry.value && { id: activeEntry.value.id, payload: activeEntry.value.payload },
+    (entry) => {
+      if (entry) lastPayload.value = entry;
+    },
+    { flush: 'sync' },
+  );
 
   /**
    * `entry` is the trigger of an open, `null` for an open with no trigger, and `undefined` for a
@@ -295,7 +304,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     payload?: { value: Payload },
   ) {
     const element = entry === null ? null : (entry?.element ?? activeTrigger.value);
-    const details = createPopupChangeEventDetails(why, event, element ?? undefined);
+    const details = createPopupChangeEventDetails(
+      why,
+      event,
+      element?.isConnected ? element : undefined,
+    );
     const nextId = !next || entry === undefined ? activeTriggerId.value : (entry?.id ?? null);
     if (next === modelOpen.value && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
@@ -398,9 +411,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return activeTriggerId.value;
     },
     get payload() {
-      return givenPayload.value
-        ? givenPayload.value.value
-        : (activeEntry.value?.payload as Payload | undefined);
+      if (givenPayload.value) return givenPayload.value.value;
+      const entry = activeEntry.value ?? lastPayload.value;
+      return (entry?.id === activeTriggerId.value ? entry?.payload : undefined) as
+        Payload | undefined;
     },
     get popup() {
       return popup.value;
@@ -473,6 +487,24 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   });
 
   return root;
+}
+
+/**
+ * Closes the open root with the reason `'none'` when its active trigger leaves the DOM. A trigger
+ * that a `v-if` with a new `key` replaces in one update is mounted for a `post` watcher
+ * (test/measurements/preview-card.test.ts).
+ */
+export function useCloseWhenTriggerLeaves(root: PopupRoot) {
+  const mounted = computed(() =>
+    root.triggers.some((trigger) => trigger.id === root.activeTriggerId && !!trigger.element),
+  );
+  watch(
+    mounted,
+    (isMounted) => {
+      if (!isMounted && root.open) root.request(false, 'none', new Event('vase-ui'));
+    },
+    { flush: 'post' },
+  );
 }
 
 function add<T>(list: T[], item: T) {

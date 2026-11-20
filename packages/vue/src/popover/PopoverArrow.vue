@@ -20,7 +20,13 @@ const { root } = injectPopoverRoot('Arrow');
 const placement = injectPositioner('Arrow');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-watch(element, (arrow) => placement.arrow.setElement(arrow), { immediate: true });
+watch(
+  element,
+  (arrow, _, onCleanup) => {
+    if (arrow) onCleanup(placement.arrow.addElement(arrow));
+  },
+  { immediate: true },
+);
 
 const state = computed<PopoverArrowState>(() => ({
   open: root.open,
