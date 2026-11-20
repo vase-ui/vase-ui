@@ -78,9 +78,7 @@ export interface OTPFieldRootState extends FieldState {
   disabled: boolean;
   readonly: boolean;
   required: boolean;
-  /** The number of slots. */
   length: number;
-  /** The code. */
   value: string;
 }
 
