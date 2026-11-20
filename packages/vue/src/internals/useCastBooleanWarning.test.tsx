@@ -124,18 +124,18 @@ describe('useCastBooleanWarning', () => {
         <Menubar modal={false}>Content</Menubar>
       </SlotHost>
     ));
-    await render(() => <SlotHost>{{ default: () => <AlertDialog.Root open={false} /> }}</SlotHost>);
+    await render(() => <SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a vnode that no render made', async () => {
-    await render(<SlotHost>{{ default: () => <AlertDialog.Root open={false} /> }}</SlotHost>);
-    await render(h(SlotHost, null, () => h(AlertDialog.Root, { open: false })));
+    await render(<SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
+    await render(h(SlotHost, null, () => h(Menubar, { modal: false })));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for array children', async () => {
-    await render(() => h(SlotHost, null, [h(AlertDialog.Root, { open: false })]));
+    await render(() => h(SlotHost, null, [h(Menubar, { modal: false })]));
     // Vue reports the array slot itself, independently of the Boolean check.
     expect(takeReportedMessages()).toEqual([
       expect.stringContaining('Non-function value encountered for default slot.'),
