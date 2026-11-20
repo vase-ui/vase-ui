@@ -6,7 +6,6 @@ import * as Combobox from '../../../combobox/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
-import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
 
 type Change = [open: boolean, reason: string];
@@ -96,16 +95,6 @@ const children = {
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>
-  ),
-  previewCard: (record: Recorder) => (
-    <PreviewCard.Root defaultOpen onOpenChange={record}>
-      <PreviewCard.Trigger href="#preview">Child trigger</PreviewCard.Trigger>
-      <PreviewCard.Portal>
-        <PreviewCard.Positioner data-testid="positioner">
-          <PreviewCard.Popup data-testid="popup">Card</PreviewCard.Popup>
-        </PreviewCard.Positioner>
-      </PreviewCard.Portal>
-    </PreviewCard.Root>
   ),
   // The list calls `useDismissLayer`, and the portal is not below the list.
   navigationMenu: (record: Recorder) => (

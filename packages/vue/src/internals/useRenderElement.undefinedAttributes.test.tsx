@@ -8,7 +8,6 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -121,21 +120,6 @@ const rows: Row[] = [
       </NavigationMenu.Root>
     ),
     expected: () => 'false',
-  },
-  {
-    name: 'PreviewCard.Popup data-open',
-    attribute: 'data-open',
-    createNode: () => (
-      <PreviewCard.Root defaultOpen>
-        <PreviewCard.Trigger href="#card">Card</PreviewCard.Trigger>
-        <PreviewCard.Portal>
-          <PreviewCard.Positioner>
-            <PreviewCard.Popup data-open={undefined} data-testid="part" />
-          </PreviewCard.Positioner>
-        </PreviewCard.Portal>
-      </PreviewCard.Root>
-    ),
-    expected: () => '',
   },
   {
     name: 'Select.Trigger aria-haspopup',

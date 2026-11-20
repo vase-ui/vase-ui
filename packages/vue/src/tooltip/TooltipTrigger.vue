@@ -2,10 +2,9 @@
 import { computed, mergeProps, useAttrs, useId, useSlots, watch } from 'vue';
 import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
-import { usePopupHover } from '../popup/hover';
+import { useOpenOnFocus, usePopupHover } from '../popup/hover';
 import { isInPopup } from '../popup/layer';
 import { useTriggerEntry } from '../popup/trigger';
-import { useOpenOnFocus } from './focus';
 import { injectGroup, isActive, setTriggerGroup } from './group';
 import { innerTriggerEvents, useTriggerRoot, type TooltipHandle } from './root';
 import type { TooltipTriggerProps, TooltipTriggerState } from './types';
@@ -111,7 +110,7 @@ function onPointerover(event: PointerEvent) {
   if (!triggerDisabled.value) innerTriggerEvents.add(event);
 }
 function onFocusin(event: FocusEvent) {
-  focus.onFocusin(event);
+  focus.listeners.onFocusin(event);
   if (!triggerDisabled.value) innerTriggerEvents.add(event);
 }
 // A key press on a button gives only `click` (test/measurements/tooltip.test.ts).
@@ -143,7 +142,7 @@ function elementProps() {
       onPointerdown: onPress,
       onClick: onPress,
       onFocusin,
-      onFocusout: focus.onFocusout,
+      onFocusout: focus.listeners.onFocusout,
     },
     attrs,
   );

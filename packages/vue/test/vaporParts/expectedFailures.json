@@ -105,14 +105,6 @@
         "<NavigationMenu.Positioner /> > resets data-instant after the first activation of a held mount": "vue-16305-keep-alive"
       }
     },
-    "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
-      "fails": {}
-    },
-    "src/preview-card/popup/PreviewCardPopup.test.tsx": {
-      "fails": {
-        "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
     "src/select/item-text/SelectItemText.test.tsx": {
       "fails": {
         "<Select.ItemText /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"

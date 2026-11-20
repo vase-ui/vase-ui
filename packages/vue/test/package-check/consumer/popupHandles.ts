@@ -15,14 +15,14 @@ export const previewCardHandle: PreviewCard.Handle<number> = PreviewCard.createH
 export const tooltipHandle: Tooltip.Handle<number> = Tooltip.createHandle<number>();
 
 export function useHandles() {
-  for (const handle of [menuHandle, previewCardHandle]) {
+  for (const handle of [menuHandle]) {
     const open: boolean = handle.isOpen;
     const mounted: boolean = handle.store.state.mounted;
     if (open) handle.close();
     else if (!mounted) handle.open('trigger');
   }
-  // A handle of Popover, Tooltip, Dialog, Alert Dialog and Drawer has no store.
-  for (const handle of [popoverHandle, tooltipHandle]) {
+  // A handle of Popover, Preview Card, Tooltip, Dialog, Alert Dialog and Drawer has no store.
+  for (const handle of [popoverHandle, previewCardHandle, tooltipHandle]) {
     const open: boolean = handle.isOpen;
     if (open) handle.close();
     else handle.open('trigger');

@@ -52,6 +52,7 @@ const RESTYLED_FAMILIES = new Set([
   'input',
   'number-field',
   'popover',
+  'preview-card',
   'radio-group',
   'switch',
   'tabs',

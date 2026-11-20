@@ -30,11 +30,8 @@ export function usePopupViewport(
   root: PopupRoot,
   slot: ShallowRef<ViewportSizes | null>,
   options: {
-    /**
-     * The root gets the `instant` state `'trigger-change'` after the animations of a move end.
-     * @default true
-     */
-    instant?: boolean;
+    /** The root gets the `instant` value `'trigger-change'` when the animations of a move end. */
+    triggerChange?: boolean;
   } = {},
 ) {
   const popup = shallowRef<Size>();
@@ -101,7 +98,7 @@ export function usePopupViewport(
       if (current !== move) return;
       popup.value = undefined;
       transitioning.value = false;
-      if (options.instant !== false) root.setInstant('trigger-change');
+      if (options.triggerChange) root.setInstant('trigger-change');
     },
   );
 

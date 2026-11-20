@@ -4,7 +4,6 @@ import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
-import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
 import * as Toast from '../../../toast/index.parts';
 import PortalPartContent from './PortalPartContent.test.vue';
@@ -36,12 +35,6 @@ const portalParts = [
     root: NavigationMenu.Root,
     portal: NavigationMenu.Portal,
     portalProps: { keepMounted: true },
-  },
-  {
-    name: 'PreviewCard.Portal',
-    root: PreviewCard.Root,
-    portal: PreviewCard.Portal,
-    rootProps: open,
   },
   { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
   { name: 'Toast.Portal', root: Toast.Provider, portal: Toast.Portal },

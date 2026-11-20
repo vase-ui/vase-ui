@@ -343,11 +343,6 @@ export function useAnchorPositioning(
     const sticky = toValue(params.sticky) ?? false;
     const arrowPadding = toValue(params.arrowPadding) ?? 5;
 
-    const inlineMiddleware = toValue(params.inline);
-    if (inlineMiddleware) {
-      list.push(inlineMiddleware);
-    }
-
     // The offset callback reads these values when a position pass calls it. These reads make a
     // new list when one of them changes.
     void sideOffsetNumber.value;
@@ -948,12 +943,6 @@ export interface UseAnchorPositioningParameters extends Sources<
    * `true` locks the side only. `'placement'` also locks the alignment.
    */
   lazyFlip?: MaybeRefOrGetter<boolean | 'placement' | undefined>;
-  /**
-   * A middleware that can replace the measured rectangle of the anchor before the offset and
-   * collision middleware run. Preview Card uses it to position the popup against one inline line
-   * box.
-   */
-  inline?: MaybeRefOrGetter<Middleware | undefined>;
 }
 
 export interface UseAnchorPositioningReturnValue {

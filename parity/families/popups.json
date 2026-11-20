@@ -48,6 +48,12 @@
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
       "reason": "The table has the one row Drawer. The handle of Drawer is the handle of Dialog, and the case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests `openWithPayload()` with no root."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/line.test.ts",
+      "reason": "`line.test.ts` tests the line of a wrapped link with native links and a real pointer: the line under the pointer at the end of the delay, the line of an open card while the pointer moves, a link of two parts, a link whose lines overlap, the line after a scroll, a virtual anchor with the link as its context element, and the side rectangle with no line. The line is a record of each link, so the cases of a stored point go."
     }
   ],
   "surfaceAdditions": [],
@@ -112,9 +118,9 @@
     {
       "upstream": "packages/react/src/utils/popups/inlineRect.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/preview-card/positioner/PreviewCardPositionerContext.ts",
-      "member": "createInlineMiddleware",
-      "witness": "packages/vue/src/preview-card/positioner/PreviewCardPositioner.inlineRect.test.ts"
+      "destination": "packages/vue/src/preview-card/line.ts",
+      "member": "lineMiddleware",
+      "witness": "packages/vue/src/preview-card/line.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/popupPositioner.ts",
@@ -122,13 +128,6 @@
       "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
       "member": "usePopupPositioner",
       "witness": "packages/vue/src/utils/popups/usePopupPositioner.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/preview-card/positioner/PreviewCardPositioner.inlineRect.test.ts",
-      "member": "createTrigger",
-      "witness": "packages/vue/src/preview-card/positioner/PreviewCardPositioner.inlineRect.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",
