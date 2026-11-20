@@ -21,7 +21,7 @@ export type DatePickerRootValue = DateValue | Temporal.PlainYearMonth;
 
 export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
-// `none` is the reason of a native reset of the form of the picker.
+// `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DatePickerRootChangeEventReason =
   CalendarChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DatePickerRootChangeEventDetails = ChangeEventDetails<DatePickerRootChangeEventReason>;

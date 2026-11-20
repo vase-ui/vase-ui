@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
 import { reset as resetWarnings } from '../common/warn';
 import { dataAttributes } from '../../test/field';
+import DateTimePartsInLocaleProvider from '../../test/fixtures/DateTimePartsInLocaleProvider.vue';
 import TimeClockParts from '../../test/fixtures/TimeClockParts.vue';
 import TimeClockSlots from '../../test/fixtures/TimeClockSlots.vue';
 import { mount, settle } from '../../test/render';
@@ -102,6 +103,14 @@ describe('the parts', () => {
     expect(takeReportedMessages()).toEqual([
       'console.warn: Vase UI: TimeClock `minuteStep` must be a whole number above 0. The clock uses a step of 1 instead. Set `minuteStep` to a whole number above 0.',
     ]);
+  });
+
+  test('the locale is that of the nearest `LocaleProvider` with no prop, with its hour cycle', async () => {
+    const { root } = mount(DateTimePartsInLocaleProvider, { locale: 'de-DE' });
+    await nextTick();
+    const range = root.querySelector<HTMLInputElement>('input[type="range"]')!;
+    expect(range).toHaveAttribute('aria-label', 'Stunde');
+    expect([range.min, range.max, range.value]).toEqual(['0', '23', '15']);
   });
 
   test('a 24-hour face has an inner ring and no day period', async () => {

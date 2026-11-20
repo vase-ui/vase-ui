@@ -47,11 +47,6 @@ export function viewsOf(granularity: TimeClockView): readonly TimeClockView[] {
   return VIEWS.slice(0, VIEWS.indexOf(granularity) + 1);
 }
 
-/** The hour cycle of the text of an attribute, or `undefined` for another text. */
-export function parseHourCycle(text: string): TimeClockHourCycle | undefined {
-  return text === '12' ? 12 : text === '24' ? 24 : undefined;
-}
-
 /** A step must be a whole number above 0, or the face has no values to go to. */
 export function isValidStep(step: number): boolean {
   return Number.isInteger(step) && step > 0;

@@ -21,7 +21,7 @@ export type DateRangePickerRootValue<Value extends DateValue = DateValue> = Rang
 
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 
-// `none` is the reason of a native reset of the form of the picker.
+// `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DateRangePickerRootChangeEventReason =
   RangeChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DateRangePickerRootChangeEventDetails =

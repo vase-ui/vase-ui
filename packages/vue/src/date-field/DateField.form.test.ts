@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import { leave } from '../../test/field';
 import DateFieldInField from '../../test/fixtures/DateFieldInField.vue';
 import DateFields from '../../test/fixtures/DateFields.vue';
+import DateTimePartsInLocaleProvider from '../../test/fixtures/DateTimePartsInLocaleProvider.vue';
 import { mount, settle, submitsPrevented } from '../../test/render';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -400,20 +401,32 @@ describe('a native label', () => {
     },
   );
 
-  test('each change of `id` names the group with the label of the new id', async () => {
-    const date = reactive<Record<string, unknown>>({ id: 'day' });
-    const { root, group } = await mountInField({ date });
-    root.insertAdjacentHTML(
-      'beforeend',
-      '<label for="day" id="day-name">Day</label><label for="arrival" id="arrival-name">Arrival</label>',
-    );
-    date.id = 'arrival';
-    await settle();
-    expect(group).toHaveAttribute('aria-labelledby', 'arrival-name');
-    date.id = 'day';
-    await settle();
-    expect(group).toHaveAttribute('aria-labelledby', 'day-name');
-  });
+  // WebKit keeps the old `labels` of the segment, so the root looks for the labels of its root node.
+  test.each([{ place: 'the document' }, { place: 'a shadow root' }])(
+    'each change of `id` names the group with the label of the new id, in $place',
+    async ({ place }) => {
+      const host = document.body.appendChild(document.createElement('div'));
+      const container = place === 'a shadow root' ? host.attachShadow({ mode: 'open' }) : host;
+      try {
+        const date = reactive<Record<string, unknown>>({ id: 'day' });
+        const { root } = mount(DateFieldInField, { date }, container);
+        await nextTick();
+        const group = root.querySelector('[role="group"]')!;
+        root.insertAdjacentHTML(
+          'beforeend',
+          '<label for="day" id="day-name">Day</label><label for="arrival" id="arrival-name">Arrival</label>',
+        );
+        date.id = 'arrival';
+        await settle();
+        expect(group).toHaveAttribute('aria-labelledby', 'arrival-name');
+        date.id = 'day';
+        await settle();
+        expect(group).toHaveAttribute('aria-labelledby', 'day-name');
+      } finally {
+        host.remove();
+      }
+    },
+  );
 
   test('`aria-label` of the developer and the label of a Field win', async () => {
     const named = await mountInField({ label: 'for', date: { id: 'day', 'aria-label': 'Day' } });
@@ -439,5 +452,16 @@ describe('the locale', () => {
     await nextTick();
     expect(types()).toEqual(['day', 'month', 'year']);
     expect(root.querySelector('span')).toHaveTextContent('.');
+  });
+
+  test('is the locale of the nearest `LocaleProvider` with no prop', async () => {
+    const { root } = mount(DateTimePartsInLocaleProvider, { locale: 'de-DE' });
+    await nextTick();
+    const segments = [...root.querySelectorAll('[role="spinbutton"]')];
+    expect(segments.map((segment) => segment.getAttribute('aria-label'))).toEqual([
+      'Tag',
+      'Monat',
+      'Jahr',
+    ]);
   });
 });

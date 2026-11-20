@@ -3,7 +3,8 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { createRenderer, screen, takeReportedMessages } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages, waitFor } from '#test-utils';
+import { createPartRef } from '../root/test-utils';
 
 const dateTime = Temporal.PlainDateTime.from('2026-11-14T15:04');
 
@@ -52,6 +53,31 @@ describe('<DatePicker.TimeField />', () => {
       '2026-11-14T16:04:00+09:00[Asia/Tokyo]',
     );
     expect(onValueChange.mock.lastCall?.[1].reason).toBe('keyboard');
+  });
+
+  it('`clear()` empties the time and gives `null` with the reason `none`', async () => {
+    const onValueChange = vi.fn();
+    const timeField = createPartRef<{ clear: () => void }>();
+    const { container } = await render(() => (
+      <DatePicker.Root
+        defaultValue={dateTime}
+        locale="en-US"
+        hourCycle={24}
+        onValueChange={onValueChange}
+      >
+        <DatePicker.TimeField ref={timeField.ref} aria-label="Time">
+          <TimeField.Input />
+        </DatePicker.TimeField>
+      </DatePicker.Root>
+    ));
+
+    timeField.current.clear();
+
+    await waitFor(() => {
+      expect(segmentOf(container, 'hour').value).toBe('');
+    });
+    expect(onValueChange.mock.lastCall?.[0]).toBe(null);
+    expect(onValueChange.mock.lastCall?.[1].reason).toBe('none');
   });
 
   it('shares one value with the field of the picker', async () => {

@@ -194,12 +194,12 @@ A `Temporal.PlainYearMonth` value has no day. A `Temporal.PlainDate` with the `g
 
 Put the field in a `Field` to show the errors of its validation. The form input has the type of the value:
 
-| Value                     | Form input       | Form text                            | Checks                                 |
-| ------------------------- | ---------------- | ------------------------------------ | -------------------------------------- |
-| `Temporal.PlainDate`      | `date`           | `2026-11-14`                         | Native                                 |
-| `Temporal.PlainDateTime`  | `datetime-local` | `2026-11-14T15:04`                   | Native                                 |
-| `Temporal.ZonedDateTime`  | `text`           | `2026-11-14T15:04+09:00[Asia/Tokyo]` | `required` native, the limits by field |
-| `Temporal.PlainYearMonth` | `text`           | `2026-11`                            | `required` native, the limits by field |
+| Value                     | Form input       | Form text                            | Checks                                     |
+| ------------------------- | ---------------- | ------------------------------------ | ------------------------------------------ |
+| `Temporal.PlainDate`      | `date`           | `2026-11-14`                         | Native                                     |
+| `Temporal.PlainDateTime`  | `datetime-local` | `2026-11-14T15:04`                   | Native                                     |
+| `Temporal.ZonedDateTime`  | `text`           | `2026-11-14T15:04+09:00[Asia/Tokyo]` | `required` native, the limits by the field |
+| `Temporal.PlainYearMonth` | `text`           | `2026-11`                            | `required` native, the limits by the field |
 
 A `Temporal.PlainDate` in `min` or `max` limits whole days. A limit with a time also limits the time of a field that shows a time. A field that shows no time compares days. A limit in a time zone counts as its local time in the zone of a zoned value. A year and month is in the limits when one of its days is.
 
@@ -281,7 +281,7 @@ The field renders with `renderToString`. The server HTML has the segments, their
 
 The locale of the field is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The field never reads the locale of the visitor. No render reads today or the time zone of the runtime either: only an arrow key in an empty segment reads today. So the server HTML and the first render of the browser agree.
 
-A server and a browser can have other `Intl` data for the same locale. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
+A server and a browser can have other `Intl` data for the same locale. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. An element that you render in an `element` slot keeps the attributes of the server, because your attributes on it win over those of the part. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 

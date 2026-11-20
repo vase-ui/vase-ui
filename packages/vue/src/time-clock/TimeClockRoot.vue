@@ -116,6 +116,7 @@ const numberElements = shallowReactive(new Map<Element, () => TimeClockFaceNumbe
 
 const rangeInput = shallowRef<HTMLInputElement | null>(null);
 // The time picker gives the focus to the range input of the face through it.
+// TODO(pickers): the refactor of the pickers removes it.
 usePickerControl(PickerClockOwner, () => rangeInput.value);
 
 const shownHourCycle = computed(() => props.hourCycle ?? hourCycleOf(shownLocale.value));

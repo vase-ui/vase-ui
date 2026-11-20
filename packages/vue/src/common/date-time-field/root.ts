@@ -115,7 +115,7 @@ function isTimeUnit(granularity: DateTimeFieldGranularity): granularity is TimeU
 }
 
 /** Two values of the same kind and the same `equals`, or two empty values. */
-export function sameTemporal(a: unknown, b: unknown): boolean {
+function sameTemporal(a: unknown, b: unknown): boolean {
   if (a == null || b == null) return a == null && b == null;
   const kind = kindOf(a);
   return kind !== null && kind === kindOf(b) && (a as Temporal.PlainDate).equals(b as never);
@@ -596,20 +596,26 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     { flush: 'post' },
   );
 
+  // WebKit keeps the old `labels` of an input whose `id` changes
+  // (test/measurements/date-time-field.test.ts), so the root also looks for the labels of the
+  // document or the shadow root of the segment, at the time of the read.
+  function labelsOf(segment: HTMLInputElement) {
+    const rootNode = segment.getRootNode() as Document | ShadowRoot;
+    const candidates = [
+      ...(segment.labels ?? []),
+      ...rootNode.querySelectorAll<HTMLLabelElement>('label[for]'),
+    ];
+    return [...new Set(candidates)].filter((label) => label.control === segment);
+  }
+
   // A `<label>` names no segment, because each segment has an `aria-label`. The labels of the first
-  // segment thus name the group. The server HTML has no such name. WebKit keeps the old `labels` of
-  // an input whose `id` changes (test/measurements/date-time-field.test.ts), so the root also looks
-  // for the labels of the document.
+  // segment thus name the group. The server HTML has no such name.
   const nativeLabelIds = shallowRef<string>();
   watch(
     [firstSegment, id],
     ([segment]) => {
       if (!segment) return;
-      const candidates = [
-        ...(segment.labels ?? []),
-        ...segment.ownerDocument.querySelectorAll<HTMLLabelElement>('label[for]'),
-      ];
-      const labels = [...new Set(candidates)].filter((label) => label.control === segment);
+      const labels = labelsOf(segment);
       labels.forEach((label, index) => {
         label.id ||= index === 0 ? `${id.value}-label` : `${id.value}-label-${index + 1}`;
       });

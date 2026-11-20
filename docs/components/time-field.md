@@ -170,7 +170,7 @@ The field renders with `renderToString`. The server HTML has the segments, their
 
 The locale of the field is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The field never reads the locale of the visitor, so the server HTML and the first render of the browser agree. Give the locale of your app to render it.
 
-A server and a browser can have other `Intl` data for the same locale, such as another hour cycle. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
+A server and a browser can have other `Intl` data for the same locale, such as another hour cycle. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. An element that you render in an `element` slot keeps the attributes of the server, because your attributes on it win over those of the part. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
