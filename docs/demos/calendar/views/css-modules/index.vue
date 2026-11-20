@@ -7,7 +7,10 @@ import styles from '../../_index.module.css';
   <Calendar.Root locale="en-US" :class="[styles.Root, styles.SixWeeks]">
     <div :class="styles.Header">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
-      <Calendar.ViewTrigger :class="styles.Title" />
+      <Calendar.ViewTrigger
+        aria-description="Shows the years, or the days again"
+        :class="styles.Title"
+      />
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
     </div>
     <Calendar.Months>
