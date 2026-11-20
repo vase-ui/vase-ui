@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { Accordion } from '../accordion';
 import { AlertDialog } from '../alert-dialog';
-import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
+import { Menubar } from '../menubar';
+import { useForwardProps } from '../use-forward-props';
 import { Toggle } from '../toggle';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
@@ -14,18 +14,9 @@ import WrapperBindProps from './WrapperBindProps.test.vue';
 import WrapperCast from './WrapperCast.test.vue';
 import WrapperCastVapor from './WrapperCastVapor.test.vue';
 import WrapperFalseDefault from './WrapperFalseDefault.test.vue';
-import WrapperForward from './WrapperForward.test.vue';
 import WrapperInSlot from './WrapperInSlot.test.vue';
 import WrapperOuter from './WrapperOuter.test.vue';
 import WrapperUndefined from './WrapperUndefined.test.vue';
-
-function inItem(content: () => unknown) {
-  return (
-    <Accordion.Root>
-      <Accordion.Item>{content()}</Accordion.Item>
-    </Accordion.Root>
-  );
-}
 
 function message(wrapper: string, part: string, prop: string) {
   return (
@@ -35,49 +26,59 @@ function message(wrapper: string, part: string, prop: string) {
   );
 }
 
+// A wrapper that forwards its props with `useForwardProps`.
+const WrapperForward = defineComponent({
+  name: 'WrapperForward',
+  props: { modal: Boolean, loopFocus: Boolean },
+  setup(props, { slots }) {
+    const forwarded = useForwardProps(props);
+    return () => <Menubar {...forwarded.value}>{slots.default?.()}</Menubar>;
+  },
+});
+
 describe('useCastBooleanWarning', () => {
   const { render } = createRenderer();
 
   it('VUE-126: warns for a wrapper that casts an absent Boolean prop', async () => {
-    await render(() => inItem(() => <WrapperCast>Content</WrapperCast>));
+    await render(() => <WrapperCast>Content</WrapperCast>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperCast.test', 'Accordion.Panel', 'keepMounted'),
-      message('WrapperCast.test', 'Accordion.Panel', 'hiddenUntilFound'),
+      message('WrapperCast.test', 'Menubar', 'modal'),
+      message('WrapperCast.test', 'Menubar', 'loopFocus'),
     ]);
-    await render(() => inItem(() => <WrapperBindProps>Content</WrapperBindProps>));
+    await render(() => <WrapperBindProps>Content</WrapperBindProps>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperBindProps.test', 'Accordion.Panel', 'keepMounted'),
-      message('WrapperBindProps.test', 'Accordion.Panel', 'hiddenUntilFound'),
+      message('WrapperBindProps.test', 'Menubar', 'modal'),
+      message('WrapperBindProps.test', 'Menubar', 'loopFocus'),
     ]);
   });
 
   it('gives no warning when the caller sets false', async () => {
     await render(() =>
-      inItem(() => (
-        <WrapperCast keepMounted={false} hiddenUntilFound={false}>
+      (
+        <WrapperCast modal={false} loopFocus={false}>
           Content
         </WrapperCast>
-      )),
+      ),
     );
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a caller value in kebab case', async () => {
     await render(() =>
-      inItem(() => h(WrapperCast, { 'keep-mounted': false, 'hidden-until-found': false })),
+      h(WrapperCast, { modal: false, 'loop-focus': false }),
     );
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for the default undefined, for the default false, and with useForwardProps', async () => {
     await render(() =>
-      inItem(() => (
+      (
         <>
           <WrapperUndefined>Content</WrapperUndefined>
           <WrapperFalseDefault>Content</WrapperFalseDefault>
           <WrapperForward>Content</WrapperForward>
         </>
-      )),
+      ),
     );
     expect(takeReportedMessages()).toEqual([]);
   });
@@ -89,13 +90,9 @@ describe('useCastBooleanWarning', () => {
 
   it('gives no warning for an undefined binding', async () => {
     const { container } = await render(() => (
-      <Accordion.Root keepMounted>
-        <Accordion.Item>
-          <WrapperCast keepMounted={undefined} hiddenUntilFound={undefined}>
-            Kept content
-          </WrapperCast>
-        </Accordion.Item>
-      </Accordion.Root>
+      <WrapperCast modal={undefined} loopFocus={undefined}>
+        Kept content
+      </WrapperCast>
     ));
     expect(takeReportedMessages()).toEqual([]);
     expect(container.textContent).toBe('Kept content');
@@ -103,58 +100,54 @@ describe('useCastBooleanWarning', () => {
 
   it('warns one time for a wrapper that many instances use', async () => {
     await render(() => (
-      <Accordion.Root>
+      <>
         {[1, 2, 3].map((key) => (
-          <Accordion.Item key={key}>
-            <WrapperCast hiddenUntilFound={false}>Content</WrapperCast>
-          </Accordion.Item>
+          <WrapperCast key={key} loopFocus={false}>
+            Content
+          </WrapperCast>
         ))}
-      </Accordion.Root>
+      </>
     ));
     expect(takeReportedMessages()).toEqual([
-      message('WrapperCast.test', 'Accordion.Panel', 'keepMounted'),
+      message('WrapperCast.test', 'Menubar', 'modal'),
     ]);
   });
 
   it('names the outer wrapper of two', async () => {
-    await render(() => inItem(() => <WrapperOuter>Content</WrapperOuter>));
+    await render(() => <WrapperOuter>Content</WrapperOuter>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperOuter.test', 'Accordion.Panel', 'keepMounted'),
+      message('WrapperOuter.test', 'Menubar', 'modal'),
     ]);
   });
 
   it('finds the wrapper when the part is in the slot of another part', async () => {
-    await render(() => (
-      <Accordion.Root>
-        <WrapperInSlot>Content</WrapperInSlot>
-      </Accordion.Root>
-    ));
+    await render(() => <WrapperInSlot>Content</WrapperInSlot>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperInSlot.test', 'Accordion.Panel', 'keepMounted'),
+      message('WrapperInSlot.test', 'Toolbar.Button', 'focusableWhenDisabled'),
     ]);
   });
 
   it('gives no warning for an explicit false in the slot of a component that declares the same prop', async () => {
     await render(() => <SlotHostUser />);
     await render(() =>
-      inItem(() => (
+      (
         <SlotHost>
-          <Accordion.Panel keepMounted={false}>Content</Accordion.Panel>
+          <Menubar modal={false}>Content</Menubar>
         </SlotHost>
-      )),
+      ),
     );
-    await render(() => <SlotHost>{{ default: () => <Collapsible.Root open={false} /> }}</SlotHost>);
+    await render(() => <SlotHost>{{ default: () => <AlertDialog.Root open={false} /> }}</SlotHost>);
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a vnode that no render made', async () => {
-    await render(<SlotHost>{{ default: () => <Collapsible.Root open={false} /> }}</SlotHost>);
-    await render(h(SlotHost, null, () => h(Collapsible.Root, { open: false })));
+    await render(<SlotHost>{{ default: () => <AlertDialog.Root open={false} /> }}</SlotHost>);
+    await render(h(SlotHost, null, () => h(AlertDialog.Root, { open: false })));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for array children', async () => {
-    await render(() => h(SlotHost, null, [h(Collapsible.Root, { open: false })]));
+    await render(() => h(SlotHost, null, [h(AlertDialog.Root, { open: false })]));
     // Vue reports the array slot itself, independently of the Boolean check.
     expect(takeReportedMessages()).toEqual([
       expect.stringContaining('Non-function value encountered for default slot.'),
@@ -162,18 +155,6 @@ describe('useCastBooleanWarning', () => {
   });
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
-    const Wrapper = defineComponent({
-      name: 'MyCollapsible',
-      props: { open: Boolean },
-      setup(props) {
-        return () => <Collapsible.Root open={props.open} />;
-      },
-    });
-    await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyCollapsible', 'Collapsible.Root', 'open')]);
-  });
-
-  it('gives one warning for AlertDialog.Root', async () => {
     const Wrapper = defineComponent({
       name: 'MyAlertDialog',
       props: { open: Boolean },
@@ -258,10 +239,10 @@ describe('useCastBooleanWarning', () => {
 
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MyCollapsible',
+      name: 'MyAlertDialog',
       props: { open: Boolean },
       setup(props) {
-        return () => <Collapsible.Root open={props.open} />;
+        return () => <AlertDialog.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -273,12 +254,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <Collapsible.Root open={props.open} />;
+        return () => <AlertDialog.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <Collapsible.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <AlertDialog.Root>'),
     ]);
   });
 

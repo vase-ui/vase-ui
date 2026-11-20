@@ -92,9 +92,11 @@ describe('the elements', () => {
     expect(dataAttributes(panel()!)).toEqual([]);
   });
 
-  test('a button has type="button" when the developer gives no type', async () => {
+  test('a button has type="button" with no type of the developer, and no type with a type of undefined', async () => {
     const { trigger } = await mountCollapsible();
     expect(trigger).toHaveAttribute('type', 'button');
+    const { trigger: untyped } = await mountCollapsible({ trigger: { type: undefined } });
+    expect(untyped).not.toHaveAttribute('type');
   });
 
   test('render the element of the `element` slot with the props, the ref and the state; a span trigger is a button for the keys', async () => {

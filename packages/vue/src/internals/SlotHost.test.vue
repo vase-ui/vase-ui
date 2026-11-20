@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ keepMounted?: boolean; open?: boolean }>();
+defineProps<{ modal?: boolean; open?: boolean }>();
 </script>
 
 <template>

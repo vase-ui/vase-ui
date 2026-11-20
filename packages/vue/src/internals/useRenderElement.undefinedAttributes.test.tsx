@@ -2,10 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { Accordion } from '@vase-ui/vue/accordion';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { DateField } from '@vase-ui/vue/date-field';
@@ -58,23 +56,6 @@ const targetId = () => screen.getByTestId('target').id;
 
 const rows: Row[] = [
   {
-    name: 'Accordion.Trigger aria-expanded',
-    attribute: 'aria-expanded',
-    createNode: () => (
-      <Accordion.Root>
-        <Accordion.Item>
-          <Accordion.Header>
-            <Accordion.Trigger aria-expanded={undefined} data-testid="part">
-              A
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Panel />
-        </Accordion.Item>
-      </Accordion.Root>
-    ),
-    expected: () => 'false',
-  },
-  {
     name: 'AlertDialog.Trigger aria-haspopup',
     attribute: 'aria-haspopup',
     createNode: () => (
@@ -105,19 +86,6 @@ const rows: Row[] = [
       </CalendarAncestors>
     ),
     expected: () => 'grid',
-  },
-  {
-    name: 'Collapsible.Trigger aria-controls',
-    attribute: 'aria-controls',
-    createNode: () => (
-      <Collapsible.Root defaultOpen>
-        <Collapsible.Trigger aria-controls={undefined} data-testid="part">
-          A
-        </Collapsible.Trigger>
-        <Collapsible.Panel data-testid="target" />
-      </Collapsible.Root>
-    ),
-    expected: targetId,
   },
   {
     name: 'Combobox.Trigger aria-haspopup',

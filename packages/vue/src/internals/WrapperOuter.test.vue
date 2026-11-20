@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import WrapperCast from './WrapperCast.test.vue';
 
-defineProps<{ keepMounted?: boolean }>();
+defineProps<{ modal?: boolean }>();
 </script>
 
 <template>
-  <WrapperCast :keep-mounted="keepMounted" :hidden-until-found="false"><slot /></WrapperCast>
+  <WrapperCast :modal="modal" :loop-focus="false"><slot /></WrapperCast>
 </template>
