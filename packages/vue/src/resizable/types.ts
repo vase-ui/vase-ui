@@ -21,13 +21,16 @@ export type ResizableRootCommitEventDetails = GenericEventDetails<ResizableRootC
 
 export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
-   * The layout. `null` is a layout with no entries, and the root stays controlled. An entry that is
-   * not a size has no effect.
+   * The layout. `{}` and `null` give each panel its first size, and the root stays controlled. An
+   * entry that is not a size has no effect.
    */
   modelValue?: ResizableLayout | null;
   /** The first layout of an uncontrolled root, and the first sizes for a double click. */
   defaultLayout?: ResizableLayout | null;
-  /** @default 'horizontal' */
+  /**
+   * `'vertical'` puts the panels in a column, and ArrowUp and ArrowDown move the handles.
+   * @default 'horizontal'
+   */
   orientation?: 'horizontal' | 'vertical';
   /** Each handle ignores the user. */
   disabled?: boolean;
@@ -42,14 +45,20 @@ export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTML
    * @default 10
    */
   largeStep?: number | string;
-  /** A drag moves a handle in steps of this size. A size, as `step`. */
+  /**
+   * A drag moves a handle in steps of this size. A size, as `step`. A key and a method do not use
+   * it.
+   */
   dragStep?: number | string;
   /**
-   * A move goes on into the panels after the panel beside the handle.
+   * A move continues into the panels after the panel beside the handle.
    * @default true
    */
   pushPanels?: boolean;
-  /** @default 'live' */
+  /**
+   * When a drag changes the layout. A key, a double click and a method change it at once.
+   * @default 'live'
+   */
   resizeMode?: ResizableRootResizeMode;
 }
 
@@ -61,28 +70,48 @@ export interface ResizableRootState {
 
 export interface ResizablePanelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  /** The `id` of the element, and the key of the panel in the layout. */
+  /**
+   * The `id` of the element, and the key of the panel in the layout. With none, the panel gets a
+   * generated `id`.
+   */
   id?: string;
   /**
    * The first size, when the layout has no entry for the panel. A number is percent of the panel
    * space. A string can have a unit: `%`, `px`, `em` (the font size of the panel), `rem`, `vw` or
-   * `vh`. A later change has no effect.
+   * `vh`. The panels with no first size share the rest of the space in equal parts. A later change
+   * has no effect.
    */
   defaultSize?: number | string;
-  /** @default 0 */
+  /**
+   * The least size, in the form of `defaultSize`.
+   * @default 0
+   */
   minSize?: number | string;
-  /** @default 100 */
+  /**
+   * The greatest size, in the form of `defaultSize`.
+   * @default 100
+   */
   maxSize?: number | string;
-  /** The panel collapses to `collapsedSize` below `minSize`. */
+  /**
+   * The panel collapses to `collapsedSize` below `minSize`. Give it a `minSize` greater than its
+   * `collapsedSize`.
+   */
   collapsible?: boolean;
-  /** @default 0 */
+  /**
+   * The size of the collapsed panel, in the form of `defaultSize`. A panel whose first size is
+   * `collapsedSize` starts collapsed, with no event.
+   * @default 0
+   */
   collapsedSize?: number | string;
   /**
    * The distance that a drag passes below `minSize` to collapse the panel, or above
    * `collapsedSize` to expand it. The default is half of the distance between the two sizes.
    */
   collapseThreshold?: number | string;
-  /** A move of a handle leaves the size of the panel. */
+  /**
+   * A move of a handle goes through the panel to the next panel, and leaves its size. The methods of
+   * the panel and the layout of the root still change its size.
+   */
   disabled?: boolean;
   /**
    * `'fixed'` keeps the pixels of the panel when the root changes size.
@@ -91,13 +120,19 @@ export interface ResizablePanelProps
   rootResizeBehavior?: 'proportional' | 'fixed';
   /**
    * When the other panels cannot take a size change of the root, the fixed panel with the greater
-   * number gives way first.
+   * number changes size first.
    * @default 0
    */
   rootResizePriority?: number;
-  /** A drag that comes within `snapTolerance` of a point gives the panel that size. */
+  /**
+   * A drag that comes within `snapTolerance` of a point gives the panel that size. A key and a
+   * method do not snap.
+   */
   snapPoints?: readonly (number | string)[];
-  /** @default '10px' */
+  /**
+   * The distance from a snap point at which a drag snaps to it.
+   * @default '10px'
+   */
   snapTolerance?: number | string;
 }
 

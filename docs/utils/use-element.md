@@ -5,6 +5,7 @@ description: A composable that gives a component the native element that it rend
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoUseElementRender from '../demos/use-render/render/css-modules/index.vue';
 import DemoUseElementRenderCallback from '../demos/use-render/render-callback/css-modules/index.vue';
@@ -14,24 +15,11 @@ import DemoUseElementRenderCallback from '../demos/use-render/render-callback/cs
 
 A composable that gives a component the native element that it renders.
 
-Use `useElement` and Vue to build a component in the form of a Vase UI part. It is the Vue form of `useRender` of Base UI.
-
-## Build a component
-
-The component renders its own element, or the element that a consumer renders in its `element` slot:
-
-<<< ./use-element/Notice.vue
-
-- Bind `setElement` on the element with `:ref`. Vapor mode ignores a `ref` in `v-bind`.
-- `element` is that element. For a component in the slot, it is the `element` that the component exposes. A component that exposes no `element` gives its root element, but a component in Vapor mode gives none. `element` is `null` on a server, before the mount and after the unmount.
-- Expose `element`. A template ref of the consumer then reads the native element.
-- A Vase UI part exposes `element` too. The component can be the element of a part, and a part can be the element of the component.
-- With `inheritAttrs: false`, the template binds the attributes of the consumer on the element. `mergeProps` of Vue merges them with the attributes of the component, and the value of the consumer wins. It joins `class` and `style`, and keeps each listener.
-- `ElementSlotProps` of `@vase-ui/vue/types` types the scope of the `element` slot.
-
 ## Examples
 
-A consumer renders a `strong` element in the `element` slot of a Text component:
+### Render another element
+
+Use `useElement` to build a component in the form of a Vase UI part. The component renders its own element, or the element that a consumer renders in its `element` slot. Here a consumer renders a `strong` element in the `element` slot of a Text component:
 
 <DemoFrame>
   <DemoUseElementRender />
@@ -46,6 +34,15 @@ A consumer renders a `strong` element in the `element` slot of a Text component:
 <<< ../demos/use-render/render/css-modules/index.module.css
 
 :::
+
+- Bind `setElement` on the element with `:ref`, because Vapor ignores a `ref` in `v-bind`. Give `setElement` to the `element` slot as `elementRef`.
+- `element` is the element that `setElement` gets. For a component in the slot, it is the `element` that the component exposes, else its root element. A Vapor component has no root element to give.
+- `element` is `null` on a server, before the mount and after the unmount.
+- Expose `element`. A template ref of the consumer then reads the native element. The component can also be the element of a Vase UI part, and a part can be the element of the component.
+- With `inheritAttrs: false`, merge the attributes of the consumer with the attributes of the component in `mergeProps` of Vue. The value of the consumer wins. `class` and `style` join, and each listener stays.
+- `ElementSlotProps` of `@vase-ui/vue/types` types the scope of the `element` slot.
+
+### Read the state
 
 The `element` slot also gives the `state` of the component:
 
@@ -65,4 +62,14 @@ The `element` slot also gives the `state` of the component:
 
 ## API reference
 
-<ApiReference name="useElement" :heading-level="3" />
+<ApiReference />
+
+### useElement
+
+Gives the native element of a component, and the function ref that sets it.
+
+<ApiReference name="useElement" :heading-level="4" />
+
+## Differences from Base UI
+
+<BaseUiDifferences />
