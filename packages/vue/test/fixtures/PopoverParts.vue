@@ -6,8 +6,9 @@ type Item = { key: string; attrs?: Record<string, unknown> };
 type Props = Record<string, unknown>;
 
 // Each trigger has the text and the `data-key` of its key. With no `triggers`, the root has one
-// trigger with the key `t`. Text inputs stand before and after the root. The popup holds two
-// buttons, and the parts that their props name.
+// trigger with the key `t`. Text inputs stand before and after the root. The input after it and the
+// outside button are at the bottom right of the view, so the popup under the trigger covers
+// neither. The popup holds two buttons, and the parts that their props name.
 defineProps({
   root: Object as PropType<Props>,
   triggers: { type: Array as PropType<Item[]>, default: () => [{ key: 't' }] },
@@ -83,6 +84,6 @@ defineExpose({ root: rootPart, popup: popupPart });
       </Popover.Portal>
     </template>
   </Popover.Root>
-  <input id="after" aria-label="After" />
-  <button id="outside">Outside</button>
+  <input id="after" aria-label="After" style="position: fixed; right: 0; bottom: 30px" />
+  <button id="outside" style="position: fixed; right: 0; bottom: 0">Outside</button>
 </template>

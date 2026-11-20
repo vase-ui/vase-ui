@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Popover, type PopoverRootChangeEventDetails } from '@vase-ui/vue/popover';
@@ -20,6 +20,17 @@ const popup = () => document.querySelector<HTMLElement>('[data-testid="popup"]')
 const positioner = () => document.querySelector<HTMLElement>('[data-testid="positioner"]');
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
 const byId = (id: string) => document.getElementById(id)!;
+/**
+ * Appends an element to `<body>` at the bottom left of the view, away from the popup, which opens
+ * under its trigger at the top. The element goes away at the end of the case.
+ */
+function appendOutside<K extends keyof HTMLElementTagNameMap>(tag: K, style = '') {
+  const element = document.body.appendChild(document.createElement(tag));
+  element.style.cssText = `position: fixed; left: 0; bottom: 0; ${style}`;
+  onTestFinished(() => element.remove());
+  return element;
+}
+
 // The fixed element of a modal popover. A backdrop of an earlier case can still leave.
 const BLOCK = 'body > div[role="presentation"]:not([data-testid])';
 
@@ -536,7 +547,7 @@ describe('the dismissal (L4)', () => {
   test('a press on an element that a script added to <body> after the open closes nothing', async () => {
     await mountPopover({ root: { defaultOpen: true } });
     await opened();
-    const added = document.body.appendChild(document.createElement('button'));
+    const added = appendOutside('button');
     added.textContent = 'Added';
     try {
       await userEvent.click(added);
@@ -593,7 +604,7 @@ describe('the dismissal (L4)', () => {
   });
 
   test('a press on another element of <body> that was there before the open closes the popup', async () => {
-    const other = document.body.appendChild(document.createElement('div'));
+    const other = appendOutside('div');
     other.textContent = 'Other';
     try {
       const log: string[] = [];
@@ -695,10 +706,12 @@ describe('the dismissal (L4)', () => {
     const style = document.head.appendChild(document.createElement('style'));
     style.textContent = '.scroller::-webkit-scrollbar { width: 12px; height: 12px }';
     const box = (dir: string) => {
-      const element = document.body.appendChild(document.createElement('div'));
+      const element = appendOutside(
+        'div',
+        `overflow: scroll; width: 200px; height: 100px; bottom: ${dir === 'rtl' ? 110 : 0}px`,
+      );
       element.className = 'scroller';
       element.dir = dir;
-      element.style.cssText = 'overflow: scroll; width: 200px; height: 100px';
       element.innerHTML = '<div style="width: 400px; height: 400px"></div>';
       return element;
     };
@@ -729,7 +742,7 @@ describe('the dismissal (L4)', () => {
   });
 
   test('a press in a frame closes the popup with `focus-out`; a focused element that leaves the popup closes nothing', async () => {
-    const frame = document.body.appendChild(document.createElement('iframe'));
+    const frame = appendOutside('iframe', 'width: 100px; height: 50px');
     try {
       const log: string[] = [];
       await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
@@ -761,7 +774,7 @@ describe('the dismissal (L4)', () => {
   });
 
   test("a press of the right button outside keeps a `'trap-focus'` popover open", async () => {
-    const other = document.body.appendChild(document.createElement('div'));
+    const other = appendOutside('div');
     other.textContent = 'Other';
     try {
       const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });
@@ -778,8 +791,7 @@ describe('the dismissal (L4)', () => {
   test.skipIf(server.browser !== 'chromium')(
     'a touch outside closes at its end after a tap or a drag of more than 5 px, and at a move of more than 10 px; a touch that rests more than 1 s closes nothing',
     async () => {
-      const other = document.body.appendChild(document.createElement('div'));
-      other.style.cssText = 'height: 100px; touch-action: none';
+      const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');
       try {
         const events: string[] = [];
         const setup = () => ({
@@ -940,7 +952,7 @@ describe('modal (3.2, L4 to L6)', () => {
   });
 
   test("`'trap-focus'` with a Close closes at the press of an outside element, before the release", async () => {
-    const other = document.body.appendChild(document.createElement('div'));
+    const other = appendOutside('div');
     other.textContent = 'Other';
     try {
       const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });
@@ -1484,7 +1496,11 @@ describe('the placement (L10)', () => {
 
     test('`anchor` places the popup at another element', async () => {
       placeAnchor('left: 300px; top: 200px; width: 50px; height: 20px');
-      await mountPopover({ root: { defaultOpen: true }, positioner: { anchor, align: 'start' } });
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: { anchor, align: 'start' },
+        popup: { style: 'width: 100px' },
+      });
       await opened();
       await placed();
       const place = positioner()!.getBoundingClientRect();

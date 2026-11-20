@@ -268,8 +268,8 @@ describe('the first frame after an open (N1)', () => {
 });
 
 describe('the tab stops of a container (N3)', () => {
-  // WebKit gives Tab a link only by a setting of the system, as it does for a button.
-  test('are the stops of the Tab key of the browser; the Tab of WebKit skips the link', async () => {
+  // WebKit on macOS gives Tab a link only by a setting of the system, as it does for a button.
+  test('are the stops of the Tab key of the browser; the Tab of WebKit on macOS skips the link', async () => {
     html(`<input id="start" aria-label="Start"><div id="box">
       <input id="radio-a" type="radio" name="group" aria-label="A"><input id="radio-b" type="radio" name="group" aria-label="B" checked>
       <details><summary id="summary">More</summary><input id="in-details" aria-label="In details"></details>
@@ -294,7 +294,7 @@ describe('the tab stops of a container (N3)', () => {
     const stops = tabbables(element('box')).map((stop) => stop.id);
     expect(stops).toEqual(['radio-b', 'summary', 'in-shadow', 'editable', 'link']);
     expect(order).toEqual(
-      server.browser === 'webkit'
+      server.browser === 'webkit' && server.platform === 'darwin'
         ? ['radio-b', 'summary', 'in-shadow', 'editable', 'end', '']
         : [...stops, 'end'],
     );
@@ -367,7 +367,7 @@ describe('a mouse press on a scrollbar that takes room (N10)', () => {
 
 describe('a real touch outside (N11)', () => {
   test.skipIf(server.browser !== 'chromium')(
-    'sends `pointerdown`, `pointerup` and `click` for a tap and for a rest of 1.5 s, and `pointercancel` for a drag on a page that scrolls',
+    'sends `pointerdown`, `pointerup` and `click` for a tap, `pointerdown` and `pointerup` for a rest of 1.5 s with a `click` only on macOS, and `pointercancel` for a drag on a page that scrolls',
     async () => {
       html(`<div id="page" style="height: 3000px"></div>`);
       const log: string[] = [];
@@ -393,7 +393,7 @@ describe('a real touch outside (N11)', () => {
       expect({ tap, drag, rest: log }).toEqual({
         tap: ['pointerdown', 'pointerup', 'click'],
         drag: ['pointerdown', 'pointercancel'],
-        rest: ['pointerdown', 'pointerup', 'click'],
+        rest: ['pointerdown', 'pointerup', ...(server.platform === 'darwin' ? ['click'] : [])],
       });
     },
   );
