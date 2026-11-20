@@ -142,9 +142,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 A form component such as `Select` or `NumberField` uses a hidden input to take part in native form submission and validation. `Input`, `Checkbox`, `Radio` and `Switch` are native inputs, so the browser places their messages. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport. The hidden input of `NumberField.Root` is its last child, and it is `position: absolute` also with no `name`.
 
-`Select.Root` renders its hidden input after its children. Put the container around `Select.Root`, not only around `Select.Trigger`:
-
-<<< ../examples/forms/PositionedInput.vue{7,8}
+The root of `Select` is a `<div>` that holds its inputs, and its text input is `position: absolute`. Give `Select.Root` `position: relative`, and the message points at the select.
 
 ## Custom validation
 
@@ -229,9 +227,9 @@ Wrap your submit function with `handleSubmit`. It validates the form. When the f
 
 `handleSubmit` takes a second function. VeeValidate calls it when the form is not valid, with the errors by field name. The names are in the sequence in which the fields mount. Find the element of the form that has the first name. Move the focus to that element:
 
-<<< ../examples/forms/VeeValidateSubmit.vue{17,19-22,26}
+<<< ../examples/forms/VeeValidateSubmit.vue{17,19-27,31}
 
-Where a part has a hidden input, as `Select` and `NumberField` have, that input has the name. It gives the focus to the control of the part.
+Where a part has a hidden input, as `Select` and `NumberField` have, that input has the name. The input of `NumberField` gives the focus to its control. The inputs of `Select` are `type="hidden"`, so the code gives the focus to the trigger in the same root.
 
 Do not use `Form` here. A field that shows an error stops the `submit` event of `Form`. `handleSubmit` then does not run, and VeeValidate does not show the errors of the other fields. Add `novalidate`, as `Form` does, so that the browser shows no message of its own.
 

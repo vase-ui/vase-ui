@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { provide, shallowRef, type PropType } from 'vue';
 import { useList, type HighlightReason } from '../../src/list/list';
-import { useTypeahead } from '../../src/menu/typeahead';
+import { useTypeahead } from '../../src/list/typeahead';
 import ListFixtureItem from './ListFixtureItem.vue';
 
 type Item = {

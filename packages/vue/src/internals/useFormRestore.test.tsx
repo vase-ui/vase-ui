@@ -217,15 +217,6 @@ interface RestoredFamily {
 
 const RESTORED_FAMILIES: RestoredFamily[] = [
   {
-    name: 'Select.Root',
-    family: 'select',
-    inputName: 'font',
-    written: ['mono'],
-    model: 'mono',
-    changes: 'mono (none)',
-    events: ['input'],
-  },
-  {
     name: 'Combobox.Root',
     family: 'combobox',
     inputName: 'fruit',

@@ -178,6 +178,11 @@ export function usePlacement(
     lazyFlip?: () => boolean;
     /** The popup moves across the side axis into the layout viewport. */
     shiftAcross?: () => boolean;
+    /**
+     * A place that the caller gives in the place of Floating UI, which then gives only the
+     * variables. `null`: the caller has no place yet, and the positioner stays hidden.
+     */
+    place?: () => CSSProperties | null | undefined;
   },
 ) {
   const rtl = shallowRef(false);
@@ -344,15 +349,23 @@ export function usePlacement(
 
   // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
   // so only the first placement hides the popup: the server HTML and the first render have no place.
-  const placed = floating.isPositioned;
-  watch(
-    [placed, () => root.open],
-    ([isPlaced, open]) => {
-      if (!open) kept.value = undefined;
-      else if (isPlaced && options.lazyFlip?.()) kept.value = floating.placement.value;
-    },
-    { flush: 'sync' },
-  );
+  const placed = computed(() => {
+    const given = options.place?.();
+    return given === undefined ? floating.isPositioned.value : given !== null;
+  });
+  // Only a caller with `lazyFlip` reads `placed` in its setup: the `place` of Select reads the
+  // item alignment, which it sets up after this call.
+  const { lazyFlip } = options;
+  if (lazyFlip) {
+    watch(
+      [placed, () => root.open],
+      ([isPlaced, open]) => {
+        if (!open) kept.value = undefined;
+        else if (isPlaced && lazyFlip()) kept.value = floating.placement.value;
+      },
+      { flush: 'sync' },
+    );
+  }
 
   const placedSide = computed(() => getSide(floating.placement.value));
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));
@@ -360,14 +373,17 @@ export function usePlacement(
   const anchorHidden = computed(() => !!floating.middlewareData.value.hide?.referenceHidden);
 
   const style = computed<CSSProperties>(() => {
+    const given = options.place?.();
     const data = floating.middlewareData.value.insets as Insets | undefined;
-    const place: CSSProperties = data
-      ? {
-          position: floating.strategy.value,
-          [data.x]: `${floating.x.value}px`,
-          [data.y]: `${floating.y.value}px`,
-        }
-      : floating.floatingStyles.value;
+    let place: CSSProperties = floating.floatingStyles.value;
+    if (given !== undefined) place = { position: 'fixed' };
+    else if (data) {
+      place = {
+        position: floating.strategy.value,
+        [data.x]: `${floating.x.value}px`,
+        [data.y]: `${floating.y.value}px`,
+      };
+    }
     return {
       ...place,
       '--available-width': available.value.width,
@@ -377,6 +393,7 @@ export function usePlacement(
       '--transform-origin': floating.middlewareData.value.transformOrigin?.value as
         string | undefined,
       visibility: placed.value ? undefined : 'hidden',
+      ...given,
     };
   });
 
@@ -401,6 +418,8 @@ export function usePlacement(
     align,
     anchorHidden,
     placed,
+    /** Floating UI has the first place of this open, with its variables. */
+    anchored: floating.isPositioned,
     arrow: {
       style: arrowStyle,
       uncentered: arrowUncentered,

@@ -109,8 +109,8 @@ export function usePopupFocus(
      * @default ['focus-out']
      */
     noReturn?: readonly string[];
-    /** The popup takes the focus when the focused element in it leaves the DOM or is hidden. */
-    restoreLostFocus?: boolean;
+    /** The element that takes the focus when the focused element of the popup leaves or hides. */
+    lostFocus?: () => HTMLElement | null;
     /** The first sentinel also asks for a close when it gets the focus from the popup. */
     closeBefore?: boolean;
     /** The root that the last sentinel closes, and after whose trigger the focus goes. */
@@ -169,14 +169,17 @@ export function usePopupFocus(
   // (test/measurements/popup.test.ts), so a `MutationObserver` looks for the removal, and for an
   // attribute that hides the element.
   watch(
-    () => (options.restoreLostFocus && root.open ? root.popup : null),
+    () => (options.lostFocus && root.open ? root.popup : null),
     (popup, _, onCleanup) => {
       if (!popup) return;
       let focused: Element | null = null;
       const restore = () => {
         if (!focused || (focused.isConnected && focused.checkVisibility())) return;
-        const active = activeElement(ownerDocument(popup));
-        if (!active || active === popup.ownerDocument.body) focus(popup);
+        const doc = ownerDocument(popup);
+        const active = activeElement(doc);
+        if (active && active !== doc.body) return;
+        focused = null;
+        focus(options.lostFocus?.());
       };
       const onFocusin = (event: FocusEvent) => (focused = event.target as Element);
       const observer = new MutationObserver(restore);

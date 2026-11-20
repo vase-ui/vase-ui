@@ -75,13 +75,15 @@ export interface PopupRoot<Payload = unknown> {
   /**
    * Asks for a change of the state after an action of the user. A request for the state that the
    * root has, for the same trigger, emits nothing. An open with the `trigger` `null` has no active
-   * trigger, also when the root has one trigger.
+   * trigger, also when the root has one trigger. `interaction` replaces the input that the root
+   * reads from the event.
    */
   request(
     open: boolean,
     reason: string,
     event: Event,
     trigger?: Element | null,
+    interaction?: InteractionType,
   ): PopupChangeEventDetails;
   /**
    * Asks for an open with no active trigger. The parts get the payload until the next open by a
@@ -344,6 +346,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     event: Event,
     entry: PopupTrigger | null | undefined,
     payload?: { value: Payload },
+    input = interactionOf(event),
   ) {
     const element = entry === null ? null : (entry?.element ?? activeTrigger.value);
     const details = createPopupChangeEventDetails(
@@ -362,8 +365,8 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     state.emitChange(next, entry, details);
     if (details.isCanceled) return details;
     reason.value = why;
-    if (next) interaction.value = interactionOf(event);
-    else closeInteraction.value = interactionOf(event);
+    if (next) interaction.value = input;
+    else closeInteraction.value = input;
     instant.value = options.instantOf?.(next, why, event);
     if (next && entry !== undefined) {
       givenPayload.value = payload ?? (entry ? undefined : givenPayload.value);
@@ -471,9 +474,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     get closeRequests() {
       return closeRequests.value;
     },
-    request(next, why, event, trigger) {
+    request(next, why, event, trigger, input) {
       const entry = trigger ? triggers.find((each) => each.element === trigger) : trigger;
-      return change(next, why, event, entry);
+      return change(next, why, event, entry, undefined, input);
     },
     openWithPayload(payload, event) {
       return change(true, 'imperative-action', event, null, { value: payload });

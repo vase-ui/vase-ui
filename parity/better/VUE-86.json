@@ -3,10 +3,9 @@
   "evidence": [
     "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref",
     "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref_list",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/trigger/SelectTrigger.tsx#L136-L138",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx#L657",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx#L744"
   ],
-  "behavior": "An open `Select.Trigger` follows each change of the `id` of `Select.List` in its `aria-controls`: a change of the `id` attribute of the list, of the `id` of `Select.Root`, or of the `id` that the `#render` slot of the list gives. An open `NavigationMenu.Trigger` follows each change of the `id` of its `NavigationMenu.Content` in its `aria-controls`. No element has `aria-owns`. An element with an empty `id` gives no attribute. Base UI reads the `id` of the element when the trigger renders, so after a change of the `id` the trigger names the old id until it renders again. No element has that id.",
-  "dueWith": "packages/react/src/select/trigger/SelectTrigger.tsx"
+  "behavior": "An open `NavigationMenu.Trigger` follows each change of the `id` of its `NavigationMenu.Content` in its `aria-controls`. No element has `aria-owns`. An element with an empty `id` gives no attribute. Base UI reads the `id` of the element when the trigger renders, so after a change of the `id` the trigger names the old id until it renders again. No element has that id.",
+  "dueWith": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx"
 }

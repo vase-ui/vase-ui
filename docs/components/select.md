@@ -55,7 +55,7 @@ A common form component for choosing a predefined value in a dropdown menu.
 - **Use Combobox for a long list**: Select has no filter. The keyboard typeahead only finds an item that matches the typed text. When the list is long enough to need a filter, use [Combobox](/components/combobox).
 - **Special positioning**: By default, the popup overlaps its trigger, so that the text of the selected item is over the value text of the trigger. See [Positioning](#positioning) to turn this off or to change it.
 - **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when the select has no visible label. See [Labeling a select](#labeling-a-select) and the [forms guide](/handbook/forms).
-- **Closing animations**: The popup stays rendered until its closing animation ends. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself.
+- **Animations**: Put a `<Transition>` around `<Select.Popup>`. See [Animation](#animation).
 
 ## Anatomy
 
@@ -63,11 +63,45 @@ Import the component and assemble its parts:
 
 <<< ./select/Anatomy.vue
 
-`Select.Root` renders no element. It renders a hidden input beside its content. A select with a `name` submits its value with the form. A select with `multiple` submits one value for each selected item.
+`Select.Root` renders a `<div>` that holds the form inputs after its content. For a select in a line of text, give the root `display: inline-block` or `display: contents`. Do not put `Select.Root` in a `<p>`: the HTML parser closes the paragraph at the `<div>`, and the hydration then fails.
 
 Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
-The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A select with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its input is `type="hidden"`.
+The popup and its items stay in the DOM, hidden, from the first focus of the trigger, the first open or the first fill of the browser. So a key on the closed trigger selects the next item whose text starts with it, as on a native select.
+
+## Forms
+
+A select with a `name` submits its value in a `type="hidden"` input. With `multiple`, it submits one value for each selected item. A hidden input keeps a line break of the value.
+
+A visually hidden text input has the constraint validation of `required`, and it takes the fill of the browser. Give `autocomplete` to the root so that the browser fills it. A native reset gives the select its first value back.
+
+## Animation
+
+Put a `<Transition>` around `<Select.Popup>`, and around `<Select.Backdrop>`. Do not write `v-show` or `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. To run code at the end of an animation, use `@after-enter` and `@after-leave`. To animate with JavaScript, give the `<Transition>` `:css="false"` and call `done` in its `@leave` hook.
+
+In the `element` slot, the part writes no `v-show`: `props` has `hidden` and `inert` while the popup is closed. Put a `<Transition appear>` in the slot, and write `v-show="state.open"` on the element. Give the `-leave-active` class a `display` rule, because `hidden` hides the element during the leave.
+
+Do not give a closed popup a size with CSS: a box with a size makes the page scroll further.
+
+## The selected mark
+
+The default slot of `<Select.Item>` gets `state.selected`. Render the mark with `v-if`:
+
+```vue
+<Select.Item value="sans" v-slot="{ state }">
+  <CheckIcon v-if="state.selected" />
+  <Select.ItemText>Sans-serif</Select.ItemText>
+</Select.Item>
+```
+
+For CSS alone, select `[aria-selected="true"]` on the item.
+
+## Style hooks
+
+- The trigger has `aria-expanded="true"` while open, `:disabled`, `aria-readonly="true"`, `aria-required="true"` and `aria-invalid="true"`. It has `data-pressed`, `data-popup-side`, `data-placeholder` and the state of its field.
+- No part has `data-focused`. Select `:focus-visible` on the trigger, and `[aria-expanded="true"]` on it while the list has the focus.
+- An item has `aria-selected="true"`, `aria-disabled="true"` and `data-highlighted`.
+- A scroll arrow is in the DOM while the list can scroll in its direction. With `keepMounted`, it stays and has `hidden`, so an arrow with a `display` rule needs `[hidden] { display: none }`.
 
 ## Positioning
 
@@ -114,6 +148,8 @@ Use `<Select.Label>` to give the trigger a visible label:
 <<< ./select/Label.vue{7}
 
 `<Select.Label>` renders a `<div>`. A click on it moves the focus to the trigger and does not open the popup.
+
+In a `Field.Root`, `<Field.Label>` is a native `<label>` of the trigger. A click on it opens the popup, as a click on the trigger does.
 
 ### Placeholder values
 

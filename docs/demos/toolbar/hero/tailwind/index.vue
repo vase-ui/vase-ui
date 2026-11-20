@@ -22,6 +22,8 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'none', stroke: 'currentColor', ...attrs }, [
     h('path', { d: 'm2.5 8.5 4 4 7-9' }),
   ]);
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -76,28 +78,32 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
       </Toolbar.Button>
       <Select.Portal>
         <Select.Positioner class="z-10 outline-none select-none" :side-offset="4">
-          <Select.Popup
-            class="group max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-y-auto border border-neutral-950 bg-white bg-clip-padding text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:translate-y-px data-[side=none]:scale-100 data-[side=none]:opacity-100 data-[side=none]:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-          >
-            <Select.Item
-              class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
-              value="Helvetica"
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup
+              class="group max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-y-auto border border-neutral-950 bg-white bg-clip-padding text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:translate-y-px data-[side=none]:scale-100 data-[side=none]:opacity-100 data-[side=none]:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
-              <Select.ItemIndicator class="col-start-1">
-                <CheckIcon />
-              </Select.ItemIndicator>
-              <Select.ItemText class="col-start-2">Helvetica</Select.ItemText>
-            </Select.Item>
-            <Select.Item
-              class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
-              value="Arial"
-            >
-              <Select.ItemIndicator class="col-start-1">
-                <CheckIcon />
-              </Select.ItemIndicator>
-              <Select.ItemText class="col-start-2">Arial</Select.ItemText>
-            </Select.Item>
-          </Select.Popup>
+              <Select.Item
+                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+                value="Helvetica"
+                v-slot="{ state }"
+              >
+                <span v-if="state.selected" class="col-start-1">
+                  <CheckIcon />
+                </span>
+                <Select.ItemText class="col-start-2">Helvetica</Select.ItemText>
+              </Select.Item>
+              <Select.Item
+                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+                value="Arial"
+                v-slot="{ state }"
+              >
+                <span v-if="state.selected" class="col-start-1">
+                  <CheckIcon />
+                </span>
+                <Select.ItemText class="col-start-2">Arial</Select.ItemText>
+              </Select.Item>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

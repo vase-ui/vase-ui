@@ -4,7 +4,6 @@ import type { Component, Directive, VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Select } from '@vase-ui/vue/select';
 import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
 import type { HTMLProps } from '../../../internals/types';
 import { createAttribute } from '../createAttribute';
@@ -28,21 +27,6 @@ const vMark: Directive<HTMLElement, string> = {
 };
 
 const families: PopupFamily[] = [
-  {
-    name: 'Select.Popup',
-    part: Select.Popup,
-    tree: (popup) => (
-      <Select.Root defaultOpen>
-        <Select.Trigger>
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>{popup}</Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
-    ),
-    siblings: 'guards',
-  },
   {
     name: 'Combobox.Popup',
     part: Combobox.Popup,

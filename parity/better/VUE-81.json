@@ -4,11 +4,10 @@
     "https://github.com/facebook/react/blob/v19.3.1/packages/react-dom-bindings/src/client/ReactDOMInput.js#L322-L324",
     "https://github.com/facebook/react/blob/v19.3.1/packages/react-dom-bindings/src/client/ReactDOMInput.js#L363-L397",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L406",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/root/SelectRoot.tsx#L465",
     "https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reactions",
     "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#attr-fe-autocomplete-off",
     "https://html.spec.whatwg.org/multipage/input.html#hidden-state-(type=hidden)"
   ],
-  "behavior": "`Select.Root`, `Combobox.Root` and `Autocomplete.Root` take the value of their input when the input changed with no event that the part handled, as for an autofill. This occurs when the browser restores the form state of the page after a history move or a reload. The part then emits its change events one time, and the input, the part and the model agree. When a parent that controls the part keeps its value, the input goes back. A `Select.Root`, a `Combobox.Root` or an `Autocomplete.Root` whose input is `type=\"hidden\"` keeps its value. With React 19.3, Base UI keeps the changed input and its state does not follow, so the part shows one state and the form submits the other.",
+  "behavior": "`Combobox.Root` and `Autocomplete.Root` take the value of their input when the input changed with no event that the part handled, as for an autofill. This occurs when the browser restores the form state of the page after a history move or a reload. The part then emits its change events one time, and the input, the part and the model agree. When a parent that controls the part keeps its value, the input goes back. A `Combobox.Root` or an `Autocomplete.Root` whose input is `type=\"hidden\"` keeps its value. With React 19.3, Base UI keeps the changed input and its state does not follow, so the part shows one state and the form submits the other.",
   "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx"
 }

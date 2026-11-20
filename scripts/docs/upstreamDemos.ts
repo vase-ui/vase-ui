@@ -58,6 +58,7 @@ const RESTYLED_FAMILIES = new Set([
   'popover',
   'preview-card',
   'radio-group',
+  'select',
   'switch',
   'tabs',
   'toggle',

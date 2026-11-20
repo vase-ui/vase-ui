@@ -1,23 +1,16 @@
 <script setup lang="ts">
-import { Select, SelectPositionerCssVariables } from '@vase-ui/vue/select';
+import { TimePicker, TimePickerItemDataAttributes } from '@vase-ui/vue/time-picker';
 
-const popupStyle = {
-  maxHeight: `var(${SelectPositionerCssVariables.availableHeight})`,
-};
+const rule = `.Item[${TimePickerItemDataAttributes.selected}] { font-weight: 600; }`;
 </script>
 
 <template>
-  <Select.Root>
-    <Select.Trigger>
-      <Select.Value placeholder="Song" />
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Positioner>
-        <Select.Popup :style="popupStyle">
-          <Select.Item value="library">Add to Library</Select.Item>
-          <Select.Item value="playlist">Add to Playlist</Select.Item>
-        </Select.Popup>
-      </Select.Positioner>
-    </Select.Portal>
-  </Select.Root>
+  <component :is="'style'">{{ rule }}</component>
+  <TimePicker.Root>
+    <TimePicker.List>
+      <template #item="{ time }">
+        <TimePicker.Item :time="time" class="Item" />
+      </template>
+    </TimePicker.List>
+  </TimePicker.Root>
 </template>

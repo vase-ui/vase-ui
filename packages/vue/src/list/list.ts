@@ -32,8 +32,11 @@ export interface List {
   /** One other element keeps the focus, and names the highlighted item. */
   readonly virtual: boolean;
   add(item: ListItem): () => void;
-  /** The items that a key can reach, in the order of the document. */
-  items(): ListItem[];
+  /**
+   * The items that a key can reach, in the order of the document: in the document, shown and not
+   * `:disabled`. With `hidden`, also the items that are not shown, such as those of a closed popup.
+   */
+  items(options?: { hidden?: boolean }): ListItem[];
   /** The `label` of the item, else its text, with no space at the ends. */
   text(item: ListItem): string;
   highlight(item: ListItem | null, reason: HighlightReason, event?: Event): void;
@@ -123,11 +126,13 @@ export function useList(options: ListOptions): List {
     },
   );
 
-  function items() {
+  function items(itemOptions?: { hidden?: boolean }) {
     return added
       .filter(
         ({ element }) =>
-          element.isConnected && element.checkVisibility() && !element.matches(':disabled'),
+          element.isConnected &&
+          (itemOptions?.hidden || element.checkVisibility()) &&
+          !element.matches(':disabled'),
       )
       .sort((a, b) => byDocumentOrder(a.element, b.element));
   }
