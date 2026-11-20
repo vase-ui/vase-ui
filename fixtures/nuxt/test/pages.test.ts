@@ -1235,9 +1235,8 @@ async function expectMenubarPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
 }
 
-// A server renders no popup and no portal. The trigger of an open root has the open state, and no
-// guards beside it. The trigger of a handle has the closed form, because a server attaches no store
-// to a handle.
+// A server renders no popup. The trigger of an open root has the open state. The trigger of a
+// handle has the closed form, because a handle holds its root only on the client.
 async function expectPopoverPageOnServer(page: Page) {
   const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-pressed'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
